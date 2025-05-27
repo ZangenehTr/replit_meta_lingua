@@ -90,18 +90,108 @@ export function setupAuth(app: Express) {
     ]);
   });
 
+  // Available courses endpoint
+  app.get("/api/courses", authenticateToken, (req: any, res) => {
+    res.json([
+      {
+        id: 1,
+        title: "Persian Language Fundamentals",
+        description: "Master the basics of Persian language with native instructors",
+        thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop",
+        language: "Persian",
+        level: "Beginner",
+        instructorId: 1,
+        price: 25000, // تومان
+        duration: "8 weeks",
+        isActive: true
+      },
+      {
+        id: 2,
+        title: "Advanced Persian Literature",
+        description: "Explore classical Persian poetry and modern literature",
+        thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=200&fit=crop",
+        language: "Persian",
+        level: "Advanced",
+        instructorId: 2,
+        price: 35000,
+        duration: "12 weeks",
+        isActive: true
+      },
+      {
+        id: 3,
+        title: "Business English for Iranians",
+        description: "Professional English communication skills",
+        thumbnail: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300&h=200&fit=crop",
+        language: "English",
+        level: "Intermediate",
+        instructorId: 3,
+        price: 30000,
+        duration: "10 weeks",
+        isActive: true
+      },
+      {
+        id: 4,
+        title: "Arabic for Persian Speakers",
+        description: "Learn Arabic with Persian language context",
+        thumbnail: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop",
+        language: "Arabic",
+        level: "Beginner",
+        instructorId: 4,
+        price: 28000,
+        duration: "6 weeks",
+        isActive: true
+      }
+    ]);
+  });
+
   app.get("/api/courses/my", authenticateToken, (req: any, res) => {
     res.json([
       {
         id: 1,
         title: "Persian Language Fundamentals",
-        description: "Master the basics of Persian language",
-        thumbnail: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=200&fit=crop",
+        description: "Master the basics of Persian language with native instructors",
+        thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop",
         progress: 68,
         language: "Persian",
-        level: "Beginner"
+        level: "Beginner",
+        enrolledAt: "2025-05-15T10:00:00Z",
+        nextLesson: "Lesson 7: Persian Grammar Basics",
+        completedLessons: 6,
+        totalLessons: 12
       }
     ]);
+  });
+
+  // Course enrollment endpoint
+  app.post("/api/courses/:id/enroll", authenticateToken, (req: any, res) => {
+    const courseId = parseInt(req.params.id);
+    
+    res.json({
+      message: "Successfully enrolled in course!",
+      enrollment: {
+        id: Date.now(),
+        courseId: courseId,
+        userId: req.user?.userId || 1,
+        enrolledAt: new Date().toISOString(),
+        progress: 0
+      }
+    });
+  });
+
+  // Update course progress
+  app.put("/api/courses/:id/progress", authenticateToken, (req: any, res) => {
+    const courseId = parseInt(req.params.id);
+    const { lessonId, completed } = req.body;
+    
+    res.json({
+      message: "Progress updated successfully",
+      progress: {
+        courseId,
+        lessonId,
+        completed,
+        newProgress: Math.min(100, (lessonId / 12) * 100)
+      }
+    });
   });
 
   app.get("/api/homework/pending", authenticateToken, (req: any, res) => {
