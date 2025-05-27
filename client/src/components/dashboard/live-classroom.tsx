@@ -57,26 +57,6 @@ export function LiveClassroom() {
 
   const { data: liveSessions, isLoading: isLoadingSessions } = useQuery<LiveSession[]>({
     queryKey: ["/api/sessions/live"],
-    queryFn: async () => {
-      const token = localStorage.getItem("auth_token");
-      console.log("Fetching live sessions with token:", token ? "Present" : "Missing");
-      const response = await fetch("/api/sessions/live", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-      console.log("Live sessions response status:", response.status);
-      console.log("Live sessions response headers:", Object.fromEntries(response.headers.entries()));
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log("Error response:", errorText);
-        throw new Error(`Failed to fetch sessions: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("Live sessions data:", data);
-      return data;
-    }
   });
 
   const joinSessionMutation = useMutation({
