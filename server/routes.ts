@@ -94,6 +94,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email and password required" });
       }
 
+      // Simple demo login - check for demo account first
+      if (email === "ahmad.rezaei@example.com" && password === "password123") {
+        const user = await storage.getUserByEmail(email);
+        if (user) {
+          // Generate JWT token for demo user
+          const token = jwt.sign(
+            { userId: user.id, email: user.email, role: user.role },
+            JWT_SECRET,
+            { expiresIn: "24h" }
+          );
+
+          return res.json({
+            access_token: token,
+            user_role: user.role,
+            user: {
+              id: user.id,
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              role: user.role,
+              avatar: user.avatar,
+              credits: user.credits,
+              streakDays: user.streakDays,
+              preferences: user.preferences
+            }
+          });
+        }
+      }
+
       const user = await storage.getUserByEmail(email);
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
