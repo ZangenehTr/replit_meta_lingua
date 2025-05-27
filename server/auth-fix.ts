@@ -242,4 +242,61 @@ export function setupAuth(app: Express) {
       }
     ]);
   });
+
+  // Live classroom endpoints
+  app.get("/api/sessions/live", authenticateToken, (req: any, res) => {
+    res.json([
+      {
+        id: 1,
+        title: "Persian Grammar Fundamentals",
+        tutorName: "Dr. Sara Hosseini",
+        tutorAvatar: "https://images.unsplash.com/photo-1494790108755-2616b612b27c?w=150&h=150&fit=crop&crop=face",
+        scheduledAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes from now
+        duration: 60,
+        language: "Persian",
+        level: "Beginner",
+        participants: 3,
+        maxParticipants: 8,
+        status: "live",
+        roomId: "room_persian_101"
+      },
+      {
+        id: 2,
+        title: "Business English Conversation",
+        tutorName: "James Richardson",
+        tutorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+        scheduledAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour from now
+        duration: 45,
+        language: "English",
+        level: "Intermediate",
+        participants: 5,
+        maxParticipants: 10,
+        status: "scheduled",
+        roomId: "room_business_eng"
+      }
+    ]);
+  });
+
+  app.post("/api/sessions/:id/join", authenticateToken, (req: any, res) => {
+    const sessionId = parseInt(req.params.id);
+    
+    res.json({
+      message: "Successfully joined session",
+      roomId: `room_session_${sessionId}`,
+      sessionToken: `token_${Date.now()}`,
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" }
+      ]
+    });
+  });
+
+  app.post("/api/sessions/:id/leave", authenticateToken, (req: any, res) => {
+    const sessionId = parseInt(req.params.id);
+    
+    res.json({
+      message: "Successfully left session",
+      sessionId: sessionId
+    });
+  });
 }
