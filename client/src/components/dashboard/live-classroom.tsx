@@ -55,28 +55,16 @@ export function LiveClassroom() {
     participants: 0
   });
 
-  const { data: liveSessions } = useQuery<LiveSession[]>({
+  const { data: liveSessions, isLoading: isLoadingSessions } = useQuery<LiveSession[]>({
     queryKey: ["/api/sessions/live"],
-    queryFn: async () => {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch("/api/sessions/live", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      return response.json();
-    }
   });
 
   const joinSessionMutation = useMutation({
     mutationFn: async (sessionId: number) => {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(`/api/sessions/${sessionId}/join`, {
+      const { apiRequest } = await import("@/lib/queryClient");
+      return apiRequest(`/api/sessions/${sessionId}/join`, {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
       });
-      return response.json();
     },
     onSuccess: (data) => {
       initializeWebRTC(data.roomId);
@@ -317,7 +305,19 @@ export function LiveClassroom() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {liveSessions && liveSessions.length > 0 ? (
+          {isLoadingSessions ? (
+            <div className="animate-pulse space-y-4">
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-muted rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4" />
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : liveSessions && liveSessions.length > 0 ? (
             liveSessions.map((session) => (
               <div key={session.id} className="border rounded-lg p-4">
                 <div className="flex items-start justify-between">
