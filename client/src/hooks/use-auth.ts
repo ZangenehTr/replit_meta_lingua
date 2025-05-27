@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 
 interface User {
   id: number;
@@ -32,7 +32,31 @@ export function useAuth() {
 
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: ["/api/users/me"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async () => {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return null;
+
+      try {
+        const response = await fetch("/api/users/me", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem("auth_token");
+            return null;
+          }
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        localStorage.removeItem("auth_token");
+        return null;
+      }
+    },
     retry: false,
     refetchOnWindowFocus: false,
   });
