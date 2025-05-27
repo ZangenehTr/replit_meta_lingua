@@ -57,14 +57,31 @@ export function LiveClassroom() {
 
   const { data: liveSessions, isLoading: isLoadingSessions } = useQuery<LiveSession[]>({
     queryKey: ["/api/sessions/live"],
+    queryFn: async () => {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch("/api/sessions/live", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      if (!response.ok) throw new Error("Failed to fetch sessions");
+      return response.json();
+    }
   });
 
   const joinSessionMutation = useMutation({
     mutationFn: async (sessionId: number) => {
-      const { apiRequest } = await import("@/lib/queryClient");
-      return apiRequest(`/api/sessions/${sessionId}/join`, {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(`/api/sessions/${sessionId}/join`, {
         method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
       });
+      if (!response.ok) throw new Error("Failed to join session");
+      return response.json();
     },
     onSuccess: (data) => {
       initializeWebRTC(data.roomId);
