@@ -1,0 +1,375 @@
+MASTER PROMPT FOR REPLIT AI DEVELOPMENT TEAM
+Project Codename: Meta Lingua Document Version: 1.2 Date: May 27, 2025
+TO: The Replit AI Development Agents
+FROM: Project Lead
+SUBJECT: MASTER INSTRUCTIONS for the Development of the "Meta Lingua" Platform
+1. ROLE AND PRIMARY OBJECTIVE
+You are the lead AI development team tasked with building the "Meta Lingua" platform. Your primary objective is to translate the following Product Requirements Document (PRD) into a fully functional, secure, and high-performance web application. You will use the Replit environment for development, but your ultimate goal is to produce a codebase that is completely portable, downloadable, and capable of being self-hosted independently in Iran.
+2. CORE DIRECTIVES
+You must adhere to these four core directives at all times:
+Be Meticulous and Detail-Oriented: The following PRD is your single source of truth. Every feature, user story, and acceptance criterion must be implemented exactly as described. Before writing or modifying any code, you must refer back to the relevant section of the PRD. Do not omit any details, no matter how small.
+Be Fast and Smart: Generate clean, efficient, and idiomatic code. Use modern best practices for both Python/FastAPI and React/TypeScript. Your implementation should be elegant and performant.
+Be Secure Above All Else: Security is a non-negotiable requirement. You are building an application that will handle user data and financial transactions. You must develop a secure application that is not vulnerable or easily hacked. This includes:
+Input Validation: Rigorously validate and sanitize all user input on both the frontend and backend to prevent XSS, command injection, and other attacks.
+SQL Injection Prevention: Use an Object-Relational Mapper (ORM) like SQLAlchemy or parameterized queries exclusively. Never use string formatting to construct SQL queries.
+Authentication & Authorization: Implement robust token-based security on every protected API endpoint. Check user roles and permissions for every sensitive action.
+Secret Management: All API keys, database credentials, and secret tokens must be stored and accessed exclusively through Replit Secrets during development. They must not be hardcoded.
+Always Remember the End Goal: The application must be downloadable and self-hostable. This is the most critical constraint and overrides all other implementation choices.
+3. CRITICAL TECHNICAL ARCHITECTURE & CONSTRAINTS
+To ensure the final application is portable and self-hostable, you must adhere to the following technology stack.
+WARNING: DO NOT use Replit-native, platform-locked services like Replit DB or Repl Auth. While convenient for development on Replit, they make self-hosting impossible. You must build using a portable, open-source stack from the beginning.
+Backend: Python with the FastAPI framework. This provides a high-performance, structured, and easily deployable backend.
+Frontend: React with TypeScript. Use a standard project structure (e.g., created with Vite).
+Database: PostgreSQL. During development on Replit, you will connect to a free, cloud-hosted PostgreSQL instance (e.g., from Neon, ElephantSQL, or a Supabase project used only for its database). All backend code must use standard Python libraries like SQLAlchemy and psycopg2 to interact with the database. This ensures the connection string can easily be changed to a self-hosted PostgreSQL server in Iran upon final deployment.
+Authentication: Self-Managed JWT (JSON Web Token) System. You will build the authentication logic directly into the FastAPI backend.
+Create endpoints for user registration (/auth/register), login (/auth/token), and token refresh.
+Upon successful login, the backend will generate and sign a JWT containing the user ID and role.
+A reusable FastAPI dependency will be created to protect all necessary endpoints by validating the JWT from the Authorization header.
+File Storage: A local directory within the Replit environment can be used for temporary storage during development. For production-level file uploads (like logos or user photos), you must integrate a library that can interface with an S3-compatible object storage service. This allows the final deployment to point to a self-hosted object storage solution like MinIO.
+WebRTC: All WebRTC functionality must be implemented using a self-hostable media server solution like LiveKit. Your FastAPI backend will communicate with the LiveKit server's API to manage rooms and generate tokens.
+AI Models: All AI features must be implemented by making API calls from the FastAPI backend to a self-hosted Ollama server. The address of the Ollama server will be stored as an environment variable in Replit Secrets.
+4. IRAN-SPECIFIC SANCTIONS & RESTRICTIONS
+The final self-hosted environment is subject to international sanctions and service blockages. Your development must reflect this reality.
+No Dependency on Blocked US Cloud Services: Do not use or embed any services that require a connection to servers that are likely to be blocked. This includes, but is not limited to:
+Google Fonts (fonts should be self-hosted with the application).
+Google Firebase services (FCM for notifications, Firestore, etc.).
+Direct AWS/GCP service APIs.
+Prioritize Open-Source and Self-Hostable: Every component in the stack has been chosen because it is open-source and can be run on private servers within Iran without external dependencies.
+Local Payment & SMS: All integrations for payment and SMS must exclusively use the specified Iranian providers: Shetab and Kavenegar.
+5. DEVELOPMENT & DEPLOYMENT WORKFLOW
+Your entire development process should be guided by this two-phase workflow:
+Phase 1 (Development on Replit): Build the full application within the Replit environment using the portable tech stack defined above. Use cloud-based stand-ins (e.g., a free PostgreSQL instance) for convenience, but ensure the code is not tied to them.
+Phase 2 (Final Goal - Self-Hosting): The final product will be a downloadable ZIP file of the React and FastAPI codebases. This code will then be deployed on servers in Iran, where its configuration will be updated to point to the locally hosted PostgreSQL database, Ollama server, and LiveKit instance.
+Your task begins now. Review the following PRD in its entirety before writing a single line of code. Adhere to these master instructions at all times. The success of this project depends on your precision, security focus, and your understanding of the ultimate self-hosting requirement.
+—————————————————————————————-
+
+
+✅ Overall Vision
+To create "Meta Lingua," a premier, AI-enhanced, multilingual language learning and institute management ecosystem. This platform will be developed using the Replit AI-gent App Maker to generate a modern, high-performance application stack. It will offer a seamless experience across a responsive web platform and dedicated mobile apps (post-MVP).
+The core architecture will be a React (TypeScript) frontend and a Python (FastAPI) backend. Crucially, the entire generated codebase will be downloadable, allowing for independent, secure self-hosting in specific regions like Iran. The platform will serve as a comprehensive solution, featuring a tutor marketplace, an on-demand tutoring service, structured video courses with AI support, an interactive virtual classroom, and a complete Institute Management Platform (IMP)/CRM.
+PART 1: CORE PLATFORM & SHARED FEATURES
+1. System Architecture & Platform Access
+1.1. Platform Delivery:
+Web Platform: A fully responsive web application built with React/Next.js, accessible via all modern web browsers (latest Chrome, Firefox, Safari, Edge).
+Mobile Applications (Post-MVP): Dedicated mobile apps for iOS and Android, built with React Native to leverage shared logic and components from the web frontend.
+1.2. Core Technology Stack (Replit Development & Self-Hosting Model):
+Development Environment: Replit AI-gent App Maker will be used to generate, develop, and test the application's frontend and backend code.
+Frontend: React with TypeScript. Developed in Replit and downloadable as a standard React/Next.js project.
+Backend: Python with FastAPI. The entire backend is a standard, high-performance FastAPI application. All business logic will be implemented as API endpoints (e.g., @app.get('/api/...')). The full, structured project will be downloadable from Replit.
+Database: Self-hosted Supabase (PostgreSQL). The FastAPI backend will use the psycopg2 or asyncpg Python library to connect to this database instance for all data storage and retrieval.
+Authentication: Self-hosted Supabase Auth. The React frontend will use the supabase-js client library for all user-facing auth flows. The FastAPI backend will protect API routes by validating JWTs issued by Supabase using a dependency injection.
+AI Models: Self-hosted Ollama (e.g., Llama 3, Mistral). The FastAPI backend will have dedicated endpoints that make secure server-to-server HTTP requests to your internal Ollama server.
+WebRTC: Self-hosted media server (e.g., LiveKit). The FastAPI backend will handle all signaling and session logic by communicating with the LiveKit server's API to generate client access tokens.
+Payment & SMS Gateways: Kavenegar & Shetab APIs. The FastAPI backend will contain dedicated Python modules for securely interacting with these external Iranian service providers.
+1.3. Data Residency & Iran-Safe Infrastructure: All downloaded code (FastAPI, React) and self-hosted services (Supabase, Ollama, LiveKit) will be located and operated within Iran.
+1.4. White-Labeling:
+Technical Implementation: An admin in the React UI will update branding settings, calling a PUT /api/institute/branding FastAPI endpoint. The backend saves this to the database. The main React app layout fetches this configuration on load and applies it.
+1.5. Day/Night Mode:
+Technical Implementation: A toggle in the React UI updates the theme locally and calls a PUT /api/users/me/preferences FastAPI endpoint to save the theme preference in the user's profile.
+1.6. Multilingual UI Support:
+Technical Implementation: The React frontend will use i18next. The user's language choice calls the same PUT /api/users/me/preferences endpoint to save the language preference.
+2. User Roles, Permissions & Authentication
+2.1. User Roles: Admin, Teacher/Tutor, Mentor, Student, Supervisor, Call Center Agent, Accountant.
+Technical Implementation: Roles are stored as a text field in the profiles table in Supabase. FastAPI will use a reusable dependency (Depends(get_current_user_with_role('Admin'))) to protect API endpoints, ensuring only authorized users can access them.
+2.2. Authentication System (Supabase Auth & FastAPI):
+Technical Implementation: The React frontend handles all signup/login/reset flows with supabase-js. For protected actions, it sends the Supabase JWT in the Authorization: Bearer <token> header to the FastAPI backend. FastAPI validates this token for every API call on protected routes. 2FA logic is handled by a dedicated FastAPI endpoint that calls the Kavenegar API.
+2.3. Unified User Profile Management:
+Technical Implementation: Managed via RESTful FastAPI endpoints: GET /api/users/me, PUT /api/users/me, GET /api/admin/users/{user_id}. Pydantic models in FastAPI will be used to validate incoming data for profile updates.
+3. Notifications System (Platform-Wide)
+3.1. Channels: In-App, Email, SMS (Kavenegar).
+3.2. Key Notification Triggers: Authentication, Bookings, Messaging, Courses, Homework, Payments, etc.
+3.3. User Notification Preferences:
+Technical Implementation: User actions in React (e.g., booking a lesson) call a primary FastAPI endpoint (e.g., POST /api/bookings). After successfully creating the booking in the database, this primary function will call a separate, internal "notification service" function within the FastAPI application. This service function checks the user's notification preferences from the database and dispatches the required notifications (writes to notifications table for in-app, calls Kavenegar API for SMS, calls email service).
+
+PART 2: STUDENT-FACING LEARNING PLATFORM
+(All features in this section will be implemented as React components that fetch data from and send commands to the FastAPI backend.)
+4. Student Dashboard & Core Experience
+4.1. Personalized Dashboard: At-a-glance view of the student's next lesson, course progress, remaining credits, unread messages, and pending homework. Includes quick action buttons and personalized recommendations.
+Technical Implementation Notes:
+Frontend (React): The main dashboard component at /dashboard will be the primary view after login.
+Backend (Python/Flask): On load, the React component will call a main dashboard endpoint, GET /api/dashboard. This single Flask route will fetch all necessary data for the logged-in student from Replit DB. It will look up the user's ID (provided by Repl Auth), then fetch their next lesson from the lessons key, their course progress from the enrollments key, and so on. It will aggregate this into a single JSON response to minimize loading time.
+Data Structure (Replit DB): User data might be structured like this: user_{replit_user_id} would be a key whose value is a JSON string containing {"name": "...", "enrolled_courses": [...], "booked_lessons": [...]}.
+4.2. "My Courses" Section: A list of all structured video courses the student is enrolled in, showing title, thumbnail, instructor, and overall progress.
+Technical Implementation Notes:
+Frontend (React): A dedicated page at /my-courses. The component will fetch and display a list of courses.
+Backend (Python/Flask): The component calls GET /api/my-courses. The Flask route gets the user's ID from Repl Auth, retrieves the user's data from Replit DB, and gets the list of enrolled_courses. For each course ID in that list, it looks up the full course details from a general courses_{course_id} key and returns the combined data to the frontend.
+4.3. "My Booked Lessons" Section: A calendar and list view of all upcoming and past scheduled lessons with marketplace tutors. Includes details and links to join, reschedule, or cancel.
+Technical Implementation Notes:
+Frontend (React): A page at /my-lessons featuring a calendar component (like react-big-calendar) and a list view.
+Backend (Python/Flask): The frontend calls GET /api/my-lessons. The Flask route retrieves the user's booked_lessons list from Replit DB. It then fetches the full details for each lesson and its associated tutor, returning a structured list of events for the calendar and list view to render. The "Join Lesson" button will only become active close to the lesson's start time.
+4.4. "My Mentors / On-Demand" Section: Displays the current balance of on-demand conversation minutes or subscription status. Includes a link to call a mentor and a history of past calls.
+Technical Implementation Notes:
+Frontend (React): A simple component that displays the user's credit balance and a "Call Now" button.
+Backend (Python/Flask): The data is fetched from the main GET /api/dashboard endpoint or a dedicated GET /api/user/credits endpoint. The backend simply retrieves the on_demand_minutes value from the user's data in Replit DB.
+4.5. "Progress & Achievements" Section: Detailed visual reports on learning progress, time spent, courses completed, average quiz scores, and certificates earned.
+Technical Implementation Notes:
+Frontend (React): A data-heavy page at /progress using a charting library like Recharts to visualize the data received from the backend.
+Backend (Python/Flask): The frontend calls GET /api/progress-report. This is a computationally intensive route. The Flask backend will need to fetch all of a user's activity—lesson completions, quiz scores, session durations—from various keys in Replit DB and perform calculations in Python to generate the statistics for the report. For example, it will iterate through all quiz_attempts linked to the user to calculate the average score.
+4.6. Student Profile & Settings: Allows the student to edit personal information, manage login/security settings (password, 2FA if applicable), set platform preferences (language, theme), and view billing history.
+Technical Implementation Notes:
+Frontend (React): A settings page at /settings with multiple tabs. The "Profile" tab will have a form to update user info.
+Backend (Python/Flask): The form submission will call a POST /api/user/profile endpoint. The Flask route will receive the JSON data, validate it, and update the user's record in Replit DB. Since Repl Auth manages the core login, password changes are handled through Replit itself. This section would manage profile data within the app (like name, bio, learning goals). Billing history would be fetched from GET /api/billing/history, which retrieves a list of transaction records stored in Replit DB.
+5. Structured Video Courses Module
+5.1. Course Catalog & Enrollment: Students can browse a catalog of available courses, view detailed descriptions, syllabi, and instructor bios, and enroll in them.
+Technical Implementation Notes:
+Frontend (React): A main page at /courses will serve as the public catalog. This page will call a non-protected FastAPI endpoint to fetch and display all published courses. Pagination will be implemented on the frontend to handle a large number of courses.
+Backend (FastAPI): An endpoint GET /api/public/courses?page=1&limit=12 will fetch course data from the courses table in Supabase. Enrolling will be handled by a protected endpoint, POST /api/enrollments, which takes a course_id. The backend logic will first verify the user is authenticated and then create a new record in the enrollments table, linking the user_id to the course_id.
+5.2. Lesson Interface (Web & Mobile): Students can view video lessons, access supplementary materials (text, PDFs), navigate the course structure, and mark lessons as complete. Prerequisite logic can lock future lessons.
+Technical Implementation Notes:
+Frontend (React): A dynamic route page like /student/courses/{courseId}/lessons/{lessonId}. It will use a standard video player component (e.g., ReactPlayer) to stream video from the URL provided by the backend. The course navigation sidebar will highlight the current lesson and show which future lessons are locked.
+Backend (FastAPI): The page will load data from GET /api/courses/{courseId}/lessons/{lessonId}. This endpoint will return the lesson data and also a boolean is_unlocked field based on checking if the prerequisite lessons have been marked as complete in the lesson_progress table.
+"Mark as Complete" Logic: The button in the React UI calls a protected endpoint, POST /api/lessons/{lesson_id}/complete. The FastAPI backend creates or updates a record in the lesson_progress table for that user_id and lesson_id. This action could trigger a database function to recalculate and update the overall course completion percentage in the enrollments table.
+5.3. 5.3. AI-Powered Lesson Assistant:
+Technical Implementation: Each AI feature is a distinct FastAPI endpoint to isolate logic.
+Quiz Generation: The React frontend calls POST /api/lessons/{lesson_id}/generate-quiz. The FastAPI endpoint retrieves lesson text from Supabase, calls the self-hosted Ollama API, validates the response, and returns a structured JSON quiz.
+AI Q&A Chat: The React chat component sends messages to POST /api/lessons/{lesson_id}/chat. The FastAPI endpoint maintains context and streams responses from the Ollama API.
+Pronunciation Feedback: The React component records audio and sends it to POST /api/ai/pronunciation-feedback. The FastAPI backend sends the audio to a self-hosted Whisper.cpp API, gets the transcript, and returns the analysis.
+5.4. Flashcard System: Users can create decks manually or have them AI-generated from lessons. The system supports practice modes, including a Spaced Repetition System (SRS), and tracks user progress.
+Technical Implementation Notes: This is a full CRUD (Create, Read, Update, Delete) module.
+Data Model (Supabase): Requires several tables:
+flashcard_decks (deck_id, user_id, name, course_id (optional)).
+flashcards (card_id, deck_id, front_content, back_content).
+flashcard_progress (progress_id, card_id, user_id, due_date, interval_days, ease_factor).
+Backend (FastAPI): A full suite of RESTful endpoints will be created: POST /api/decks, POST /api/decks/{deck_id}/flashcards, GET /api/decks/{deck_id}/practice, etc.
+AI Generation: An endpoint POST /api/lessons/{lesson_id}/generate-flashcards will call Ollama with a prompt to extract key vocabulary and definitions from the lesson text and automatically populate a new deck.
+SRS Logic: A POST /api/flashcards/{card_id}/review endpoint will receive the user's self-assessed performance on a card (e.g., a score from 1-5). The FastAPI backend will implement an SRS algorithm (like a simplified SM-2) in Python to calculate the next review due_date, interval_days, and ease_factor, then update the flashcard_progress table for that user and card.
+5.5. Offline Content Access (Mobile App Specific): Students can download video lessons, text materials, and flashcard decks for offline access on the mobile app. Progress syncs when they come back online.
+Technical Implementation Notes: This is a Post-MVP feature for the React Native mobile app.
+Manifest Endpoint: The mobile app will call a FastAPI endpoint like GET /api/courses/{course_id}/content-manifest. The backend will return a JSON object listing the URLs for all downloadable assets (videos, PDFs, text files) and the raw data for flashcards associated with that course.
+Download Manager (React Native): The mobile app will use a library like rn-fetch-blob to manage the background downloading and storage of these assets in the device's secure local storage. Textual data and flashcards will be stored in a local mobile database like WatermelonDB or SQLite.
+Offline Progress Tracking: The mobile app will write all user progress (lessons completed, quizzes taken, flashcards reviewed) to its local database while offline.
+Syncing Logic: When the app detects an internet connection, it will enter a "syncing" state. It will call a batch API endpoint on the backend, POST /api/sync-progress, sending an array of all actions the user took while offline. The FastAPI backend will then process this batch transactionally, updating the main Supabase database with the user's progress.
+
+6. Tutor Marketplace & Scheduled Lesson System (Web & Mobile)
+6.1. Tutor Discovery & Profiles: Public, searchable directory of tutors with detailed profiles including verified qualifications, video intros, specializations, accents, and student reviews.
+Technical Implementation Notes: The React frontend will display tutor profiles fetched from a GET /api/tutors/{tutor_id} FastAPI endpoint. The "Verified" badge will be a boolean field in the tutor_profiles table in Supabase, set by an admin via their UI. The real-time availability calendar will be a React component that fetches availability data from GET /api/tutors/{tutor_id}/availability, which the backend compiles from the tutor's settings.
+6.2. Advanced Search and Filtering for Tutors: Filter by price, availability, language, specialization, accent, rating. Sort by popularity, price, etc.
+Technical Implementation Notes: This will be powered by a single, robust FastAPI endpoint: GET /api/tutors. It will be designed to accept multiple query parameters (e.g., ?price_min=10&price_max=50&specialty=IELTS&sort_by=rating_desc). The backend logic will dynamically build a complex SQL WHERE and ORDER BY clause based on the provided parameters to filter and sort results efficiently at the database level before sending them to the client.
+6.3. Trial Lesson Management: Tutors can offer a one-time discounted/free trial lesson.
+Technical Implementation Notes: A boolean flag offers_trial will be in the tutor_profiles table. A separate table, trial_lessons_taken, will link student_id and tutor_id to ensure a student can only book one trial per tutor. The POST /api/bookings/initiate endpoint will check this table before allowing a trial lesson booking.
+6.4. Booking, Payment, and Lesson Management Flow: Select time slots, book packages, secure payment via Shetab, reschedule/cancel, access recordings.
+Technical Implementation Notes: This is a key multi-step transaction flow.
+Initiation: React frontend calls POST /api/bookings/initiate.
+Payment Link: The FastAPI backend creates a pending booking in the database, calls the Shetab API to generate a payment link, and returns this link to the client.
+Payment: The client is redirected to Shetab.
+Confirmation: Shetab calls a POST /api/payments/shetab-callback webhook on the FastAPI backend. The backend verifies the payment and updates the booking status to confirmed.
+Calendar Integration: A GET /api/bookings/{booking_id}/ical endpoint will generate a standard .ics file on-the-fly for users to add to their calendars.
+6.5. Pre-Booking Communication: Secure messaging for prospective students to ask tutors questions.
+Technical Implementation Notes: A messaging system backed by a messages table in Supabase. A POST /api/messages endpoint will handle sending messages. The React UI will poll a GET /api/messages/unread-count endpoint to show notifications.
+7. On-Demand Instant Tutoring Service (Web & Mobile)
+7.1. Tutor/Mentor "Online & Available" System: Real-time status display.
+Technical Implementation Notes: This requires a real-time presence system. For robustness, this can be implemented with WebSockets. When a tutor logs in and toggles their availability, their React client establishes a WebSocket connection to a dedicated endpoint on the FastAPI server. The server maintains a set of available_tutors. An alternative for simpler MVP is a "heartbeat" where the tutor's client sends a POST /api/tutors/me/heartbeat request every 30-60 seconds.
+7.2. Student "Find a Tutor Now" Interface: A gallery of currently available tutors.
+Technical Implementation Notes: The React UI will call GET /api/tutors/available. The FastAPI backend will return a list of tutors who are currently connected via WebSocket or whose last heartbeat was within the required timeframe.
+7.3. Call Initiation & Connection: "Call Now" button connects the student to a tutor.
+Technical Implementation Notes: The student's client calls POST /api/ondemand/call. The FastAPI backend selects an available tutor (e.g., round-robin), sends them a "call-request" message via WebSocket, and if the tutor accepts, the backend initiates the LiveKit token generation flow for both users to join a new, unique room.
+8. 24/7 Mentor Service (for Video Course Support - Web & Mobile)
+8.1. Integration with Video Courses: Hybrid packages with video course + live mentor minutes.
+Technical Implementation Notes: The enrollments table in Supabase will have a column for mentor_minutes_balance.
+8.2. Contextual Mentor Dashboard (On Call Accept): The mentor sees the student's profile, course progress, quiz scores, and previous mentor notes.
+Technical Implementation Notes: When a mentor accepts a call, their React UI calls a GET /api/mentoring/sessions/{session_id}/context endpoint. The FastAPI backend fetches the student's complete profile, their progress in the specific course (modules watched, quiz scores from the quiz_attempts table), and any previous notes from a mentor_notes table. This data is aggregated into a single JSON object to fully equip the mentor for the call.
+
+PART 6: NON-FUNCTIONAL REQUIREMENTS, ASSUMPTIONS, RISKS
+20. Non-Functional Requirements (NFRs)
+Performance: Fast load times, API responses, and WebRTC latency.
+Technical Implementation Notes: FastAPI's asynchronous nature will help meet API response time goals. Proper database indexing on frequently queried columns in Supabase (PostgreSQL) is critical. The Next.js frontend will use code-splitting, static site generation (SSG) for public pages, and image optimization to ensure fast load times.
+Scalability: Horizontal scaling for backend and WebRTC.
+Technical Implementation Notes: The self-hosted architecture is key. The FastAPI backend is stateless, allowing multiple instances to be run behind a load balancer. The self-hosted Supabase can be scaled vertically (more powerful server) or horizontally (read replicas). LiveKit is designed for distributed, scalable deployments.
+Security: OWASP Top 10, encryption, RBAC, DDoS protection.
+Technical Implementation Notes: FastAPI's dependency injection system will enforce authentication and role-based authorization on every necessary endpoint. Pydantic models provide strict data validation to prevent many injection-style attacks. All passwords are handled by Supabase Auth (bcrypt hashing). A web application firewall (WAF) should be configured in front of the self-hosted servers.
+Usability & Accessibility: WCAG 2.1 AA guidelines.
+Technical Implementation Notes: The React frontend will be developed using semantic HTML and ARIA attributes where necessary. Automated accessibility testing tools (e.g., Axe) will be part of the development and CI/CD process.
+Maintainability: Modular, documented code, automated testing.
+Technical Implementation Notes: The clear separation between the React frontend and FastAPI backend is the primary driver of maintainability. Following standard project structures for both frameworks is essential. A robust suite of unit tests (using pytest for FastAPI) and integration tests will be required.
+Reliability/Availability: 99.9% uptime for core platform.
+Technical Implementation Notes: In a self-hosted environment, this requires redundancy. At least two instances of the FastAPI server should be run behind a load balancer. A robust backup and restore strategy must be in place for the Supabase PostgreSQL database. Application monitoring tools (e.g., Prometheus/Grafana) are essential for tracking health and alerting on issues.
+21. Assumptions
+Users have stable internet and compatible devices.
+Shetab & Kavenegar have stable, documented APIs.
+Self-hosted AI/speech tech achieves sufficient accuracy/performance.
+Adequate server infrastructure will be provisioned.
+Technical Implementation Notes: The assumption of "adequate server infrastructure" must be quantified. This specifically means provisioning servers with sufficient CPU/RAM for the FastAPI instances and the database, and critically, servers with dedicated GPUs for the self-hosted Ollama AI models to ensure acceptable response times for AI features.
+22. Open Questions & Potential Risks
+WebRTC Infrastructure: Complexity, cost, and maintenance of a scalable, self-hosted WebRTC service.
+Technical Mitigation: This risk is mitigated by choosing a comprehensive WebRTC SFU (Selective Forwarding Unit) like LiveKit rather than building from raw WebRTC primitives. LiveKit handles the complex session management, transcoding, and scalability aspects. The risk then shifts to the operational cost and expertise needed to maintain the LiveKit servers.
+AI Model Performance & Resources: Real-world performance of self-hosted Ollama models and GPU hardware requirements.
+Technical Mitigation: This risk requires a dedicated R&D phase. Different open-source models (e.g., a 7B vs a 13B parameter model) must be benchmarked on target GPU hardware to find the optimal balance between response quality, speed, and cost for features like quiz generation and contextual chat.
+Scope Creep & MVP Definition: The risk of this massive PRD leading to an unmanageable initial build.
+Technical Mitigation: The phased development plan (MVP) is the primary mitigation. Sticking rigidly to the defined MVP feature set is a project management discipline, but technically, it means building only the specified FastAPI endpoints and React components for Phase 1 and ensuring the architecture allows for the other features to be added later without a complete rewrite.
+
+
+
+PART 3: LIVE INTERACTIVE CLASSROOM
+9. WebRTC Virtual Classroom Environment
+9.1. Core Audio/Video & 9.2-9.3 Controls:
+Technical Implementation: The virtual classroom is built around a tight interaction between React, FastAPI, and LiveKit.
+Join Request: The student's React component calls a protected FastAPI endpoint: POST /api/lessons/{lesson_id}/join.
+Backend Logic: The FastAPI function authenticates the user, verifies they are enrolled in the lesson, then makes a server-to-server API call to the self-hosted LiveKit instance to request a time-limited access token for that specific user and room.
+Token Response: FastAPI returns the generated LiveKit token to the React client.
+WebRTC Connection: The React client uses the received token and the livekit-client or @livekit/components-react library to establish a direct connection to the self-hosted LiveKit media server.
+9.6. Interactive Whiteboard & 9.7 File Sharing:
+Technical Implementation: Whiteboard state changes and file-sharing events can be sent as data messages over the LiveKit data channel, ensuring low latency. For persistence, the final state of the whiteboard or the list of shared files can be sent to a FastAPI endpoint (POST /api/lessons/{lesson_id}/assets) to be saved in the database.
+9.8. In-Session Interactive Quiz Games:
+Technical Implementation: The teacher's React UI calls a FastAPI endpoint like POST /api/lessons/{lesson_id}/quiz/launch. The backend then uses the LiveKit server-side SDK to broadcast the quiz data payload to all participants in the room simultaneously via the data channel. Student answers are sent back the same way for the teacher's UI to aggregate.
+
+PART 4: INSTITUTE MANAGEMENT PLATFORM (IMP) / CRM
+(PRIMARILY WEB, KEY INFO ON MOBILE FOR ADMINS)
+10. Student Information System (SIS)
+10.1. Comprehensive Student Profiles: All personal details, guardian info, learning history, goals, communication logs, payment history, attendance, homework, and feedback notes.
+Technical Implementation Notes: This will be a detailed view component in the admin section of the React app (e.g., at route /admin/students/{student_id}). On load, it will call a protected FastAPI endpoint, GET /api/admin/students/{student_id}. The backend will execute a series of complex SQL queries with joins across profiles, enrollments, payments, communication_logs, and other tables in the Supabase database to aggregate all relevant information into a single, comprehensive JSON object for the React UI to display.
+10.2. Advanced Registration & Enrollment: Customizable online forms, placement testing, manual/self-enrollment with prerequisite checks, batch enrollment.
+Technical Implementation Notes: The admin UI will have forms for manual and batch enrollment. Submitting these forms will trigger API calls like POST /api/admin/enrollments. The FastAPI backend will handle the business logic, such as checking for prerequisites and seat capacity before creating new records in the enrollments table.
+10.3. Level & Progress Management: Admin-definable language levels (e.g., CEFR A1-C2). Detailed progress tracking and automated advancement criteria.
+Technical Implementation Notes: Language levels will be stored in a levels table. A student's progress is an aggregation of their completed lessons, quiz scores, etc. A nightly or on-demand FastAPI job (POST /api/admin/students/evaluate-advancement) could be triggered to evaluate students against admin-defined criteria and update their level automatically.
+10.4. Certificate Generation: Admins design and automate the generation of branded course/level completion certificates (PDF).
+Technical Implementation Notes: An admin clicks a "Generate Certificate" button in the React UI. This calls POST /api/students/{student_id}/certificate?course_id={course_id}. The FastAPI backend fetches student and course completion data, populates a predefined HTML/CSS template (stored as a template file), uses a Python library like WeasyPrint to render the HTML into a PDF, and returns the PDF file as a downloadable FileResponse.
+11. Course & Curriculum Management (Admin/Supervisor/Teacher)
+11.1. Advanced Course Builder: Create diverse courses (video, live class, hybrid). Define modules, lessons, objectives, prerequisites, resources, pricing, and enrollment capacity.
+Technical Implementation Notes: This maps directly to a set of RESTful endpoints in FastAPI: POST /api/courses, GET /api/courses/{course_id}, PUT /api/courses/{course_id}. The React admin interface will provide a rich course builder UI that makes calls to these endpoints. Uploaded content (videos, PDFs) will be sent to dedicated endpoints that stream the files to Supabase Storage, with the database only storing the file paths.
+12. Class Scheduling & Management (Admin/Supervisor for Institute-Led Group Classes)
+12.1. Group Class Creation & Configuration: Schedule classes defining course/level, dates, recurring schedules, teacher(s), max capacity, and auto-generated virtual classroom link.
+Technical Implementation Notes: A scheduling UI in React (perhaps using a library like FullCalendar) will call a POST /api/classes endpoint. The FastAPI backend will handle the logic for creating class schedules, including recurring events (using a library like python-dateutil), and managing rosters in the database.
+12.4. Automated Attendance Tracking: Log WebRTC session join/leave times, flag lates/absences.
+Technical Implementation Notes: The self-hosted LiveKit server will be configured to send webhooks to a specific FastAPI endpoint (e.g., POST /api/webhooks/livekit). When a user joins or leaves a room, LiveKit sends a payload. The backend uses this data to log precise attendance records in an attendance table, linking the user to the specific class session.
+13. Teacher, Tutor & Mentor Management (Admin/Supervisor)
+13.3. Payroll Management: Automated calculation based on completed sessions/minutes, rates, commissions. Generate payroll reports.
+Technical Implementation Notes: The admin UI will have a "Generate Payroll" feature. This calls a FastAPI endpoint like GET /api/admin/payroll/reports?start_date=...&end_date=.... The backend logic will query the database for all completed sessions within the date range, join with the teachers' contract/rate information, calculate the total due for each teacher, and return a detailed report.
+14. IMP Communication & Collaboration Tools
+14.2. Advanced Homework Module: Teachers assign homework (text, files), students submit, teachers grade and provide feedback.
+Technical Implementation Notes: This will be a full CRUD API module in FastAPI. POST /api/classes/{class_id}/assignments, GET /api/assignments/{assignment_id}, POST /api/assignments/{assignment_id}/submissions (by students), and POST /api/submissions/{submission_id}/grade (by teachers). File uploads will use Supabase Storage.
+15. Financial Management & Billing (Admin/Accountant)
+15.4. Marketplace Payouts: Automated calculation and system for managing payouts to marketplace tutors (after platform commission).
+Technical Implementation Notes: An admin triggers a "Process Payouts" job via the React UI. This calls a FastAPI endpoint POST /api/admin/payouts/process. The backend calculates each tutor's earnings from completed marketplace lessons, subtracts the platform commission (a value stored in an institute_config table), and creates records in a payouts table with a pending status for the accountant to review and execute.
+16. Supervision & Quality Assurance System (Supervisor, Admin)
+16.1. Live Session Observation: Supervisors silently join any live WebRTC session.
+Technical Implementation Notes: The Supervisor's "Observe Session" button in React calls a special FastAPI endpoint, e.g., POST /api/lessons/{lesson_id}/observe. This endpoint calls the LiveKit server-side API to generate a token with can_publish: false and can_publish_data: false, but with hidden: true permissions, allowing them to watch and listen without appearing as a participant.
+17. Advanced Reporting & Analytics (IMP Dashboard)
+Technical Implementation Notes: Each report in the admin dashboard corresponds to a specific FastAPI endpoint (e.g., GET /api/admin/reports/student-enrollment-trends). The backend will perform complex SQL aggregation queries (using GROUP BY, COUNT, SUM, window functions, etc.) on the Supabase database to generate the data. The React frontend will use a charting library (e.g., Recharts) to visualize the JSON data returned by the API.
+18. Lead Management & Call Center CRM (Call Center Agent, Manager)
+Technical Implementation Notes: This is a standard RESTful API module within FastAPI for CRM functionality: POST /api/leads, GET /api/leads, PUT /api/leads/{lead_id}, etc. Pydantic models will strictly define the structure of a Lead. The VoIP integration will involve the third-party service calling a webhook on the FastAPI backend (e.g., POST /api/webhooks/voip/call-ended) to log the call details against the lead's profile.
+
+PART 5: MARKETING & EXTERNAL INTEGRATIONS
+(ADMIN/MANAGER)
+19. Marketing Automation & Communication Tools
+19.1. Integrated Email Marketing: List segmentation, campaign builder, automated sequences, analytics.
+Technical Implementation Notes: The marketing UI in React will call FastAPI endpoints like POST /api/marketing/campaigns. For large sends, the backend should use a task queue like Celery (with Redis or RabbitMQ as a broker) to process the email campaign asynchronously in the background, preventing API timeouts. Analytics (opens/clicks) are handled by embedding a 1x1 tracking pixel image served by a FastAPI endpoint (GET /api/tracking/pixel/{campaign_id}) and by routing all email links through a redirect endpoint (GET /api/tracking/click/{campaign_id}?url=...).
+19.3. Social Media Management & Integration: Connect accounts, schedule posts, monitor interactions.
+Technical Implementation Notes: This will require an OAuth2 flow for the admin to authorize the application. The FastAPI backend will securely store the obtained access tokens (encrypted in the database). Endpoints like POST /api/social/schedule-post will add posts to a queue. A separate, scheduled background job (e.g., a cron job running a Python script) will check this queue and use the stored tokens to post to the relevant social media APIs at the scheduled time.
+19.4. Public-Facing Website & CMS (Content Management System):
+Technical Implementation Notes: This is a perfect use case for Next.js's features in the React frontend.
+Dynamic Pages: The public-facing course catalog and blog will be Next.js pages that use getStaticProps or getServerSideProps to fetch data from public (non-protected) FastAPI endpoints, such as GET /api/public/courses or GET /api/public/blog-posts. This ensures excellent SEO.
+CMS/Builder: The "Landing Page Builder" in the admin panel will be a React UI that saves page definitions (e.g., a JSON array of components like { "type": "Hero", "title": "..." }) to the database via a FastAPI endpoint. A dynamic Next.js page (e.g., /pages/[slug].js) will then fetch this JSON and map it to React components to render the custom page.
+
+META LINGUA - PHASED DEVELOPMENT PLAN (MVP)
+MVP - You are absolutely right. I sincerely apologize.
+You correctly pointed out that my previous response was incomplete and did not cover all the user stories from the MVP plan. I was following up on the "Acceptance Criteria" request and failed to re-integrate all the stories we had previously discussed. Thank you for pasting the list; it makes it perfectly clear what was missed.
+My goal is to provide a complete and useful document. I will now correct this by providing the full list of MVP user stories, each with its complete Acceptance Criteria and the new, detailed Technical Implementation Notes specifically for the Replit architecture.
+
+MVP - Step 1: Detailed User Stories & Acceptance Criteria (Full Replit Edition)
+A. Core Platform & Shared Features (MVP Subset)
+A1. User Authentication & Basic Profiles
+US-MVP-AUTH-001: New Student Signup
+As a new prospective Student, I want to be able to sign up for Meta Lingua, So that I can create a 'Student' account and access the learning platform.
+Acceptance Criteria:
+When I authenticate for the first time, a user account is created for me.
+A corresponding user profile is automatically created in the database with my name and a default role of 'Student'.
+I am logged in and can access the platform.
+Technical Implementation Notes (Replit):
+Authentication: This is handled by Replit Authentication. The UI will feature a "Login / Sign Up with Replit" button which triggers the Repl Auth modal.
+Backend (Python/Flask): After a user authenticates for the first time, the Flask backend receives their identity in the request headers (e.g., X-Replit-User-Id). A dedicated Flask route (e.g., /api/auth/first-login-hook) will check if a profile for this ID exists in Replit DB. If not, it creates a new key (e.g., user_{replit_user_id}) and stores a JSON object with their name and role: 'Student'.
+US-MVP-AUTH-002: User Login (Student, Admin, Teacher/Tutor)
+As a registered Student, Admin, or Teacher/Tutor, I want to log in, So that I can access my respective dashboard.
+Acceptance Criteria:
+When I successfully authenticate, my session is established.
+If my role in the database is 'Student', I am redirected to /student/dashboard.
+If my role is 'Admin', I am redirected to /admin/dashboard.
+If my role is 'Teacher/Tutor', I am redirected to /teacher/dashboard.
+Technical Implementation Notes (Replit):
+Authentication: The "Login" button triggers the Replit Authentication modal.
+Frontend (React): After successful authentication, the React app calls a backend endpoint to get the user's role.
+Backend (Python/Flask): The frontend calls GET /api/user/role. The Flask route reads the X-Replit-User-Id from the header, looks up the user's profile in Replit DB (e.g., db[f"user_{replit_user_id}"]), and returns the role field. The React frontend then performs the client-side redirect.
+US-MVP-PROFILE-001: User Edits Own Basic Profile Information (Name)
+As a logged-in user, I want to access a "Profile Settings" page to update my full name, So that I can keep my information accurate.
+Acceptance Criteria:
+I can navigate to a "Profile Settings" page.
+My current full name is displayed and editable.
+When I save changes, my name is updated in the database and a success message is shown.
+Technical Implementation Notes (Replit):
+Frontend (React): A settings page at /settings/profile has a form pre-populated with data from the backend.
+Backend (Python/Flask): The frontend calls GET /api/user/profile to get data. On submit, it calls POST /api/user/profile with the new data. The Flask backend reads the X-Replit-User-Id, fetches the user's JSON profile from Replit DB, updates the full_name field, and saves the object back to the database.
+A2. Platform Wide Features (MVP)
+US-MVP-PROFILE-002: Teacher/Tutor Edits Basic Marketplace Profile
+As an approved Teacher/Tutor, I want to edit my marketplace-specific profile details (hourly rate, bio, languages, specialty), So that students can learn more about me.
+Acceptance Criteria:
+On my profile settings page, I can edit my hourly rate, bio, languages spoken, and select one primary specialty from an admin-defined list.
+I can upload/change my profile photo.
+When I save, the details are updated and reflected on my public marketplace profile.
+Technical Implementation Notes (Replit):
+Frontend (React): A form in the teacher's settings area (/teacher/settings/profile).
+Backend (Python/Flask): The form submission calls POST /api/tutor/profile. The Flask route, protected to ensure the user has a 'Teacher/Tutor' role, updates the teacher's specific profile key in Replit DB (e.g., tutor_{replit_user_id}). For the photo, the frontend will upload to a service like Cloudinary, and the returned URL will be saved in the tutor's profile data.
+US-MVP-PLAT-001: Admin Sets Basic White-Labeling (Name & Logo)
+As an Admin, I want to upload an institute logo and set an institute display name, So that this branding is reflected across the platform.
+Acceptance Criteria:
+In an admin settings area, I can upload a logo image and input a display name.
+When saved, the logo and name appear in the application header for all users.
+Technical Implementation Notes (Replit):
+Frontend (React): An admin-only page at /admin/settings.
+Backend (Python/Flask): The settings are saved via a POST /api/admin/branding endpoint. This Flask route stores all branding information under a single, well-known key in Replit DB, such as db["institute_config"]. The logo is uploaded to Cloudinary, and its URL is stored in this config object.
+US-MVP-PLAT-002 & US-MVP-PLAT-003: User Selects Theme & Language
+As any user, I want to toggle between light/dark mode and select a language (English/Farsi), So that my preferences persist.
+Acceptance Criteria:
+UI controls for theme and language are available.
+The choice immediately updates the UI (including RTL for Farsi).
+The choice is saved and persists across sessions.
+Technical Implementation Notes (Replit):
+Frontend (React): The React UI manages the immediate state change.
+Backend (Python/Flask): The choice triggers a call to POST /api/user/preferences with a payload like {"theme": "dark", "language": "fa"}. The Flask backend updates the user's profile object in Replit DB with these preferences.
+US-MVP-PLAT-004: User Receives Essential In-App & Email Notifications
+As a user, I want to receive timely notifications for critical events, So that I stay informed.
+Acceptance Criteria:
+Users receive notifications for booking confirmations, reminders, and new messages.
+Notifications are available in-app and via email.
+Technical Implementation Notes (Replit):
+Backend (Python/Flask): When a key event occurs (e.g., a booking is confirmed), the corresponding Flask route will append a notification object to a notifications list within the user's JSON profile in Replit DB. It will also call an external email API (like SendGrid or Mailgun, with keys in Replit Secrets) to send the email.
+Frontend (React): A notification component in the header will fetch its data from GET /api/user/notifications.
+B. Student-Facing Learning Platform (MVP Subset)
+US-MVP-VCRS-STU-003: Student Views Video Lesson Content and Navigates Course
+As an enrolled Student, I want to select a course, view its lessons, and view the video and text for each lesson, So that I can learn the material.
+Acceptance Criteria:
+I can select an enrolled course and see its lessons.
+For each lesson, I can view the video and supplementary text.
+I can navigate with "Next/Previous" buttons and "Mark as Complete".
+Technical Implementation Notes (Replit):
+Frontend (React): A dynamic route page /student/courses/{courseId}/lessons/{lessonId}.
+Backend (Python/Flask): The frontend calls GET /api/lessons/{lessonId}. The Flask route retrieves the lesson data from Replit DB (from a key like lesson_{lessonId}). It also checks if the logged-in user is enrolled in the parent course before returning the data. The "Mark as Complete" button calls POST /api/lessons/{lessonId}/complete, which updates a progress object in the user's profile in the database.
+US-MVP-AI-STU-001 & US-MVP-AI-STU-02: AI Quiz and Q&A
+As a Student, I want to generate a quiz or ask questions about a lesson, So that I can test my understanding and get clarifications.
+Acceptance Criteria:
+A "Generate Quiz" button creates 5 MCQs from the lesson text.
+A chat interface allows me to ask questions about the lesson and get answers.
+Technical Implementation Notes (Replit):
+Backend (Python/Flask): Endpoints like POST /api/lessons/{lessonId}/generate-quiz and POST /api/lessons/{lessonId}/chat. The Flask route fetches the lesson text from Replit DB. It then uses a Python library (like openai or groq) to call an external AI API, using an API key stored securely in Replit Secrets.
+C. Tutor Marketplace & Scheduled 1-on-1 Lessons (MVP)
+US-MVP-MKT-STU-001: Student Discovers Tutors with Basic Search/Filter
+As a Student, I want to view a list of tutors and filter them, So that I can find a suitable tutor.
+Acceptance Criteria:
+I can see a directory of tutors.
+I can filter by availability (date) and one primary specialty.
+Technical Implementation Notes (Replit):
+Backend (Python/Flask): Replit DB does not support server-side queries. The GET /api/tutors endpoint will fetch all tutor profiles (e.g., using db.prefix("tutor_")).
+Frontend (React): The React component will receive the full list of tutors and perform the filtering logic client-side. For an MVP with a small number of tutors, this is acceptable.
+US-MVP-MKT-STU-003 & 004: Student Books and Pays for a Single Lesson
+As a Student, I want to select a time slot and pay using Shetab, So that my lesson is confirmed.
+Acceptance Criteria:
+The booking and payment flow is seamless, resulting in a confirmed lesson.
+Technical Implementation Notes (Replit):
+Backend (Python/Flask): The POST /api/bookings/initiate endpoint creates a new booking key in Replit DB with a pending status and returns a Shetab payment link. The POST /api/payments/shetab-callback webhook receives confirmation from Shetab and updates the booking's status to confirmed.
+D. Live Interactive Classroom (MVP)
+US-MVP-LRN-GEN-001: User Joins Live 1-on-1 Classroom
+As a Student or Teacher/Tutor, I want to click "Join Lesson" to enter the virtual classroom.
+Acceptance Criteria:
+Clicking the link successfully launches the 1-on-1 video call.
+Technical Implementation Notes (Replit):
+Backend (Python/Flask): The "Join" button calls POST /api/lessons/{lesson_id}/join. The Flask route verifies the user is authorized for the lesson. It then calls the API of a managed WebRTC service like Whereby or Daily.co (using a key from Replit Secrets) to programmatically create a new, temporary meeting room.
+Frontend (React): The Flask backend returns the unique meeting room URL. The React frontend then either redirects the user to that URL or embeds the meeting using the service's provided iframe/component library.
+
