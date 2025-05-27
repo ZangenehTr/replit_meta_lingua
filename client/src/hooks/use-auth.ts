@@ -47,8 +47,10 @@ export function useAuth() {
       
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Force immediate refetch of user data
       queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
+      queryClient.refetchQueries({ queryKey: ["/api/users/me"] });
     },
   });
 
