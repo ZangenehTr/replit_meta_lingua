@@ -1,0 +1,134 @@
+MASTER DEBUGGING PROMPT FOR REPLIT AI: AUTHENTICATION SYSTEM REPAIR
+
+Objective: Resolve all authentication and authorization errors present in the application, based on the provided server logs. Ensure the system is secure and follows best practices for JWT-based authentication.
+
+Provided Server Logs (Summary for AI Context):
+
+GET /api/users/me frequently returns 401 {"message":"Access token required"}.
+GET /api/users/me sometimes returns 403 {"message":"Invalid token"}.
+POST /api/auth/login frequently returns 401 {"message":"Invalid credentials"}.
+Step-by-Step Instructions for Replit AI:
+
+Phase 1: Backend Login Endpoint (POST /api/auth/login) - Fixing 401 Invalid credentials
+
+Locate the Route: Open the Express.js route handler for POST /api/auth/login.
+Inspect Request Body Parsing:
+Verify: Ensure app.use(express.json()); and app.use(express.urlencoded({ extended: true })); are correctly configured at the top of your main server file (e.g., index.js, server.js, or app.js) before your route definitions.
+Action: If missing, add them.
+Inspect Credential Retrieval:
+Verify: Confirm that email and password are being correctly extracted from req.body (e.g., const { email, password } = req.body;). Log these values temporarily (and securely, do not commit logs with passwords) to ensure they are not undefined or incorrect.
+Inspect User Lookup:
+Verify: Check the database query or method used to find the user by email. Ensure it correctly handles cases where the user is not found.
+CRITICAL - Inspect Password Comparison:
+Verify: The system MUST NOT compare plaintext passwords directly (e.g., user.password === password).
+Action: If direct comparison is found, replace it with bcrypt.compare(). Ensure bcrypt is installed (npm install bcrypt).
+JavaScript
+
+// Example:
+// const user = await User.findOne({ email });
+// if (!user) { return res.status(401).json({ message: "Invalid credentials" }); }
+// const isMatch = await bcrypt.compare(password, user.passwordHash); // Assuming passwordHash is stored
+// if (!isMatch) { return res.status(401).json({ message: "Invalid credentials" }); }
+Inspect JWT Generation:
+Verify: After successful password comparison, a JWT must be generated.
+Verify: The JWT payload should contain essential, non-sensitive user identifiers (e.g., userId: user.id, role: user.role).
+Verify: The JWT MUST be signed using a strong, unique secret key, ideally stored in Replit Secrets (e.g., process.env.JWT_SECRET).
+JavaScript
+
+// Example:
+// const token = jwt.sign(
+//   { userId: user.id, role: user.role },
+//   process.env.JWT_SECRET,
+//   { expiresIn: '1h' } // Or your desired expiration
+// );
+Inspect Response:
+Verify: The generated token must be sent back to the client in the JSON response upon successful login.
+JavaScript
+
+// Example:
+// res.json({ message: "Login successful", token });
+Phase 2: Backend Authentication Middleware - Fixing 401 Access token required & 403 Invalid token
+
+Locate the Middleware: Find the middleware function used to protect routes like /api/users/me. This function is responsible for verifying the JWT.
+Inspect Token Extraction:
+Verify: The middleware must correctly extract the token from the Authorization header. It should expect the format Bearer <token>.
+Action: If extraction is faulty, correct it.
+JavaScript
+
+// Example:
+// const authHeader = req.headers['authorization'];
+// if (!authHeader || !authHeader.startsWith('Bearer ')) {
+//   return res.status(401).json({ message: 'Access token required' });
+// }
+// const token = authHeader.split(' ')[1];
+CRITICAL - Inspect JWT Verification:
+Verify: The jwt.verify() method must be used.
+Verify: The JWT_SECRET used here MUST BE THE EXACT SAME STRING as the one used in the login route for signing the token. Check Replit Secrets for consistency.
+Action: If the secret is different or hardcoded, fix it to use the correct secret from process.env.JWT_SECRET.
+JavaScript
+
+// Example:
+// try {
+//   const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//   req.user = decoded; // Attach decoded payload (e.g., { userId, role }) to request object
+//   next();
+// } catch (error) {
+//   if (error.name === 'TokenExpiredError') {
+//     return res.status(401).json({ message: 'Token expired' });
+//   }
+//   return res.status(403).json({ message: 'Invalid token' });
+// }
+Inspect User Object Attachment:
+Verify: After successful verification, the decoded payload (containing userId, role, etc.) should be attached to the req object (e.g., req.user = decodedPayload;).
+Phase 3: Frontend Token Handling (React Application)
+
+Locate Login Logic: Open the React component/function responsible for handling the login form submission (e.g., in src/pages/auth.tsx or a login component).
+Inspect Token Storage:
+Verify: After a successful response from POST /api/auth/login, the frontend MUST extract the token from the response body.
+Verify: This extracted token MUST be stored securely and persistently, typically in localStorage.
+Action: If the token is not being stored, or stored incorrectly, implement this.
+JavaScript
+
+// Example after fetch:
+// const data = await response.json();
+// if (response.ok && data.token) {
+//   localStorage.setItem('accessToken', data.token);
+//   // Proceed with redirect or UI update
+// } else {
+//   // Handle login error
+// }
+Locate API Call Logic: Examine how your React app makes requests to protected backend endpoints (e.g., to /api/users/me, /api/dashboard). This might be in individual components or a centralized API service/utility function.
+CRITICAL - Inspect Token Attachment to Headers:
+Verify: For EVERY request to a protected backend API, the frontend MUST retrieve the stored accessToken from localStorage.
+Verify: This token MUST be included in the Authorization header with the Bearer prefix.
+Action: If tokens are not being attached, or attached incorrectly, implement this.
+JavaScript
+
+// Example for a fetch call:
+// const token = localStorage.getItem('accessToken');
+// const response = await fetch('/api/users/me', {
+//   method: 'GET',
+//   headers: {
+//     'Content-Type': 'application/json',
+//     'Authorization': `Bearer ${token}` // CRITICAL PART
+//   }
+// });
+Recommendation: If not already done, create a reusable API utility function or use an Axios interceptor to automatically attach the token to all relevant requests.
+Inspect Logout Logic:
+Verify: When the user logs out, the accessToken MUST be removed from localStorage.
+Action: Implement localStorage.removeItem('accessToken'); in your logout function.
+Implement Global Error Handling for Auth:
+Action: In your API utility or global API response handler, if a 401 or 403 status code is received from the backend for any request, automatically:
+Remove the accessToken from localStorage.
+Redirect the user to the login page. This prevents the app from getting stuck sending an invalid/expired token.
+Phase 4: Verification and Testing
+
+Test Login: Attempt to log in with correct and incorrect credentials. Verify correct responses and token storage.
+Test Protected Routes: After logging in, navigate to pages that fetch data from protected routes (e.g., user dashboard loading /api/users/me). Verify data loads and no 401/403 errors occur.
+Test Token Expiration (If Possible): If your tokens have a short expiration, wait for it to expire and verify the app handles it gracefully (e.g., redirects to login on the next API call).
+Test Logout: Log out and verify the token is cleared and protected routes are no longer accessible.
+Final Instruction for Replit AI:
+After implementing these changes, please provide a summary of the key modifications made in both the backend (Express.js) and frontend (React) code, highlighting how each change addresses the errors observed in the logs. Ensure all secrets (like JWT_SECRET) are correctly referenced from Replit Secrets (process.env.YOUR_SECRET_NAME).
+
+
+Sources
