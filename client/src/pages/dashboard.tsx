@@ -9,6 +9,7 @@ import { TutorMarketplace } from "@/components/dashboard/tutor-marketplace";
 import { RecentMessages } from "@/components/dashboard/recent-messages";
 import { HomeworkTasks } from "@/components/dashboard/homework-tasks";
 import { PaymentCredits } from "@/components/dashboard/payment-credits";
+import { LiveClassroom } from "@/components/dashboard/live-classroom";
 
 export default function Dashboard() {
   return (
@@ -26,7 +27,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Main Content Area */}
               <div className="lg:col-span-2 space-y-8">
-                <UpcomingSessions />
+                <LiveClassroom />
                 <CourseProgress />
                 <AIAssistant />
                 <TutorMarketplace />
@@ -34,6 +35,7 @@ export default function Dashboard() {
 
               {/* Sidebar Content */}
               <div className="space-y-8">
+                <UpcomingSessions />
                 <RecentMessages />
                 <HomeworkTasks />
                 <PaymentCredits />
