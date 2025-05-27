@@ -8,6 +8,7 @@ import { getAuthToken } from "@/lib/auth";
 import NotFound from "@/pages/not-found";
 import Auth from "@/pages/auth";
 import Dashboard from "@/pages/dashboard";
+import DemoDashboard from "@/pages/demo-dashboard";
 
 // Update queryClient to include auth headers
 queryClient.setDefaultOptions({
@@ -74,13 +75,14 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={Auth} />
+      <Route path="/demo" component={DemoDashboard} />
       <Route path="/dashboard">
         <ProtectedRoute>
           <Dashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/">
-        <Redirect to="/dashboard" />
+        <Redirect to="/demo" />
       </Route>
       <Route component={NotFound} />
     </Switch>
