@@ -43,14 +43,17 @@ export function useAuth() {
       
       if (data.access_token) {
         localStorage.setItem("auth_token", data.access_token);
+        // Small delay to ensure token is stored before refetch
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       
       return data;
     },
-    onSuccess: (data) => {
-      // Force immediate refetch of user data
+    onSuccess: async (data) => {
+      // Wait a moment then force refetch of user data
+      await new Promise(resolve => setTimeout(resolve, 200));
       queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
-      queryClient.refetchQueries({ queryKey: ["/api/users/me"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/users/me"] });
     },
   });
 

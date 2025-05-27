@@ -91,7 +91,7 @@ export class MemStorage implements IStorage {
     const defaultUser: User = {
       id: 1,
       email: "ahmad.rezaei@example.com",
-      password: "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // password123
+      password: "$2b$10$Hx.OSMR.FnZuUhUj2uEboew4eTHZu2N7Gc0VCu.tUU0Tpd3yEJJ7K", // password123
       firstName: "Ahmad",
       lastName: "Rezaei",
       role: "student",
