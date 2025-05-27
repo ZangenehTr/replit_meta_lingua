@@ -87,11 +87,11 @@ export class MemStorage implements IStorage {
   }
 
   private initializeData() {
-    // Initialize with sample data
+    // Initialize with sample data - using "password123" as the demo password
     const defaultUser: User = {
       id: 1,
       email: "ahmad.rezaei@example.com",
-      password: "$2b$10$hash", // In real app, this would be properly hashed
+      password: "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // password123
       firstName: "Ahmad",
       lastName: "Rezaei",
       role: "student",

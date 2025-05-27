@@ -44,20 +44,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication endpoints
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
+      const { email, password, firstName, lastName } = req.body;
       
       // Check if user already exists
-      const existingUser = await storage.getUserByEmail(userData.email);
+      const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: "User already exists" });
       }
 
       // Hash password
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      const hashedPassword = await bcrypt.hash(password, 10);
       
       const user = await storage.createUser({
-        ...userData,
-        password: hashedPassword
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role: "student"
       });
 
       // Generate JWT token
