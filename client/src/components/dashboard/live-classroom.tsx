@@ -349,11 +349,17 @@ export function LiveClassroom() {
                     </p>
                     <Button
                       size="sm"
-                      className="mt-2"
-                      onClick={() => joinSessionMutation.mutate(session.id)}
+                      className="mt-2 w-full sm:w-auto"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        joinSessionMutation.mutate(session.id);
+                      }}
                       disabled={joinSessionMutation.isPending}
                     >
-                      {session.status === "live" ? (
+                      {joinSessionMutation.isPending ? (
+                        "Joining..."
+                      ) : session.status === "live" ? (
                         <>
                           <Video className="h-4 w-4 mr-1" />
                           Join Live Session

@@ -194,12 +194,16 @@ export function CourseProgress() {
                     </div>
                   </div>
                   <Button
-                    onClick={() => enrollMutation.mutate(course.id)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      enrollMutation.mutate(course.id);
+                    }}
                     disabled={enrollMutation.isPending}
                     size="sm"
                     className="w-full sm:w-auto"
                   >
-                    {enrollMutation.isPending ? "Enrolling..." : "Enroll Now"}
+                    {enrollMutation.isPending && enrollMutation.variables === course.id ? "Enrolling..." : "Enroll Now"}
                   </Button>
                 </div>
               </div>
