@@ -580,6 +580,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manager endpoints
+  app.get("/api/manager/stats", authenticateToken, async (req: any, res) => {
+    if (!['admin', 'manager'].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const users = await storage.getAllUsers();
+      const students = users.filter(u => u.role === 'student');
+      const teachers = users.filter(u => u.role === 'teacher');
+      const activeStudents = students.filter(u => u.isActive);
+      
+      const stats = {
+        totalStudents: students.length,
+        activeStudents: activeStudents.length,
+        newEnrollments: 12,
+        monthlyRevenue: 8950,
+        conversionRate: 68,
+        activeTeachers: teachers.length,
+        averageClassSize: 8,
+        studentSatisfaction: 4.7
+      };
+
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get manager stats" });
+    }
+  });
+
+  app.get("/api/manager/teachers", authenticateToken, async (req: any, res) => {
+    if (!['admin', 'manager'].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const users = await storage.getAllUsers();
+      const teachers = users.filter(u => u.role === 'teacher').map(teacher => ({
+        id: teacher.id,
+        name: `${teacher.firstName} ${teacher.lastName}`,
+        studentsAssigned: Math.floor(Math.random() * 20) + 5,
+        classesThisMonth: Math.floor(Math.random() * 15) + 8,
+        averageRating: (Math.random() * 1.5 + 3.5).toFixed(1),
+        totalRevenue: Math.floor(Math.random() * 3000) + 1000,
+        retentionRate: Math.floor(Math.random() * 30) + 70,
+        status: Math.random() > 0.7 ? 'excellent' : Math.random() > 0.4 ? 'good' : 'needs_improvement'
+      }));
+
+      res.json(teachers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get teachers" });
+    }
+  });
+
+  app.get("/api/manager/courses", authenticateToken, async (req: any, res) => {
+    if (!['admin', 'manager'].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const courses = [
+        {
+          id: 1,
+          title: "Persian Grammar Fundamentals",
+          language: "Persian",
+          enrollments: 24,
+          completionRate: 87,
+          revenue: 2400,
+          averageRating: 4.8,
+          instructor: "Dr. Reza Hosseini",
+          status: "active"
+        },
+        {
+          id: 2,
+          title: "Business English for Iranians",
+          language: "English",
+          enrollments: 18,
+          completionRate: 92,
+          revenue: 3150,
+          averageRating: 4.6,
+          instructor: "Sarah Johnson",
+          status: "active"
+        },
+        {
+          id: 3,
+          title: "Advanced Persian Literature",
+          language: "Persian",
+          enrollments: 12,
+          completionRate: 75,
+          revenue: 1800,
+          averageRating: 4.9,
+          instructor: "Prof. Maryam Karimi",
+          status: "active"
+        },
+        {
+          id: 4,
+          title: "Arabic for Persian Speakers",
+          language: "Arabic",
+          enrollments: 8,
+          completionRate: 65,
+          revenue: 960,
+          averageRating: 4.2,
+          instructor: "Ahmad Al-Farisi",
+          status: "inactive"
+        }
+      ];
+
+      res.json(courses);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get courses" });
+    }
+  });
+
   // Branding endpoints
   app.get("/api/branding", async (req, res) => {
     const branding = await storage.getBranding();
