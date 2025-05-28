@@ -24,7 +24,7 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    if (error.response?.status === 403 && !originalRequest._retry) {
+    if ((error.response?.status === 403 || error.response?.status === 401) && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
@@ -45,9 +45,15 @@ apiClient.interceptors.response.use(
         
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, log user out
+        // Refresh failed, clear tokens and redirect
         localStorage.removeItem('auth_token');
         localStorage.removeItem('refresh_token');
+        
+        // Clear any cached data
+        if (window.queryClient) {
+          window.queryClient.clear();
+        }
+        
         window.location.href = '/auth';
         return Promise.reject(refreshError);
       }
