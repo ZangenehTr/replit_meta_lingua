@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { WelcomeSection } from "@/components/dashboard/welcome-section";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { UpcomingSessions } from "@/components/dashboard/upcoming-sessions";
@@ -10,9 +11,11 @@ import { PaymentCredits } from "@/components/dashboard/payment-credits";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Navigation } from "@/components/layout/navigation";
 import { useTheme } from "@/hooks/use-theme";
+import AICompanion from "@/components/ai-companion";
 
 export default function DemoDashboard() {
   const { theme } = useTheme();
+  const [companionVisible, setCompanionVisible] = useState(false);
 
   // Mock user data for demo
   const mockUser = {
@@ -59,6 +62,14 @@ export default function DemoDashboard() {
           </main>
         </div>
       </div>
+      
+      {/* AI Learning Companion - Parsa */}
+      <AICompanion 
+        isVisible={companionVisible}
+        onToggle={() => setCompanionVisible(!companionVisible)}
+        studentLevel="intermediate"
+        currentLesson="Persian Conversation Basics"
+      />
     </div>
   );
 }
