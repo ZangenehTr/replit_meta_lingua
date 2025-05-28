@@ -580,6 +580,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Companion Chat endpoint - Dynamic responses using Anthropic
+  app.post("/api/ai/companion", async (req, res) => {
+    try {
+      const { message, language, studentLevel, currentLesson } = req.body;
+      
+      const Anthropic = require('@anthropic-ai/sdk');
+      const anthropic = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      });
+
+      // Create dynamic prompt based on language and context
+      const systemPrompt = language === 'fa' 
+        ? `تو لکسی هستی، دستیار هوشمند یادگیری زبان ایرانی. باید فقط به فارسی پاسخ بدهی. درباره فرهنگ ایران، زبان فارسی، و کمک به یادگیری صحبت کن. همیشه مفید، دوستانه و حامی باش.`
+        : `You are Lexi, an AI learning companion for Iranian language learning. Respond only in English. Help with Persian/Farsi language learning, Iranian culture, and provide encouraging support. Always be helpful, friendly, and supportive.`;
+
+      const userPrompt = `Student level: ${studentLevel}. Current lesson: ${currentLesson}. Message: ${message}`;
+
+      const response = await anthropic.messages.create({
+        model: 'claude-3-7-sonnet-20250219', // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+        max_tokens: 300,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      });
+
+      // Determine emotion based on response content
+      const content = response.content[0].text;
+      let emotion = 'happy';
+      if (content.includes('!') || content.includes('عالی') || content.includes('wonderful')) emotion = 'excited';
+      if (content.includes('?') || content.includes('بیشتر') || content.includes('more')) emotion = 'thinking';
+      if (content.includes('کمک') || content.includes('help')) emotion = 'encouraging';
+      if (content.includes('آفرین') || content.includes('great')) emotion = 'celebrating';
+
+      // Add cultural tip for Persian responses
+      let culturalTip = undefined;
+      if (language === 'fa' && (message.includes('سلام') || message.includes('فرهنگ'))) {
+        culturalTip = "مهمان‌نوازی یکی از مهمترین ارزش‌های فرهنگ ایرانیه";
+      } else if (language === 'en' && (message.includes('culture') || message.includes('hello'))) {
+        culturalTip = "Iranian hospitality is one of the most cherished cultural values";
+      }
+
+      res.json({
+        content,
+        emotion,
+        culturalTip,
+        pronunciation: language === 'fa' && message.includes('سلام') ? "سلام [sa-LAM]" : undefined
+      });
+
+    } catch (error) {
+      console.error('AI Companion error:', error);
+      // Fallback response
+      const fallback = req.body.language === 'fa' 
+        ? "متأسفم، در حال حاضر مشکلی دارم. لطفاً دوباره تلاش کنید."
+        : "Sorry, I'm having some trouble right now. Please try again.";
+      
+      res.json({
+        content: fallback,
+        emotion: 'thinking'
+      });
+    }
+  });
+
   // Manager endpoints
   app.get("/api/manager/stats", authenticateToken, async (req: any, res) => {
     if (!['admin', 'manager'].includes(req.user.role)) {
