@@ -1915,7 +1915,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Companion Chat
+  // AI Companion Chat with Ollama
   app.post("/api/ai/companion-chat", authenticateToken, async (req: any, res) => {
     try {
       const { message, context } = req.body;
@@ -1943,33 +1943,78 @@ Return JSON format:
   "pronunciation": "optional pronunciation guide"
 }`;
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [{ role: "user", content: prompt }],
-          response_format: { type: "json_object" },
-          max_tokens: 800,
-        }),
-      });
+      // Try Ollama first (local AI)
+      try {
+        const ollamaResponse = await fetch('http://localhost:11434/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama2', // or any available model
+            prompt: prompt,
+            stream: false,
+            format: 'json'
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('OpenAI API request failed');
+        if (ollamaResponse.ok) {
+          const ollamaData = await ollamaResponse.json();
+          const result = JSON.parse(ollamaData.response || '{}');
+          
+          res.json({
+            response: result.response || "سلام! چطور می‌تونم کمکت کنم؟ / Hello! How can I help you?",
+            emotion: result.emotion || "happy",
+            culturalTip: result.culturalTip,
+            pronunciation: result.pronunciation
+          });
+          return;
+        }
+      } catch (ollamaError) {
+        console.log('Ollama not available, using fallback responses');
       }
 
-      const data = await response.json();
-      const result = JSON.parse(data.choices[0].message.content || '{}');
+      // Fallback to intelligent pattern-based responses
+      const lowerMessage = message.toLowerCase();
+      let response = "سلام! چطور می‌تونم کمکت کنم؟ / Hello! How can I help you?";
+      let emotion = "happy";
+      let culturalTip = null;
+      let pronunciation = null;
+
+      if (lowerMessage.includes('سلام') || lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+        response = "سلام عزیز! خوش اومدی! 🌟\nHello dear! Welcome! Ready to learn some beautiful Persian today?";
+        emotion = "excited";
+        culturalTip = "In Persian culture, greetings are very important. 'سلام' (salaam) comes from Arabic meaning 'peace'.";
+        pronunciation = "سلام is pronounced 'sa-LAAM' with emphasis on the second syllable.";
+      } else if (lowerMessage.includes('help') || lowerMessage.includes('راهنمایی') || lowerMessage.includes('کمک')) {
+        response = "البته! من اینجام که کمکت کنم! 💪\nOf course! I'm here to help you! What would you like to practice?";
+        emotion = "encouraging";
+        culturalTip = "Persian has many ways to ask for help. 'کمک' (komak) is the most common word for help.";
+      } else if (lowerMessage.includes('thanks') || lowerMessage.includes('thank') || lowerMessage.includes('مرسی') || lowerMessage.includes('متشکرم')) {
+        response = "خواهش می‌کنم! موفق باشی! 🎉\nYou're welcome! Keep up the great work!";
+        emotion = "celebrating";
+        culturalTip = "Iranians often say 'خواهش می‌کنم' (khaahesh meekonam) which literally means 'I request/desire it'.";
+      } else if (lowerMessage.includes('lesson') || lowerMessage.includes('درس') || lowerMessage.includes('practice') || lowerMessage.includes('تمرین')) {
+        response = "عالی! بیا با هم تمرین کنیم! 📚\nGreat! Let's practice together! What topic interests you most?";
+        emotion = "excited";
+        culturalTip = "Regular practice is key in Persian learning. Try to use new words in sentences daily.";
+      } else if (lowerMessage.includes('culture') || lowerMessage.includes('فرهنگ') || lowerMessage.includes('cultural')) {
+        response = "فرهنگ ایران خیلی غنیه! 🎭\nIranian culture is so rich! What aspect would you like to learn about?";
+        emotion = "excited";
+        culturalTip = "Iranian culture emphasizes hospitality (مهمان‌نوازی), poetry, and family connections.";
+      } else {
+        response = `جالبه! بگو ببینم بیشتر چی می‌خوای بدونی؟ 🤔\nInteresting! Tell me more about what you'd like to learn?`;
+        emotion = "thinking";
+        culturalTip = "In Persian conversation, asking follow-up questions shows genuine interest and respect.";
+      }
 
       res.json({
-        response: result.response || "سلام! چطور می‌تونم کمکت کنم؟ / Hello! How can I help you?",
-        emotion: result.emotion || "happy",
-        culturalTip: result.culturalTip,
-        pronunciation: result.pronunciation
+        response,
+        emotion,
+        culturalTip,
+        pronunciation
       });
+
     } catch (error) {
       console.error('Companion chat error:', error);
       res.json({
