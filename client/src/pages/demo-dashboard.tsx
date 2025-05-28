@@ -63,7 +63,7 @@ export default function DemoDashboard() {
         </div>
       </div>
       
-      {/* AI Learning Companion - Parsa */}
+      {/* AI Learning Companion - Lexi */}
       <AICompanion 
         isVisible={companionVisible}
         onToggle={() => setCompanionVisible(!companionVisible)}

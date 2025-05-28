@@ -1920,7 +1920,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { message, context } = req.body;
       
-      const prompt = `You are Parsa (پارسا), a delightful and encouraging AI companion for Persian language learners. You have a playful, supportive personality and help students learn Persian in a fun way.
+      const prompt = `You are Lexi, a delightful and encouraging AI companion for Persian language learners. You have a playful, supportive personality and help students learn Persian in a fun way.
 
 Context:
 - Student Level: ${context.level || 'intermediate'}
