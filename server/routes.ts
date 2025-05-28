@@ -580,32 +580,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Companion Chat endpoint - Dynamic responses using Anthropic
+  // AI Companion Chat endpoint - Dynamic responses using Ollama
   app.post("/api/ai/companion", async (req, res) => {
     try {
       const { message, language, studentLevel, currentLesson } = req.body;
       
-      const Anthropic = require('@anthropic-ai/sdk');
-      const anthropic = new Anthropic({
-        apiKey: process.env.ANTHROPIC_API_KEY,
-      });
-
-      // Create dynamic prompt based on language and context
+      // Create dynamic prompt based on language and context for Ollama
       const systemPrompt = language === 'fa' 
         ? `تو لکسی هستی، دستیار هوشمند یادگیری زبان ایرانی. باید فقط به فارسی پاسخ بدهی. درباره فرهنگ ایران، زبان فارسی، و کمک به یادگیری صحبت کن. همیشه مفید، دوستانه و حامی باش.`
         : `You are Lexi, an AI learning companion for Iranian language learning. Respond only in English. Help with Persian/Farsi language learning, Iranian culture, and provide encouraging support. Always be helpful, friendly, and supportive.`;
 
       const userPrompt = `Student level: ${studentLevel}. Current lesson: ${currentLesson}. Message: ${message}`;
+      const fullPrompt = `${systemPrompt}\n\nUser: ${userPrompt}\nLexi:`;
 
-      const response = await anthropic.messages.create({
-        model: 'claude-3-7-sonnet-20250219', // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-        max_tokens: 300,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
+      // Make request to Ollama server
+      const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434';
+      const ollamaResponse = await fetch(`${ollamaUrl}/api/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama3.2', // Default Ollama model
+          prompt: fullPrompt,
+          stream: false,
+          options: {
+            temperature: 0.7,
+            max_tokens: 300
+          }
+        })
       });
 
+      if (!ollamaResponse.ok) {
+        throw new Error(`Ollama server error: ${ollamaResponse.status}`);
+      }
+
+      const ollamaData = await ollamaResponse.json();
+      const content = ollamaData.response;
+
       // Determine emotion based on response content
-      const content = response.content[0].text;
       let emotion = 'happy';
       if (content.includes('!') || content.includes('عالی') || content.includes('wonderful')) emotion = 'excited';
       if (content.includes('?') || content.includes('بیشتر') || content.includes('more')) emotion = 'thinking';
@@ -620,7 +633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         culturalTip = "Iranian hospitality is one of the most cherished cultural values";
       }
 
-      console.log('AI Response:', { content, emotion, culturalTip });
+      console.log('Ollama AI Response:', { content, emotion, culturalTip });
       res.json({
         content,
         emotion,
@@ -629,7 +642,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
     } catch (error) {
-      console.error('AI Companion error:', error);
+      console.error('Ollama AI Companion error:', error);
       // Fallback response
       const fallback = req.body.language === 'fa' 
         ? "متأسفم، در حال حاضر مشکلی دارم. لطفاً دوباره تلاش کنید."
