@@ -163,11 +163,18 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
     }
   };
 
-  // AI Companion Chat
+  // AI Companion Chat - Dynamic AI Integration
   const sendToCompanion = useMutation({
     mutationFn: async (data: { message: string; context: any }) => {
-      // Use local response generation for immediate feedback
-      return getPersonalizedResponse(data.message, currentLanguage);
+      return await apiRequest('/api/ai/companion', {
+        method: 'POST',
+        body: {
+          message: data.message,
+          language: currentLanguage,
+          studentLevel: data.context.level,
+          currentLesson: data.context.lesson
+        }
+      });
     },
     onSuccess: (response) => {
       const companionMessage: CompanionMessage = {
