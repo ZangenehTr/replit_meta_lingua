@@ -1,0 +1,46 @@
+Give this prompt to Replit AI:
+
+Objective: Refactor the application's data-fetching logic to resolve 403 Invalid token errors by centralizing API calls and implementing automatic token refreshing.
+
+Analysis: The application uses React Query but appears to have inconsistent API calling logic, causing some requests to be sent with an invalid or expired auth_token. The logout function is correct, but the in-session token handling is flawed.
+
+Step-by-Step Instructions:
+
+Create a Centralized Axios Client:
+
+Create a file at src/api/apiClient.ts that exports a pre-configured Axios instance.
+This instance must have a request interceptor that automatically reads "auth_token" from localStorage and attaches the Authorization: Bearer <token> header to every outgoing request.
+Integrate Axios Client with React Query:
+
+Go to where your QueryClient is initialized.
+Define a defaultQueryFn and defaultMutationFn that uses the new Axios client for all data fetching. This ensures that every single query and mutation managed by React Query will automatically use the centralized, token-aware client.
+Example:
+TypeScript
+
+// In your QueryClient setup file
+import apiClient from './api/apiClient';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      queryFn: async ({ queryKey }) => {
+        const { data } = await apiClient.get(queryKey[0]);
+        return data;
+      },
+    },
+  },
+});
+Implement an Automatic Token Refresh Interceptor:
+
+Add a response interceptor to the apiClient in src/api/apiClient.ts.
+This interceptor will catch 403 or 401 errors. When it does, it must:
+Pause the original failed request.
+Send the "refresh_token" from localStorage to your backend's /api/auth/refresh endpoint.
+Receive the new "auth_token" and save it to localStorage.
+Transparently retry the original request with the new token.
+If the refresh itself fails, it should trigger the logout() function from the use-auth hook.
+Final Cleanup:
+
+Search the entire project for any remaining direct fetch() calls and replace them with React Query hooks (useQuery, useMutation) so they benefit from the new centralized logic.
+Summary: By forcing all React Query operations through a single, intelligent Axios client, you will fix the inconsistent token attachment and make the app resilient to token expiration.
+
