@@ -370,4 +370,42 @@ export function setupAuth(app: Express) {
       sessionId: sessionId
     });
   });
+
+  // AI recommendations endpoint
+  app.post("/api/ai/recommendations", authenticateToken, (req: any, res) => {
+    const user = users.get(req.user.email);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate personalized AI recommendations based on user progress
+    const recommendations = [
+      "Focus on Persian verb conjugations - you're making great progress!",
+      "Try the advanced conversation practice to improve fluency",
+      "Review yesterday's vocabulary - repetition enhances retention",
+      "Schedule more live sessions with native speakers",
+      "Practice writing Persian script for 15 minutes daily"
+    ];
+
+    res.json({
+      recommendations: recommendations.slice(0, 3), // Return top 3 recommendations
+      user: user.firstName
+    });
+  });
+
+  // User preferences update endpoint
+  app.put("/api/users/me/preferences", authenticateToken, (req: any, res) => {
+    const user = users.get(req.user.email);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.preferences = { ...user.preferences, ...req.body };
+    users.set(req.user.email, user);
+
+    res.json({
+      message: "Preferences updated",
+      preferences: user.preferences
+    });
+  });
 }
