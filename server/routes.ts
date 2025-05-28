@@ -1975,37 +1975,69 @@ Return JSON format:
       }
 
       // Fallback to intelligent pattern-based responses
+      // Get user's language preference from context
+      const userLanguage = context.language || 'en';
       const lowerMessage = message.toLowerCase();
-      let response = "سلام! چطور می‌تونم کمکت کنم؟ / Hello! How can I help you?";
+      
+      let response = "";
       let emotion = "happy";
       let culturalTip = null;
       let pronunciation = null;
 
       if (lowerMessage.includes('سلام') || lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
-        response = "سلام عزیز! خوش اومدی! 🌟\nHello dear! Welcome! Ready to learn some beautiful Persian today?";
+        response = userLanguage === 'fa' ? 
+          "سلام عزیزم! خیلی خوشحالم که می‌بینمت! چطوری؟ 😊" :
+          "Hello dear! I'm so happy to see you! How are you feeling today? 😊";
         emotion = "excited";
-        culturalTip = "In Persian culture, greetings are very important. 'سلام' (salaam) comes from Arabic meaning 'peace'.";
-        pronunciation = "سلام is pronounced 'sa-LAAM' with emphasis on the second syllable.";
+        culturalTip = userLanguage === 'fa' ? 
+          "در فرهنگ ایرانی، احوال‌پرسی خیلی مهمه و نشان از محبت داره" :
+          "In Persian culture, greetings are very warm and personal. 'عزیزم' (azizam) means 'my dear'";
+        pronunciation = userLanguage === 'fa' ? 
+          "سلام: sa-LAAM (تاکید روی آخر)" :
+          "سلام is pronounced 'sa-LAAM' with emphasis on the second syllable";
       } else if (lowerMessage.includes('help') || lowerMessage.includes('راهنمایی') || lowerMessage.includes('کمک')) {
-        response = "البته! من اینجام که کمکت کنم! 💪\nOf course! I'm here to help you! What would you like to practice?";
+        response = userLanguage === 'fa' ? 
+          "البته! همیشه آماده کمکم! امروز چی می‌خوای یاد بگیری؟ 🤝" :
+          "Of course! I'm always ready to help! What would you like to learn today? 🤝";
         emotion = "encouraging";
-        culturalTip = "Persian has many ways to ask for help. 'کمک' (komak) is the most common word for help.";
+        culturalTip = userLanguage === 'fa' ? 
+          "کمک کردن به دیگران از ارزش‌های اصلی فرهنگ ایرانیه" :
+          "Helping others is a core value in Persian culture called 'کمک رسانی' (komak resani)";
       } else if (lowerMessage.includes('thanks') || lowerMessage.includes('thank') || lowerMessage.includes('مرسی') || lowerMessage.includes('متشکرم')) {
-        response = "خواهش می‌کنم! موفق باشی! 🎉\nYou're welcome! Keep up the great work!";
+        response = userLanguage === 'fa' ? 
+          "خواهش می‌کنم! خیلی خوشحالم که کمک کردم! 🌟" :
+          "You're very welcome! I'm so happy I could help! 🌟";
         emotion = "celebrating";
-        culturalTip = "Iranians often say 'خواهش می‌کنم' (khaahesh meekonam) which literally means 'I request/desire it'.";
+        culturalTip = userLanguage === 'fa' ? 
+          "ایرانی‌ها خیلی مؤدب هستن و همیشه 'خواهش می‌کنم' می‌گن" :
+          "Persians are very polite and often say 'خواهش می‌کنم' (khahesh mikonam)";
+        pronunciation = userLanguage === 'fa' ? 
+          "مرسی: mer-SEE (از فرانسوی گرفته شده)" :
+          "مرسی is pronounced 'mer-SEE' - borrowed from French 'merci'";
       } else if (lowerMessage.includes('lesson') || lowerMessage.includes('درس') || lowerMessage.includes('practice') || lowerMessage.includes('تمرین')) {
-        response = "عالی! بیا با هم تمرین کنیم! 📚\nGreat! Let's practice together! What topic interests you most?";
+        response = userLanguage === 'fa' ? 
+          "عالی! بیا با هم تمرین کنیم! کدوم موضوع رو دوست داری؟ 📚" :
+          "Great! Let's practice together! What topic interests you most? 📚";
         emotion = "excited";
-        culturalTip = "Regular practice is key in Persian learning. Try to use new words in sentences daily.";
+        culturalTip = userLanguage === 'fa' ? 
+          "تمرین مداوم کلید یادگیری فارسیه" :
+          "Regular practice is key in Persian learning. Try to use new words daily";
       } else if (lowerMessage.includes('culture') || lowerMessage.includes('فرهنگ') || lowerMessage.includes('cultural')) {
-        response = "فرهنگ ایران خیلی غنیه! 🎭\nIranian culture is so rich! What aspect would you like to learn about?";
+        response = userLanguage === 'fa' ? 
+          "فرهنگ ایران خیلی غنیه! کدوم قسمتش رو می‌خوای بدونی؟ 🎭" :
+          "Iranian culture is so rich! What aspect would you like to learn about? 🎭";
         emotion = "excited";
-        culturalTip = "Iranian culture emphasizes hospitality (مهمان‌نوازی), poetry, and family connections.";
+        culturalTip = userLanguage === 'fa' ? 
+          "مهمان‌نوازی، شعر و خانواده از رکن‌های فرهنگ ایرانن" :
+          "Iranian culture emphasizes hospitality (مهمان‌نوازی), poetry, and family connections";
       } else {
-        response = `جالبه! بگو ببینم بیشتر چی می‌خوای بدونی؟ 🤔\nInteresting! Tell me more about what you'd like to learn?`;
+        response = userLanguage === 'fa' ? 
+          "جالبه! بگو ببینم بیشتر چی می‌خوای بدونی؟ 🤔" :
+          "Interesting! Tell me more about what you'd like to learn? 🤔";
         emotion = "thinking";
-        culturalTip = "In Persian conversation, asking follow-up questions shows genuine interest and respect.";
+        culturalTip = userLanguage === 'fa' ? 
+          "در گفتگوهای فارسی، نشان دادن علاقه واقعی خیلی مهمه" :
+          "In Persian conversations, showing genuine interest is very important";
       }
 
       res.json({

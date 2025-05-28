@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 
 interface CompanionMessage {
   id: string;
@@ -118,6 +119,7 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
       context: {
         level: studentLevel,
         currentLesson,
+        language: currentLanguage,
         previousMessages: messages.slice(-5)
       }
     });
