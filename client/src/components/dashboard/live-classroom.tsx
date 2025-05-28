@@ -55,23 +55,28 @@ export function LiveClassroom() {
     participants: 0
   });
 
-  const { data: liveSessions, isLoading: isLoadingSessions } = useQuery<LiveSession[]>({
+  const { data: liveSessions } = useQuery<LiveSession[]>({
     queryKey: ["/api/sessions/live"],
-    enabled: false, // Disable API call to use fallback data
+    queryFn: async () => {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch("/api/sessions/live", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      return response.json();
+    }
   });
 
   const joinSessionMutation = useMutation({
     mutationFn: async (sessionId: number) => {
-      // For demo purposes, simulate successful join
-      return {
-        message: "Successfully joined session",
-        roomId: `room_session_${sessionId}`,
-        sessionToken: `token_${Date.now()}`,
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" }
-        ]
-      };
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(`/api/sessions/${sessionId}/join`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      return response.json();
     },
     onSuccess: (data) => {
       initializeWebRTC(data.roomId);
@@ -312,19 +317,7 @@ export function LiveClassroom() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {isLoadingSessions ? (
-            <div className="animate-pulse space-y-4">
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-muted rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-muted rounded w-3/4" />
-                    <div className="h-3 bg-muted rounded w-1/2" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : liveSessions && liveSessions.length > 0 ? (
+          {liveSessions && liveSessions.length > 0 ? (
             liveSessions.map((session) => (
               <div key={session.id} className="border rounded-lg p-4">
                 <div className="flex items-start justify-between">
@@ -377,84 +370,11 @@ export function LiveClassroom() {
               </div>
             ))
           ) : (
-            // Fallback demo sessions for immediate display
-            <>
-              <div className="border rounded-lg p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src="https://images.unsplash.com/photo-1494790108755-2616b612b27c?w=150&h=150&fit=crop&crop=face"
-                      alt="Dr. Sara Hosseini"
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                    <div>
-                      <h4 className="font-medium">Persian Grammar Fundamentals</h4>
-                      <p className="text-sm text-muted-foreground">
-                        with Dr. Sara Hosseini
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline">Persian</Badge>
-                        <Badge variant="secondary">Beginner</Badge>
-                        <Badge variant="destructive" className="animate-pulse">
-                          🔴 LIVE
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">
-                      3/8 students
-                    </p>
-                    <Button
-                      size="sm"
-                      className="mt-2"
-                      onClick={() => joinSessionMutation.mutate(1)}
-                      disabled={joinSessionMutation.isPending}
-                    >
-                      <Video className="h-4 w-4 mr-1" />
-                      Join Live Session
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border rounded-lg p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-                      alt="James Richardson"
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                    <div>
-                      <h4 className="font-medium">Business English Conversation</h4>
-                      <p className="text-sm text-muted-foreground">
-                        with James Richardson
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline">English</Badge>
-                        <Badge variant="secondary">Intermediate</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">
-                      5/10 students
-                    </p>
-                    <Button
-                      size="sm"
-                      className="mt-2"
-                      variant="outline"
-                      onClick={() => joinSessionMutation.mutate(2)}
-                      disabled={joinSessionMutation.isPending}
-                    >
-                      <Phone className="h-4 w-4 mr-1" />
-                      Join in 45 min
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </>
+            <div className="text-center py-8 text-muted-foreground">
+              <Video className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No live sessions available</p>
+              <p className="text-xs mt-1">Check back later or schedule a session with a tutor</p>
+            </div>
           )}
         </div>
       </CardContent>

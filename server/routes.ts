@@ -41,7 +41,7 @@ const requireRole = (roles: string[]) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Import and setup working authentication first
+  // Import and setup working authentication
   const { setupAuth } = await import("./auth-fix");
   setupAuth(app);
 
