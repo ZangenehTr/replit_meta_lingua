@@ -21,11 +21,10 @@ export function AIAssistant() {
 
   const getRecommendationsMutation = useMutation({
     mutationFn: async () => {
-      const token = localStorage.getItem("auth_token");
       const response = await fetch("/api/ai/recommendations", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({})
