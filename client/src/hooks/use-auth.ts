@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import apiClient from "@/lib/apiClient";
 
 interface User {
   id: number;
@@ -37,23 +37,11 @@ export function useAuth() {
       if (!token) return null;
 
       try {
-        const response = await fetch("/api/users/me", {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        
-        if (!response.ok) {
-          if (response.status === 401 || response.status === 403) {
-            localStorage.removeItem("auth_token");
-            return null;
-          }
-          throw new Error(`HTTP ${response.status}`);
-        }
-        
-        return await response.json();
+        const response = await apiClient.get("/users/me");
+        return response.data;
       } catch (error) {
         localStorage.removeItem("auth_token");
+        localStorage.removeItem("refresh_token");
         return null;
       }
     },
@@ -63,12 +51,15 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials) => {
-      const response = await apiRequest("POST", "/api/auth/login", credentials);
-      const data = await response.json();
+      const response = await apiClient.post("/auth/login", credentials);
+      const data = response.data;
       
-      // Store token in localStorage as per Phase 3 of debugging guide
-      if (data.token) {
-        localStorage.setItem("auth_token", data.token);
+      // Store both tokens
+      if (data.accessToken) {
+        localStorage.setItem("auth_token", data.accessToken);
+      }
+      if (data.refreshToken) {
+        localStorage.setItem("refresh_token", data.refreshToken);
       }
       
       return data;
@@ -81,11 +72,15 @@ export function useAuth() {
 
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
-      const response = await apiRequest("POST", "/api/auth/register", userData);
-      const data = await response.json();
+      const response = await apiClient.post("/auth/register", userData);
+      const data = response.data;
       
-      if (data.access_token) {
-        localStorage.setItem("auth_token", data.access_token);
+      // Store both tokens
+      if (data.accessToken) {
+        localStorage.setItem("auth_token", data.accessToken);
+      }
+      if (data.refreshToken) {
+        localStorage.setItem("refresh_token", data.refreshToken);
       }
       
       return data;
@@ -97,8 +92,8 @@ export function useAuth() {
 
   const updatePreferencesMutation = useMutation({
     mutationFn: async (preferences: any) => {
-      const response = await apiRequest("PUT", "/api/users/me/preferences", preferences);
-      return response.json();
+      const response = await apiClient.put("/users/me/preferences", preferences);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
@@ -107,6 +102,7 @@ export function useAuth() {
 
   const logout = () => {
     localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
     queryClient.setQueryData(["/api/users/me"], null);
     queryClient.clear();
     window.location.href = "/auth";
