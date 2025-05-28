@@ -1752,6 +1752,169 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== AI-POWERED PERSONALIZATION API =====
+  
+  // Get personalized learning recommendations
+  app.get("/api/ai/recommendations", authenticateToken, async (req: any, res) => {
+    try {
+      const { aiPersonalizationService } = await import('./ai-services');
+      
+      // Mock user profile - in a real app, this would come from the database
+      const profile = {
+        userId: req.user.userId,
+        nativeLanguage: "English",
+        targetLanguage: "Persian",
+        proficiencyLevel: "intermediate" as const,
+        learningGoals: ["Business Communication", "Cultural Understanding", "Grammar Mastery"],
+        culturalBackground: "Western",
+        preferredLearningStyle: "visual" as const,
+        weaknesses: ["Verb Conjugation", "Formal Speech"],
+        strengths: ["Vocabulary", "Pronunciation"],
+        progressHistory: []
+      };
+
+      const recentActivity = [
+        { lesson: "Persian Grammar Basics", score: 85, date: "2025-05-27" },
+        { lesson: "Business Vocabulary", score: 92, date: "2025-05-26" }
+      ];
+
+      const recommendations = await aiPersonalizationService.generatePersonalizedRecommendations(
+        profile, 
+        recentActivity
+      );
+
+      res.json({ recommendations, profile });
+    } catch (error) {
+      console.error('AI recommendations error:', error);
+      res.status(500).json({ message: "Failed to generate recommendations" });
+    }
+  });
+
+  // Get progress analysis and feedback
+  app.get("/api/ai/progress-analysis", authenticateToken, async (req: any, res) => {
+    try {
+      const { aiPersonalizationService } = await import('./ai-services');
+      
+      const profile = {
+        userId: req.user.userId,
+        nativeLanguage: "English",
+        targetLanguage: "Persian",
+        proficiencyLevel: "intermediate" as const,
+        learningGoals: ["Business Communication"],
+        culturalBackground: "Western",
+        preferredLearningStyle: "visual" as const,
+        weaknesses: ["Verb Conjugation"],
+        strengths: ["Vocabulary"],
+        progressHistory: []
+      };
+
+      const completedLessons = [
+        { title: "Persian Greetings", score: 90, timeSpent: 25 },
+        { title: "Business Vocabulary", score: 85, timeSpent: 30 }
+      ];
+
+      const quizResults = [
+        { topic: "Grammar", score: 75, attempts: 2 },
+        { topic: "Vocabulary", score: 95, attempts: 1 }
+      ];
+
+      const analysis = await aiPersonalizationService.analyzeProgressAndProvideFeedback(
+        profile,
+        completedLessons,
+        quizResults
+      );
+
+      res.json(analysis);
+    } catch (error) {
+      console.error('Progress analysis error:', error);
+      res.status(500).json({ message: "Failed to analyze progress" });
+    }
+  });
+
+  // Generate conversation scenario
+  app.post("/api/ai/conversation-scenario", authenticateToken, async (req: any, res) => {
+    try {
+      const { aiPersonalizationService } = await import('./ai-services');
+      const { topic, difficulty } = req.body;
+      
+      const profile = {
+        userId: req.user.userId,
+        nativeLanguage: "English",
+        targetLanguage: "Persian",
+        proficiencyLevel: difficulty || "intermediate" as const,
+        learningGoals: [],
+        culturalBackground: "Western",
+        preferredLearningStyle: "visual" as const,
+        weaknesses: [],
+        strengths: [],
+        progressHistory: []
+      };
+
+      const scenario = await aiPersonalizationService.generateConversationScenarios(
+        profile,
+        topic,
+        difficulty
+      );
+
+      res.json(scenario);
+    } catch (error) {
+      console.error('Conversation scenario error:', error);
+      res.status(500).json({ message: "Failed to generate conversation scenario" });
+    }
+  });
+
+  // AI conversation practice
+  app.post("/api/ai/conversation", authenticateToken, async (req: any, res) => {
+    try {
+      const { aiPersonalizationService } = await import('./ai-services');
+      const { message, context, proficiencyLevel } = req.body;
+
+      const aiResponse = await aiPersonalizationService.generateConversationResponse(
+        message,
+        context,
+        proficiencyLevel || "intermediate",
+        "Western"
+      );
+
+      res.json(aiResponse);
+    } catch (error) {
+      console.error('AI conversation error:', error);
+      res.status(500).json({ message: "Failed to generate conversation response" });
+    }
+  });
+
+  // Generate adaptive quiz
+  app.post("/api/ai/adaptive-quiz", authenticateToken, async (req: any, res) => {
+    try {
+      const { aiPersonalizationService } = await import('./ai-services');
+      const { topic, weakAreas } = req.body;
+      
+      const profile = {
+        userId: req.user.userId,
+        nativeLanguage: "English",
+        targetLanguage: "Persian",
+        proficiencyLevel: "intermediate" as const,
+        learningGoals: [],
+        culturalBackground: "Western",
+        preferredLearningStyle: "visual" as const,
+        weaknesses: weakAreas || [],
+        strengths: [],
+        progressHistory: []
+      };
+
+      const quiz = await aiPersonalizationService.generateAdaptiveQuiz(
+        profile,
+        topic,
+        weakAreas || []
+      );
+
+      res.json(quiz);
+    } catch (error) {
+      console.error('Adaptive quiz error:', error);
+      res.status(500).json({ message: "Failed to generate adaptive quiz" });
+    }
+  });
+
   // Branding endpoints
   app.get("/api/branding", async (req, res) => {
     const branding = await storage.getBranding();
