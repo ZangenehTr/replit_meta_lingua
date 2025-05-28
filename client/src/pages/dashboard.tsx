@@ -19,12 +19,12 @@ export default function Dashboard() {
       <div className="flex">
         <Sidebar />
         
-        <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 ml-0 md:ml-64 p-4 md:p-8 overflow-x-hidden">
+          <div className="max-w-7xl mx-auto w-full">
             <WelcomeSection />
             <StatsCards />
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-8 w-full">
               {/* Main Content Area */}
               <div className="xl:col-span-2 space-y-4 md:space-y-8">
                 <LiveClassroom />
