@@ -166,15 +166,24 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
   // AI Companion Chat - Dynamic AI Integration
   const sendToCompanion = useMutation({
     mutationFn: async (data: { message: string; context: any }) => {
-      return await apiRequest('/api/ai/companion', {
+      const response = await fetch('/api/ai/companion', {
         method: 'POST',
-        body: {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           message: data.message,
           language: currentLanguage,
           studentLevel: data.context.level,
           currentLesson: data.context.lesson
-        }
+        })
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+      
+      return await response.json();
     },
     onSuccess: (response) => {
       const companionMessage: CompanionMessage = {
