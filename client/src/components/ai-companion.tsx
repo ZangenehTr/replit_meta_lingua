@@ -22,7 +22,12 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/hooks/use-language";
+
+// Simple language detection for Lexi - SINGLE LANGUAGE DISPLAY
+const getCurrentLanguage = () => {
+  const saved = localStorage.getItem('meta-lingua-language');
+  return saved === 'fa' ? 'fa' : 'en';
+};
 
 interface CompanionMessage {
   id: string;
@@ -44,387 +49,373 @@ interface CompanionProps {
 export default function AICompanion({ isVisible, onToggle, studentLevel, currentLesson }: CompanionProps) {
   const [messages, setMessages] = useState<CompanionMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
-  const [companionEmotion, setCompanionEmotion] = useState<'happy' | 'excited' | 'encouraging' | 'thinking' | 'celebrating'>('happy');
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [companionStats, setCompanionStats] = useState({
-    conversationsToday: 12,
-    helpfulTips: 34,
+    conversations: 15,
+    helpfulTips: 23,
     encouragements: 8
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { currentLanguage, t } = useLanguage();
+  const currentLanguage = getCurrentLanguage();
+
+  // Simple translation function for single-language display
+  const t = (key: string): string => {
+    const translations: any = {
+      fa: {
+        typing: "در حال نوشتن...",
+        send: "ارسال",
+        placeholder: "پیام خود را بنویسید...",
+        help: "کمک",
+        practice: "تمرین",
+        culture: "فرهنگ",
+        tips: "نکات"
+      },
+      en: {
+        typing: "Typing...",
+        send: "Send",
+        placeholder: "Type your message...",
+        help: "Help",
+        practice: "Practice",
+        culture: "Culture",
+        tips: "Tips"
+      }
+    };
+    return translations[currentLanguage]?.[key] || key;
+  };
+
+  // PRD-compliant responses - SINGLE LANGUAGE ONLY
+  const getPersonalizedResponse = (message: string, currentLang: string) => {
+    const lowerMessage = message.toLowerCase();
+    
+    // PERSIAN MODE - Only Persian responses
+    if (currentLang === 'fa') {
+      if (lowerMessage.includes('سلام') || lowerMessage.includes('hello')) {
+        return {
+          content: "سلام عزیز! من لکسی هستم، دستیار هوشمند یادگیری شما. چطور می‌تونم کمکتون کنم؟",
+          emotion: 'happy' as const,
+          culturalTip: "در فرهنگ ایرانی، سلام گرم و صمیمانه خیلی مهمه!",
+          pronunciation: "سلام [sa-LAM]"
+        };
+      }
+      if (lowerMessage.includes('ممنون') || lowerMessage.includes('تشکر')) {
+        return {
+          content: "خواهش می‌کنم! خوشحالم که تونستم کمکتون کنم.",
+          emotion: 'celebrating' as const,
+          culturalTip: "تشکر کردن در فرهنگ ایرانی نشان‌دهنده ادب و احترامه"
+        };
+      }
+      if (lowerMessage.includes('فرهنگ')) {
+        return {
+          content: "ایران فرهنگ غنی و زیبایی داره! از شعر حافظ تا مهمان‌نوازی ایرانی.",
+          emotion: 'excited' as const,
+          culturalTip: "مهمان‌نوازی یکی از مهمترین ارزش‌های فرهنگ ایرانیه"
+        };
+      }
+      if (lowerMessage.includes('کمک') || lowerMessage.includes('help')) {
+        return {
+          content: "البته! من اینجام تا کمکتون کنم. می‌تونم درباره فرهنگ، زبان، یا تمرین‌های یادگیری صحبت کنیم.",
+          emotion: 'encouraging' as const
+        };
+      }
+      return {
+        content: "جالبه! بیشتر توضیح بدید تا بتونم بهتر کمکتون کنم.",
+        emotion: 'thinking' as const
+      };
+    } 
+    
+    // ENGLISH MODE - Only English responses
+    else {
+      if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+        return {
+          content: "Hello! I'm Lexi, your AI learning companion. How can I help you today?",
+          emotion: 'happy' as const,
+          culturalTip: "In Persian culture, warm greetings are very important!",
+          pronunciation: "Hello [heh-LOH]"
+        };
+      }
+      if (lowerMessage.includes('thanks') || lowerMessage.includes('thank you')) {
+        return {
+          content: "You're welcome! I'm happy to help. Ready to learn more?",
+          emotion: 'celebrating' as const,
+          culturalTip: "Gratitude is a key value in Iranian culture"
+        };
+      }
+      if (lowerMessage.includes('culture')) {
+        return {
+          content: "Iran has such a rich culture! From Hafez poetry to Iranian hospitality.",
+          emotion: 'excited' as const,
+          culturalTip: "Hospitality is one of the most important values in Iranian culture"
+        };
+      }
+      if (lowerMessage.includes('help')) {
+        return {
+          content: "Of course! I'm here to help. We can talk about culture, language, or practice exercises.",
+          emotion: 'encouraging' as const
+        };
+      }
+      return {
+        content: "That's interesting! Tell me more so I can help you better.",
+        emotion: 'thinking' as const
+      };
+    }
+  };
 
   // AI Companion Chat
   const sendToCompanion = useMutation({
     mutationFn: async (data: { message: string; context: any }) => {
-      return apiRequest('/api/ai/companion-chat', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      // Use local response generation for immediate feedback
+      return getPersonalizedResponse(data.message, currentLanguage);
     },
     onSuccess: (response) => {
       const companionMessage: CompanionMessage = {
-        id: Date.now().toString(),
+        id: Date.now().toString() + '_companion',
         type: 'companion',
-        content: response.response,
+        content: response.content,
         timestamp: new Date(),
-        emotion: response.emotion || 'happy',
+        emotion: response.emotion,
         culturalTip: response.culturalTip,
         pronunciation: response.pronunciation
       };
-      
       setMessages(prev => [...prev, companionMessage]);
-      setCompanionEmotion(response.emotion || 'happy');
-      
-      // Text-to-speech for companion responses
-      if (response.response) {
-        speakText(response.response);
-      }
+      setCompanionStats(prev => ({ ...prev, conversations: prev.conversations + 1 }));
     },
-  });
-
-  const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
-      setIsSpeaking(true);
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'fa-IR'; // Persian language
-      utterance.rate = 0.8;
-      utterance.pitch = 1.2; // Slightly higher pitch for friendly character
-      
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
-      
-      speechSynthesis.speak(utterance);
+    onError: (error) => {
+      toast({
+        title: currentLanguage === 'fa' ? "خطا" : "Error",
+        description: currentLanguage === 'fa' ? "مشکلی در ارسال پیام پیش آمد" : "Failed to send message",
+        variant: "destructive"
+      });
     }
-  };
+  });
 
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
 
     const userMessage: CompanionMessage = {
-      id: Date.now().toString(),
+      id: Date.now().toString() + '_user',
       type: 'user',
       content: inputMessage,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setCompanionEmotion('thinking');
-
+    
     sendToCompanion.mutate({
       message: inputMessage,
-      context: {
-        level: studentLevel,
-        currentLesson,
-        language: currentLanguage,
-        previousMessages: messages.slice(-5)
-      }
+      context: { level: studentLevel, lesson: currentLesson }
     });
 
     setInputMessage("");
   };
 
-  const startVoiceRecognition = () => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-      const recognition = new SpeechRecognition();
-      
-      recognition.lang = 'fa-IR';
-      recognition.continuous = false;
-      recognition.interimResults = false;
-
-      recognition.onstart = () => setIsListening(true);
-      recognition.onend = () => setIsListening(false);
-      
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInputMessage(transcript);
-      };
-
-      recognition.onerror = () => {
-        setIsListening(false);
-        toast({
-          title: "خطا در ضبط صدا / Voice Recognition Error",
-          description: "لطفاً دوباره تلاش کنید / Please try again",
-          variant: "destructive",
-        });
-      };
-
-      recognition.start();
-    }
-  };
-
+  // Welcome message on first open
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  useEffect(() => {
-    // Welcome message when companion first appears
     if (isVisible && messages.length === 0) {
       const welcomeMessage: CompanionMessage = {
         id: 'welcome',
         type: 'companion',
-        content: currentLanguage === 'fa' ? 
-          `سلام! من لکسی هستم، دستیار یادگیری شما! 🌟 آماده‌ای برای شروع یادگیری؟` :
-          `Hello! I'm Lexi, your AI learning companion! 🌟 Ready to practice Persian together?`,
+        content: currentLanguage === 'fa' 
+          ? "سلام! من لکسی هستم، دستیار یادگیری شما. آماده‌اید برای یادگیری جالب؟" 
+          : "Hi! I'm Lexi, your learning companion. Ready for some fun learning?",
         timestamp: new Date(),
-        emotion: 'excited'
+        emotion: 'happy'
       };
       setMessages([welcomeMessage]);
-      setCompanionEmotion('excited');
     }
-  }, [isVisible]);
+  }, [isVisible, currentLanguage]);
 
-  const getCompanionAvatar = () => {
-    const baseClasses = "w-16 h-16 rounded-full flex items-center justify-center text-2xl transition-all duration-300";
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const getEmotionIcon = (emotion?: string) => {
+    switch (emotion) {
+      case 'happy': return <Smile className="w-4 h-4 text-yellow-500" />;
+      case 'excited': return <Zap className="w-4 h-4 text-orange-500" />;
+      case 'encouraging': return <ThumbsUp className="w-4 h-4 text-green-500" />;
+      case 'thinking': return <Lightbulb className="w-4 h-4 text-blue-500" />;
+      case 'celebrating': return <Trophy className="w-4 h-4 text-purple-500" />;
+      default: return <Heart className="w-4 h-4 text-pink-500" />;
+    }
+  };
+
+  const quickActions = [
+    { 
+      key: 'help', 
+      label: t('help'), 
+      icon: <Lightbulb className="w-4 h-4" /> 
+    },
+    { 
+      key: 'practice', 
+      label: t('practice'), 
+      icon: <Book className="w-4 h-4" /> 
+    },
+    { 
+      key: 'culture', 
+      label: t('culture'), 
+      icon: <Star className="w-4 h-4" /> 
+    },
+    { 
+      key: 'tips', 
+      label: t('tips'), 
+      icon: <Sparkles className="w-4 h-4" /> 
+    }
+  ];
+
+  const handleQuickAction = (action: string) => {
+    const actionMessages: any = {
+      fa: {
+        help: "کمک",
+        practice: "می‌خوام تمرین کنم",
+        culture: "درباره فرهنگ ایران بگو",
+        tips: "نکاتی برای یادگیری بهتر بده"
+      },
+      en: {
+        help: "help",
+        practice: "I want to practice",
+        culture: "tell me about Iranian culture", 
+        tips: "give me learning tips"
+      }
+    };
     
-    switch (companionEmotion) {
-      case 'excited':
-        return `${baseClasses} bg-gradient-to-br from-yellow-400 to-orange-500 animate-bounce`;
-      case 'encouraging':
-        return `${baseClasses} bg-gradient-to-br from-green-400 to-blue-500 animate-pulse`;
-      case 'thinking':
-        return `${baseClasses} bg-gradient-to-br from-purple-400 to-pink-500 animate-spin`;
-      case 'celebrating':
-        return `${baseClasses} bg-gradient-to-br from-pink-400 to-red-500 animate-ping`;
-      default:
-        return `${baseClasses} bg-gradient-to-br from-blue-400 to-purple-500`;
-    }
-  };
-
-  const getCompanionEmoji = () => {
-    switch (companionEmotion) {
-      case 'excited': return '🤩';
-      case 'encouraging': return '💪';
-      case 'thinking': return '🤔';
-      case 'celebrating': return '🎉';
-      default: return '😊';
-    }
-  };
-
-  const getRandomEncouragement = () => {
-    const encouragements = [
-      "عالی! / Excellent!",
-      "آفرین! / Well done!",
-      "تو داری خیلی خوب پیش میری! / You're doing great!",
-      "ادامه بده! / Keep going!",
-      "فوق‌العاده! / Amazing!"
-    ];
-    return encouragements[Math.floor(Math.random() * encouragements.length)];
+    const message = actionMessages[currentLanguage]?.[action] || action;
+    setInputMessage(message);
+    handleSendMessage();
   };
 
   if (!isVisible) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
-        <Button
-          onClick={onToggle}
-          className="rounded-full w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
-        >
-          <div className="text-2xl">🤖</div>
-        </Button>
-      </div>
+      <Button
+        onClick={onToggle}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg z-50"
+      >
+        <MessageCircle className="w-6 h-6 text-white" />
+      </Button>
     );
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-96 max-h-[600px] flex flex-col">
-      <Card className="flex-1 shadow-2xl border-2 border-blue-200 dark:border-blue-800 overflow-hidden">
-        {/* Companion Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
+    <Card className="fixed bottom-6 right-6 w-80 h-96 shadow-xl z-50 bg-white dark:bg-gray-800">
+      <CardContent className="p-0 h-full flex flex-col">
+        {/* Header */}
+        <div className="p-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className={getCompanionAvatar()}>
-                <span>{getCompanionEmoji()}</span>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                <MessageCircle className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-bold text-lg">لکسی / Lexi</h3>
-                <p className="text-xs opacity-90">دستیار یادگیری هوشمند / AI Learning Companion</p>
+                <h3 className="font-semibold">Lexi</h3>
+                <p className="text-xs opacity-90">
+                  {currentLanguage === 'fa' ? 'دستیار یادگیری' : 'Learning Companion'}
+                </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsSpeaking(!isSpeaking)}
-                className="text-white hover:bg-white/20"
-              >
-                {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onToggle}
-                className="text-white hover:bg-white/20"
-              >
-                ✕
-              </Button>
-            </div>
-          </div>
-          
-          {/* Companion Stats */}
-          <div className="flex justify-between mt-3 text-xs">
-            <div className="flex items-center">
-              <MessageCircle className="h-3 w-3 mr-1" />
-              {companionStats.conversationsToday} گفتگو امروز
-            </div>
-            <div className="flex items-center">
-              <Lightbulb className="h-3 w-3 mr-1" />
-              {companionStats.helpfulTips} نکته مفید
-            </div>
-            <div className="flex items-center">
-              <Heart className="h-3 w-3 mr-1" />
-              {companionStats.encouragements} تشویق
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggle}
+              className="text-white hover:bg-white hover:bg-opacity-20"
+            >
+              ×
+            </Button>
           </div>
         </div>
 
-        {/* Messages Area */}
-        <CardContent className="p-0 flex-1 overflow-hidden">
-          <div className="h-80 overflow-y-auto p-4 bg-gradient-to-b from-blue-50/30 to-purple-50/30 dark:from-blue-900/10 dark:to-purple-900/10">
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`max-w-[80%] ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
-                    <div
-                      className={`p-3 rounded-2xl ${
-                        message.type === 'user'
-                          ? 'bg-blue-600 text-white rounded-br-sm'
-                          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-bl-sm'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      {message.pronunciation && (
-                        <div className="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                          <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                            <strong>تلفظ / Pronunciation:</strong> {message.pronunciation}
-                          </p>
-                        </div>
-                      )}
-                      {message.culturalTip && (
-                        <div className="mt-2 p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                          <p className="text-xs text-purple-800 dark:text-purple-200">
-                            <strong>نکته فرهنگی / Cultural Tip:</strong> {message.culturalTip}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1 px-2">
-                      {message.timestamp.toLocaleTimeString('fa-IR', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </p>
-                  </div>
-                  
-                  {message.type === 'companion' && (
-                    <div className="order-2 ml-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-sm">
-                        {getCompanionEmoji()}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              
-              {sendToCompanion.isPending && (
-                <div className="flex justify-start">
-                  <div className="bg-white dark:bg-gray-800 border rounded-2xl rounded-bl-sm p-3 max-w-[80%]">
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-bounce">🤔</div>
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-100"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-200"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div ref={messagesEndRef} />
-          </div>
-        </CardContent>
-
-        {/* Input Area */}
-        <div className="p-4 border-t bg-white dark:bg-gray-900">
-          <div className="flex space-x-2">
-            <div className="flex-1 relative">
-              <Input
-                placeholder="سؤال خود را بپرسید... / Ask your question..."
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                className="pr-12"
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={startVoiceRecognition}
-                disabled={isListening}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[80%] p-3 rounded-lg ${
+                  message.type === 'user'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                }`}
               >
-                {isListening ? (
-                  <div className="flex items-center">
-                    <MicOff className="h-4 w-4 text-red-500 animate-pulse" />
+                {message.type === 'companion' && (
+                  <div className="flex items-center gap-2 mb-1">
+                    {getEmotionIcon(message.emotion)}
+                    <span className="text-xs font-medium">Lexi</span>
                   </div>
-                ) : (
-                  <Mic className="h-4 w-4" />
                 )}
-              </Button>
+                <p className="text-sm">{message.content}</p>
+                
+                {message.culturalTip && (
+                  <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs">
+                    <Star className="w-3 h-3 inline mr-1" />
+                    {message.culturalTip}
+                  </div>
+                )}
+                
+                {message.pronunciation && (
+                  <div className="mt-1 text-xs opacity-70">
+                    🔊 {message.pronunciation}
+                  </div>
+                )}
+              </div>
             </div>
-            <Button 
-              onClick={handleSendMessage} 
-              disabled={!inputMessage.trim() || sendToCompanion.isPending}
-              className="bg-gradient-to-r from-blue-500 to-purple-600"
-            >
-              <MessageCircle className="h-4 w-4" />
-            </Button>
-          </div>
+          ))}
           
-          {/* Quick Actions */}
-          <div className="flex flex-wrap gap-2 mt-3">
+          {sendToCompanion.isPending && (
+            <div className="flex justify-start">
+              <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full"></div>
+                  <span className="text-sm">{t('typing')}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Quick Actions */}
+        <div className="p-2 border-t">
+          <div className="flex gap-1">
+            {quickActions.map((action) => (
+              <Button
+                key={action.key}
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickAction(action.key)}
+                className="flex-1 text-xs h-8"
+              >
+                {action.icon}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Input */}
+        <div className="p-3 border-t">
+          <div className="flex gap-2">
+            <Input
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder={t('placeholder')}
+              className="flex-1"
+              dir={currentLanguage === 'fa' ? 'rtl' : 'ltr'}
+            />
             <Button
-              variant="outline"
+              onClick={handleSendMessage}
+              disabled={!inputMessage.trim() || sendToCompanion.isPending}
               size="sm"
-              onClick={() => setInputMessage("راهنمایی در مورد این درس / Help with this lesson")}
-              className="text-xs"
             >
-              <Book className="h-3 w-3 mr-1" />
-              راهنمای درس
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                toast({
-                  title: getRandomEncouragement(),
-                  description: "به کارت ادامه بده! / Keep up the great work!",
-                });
-                setCompanionEmotion('encouraging');
-              }}
-              className="text-xs"
-            >
-              <Trophy className="h-3 w-3 mr-1" />
-              تشویق
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setInputMessage("نکته فرهنگی بده / Give me a cultural tip")}
-              className="text-xs"
-            >
-              <Sparkles className="h-3 w-3 mr-1" />
-              نکته فرهنگی
+              {t('send')}
             </Button>
           </div>
         </div>
-      </Card>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
