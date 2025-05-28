@@ -27,6 +27,9 @@ import {
   Award,
   Target
 } from "lucide-react";
+import { CreateAssignmentModal } from "@/components/create-assignment-modal";
+import { ScheduleSessionModal } from "@/components/schedule-session-modal";
+import { SendAnnouncementModal } from "@/components/send-announcement-modal";
 
 interface TeacherStats {
   totalStudents: number;
@@ -303,18 +306,24 @@ export default function TeacherDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Button className="h-20 flex-col space-y-2">
-                    <Plus className="h-6 w-6" />
-                    <span>Create Assignment</span>
-                  </Button>
-                  <Button variant="outline" className="h-20 flex-col space-y-2">
-                    <Calendar className="h-6 w-6" />
-                    <span>Schedule Session</span>
-                  </Button>
-                  <Button variant="outline" className="h-20 flex-col space-y-2">
-                    <MessageSquare className="h-6 w-6" />
-                    <span>Send Announcement</span>
-                  </Button>
+                  <CreateAssignmentModal>
+                    <Button className="h-20 flex-col space-y-2">
+                      <Plus className="h-6 w-6" />
+                      <span>Create Assignment</span>
+                    </Button>
+                  </CreateAssignmentModal>
+                  <ScheduleSessionModal>
+                    <Button variant="outline" className="h-20 flex-col space-y-2">
+                      <Calendar className="h-6 w-6" />
+                      <span>Schedule Session</span>
+                    </Button>
+                  </ScheduleSessionModal>
+                  <SendAnnouncementModal>
+                    <Button variant="outline" className="h-20 flex-col space-y-2">
+                      <MessageSquare className="h-6 w-6" />
+                      <span>Send Announcement</span>
+                    </Button>
+                  </SendAnnouncementModal>
                 </div>
               </CardContent>
             </Card>
