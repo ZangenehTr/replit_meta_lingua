@@ -181,16 +181,14 @@ Return JSON format:
   "practiceQuestions": ["list of practice questions"]
 }`;
 
-      const message = await anthropic.messages.create({
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
         max_tokens: 1800,
-        messages: [{ role: 'user', content: prompt }],
-        model: 'claude-3-7-sonnet-20250219',
       });
 
-      const response = message.content[0];
-      if (response.type === 'text') {
-        return JSON.parse(response.text);
-      }
+      return JSON.parse(response.choices[0].message.content || '{}');
       throw new Error('Invalid response format');
     } catch (error) {
       console.error('Error generating conversation scenario:', error);
