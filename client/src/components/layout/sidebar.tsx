@@ -32,7 +32,7 @@ export function Sidebar() {
   const [location] = useLocation();
 
   return (
-    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 fixed h-full overflow-y-auto">
+    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 fixed h-full overflow-y-auto hidden md:block">
       <div className="p-6">
         <nav className="space-y-2">
           {navigationItems.map((item) => {
@@ -75,7 +75,10 @@ export function Sidebar() {
           <Button 
             variant="ghost" 
             className="w-full justify-start"
-            onClick={logout}
+            onClick={() => {
+              localStorage.removeItem("auth_token");
+              window.location.href = "/auth";
+            }}
           >
             <LogOut className="mr-3 h-4 w-4" />
             <span>Sign Out</span>

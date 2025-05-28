@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { Badge } from "@/components/ui/badge";
+import { MobileNav } from "./mobile-nav";
 
 export function Navigation() {
   const { user, logout, updatePreferences } = useAuth();
@@ -49,6 +50,9 @@ export function Navigation() {
               </div>
             </div>
           </div>
+
+          {/* Mobile Navigation */}
+          <MobileNav />
 
           {/* User Actions */}
           <div className="flex items-center space-x-4">
