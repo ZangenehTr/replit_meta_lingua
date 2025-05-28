@@ -869,6 +869,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create assignment endpoint
+  app.post("/api/teacher/assignments", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'teacher') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const { title, description, course, dueDate, maxPoints, instructions } = req.body;
+      
+      const assignment = {
+        id: Date.now(),
+        title,
+        description,
+        course,
+        dueDate,
+        maxPoints: maxPoints || 100,
+        instructions,
+        teacherId: req.user.userId,
+        status: "active",
+        createdAt: new Date().toISOString()
+      };
+
+      res.status(201).json({ 
+        message: "Assignment created successfully", 
+        assignment 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create assignment" });
+    }
+  });
+
+  // Schedule session endpoint
+  app.post("/api/teacher/sessions", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'teacher') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const { title, course, scheduledAt, duration, description, materials, objectives } = req.body;
+      
+      const session = {
+        id: Date.now(),
+        title,
+        course,
+        scheduledAt,
+        duration,
+        description,
+        materials,
+        objectives,
+        teacherId: req.user.userId,
+        status: "scheduled",
+        roomId: `room-${Date.now()}`,
+        createdAt: new Date().toISOString()
+      };
+
+      res.status(201).json({ 
+        message: "Session scheduled successfully", 
+        session 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to schedule session" });
+    }
+  });
+
+  // Send announcement endpoint
+  app.post("/api/teacher/announcements", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'teacher') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const { title, message, priority, sendToAll, courses, scheduleForLater } = req.body;
+      
+      const announcement = {
+        id: Date.now(),
+        title,
+        message,
+        priority,
+        sendToAll,
+        courses: sendToAll ? [] : courses,
+        teacherId: req.user.userId,
+        scheduledFor: scheduleForLater ? null : new Date().toISOString(),
+        status: scheduleForLater ? "scheduled" : "sent",
+        createdAt: new Date().toISOString()
+      };
+
+      res.status(201).json({ 
+        message: "Announcement sent successfully", 
+        announcement 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to send announcement" });
+    }
+  });
+
   // Branding endpoints
   app.get("/api/branding", async (req, res) => {
     const branding = await storage.getBranding();
