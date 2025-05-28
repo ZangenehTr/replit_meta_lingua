@@ -620,6 +620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         culturalTip = "Iranian hospitality is one of the most cherished cultural values";
       }
 
+      console.log('AI Response:', { content, emotion, culturalTip });
       res.json({
         content,
         emotion,
