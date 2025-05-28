@@ -601,12 +601,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'llama3.2', // Default Ollama model
+          model: 'llama3.2',
           prompt: fullPrompt,
           stream: false,
           options: {
             temperature: 0.7,
-            max_tokens: 300
+            num_predict: 200
           }
         })
       });
