@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Navigation } from "@/components/layout/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { WelcomeSection } from "@/components/dashboard/welcome-section";
@@ -10,8 +11,11 @@ import { RecentMessages } from "@/components/dashboard/recent-messages";
 import { HomeworkTasks } from "@/components/dashboard/homework-tasks";
 import { PaymentCredits } from "@/components/dashboard/payment-credits";
 import { LiveClassroom } from "@/components/dashboard/live-classroom";
+import AICompanion from "@/components/ai-companion";
 
 export default function Dashboard() {
+  const [companionVisible, setCompanionVisible] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -44,6 +48,14 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
+      
+      {/* AI Learning Companion - Parsa */}
+      <AICompanion 
+        isVisible={companionVisible}
+        onToggle={() => setCompanionVisible(!companionVisible)}
+        studentLevel="intermediate"
+        currentLesson="Persian Conversation Basics"
+      />
     </div>
   );
 }
