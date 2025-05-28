@@ -167,16 +167,16 @@ export function CourseProgress() {
               .filter(course => !courses?.some(enrolled => enrolled.id === course.id))
               .map((course) => (
               <div key={course.id} className="border rounded-lg p-4">
-                <div className="flex items-start space-x-4">
+                <div className="flex flex-col sm:flex-row items-start gap-4">
                   <img
                     src={course.thumbnail}
                     alt={course.title}
-                    className="w-16 h-16 rounded-lg object-cover"
+                    className="w-full sm:w-16 h-32 sm:h-16 rounded-lg object-cover"
                   />
-                  <div className="flex-1">
+                  <div className="flex-1 w-full">
                     <h4 className="font-medium">{course.title}</h4>
                     <p className="text-sm text-muted-foreground">{course.description}</p>
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
                       <Badge variant="outline">{course.language}</Badge>
                       <Badge variant="secondary">{course.level}</Badge>
                       {course.duration && (
@@ -197,6 +197,7 @@ export function CourseProgress() {
                     onClick={() => enrollMutation.mutate(course.id)}
                     disabled={enrollMutation.isPending}
                     size="sm"
+                    className="w-full sm:w-auto"
                   >
                     {enrollMutation.isPending ? "Enrolling..." : "Enroll Now"}
                   </Button>
