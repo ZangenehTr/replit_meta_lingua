@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import Auth from "@/pages/auth";
 import Dashboard from "@/pages/dashboard";
 import DemoDashboard from "@/pages/demo-dashboard";
+import AdminDashboard from "@/pages/admin-dashboard";
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
 
