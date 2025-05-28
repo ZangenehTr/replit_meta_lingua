@@ -10,6 +10,7 @@ import Auth from "@/pages/auth";
 import Dashboard from "@/pages/dashboard";
 import DemoDashboard from "@/pages/demo-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
+import ManagerDashboard from "@/pages/manager-dashboard";
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
 
@@ -42,6 +43,11 @@ function Router() {
       <Route path="/admin">
         <ProtectedRoute>
           <AdminDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/manager">
+        <ProtectedRoute>
+          <ManagerDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/dashboard">
