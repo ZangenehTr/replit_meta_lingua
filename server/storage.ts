@@ -1,11 +1,15 @@
 import { 
   users, courses, enrollments, sessions, messages, homework, 
-  payments, notifications, instituteBranding,
+  payments, notifications, instituteBranding, studentProfiles, leads, invoices,
+  teacherPerformance, attendance, communicationLogs,
   type User, type InsertUser, type Course, type InsertCourse,
   type Enrollment, type InsertEnrollment, type Session, type InsertSession,
   type Message, type InsertMessage, type Homework, type InsertHomework,
   type Payment, type InsertPayment, type Notification, type InsertNotification,
-  type InstituteBranding, type InsertBranding
+  type InstituteBranding, type InsertBranding, type StudentProfile, type InsertStudentProfile,
+  type Lead, type InsertLead, type Invoice, type InsertInvoice,
+  type TeacherPerformance, type InsertTeacherPerformance, type Attendance, type InsertAttendance,
+  type CommunicationLog, type InsertCommunicationLog
 } from "@shared/schema";
 
 export interface IStorage {
@@ -59,6 +63,36 @@ export interface IStorage {
   // Tutors
   getTutors(): Promise<User[]>;
   getFeaturedTutors(): Promise<User[]>;
+
+  // CRM - Student Management
+  getStudentProfiles(): Promise<(StudentProfile & { userName: string, userEmail: string })[]>;
+  getStudentProfile(userId: number): Promise<StudentProfile | undefined>;
+  createStudentProfile(profile: InsertStudentProfile): Promise<StudentProfile>;
+  updateStudentProfile(id: number, updates: Partial<StudentProfile>): Promise<StudentProfile | undefined>;
+
+  // CRM - Lead Management
+  getLeads(): Promise<(Lead & { assignedToName?: string })[]>;
+  getLead(id: number): Promise<Lead | undefined>;
+  createLead(lead: InsertLead): Promise<Lead>;
+  updateLead(id: number, updates: Partial<Lead>): Promise<Lead | undefined>;
+
+  // CRM - Financial Management
+  getInvoices(): Promise<(Invoice & { studentName: string, courseName?: string })[]>;
+  getInvoice(id: number): Promise<Invoice | undefined>;
+  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
+  updateInvoice(id: number, updates: Partial<Invoice>): Promise<Invoice | undefined>;
+
+  // CRM - Teacher Performance
+  getTeacherPerformance(teacherId?: number): Promise<TeacherPerformance[]>;
+  createTeacherPerformance(performance: InsertTeacherPerformance): Promise<TeacherPerformance>;
+
+  // CRM - Attendance
+  getAttendance(sessionId?: number, studentId?: number): Promise<Attendance[]>;
+  createAttendance(attendance: InsertAttendance): Promise<Attendance>;
+
+  // CRM - Communication Logs
+  getCommunicationLogs(contactId?: number): Promise<(CommunicationLog & { staffName: string })[]>;
+  createCommunicationLog(log: InsertCommunicationLog): Promise<CommunicationLog>;
 }
 
 export class MemStorage implements IStorage {
