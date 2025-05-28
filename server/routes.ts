@@ -1915,6 +1915,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Companion Chat
+  app.post("/api/ai/companion-chat", authenticateToken, async (req: any, res) => {
+    try {
+      const { message, context } = req.body;
+      
+      const prompt = `You are Parsa (پارسا), a delightful and encouraging AI companion for Persian language learners. You have a playful, supportive personality and help students learn Persian in a fun way.
+
+Context:
+- Student Level: ${context.level || 'intermediate'}
+- Current Lesson: ${context.currentLesson || 'general practice'}
+- Previous Messages: ${JSON.stringify(context.previousMessages || [])}
+
+Student Message: "${message}"
+
+Respond as Parsa with:
+1. A helpful, encouraging response in both Persian and English
+2. An appropriate emotion for your animated character
+3. Optional cultural tips or pronunciation help
+4. Keep responses concise but warm and supportive
+
+Return JSON format:
+{
+  "response": "Your bilingual response (Persian / English)",
+  "emotion": "happy|excited|encouraging|thinking|celebrating",
+  "culturalTip": "optional cultural insight",
+  "pronunciation": "optional pronunciation guide"
+}`;
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: prompt }],
+          response_format: { type: "json_object" },
+          max_tokens: 800,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('OpenAI API request failed');
+      }
+
+      const data = await response.json();
+      const result = JSON.parse(data.choices[0].message.content || '{}');
+
+      res.json({
+        response: result.response || "سلام! چطور می‌تونم کمکت کنم؟ / Hello! How can I help you?",
+        emotion: result.emotion || "happy",
+        culturalTip: result.culturalTip,
+        pronunciation: result.pronunciation
+      });
+    } catch (error) {
+      console.error('Companion chat error:', error);
+      res.json({
+        response: "متأسفم، الان نمی‌تونم جواب بدم. دوباره تلاش کن! / Sorry, I can't respond right now. Please try again!",
+        emotion: "encouraging",
+        culturalTip: null,
+        pronunciation: null
+      });
+    }
+  });
+
   // Branding endpoints
   app.get("/api/branding", async (req, res) => {
     const branding = await storage.getBranding();
