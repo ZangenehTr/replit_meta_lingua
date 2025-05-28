@@ -212,7 +212,7 @@ export function LiveClassroom() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Video Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-64">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-48 md:h-64">
             <div className="relative bg-gray-900 rounded-lg overflow-hidden">
               <video
                 ref={localVideoRef}
@@ -245,7 +245,7 @@ export function LiveClassroom() {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 flex-wrap">
             <Button
               variant={videoState.isAudioEnabled ? "default" : "destructive"}
               size="sm"
