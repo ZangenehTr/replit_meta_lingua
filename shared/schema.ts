@@ -31,7 +31,114 @@ export const courses = pgTable("courses", {
   thumbnail: text("thumbnail"),
   instructorId: integer("instructor_id").references(() => users.id),
   price: integer("price").default(0),
+  duration: integer("duration"), // in minutes
+  totalLessons: integer("total_lessons").default(0),
+  category: text("category").notNull(),
+  tags: text("tags").array(),
+  prerequisites: text("prerequisites").array(),
+  learningObjectives: text("learning_objectives").array(),
+  difficulty: text("difficulty").default("beginner"),
+  certificateTemplate: text("certificate_template"),
   isActive: boolean("is_active").default(true),
+  isFeatured: boolean("is_featured").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Course lessons
+export const courseLessons = pgTable("course_lessons", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull().references(() => courses.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  videoUrl: text("video_url"),
+  duration: integer("duration"), // in seconds
+  order: integer("order").notNull(),
+  transcript: text("transcript"),
+  notes: text("notes"),
+  resources: text("resources").array(),
+  isPreview: boolean("is_preview").default(false),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Lesson quizzes
+export const lessonQuizzes = pgTable("lesson_quizzes", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lesson_id").notNull().references(() => courseLessons.id),
+  title: text("title").notNull(),
+  questions: text("questions").notNull(), // JSON string
+  passingScore: integer("passing_score").default(70),
+  timeLimit: integer("time_limit"), // in minutes
+  maxAttempts: integer("max_attempts").default(3),
+  isRequired: boolean("is_required").default(false),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Quiz attempts
+export const quizAttempts = pgTable("quiz_attempts", {
+  id: serial("id").primaryKey(),
+  quizId: integer("quiz_id").notNull().references(() => lessonQuizzes.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  answers: text("answers").notNull(), // JSON string
+  score: integer("score").notNull(),
+  isPassed: boolean("is_passed").notNull(),
+  timeSpent: integer("time_spent"), // in seconds
+  attemptNumber: integer("attempt_number").notNull(),
+  completedAt: timestamp("completed_at").defaultNow()
+});
+
+// Course progress tracking
+export const courseProgress = pgTable("course_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  courseId: integer("course_id").notNull().references(() => courses.id),
+  lessonId: integer("lesson_id").references(() => courseLessons.id),
+  progressPercentage: integer("progress_percentage").default(0),
+  watchTime: integer("watch_time").default(0), // in seconds
+  lastWatchedAt: timestamp("last_watched_at"),
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  notes: text("notes"),
+  bookmarks: text("bookmarks").array(), // timestamps in video
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Flashcard decks
+export const flashcardDecks = pgTable("flashcard_decks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  courseId: integer("course_id").references(() => courses.id),
+  lessonId: integer("lesson_id").references(() => courseLessons.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  isPublic: boolean("is_public").default(false),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Individual flashcards
+export const flashcards = pgTable("flashcards", {
+  id: serial("id").primaryKey(),
+  deckId: integer("deck_id").notNull().references(() => flashcardDecks.id),
+  front: text("front").notNull(),
+  back: text("back").notNull(),
+  difficulty: integer("difficulty").default(1), // 1-5 for SRS
+  nextReview: timestamp("next_review").defaultNow(),
+  reviewCount: integer("review_count").default(0),
+  correctCount: integer("correct_count").default(0),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Course certificates
+export const courseCertificates = pgTable("course_certificates", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  courseId: integer("course_id").notNull().references(() => courses.id),
+  certificateNumber: text("certificate_number").notNull().unique(),
+  issueDate: timestamp("issue_date").defaultNow(),
+  pdfUrl: text("pdf_url"),
+  verificationHash: text("verification_hash"),
+  isValid: boolean("is_valid").default(true),
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -264,6 +371,43 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 export const insertBrandingSchema = createInsertSchema(instituteBranding).omit({
   id: true,
   updatedAt: true
+});
+
+// Course and lesson schemas
+export const insertCourseLessonSchema = createInsertSchema(courseLessons).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertLessonQuizSchema = createInsertSchema(lessonQuizzes).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertQuizAttemptSchema = createInsertSchema(quizAttempts).omit({
+  id: true,
+  completedAt: true
+});
+
+export const insertCourseProgressSchema = createInsertSchema(courseProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertFlashcardDeckSchema = createInsertSchema(flashcardDecks).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertFlashcardSchema = createInsertSchema(flashcards).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertCourseCertificateSchema = createInsertSchema(courseCertificates).omit({
+  id: true,
+  createdAt: true
 });
 
 // CRM Insert Schemas

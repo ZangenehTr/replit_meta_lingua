@@ -1151,6 +1151,607 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== STRUCTURED VIDEO COURSES API =====
+  
+  // Get course with lessons for player
+  app.get("/api/courses/:courseId/player", authenticateToken, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const course = await storage.getCourse(courseId);
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Mock comprehensive course data with lessons
+      const courseData = {
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        instructor: "Dr. Maryam Hosseini",
+        level: course.level,
+        language: course.language,
+        totalLessons: 12,
+        completedLessons: 3,
+        progress: 25,
+        lessons: [
+          {
+            id: 1,
+            title: "مقدمه‌ای بر دستور زبان فارسی / Introduction to Persian Grammar",
+            description: "آشنایی با اصول پایه دستور زبان فارسی و ساختار جمله",
+            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+            duration: 1200, // 20 minutes
+            order: 1,
+            transcript: "در این درس با اصول پایه دستور زبان فارسی آشنا می‌شوید...",
+            notes: "نکات مهم درس",
+            resources: ["Persian Grammar Basics.pdf", "Exercise Sheet 1.pdf"],
+            isPreview: true,
+            isCompleted: true
+          },
+          {
+            id: 2,
+            title: "انواع کلمات در فارسی / Types of Words in Persian",
+            description: "بررسی انواع کلمات: اسم، فعل، صفت، قید",
+            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+            duration: 900,
+            order: 2,
+            transcript: "در زبان فارسی انواع مختلفی از کلمات وجود دارد...",
+            notes: "",
+            resources: ["Word Types Chart.pdf"],
+            isPreview: false,
+            isCompleted: true
+          },
+          {
+            id: 3,
+            title: "ساختار جمله در فارسی / Sentence Structure in Persian",
+            description: "نحوه تشکیل جملات ساده و مرکب",
+            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+            duration: 1080,
+            order: 3,
+            transcript: "ساختار جمله در فارسی معمولاً فاعل + مفعول + فعل است...",
+            notes: "",
+            resources: ["Sentence Examples.pdf", "Practice Exercises.pdf"],
+            isPreview: false,
+            isCompleted: true
+          },
+          {
+            id: 4,
+            title: "زمان‌های فعل / Verb Tenses",
+            description: "آشنایی با زمان‌های مختلف فعل در فارسی",
+            videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+            duration: 1350,
+            order: 4,
+            transcript: "",
+            notes: "",
+            resources: ["Verb Conjugation Table.pdf"],
+            isPreview: false,
+            isCompleted: false
+          }
+        ]
+      };
+
+      res.json(courseData);
+    } catch (error) {
+      console.error('Course player error:', error);
+      res.status(500).json({ message: "Failed to get course data" });
+    }
+  });
+
+  // Update course progress
+  app.post("/api/courses/:courseId/progress", authenticateToken, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const { lessonId, watchTime, progress, notes, bookmarks } = req.body;
+
+      // In a real implementation, this would update the courseProgress table
+      const progressData = {
+        userId: req.user.userId,
+        courseId,
+        lessonId,
+        progressPercentage: progress,
+        watchTime,
+        notes,
+        bookmarks,
+        lastWatchedAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      res.json({ message: "Progress updated successfully", progress: progressData });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update progress" });
+    }
+  });
+
+  // Mark lesson as complete
+  app.post("/api/courses/:courseId/lessons/:lessonId/complete", authenticateToken, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const lessonId = parseInt(req.params.lessonId);
+
+      // Mark lesson as completed
+      const completion = {
+        userId: req.user.userId,
+        courseId,
+        lessonId,
+        isCompleted: true,
+        completedAt: new Date()
+      };
+
+      res.json({ message: "Lesson marked as complete", completion });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark lesson complete" });
+    }
+  });
+
+  // ===== TUTOR MARKETPLACE API =====
+  
+  // Get all tutors
+  app.get("/api/marketplace/tutors", async (req, res) => {
+    try {
+      const { language, level, specialization, minRating, maxPrice } = req.query;
+      
+      const tutors = [
+        {
+          id: 1,
+          name: "دکتر سارا احمدی / Dr. Sara Ahmadi",
+          avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b547?w=150",
+          specializations: ["Persian Literature", "Advanced Grammar", "Poetry"],
+          languages: ["Persian", "English"],
+          rating: 4.9,
+          reviewCount: 127,
+          completedSessions: 450,
+          hourlyRate: 350000, // Toman
+          availability: "Available Now",
+          experience: "8 years",
+          education: "PhD in Persian Literature, University of Tehran",
+          description: "متخصص ادبیات فارسی با تجربه تدریس بیش از ۸ سال",
+          bio: "I specialize in Persian literature and advanced grammar. My teaching method focuses on practical conversation and cultural context.",
+          responseTime: "Usually responds within 1 hour",
+          successRate: 95,
+          packages: [
+            { sessions: 1, price: 350000, discount: 0 },
+            { sessions: 5, price: 1575000, discount: 10 },
+            { sessions: 10, price: 2800000, discount: 20 }
+          ]
+        },
+        {
+          id: 2,
+          name: "استاد حسین رضایی / Prof. Hossein Rezaei",
+          avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
+          specializations: ["Business Persian", "Conversation", "Pronunciation"],
+          languages: ["Persian", "English", "Arabic"],
+          rating: 4.8,
+          reviewCount: 89,
+          completedSessions: 320,
+          hourlyRate: 280000,
+          availability: "Next available: Tomorrow 2 PM",
+          experience: "5 years",
+          education: "MA in Applied Linguistics, Sharif University",
+          description: "مربی مکالمه فارسی برای تجارت و کسب‌وکار",
+          bio: "I help professionals master business Persian and improve their conversation skills for workplace success.",
+          responseTime: "Usually responds within 3 hours",
+          successRate: 92,
+          packages: [
+            { sessions: 1, price: 280000, discount: 0 },
+            { sessions: 5, price: 1260000, discount: 10 },
+            { sessions: 10, price: 2240000, discount: 20 }
+          ]
+        },
+        {
+          id: 3,
+          name: "خانم فاطمه کریمی / Ms. Fatemeh Karimi",
+          avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
+          specializations: ["Beginner Persian", "Reading", "Writing"],
+          languages: ["Persian", "English"],
+          rating: 4.7,
+          reviewCount: 156,
+          completedSessions: 580,
+          hourlyRate: 220000,
+          availability: "Available Now",
+          experience: "6 years",
+          education: "BA in Persian Language Teaching, Allameh Tabataba'i University",
+          description: "معلم صبور و با تجربه برای مبتدیان",
+          bio: "I love working with beginners and helping them build a strong foundation in Persian language and culture.",
+          responseTime: "Usually responds within 30 minutes",
+          successRate: 96,
+          packages: [
+            { sessions: 1, price: 220000, discount: 0 },
+            { sessions: 5, price: 990000, discount: 10 },
+            { sessions: 10, price: 1760000, discount: 20 }
+          ]
+        }
+      ];
+
+      // Apply filters
+      let filteredTutors = tutors;
+      
+      if (language) {
+        filteredTutors = filteredTutors.filter(tutor => 
+          tutor.languages.some(lang => lang.toLowerCase().includes(language.toString().toLowerCase()))
+        );
+      }
+      
+      if (minRating) {
+        filteredTutors = filteredTutors.filter(tutor => tutor.rating >= parseFloat(minRating.toString()));
+      }
+      
+      if (maxPrice) {
+        filteredTutors = filteredTutors.filter(tutor => tutor.hourlyRate <= parseInt(maxPrice.toString()));
+      }
+
+      res.json(filteredTutors);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get tutors" });
+    }
+  });
+
+  // Get tutor details
+  app.get("/api/marketplace/tutors/:tutorId", async (req, res) => {
+    try {
+      const tutorId = parseInt(req.params.tutorId);
+      
+      // Mock detailed tutor data
+      const tutor = {
+        id: tutorId,
+        name: "دکتر سارا احمدی / Dr. Sara Ahmadi",
+        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b547?w=300",
+        specializations: ["Persian Literature", "Advanced Grammar", "Poetry"],
+        languages: ["Persian", "English"],
+        rating: 4.9,
+        reviewCount: 127,
+        completedSessions: 450,
+        hourlyRate: 350000,
+        availability: "Available Now",
+        experience: "8 years",
+        education: "PhD in Persian Literature, University of Tehran",
+        certifications: ["TESOL Certified", "Persian Language Teaching Certificate"],
+        description: "متخصص ادبیات فارسی با تجربه تدریس بیش از ۸ سال",
+        bio: "I specialize in Persian literature and advanced grammar. My teaching method focuses on practical conversation and cultural context. I have helped over 450 students achieve their Persian language goals.",
+        responseTime: "Usually responds within 1 hour",
+        successRate: 95,
+        teachingStyle: "Interactive and conversation-focused",
+        availableSlots: [
+          { date: "2025-05-29", time: "09:00", available: true },
+          { date: "2025-05-29", time: "14:00", available: true },
+          { date: "2025-05-29", time: "16:00", available: false },
+          { date: "2025-05-30", time: "10:00", available: true },
+          { date: "2025-05-30", time: "15:00", available: true }
+        ],
+        packages: [
+          { sessions: 1, price: 350000, discount: 0, popular: false },
+          { sessions: 5, price: 1575000, discount: 10, popular: true },
+          { sessions: 10, price: 2800000, discount: 20, popular: false }
+        ],
+        reviews: [
+          {
+            id: 1,
+            studentName: "علی محمدی",
+            rating: 5,
+            date: "2025-05-20",
+            comment: "استاد فوق‌العاده‌ای است. روش تدریسش بسیار مؤثر و جذاب است.",
+            lessonTopic: "Persian Poetry Analysis"
+          },
+          {
+            id: 2,
+            studentName: "Sarah Johnson",
+            rating: 5,
+            date: "2025-05-18",
+            comment: "Dr. Ahmadi is an excellent teacher. She explains complex grammar concepts very clearly.",
+            lessonTopic: "Advanced Grammar"
+          }
+        ]
+      };
+
+      res.json(tutor);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get tutor details" });
+    }
+  });
+
+  // Book tutor session
+  app.post("/api/marketplace/tutors/:tutorId/book", authenticateToken, async (req: any, res) => {
+    try {
+      const tutorId = parseInt(req.params.tutorId);
+      const { packageType, selectedDate, selectedTime, sessionNotes } = req.body;
+
+      const booking = {
+        id: Date.now(),
+        userId: req.user.userId,
+        tutorId,
+        packageType,
+        scheduledDate: selectedDate,
+        scheduledTime: selectedTime,
+        sessionNotes,
+        status: 'confirmed',
+        paymentStatus: 'pending',
+        bookingDate: new Date(),
+        sessionUrl: null // Will be generated before session
+      };
+
+      res.status(201).json({ 
+        message: "Session booked successfully", 
+        booking,
+        nextStep: "payment"
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to book session" });
+    }
+  });
+
+  // ===== ON-DEMAND MENTORING API =====
+  
+  // Get available mentors
+  app.get("/api/mentoring/available-mentors", async (req, res) => {
+    try {
+      const mentors = [
+        {
+          id: 1,
+          name: "دکتر امیر حسینی / Dr. Amir Hosseini",
+          avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
+          specializations: ["Persian Grammar", "Literature", "Conversation"],
+          languages: ["Persian", "English"],
+          rating: 4.9,
+          reviewCount: 234,
+          totalMinutes: 15420,
+          isOnline: true,
+          responseTime: "Usually responds within 2 minutes",
+          pricePerMinute: 120, // Toman per minute
+          successRate: 96,
+          description: "متخصص ادبیات فارسی و دستور زبان با ۱۰ سال تجربه تدریس"
+        },
+        {
+          id: 2,
+          name: "خانم مریم صادقی / Ms. Maryam Sadeghi",
+          avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
+          specializations: ["Business Persian", "Pronunciation", "Writing"],
+          languages: ["Persian", "English", "French"],
+          rating: 4.8,
+          reviewCount: 189,
+          totalMinutes: 12350,
+          isOnline: true,
+          responseTime: "Usually responds within 1 minute",
+          pricePerMinute: 100,
+          successRate: 94,
+          description: "مربی فارسی تجاری و تلفظ صحیح با تخصص در آموزش به بازرگانان"
+        },
+        {
+          id: 3,
+          name: "استاد علی رضایی / Prof. Ali Rezaei",
+          avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+          specializations: ["Poetry", "Classical Persian", "Advanced Grammar"],
+          languages: ["Persian", "Arabic"],
+          rating: 4.7,
+          reviewCount: 156,
+          totalMinutes: 8900,
+          isOnline: false,
+          responseTime: "Usually responds within 5 minutes",
+          pricePerMinute: 150,
+          successRate: 98,
+          description: "استاد شعر و ادبیات کلاسیک فارسی با تخصص در حافظ و سعدی"
+        }
+      ];
+
+      res.json(mentors);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get mentors" });
+    }
+  });
+
+  // Get call history
+  app.get("/api/mentoring/call-history", authenticateToken, async (req: any, res) => {
+    try {
+      const callHistory = [
+        {
+          id: 1,
+          mentorName: "دکتر امیر حسینی",
+          mentorAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50",
+          duration: 12,
+          cost: 1440,
+          date: "1403/03/05",
+          topic: "Persian Grammar Questions",
+          rating: 5
+        },
+        {
+          id: 2,
+          mentorName: "خانم مریم صادقی",
+          mentorAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50",
+          duration: 8,
+          cost: 800,
+          date: "1403/03/03",
+          topic: "Business Persian Vocabulary",
+          rating: 5
+        },
+        {
+          id: 3,
+          mentorName: "دکتر امیر حسینی",
+          mentorAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50",
+          duration: 15,
+          cost: 1800,
+          date: "1403/02/28",
+          topic: "Conversation Practice",
+          rating: 4
+        }
+      ];
+
+      res.json(callHistory);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get call history" });
+    }
+  });
+
+  // Start call
+  app.post("/api/mentoring/start-call", authenticateToken, async (req: any, res) => {
+    try {
+      const { mentorId, topic, callType } = req.body;
+      
+      // In a real implementation, this would integrate with WebRTC/LiveKit
+      const session = {
+        id: Date.now(),
+        mentorId,
+        mentorName: "دکتر امیر حسینی",
+        mentorAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
+        startTime: new Date(),
+        duration: 0,
+        status: 'active',
+        cost: 0,
+        topic,
+        callType,
+        sessionUrl: `https://meet.metalingua.com/room/${Date.now()}` // Mock WebRTC room URL
+      };
+
+      res.status(201).json({ 
+        message: "Call started successfully", 
+        session 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to start call" });
+    }
+  });
+
+  // End call
+  app.post("/api/mentoring/end-call/:callId", authenticateToken, async (req: any, res) => {
+    try {
+      const callId = parseInt(req.params.callId);
+      
+      // In a real implementation, this would calculate actual call duration and cost
+      const callSummary = {
+        callId,
+        duration: Math.floor(Math.random() * 15) + 5, // 5-20 minutes
+        totalCost: Math.floor(Math.random() * 2000) + 500, // 500-2500 Toman
+        endTime: new Date(),
+        rating: null // User can rate later
+      };
+
+      res.json({ 
+        message: "Call ended successfully", 
+        summary: callSummary 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to end call" });
+    }
+  });
+
+  // ===== LIVE CLASSROOM (WebRTC) API =====
+  
+  // Create virtual classroom
+  app.post("/api/classroom/create", authenticateToken, async (req: any, res) => {
+    if (!['teacher', 'admin', 'manager'].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const { title, description, scheduledFor, duration, maxParticipants, features } = req.body;
+      
+      // In a real implementation, this would create a LiveKit room
+      const classroom = {
+        id: Date.now(),
+        title,
+        description,
+        teacherId: req.user.userId,
+        teacherName: "Dr. Maryam Hosseini",
+        scheduledFor,
+        duration,
+        maxParticipants: maxParticipants || 30,
+        currentParticipants: 0,
+        features: features || {
+          screenShare: true,
+          whiteboard: true,
+          breakoutRooms: true,
+          recording: true,
+          chat: true,
+          fileSharing: true
+        },
+        roomUrl: `https://classroom.metalingua.com/room/${Date.now()}`,
+        status: 'scheduled',
+        createdAt: new Date()
+      };
+
+      res.status(201).json({ 
+        message: "Virtual classroom created successfully", 
+        classroom 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create classroom" });
+    }
+  });
+
+  // Join virtual classroom
+  app.post("/api/classroom/:classroomId/join", authenticateToken, async (req: any, res) => {
+    try {
+      const classroomId = parseInt(req.params.classroomId);
+      
+      // In a real implementation, this would generate LiveKit access token
+      const accessToken = {
+        token: `lk_${Date.now()}_${req.user.userId}`,
+        roomUrl: `https://classroom.metalingua.com/room/${classroomId}`,
+        permissions: {
+          canPublish: req.user.role === 'teacher',
+          canSubscribe: true,
+          canPublishData: true,
+          canUpdateMetadata: req.user.role === 'teacher'
+        },
+        participantInfo: {
+          userId: req.user.userId,
+          name: req.user.firstName + ' ' + req.user.lastName,
+          role: req.user.role,
+          avatar: req.user.avatar || ""
+        }
+      };
+
+      res.json({ 
+        message: "Classroom access granted", 
+        accessToken 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to join classroom" });
+    }
+  });
+
+  // Get classroom sessions
+  app.get("/api/classroom/sessions", authenticateToken, async (req: any, res) => {
+    try {
+      const sessions = [
+        {
+          id: 1,
+          title: "Persian Grammar Fundamentals",
+          teacherName: "Dr. Maryam Hosseini",
+          scheduledFor: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          duration: 90,
+          currentParticipants: 12,
+          maxParticipants: 25,
+          status: 'scheduled',
+          features: ['Screen Share', 'Whiteboard', 'Recording']
+        },
+        {
+          id: 2,
+          title: "Persian Poetry Workshop",
+          teacherName: "Prof. Ahmad Mohammadi",
+          scheduledFor: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+          duration: 120,
+          currentParticipants: 8,
+          maxParticipants: 15,
+          status: 'scheduled',
+          features: ['Screen Share', 'Breakout Rooms', 'Chat']
+        },
+        {
+          id: 3,
+          title: "Business Persian Conversation",
+          teacherName: "Ms. Sara Karimi",
+          scheduledFor: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+          duration: 60,
+          currentParticipants: 0,
+          maxParticipants: 20,
+          status: 'completed',
+          features: ['Screen Share', 'Recording', 'Chat']
+        }
+      ];
+
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get classroom sessions" });
+    }
+  });
+
   // Branding endpoints
   app.get("/api/branding", async (req, res) => {
     const branding = await storage.getBranding();
