@@ -692,6 +692,183 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Teacher endpoints
+  app.get("/api/teacher/stats", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'teacher') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const stats = {
+        totalStudents: 28,
+        activeClasses: 4,
+        completedSessions: 156,
+        averageRating: 4.8,
+        pendingHomework: 12,
+        upcomingSessions: 3,
+        monthlyEarnings: 2850,
+        attendanceRate: 94
+      };
+
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get teacher stats" });
+    }
+  });
+
+  app.get("/api/teacher/students", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'teacher') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const students = [
+        {
+          id: 1,
+          name: "Ahmad Rezaei",
+          course: "Persian Grammar Fundamentals",
+          level: "Intermediate",
+          progress: 78,
+          lastSession: "2024-01-15",
+          attendanceRate: 92,
+          homeworkStatus: "submitted",
+          nextLesson: "Conditional sentences",
+          strengths: ["Grammar", "Reading"],
+          improvements: ["Speaking fluency", "Pronunciation"]
+        },
+        {
+          id: 2,
+          name: "Maryam Karimi",
+          course: "Advanced Persian Literature",
+          level: "Advanced",
+          progress: 89,
+          lastSession: "2024-01-14",
+          attendanceRate: 96,
+          homeworkStatus: "graded",
+          nextLesson: "Modern poetry analysis",
+          strengths: ["Literary analysis", "Writing"],
+          improvements: ["Historical context", "Critical thinking"]
+        },
+        {
+          id: 3,
+          name: "Hassan Mohammadi",
+          course: "Business English",
+          level: "Beginner",
+          progress: 45,
+          lastSession: "2024-01-13",
+          attendanceRate: 88,
+          homeworkStatus: "pending",
+          nextLesson: "Email writing",
+          strengths: ["Vocabulary", "Listening"],
+          improvements: ["Speaking confidence", "Grammar"]
+        }
+      ];
+
+      res.json(students);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get students" });
+    }
+  });
+
+  app.get("/api/teacher/sessions", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'teacher') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const sessions = [
+        {
+          id: 1,
+          title: "Persian Grammar - Conditional Sentences",
+          course: "Persian Grammar Fundamentals",
+          students: 8,
+          scheduledAt: "Today 2:00 PM",
+          duration: 90,
+          status: "scheduled",
+          roomId: "room-123",
+          materials: ["Grammar workbook", "Audio exercises"],
+          objectives: ["Learn conditional forms", "Practice with examples"]
+        },
+        {
+          id: 2,
+          title: "Literature Discussion",
+          course: "Advanced Persian Literature",
+          students: 6,
+          scheduledAt: "Today 4:30 PM",
+          duration: 60,
+          status: "scheduled",
+          roomId: "room-456",
+          materials: ["Poetry collection", "Analysis notes"],
+          objectives: ["Analyze modern poetry", "Discuss themes"]
+        },
+        {
+          id: 3,
+          title: "Business Communication",
+          course: "Business English",
+          students: 12,
+          scheduledAt: "Yesterday 10:00 AM",
+          duration: 75,
+          status: "completed",
+          roomId: "room-789",
+          materials: ["Business scenarios", "Email templates"],
+          objectives: ["Email writing skills", "Professional vocabulary"]
+        }
+      ];
+
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get sessions" });
+    }
+  });
+
+  app.get("/api/teacher/homework", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'teacher') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const homework = [
+        {
+          id: 1,
+          title: "Grammar Exercise - Past Tense",
+          course: "Persian Grammar Fundamentals",
+          studentName: "Ahmad Rezaei",
+          submittedAt: "2024-01-14 3:30 PM",
+          status: "submitted",
+          grade: null,
+          feedback: null,
+          dueDate: "2024-01-15"
+        },
+        {
+          id: 2,
+          title: "Poetry Analysis - Hafez",
+          course: "Advanced Persian Literature",
+          studentName: "Maryam Karimi",
+          submittedAt: "2024-01-13 11:45 AM",
+          status: "graded",
+          grade: 92,
+          feedback: "Excellent analysis of metaphors and imagery.",
+          dueDate: "2024-01-14"
+        },
+        {
+          id: 3,
+          title: "Business Email Writing",
+          course: "Business English",
+          studentName: "Hassan Mohammadi",
+          submittedAt: "2024-01-16 9:15 AM",
+          status: "overdue",
+          grade: null,
+          feedback: null,
+          dueDate: "2024-01-15"
+        }
+      ];
+
+      res.json(homework);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get homework" });
+    }
+  });
+
   // Branding endpoints
   app.get("/api/branding", async (req, res) => {
     const branding = await storage.getBranding();
