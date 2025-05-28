@@ -49,10 +49,7 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('auth_token');
         localStorage.removeItem('refresh_token');
         
-        // Clear any cached data
-        if (window.queryClient) {
-          window.queryClient.clear();
-        }
+        // Clear any cached data would be handled by redirect
         
         window.location.href = '/auth';
         return Promise.reject(refreshError);
