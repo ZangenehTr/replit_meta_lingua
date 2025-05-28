@@ -1,0 +1,97 @@
+Phase 1: Unify Frontend API Calls to Eliminate Inconsistency
+
+Create a Centralized API Client:
+
+Action: If one does not already exist, create a new file (e.g., src/api/apiClient.js or src/utils/api.js).
+Action: In this file, configure a global Axios instance. Axios is a library that simplifies API calls and allows for powerful features like interceptors. If it's not installed, install it (npm install axios).
+Action: Configure this Axios instance to always retrieve the access token from localStorage and automatically attach it to the Authorization header for every request.
+JavaScript
+
+// In src/api/apiClient.js
+import axios from 'axios';
+
+const apiClient = axios.create({
+  baseURL: '/api', // Your API's base URL
+});
+
+// This is the interceptor. It runs before every request.
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;
+Refactor All API Calls:
+
+Action: Search the entire React codebase (/src) for any instances of the native fetch() API or direct axios() calls.
+Action: Replace ALL of them with the new, centralized apiClient.
+Example (Before): fetch('/api/sessions/live')
+Example (After):
+JavaScript
+
+import apiClient from '../api/apiClient';
+// ...
+const response = await apiClient.get('/sessions/live');
+Priority: Pay special attention to the components that trigger the failing requests: POST /api/ai/recommendations and POST /api/sessions. Ensure they are using the new apiClient.
+Phase 2: Implement a Robust Token Refresh Mechanism (Handles Expired Tokens)
+
+Modify Backend Login Route (POST /api/auth/login):
+
+Action: Update this Express route. In addition to the short-lived accessToken, it must now also generate and return a long-lived refreshToken.
+Action: The refreshToken should also be a JWT, signed with a different secret key (process.env.JWT_REFRESH_SECRET) and have a much longer expiration (e.g., '7d').
+Action: Securely store the generated refreshToken in the database, associated with the user, so you can invalidate it later if needed.
+Example Response: res.json({ accessToken: '...', refreshToken: '...' });
+Create Backend Refresh Route (POST /api/auth/refresh):
+
+Action: Create a new, public Express route.
+Action: It will expect a refreshToken in the request body.
+Logic: The route will verify the refreshToken against its secret and check if it exists and is valid in the database. If valid, it will generate a new, fresh accessToken and return it.
+Modify Frontend Login Logic:
+
+Action: After a successful login, the frontend must now store both the accessToken and the refreshToken in localStorage.
+Upgrade the Frontend API Client with a Refresh Interceptor:
+
+Action: Add a "response interceptor" to the apiClient in the frontend. This interceptor will catch errors from the backend.
+Logic: If the interceptor catches an API error with a status of 401 or 403 (indicating the accessToken is expired or invalid), it will automatically and silently:
+Make a POST request to /api/auth/refresh, sending its stored refreshToken.
+If the refresh is successful, it receives a new accessToken.
+It updates localStorage with the new accessToken.
+It then transparently retries the original API request that failed. The user will not notice anything happened.
+If the refresh fails, it will log the user out by clearing localStorage and redirecting to the login page.
+JavaScript
+
+// In src/api/apiClient.js (add this part)
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response.status === 403 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        const response = await axios.post('/api/auth/refresh', { token: refreshToken });
+        const { accessToken } = response.data;
+        localStorage.setItem('accessToken', accessToken);
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+         // Refresh failed, log user out
+         localStorage.removeItem('accessToken');
+         localStorage.removeItem('refreshToken');
+         window.location.href = '/login';
+         return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+Final Instruction for Replit AI:
+Please implement the changes above. First, centralize all frontend API requests into a single Axios client with a request interceptor to attach the token. Second, implement the full access/refresh token rotation mechanism on both the backend and frontend to ensure seamless user sessions, even when access tokens expire. Provide a summary of the new files created (like apiClient.js) and the routes modified.

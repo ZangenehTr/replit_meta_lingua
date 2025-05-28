@@ -3,9 +3,11 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
 const JWT_SECRET = "meta-lingua-secret-2025";
+const JWT_REFRESH_SECRET = "meta-lingua-refresh-secret-2025";
 
 // In-memory user storage
 const users = new Map();
+const refreshTokens = new Map();
 
 // Simple demo user data
 const DEMO_USER = {
@@ -74,16 +76,26 @@ export function setupAuth(app: Express) {
 
       users.set(email, newUser);
 
-      const token = jwt.sign(
+      const accessToken = jwt.sign(
         { userId: newUser.id, email: newUser.email, role: newUser.role },
         JWT_SECRET,
-        { expiresIn: "24h" }
+        { expiresIn: "1h" }
       );
+
+      const refreshToken = jwt.sign(
+        { userId: newUser.id, email: newUser.email },
+        JWT_REFRESH_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      // Store refresh token
+      refreshTokens.set(refreshToken, newUser.id);
 
       const { password: _, ...userWithoutPassword } = newUser;
       return res.status(201).json({
         message: "User created successfully",
-        access_token: token,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
         user: userWithoutPassword
       });
     } catch (error) {
@@ -110,19 +122,63 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const token = jwt.sign(
+      const accessToken = jwt.sign(
         { userId: user.id, email: user.email, role: user.role },
         JWT_SECRET,
-        { expiresIn: "24h" }
+        { expiresIn: "1h" }
       );
+
+      const refreshToken = jwt.sign(
+        { userId: user.id, email: user.email },
+        JWT_REFRESH_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      // Store refresh token
+      refreshTokens.set(refreshToken, user.id);
 
       const { password: _, ...userWithoutPassword } = user;
       return res.json({
-        token: token,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
         user: userWithoutPassword
       });
     } catch (error) {
       return res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // Refresh token endpoint
+  app.post("/api/auth/refresh", async (req, res) => {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(401).json({ message: "Refresh token required" });
+    }
+
+    try {
+      const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as any;
+      
+      if (!refreshTokens.has(token)) {
+        return res.status(403).json({ message: "Invalid refresh token" });
+      }
+
+      const user = users.get(decoded.email);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const newAccessToken = jwt.sign(
+        { userId: user.id, email: user.email, role: user.role },
+        JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      return res.json({
+        accessToken: newAccessToken
+      });
+    } catch (error) {
+      return res.status(403).json({ message: "Invalid refresh token" });
     }
   });
 
