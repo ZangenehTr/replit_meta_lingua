@@ -4,6 +4,9 @@ import bcrypt from "bcrypt";
 
 const JWT_SECRET = "meta-lingua-secret-2025";
 
+// In-memory user storage
+const users = new Map();
+
 // Simple demo user data
 const DEMO_USER = {
   id: 1,
@@ -14,8 +17,13 @@ const DEMO_USER = {
   avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
   credits: 12,
   streakDays: 15,
-  preferences: { theme: "light", language: "en", notifications: true }
+  totalLessons: 8,
+  preferences: { theme: "light", language: "en", notifications: true },
+  password: "$2b$10$rI7K0gKZ1QYhKp5V8qC6Ku5QjN1Z7lF9qY2vK8xW3zI4pR5tE6gS." // "password123"
 };
+
+// Initialize with demo user
+users.set(DEMO_USER.email, DEMO_USER);
 
 export function setupAuth(app: Express) {
   // Authentication middleware
@@ -36,6 +44,53 @@ export function setupAuth(app: Express) {
     }
   };
 
+  // Registration endpoint
+  app.post("/api/auth/register", async (req, res) => {
+    const { email, password, firstName, lastName, role = "student" } = req.body;
+
+    if (!email || !password || !firstName || !lastName) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    if (users.has(email)) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = {
+        id: users.size + 1,
+        email,
+        firstName,
+        lastName,
+        role,
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        credits: 5,
+        streakDays: 0,
+        totalLessons: 0,
+        preferences: { theme: "light", language: "en", notifications: true },
+        password: hashedPassword
+      };
+
+      users.set(email, newUser);
+
+      const token = jwt.sign(
+        { userId: newUser.id, email: newUser.email, role: newUser.role },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      const { password: _, ...userWithoutPassword } = newUser;
+      return res.status(201).json({
+        message: "User created successfully",
+        access_token: token,
+        user: userWithoutPassword
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
   // Login endpoint
   app.post("/api/auth/login", async (req, res) => {
     const { email, password } = req.body;
@@ -44,26 +99,42 @@ export function setupAuth(app: Express) {
       return res.status(400).json({ message: "Email and password required" });
     }
 
-    // Check demo credentials
-    if (email === "ahmad.rezaei@example.com" && password === "password123") {
+    const user = users.get(email);
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    try {
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
       const token = jwt.sign(
-        { userId: DEMO_USER.id, email: DEMO_USER.email, role: DEMO_USER.role },
+        { userId: user.id, email: user.email, role: user.role },
         JWT_SECRET,
         { expiresIn: "24h" }
       );
 
+      const { password: _, ...userWithoutPassword } = user;
       return res.json({
         token: token,
-        user: DEMO_USER
+        user: userWithoutPassword
       });
+    } catch (error) {
+      return res.status(500).json({ message: "Login failed" });
     }
-
-    return res.status(401).json({ message: "Invalid credentials" });
   });
 
   // User profile endpoint
   app.get("/api/users/me", authenticateToken, (req: any, res) => {
-    res.json(DEMO_USER);
+    const user = users.get(req.user.email);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    const { password: _, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
   });
 
   // Other protected endpoints with demo data
