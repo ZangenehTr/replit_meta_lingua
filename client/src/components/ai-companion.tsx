@@ -54,6 +54,7 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { currentLanguage, t } = useLanguage();
 
   // AI Companion Chat
   const sendToCompanion = useMutation({
@@ -164,7 +165,9 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
       const welcomeMessage: CompanionMessage = {
         id: 'welcome',
         type: 'companion',
-        content: `سلام! من لکسی هستم، دستیار یادگیری شما! 🌟\nHello! I'm Lexi, your learning companion! Ready to practice Persian together?`,
+        content: currentLanguage === 'fa' ? 
+          `سلام! من لکسی هستم، دستیار یادگیری شما! 🌟 آماده‌ای برای شروع یادگیری؟` :
+          `Hello! I'm Lexi, your AI learning companion! 🌟 Ready to practice Persian together?`,
         timestamp: new Date(),
         emotion: 'excited'
       };
