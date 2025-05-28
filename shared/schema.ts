@@ -121,6 +121,103 @@ export const instituteBranding = pgTable("institute_branding", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// CRM Features - Student Management
+export const studentProfiles = pgTable("student_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  studentId: text("student_id").unique(), // Custom student ID
+  dateOfBirth: timestamp("date_of_birth"),
+  nationalId: text("national_id"),
+  emergencyContact: text("emergency_contact"),
+  emergencyPhone: text("emergency_phone"),
+  address: text("address"),
+  parentName: text("parent_name"),
+  parentPhone: text("parent_phone"),
+  enrollmentSource: text("enrollment_source"), // website, referral, social_media, etc.
+  notes: text("notes"),
+  status: text("status").default("active"), // active, inactive, suspended, graduated
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Lead Management
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  source: text("source"), // website, referral, social_media, advertisement
+  status: text("status").default("new"), // new, contacted, qualified, enrolled, lost
+  interestedCourses: text("interested_courses").array(),
+  notes: text("notes"),
+  assignedToId: integer("assigned_to_id").references(() => users.id),
+  contactedAt: timestamp("contacted_at"),
+  followUpDate: timestamp("follow_up_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Financial Management
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  invoiceNumber: text("invoice_number").unique().notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").default("USD"),
+  status: text("status").default("pending"), // pending, paid, overdue, cancelled
+  dueDate: timestamp("due_date").notNull(),
+  paidAt: timestamp("paid_at"),
+  paymentMethod: text("payment_method"), // card, bank_transfer, cash, etc.
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Teacher Performance Tracking
+export const teacherPerformance = pgTable("teacher_performance", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  month: integer("month").notNull(),
+  year: integer("year").notNull(),
+  totalHours: decimal("total_hours", { precision: 5, scale: 2 }).default("0"),
+  totalStudents: integer("total_students").default(0),
+  averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default("0"),
+  totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default("0"),
+  classesConducted: integer("classes_conducted").default(0),
+  studentRetentionRate: decimal("student_retention_rate", { precision: 5, scale: 2 }).default("0"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Attendance Tracking
+export const attendance = pgTable("attendance", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => sessions.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  status: text("status").notNull(), // present, absent, late, excused
+  checkInTime: timestamp("check_in_time"),
+  checkOutTime: timestamp("check_out_time"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Communication Logs
+export const communicationLogs = pgTable("communication_logs", {
+  id: serial("id").primaryKey(),
+  contactId: integer("contact_id").notNull(), // Can reference users or leads
+  contactType: text("contact_type").notNull(), // student, lead, teacher
+  communicationType: text("communication_type").notNull(), // email, phone, sms, in_person
+  subject: text("subject"),
+  content: text("content"),
+  staffId: integer("staff_id").references(() => users.id).notNull(),
+  scheduledAt: timestamp("scheduled_at"),
+  completedAt: timestamp("completed_at"),
+  outcome: text("outcome"), // successful, no_answer, rescheduled, etc.
+  followUpRequired: boolean("follow_up_required").default(false),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -169,6 +266,40 @@ export const insertBrandingSchema = createInsertSchema(instituteBranding).omit({
   updatedAt: true
 });
 
+// CRM Insert Schemas
+export const insertStudentProfileSchema = createInsertSchema(studentProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertLeadSchema = createInsertSchema(leads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertTeacherPerformanceSchema = createInsertSchema(teacherPerformance).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertAttendanceSchema = createInsertSchema(attendance).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertCommunicationLogSchema = createInsertSchema(communicationLogs).omit({
+  id: true,
+  createdAt: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -188,3 +319,17 @@ export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type InstituteBranding = typeof instituteBranding.$inferSelect;
 export type InsertBranding = z.infer<typeof insertBrandingSchema>;
+
+// CRM Types
+export type StudentProfile = typeof studentProfiles.$inferSelect;
+export type InsertStudentProfile = z.infer<typeof insertStudentProfileSchema>;
+export type Lead = typeof leads.$inferSelect;
+export type InsertLead = z.infer<typeof insertLeadSchema>;
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type TeacherPerformance = typeof teacherPerformance.$inferSelect;
+export type InsertTeacherPerformance = z.infer<typeof insertTeacherPerformanceSchema>;
+export type Attendance = typeof attendance.$inferSelect;
+export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;
+export type CommunicationLog = typeof communicationLogs.$inferSelect;
+export type InsertCommunicationLog = z.infer<typeof insertCommunicationLogSchema>;
