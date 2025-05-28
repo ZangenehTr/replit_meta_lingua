@@ -446,6 +446,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin CRM endpoints
+  app.get("/api/admin/stats", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const users = await storage.getAllUsers();
+      const students = users.filter(u => u.role === 'student');
+      const teachers = users.filter(u => u.role === 'teacher');
+      const activeStudents = students.filter(u => u.isActive);
+      
+      const stats = {
+        totalStudents: students.length,
+        activeStudents: activeStudents.length,
+        totalTeachers: teachers.length,
+        totalRevenue: 45250,
+        monthlyRevenue: 8950,
+        pendingLeads: 12,
+        todaysSessions: 8,
+        overdueInvoices: 3
+      };
+
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get admin stats" });
+    }
+  });
+
+  app.get("/api/admin/students", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const users = await storage.getAllUsers();
+      const students = users.filter(u => u.role === 'student').map(student => ({
+        id: student.id,
+        name: `${student.firstName} ${student.lastName}`,
+        email: student.email,
+        phone: student.phoneNumber || 'N/A',
+        status: student.isActive ? 'active' : 'inactive',
+        enrolledCourses: 2,
+        totalPayments: 1250,
+        lastActivity: '2 days ago'
+      }));
+
+      res.json(students);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get students" });
+    }
+  });
+
+  app.get("/api/admin/leads", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const leads = [
+        {
+          id: 1,
+          name: "Sara Ahmadi",
+          email: "sara.ahmadi@email.com",
+          phone: "+98 912 345 6789",
+          source: "Website",
+          status: "new",
+          interestedCourses: ["Persian Literature", "Business English"],
+          assignedTo: "Ali Rezaei",
+          followUpDate: "2024-01-15",
+          createdAt: "2024-01-10"
+        },
+        {
+          id: 2,
+          name: "Mohammad Hosseini",
+          email: "m.hosseini@email.com",
+          phone: "+98 911 234 5678",
+          source: "Referral",
+          status: "contacted",
+          interestedCourses: ["Advanced Persian Grammar"],
+          assignedTo: "Zahra Karimi",
+          followUpDate: "2024-01-16",
+          createdAt: "2024-01-08"
+        }
+      ];
+
+      res.json(leads);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get leads" });
+    }
+  });
+
+  app.get("/api/admin/invoices", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const invoices = [
+        {
+          id: 1,
+          invoiceNumber: "INV-2024-001",
+          studentName: "Ahmad Rezaei",
+          amount: 500,
+          status: "paid",
+          dueDate: "2024-01-20",
+          courseName: "Persian Grammar Fundamentals"
+        },
+        {
+          id: 2,
+          invoiceNumber: "INV-2024-002",
+          studentName: "Maryam Karimi",
+          amount: 750,
+          status: "pending",
+          dueDate: "2024-01-25",
+          courseName: "Business English"
+        },
+        {
+          id: 3,
+          invoiceNumber: "INV-2024-003",
+          studentName: "Hassan Mohammadi",
+          amount: 450,
+          status: "overdue",
+          dueDate: "2024-01-10",
+          courseName: "Advanced Persian Literature"
+        }
+      ];
+
+      res.json(invoices);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get invoices" });
+    }
+  });
+
   // Branding endpoints
   app.get("/api/branding", async (req, res) => {
     const branding = await storage.getBranding();
