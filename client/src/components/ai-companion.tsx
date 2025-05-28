@@ -164,7 +164,7 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
       const welcomeMessage: CompanionMessage = {
         id: 'welcome',
         type: 'companion',
-        content: `سلام! من پارسا هستم، دستیار یادگیری شما! 🌟\nHello! I'm Parsa, your learning companion! Ready to practice Persian together?`,
+        content: `سلام! من لکسی هستم، دستیار یادگیری شما! 🌟\nHello! I'm Lexi, your learning companion! Ready to practice Persian together?`,
         timestamp: new Date(),
         emotion: 'excited'
       };
@@ -235,7 +235,7 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
                 <span>{getCompanionEmoji()}</span>
               </div>
               <div>
-                <h3 className="font-bold text-lg">پارسا / Parsa</h3>
+                <h3 className="font-bold text-lg">لکسی / Lexi</h3>
                 <p className="text-xs opacity-90">دستیار یادگیری هوشمند / AI Learning Companion</p>
               </div>
             </div>
