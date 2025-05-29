@@ -230,6 +230,37 @@ export const dailyGoals = pgTable("daily_goals", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// Level assessment questions - managed by admins/managers
+export const levelAssessmentQuestions = pgTable("level_assessment_questions", {
+  id: serial("id").primaryKey(),
+  language: varchar("language", { length: 10 }).notNull(), // Target language for the question
+  questionText: text("question_text").notNull(),
+  questionType: varchar("question_type", { length: 50 }).notNull(), // "multiple_choice", "audio", "image", "text_input", "speaking"
+  difficulty: varchar("difficulty", { length: 20 }).notNull(), // "beginner", "intermediate", "advanced"
+  options: jsonb("options"), // For multiple choice questions
+  correctAnswer: text("correct_answer"),
+  mediaUrl: varchar("media_url", { length: 500 }), // For audio/image questions
+  points: integer("points").default(1),
+  isActive: boolean("is_active").default(true),
+  order: integer("order").default(0),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// User level assessment results
+export const levelAssessmentResults = pgTable("level_assessment_results", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  language: varchar("language", { length: 10 }).notNull(),
+  totalScore: integer("total_score").notNull(),
+  maxScore: integer("max_score").notNull(),
+  proficiencyLevel: varchar("proficiency_level", { length: 50 }).notNull(),
+  completedAt: timestamp("completed_at").defaultNow(),
+  answers: jsonb("answers").notNull(), // Store user answers for review
+  timeTaken: integer("time_taken") // in seconds
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,

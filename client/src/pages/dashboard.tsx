@@ -32,20 +32,15 @@ export default function Dashboard() {
     <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
       <Navigation />
       
-      {/* Mobile Progress Button - Repositioned for mobile */}
-      <div className="fixed top-4 right-4 z-50 md:top-6 md:right-6">
+      {/* Mobile Progress Button - Fixed positioning */}
+      <div className="fixed top-20 right-4 z-40 md:hidden">
         <Link href="/progress">
           <Button 
             size="sm" 
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg text-xs md:text-sm px-2 py-1 md:px-4 md:py-2"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg text-xs px-3 py-2"
           >
-            <Trophy className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
-            <span className="hidden sm:inline">
-              {currentLanguage === 'fa' ? 'پیشرفت من' : 'My Progress'}
-            </span>
-            <span className="sm:hidden">
-              {currentLanguage === 'fa' ? 'پیشرفت' : 'Progress'}
-            </span>
+            <Trophy className="h-4 w-4 mr-1" />
+            <span>{currentLanguage === 'fa' ? 'پیشرفت' : 'Progress'}</span>
           </Button>
         </Link>
       </div>
