@@ -53,34 +53,34 @@ export default function Dashboard() {
       <div className="flex">
         <Sidebar />
         
-        <main className="flex-1 ml-0 md:ml-64 p-2 md:p-6 lg:p-8 overflow-x-hidden">
+        <main className="flex-1 ml-0 md:ml-64 p-3 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden">
           <div className="max-w-7xl mx-auto w-full">
             <WelcomeSection />
             
             {/* Mobile Gamification Widget */}
-            <div className="md:hidden">
+            <div className="md:hidden mb-4">
               <MobileGamificationWidget />
             </div>
             
             {/* Enhanced Gamification Section */}
-            <div className="mb-6">
+            <div className="mb-4 md:mb-6">
               <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="overview" className="text-xs md:text-sm">
-                    <Star className="h-4 w-4 mr-1" />
-                    {currentLanguage === 'fa' ? 'نمای کلی' : 'Overview'}
+                <TabsList className="grid w-full grid-cols-3 mb-3 md:mb-4 h-9 sm:h-10">
+                  <TabsTrigger value="overview" className="text-xs sm:text-sm px-2">
+                    <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <span className="truncate">{currentLanguage === 'fa' ? 'نمای کلی' : 'Overview'}</span>
                   </TabsTrigger>
-                  <TabsTrigger value="challenges" className="text-xs md:text-sm">
-                    <Target className="h-4 w-4 mr-1" />
-                    {currentLanguage === 'fa' ? 'چالش‌ها' : 'Challenges'}
+                  <TabsTrigger value="challenges" className="text-xs sm:text-sm px-2">
+                    <Target className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <span className="truncate">{currentLanguage === 'fa' ? 'چالش‌ها' : 'Challenges'}</span>
                   </TabsTrigger>
-                  <TabsTrigger value="leaderboard" className="text-xs md:text-sm">
-                    <Users className="h-4 w-4 mr-1" />
-                    {currentLanguage === 'fa' ? 'رتبه‌بندی' : 'Leaderboard'}
+                  <TabsTrigger value="leaderboard" className="text-xs sm:text-sm px-2">
+                    <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <span className="truncate">{currentLanguage === 'fa' ? 'رتبه‌بندی' : 'Leaderboard'}</span>
                   </TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="overview" className="space-y-4">
+                <TabsContent value="overview" className="space-y-3 md:space-y-4">
                   <StatsCards />
                 </TabsContent>
                 
@@ -95,9 +95,9 @@ export default function Dashboard() {
             </div>
 
             {/* Mobile-Optimized Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-6 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6 w-full">
               {/* Main Content Area */}
-              <div className="lg:col-span-1 xl:col-span-2 space-y-3 md:space-y-6">
+              <div className="lg:col-span-1 xl:col-span-2 space-y-3 sm:space-y-4 md:space-y-6">
                 <LiveClassroom />
                 <CourseProgress />
                 <AIAssistant />
@@ -105,7 +105,7 @@ export default function Dashboard() {
               </div>
 
               {/* Sidebar Content */}
-              <div className="space-y-3 md:space-y-6">
+              <div className="space-y-3 sm:space-y-4 md:space-y-6">
                 <UpcomingSessions />
                 <RecentMessages />
                 <HomeworkTasks />

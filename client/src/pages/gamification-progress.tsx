@@ -175,29 +175,31 @@ export default function GamificationProgress() {
     : achievements.filter(a => a.type === selectedCategory);
 
   return (
-    <div className={`min-h-screen p-6 ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Navigation Bar */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <Link href="/dashboard">
-            <Button variant="outline" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              {currentLanguage === 'fa' ? 'بازگشت به داشبورد' : 'Back to Dashboard'}
-            </Button>
-          </Link>
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm">
-              <Home className="h-4 w-4 mr-2" />
-              {currentLanguage === 'fa' ? 'خانه' : 'Home'}
-            </Button>
-          </Link>
+    <div className={`min-h-screen p-2 sm:p-4 md:p-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+      {/* Navigation Bar - Mobile Optimized */}
+      <div className="mb-4 md:mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard">
+              <Button variant="outline" size="sm" className="flex items-center gap-1 sm:gap-2">
+                <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">{currentLanguage === 'fa' ? 'بازگشت' : 'Back'}</span>
+              </Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-2">
+                <Home className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">{currentLanguage === 'fa' ? 'خانه' : 'Home'}</span>
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-3 md:space-y-6">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
             {currentLanguage === 'fa' ? 'پیشرفت و دستاوردها' : 'Progress & Achievements'}
           </h1>
           <p className="text-muted-foreground">
@@ -208,56 +210,56 @@ export default function GamificationProgress() {
           </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Stats Overview - Mobile Optimized */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Star className="h-8 w-8 text-yellow-500" />
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="flex items-center justify-center mb-1 sm:mb-2">
+                <Star className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-yellow-500" />
               </div>
-              <div className="text-2xl font-bold">{userStats.level}</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.level}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 {currentLanguage === 'fa' ? 'سطح' : 'Level'}
               </div>
-              <Progress value={levelProgress} className="mt-2" />
-              <div className="text-xs text-muted-foreground mt-1">
+              <Progress value={levelProgress} className="mt-1 sm:mt-2 h-1 sm:h-2" />
+              <div className="text-xs text-muted-foreground mt-1 hidden sm:block">
                 {userStats.totalXp} / {nextLevelXp} XP
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Flame className="h-8 w-8 text-orange-500" />
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="flex items-center justify-center mb-1 sm:mb-2">
+                <Flame className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-orange-500" />
               </div>
-              <div className="text-2xl font-bold">{userStats.currentStreak}</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.currentStreak}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 {currentLanguage === 'fa' ? 'روز متوالی' : 'Day Streak'}
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <BookOpen className="h-8 w-8 text-blue-500" />
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="flex items-center justify-center mb-1 sm:mb-2">
+                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-blue-500" />
               </div>
-              <div className="text-2xl font-bold">{userStats.lessonsCompleted}</div>
-              <div className="text-sm text-muted-foreground">
-                {currentLanguage === 'fa' ? 'درس تمام شده' : 'Lessons Completed'}
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.lessonsCompleted}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                {currentLanguage === 'fa' ? 'درس‌ها' : 'Lessons'}
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <Clock className="h-8 w-8 text-green-500" />
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="flex items-center justify-center mb-1 sm:mb-2">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-green-500" />
               </div>
-              <div className="text-2xl font-bold">{Math.floor(userStats.minutesStudied / 60)}</div>
-              <div className="text-sm text-muted-foreground">
-                {currentLanguage === 'fa' ? 'ساعت مطالعه' : 'Hours Studied'}
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{Math.floor(userStats.minutesStudied / 60)}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                {currentLanguage === 'fa' ? 'ساعت‌ها' : 'Hours'}
               </div>
             </CardContent>
           </Card>

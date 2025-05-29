@@ -98,19 +98,19 @@ export function DailyChallenges() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-3">
         {challenges.map((challenge) => {
           const Icon = getChallengeIcon(challenge.type);
           const progress = (challenge.current / challenge.target) * 100;
           
           return (
             <Card key={challenge.id} className={`relative ${challenge.isCompleted ? 'bg-green-50 dark:bg-green-900/20' : ''}`}>
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-2 p-3 sm:p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Icon className="h-4 w-4 text-primary" />
+                  <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
+                    <Icon className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
                     <Badge 
-                      className={`${getDifficultyColor(challenge.difficulty)} text-white text-xs`}
+                      className={`${getDifficultyColor(challenge.difficulty)} text-white text-xs flex-shrink-0`}
                     >
                       {currentLanguage === 'fa' ? 
                         (challenge.difficulty === 'easy' ? 'آسان' : 
@@ -119,16 +119,16 @@ export function DailyChallenges() {
                       }
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0">
                     <Clock className="h-3 w-3" />
-                    <span>{challenge.timeLeft}</span>
+                    <span className="hidden sm:inline">{challenge.timeLeft}</span>
                   </div>
                 </div>
-                <CardTitle className="text-sm leading-tight">{challenge.title}</CardTitle>
-                <CardDescription className="text-xs">{challenge.description}</CardDescription>
+                <CardTitle className="text-sm leading-tight truncate">{challenge.title}</CardTitle>
+                <CardDescription className="text-xs line-clamp-2">{challenge.description}</CardDescription>
               </CardHeader>
               
-              <CardContent className="space-y-3 pt-0">
+              <CardContent className="space-y-3 pt-0 p-3 sm:p-4">
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
                     <span>
@@ -141,8 +141,8 @@ export function DailyChallenges() {
                   <Progress value={progress} className="h-1.5" />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 text-xs min-w-0 flex-1">
                     <div className="flex items-center gap-1">
                       <Zap className="h-3 w-3 text-yellow-500" />
                       <span>+{challenge.reward.xp}</span>
@@ -154,11 +154,11 @@ export function DailyChallenges() {
                   </div>
                   
                   {challenge.isCompleted ? (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs">
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs flex-shrink-0">
                       {currentLanguage === 'fa' ? 'تکمیل' : 'Done'}
                     </Badge>
                   ) : (
-                    <Button size="sm" variant="outline" className="h-6 px-2 text-xs">
+                    <Button size="sm" variant="outline" className="h-6 px-2 text-xs flex-shrink-0">
                       {currentLanguage === 'fa' ? 'شروع' : 'Start'}
                     </Button>
                   )}
