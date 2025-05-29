@@ -24,6 +24,16 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <Navigation />
       
+      {/* Prominent Progress Button - Always Visible */}
+      <div className="fixed top-4 right-4 z-50">
+        <Link href="/progress">
+          <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg">
+            <Trophy className="h-5 w-5 mr-2" />
+            My Progress
+          </Button>
+        </Link>
+      </div>
+      
       <div className="flex">
         <Sidebar />
         
@@ -32,9 +42,9 @@ export default function Dashboard() {
             <WelcomeSection />
             
             {/* Quick Access to Progress */}
-            <Card className="mb-6">
+            <Card className="mb-6 border-2 border-blue-500/20 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-950/30 dark:to-purple-950/30">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
                   <Trophy className="h-5 w-5 text-yellow-500" />
                   Your Learning Progress
                 </CardTitle>
@@ -44,15 +54,15 @@ export default function Dashboard() {
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <Star className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm text-muted-foreground">Level 12</span>
+                      <span className="text-sm font-medium">Level 12</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Target className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-muted-foreground">7 day streak</span>
+                      <span className="text-sm font-medium">7 day streak</span>
                     </div>
                   </div>
                   <Link href="/progress">
-                    <Button>
+                    <Button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700">
                       <TrendingUp className="h-4 w-4 mr-2" />
                       View All Achievements
                     </Button>
