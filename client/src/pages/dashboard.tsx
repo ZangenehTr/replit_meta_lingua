@@ -13,6 +13,8 @@ import { PaymentCredits } from "@/components/dashboard/payment-credits";
 import { LiveClassroom } from "@/components/dashboard/live-classroom";
 import { DailyChallenges } from "@/components/daily-challenges";
 import { Leaderboard } from "@/components/leaderboard";
+import { AchievementNotifications } from "@/components/achievement-notifications";
+import { MobileGamificationWidget } from "@/components/mobile-gamification-widget";
 import AICompanion from "@/components/ai-companion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,6 +56,11 @@ export default function Dashboard() {
         <main className="flex-1 ml-0 md:ml-64 p-2 md:p-6 lg:p-8 overflow-x-hidden">
           <div className="max-w-7xl mx-auto w-full">
             <WelcomeSection />
+            
+            {/* Mobile Gamification Widget */}
+            <div className="md:hidden">
+              <MobileGamificationWidget />
+            </div>
             
             {/* Enhanced Gamification Section */}
             <div className="mb-6">
@@ -108,6 +115,9 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
+      
+      {/* Achievement Notifications */}
+      <AchievementNotifications />
       
       {/* AI Learning Companion - Lexi */}
       <AICompanion 
