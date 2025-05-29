@@ -8,8 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar as UICalendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useLanguage } from "@/hooks/use-language";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { format } from "date-fns";
 import { 
   Users, 
   Search, 
@@ -20,14 +24,18 @@ import {
   MessageCircle,
   Phone,
   Mail,
-  Calendar,
+  CalendarIcon,
   BookOpen,
   TrendingUp,
   AlertCircle,
   Clock,
   CheckCircle,
   FileText,
-  Download
+  Download,
+  Upload,
+  CreditCard,
+  GraduationCap,
+  History
 } from "lucide-react";
 
 export function AdminStudents() {
@@ -35,6 +43,21 @@ export function AdminStudents() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newStudentData, setNewStudentData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    nationalId: "",
+    birthday: null,
+    level: "",
+    guardianName: "",
+    guardianPhone: "",
+    profileImage: null,
+    notes: ""
+  });
+  const queryClient = useQueryClient();
 
   console.log('AdminStudents component rendered');
 
@@ -42,6 +65,42 @@ export function AdminStudents() {
   const { data: students, isLoading } = useQuery({
     queryKey: ['/api/admin/students', { search: searchTerm, status: filterStatus }],
   });
+
+  // Create student mutation
+  const createStudentMutation = useMutation({
+    mutationFn: (studentData) => apiRequest('/api/admin/students', {
+      method: 'POST',
+      body: JSON.stringify(studentData)
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['/api/admin/students']);
+      setIsCreateDialogOpen(false);
+      setNewStudentData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        nationalId: "",
+        birthday: null,
+        level: "",
+        guardianName: "",
+        guardianPhone: "",
+        profileImage: null,
+        notes: ""
+      });
+    }
+  });
+
+  const handleCreateStudent = () => {
+    createStudentMutation.mutate(newStudentData);
+  };
+
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setNewStudentData({ ...newStudentData, profileImage: file });
+    }
+  };
 
   const studentData = students || [
     {
