@@ -98,7 +98,7 @@ export function AdminStudents() {
     }
   ];
 
-  const filteredStudents = studentData.filter(student => {
+  const filteredStudents = (studentData || []).filter(student => {
     const matchesSearch = student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase());
