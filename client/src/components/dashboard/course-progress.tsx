@@ -106,7 +106,7 @@ export function CourseProgress() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BookOpen className="h-5 w-5" />
-          Course Progress & Enrollment
+          {t('courseProgress')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6">
@@ -152,7 +152,7 @@ export function CourseProgress() {
                     })}
                     disabled={progressMutation.isPending}
                   >
-                    {progressMutation.isPending ? "Updating..." : "Continue Learning"}
+                    {progressMutation.isPending ? t('updating') : t('continueLearning')}
                     <ArrowRight className="ml-1 h-3 w-3" />
                   </Button>
                 </div>
@@ -164,7 +164,7 @@ export function CourseProgress() {
         {/* Available Courses */}
         {availableCourses && (
           <div className="space-y-4">
-            <h3 className="font-medium text-sm text-muted-foreground">AVAILABLE COURSES</h3>
+            <h3 className="font-medium text-sm text-muted-foreground">{t('availableCourses').toUpperCase()}</h3>
             {availableCourses
               .filter(course => !courses?.some(enrolled => enrolled.id === course.id))
               .map((course) => (
@@ -205,7 +205,7 @@ export function CourseProgress() {
                     size="sm"
                     className="w-full sm:w-auto"
                   >
-                    {enrollMutation.isPending && enrollMutation.variables === course.id ? "Enrolling..." : "Enroll Now"}
+                    {enrollMutation.isPending && enrollMutation.variables === course.id ? t('enrolling') : t('enrollNow')}
                   </Button>
                 </div>
               </div>
