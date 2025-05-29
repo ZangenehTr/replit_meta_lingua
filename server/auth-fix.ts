@@ -21,7 +21,7 @@ const DEMO_USER = {
   streakDays: 15,
   totalLessons: 8,
   preferences: { theme: "light", language: "en", notifications: true },
-  password: "$2b$10$rI7K0gKZ1QYhKp5V8qC6Ku5QjN1Z7lF9qY2vK8xW3zI4pR5tE6gS." // "password123"
+  password: "$2b$10$tO5lVOUKjyeG4Kv39wvYcO4dIhOkxxh6iFezQmMApZt39r2crgFmy" // "password123"
 };
 
 // Initialize with demo user
