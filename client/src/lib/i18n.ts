@@ -431,7 +431,7 @@ export const persianWeekdays = [
 
 // Convert Gregorian to Persian date
 export function gregorianToPersian(date: Date): { year: number; month: number; day: number } {
-  const gy = date.getFullYear();
+  let gy = date.getFullYear();
   const gm = date.getMonth() + 1;
   const gd = date.getDate();
   

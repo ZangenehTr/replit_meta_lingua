@@ -70,6 +70,11 @@ function Router() {
           <GamificationProgress />
         </ProtectedRoute>
       </Route>
+      <Route path="/profile">
+        <ProtectedRoute>
+          <UserProfile />
+        </ProtectedRoute>
+      </Route>
       <Route path="/dashboard">
         <ProtectedRoute>
           <Dashboard />
