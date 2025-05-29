@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, AlertTriangle } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
 
 interface Homework {
   id: number;
@@ -13,6 +14,7 @@ interface Homework {
 }
 
 export function HomeworkTasks() {
+  const { t } = useLanguage();
   const { data: homework, isLoading } = useQuery<Homework[]>({
     queryKey: ["/api/homework/pending"],
   });
@@ -39,7 +41,7 @@ export function HomeworkTasks() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Pending Homework</CardTitle>
+          <CardTitle>{t("pendingHomework")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
