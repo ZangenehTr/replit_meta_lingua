@@ -192,6 +192,15 @@ export interface Translations {
   discoverLanguageLevel: string;
   takeAssessment: string;
   whatIsMyLevel: string;
+  
+  // Additional missing keys from screenshots
+  liveVirtualClassroom: string;
+  joinLive: string;
+  aiStudyAssistant: string;
+  start: string;
+  recentMessages: string;
+  viewAll: string;
+  noCoursesAvailableAtMoment: string;
 }
 
 export const translations: Record<Language, Translations> = {
