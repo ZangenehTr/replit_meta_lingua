@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { Link, useLocation } from "wouter";
 
 const navigationItems = [
@@ -30,10 +31,11 @@ const navigationItems = [
 
 export function Sidebar() {
   const { logout } = useAuth();
+  const { t, isRTL } = useLanguage();
   const [location] = useLocation();
 
   return (
-    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 fixed h-full overflow-y-auto hidden md:block">
+    <aside className={`w-64 bg-white dark:bg-gray-800 ${isRTL ? 'border-l border-gray-200 dark:border-gray-700' : 'border-r border-gray-200 dark:border-gray-700'} fixed h-full overflow-y-auto hidden md:block ${isRTL ? 'right-0' : 'left-0'}`}>
       <div className="p-6">
         <nav className="space-y-2">
           {navigationItems.map((item) => {

@@ -48,7 +48,7 @@ export default function Dashboard() {
       <div className="flex">
         <Sidebar />
         
-        <main className="flex-1 ml-0 md:ml-64 p-3 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden">
+        <main className={`flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden ${isRTL ? 'ml-0 md:mr-64' : 'ml-0 md:ml-64'}`}>
           <div className="max-w-7xl mx-auto w-full">
             <WelcomeSection />
             
