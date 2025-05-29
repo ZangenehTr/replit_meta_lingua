@@ -75,7 +75,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/">
-        <Redirect to="/demo" />
+        <Redirect to="/dashboard" />
       </Route>
       <Route component={NotFound} />
     </Switch>

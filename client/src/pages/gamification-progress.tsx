@@ -179,13 +179,13 @@ export default function GamificationProgress() {
       {/* Navigation Bar */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
-          <Link href="/demo">
+          <Link href="/dashboard">
             <Button variant="outline" className="flex items-center gap-2">
               <ArrowLeft className="h-4 w-4" />
               {currentLanguage === 'fa' ? 'بازگشت به داشبورد' : 'Back to Dashboard'}
             </Button>
           </Link>
-          <Link href="/demo">
+          <Link href="/dashboard">
             <Button variant="ghost" size="sm">
               <Home className="h-4 w-4 mr-2" />
               {currentLanguage === 'fa' ? 'خانه' : 'Home'}
