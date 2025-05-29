@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Trophy, Star, Target, Flame, BookOpen, Clock, 
-  Award, Medal, Crown, Zap, Calendar, TrendingUp 
+  Award, Medal, Crown, Zap, Calendar, TrendingUp, ArrowLeft, Home 
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
+import { Link } from 'wouter';
 
 interface Achievement {
   id: number;
@@ -175,6 +176,24 @@ export default function GamificationProgress() {
 
   return (
     <div className={`min-h-screen p-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+      {/* Navigation Bar */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <Link href="/demo">
+            <Button variant="outline" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              {currentLanguage === 'fa' ? 'بازگشت به داشبورد' : 'Back to Dashboard'}
+            </Button>
+          </Link>
+          <Link href="/demo">
+            <Button variant="ghost" size="sm">
+              <Home className="h-4 w-4 mr-2" />
+              {currentLanguage === 'fa' ? 'خانه' : 'Home'}
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center">
