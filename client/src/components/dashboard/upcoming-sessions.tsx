@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 
 interface Session {
   id: number;
@@ -16,6 +17,7 @@ interface Session {
 export function UpcomingSessions() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useLanguage();
 
   const { data: sessions, isLoading } = useQuery<Session[]>({
     queryKey: ["/api/sessions/upcoming"],
@@ -65,7 +67,7 @@ export function UpcomingSessions() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Upcoming Sessions</CardTitle>
+          <CardTitle>{t('upcomingSessions')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -88,12 +90,12 @@ export function UpcomingSessions() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Upcoming Sessions</CardTitle>
+        <CardTitle>{t('upcomingSessions')}</CardTitle>
       </CardHeader>
       <CardContent>
         {!sessions || sessions.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <p>No upcoming sessions scheduled</p>
+            <p>{t('noUpcomingSessions')}</p>
           </div>
         ) : (
           <div className="space-y-4">
