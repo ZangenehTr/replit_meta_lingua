@@ -8,8 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar as UICalendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RotatingDatePicker } from "@/components/ui/rotating-date-picker";
 import { useLanguage } from "@/hooks/use-language";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -35,7 +34,8 @@ import {
   Upload,
   CreditCard,
   GraduationCap,
-  History
+  History,
+  ChevronLeft
 } from "lucide-react";
 
 export function AdminStudents() {
@@ -91,9 +91,19 @@ export function AdminStudents() {
     }
   });
 
-  const handleCreateStudent = () => {
-    if (createStudentMutation.mutate) {
-      createStudentMutation.mutate(newStudentData);
+  const handleCreateStudent = async () => {
+    // Validate required fields
+    if (!newStudentData.firstName || !newStudentData.lastName || !newStudentData.email) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await createStudentMutation.mutateAsync(newStudentData);
+      // Success handled in onSuccess callback
+    } catch (error) {
+      console.error('Error creating student:', error);
+      alert('Failed to create student. Please try again.');
     }
   };
 
@@ -191,11 +201,22 @@ export function AdminStudents() {
     <div className={`p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">{t('studentInformationSystem')}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Complete student profiles, progress tracking, and parent communication
-          </p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">{t('studentInformationSystem')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Complete student profiles, progress tracking, and parent communication
+            </p>
+          </div>
         </div>
         <div className="flex gap-3">
           <Button variant="outline">
@@ -265,22 +286,12 @@ export function AdminStudents() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="birthday">Birthday</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {newStudentData.birthday ? format(newStudentData.birthday, "PPP") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <UICalendar
-                        mode="single"
-                        selected={newStudentData.birthday}
-                        onSelect={(date) => setNewStudentData({...newStudentData, birthday: date})}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <RotatingDatePicker
+                    value={newStudentData.birthday}
+                    onChange={(date) => setNewStudentData({...newStudentData, birthday: date})}
+                    placeholder="Select birthday"
+                    className="w-full"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="level">Proficiency Level</Label>
