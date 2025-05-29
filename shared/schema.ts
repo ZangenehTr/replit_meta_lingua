@@ -9,7 +9,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
-  role: text("role").notNull().default("student"), // admin, teacher, student, mentor, supervisor, call_center, accountant, manager
+  role: text("role").notNull().default("student"), // admin, teacher, student, mentor, supervisor, call_center, accountant
   phoneNumber: text("phone_number"),
   avatar: text("avatar"),
   isActive: boolean("is_active").default(true),
@@ -19,6 +19,53 @@ export const users = pgTable("users", {
   totalLessons: integer("total_lessons").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// User Profiles with Cultural Background and Learning Preferences
+export const userProfiles = pgTable("user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  culturalBackground: text("cultural_background"), // iranian, arabic, western, east_asian, south_asian, african, latin_american, other
+  nativeLanguage: text("native_language").notNull().default("en"),
+  targetLanguages: text("target_languages").array().default([]), // Languages user wants to learn
+  proficiencyLevel: text("proficiency_level").default("beginner"), // beginner, elementary, intermediate, upper_intermediate, advanced, proficient
+  learningGoals: text("learning_goals").array().default([]),
+  learningStyle: text("learning_style"), // visual, auditory, kinesthetic, reading_writing
+  timezone: text("timezone").default("UTC"),
+  preferredStudyTime: text("preferred_study_time"), // morning, afternoon, evening, night
+  weeklyStudyHours: integer("weekly_study_hours").default(5),
+  personalityType: text("personality_type"), // introvert, extrovert, ambivert
+  motivationFactors: text("motivation_factors").array().default([]), // career, travel, education, family, hobby
+  learningChallenges: text("learning_challenges").array().default([]), // pronunciation, grammar, vocabulary, listening, speaking
+  strengths: text("strengths").array().default([]), // memory, pattern_recognition, analytical, creative
+  interests: text("interests").array().default([]), // business, travel, culture, technology, arts, sports
+  bio: text("bio"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Role Permissions
+export const rolePermissions = pgTable("role_permissions", {
+  id: serial("id").primaryKey(),
+  role: text("role").notNull(), // admin, teacher, student, mentor, supervisor, call_center, accountant
+  resource: text("resource").notNull(), // users, courses, payments, reports, sessions, etc.
+  action: text("action").notNull(), // create, read, update, delete, manage
+  allowed: boolean("allowed").default(true),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// User Sessions for authentication
+export const userSessions = pgTable("user_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  token: text("token").notNull().unique(),
+  refreshToken: text("refresh_token").unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
 // Courses table
@@ -43,103 +90,6 @@ export const courses = pgTable("courses", {
   isFeatured: boolean("is_featured").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
-});
-
-// Course lessons
-export const courseLessons = pgTable("course_lessons", {
-  id: serial("id").primaryKey(),
-  courseId: integer("course_id").notNull().references(() => courses.id),
-  title: text("title").notNull(),
-  description: text("description"),
-  videoUrl: text("video_url"),
-  duration: integer("duration"), // in seconds
-  order: integer("order").notNull(),
-  transcript: text("transcript"),
-  notes: text("notes"),
-  resources: text("resources").array(),
-  isPreview: boolean("is_preview").default(false),
-  createdAt: timestamp("created_at").defaultNow()
-});
-
-// Lesson quizzes
-export const lessonQuizzes = pgTable("lesson_quizzes", {
-  id: serial("id").primaryKey(),
-  lessonId: integer("lesson_id").notNull().references(() => courseLessons.id),
-  title: text("title").notNull(),
-  questions: text("questions").notNull(), // JSON string
-  passingScore: integer("passing_score").default(70),
-  timeLimit: integer("time_limit"), // in minutes
-  maxAttempts: integer("max_attempts").default(3),
-  isRequired: boolean("is_required").default(false),
-  createdAt: timestamp("created_at").defaultNow()
-});
-
-// Quiz attempts
-export const quizAttempts = pgTable("quiz_attempts", {
-  id: serial("id").primaryKey(),
-  quizId: integer("quiz_id").notNull().references(() => lessonQuizzes.id),
-  userId: integer("user_id").notNull().references(() => users.id),
-  answers: text("answers").notNull(), // JSON string
-  score: integer("score").notNull(),
-  isPassed: boolean("is_passed").notNull(),
-  timeSpent: integer("time_spent"), // in seconds
-  attemptNumber: integer("attempt_number").notNull(),
-  completedAt: timestamp("completed_at").defaultNow()
-});
-
-// Course progress tracking
-export const courseProgress = pgTable("course_progress", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  courseId: integer("course_id").notNull().references(() => courses.id),
-  lessonId: integer("lesson_id").references(() => courseLessons.id),
-  progressPercentage: integer("progress_percentage").default(0),
-  watchTime: integer("watch_time").default(0), // in seconds
-  lastWatchedAt: timestamp("last_watched_at"),
-  isCompleted: boolean("is_completed").default(false),
-  completedAt: timestamp("completed_at"),
-  notes: text("notes"),
-  bookmarks: text("bookmarks").array(), // timestamps in video
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
-});
-
-// Flashcard decks
-export const flashcardDecks = pgTable("flashcard_decks", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  courseId: integer("course_id").references(() => courses.id),
-  lessonId: integer("lesson_id").references(() => courseLessons.id),
-  title: text("title").notNull(),
-  description: text("description"),
-  isPublic: boolean("is_public").default(false),
-  createdAt: timestamp("created_at").defaultNow()
-});
-
-// Individual flashcards
-export const flashcards = pgTable("flashcards", {
-  id: serial("id").primaryKey(),
-  deckId: integer("deck_id").notNull().references(() => flashcardDecks.id),
-  front: text("front").notNull(),
-  back: text("back").notNull(),
-  difficulty: integer("difficulty").default(1), // 1-5 for SRS
-  nextReview: timestamp("next_review").defaultNow(),
-  reviewCount: integer("review_count").default(0),
-  correctCount: integer("correct_count").default(0),
-  createdAt: timestamp("created_at").defaultNow()
-});
-
-// Course certificates
-export const courseCertificates = pgTable("course_certificates", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  courseId: integer("course_id").notNull().references(() => courses.id),
-  certificateNumber: text("certificate_number").notNull().unique(),
-  issueDate: timestamp("issue_date").defaultNow(),
-  pdfUrl: text("pdf_url"),
-  verificationHash: text("verification_hash"),
-  isValid: boolean("is_valid").default(true),
-  createdAt: timestamp("created_at").defaultNow()
 });
 
 // Course enrollments
@@ -228,100 +178,55 @@ export const instituteBranding = pgTable("institute_branding", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// CRM Features - Student Management
-export const studentProfiles = pgTable("student_profiles", {
+// Gamification System
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // streak, milestone, social, skill
+  icon: text("icon").notNull(),
+  xpReward: integer("xp_reward").default(0),
+  badgeColor: text("badge_color").default("#3B82F6"),
+  requirements: jsonb("requirements").notNull(), // Conditions to unlock
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const userAchievements = pgTable("user_achievements", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
-  studentId: text("student_id").unique(), // Custom student ID
-  dateOfBirth: timestamp("date_of_birth"),
-  nationalId: text("national_id"),
-  emergencyContact: text("emergency_contact"),
-  emergencyPhone: text("emergency_phone"),
-  address: text("address"),
-  parentName: text("parent_name"),
-  parentPhone: text("parent_phone"),
-  enrollmentSource: text("enrollment_source"), // website, referral, social_media, etc.
-  notes: text("notes"),
-  status: text("status").default("active"), // active, inactive, suspended, graduated
-  createdAt: timestamp("created_at").defaultNow(),
+  achievementId: integer("achievement_id").references(() => achievements.id).notNull(),
+  unlockedAt: timestamp("unlocked_at").defaultNow(),
+  isNotified: boolean("is_notified").default(false)
+});
+
+export const userStats = pgTable("user_stats", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  totalXp: integer("total_xp").default(0),
+  currentLevel: integer("current_level").default(1),
+  streakDays: integer("streak_days").default(0),
+  longestStreak: integer("longest_streak").default(0),
+  totalStudyTime: integer("total_study_time").default(0), // in minutes
+  lessonsCompleted: integer("lessons_completed").default(0),
+  quizzesCompleted: integer("quizzes_completed").default(0),
+  perfectScores: integer("perfect_scores").default(0),
+  wordsLearned: integer("words_learned").default(0),
+  conversationsCompleted: integer("conversations_completed").default(0),
+  lastActivityDate: timestamp("last_activity_date"),
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// Lead Management
-export const leads = pgTable("leads", {
+export const dailyGoals = pgTable("daily_goals", {
   id: serial("id").primaryKey(),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
-  email: text("email").notNull(),
-  phone: text("phone"),
-  source: text("source"), // website, referral, social_media, advertisement
-  status: text("status").default("new"), // new, contacted, qualified, enrolled, lost
-  interestedCourses: text("interested_courses").array(),
-  notes: text("notes"),
-  assignedToId: integer("assigned_to_id").references(() => users.id),
-  contactedAt: timestamp("contacted_at"),
-  followUpDate: timestamp("follow_up_date"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
-});
-
-// Financial Management
-export const invoices = pgTable("invoices", {
-  id: serial("id").primaryKey(),
-  invoiceNumber: text("invoice_number").unique().notNull(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
-  courseId: integer("course_id").references(() => courses.id),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  currency: text("currency").default("USD"),
-  status: text("status").default("pending"), // pending, paid, overdue, cancelled
-  dueDate: timestamp("due_date").notNull(),
-  paidAt: timestamp("paid_at"),
-  paymentMethod: text("payment_method"), // card, bank_transfer, cash, etc.
-  description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
-});
-
-// Teacher Performance Tracking
-export const teacherPerformance = pgTable("teacher_performance", {
-  id: serial("id").primaryKey(),
-  teacherId: integer("teacher_id").references(() => users.id).notNull(),
-  month: integer("month").notNull(),
-  year: integer("year").notNull(),
-  totalHours: decimal("total_hours", { precision: 5, scale: 2 }).default("0"),
-  totalStudents: integer("total_students").default(0),
-  averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default("0"),
-  totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default("0"),
-  classesConducted: integer("classes_conducted").default(0),
-  studentRetentionRate: decimal("student_retention_rate", { precision: 5, scale: 2 }).default("0"),
-  createdAt: timestamp("created_at").defaultNow()
-});
-
-// Attendance Tracking
-export const attendance = pgTable("attendance", {
-  id: serial("id").primaryKey(),
-  sessionId: integer("session_id").references(() => sessions.id).notNull(),
-  studentId: integer("student_id").references(() => users.id).notNull(),
-  status: text("status").notNull(), // present, absent, late, excused
-  checkInTime: timestamp("check_in_time"),
-  checkOutTime: timestamp("check_out_time"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow()
-});
-
-// Communication Logs
-export const communicationLogs = pgTable("communication_logs", {
-  id: serial("id").primaryKey(),
-  contactId: integer("contact_id").notNull(), // Can reference users or leads
-  contactType: text("contact_type").notNull(), // student, lead, teacher
-  communicationType: text("communication_type").notNull(), // email, phone, sms, in_person
-  subject: text("subject"),
-  content: text("content"),
-  staffId: integer("staff_id").references(() => users.id).notNull(),
-  scheduledAt: timestamp("scheduled_at"),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  goalType: text("goal_type").notNull(), // study_time, lessons, vocabulary, speaking
+  targetValue: integer("target_value").notNull(),
+  currentValue: integer("current_value").default(0),
+  goalDate: timestamp("goal_date").notNull(),
+  isCompleted: boolean("is_completed").default(false),
   completedAt: timestamp("completed_at"),
-  outcome: text("outcome"), // successful, no_answer, rescheduled, etc.
-  followUpRequired: boolean("follow_up_required").default(false),
+  xpReward: integer("xp_reward").default(10),
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -332,9 +237,26 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true
 });
 
-export const insertCourseSchema = createInsertSchema(courses).omit({
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({
   id: true,
   createdAt: true
+});
+
+export const insertUserSessionSchema = createInsertSchema(userSessions).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertCourseSchema = createInsertSchema(courses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
 });
 
 export const insertEnrollmentSchema = createInsertSchema(enrollments).omit({
@@ -373,127 +295,6 @@ export const insertBrandingSchema = createInsertSchema(instituteBranding).omit({
   updatedAt: true
 });
 
-// Course and lesson schemas
-export const insertCourseLessonSchema = createInsertSchema(courseLessons).omit({
-  id: true,
-  createdAt: true
-});
-
-export const insertLessonQuizSchema = createInsertSchema(lessonQuizzes).omit({
-  id: true,
-  createdAt: true
-});
-
-export const insertQuizAttemptSchema = createInsertSchema(quizAttempts).omit({
-  id: true,
-  completedAt: true
-});
-
-export const insertCourseProgressSchema = createInsertSchema(courseProgress).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
-
-export const insertFlashcardDeckSchema = createInsertSchema(flashcardDecks).omit({
-  id: true,
-  createdAt: true
-});
-
-export const insertFlashcardSchema = createInsertSchema(flashcards).omit({
-  id: true,
-  createdAt: true
-});
-
-export const insertCourseCertificateSchema = createInsertSchema(courseCertificates).omit({
-  id: true,
-  createdAt: true
-});
-
-// CRM Insert Schemas
-export const insertStudentProfileSchema = createInsertSchema(studentProfiles).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
-
-export const insertLeadSchema = createInsertSchema(leads).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
-
-export const insertInvoiceSchema = createInsertSchema(invoices).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
-
-export const insertTeacherPerformanceSchema = createInsertSchema(teacherPerformance).omit({
-  id: true,
-  createdAt: true
-});
-
-export const insertAttendanceSchema = createInsertSchema(attendance).omit({
-  id: true,
-  createdAt: true
-});
-
-export const insertCommunicationLogSchema = createInsertSchema(communicationLogs).omit({
-  id: true,
-  createdAt: true
-});
-
-// Gamification Tables
-export const achievements = pgTable("achievements", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description").notNull(),
-  icon: text("icon").notNull(),
-  type: text("type").notNull(), // 'progress', 'streak', 'milestone', 'social', 'skill'
-  requirement: integer("requirement").notNull(), // Number needed to unlock
-  points: integer("points").notNull().default(0),
-  rarity: text("rarity").notNull().default('common'), // 'common', 'rare', 'epic', 'legendary'
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const userAchievements = pgTable("user_achievements", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  achievementId: integer("achievement_id").references(() => achievements.id).notNull(),
-  unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
-  progress: integer("progress").notNull().default(0),
-});
-
-export const userStats = pgTable("user_stats", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  totalXp: integer("total_xp").notNull().default(0),
-  level: integer("level").notNull().default(1),
-  currentStreak: integer("current_streak").notNull().default(0),
-  longestStreak: integer("longest_streak").notNull().default(0),
-  lessonsCompleted: integer("lessons_completed").notNull().default(0),
-  coursesCompleted: integer("courses_completed").notNull().default(0),
-  minutesStudied: integer("minutes_studied").notNull().default(0),
-  perfectQuizzes: integer("perfect_quizzes").notNull().default(0),
-  socialShares: integer("social_shares").notNull().default(0),
-  lastActivityDate: timestamp("last_activity_date"),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-export const dailyGoals = pgTable("daily_goals", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  goalType: text("goal_type").notNull(), // 'lessons', 'minutes', 'xp'
-  targetValue: integer("target_value").notNull(),
-  currentValue: integer("current_value").notNull().default(0),
-  date: text("date").notNull(),
-  isCompleted: boolean("is_completed").notNull().default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Gamification Insert Schemas
 export const insertAchievementSchema = createInsertSchema(achievements).omit({
   id: true,
   createdAt: true
@@ -517,6 +318,12 @@ export const insertDailyGoalSchema = createInsertSchema(dailyGoals).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+export type RolePermission = typeof rolePermissions.$inferSelect;
+export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
+export type UserSession = typeof userSessions.$inferSelect;
+export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
 export type Course = typeof courses.$inferSelect;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type Enrollment = typeof enrollments.$inferSelect;
@@ -533,22 +340,6 @@ export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type InstituteBranding = typeof instituteBranding.$inferSelect;
 export type InsertBranding = z.infer<typeof insertBrandingSchema>;
-
-// CRM Types
-export type StudentProfile = typeof studentProfiles.$inferSelect;
-export type InsertStudentProfile = z.infer<typeof insertStudentProfileSchema>;
-export type Lead = typeof leads.$inferSelect;
-export type InsertLead = z.infer<typeof insertLeadSchema>;
-export type Invoice = typeof invoices.$inferSelect;
-export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
-export type TeacherPerformance = typeof teacherPerformance.$inferSelect;
-export type InsertTeacherPerformance = z.infer<typeof insertTeacherPerformanceSchema>;
-export type Attendance = typeof attendance.$inferSelect;
-export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;
-export type CommunicationLog = typeof communicationLogs.$inferSelect;
-export type InsertCommunicationLog = z.infer<typeof insertCommunicationLogSchema>;
-
-// Gamification Types
 export type Achievement = typeof achievements.$inferSelect;
 export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
 export type UserAchievement = typeof userAchievements.$inferSelect;
