@@ -1,6 +1,29 @@
+/* Persian/Arabic RTL Font Support */
+@import url('https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* RTL Support */
+[dir="rtl"] {
+  font-family: 'Almarai', 'Tahoma', 'Arial', sans-serif;
+}
+
+[dir="ltr"] {
+  font-family: 'Inter', 'Arial', sans-serif;
+}
+
+/* RTL specific styles */
+.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.ltr {
+  direction: ltr;
+  text-align: left;
+}
 
 /* Mobile optimizations */
 @layer utilities {
