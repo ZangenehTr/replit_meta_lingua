@@ -1,5 +1,6 @@
 /* Persian/Arabic RTL Font Support */
 @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,7 +8,7 @@
 
 /* RTL Support */
 [dir="rtl"] {
-  font-family: 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
+  font-family: 'Almarai', 'Noto Kufi Arabic', 'Tahoma', 'Arial', sans-serif !important;
 }
 
 [dir="ltr"] {
@@ -18,7 +19,7 @@
 .rtl {
   direction: rtl;
   text-align: right;
-  font-family: 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
+  font-family: 'Almarai', 'Noto Kufi Arabic', 'Tahoma', 'Arial', sans-serif !important;
 }
 
 .ltr {
@@ -27,9 +28,42 @@
   font-family: 'Inter', 'Arial', sans-serif !important;
 }
 
-/* Force Almarai font for all RTL elements */
-[dir="rtl"] *, .rtl * {
+/* Language-specific font families */
+.lang-fa {
   font-family: 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
+}
+
+.lang-ar {
+  font-family: 'Noto Kufi Arabic', 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
+}
+
+.lang-en {
+  font-family: 'Inter', 'Arial', sans-serif !important;
+}
+
+/* Force proper font for all RTL elements */
+[dir="rtl"] *, .rtl * {
+  font-family: 'Almarai', 'Noto Kufi Arabic', 'Tahoma', 'Arial', sans-serif !important;
+}
+
+/* Force proper font for Arabic content */
+.lang-ar *, [lang="ar"] *, [data-lang="ar"] * {
+  font-family: 'Noto Kufi Arabic', 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
+}
+
+/* Force proper font for Persian content */
+.lang-fa *, [lang="fa"] *, [data-lang="fa"] * {
+  font-family: 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
+}
+
+/* Force proper font for English content */
+.lang-en *, [lang="en"] *, [data-lang="en"] * {
+  font-family: 'Inter', 'Arial', sans-serif !important;
+}
+
+/* Ensure all elements inherit proper fonts */
+* {
+  font-family: inherit;
 }
 
 /* Force Inter font for all LTR elements */
