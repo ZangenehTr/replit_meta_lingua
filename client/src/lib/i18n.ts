@@ -372,6 +372,18 @@ export const translations: Record<Language, Translations> = {
     joinLive: "پیوستن زنده",
     learningStreak: "روزهای مطالعه",
     availableCredits: "اعتبار موجود",
+    
+    // Navigation
+    myDashboard: "داشبورد",
+    myCourses: "دوره‌های من",
+    findTutors: "یافتن مربی",
+    liveSessions: "جلسات زنده",
+    homework: "تکالیف",
+    messages: "پیام‌ها",
+    progress: "پیشرفت",
+    paymentCredits: "پرداخت و اعتبار",
+    profile: "پروفایل",
+    signOut: "خروج",
   },
 
   ar: {
