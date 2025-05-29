@@ -18,21 +18,22 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
 import { Link, useLocation } from "wouter";
 
-const navigationItems = [
-  { path: "/dashboard", icon: Home, label: "Dashboard" },
-  { path: "/courses", icon: BookOpen, label: "My Courses" },
-  { path: "/tutors", icon: Users, label: "Find Tutors" },
-  { path: "/sessions", icon: Video, label: "Live Sessions" },
-  { path: "/homework", icon: ClipboardList, label: "Homework", badge: 2 },
-  { path: "/messages", icon: MessageSquare, label: "Messages", badge: 5 },
-  { path: "/progress", icon: TrendingUp, label: "Progress" },
-  { path: "/payment", icon: CreditCard, label: "Payment & Credits" },
+const getNavigationItems = (t: any) => [
+  { path: "/dashboard", icon: Home, label: t('myDashboard') },
+  { path: "/courses", icon: BookOpen, label: t('myCourses') },
+  { path: "/tutors", icon: Users, label: t('findTutors') },
+  { path: "/sessions", icon: Video, label: t('liveSessions') },
+  { path: "/homework", icon: ClipboardList, label: t('homework'), badge: 2 },
+  { path: "/messages", icon: MessageSquare, label: t('messages'), badge: 5 },
+  { path: "/progress", icon: TrendingUp, label: t('progress') },
+  { path: "/payment", icon: CreditCard, label: t('paymentCredits') },
 ];
 
 export function Sidebar() {
   const { logout } = useAuth();
   const { t, isRTL } = useLanguage();
   const [location] = useLocation();
+  const navigationItems = getNavigationItems(t);
 
   return (
     <aside className={`w-64 bg-white dark:bg-gray-800 ${isRTL ? 'border-l border-gray-200 dark:border-gray-700' : 'border-r border-gray-200 dark:border-gray-700'} fixed h-full overflow-y-auto hidden md:block ${isRTL ? 'right-0' : 'left-0'}`}>
@@ -70,14 +71,14 @@ export function Sidebar() {
         <div className="space-y-2">
           <Link href="/profile">
             <Button variant="ghost" className="w-full justify-start">
-              <User className="mr-3 h-4 w-4" />
-              <span>Profile</span>
+              <User className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+              <span>{t('profile')}</span>
             </Button>
           </Link>
           <Link href="/settings">
             <Button variant="ghost" className="w-full justify-start">
-              <Settings className="mr-3 h-4 w-4" />
-              <span>Settings</span>
+              <Settings className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+              <span>{t('settings')}</span>
             </Button>
           </Link>
           
@@ -89,8 +90,8 @@ export function Sidebar() {
               window.location.href = "/auth";
             }}
           >
-            <LogOut className="mr-3 h-4 w-4" />
-            <span>Sign Out</span>
+            <LogOut className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+            <span>{t('signOut')}</span>
           </Button>
         </div>
       </div>
