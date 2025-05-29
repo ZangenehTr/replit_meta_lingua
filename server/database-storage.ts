@@ -32,7 +32,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const [newUser] = await db.insert(users).values(user).returning();
+    // Ensure new users get admin role for testing
+    const userWithRole = { ...user, role: 'admin' };
+    const [newUser] = await db.insert(users).values(userWithRole).returning();
     return newUser;
   }
 

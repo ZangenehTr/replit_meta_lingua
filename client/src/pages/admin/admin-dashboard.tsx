@@ -97,7 +97,10 @@ export function AdminDashboard() {
         {/* Student Information System */}
         <Card 
           className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setLocation('/admin/students')}
+          onClick={() => {
+            console.log('Navigating to /admin/students');
+            setLocation('/admin/students');
+          }}
         >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
