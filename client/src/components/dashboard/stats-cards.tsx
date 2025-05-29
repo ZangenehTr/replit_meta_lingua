@@ -29,58 +29,58 @@ export function StatsCards() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8">
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-3 sm:p-4 md:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">Learning Streak</p>
-              <p className="text-2xl font-bold">{stats?.streak || 0} days</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Learning Streak</p>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.streak || 0} <span className="text-sm sm:text-base">days</span></p>
             </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <Flame className="h-6 w-6 text-green-600" />
+            <div className="p-2 sm:p-3 bg-green-100 dark:bg-green-900/20 rounded-lg ml-2">
+              <Flame className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-green-600" />
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-3 sm:p-4 md:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">Course Progress</p>
-              <p className="text-2xl font-bold">{stats?.progress || 0}%</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Course Progress</p>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.progress || 0}%</p>
             </div>
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <TrendingUp className="h-6 w-6 text-primary" />
+            <div className="p-2 sm:p-3 bg-primary/10 rounded-lg ml-2">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-primary" />
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-3 sm:p-4 md:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">Available Credits</p>
-              <p className="text-2xl font-bold">{stats?.credits || 0}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Available Credits</p>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.credits || 0}</p>
             </div>
-            <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
-              <Coins className="h-6 w-6 text-yellow-600" />
+            <div className="p-2 sm:p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg ml-2">
+              <Coins className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-yellow-600" />
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-3 sm:p-4 md:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground text-sm font-medium">Next Session</p>
-              <p className="text-2xl font-bold">{formatNextSession(stats?.nextSession || null)}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Next Session</p>
+              <p className="text-sm sm:text-lg md:text-2xl font-bold truncate">{formatNextSession(stats?.nextSession || null)}</p>
             </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-              <Clock className="h-6 w-6 text-purple-600" />
+            <div className="p-2 sm:p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg ml-2">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-purple-600" />
             </div>
           </div>
         </CardContent>
