@@ -19,14 +19,40 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const savedLang = localStorage.getItem('meta-lingua-language') as Language;
     if (savedLang && ['en', 'fa', 'ar'].includes(savedLang)) {
       setCurrentLanguage(savedLang);
+      const direction = getTextDirection(savedLang);
+      document.documentElement.dir = direction;
+      document.documentElement.lang = savedLang;
+      
+      // Apply appropriate font and styling based on language
+      if (direction === 'rtl') {
+        document.body.style.fontFamily = "'Almarai', 'Tahoma', 'Arial', sans-serif";
+        document.body.classList.add('rtl');
+        document.body.classList.remove('ltr');
+      } else {
+        document.body.style.fontFamily = "'Inter', 'Arial', sans-serif";
+        document.body.classList.add('ltr');
+        document.body.classList.remove('rtl');
+      }
     }
   }, []);
 
   const setLanguage = (lang: Language) => {
     setCurrentLanguage(lang);
     localStorage.setItem('meta-lingua-language', lang);
-    document.documentElement.dir = getTextDirection(lang);
+    const direction = getTextDirection(lang);
+    document.documentElement.dir = direction;
     document.documentElement.lang = lang;
+    
+    // Apply appropriate font and styling based on language
+    if (direction === 'rtl') {
+      document.body.style.fontFamily = "'Almarai', 'Tahoma', 'Arial', sans-serif";
+      document.body.classList.add('rtl');
+      document.body.classList.remove('ltr');
+    } else {
+      document.body.style.fontFamily = "'Inter', 'Arial', sans-serif";
+      document.body.classList.add('ltr');
+      document.body.classList.remove('rtl');
+    }
   };
 
   const t = (key: keyof typeof translations.en): string => {
