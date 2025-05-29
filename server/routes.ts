@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { z } from "zod";
-import { insertUserSchema, insertSessionSchema, insertMessageSchema, insertPaymentSchema } from "@shared/schema";
+import { insertUserSchema, insertUserProfileSchema, insertSessionSchema, insertMessageSchema, insertPaymentSchema } from "@shared/schema";
 
 const JWT_SECRET = process.env.JWT_SECRET || "meta-lingua-secret-key";
 
@@ -214,6 +214,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to load dashboard data" });
+    }
+  });
+
+  // User Profile Management
+  app.get("/api/profile", authenticateToken, async (req: any, res) => {
+    try {
+      const profile = await storage.getUserProfile(req.user.id);
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
+  app.post("/api/profile", authenticateToken, async (req: any, res) => {
+    try {
+      const profileData = insertUserProfileSchema.parse({
+        userId: req.user.id,
+        ...req.body
+      });
+      
+      const profile = await storage.createUserProfile(profileData);
+      res.json(profile);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid profile data" });
+    }
+  });
+
+  app.patch("/api/profile", authenticateToken, async (req: any, res) => {
+    try {
+      const updates = req.body;
+      const profile = await storage.updateUserProfile(req.user.id, updates);
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      
+      res.json(profile);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // User Management (Admin/Manager only)
+  app.get("/api/users", authenticateToken, requireRole(['admin', 'supervisor']), async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.patch("/api/users/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const updates = req.body;
+
+      // Users can only update their own profile, unless they're admin/supervisor
+      if (req.user.id !== userId && !['admin', 'supervisor'].includes(req.user.role)) {
+        return res.status(403).json({ message: "Can only update your own profile" });
+      }
+
+      const user = await storage.updateUser(userId, updates);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Role Management (Admin only)
+  app.get("/api/roles/:role/permissions", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const role = req.params.role;
+      const permissions = await storage.getRolePermissions(role);
+      res.json(permissions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch permissions" });
+    }
+  });
+
+  app.post("/api/permissions", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const permissionData = req.body;
+      const permission = await storage.createRolePermission(permissionData);
+      res.json(permission);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create permission" });
     }
   });
 
