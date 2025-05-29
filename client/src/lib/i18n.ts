@@ -194,12 +194,7 @@ export interface Translations {
   whatIsMyLevel: string;
   
   // Additional missing keys from screenshots
-  liveVirtualClassroom: string;
-  joinLive: string;
-  aiStudyAssistant: string;
   start: string;
-  recentMessages: string;
-  viewAll: string;
   noCoursesAvailableAtMoment: string;
 }
 
@@ -404,6 +399,10 @@ export const translations: Record<Language, Translations> = {
     discoverLanguageLevel: "Discover Your Language Level",
     takeAssessment: "Take our comprehensive assessment to determine your exact proficiency level",
     whatIsMyLevel: "What is my level",
+    
+    // Additional missing keys from screenshots
+    start: "Start",
+    noCoursesAvailableAtMoment: "No courses available at the moment",
   },
 
   fa: {
