@@ -34,6 +34,7 @@ const getNavigationItems = (t: any) => [
 ];
 
 const getCRMNavigationItems = (t: any) => [
+  { path: "/admin/students", icon: Users, label: "سیستم اطلاعات دانش‌آموزان" },
   { path: "/crm", icon: Building2, label: "مدیریت CRM" },
   { path: "/lead-management", icon: UserPlus, label: "مدیریت لیدها" },
   { path: "/communication-center", icon: Send, label: "مرکز ارتباطات" },

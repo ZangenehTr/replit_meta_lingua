@@ -449,6 +449,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(messages);
   });
 
+  // ===== STUDENT INFORMATION SYSTEM (SIS) ENDPOINTS =====
+  
+  // GET /api/admin/students - Student Information System as per PRD
+  app.get("/api/admin/students", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const students = users
+        .filter(user => user.role === 'student')
+        .map(student => ({
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          phoneNumber: student.phoneNumber || null,
+          enrollmentDate: student.createdAt,
+          status: 'active',
+          currentLevel: 'B1', // This would come from user profile when implemented
+          targetLanguage: 'English',
+          nativeLanguage: 'Persian',
+          learningGoals: ['Business Communication', 'Travel'],
+          guardianName: null,
+          guardianPhone: null,
+          dateOfBirth: null,
+          address: null,
+          communicationLogs: [],
+          paymentHistory: [],
+          attendanceRecords: [],
+          homeworkSubmissions: [],
+          progressReports: []
+        }));
+      
+      res.json(students);
+    } catch (error) {
+      console.error("Error fetching students for SIS:", error);
+      res.status(500).json({ message: "Failed to fetch students" });
+    }
+  });
+
   // ===== CRM MANAGEMENT ENDPOINTS =====
   
   // CRM Dashboard Stats
