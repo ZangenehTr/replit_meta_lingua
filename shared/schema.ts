@@ -175,6 +175,13 @@ export const instituteBranding = pgTable("institute_branding", {
   logo: text("logo"),
   primaryColor: text("primary_color").default("#3B82F6"),
   secondaryColor: text("secondary_color").default("#10B981"),
+  accentColor: text("accent_color").default("#8B5CF6"),
+  backgroundColor: text("background_color").default("#FFFFFF"),
+  textColor: text("text_color").default("#1F2937"),
+  favicon: text("favicon"),
+  loginBackgroundImage: text("login_background_image"),
+  fontFamily: text("font_family").default("Inter"),
+  borderRadius: text("border_radius").default("0.5rem"),
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
