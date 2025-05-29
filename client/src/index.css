@@ -7,22 +7,34 @@
 
 /* RTL Support */
 [dir="rtl"] {
-  font-family: 'Almarai', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
 }
 
 [dir="ltr"] {
-  font-family: 'Inter', 'Arial', sans-serif;
+  font-family: 'Inter', 'Arial', sans-serif !important;
 }
 
 /* RTL specific styles */
 .rtl {
   direction: rtl;
   text-align: right;
+  font-family: 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
 }
 
 .ltr {
   direction: ltr;
   text-align: left;
+  font-family: 'Inter', 'Arial', sans-serif !important;
+}
+
+/* Force Almarai font for all RTL elements */
+[dir="rtl"] *, .rtl * {
+  font-family: 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
+}
+
+/* Force Inter font for all LTR elements */
+[dir="ltr"] *, .ltr * {
+  font-family: 'Inter', 'Arial', sans-serif !important;
 }
 
 /* Mobile optimizations */
