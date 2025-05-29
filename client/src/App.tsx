@@ -18,6 +18,11 @@ import GamificationProgress from "@/pages/gamification-progress";
 import UserProfile from "@/pages/user-profile";
 import CRMDashboard from "@/pages/crm-dashboard";
 import StudentInformationSystem from "@/pages/student-information-system";
+import { AdminDashboard as EnhancedAdminDashboard } from "@/pages/admin/admin-dashboard";
+import { AdminStudents } from "@/pages/admin/students";
+import { AdminCourses } from "@/pages/admin/courses";
+import { AdminFinancial } from "@/pages/admin/financial";
+import { AdminSystem } from "@/pages/admin/system";
 import { LanguageProvider } from "@/hooks/use-language";
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
