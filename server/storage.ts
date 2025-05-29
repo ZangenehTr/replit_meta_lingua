@@ -24,6 +24,24 @@ export interface IStorage {
   updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
   updateUserPreferences(id: number, preferences: any): Promise<User | undefined>;
 
+  // User profiles
+  getUserProfile(userId: number): Promise<UserProfile | undefined>;
+  createUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
+  updateUserProfile(userId: number, updates: Partial<UserProfile>): Promise<UserProfile | undefined>;
+
+  // Authentication sessions
+  getUserSession(token: string): Promise<UserSession | undefined>;
+  getUserSessionByRefreshToken(refreshToken: string): Promise<UserSession | undefined>;
+  createUserSession(session: InsertUserSession): Promise<UserSession>;
+  updateUserSessionActivity(sessionId: number): Promise<void>;
+  updateUserSessionTokens(sessionId: number, accessToken: string, refreshToken: string): Promise<void>;
+  invalidateUserSession(token: string): Promise<void>;
+
+  // Role permissions
+  checkUserPermission(role: string, resource: string, action: string): Promise<boolean>;
+  getRolePermissions(role: string): Promise<RolePermission[]>;
+  createRolePermission(permission: InsertRolePermission): Promise<RolePermission>;
+
   // Courses
   getCourses(): Promise<Course[]>;
   getCourse(id: number): Promise<Course | undefined>;
