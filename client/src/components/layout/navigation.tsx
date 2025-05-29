@@ -1,4 +1,5 @@
-import { Bell, Globe, Moon, Sun, User, LogOut } from "lucide-react";
+import { Bell, Globe, Moon, Sun, User, LogOut, TrendingUp } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -111,6 +112,12 @@ export function Navigation() {
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
+                <Link href="/progress">
+                  <DropdownMenuItem>
+                    <TrendingUp className="mr-2 h-4 w-4" />
+                    <span>Progress & Achievements</span>
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuItem>
                   <Globe className="mr-2 h-4 w-4" />
                   <span>Settings</span>
