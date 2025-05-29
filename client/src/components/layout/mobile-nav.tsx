@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
+import { Language } from "@/lib/i18n";
 import { Link, useLocation } from "wouter";
 import { 
   Home, 
@@ -32,8 +34,15 @@ const navigationItems = [
 
 export function MobileNav() {
   const { logout } = useAuth();
+  const { currentLanguage, setLanguage } = useLanguage();
   const [location] = useLocation();
   const [open, setOpen] = useState(false);
+
+  const languages = [
+    { code: 'en' as const, name: 'English', flag: '🇺🇸' },
+    { code: 'fa' as const, name: 'فارسی', flag: '🇮🇷' },
+    { code: 'ar' as const, name: 'العربية', flag: '🇸🇦' },
+  ];
 
   return (
     <div className="md:hidden">
@@ -83,6 +92,29 @@ export function MobileNav() {
             </nav>
             
             <Separator className="my-6" />
+            
+            {/* Language Selector Section */}
+            <div className="mb-4">
+              <p className="text-sm font-medium text-muted-foreground mb-2 px-2">Language</p>
+              <div className="space-y-1">
+                {languages.map((lang) => (
+                  <Button
+                    key={lang.code}
+                    variant={currentLanguage === lang.code ? "default" : "ghost"}
+                    className="w-full justify-start"
+                    onClick={() => {
+                      setLanguage(lang.code);
+                      setOpen(false);
+                    }}
+                  >
+                    <span className="mr-3 text-lg">{lang.flag}</span>
+                    <span className={lang.code === 'fa' || lang.code === 'ar' ? 'font-arabic' : ''}>{lang.name}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
             
             <div className="space-y-2">
               <Link href="/profile">
