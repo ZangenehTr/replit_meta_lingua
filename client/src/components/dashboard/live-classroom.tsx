@@ -315,41 +315,41 @@ export function LiveClassroom() {
           Live Virtual Classroom
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="p-3 sm:p-6">
+        <div className="space-y-3 sm:space-y-4">
           {liveSessions && liveSessions.length > 0 ? (
             liveSessions.map((session) => (
-              <div key={session.id} className="border rounded-lg p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
+              <div key={session.id} className="border rounded-lg p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row items-start gap-3">
+                  <div className="flex items-center gap-3 w-full sm:flex-1">
                     <img
                       src={session.tutorAvatar}
                       alt={session.tutorName}
-                      className="w-12 h-12 rounded-full object-cover"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
                     />
-                    <div>
-                      <h4 className="font-medium">{session.title}</h4>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-medium text-sm sm:text-base truncate">{session.title}</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         with {session.tutorName}
                       </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline">{session.language}</Badge>
-                        <Badge variant="secondary">{session.level}</Badge>
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
+                        <Badge variant="outline" className="text-xs">{session.language}</Badge>
+                        <Badge variant="secondary" className="text-xs">{session.level}</Badge>
                         {session.status === "live" && (
-                          <Badge variant="destructive" className="animate-pulse">
-                            🔴 LIVE
+                          <Badge variant="destructive" className="animate-pulse text-xs">
+                            LIVE
                           </Badge>
                         )}
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">
+                  <div className="w-full sm:w-auto sm:text-right space-y-2">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {session.participants}/{session.maxParticipants} students
                     </p>
                     <Button
                       size="sm"
-                      className="mt-2 w-full sm:w-auto"
+                      className="w-full sm:w-auto text-xs sm:text-sm"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -361,13 +361,14 @@ export function LiveClassroom() {
                         "Joining..."
                       ) : session.status === "live" ? (
                         <>
-                          <Video className="h-4 w-4 mr-1" />
-                          Join Live Session
+                          <Video className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          Join Live
                         </>
                       ) : (
                         <>
-                          <Phone className="h-4 w-4 mr-1" />
-                          Join at {new Date(session.scheduledAt).toLocaleTimeString()}
+                          <Phone className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          <span className="hidden sm:inline">Join at </span>
+                          {new Date(session.scheduledAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </>
                       )}
                     </Button>

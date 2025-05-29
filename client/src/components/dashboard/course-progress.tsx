@@ -108,42 +108,43 @@ export function CourseProgress() {
           Course Progress & Enrollment
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6">
         {/* Enrolled Courses */}
         {courses && courses.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <h3 className="font-medium text-sm text-muted-foreground">MY COURSES</h3>
             {courses.map((course) => (
-              <div key={course.id} className="border rounded-lg p-4 space-y-3">
-                <div className="flex items-start space-x-4">
+              <div key={course.id} className="border rounded-lg p-3 sm:p-4 space-y-3">
+                <div className="flex items-start space-x-3">
                   <img
                     src={course.thumbnail}
                     alt={course.title}
-                    className="w-16 h-16 rounded-lg object-cover"
+                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover flex-shrink-0"
                   />
-                  <div className="flex-1">
-                    <h4 className="font-medium">{course.title}</h4>
-                    <p className="text-sm text-muted-foreground">{course.description}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="outline">{course.language}</Badge>
-                      <Badge variant="secondary">{course.level}</Badge>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-sm sm:text-base truncate">{course.title}</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{course.description}</p>
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
+                      <Badge variant="outline" className="text-xs">{course.language}</Badge>
+                      <Badge variant="secondary" className="text-xs">{course.level}</Badge>
                       {course.progress !== undefined && (
-                        <Badge>{course.progress}% Complete</Badge>
+                        <Badge className="text-xs">{course.progress}% Complete</Badge>
                       )}
                     </div>
                     {course.nextLesson && (
-                      <p className="text-xs text-blue-600 mt-2">
+                      <p className="text-xs text-blue-600 mt-2 truncate">
                         Next: {course.nextLesson}
                       </p>
                     )}
                   </div>
                 </div>
                 {course.progress !== undefined && (
-                  <Progress value={course.progress} className="h-2" />
+                  <Progress value={course.progress} className="h-1.5 sm:h-2" />
                 )}
                 <div className="flex gap-2">
                   <Button
                     size="sm"
+                    className="w-full sm:w-auto text-xs sm:text-sm"
                     onClick={() => progressMutation.mutate({ 
                       courseId: course.id, 
                       lessonId: (course.completedLessons || 0) + 1 
