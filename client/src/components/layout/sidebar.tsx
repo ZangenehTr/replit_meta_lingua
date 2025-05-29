@@ -9,7 +9,11 @@ import {
   CreditCard, 
   User,
   Settings,
-  LogOut
+  LogOut,
+  Building2,
+  UserPlus,
+  Send,
+  DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,11 +33,19 @@ const getNavigationItems = (t: any) => [
   { path: "/payment", icon: CreditCard, label: t('paymentCredits') },
 ];
 
+const getCRMNavigationItems = (t: any) => [
+  { path: "/crm", icon: Building2, label: "مدیریت CRM" },
+  { path: "/lead-management", icon: UserPlus, label: "مدیریت لیدها" },
+  { path: "/communication-center", icon: Send, label: "مرکز ارتباطات" },
+  { path: "/financial-management", icon: DollarSign, label: "مدیریت مالی" },
+];
+
 export function Sidebar() {
   const { logout } = useAuth();
   const { t, isRTL } = useLanguage();
   const [location] = useLocation();
   const navigationItems = getNavigationItems(t);
+  const crmNavigationItems = getCRMNavigationItems(t);
 
   return (
     <aside className={`w-64 bg-white dark:bg-gray-800 ${isRTL ? 'border-l border-gray-200 dark:border-gray-700' : 'border-r border-gray-200 dark:border-gray-700'} fixed h-full overflow-y-auto hidden md:block ${isRTL ? 'right-0' : 'left-0'}`}>
@@ -65,6 +77,35 @@ export function Sidebar() {
             );
           })}
         </nav>
+        
+        <Separator className="my-6" />
+        
+        {/* CRM Management Section */}
+        <div className="space-y-2">
+          <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            مدیریت آموزشگاه
+          </h3>
+          {crmNavigationItems.map((item) => {
+            const isActive = location === item.path;
+            const Icon = item.icon;
+            
+            return (
+              <Link key={item.path} href={item.path}>
+                <Button
+                  variant={isActive ? "default" : "ghost"}
+                  className={`w-full justify-start ${
+                    isActive 
+                      ? "bg-primary text-primary-foreground" 
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <Icon className="mr-3 h-4 w-4" />
+                  <span>{item.label}</span>
+                </Button>
+              </Link>
+            );
+          })}
+        </div>
         
         <Separator className="my-6" />
         
