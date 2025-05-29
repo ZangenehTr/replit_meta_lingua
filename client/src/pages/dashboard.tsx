@@ -93,15 +93,15 @@ export default function Dashboard() {
                 <TabsList className="grid w-full grid-cols-3 mb-3 md:mb-4 h-9 sm:h-10">
                   <TabsTrigger value="overview" className="text-xs sm:text-sm px-2">
                     <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    <span className="truncate">{currentLanguage === 'fa' ? 'نمای کلی' : 'Overview'}</span>
+                    <span className="truncate">{t('overview')}</span>
                   </TabsTrigger>
                   <TabsTrigger value="challenges" className="text-xs sm:text-sm px-2">
                     <Target className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    <span className="truncate">{currentLanguage === 'fa' ? 'چالش‌ها' : 'Challenges'}</span>
+                    <span className="truncate">{t('challenges')}</span>
                   </TabsTrigger>
                   <TabsTrigger value="leaderboard" className="text-xs sm:text-sm px-2">
                     <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    <span className="truncate">{currentLanguage === 'fa' ? 'رتبه‌بندی' : 'Leaderboard'}</span>
+                    <span className="truncate">{t('leaderboard')}</span>
                   </TabsTrigger>
                 </TabsList>
                 
