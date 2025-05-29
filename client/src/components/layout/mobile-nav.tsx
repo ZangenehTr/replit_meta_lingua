@@ -15,6 +15,7 @@ import {
   MessageSquare, 
   TrendingUp, 
   CreditCard, 
+  User,
   Settings
 } from "lucide-react";
 
@@ -84,6 +85,16 @@ export function MobileNav() {
             <Separator className="my-6" />
             
             <div className="space-y-2">
+              <Link href="/profile">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => setOpen(false)}
+                >
+                  <User className="mr-3 h-4 w-4" />
+                  <span>Profile</span>
+                </Button>
+              </Link>
               <Link href="/settings">
                 <Button 
                   variant="ghost" 

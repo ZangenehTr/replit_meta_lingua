@@ -7,6 +7,7 @@ import {
   MessageSquare, 
   TrendingUp, 
   CreditCard, 
+  User,
   Settings,
   LogOut
 } from "lucide-react";
@@ -65,6 +66,12 @@ export function Sidebar() {
         <Separator className="my-6" />
         
         <div className="space-y-2">
+          <Link href="/profile">
+            <Button variant="ghost" className="w-full justify-start">
+              <User className="mr-3 h-4 w-4" />
+              <span>Profile</span>
+            </Button>
+          </Link>
           <Link href="/settings">
             <Button variant="ghost" className="w-full justify-start">
               <Settings className="mr-3 h-4 w-4" />
