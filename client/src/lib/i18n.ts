@@ -103,6 +103,18 @@ export interface Translations {
   success: string;
   warning: string;
   info: string;
+  
+  // Dashboard specific
+  upcomingSessions: string;
+  recentMessages: string;
+  courseProgress: string;
+  liveVideoClasses: string;
+  viewAll: string;
+  noUpcomingSessions: string;
+  noMessages: string;
+  joinLive: string;
+  learningStreak: string;
+  availableCredits: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -208,6 +220,18 @@ export const translations: Record<Language, Translations> = {
     success: "Success",
     warning: "Warning",
     info: "Information",
+    
+    // Dashboard specific
+    upcomingSessions: "Upcoming Sessions",
+    recentMessages: "Recent Messages",
+    courseProgress: "Course Progress",
+    liveVideoClasses: "Live Video Classes",
+    viewAll: "View All",
+    noUpcomingSessions: "No upcoming sessions scheduled",
+    noMessages: "No messages yet",
+    joinLive: "Join Live",
+    learningStreak: "Learning Streak",
+    availableCredits: "Available Credits",
   },
 
   fa: {
@@ -312,6 +336,18 @@ export const translations: Record<Language, Translations> = {
     success: "موفقیت",
     warning: "هشدار",
     info: "اطلاعات",
+    
+    // Dashboard specific
+    upcomingSessions: "جلسات آتی",
+    recentMessages: "پیام‌های اخیر",
+    courseProgress: "پیشرفت دوره",
+    liveVideoClasses: "کلاس‌های ویدیویی زنده",
+    viewAll: "مشاهده همه",
+    noUpcomingSessions: "هیچ جلسه‌ای برنامه‌ریزی نشده",
+    noMessages: "هیچ پیامی وجود ندارد",
+    joinLive: "پیوستن زنده",
+    learningStreak: "روزهای مطالعه",
+    availableCredits: "اعتبار موجود",
   },
 
   ar: {
@@ -416,6 +452,18 @@ export const translations: Record<Language, Translations> = {
     success: "نجح",
     warning: "تحذير",
     info: "معلومات",
+    
+    // Dashboard specific
+    upcomingSessions: "الجلسات القادمة",
+    recentMessages: "الرسائل الأخيرة",
+    courseProgress: "تقدم الدورة",
+    liveVideoClasses: "الفصول المباشرة",
+    viewAll: "عرض الكل",
+    noUpcomingSessions: "لا توجد جلسات مجدولة قادمة",
+    noMessages: "لا توجد رسائل بعد",
+    joinLive: "انضم مباشرة",
+    learningStreak: "سلسلة التعلم",
+    availableCredits: "الرصيد المتاح",
   }
 };
 
