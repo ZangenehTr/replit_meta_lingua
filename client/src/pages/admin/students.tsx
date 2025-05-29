@@ -36,6 +36,8 @@ export function AdminStudents() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedStudent, setSelectedStudent] = useState(null);
 
+  console.log('AdminStudents component rendered');
+
   // Fetch students data
   const { data: students, isLoading } = useQuery({
     queryKey: ['/api/admin/students', { search: searchTerm, status: filterStatus }],
