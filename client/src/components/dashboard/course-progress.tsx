@@ -24,6 +24,7 @@ interface Course {
 }
 
 export function CourseProgress() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   
   const { data: courses, isLoading } = useQuery<Course[]>({
