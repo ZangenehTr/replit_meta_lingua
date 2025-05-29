@@ -16,6 +16,7 @@ import TeacherDashboard from "@/pages/teacher-dashboard";
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import GamificationProgress from "@/pages/gamification-progress";
 import UserProfile from "@/pages/user-profile";
+import CRMDashboard from "@/pages/crm-dashboard";
 import { LanguageProvider } from "@/hooks/use-language";
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
@@ -74,6 +75,11 @@ function Router() {
       <Route path="/profile">
         <ProtectedRoute>
           <UserProfile />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/crm">
+        <ProtectedRoute>
+          <CRMDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/dashboard">
