@@ -20,7 +20,10 @@ export function AchievementNotifications() {
   const [notifications, setNotifications] = useState<Achievement[]>([]);
 
   useEffect(() => {
-    // Simulate new achievements
+    // Check localStorage for dismissed notifications
+    const dismissedNotifications = JSON.parse(localStorage.getItem('dismissedAchievements') || '[]');
+    
+    // Simulate new achievements - only show if not previously dismissed
     const newAchievements: Achievement[] = [
       {
         id: 1,
@@ -40,13 +43,19 @@ export function AchievementNotifications() {
         icon: '📚',
         isNew: true
       }
-    ];
+    ].filter(achievement => !dismissedNotifications.includes(achievement.id));
 
     setNotifications(newAchievements);
   }, [currentLanguage]);
 
   const dismissNotification = (id: number) => {
+    // Remove from current notifications
     setNotifications(prev => prev.filter(notif => notif.id !== id));
+    
+    // Save to localStorage so it doesn't appear again
+    const dismissedNotifications = JSON.parse(localStorage.getItem('dismissedAchievements') || '[]');
+    const updatedDismissed = [...dismissedNotifications, id];
+    localStorage.setItem('dismissedAchievements', JSON.stringify(updatedDismissed));
   };
 
   if (notifications.length === 0) return null;
