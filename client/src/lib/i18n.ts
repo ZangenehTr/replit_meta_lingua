@@ -196,6 +196,23 @@ export interface Translations {
   // Additional missing keys from screenshots
   start: string;
   noCoursesAvailableAtMoment: string;
+  
+  // Role-based navigation keys (PRD specified roles)
+  studentInformationSystem: string;
+  courseManagement: string;
+  classScheduling: string;
+  teacherManagement: string;
+  financialManagement: string;
+  reportsAnalytics: string;
+  communicationCenter: string;
+  qualityAssurance: string;
+  leadManagement: string;
+  callLogs: string;
+  prospects: string;
+  campaigns: string;
+  mentees: string;
+  mentoringSessions: string;
+  progressTracking: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -234,7 +251,6 @@ export const translations: Record<Language, Translations> = {
     // Manager Dashboard
     managerDashboard: "Manager Dashboard",
     performanceOverview: "Performance Overview",
-    teacherManagement: "Teacher Management",
     courseAnalytics: "Course Analytics",
     createClass: "Create Class",
     assignTeacher: "Assign Teacher",
@@ -403,6 +419,23 @@ export const translations: Record<Language, Translations> = {
     // Additional missing keys from screenshots
     start: "Start",
     noCoursesAvailableAtMoment: "No courses available at the moment",
+    
+    // Role-based navigation keys (PRD specified roles)
+    studentInformationSystem: "Student Information System",
+    courseManagement: "Course Management",
+    classScheduling: "Class Scheduling",
+    teacherManagement: "Teacher Management",
+    financialManagement: "Financial Management",
+    reportsAnalytics: "Reports & Analytics",
+    communicationCenter: "Communication Center",
+    qualityAssurance: "Quality Assurance",
+    leadManagement: "Lead Management",
+    callLogs: "Call Logs",
+    prospects: "Prospects",
+    campaigns: "Campaigns",
+    mentees: "Mentees",
+    mentoringSessions: "Mentoring Sessions",
+    progressTracking: "Progress Tracking",
   },
 
   fa: {
@@ -440,7 +473,6 @@ export const translations: Record<Language, Translations> = {
     // Manager Dashboard
     managerDashboard: "داشبورد مدیر",
     performanceOverview: "نمای کلی عملکرد",
-    teacherManagement: "مدیریت معلمان",
     courseAnalytics: "تحلیل دوره‌ها",
     createClass: "ایجاد کلاس",
     assignTeacher: "تخصیص معلم",
@@ -568,6 +600,23 @@ export const translations: Record<Language, Translations> = {
     whatIsMyLevel: "سطح من چیست",
     start: "شروع",
     noCoursesAvailableAtMoment: "در حال حاضر هیچ دوره‌ای موجود نیست",
+    
+    // Role-based navigation keys (PRD specified roles)
+    studentInformationSystem: "سیستم اطلاعات دانش‌آموزان",
+    courseManagement: "مدیریت دوره‌ها",
+    classScheduling: "زمان‌بندی کلاس‌ها",
+    teacherManagement: "مدیریت اساتید",
+    financialManagement: "مدیریت مالی",
+    reportsAnalytics: "گزارش‌ها و تحلیل‌ها",
+    communicationCenter: "مرکز ارتباطات",
+    qualityAssurance: "تضمین کیفیت",
+    leadManagement: "مدیریت لیدها",
+    callLogs: "سوابق تماس‌ها",
+    prospects: "مشتریان بالقوه",
+    campaigns: "کمپین‌ها",
+    mentees: "شاگردان",
+    mentoringSessions: "جلسات منتورینگ",
+    progressTracking: "رهگیری پیشرفت",
   },
 
   ar: {
