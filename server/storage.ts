@@ -134,6 +134,10 @@ export class MemStorage implements IStorage {
     this.homework = new Map();
     this.payments = new Map();
     this.notifications = new Map();
+    this.achievements = new Map();
+    this.userAchievements = new Map();
+    this.userStats = new Map();
+    this.dailyGoals = new Map();
     this.currentId = 1;
     this.initializeData();
   }
