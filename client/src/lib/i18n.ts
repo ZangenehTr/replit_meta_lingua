@@ -148,6 +148,50 @@ export interface Translations {
   noCoursesAvailable: string;
   continueLearning: string;
   updating: string;
+
+  // New Dashboard Keys
+  viewAllTasks: string;
+  noPendingHomework: string;
+  greatJobStaying: string;
+  creditsPayment: string;
+  creditsAvailable: string;
+  buyMoreCredits: string;
+  securePaymentVia: string;
+  basedOnPerformance: string;
+  getPersonalizedPlan: string;
+  practicePronounciation: string;
+  reviewIrregularVerbs: string;
+  focusOnListening: string;
+  poweredByOllama: string;
+  studentsCount: string;
+  viewAllTutors: string;
+  noTutorsAvailable: string;
+  basicInfo: string;
+  learning: string;
+  preferences: string;
+  cultural: string;
+  profileSettings: string;
+  manageAccount: string;
+  learningProfile: string;
+  tellUsAbout: string;
+  nativeLanguage: string;
+  currentProficiency: string;
+  preferredLearningStyle: string;
+  preferredStudyTime: string;
+  weeklyStudyHours: string;
+  aboutMe: string;
+  updateLearningProfile: string;
+  updateBasicInfo: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  optionalForSMS: string;
+  readyToContinue: string;
+  lessonsDay: string;
+  streak: string;
+  discoverLanguageLevel: string;
+  takeAssessment: string;
+  whatIsMyLevel: string;
 }
 
 export const translations: Record<Language, Translations> = {

@@ -62,9 +62,9 @@ export function HomeworkTasks() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Pending Homework</CardTitle>
+          <CardTitle>{t("pendingHomework")}</CardTitle>
           <Button variant="ghost" size="sm">
-            View All Tasks
+            {t("viewAllTasks")}
           </Button>
         </div>
       </CardHeader>
