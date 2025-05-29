@@ -128,7 +128,7 @@ export function UpcomingSessions() {
                     onClick={() => joinSessionMutation.mutate(session.id)}
                     disabled={joinSessionMutation.isPending}
                   >
-                    {joinSessionMutation.isPending ? "Joining..." : "Join"}
+                    {joinSessionMutation.isPending ? "Joining..." : t('joinNow')}
                   </Button>
                 </div>
               </div>

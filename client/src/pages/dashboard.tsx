@@ -26,7 +26,7 @@ import { useLanguage } from "@/hooks/use-language";
 export default function Dashboard() {
   const [companionVisible, setCompanionVisible] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentLanguage, isRTL } = useLanguage();
+  const { currentLanguage, t, isRTL } = useLanguage();
 
   return (
     <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>

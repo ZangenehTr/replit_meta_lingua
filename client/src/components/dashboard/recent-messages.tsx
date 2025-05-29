@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/hooks/use-language";
 import { useQuery } from "@tanstack/react-query";
 
 interface Message {
@@ -14,6 +15,7 @@ interface Message {
 }
 
 export function RecentMessages() {
+  const { t } = useLanguage();
   const { data: messages, isLoading } = useQuery<Message[]>({
     queryKey: ["/api/messages"],
     select: (data) => data?.slice(0, 5) || [],
@@ -39,7 +41,7 @@ export function RecentMessages() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Recent Messages</CardTitle>
+          <CardTitle>{t('recentMessages')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
