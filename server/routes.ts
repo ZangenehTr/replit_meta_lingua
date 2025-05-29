@@ -159,6 +159,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Update user profile
+  app.patch("/api/users/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { firstName, lastName, phoneNumber, avatar, preferences } = req.body;
+      
+      // Ensure user can only update their own profile
+      if (userId !== req.user.id) {
+        return res.status(403).json({ message: "Unauthorized to update this profile" });
+      }
+      
+      const updateData = {
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName }),
+        ...(phoneNumber && { phoneNumber }),
+        ...(avatar && { avatar }),
+        ...(preferences && { preferences })
+      };
+      
+      const user = await storage.updateUser(userId, updateData);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ 
+        message: "Profile updated successfully",
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          avatar: user.avatar,
+          credits: user.credits,
+          streakDays: user.streakDays,
+          preferences: user.preferences
+        }
+      });
+    } catch (error) {
+      console.error('Profile update error:', error);
+      res.status(400).json({ message: "Invalid input data" });
+    }
+  });
+
   app.put("/api/users/me/preferences", authenticateToken, async (req: any, res) => {
     try {
       const user = await storage.updateUserPreferences(req.user.id, req.body);
