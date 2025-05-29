@@ -2288,6 +2288,33 @@ Return JSON format:
     }
   });
 
+  // Institute Branding API
+  app.get("/api/branding", async (req, res) => {
+    try {
+      const branding = await storage.getBranding();
+      res.json(branding);
+    } catch (error) {
+      console.error("Error fetching branding:", error);
+      res.status(500).json({ message: "Failed to fetch branding" });
+    }
+  });
+
+  app.put("/api/branding", authenticateToken, async (req: any, res) => {
+    try {
+      // Only managers can update branding
+      if (req.user.role !== 'manager') {
+        return res.status(403).json({ message: "Only managers can update branding" });
+      }
+
+      const brandingData = req.body;
+      const updatedBranding = await storage.updateBranding(brandingData);
+      res.json(updatedBranding);
+    } catch (error) {
+      console.error("Error updating branding:", error);
+      res.status(500).json({ message: "Failed to update branding" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
