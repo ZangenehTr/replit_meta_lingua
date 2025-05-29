@@ -115,6 +115,18 @@ export interface Translations {
   joinLive: string;
   learningStreak: string;
   availableCredits: string;
+  
+  // Navigation
+  myDashboard: string;
+  myCourses: string;
+  findTutors: string;
+  liveSessions: string;
+  homework: string;
+  messages: string;
+  progress: string;
+  paymentCredits: string;
+  profile: string;
+  signOut: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -232,6 +244,18 @@ export const translations: Record<Language, Translations> = {
     joinLive: "Join Live",
     learningStreak: "Learning Streak",
     availableCredits: "Available Credits",
+    
+    // Navigation
+    myDashboard: "Dashboard",
+    myCourses: "My Courses",
+    findTutors: "Find Tutors",
+    liveSessions: "Live Sessions",
+    homework: "Homework",
+    messages: "Messages",
+    progress: "Progress",
+    paymentCredits: "Payment & Credits",
+    profile: "Profile",
+    signOut: "Sign Out",
   },
 
   fa: {
@@ -464,6 +488,18 @@ export const translations: Record<Language, Translations> = {
     joinLive: "انضم مباشرة",
     learningStreak: "سلسلة التعلم",
     availableCredits: "الرصيد المتاح",
+    
+    // Navigation
+    myDashboard: "لوحة التحكم",
+    myCourses: "دوراتي",
+    findTutors: "العثور على مدرسين",
+    liveSessions: "الجلسات المباشرة",
+    homework: "الواجبات",
+    messages: "الرسائل",
+    progress: "التقدم",
+    paymentCredits: "الدفع والأرصدة",
+    profile: "الملف الشخصي",
+    signOut: "تسجيل الخروج",
   }
 };
 
