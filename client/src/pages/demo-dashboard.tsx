@@ -12,6 +12,9 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Navigation } from "@/components/layout/navigation";
 import { useTheme } from "@/hooks/use-theme";
 import AICompanion from "@/components/ai-companion";
+import { Button } from "@/components/ui/button";
+import { Trophy } from "lucide-react";
+import { Link } from "wouter";
 
 export default function DemoDashboard() {
   const { theme } = useTheme();
@@ -33,6 +36,16 @@ export default function DemoDashboard() {
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
+      {/* Progress Button - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50">
+        <Link href="/progress">
+          <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg">
+            <Trophy className="h-5 w-5 mr-2" />
+            My Progress
+          </Button>
+        </Link>
+      </div>
+      
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
         <Sidebar user={mockUser} />
         
