@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, jsonb, varchar, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -346,6 +346,17 @@ export const insertDailyGoalSchema = createInsertSchema(dailyGoals).omit({
   createdAt: true
 });
 
+export const insertLevelAssessmentQuestionSchema = createInsertSchema(levelAssessmentQuestions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertLevelAssessmentResultSchema = createInsertSchema(levelAssessmentResults).omit({
+  id: true,
+  completedAt: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -379,3 +390,7 @@ export type UserStats = typeof userStats.$inferSelect;
 export type InsertUserStats = z.infer<typeof insertUserStatsSchema>;
 export type DailyGoal = typeof dailyGoals.$inferSelect;
 export type InsertDailyGoal = z.infer<typeof insertDailyGoalSchema>;
+export type LevelAssessmentQuestion = typeof levelAssessmentQuestions.$inferSelect;
+export type InsertLevelAssessmentQuestion = z.infer<typeof insertLevelAssessmentQuestionSchema>;
+export type LevelAssessmentResult = typeof levelAssessmentResults.$inferSelect;
+export type InsertLevelAssessmentResult = z.infer<typeof insertLevelAssessmentResultSchema>;

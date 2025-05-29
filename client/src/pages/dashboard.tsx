@@ -57,6 +57,36 @@ export default function Dashboard() {
               <MobileGamificationWidget />
             </div>
             
+            {/* Level Assessment CTA */}
+            <div className="mb-4 md:mb-6">
+              <Card className="bg-gradient-to-r from-purple-500 to-blue-600 text-white border-0">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="text-center md:text-left">
+                      <h3 className="text-lg md:text-xl font-bold mb-2">
+                        {currentLanguage === 'fa' ? 'سطح زبان خود را بیابید' : 'Discover Your Language Level'}
+                      </h3>
+                      <p className="text-sm md:text-base opacity-90">
+                        {currentLanguage === 'fa' 
+                          ? 'آزمون سطح‌سنجی جامع برای تعیین دقیق سطح زبان شما'
+                          : 'Take our comprehensive assessment to determine your exact proficiency level'
+                        }
+                      </p>
+                    </div>
+                    <Link href="/level-assessment">
+                      <Button 
+                        size="lg" 
+                        className="bg-white text-purple-600 hover:bg-gray-50 font-semibold px-6 py-3"
+                      >
+                        <Target className="h-5 w-5 mr-2" />
+                        {currentLanguage === 'fa' ? 'سطح من چیست؟' : 'What is my level?'}
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Enhanced Gamification Section */}
             <div className="mb-4 md:mb-6">
               <Tabs defaultValue="overview" className="w-full">
