@@ -561,6 +561,13 @@ export const translations: Record<Language, Translations> = {
     noCoursesAvailable: "در حال حاضر هیچ دوره‌ای موجود نیست",
     continueLearning: "ادامه یادگیری",
     updating: "در حال به‌روزرسانی...",
+    
+    // Missing dashboard translations
+    discoverLanguageLevel: "سطح زبان خود را کشف کنید",
+    takeAssessment: "ارزیابی جامع ما را انجام دهید تا سطح دقیق مهارت خود را تعیین کنید",
+    whatIsMyLevel: "سطح من چیست",
+    start: "شروع",
+    noCoursesAvailableAtMoment: "در حال حاضر هیچ دوره‌ای موجود نیست",
   },
 
   ar: {
@@ -702,6 +709,13 @@ export const translations: Record<Language, Translations> = {
     paymentCredits: "الدفع والأرصدة",
     profile: "الملف الشخصي",
     signOut: "تسجيل الخروج",
+    
+    // Missing dashboard translations
+    discoverLanguageLevel: "اكتشف مستوى اللغة الخاص بك",
+    takeAssessment: "خذ تقييمنا الشامل لتحديد مستوى إتقانك بدقة",
+    whatIsMyLevel: "ما هو مستواي",
+    start: "ابدأ",
+    noCoursesAvailableAtMoment: "لا توجد دورات متاحة في الوقت الحالي",
   }
 };
 
