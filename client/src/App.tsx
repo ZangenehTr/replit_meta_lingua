@@ -53,32 +53,30 @@ function Router() {
     <Switch>
       <Route path="/auth" component={Auth} />
       <Route path="/demo" component={DemoDashboard} />
-      <Route path="/admin" nest>
-        <Route path="/">
-          <ProtectedRoute>
-            <EnhancedAdminDashboard />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/students">
-          <ProtectedRoute>
-            <AdminStudents />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/courses">
-          <ProtectedRoute>
-            <AdminCourses />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/financial">
-          <ProtectedRoute>
-            <AdminFinancial />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/system">
-          <ProtectedRoute>
-            <AdminSystem />
-          </ProtectedRoute>
-        </Route>
+      <Route path="/admin">
+        <ProtectedRoute>
+          <EnhancedAdminDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/students">
+        <ProtectedRoute>
+          <AdminStudents />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/courses">
+        <ProtectedRoute>
+          <AdminCourses />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/financial">
+        <ProtectedRoute>
+          <AdminFinancial />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/system">
+        <ProtectedRoute>
+          <AdminSystem />
+        </ProtectedRoute>
       </Route>
       <Route path="/manager">
         <ProtectedRoute>
