@@ -1,7 +1,8 @@
 import { 
   users, courses, enrollments, sessions, messages, homework, 
   payments, notifications, instituteBranding, studentProfiles, leads, invoices,
-  teacherPerformance, attendance, communicationLogs,
+  teacherPerformance, attendance, communicationLogs, achievements, userAchievements,
+  userStats, dailyGoals,
   type User, type InsertUser, type Course, type InsertCourse,
   type Enrollment, type InsertEnrollment, type Session, type InsertSession,
   type Message, type InsertMessage, type Homework, type InsertHomework,
@@ -9,7 +10,9 @@ import {
   type InstituteBranding, type InsertBranding, type StudentProfile, type InsertStudentProfile,
   type Lead, type InsertLead, type Invoice, type InsertInvoice,
   type TeacherPerformance, type InsertTeacherPerformance, type Attendance, type InsertAttendance,
-  type CommunicationLog, type InsertCommunicationLog
+  type CommunicationLog, type InsertCommunicationLog,
+  type Achievement, type InsertAchievement, type UserAchievement, type InsertUserAchievement,
+  type UserStats, type InsertUserStats, type DailyGoal, type InsertDailyGoal
 } from "@shared/schema";
 
 export interface IStorage {
@@ -94,6 +97,16 @@ export interface IStorage {
   // CRM - Communication Logs
   getCommunicationLogs(contactId?: number): Promise<(CommunicationLog & { staffName: string })[]>;
   createCommunicationLog(log: InsertCommunicationLog): Promise<CommunicationLog>;
+
+  // Gamification
+  getAchievements(): Promise<Achievement[]>;
+  getUserAchievements(userId: number): Promise<(UserAchievement & { achievement: Achievement })[]>;
+  createUserAchievement(userAchievement: InsertUserAchievement): Promise<UserAchievement>;
+  getUserStats(userId: number): Promise<UserStats | undefined>;
+  updateUserStats(userId: number, stats: Partial<UserStats>): Promise<UserStats | undefined>;
+  getDailyGoals(userId: number, date?: string): Promise<DailyGoal[]>;
+  createDailyGoal(goal: InsertDailyGoal): Promise<DailyGoal>;
+  updateDailyGoal(id: number, updates: Partial<DailyGoal>): Promise<DailyGoal | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -106,6 +119,10 @@ export class MemStorage implements IStorage {
   private payments: Map<number, Payment>;
   private notifications: Map<number, Notification>;
   private branding: InstituteBranding | undefined;
+  private achievements: Map<number, Achievement>;
+  private userAchievements: Map<number, UserAchievement>;
+  private userStats: Map<number, UserStats>;
+  private dailyGoals: Map<number, DailyGoal>;
   private currentId: number;
 
   constructor() {

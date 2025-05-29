@@ -444,6 +444,76 @@ export const insertCommunicationLogSchema = createInsertSchema(communicationLogs
   createdAt: true
 });
 
+// Gamification Tables
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(),
+  type: text("type").notNull(), // 'progress', 'streak', 'milestone', 'social', 'skill'
+  requirement: integer("requirement").notNull(), // Number needed to unlock
+  points: integer("points").notNull().default(0),
+  rarity: text("rarity").notNull().default('common'), // 'common', 'rare', 'epic', 'legendary'
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  achievementId: integer("achievement_id").references(() => achievements.id).notNull(),
+  unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
+  progress: integer("progress").notNull().default(0),
+});
+
+export const userStats = pgTable("user_stats", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  totalXp: integer("total_xp").notNull().default(0),
+  level: integer("level").notNull().default(1),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lessonsCompleted: integer("lessons_completed").notNull().default(0),
+  coursesCompleted: integer("courses_completed").notNull().default(0),
+  minutesStudied: integer("minutes_studied").notNull().default(0),
+  perfectQuizzes: integer("perfect_quizzes").notNull().default(0),
+  socialShares: integer("social_shares").notNull().default(0),
+  lastActivityDate: timestamp("last_activity_date"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const dailyGoals = pgTable("daily_goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  goalType: text("goal_type").notNull(), // 'lessons', 'minutes', 'xp'
+  targetValue: integer("target_value").notNull(),
+  currentValue: integer("current_value").notNull().default(0),
+  date: text("date").notNull(),
+  isCompleted: boolean("is_completed").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Gamification Insert Schemas
+export const insertAchievementSchema = createInsertSchema(achievements).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertUserAchievementSchema = createInsertSchema(userAchievements).omit({
+  id: true,
+  unlockedAt: true
+});
+
+export const insertUserStatsSchema = createInsertSchema(userStats).omit({
+  id: true,
+  updatedAt: true
+});
+
+export const insertDailyGoalSchema = createInsertSchema(dailyGoals).omit({
+  id: true,
+  createdAt: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -477,3 +547,13 @@ export type Attendance = typeof attendance.$inferSelect;
 export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;
 export type CommunicationLog = typeof communicationLogs.$inferSelect;
 export type InsertCommunicationLog = z.infer<typeof insertCommunicationLogSchema>;
+
+// Gamification Types
+export type Achievement = typeof achievements.$inferSelect;
+export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
+export type UserAchievement = typeof userAchievements.$inferSelect;
+export type InsertUserAchievement = z.infer<typeof insertUserAchievementSchema>;
+export type UserStats = typeof userStats.$inferSelect;
+export type InsertUserStats = z.infer<typeof insertUserStatsSchema>;
+export type DailyGoal = typeof dailyGoals.$inferSelect;
+export type InsertDailyGoal = z.infer<typeof insertDailyGoalSchema>;
