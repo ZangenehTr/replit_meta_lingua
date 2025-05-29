@@ -314,6 +314,158 @@ export const levelAssessmentResults = pgTable("level_assessment_results", {
   timeTaken: integer("time_taken") // in seconds
 });
 
+// CRM Management Tables
+export const institutes = pgTable("institutes", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  code: text("code").notNull().unique(), // Unique institute identifier
+  description: text("description"),
+  address: text("address"),
+  phoneNumber: text("phone_number"),
+  email: text("email"),
+  website: text("website"),
+  logo: text("logo"), // URL to logo image
+  primaryColor: text("primary_color").default("#3B82F6"),
+  secondaryColor: text("secondary_color").default("#10B981"),
+  timezone: text("timezone").default("UTC"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const departments = pgTable("departments", {
+  id: serial("id").primaryKey(),
+  instituteId: integer("institute_id").references(() => institutes.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  headTeacherId: integer("head_teacher_id").references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const studentGroups = pgTable("student_groups", {
+  id: serial("id").primaryKey(),
+  instituteId: integer("institute_id").references(() => institutes.id).notNull(),
+  departmentId: integer("department_id").references(() => departments.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  language: text("language").notNull(), // Target language
+  level: text("level").notNull(), // beginner, intermediate, advanced
+  maxStudents: integer("max_students").default(20),
+  currentStudents: integer("current_students").default(0),
+  teacherId: integer("teacher_id").references(() => users.id),
+  schedule: jsonb("schedule"), // Weekly schedule
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const studentGroupMembers = pgTable("student_group_members", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").references(() => studentGroups.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  enrolledAt: timestamp("enrolled_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  status: text("status").default("active"), // active, completed, dropped, suspended
+  progress: integer("progress").default(0), // 0-100
+  lastAttendance: timestamp("last_attendance")
+});
+
+export const teacherAssignments = pgTable("teacher_assignments", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  instituteId: integer("institute_id").references(() => institutes.id).notNull(),
+  departmentId: integer("department_id").references(() => departments.id),
+  subjects: text("subjects").array().default([]), // Languages they teach
+  maxStudents: integer("max_students").default(50),
+  currentStudents: integer("current_students").default(0),
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
+  contractType: text("contract_type").default("part_time"), // full_time, part_time, freelance
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  status: text("status").default("active"), // active, inactive, terminated
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const attendanceRecords = pgTable("attendance_records", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  groupId: integer("group_id").references(() => studentGroups.id),
+  sessionId: integer("session_id").references(() => sessions.id),
+  date: date("date").notNull(),
+  status: text("status").notNull(), // present, absent, late, excused
+  checkInTime: timestamp("check_in_time"),
+  checkOutTime: timestamp("check_out_time"),
+  notes: text("notes"),
+  markedBy: integer("marked_by").references(() => users.id), // Teacher who marked attendance
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const studentNotes = pgTable("student_notes", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  type: text("type").notNull(), // academic, behavioral, progress, concern, achievement
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  priority: text("priority").default("normal"), // low, normal, high, urgent
+  isPrivate: boolean("is_private").default(false), // Visible only to authorized staff
+  tags: text("tags").array().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const parentGuardians = pgTable("parent_guardians", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  name: text("name").notNull(),
+  relationship: text("relationship").notNull(), // father, mother, guardian, other
+  phoneNumber: text("phone_number"),
+  email: text("email"),
+  address: text("address"),
+  isPrimary: boolean("is_primary").default(false),
+  emergencyContact: boolean("emergency_contact").default(false),
+  canPickup: boolean("can_pickup").default(true),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const communicationLogs = pgTable("communication_logs", {
+  id: serial("id").primaryKey(),
+  fromUserId: integer("from_user_id").references(() => users.id).notNull(),
+  toUserId: integer("to_user_id").references(() => users.id),
+  toParentId: integer("to_parent_id").references(() => parentGuardians.id),
+  type: text("type").notNull(), // email, sms, phone_call, meeting, note
+  subject: text("subject"),
+  content: text("content").notNull(),
+  status: text("status").default("sent"), // sent, delivered, read, failed
+  scheduledFor: timestamp("scheduled_for"),
+  sentAt: timestamp("sent_at"),
+  readAt: timestamp("read_at"),
+  metadata: jsonb("metadata"), // Additional data like SMS provider response
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const studentReports = pgTable("student_reports", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  generatedBy: integer("generated_by").references(() => users.id).notNull(),
+  reportType: text("report_type").notNull(), // progress, assessment, behavior, attendance
+  period: text("period").notNull(), // weekly, monthly, quarterly, semester, annual
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  data: jsonb("data").notNull(), // Report data and metrics
+  comments: text("comments"),
+  isPublished: boolean("is_published").default(false),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -421,6 +573,63 @@ export const insertLevelAssessmentResultSchema = createInsertSchema(levelAssessm
   completedAt: true
 });
 
+// CRM Insert Schemas
+export const insertInstituteSchema = createInsertSchema(institutes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertDepartmentSchema = createInsertSchema(departments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertStudentGroupSchema = createInsertSchema(studentGroups).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertStudentGroupMemberSchema = createInsertSchema(studentGroupMembers).omit({
+  id: true,
+  enrolledAt: true
+});
+
+export const insertTeacherAssignmentSchema = createInsertSchema(teacherAssignments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertAttendanceRecordSchema = createInsertSchema(attendanceRecords).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertStudentNoteSchema = createInsertSchema(studentNotes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertParentGuardianSchema = createInsertSchema(parentGuardians).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCommunicationLogSchema = createInsertSchema(communicationLogs).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertStudentReportSchema = createInsertSchema(studentReports).omit({
+  id: true,
+  createdAt: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -462,3 +671,25 @@ export type SystemConfig = typeof systemConfig.$inferSelect;
 export type InsertSystemConfig = z.infer<typeof insertSystemConfigSchema>;
 export type CustomRole = typeof customRoles.$inferSelect;
 export type InsertCustomRole = z.infer<typeof insertCustomRoleSchema>;
+
+// CRM Types
+export type Institute = typeof institutes.$inferSelect;
+export type InsertInstitute = z.infer<typeof insertInstituteSchema>;
+export type Department = typeof departments.$inferSelect;
+export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
+export type StudentGroup = typeof studentGroups.$inferSelect;
+export type InsertStudentGroup = z.infer<typeof insertStudentGroupSchema>;
+export type StudentGroupMember = typeof studentGroupMembers.$inferSelect;
+export type InsertStudentGroupMember = z.infer<typeof insertStudentGroupMemberSchema>;
+export type TeacherAssignment = typeof teacherAssignments.$inferSelect;
+export type InsertTeacherAssignment = z.infer<typeof insertTeacherAssignmentSchema>;
+export type AttendanceRecord = typeof attendanceRecords.$inferSelect;
+export type InsertAttendanceRecord = z.infer<typeof insertAttendanceRecordSchema>;
+export type StudentNote = typeof studentNotes.$inferSelect;
+export type InsertStudentNote = z.infer<typeof insertStudentNoteSchema>;
+export type ParentGuardian = typeof parentGuardians.$inferSelect;
+export type InsertParentGuardian = z.infer<typeof insertParentGuardianSchema>;
+export type CommunicationLog = typeof communicationLogs.$inferSelect;
+export type InsertCommunicationLog = z.infer<typeof insertCommunicationLogSchema>;
+export type StudentReport = typeof studentReports.$inferSelect;
+export type InsertStudentReport = z.infer<typeof insertStudentReportSchema>;

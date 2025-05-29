@@ -449,6 +449,304 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(messages);
   });
 
+  // ===== CRM MANAGEMENT ENDPOINTS =====
+  
+  // CRM Dashboard Stats
+  app.get("/api/crm/stats", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+    try {
+      const stats = await storage.getCRMStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch CRM stats" });
+    }
+  });
+
+  // Student Management
+  app.get("/api/crm/students", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const { search, status, level, language, page = 1, limit = 50 } = req.query;
+      const students = await storage.getStudentsWithFilters({
+        search: search as string,
+        status: status as string,
+        level: level as string,
+        language: language as string,
+        page: parseInt(page as string),
+        limit: parseInt(limit as string)
+      });
+      res.json(students);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch students" });
+    }
+  });
+
+  app.get("/api/crm/students/:id", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.id);
+      const student = await storage.getStudentDetails(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      res.json(student);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch student details" });
+    }
+  });
+
+  app.post("/api/crm/students", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+    try {
+      const studentData = req.body;
+      const student = await storage.createStudent(studentData);
+      res.status(201).json(student);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create student" });
+    }
+  });
+
+  app.put("/api/crm/students/:id", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.id);
+      const student = await storage.updateStudent(studentId, req.body);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      res.json(student);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update student" });
+    }
+  });
+
+  // Teacher Management
+  app.get("/api/crm/teachers", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+    try {
+      const { search, status, specialization } = req.query;
+      const teachers = await storage.getTeachersWithFilters({
+        search: search as string,
+        status: status as string,
+        specialization: specialization as string
+      });
+      res.json(teachers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch teachers" });
+    }
+  });
+
+  app.get("/api/crm/teachers/:id", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.id);
+      const teacher = await storage.getTeacherDetails(teacherId);
+      if (!teacher) {
+        return res.status(404).json({ message: "Teacher not found" });
+      }
+      res.json(teacher);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch teacher details" });
+    }
+  });
+
+  app.post("/api/crm/teachers", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+    try {
+      const teacherData = req.body;
+      const teacher = await storage.createTeacher(teacherData);
+      res.status(201).json(teacher);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create teacher" });
+    }
+  });
+
+  // Student Groups Management
+  app.get("/api/crm/groups", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const { language, level, status, teacherId } = req.query;
+      const groups = await storage.getStudentGroupsWithFilters({
+        language: language as string,
+        level: level as string,
+        status: status as string,
+        teacherId: teacherId ? parseInt(teacherId as string) : undefined
+      });
+      res.json(groups);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch groups" });
+    }
+  });
+
+  app.get("/api/crm/groups/:id", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      const group = await storage.getStudentGroupDetails(groupId);
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+      res.json(group);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch group details" });
+    }
+  });
+
+  app.post("/api/crm/groups", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+    try {
+      const groupData = req.body;
+      const group = await storage.createStudentGroup(groupData);
+      res.status(201).json(group);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create group" });
+    }
+  });
+
+  // Attendance Management
+  app.get("/api/crm/attendance", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const { groupId, date, studentId } = req.query;
+      const attendance = await storage.getAttendanceRecords({
+        groupId: groupId ? parseInt(groupId as string) : undefined,
+        date: date as string,
+        studentId: studentId ? parseInt(studentId as string) : undefined
+      });
+      res.json(attendance);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch attendance" });
+    }
+  });
+
+  app.post("/api/crm/attendance", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const attendanceData = {
+        ...req.body,
+        markedBy: req.user.id
+      };
+      const attendance = await storage.createAttendanceRecord(attendanceData);
+      res.status(201).json(attendance);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to mark attendance" });
+    }
+  });
+
+  // Student Notes Management
+  app.get("/api/crm/students/:id/notes", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.id);
+      const notes = await storage.getStudentNotes(studentId);
+      res.json(notes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch student notes" });
+    }
+  });
+
+  app.post("/api/crm/students/:id/notes", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.id);
+      const noteData = {
+        ...req.body,
+        studentId,
+        teacherId: req.user.id
+      };
+      const note = await storage.createStudentNote(noteData);
+      res.status(201).json(note);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create note" });
+    }
+  });
+
+  // Parent/Guardian Management
+  app.get("/api/crm/students/:id/parents", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.id);
+      const parents = await storage.getStudentParents(studentId);
+      res.json(parents);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch parent information" });
+    }
+  });
+
+  app.post("/api/crm/students/:id/parents", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.id);
+      const parentData = {
+        ...req.body,
+        studentId
+      };
+      const parent = await storage.createParentGuardian(parentData);
+      res.status(201).json(parent);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to add parent information" });
+    }
+  });
+
+  // Communication Logs
+  app.get("/api/crm/communications", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const { studentId, type, dateFrom, dateTo } = req.query;
+      const communications = await storage.getCommunicationLogs({
+        studentId: studentId ? parseInt(studentId as string) : undefined,
+        type: type as string,
+        dateFrom: dateFrom as string,
+        dateTo: dateTo as string
+      });
+      res.json(communications);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch communication logs" });
+    }
+  });
+
+  app.post("/api/crm/communications", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const communicationData = {
+        ...req.body,
+        fromUserId: req.user.id
+      };
+      const communication = await storage.createCommunicationLog(communicationData);
+      res.status(201).json(communication);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to log communication" });
+    }
+  });
+
+  // Student Reports
+  app.get("/api/crm/reports", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const { studentId, reportType, period } = req.query;
+      const reports = await storage.getStudentReports({
+        studentId: studentId ? parseInt(studentId as string) : undefined,
+        reportType: reportType as string,
+        period: period as string
+      });
+      res.json(reports);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch reports" });
+    }
+  });
+
+  app.post("/api/crm/reports", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+    try {
+      const reportData = {
+        ...req.body,
+        generatedBy: req.user.id
+      };
+      const report = await storage.createStudentReport(reportData);
+      res.status(201).json(report);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to generate report" });
+    }
+  });
+
+  // Institute Management
+  app.get("/api/crm/institutes", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const institutes = await storage.getInstitutes();
+      res.json(institutes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch institutes" });
+    }
+  });
+
+  app.post("/api/crm/institutes", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const institute = await storage.createInstitute(req.body);
+      res.status(201).json(institute);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create institute" });
+    }
+  });
+
   app.post("/api/messages", authenticateToken, async (req: any, res) => {
     try {
       const messageData = insertMessageSchema.parse({
