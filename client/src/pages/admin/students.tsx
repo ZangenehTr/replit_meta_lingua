@@ -200,14 +200,14 @@ export function AdminStudents() {
             <Download className="h-4 w-4 mr-2" />
             Export Data
           </Button>
-          <Dialog>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Student
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Student</DialogTitle>
                 <DialogDescription>
@@ -217,23 +217,72 @@ export function AdminStudents() {
               <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="Enter first name" />
+                  <Input 
+                    id="firstName" 
+                    placeholder="Enter first name"
+                    value={newStudentData.firstName}
+                    onChange={(e) => setNewStudentData({...newStudentData, firstName: e.target.value})}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Enter last name" />
+                  <Input 
+                    id="lastName" 
+                    placeholder="Enter last name"
+                    value={newStudentData.lastName}
+                    onChange={(e) => setNewStudentData({...newStudentData, lastName: e.target.value})}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="student@example.com" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="student@example.com"
+                    value={newStudentData.email}
+                    onChange={(e) => setNewStudentData({...newStudentData, email: e.target.value})}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" placeholder="+1234567890" />
+                  <Input 
+                    id="phone" 
+                    placeholder="+1234567890"
+                    value={newStudentData.phone}
+                    onChange={(e) => setNewStudentData({...newStudentData, phone: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nationalId">National ID Number</Label>
+                  <Input 
+                    id="nationalId" 
+                    placeholder="Enter national ID number"
+                    value={newStudentData.nationalId}
+                    onChange={(e) => setNewStudentData({...newStudentData, nationalId: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="birthday">Birthday</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {newStudentData.birthday ? format(newStudentData.birthday, "PPP") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <UICalendar
+                        mode="single"
+                        selected={newStudentData.birthday}
+                        onSelect={(date) => setNewStudentData({...newStudentData, birthday: date})}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="level">Proficiency Level</Label>
-                  <Select>
+                  <Select value={newStudentData.level} onValueChange={(value) => setNewStudentData({...newStudentData, level: value})}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select level" />
                     </SelectTrigger>
@@ -246,16 +295,59 @@ export function AdminStudents() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="guardian">Guardian Name</Label>
-                  <Input id="guardian" placeholder="Parent/Guardian name" />
+                  <Input 
+                    id="guardian" 
+                    placeholder="Parent/Guardian name"
+                    value={newStudentData.guardianName}
+                    onChange={(e) => setNewStudentData({...newStudentData, guardianName: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="guardianPhone">Guardian Phone</Label>
+                  <Input 
+                    id="guardianPhone" 
+                    placeholder="Guardian phone number"
+                    value={newStudentData.guardianPhone}
+                    onChange={(e) => setNewStudentData({...newStudentData, guardianPhone: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="profileImage">Profile Image</Label>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      id="profileImage" 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                    <Upload className="h-4 w-4 text-gray-400" />
+                  </div>
                 </div>
                 <div className="col-span-2 space-y-2">
                   <Label htmlFor="notes">Initial Notes</Label>
-                  <Textarea id="notes" placeholder="Any special notes or requirements..." />
+                  <Textarea 
+                    id="notes" 
+                    placeholder="Any special notes or requirements..."
+                    value={newStudentData.notes}
+                    onChange={(e) => setNewStudentData({...newStudentData, notes: e.target.value})}
+                  />
                 </div>
               </div>
               <div className="flex justify-end gap-3">
-                <Button variant="outline">Cancel</Button>
-                <Button>Create Student Profile</Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsCreateDialogOpen(false)}
+                  disabled={createStudentMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleCreateStudent}
+                  disabled={createStudentMutation.isPending}
+                >
+                  {createStudentMutation.isPending ? "Creating..." : "Create Student Profile"}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
