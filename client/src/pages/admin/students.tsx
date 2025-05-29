@@ -24,7 +24,7 @@ import {
   MessageCircle,
   Phone,
   Mail,
-  CalendarIcon,
+  Calendar as CalendarIcon,
   BookOpen,
   TrendingUp,
   AlertCircle,
@@ -68,12 +68,12 @@ export function AdminStudents() {
 
   // Create student mutation
   const createStudentMutation = useMutation({
-    mutationFn: (studentData) => apiRequest('/api/admin/students', {
+    mutationFn: (studentData: any) => apiRequest('/api/admin/students', {
       method: 'POST',
       body: JSON.stringify(studentData)
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['/api/admin/students']);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/students'] });
       setIsCreateDialogOpen(false);
       setNewStudentData({
         firstName: "",
@@ -92,7 +92,9 @@ export function AdminStudents() {
   });
 
   const handleCreateStudent = () => {
-    createStudentMutation.mutate(newStudentData);
+    if (createStudentMutation.mutate) {
+      createStudentMutation.mutate(newStudentData);
+    }
   };
 
   const handleImageUpload = (event) => {
@@ -159,7 +161,7 @@ export function AdminStudents() {
     }
   ];
 
-  const filteredStudents = (studentData || []).filter(student => {
+  const filteredStudents = (Array.isArray(studentData) ? studentData : []).filter(student => {
     const matchesSearch = student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -474,7 +476,7 @@ export function AdminStudents() {
                                 <span>{student.phone}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-gray-500" />
+                                <CalendarIcon className="h-4 w-4 text-gray-500" />
                                 <span>Enrolled: {student.enrollmentDate}</span>
                               </div>
                               <div className="flex items-center gap-2">
