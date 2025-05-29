@@ -7,9 +7,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/hooks/use-language";
+import { getTextDirection } from "@/lib/i18n";
 
 export function MobileLanguageSelector() {
-  const { language, setLanguage, getTextDirection } = useLanguage();
+  const { currentLanguage, setLanguage } = useLanguage();
 
   const languages = [
     { code: 'en' as const, name: 'English', flag: '🇺🇸' },
@@ -17,7 +18,7 @@ export function MobileLanguageSelector() {
     { code: 'ar' as const, name: 'العربية', flag: '🇸🇦' },
   ];
 
-  const currentLang = languages.find(lang => lang.code === language);
+  const currentLang = languages.find(lang => lang.code === currentLanguage);
 
   return (
     <DropdownMenu>
@@ -32,7 +33,7 @@ export function MobileLanguageSelector() {
             key={lang.code}
             onClick={() => setLanguage(lang.code)}
             className={`flex items-center gap-2 ${getTextDirection(lang.code) === 'rtl' ? 'flex-row-reverse' : ''} ${
-              language === lang.code ? 'bg-muted' : ''
+              currentLanguage === lang.code ? 'bg-muted' : ''
             }`}
           >
             <span className="text-lg">{lang.flag}</span>
