@@ -73,7 +73,7 @@ export function RecentMessages() {
       <CardContent>
         {!messages || messages.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            <p>No messages yet</p>
+            <p>{t('noMessages')}</p>
           </div>
         ) : (
           <div className="space-y-4">

@@ -127,6 +127,27 @@ export interface Translations {
   paymentCredits: string;
   profile: string;
   signOut: string;
+  
+  // Missing keys
+  joinNow: string;
+  reschedule: string;
+  joining: string;
+  continueReading: string;
+  enrollNow: string;
+  enrolling: string;
+  myCourses2: string;
+  availableCourses: string;
+  noCourses: string;
+  challenges: string;
+  leaderboard: string;
+  with: string;
+  today: string;
+  daysAgo: string;
+  hoursAgo: string;
+  justNow: string;
+  noCoursesAvailable: string;
+  continueLearning: string;
+  updating: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -269,6 +290,23 @@ export const translations: Record<Language, Translations> = {
     paymentCredits: "Payment & Credits",
     profile: "Profile",
     signOut: "Sign Out",
+    
+    // Additional keys
+    reschedule: "Reschedule",
+    joining: "Joining...",
+    continueReading: "Continue Reading",
+    enrollNow: "Enroll Now",
+    enrolling: "Enrolling...",
+    myCourses2: "My Courses",
+    availableCourses: "Available Courses",
+    noCourses: "No courses available at the moment",
+    with: "with",
+    daysAgo: "days ago",
+    hoursAgo: "hours ago",
+    justNow: "Just now",
+    noCoursesAvailable: "No courses available at the moment",
+    continueLearning: "Continue Learning",
+    updating: "Updating...",
   },
 
   fa: {
@@ -410,6 +448,23 @@ export const translations: Record<Language, Translations> = {
     paymentCredits: "پرداخت و اعتبار",
     profile: "پروفایل",
     signOut: "خروج",
+    
+    // Additional keys
+    reschedule: "تغییر زمان",
+    joining: "در حال پیوستن...",
+    continueReading: "ادامه مطالعه",
+    enrollNow: "ثبت‌نام کنید",
+    enrolling: "در حال ثبت‌نام...",
+    myCourses2: "دوره‌های من",
+    availableCourses: "دوره‌های موجود",
+    noCourses: "در حال حاضر هیچ دوره‌ای موجود نیست",
+    with: "با",
+    daysAgo: "روز پیش",
+    hoursAgo: "ساعت پیش",
+    justNow: "هم‌اکنون",
+    noCoursesAvailable: "در حال حاضر هیچ دوره‌ای موجود نیست",
+    continueLearning: "ادامه یادگیری",
+    updating: "در حال به‌روزرسانی...",
   },
 
   ar: {
