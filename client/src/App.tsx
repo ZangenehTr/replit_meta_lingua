@@ -14,6 +14,7 @@ import ManagerDashboard from "@/pages/manager-dashboard";
 import TeacherDashboard from "@/pages/teacher-dashboard";
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import GamificationProgress from "@/pages/gamification-progress";
+import { LanguageProvider } from "@/hooks/use-language";
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
 
@@ -84,10 +85,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <LanguageProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
