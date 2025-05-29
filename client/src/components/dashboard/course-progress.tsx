@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, BookOpen, Clock, DollarSign } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
 
 interface Course {
   id: number;
