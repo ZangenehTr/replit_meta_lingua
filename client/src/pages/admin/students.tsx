@@ -59,14 +59,14 @@ export function AdminStudents() {
   });
   const queryClient = useQueryClient();
 
-  console.log('AdminStudents component rendered');
-  console.log('Students data:', students);
-  console.log('Is loading:', isLoading);
-
   // Fetch students data
   const { data: students, isLoading } = useQuery({
     queryKey: ['/api/students/list', { search: searchTerm, status: filterStatus }],
   });
+
+  console.log('AdminStudents component rendered');
+  console.log('Students data:', students);
+  console.log('Is loading:', isLoading);
 
   // Create student mutation
   const createStudentMutation = useMutation({
