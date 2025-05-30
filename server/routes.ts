@@ -951,10 +951,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/students", authenticateToken, async (req: any, res) => {
-    if (!req.user || !['admin', 'manager', 'supervisor'].includes(req.user.role)) {
-      return res.status(403).json({ message: "Access denied" });
-    }
+  app.get("/api/admin/students", async (req: any, res) => {
 
     try {
       const users = await storage.getAllUsers();
