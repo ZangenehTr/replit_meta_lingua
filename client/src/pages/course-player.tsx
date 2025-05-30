@@ -564,7 +564,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">سطح / Level:</span>
-                  <Badge variant="outline">{course.level}</span>
+                  <Badge variant="outline">{course.level}</Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">زبان / Language:</span>
