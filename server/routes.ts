@@ -1275,6 +1275,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // VoIP Integration endpoint for Isabel VoIP line
+  app.post("/api/voip/initiate-call", async (req, res) => {
+    try {
+      const { phoneNumber, contactName, callType, recordCall } = req.body;
+      
+      // Create call log entry for tracking
+      const callLog = {
+        id: Date.now(),
+        phoneNumber,
+        contactName,
+        callType,
+        recordCall,
+        initiatedAt: new Date(),
+        status: 'initiated',
+        duration: 0,
+        recordingUrl: null
+      };
+
+      // In production, this would integrate with Isabel VoIP API
+      // For now, simulate successful call initiation
+      res.json({
+        success: true,
+        callId: callLog.id,
+        message: "VoIP call initiated successfully",
+        recordingEnabled: recordCall
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to initiate VoIP call via Isabel line" 
+      });
+    }
+  });
+
   // AI Companion Chat endpoint - Dynamic responses using Ollama
   app.post("/api/ai/companion", async (req, res) => {
     try {
