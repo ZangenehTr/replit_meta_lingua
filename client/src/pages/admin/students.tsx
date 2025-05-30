@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ModernDatePicker } from "@/components/ui/modern-date-picker";
+import { SimpleDateInput } from "@/components/ui/simple-date-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useLanguage } from "@/hooks/use-language";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -500,7 +500,7 @@ export function AdminStudents() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="birthday">Birthday</Label>
-                  <ModernDatePicker
+                  <SimpleDateInput
                     value={newStudentData.birthday}
                     onChange={(date) => setNewStudentData({...newStudentData, birthday: date})}
                     placeholder="Select birthday"
@@ -717,7 +717,7 @@ export function AdminStudents() {
               </div>
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="editBirthday">Birthday</Label>
-                <ModernDatePicker
+                <SimpleDateInput
                   value={editingStudent.birthday}
                   onChange={(date) => setEditingStudent({...editingStudent, birthday: date})}
                 />
