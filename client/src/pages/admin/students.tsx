@@ -444,11 +444,10 @@ export function AdminStudents() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
-                  <Input 
-                    id="phone" 
-                    placeholder="+1234567890"
+                  <PhoneInput
                     value={newStudentData.phone}
-                    onChange={(e) => setNewStudentData({...newStudentData, phone: e.target.value})}
+                    onChange={(value) => setNewStudentData({...newStudentData, phone: value})}
+                    placeholder="Enter phone number"
                   />
                 </div>
                 <div className="space-y-2">
@@ -457,7 +456,11 @@ export function AdminStudents() {
                     id="nationalId" 
                     placeholder="Enter national ID number"
                     value={newStudentData.nationalId}
-                    onChange={(e) => setNewStudentData({...newStudentData, nationalId: e.target.value})}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^\d]/g, ''); // Only allow numbers
+                      setNewStudentData({...newStudentData, nationalId: value});
+                    }}
+                    inputMode="numeric"
                   />
                 </div>
                 <div className="space-y-2">
@@ -493,11 +496,10 @@ export function AdminStudents() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="guardianPhone">Guardian Phone</Label>
-                  <Input 
-                    id="guardianPhone" 
-                    placeholder="Guardian phone number"
+                  <PhoneInput
                     value={newStudentData.guardianPhone}
-                    onChange={(e) => setNewStudentData({...newStudentData, guardianPhone: e.target.value})}
+                    onChange={(value) => setNewStudentData({...newStudentData, guardianPhone: value})}
+                    placeholder="Enter guardian phone number"
                   />
                 </div>
                 <div className="space-y-2">
@@ -584,11 +586,10 @@ export function AdminStudents() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="editPhone">Phone</Label>
-                <Input 
-                  id="editPhone" 
-                  placeholder="+1234567890"
+                <PhoneInput
                   value={editingStudent.phone}
-                  onChange={(e) => setEditingStudent({...editingStudent, phone: e.target.value})}
+                  onChange={(value) => setEditingStudent({...editingStudent, phone: value})}
+                  placeholder="Enter phone number"
                 />
               </div>
               <div className="space-y-2">
@@ -597,7 +598,11 @@ export function AdminStudents() {
                   id="editNationalId" 
                   placeholder="National ID number"
                   value={editingStudent.nationalId || ''}
-                  onChange={(e) => setEditingStudent({...editingStudent, nationalId: e.target.value})}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^\d]/g, ''); // Only allow numbers
+                    setEditingStudent({...editingStudent, nationalId: value});
+                  }}
+                  inputMode="numeric"
                 />
               </div>
               <div className="space-y-2">
@@ -627,11 +632,10 @@ export function AdminStudents() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="editGuardianPhone">Guardian Phone</Label>
-                <Input 
-                  id="editGuardianPhone" 
-                  placeholder="Guardian's phone number"
+                <PhoneInput
                   value={editingStudent.guardianPhone || ''}
-                  onChange={(e) => setEditingStudent({...editingStudent, guardianPhone: e.target.value})}
+                  onChange={(value) => setEditingStudent({...editingStudent, guardianPhone: value})}
+                  placeholder="Enter guardian phone number"
                 />
               </div>
               <div className="col-span-2 space-y-2">
