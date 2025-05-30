@@ -13,6 +13,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Users, 
   Search, 
@@ -40,6 +41,7 @@ import {
 
 export function AdminStudents() {
   const { t, isRTL } = useLanguage();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -97,7 +99,11 @@ export function AdminStudents() {
   const handleCreateStudent = async () => {
     // Validate required fields
     if (!newStudentData.firstName || !newStudentData.lastName || !newStudentData.email) {
-      alert('Please fill in all required fields');
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -118,10 +124,40 @@ export function AdminStudents() {
 
       await createStudentMutation.mutateAsync(studentData);
       // Success handled in onSuccess callback
+      toast({
+        title: "Success",
+        description: "Student created successfully",
+      });
     } catch (error: any) {
       console.error('Error creating student:', error);
-      const errorMessage = error?.message || 'Failed to create student. Please check all fields and try again.';
-      alert(errorMessage);
+      
+      // Parse the error message to show user-friendly text
+      let errorMessage = 'Failed to create student. Please try again.';
+      
+      if (error?.message) {
+        const message = error.message;
+        if (message.includes('Email already exists')) {
+          errorMessage = 'This email address is already registered. Please use a different email address.';
+        } else if (message.includes('400:')) {
+          // Extract the actual error message from the API response
+          const match = message.match(/400:\s*({.*})/);
+          if (match) {
+            try {
+              const errorData = JSON.parse(match[1]);
+              errorMessage = errorData.message || errorMessage;
+            } catch (e) {
+              // If parsing fails, use the original message
+              errorMessage = message.replace('400:', '').trim();
+            }
+          }
+        }
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
