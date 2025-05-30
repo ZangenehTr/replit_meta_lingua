@@ -206,6 +206,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Get all courses
+  app.get("/api/courses", async (req: any, res) => {
+    try {
+      const courses = await storage.getCourses();
+      res.json(courses);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+
   // Update user profile
   app.patch("/api/users/:id", authenticateToken, async (req: any, res) => {
     try {
