@@ -46,6 +46,8 @@ export function AdminStudents() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
   const [newStudentData, setNewStudentData] = useState({
     firstName: "",
     lastName: "",
@@ -93,6 +95,21 @@ export function AdminStudents() {
         profileImage: null,
         notes: ""
       });
+    }
+  });
+
+  // Edit student mutation
+  const editStudentMutation = useMutation({
+    mutationFn: ({ id, studentData }: { id: number; studentData: any }) => 
+      apiRequest(`/api/admin/students/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(studentData)
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/students/list'] });
+      queryClient.refetchQueries({ queryKey: ['/api/students/list'] });
+      setIsEditDialogOpen(false);
+      setEditingStudent(null);
     }
   });
 
@@ -165,6 +182,73 @@ export function AdminStudents() {
     const file = event.target.files[0];
     if (file) {
       setNewStudentData({ ...newStudentData, profileImage: file });
+    }
+  };
+
+  const handleEditStudent = (student: any) => {
+    setEditingStudent({
+      ...student,
+      birthday: student.birthday ? new Date(student.birthday) : null
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateStudent = async () => {
+    if (!editingStudent || !editingStudent.firstName || !editingStudent.lastName || !editingStudent.email) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const studentData = {
+        firstName: editingStudent.firstName,
+        lastName: editingStudent.lastName,
+        email: editingStudent.email,
+        phone: editingStudent.phone,
+        nationalId: editingStudent.nationalId,
+        birthday: editingStudent.birthday ? editingStudent.birthday.toISOString() : null,
+        level: editingStudent.level,
+        guardianName: editingStudent.guardianName,
+        guardianPhone: editingStudent.guardianPhone,
+        notes: editingStudent.notes
+      };
+
+      await editStudentMutation.mutateAsync({ id: editingStudent.id, studentData });
+      toast({
+        title: "Success",
+        description: "Student updated successfully",
+      });
+    } catch (error: any) {
+      console.error('Error updating student:', error);
+      
+      let errorMessage = 'Failed to update student. Please try again.';
+      
+      if (error?.message) {
+        const message = error.message;
+        if (message.includes('Email already exists')) {
+          errorMessage = 'This email address is already registered. Please use a different email address.';
+        } else if (message.includes('400:')) {
+          const match = message.match(/400:\s*({.*})/);
+          if (match) {
+            try {
+              const errorData = JSON.parse(match[1]);
+              errorMessage = errorData.message || errorMessage;
+            } catch (e) {
+              errorMessage = message.replace('400:', '').trim();
+            }
+          }
+        }
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
@@ -427,6 +511,133 @@ export function AdminStudents() {
         </div>
       </div>
 
+      {/* Edit Student Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Student Profile</DialogTitle>
+            <DialogDescription>
+              Update student information and profile details
+            </DialogDescription>
+          </DialogHeader>
+          {editingStudent && (
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="editFirstName">First Name</Label>
+                <Input 
+                  id="editFirstName" 
+                  placeholder="Enter first name"
+                  value={editingStudent.firstName}
+                  onChange={(e) => setEditingStudent({...editingStudent, firstName: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editLastName">Last Name</Label>
+                <Input 
+                  id="editLastName" 
+                  placeholder="Enter last name"
+                  value={editingStudent.lastName}
+                  onChange={(e) => setEditingStudent({...editingStudent, lastName: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editEmail">Email</Label>
+                <Input 
+                  id="editEmail" 
+                  type="email" 
+                  placeholder="student@example.com"
+                  value={editingStudent.email}
+                  onChange={(e) => setEditingStudent({...editingStudent, email: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editPhone">Phone</Label>
+                <Input 
+                  id="editPhone" 
+                  placeholder="+1234567890"
+                  value={editingStudent.phone}
+                  onChange={(e) => setEditingStudent({...editingStudent, phone: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editNationalId">National ID</Label>
+                <Input 
+                  id="editNationalId" 
+                  placeholder="National ID number"
+                  value={editingStudent.nationalId || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, nationalId: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editLevel">Level</Label>
+                <Select 
+                  value={editingStudent.level} 
+                  onValueChange={(value) => setEditingStudent({...editingStudent, level: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Beginner">Beginner</SelectItem>
+                    <SelectItem value="Intermediate">Intermediate</SelectItem>
+                    <SelectItem value="Advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editGuardianName">Guardian Name</Label>
+                <Input 
+                  id="editGuardianName" 
+                  placeholder="Guardian's full name"
+                  value={editingStudent.guardianName || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, guardianName: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editGuardianPhone">Guardian Phone</Label>
+                <Input 
+                  id="editGuardianPhone" 
+                  placeholder="Guardian's phone number"
+                  value={editingStudent.guardianPhone || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, guardianPhone: e.target.value})}
+                />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="editBirthday">Birthday</Label>
+                <RotatingDatePicker
+                  selectedDate={editingStudent.birthday}
+                  onDateChange={(date) => setEditingStudent({...editingStudent, birthday: date})}
+                />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="editNotes">Notes</Label>
+                <Textarea 
+                  id="editNotes" 
+                  placeholder="Additional notes about the student"
+                  value={editingStudent.notes || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, notes: e.target.value})}
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUpdateStudent}
+              disabled={editStudentMutation.isPending}
+            >
+              {editStudentMutation.isPending ? "Updating..." : "Update Student"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Search and Filters */}
       <div className="flex gap-4 items-center">
         <div className="relative flex-1">
@@ -659,7 +870,11 @@ export function AdminStudents() {
                   </DialogContent>
                 </Dialog>
 
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEditStudent(student)}
+                >
                   <Edit3 className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
