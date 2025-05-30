@@ -68,25 +68,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentUsers = users.filter(u => u.role === 'student');
       
       for (const student of studentUsers) {
-        // Get actual course enrollments for each student
-        const userCourses = await storage.getUserCourses(student.id);
-        const profile = await storage.getUserProfile(student.id);
-        
-        students.push({
-          id: student.id,
-          firstName: student.firstName,
-          lastName: student.lastName,
-          email: student.email,
-          phone: student.phoneNumber || '',
-          status: student.isActive ? 'active' : 'inactive',
-          level: profile?.proficiencyLevel || 'Beginner',
-          progress: 65, // Default for now
-          attendance: 85, // Default for now
-          courses: userCourses.map(c => c.title),
-          enrollmentDate: student.createdAt,
-          lastActivity: '2 days ago', // Default for now
-          avatar: student.avatar || '/api/placeholder/40/40'
-        });
+        try {
+          // Get actual course enrollments for each student with error handling
+          let userCourses = [];
+          let profile = null;
+          
+          try {
+            userCourses = await storage.getUserCourses(student.id);
+          } catch (courseError) {
+            console.error(`Error fetching courses for student ${student.id}:`, courseError);
+            userCourses = [];
+          }
+          
+          try {
+            profile = await storage.getUserProfile(student.id);
+          } catch (profileError) {
+            console.error(`Error fetching profile for student ${student.id}:`, profileError);
+            profile = null;
+          }
+          
+          students.push({
+            id: student.id,
+            firstName: student.firstName,
+            lastName: student.lastName,
+            email: student.email,
+            phone: student.phoneNumber || '',
+            status: student.isActive ? 'active' : 'inactive',
+            level: profile?.proficiencyLevel || 'Beginner',
+            progress: 65, // Default for now
+            attendance: 85, // Default for now
+            courses: userCourses.map(c => c.title),
+            enrollmentDate: student.createdAt,
+            lastActivity: '2 days ago', // Default for now
+            avatar: student.avatar || '/api/placeholder/40/40'
+          });
+        } catch (studentError) {
+          console.error(`Error processing student ${student.id}:`, studentError);
+          // Continue with next student instead of crashing
+        }
       }
       
       console.log('Filtered students:', students.length);
@@ -1056,14 +1075,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create new student
   app.post("/api/admin/students", async (req: any, res) => {
-
     try {
       const { firstName, lastName, email, phone, nationalId, birthday, level, status, guardianName, guardianPhone, notes, selectedCourses, totalFee } = req.body;
       
+      console.log('Creating student with data:', { firstName, lastName, email, phone, level, status, selectedCourses });
+      
+      // Validate required fields
+      if (!firstName || !lastName || !email) {
+        return res.status(400).json({ message: "First name, last name, and email are required." });
+      }
+      
       // Check if email already exists
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already exists. Please use a different email address." });
+      try {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser) {
+          return res.status(400).json({ message: "Email already exists. Please use a different email address." });
+        }
+      } catch (emailCheckError) {
+        console.error('Error checking existing email:', emailCheckError);
+        // Continue with creation if email check fails
       }
       
       // Create user account for the student
@@ -1087,22 +1117,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       const newStudent = await storage.createUser(studentData);
+      console.log('Student created successfully:', newStudent.id);
       
       // Create course enrollments if courses were selected
       if (selectedCourses && selectedCourses.length > 0) {
-        // Verify courses exist before enrolling
-        const availableCourses = await storage.getCourses();
-        const validCourseIds = availableCourses.map(c => c.id);
-        
-        for (const courseId of selectedCourses) {
-          if (validCourseIds.includes(courseId)) {
-            await storage.enrollInCourse({
-              userId: newStudent.id,
-              courseId: courseId,
-              enrollmentDate: new Date(),
-              status: 'active'
-            });
+        try {
+          // Verify courses exist before enrolling
+          const availableCourses = await storage.getCourses();
+          const validCourseIds = availableCourses.map(c => c.id);
+          console.log('Available course IDs:', validCourseIds);
+          console.log('Selected course IDs:', selectedCourses);
+          
+          for (const courseId of selectedCourses) {
+            if (validCourseIds.includes(courseId)) {
+              try {
+                await storage.enrollInCourse({
+                  userId: newStudent.id,
+                  courseId: courseId,
+                  enrollmentDate: new Date(),
+                  status: 'active'
+                });
+                console.log(`Enrolled student ${newStudent.id} in course ${courseId}`);
+              } catch (enrollError) {
+                console.error(`Error enrolling in course ${courseId}:`, enrollError);
+                // Continue with other courses instead of failing completely
+              }
+            } else {
+              console.warn(`Course ID ${courseId} not found in available courses`);
+            }
           }
+        } catch (coursesError) {
+          console.error('Error handling course enrollments:', coursesError);
+          // Continue without failing the student creation
         }
       }
       
