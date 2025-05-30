@@ -57,6 +57,7 @@ export function AdminStudents() {
     nationalId: "",
     birthday: null,
     level: "",
+    status: "active",
     guardianName: "",
     guardianPhone: "",
     profileImage: null,
@@ -517,6 +518,19 @@ export function AdminStudents() {
                       <SelectItem value="beginner">Beginner</SelectItem>
                       <SelectItem value="intermediate">Intermediate</SelectItem>
                       <SelectItem value="advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Student Status</Label>
+                  <Select value={newStudentData.status} onValueChange={(value) => setNewStudentData({...newStudentData, status: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

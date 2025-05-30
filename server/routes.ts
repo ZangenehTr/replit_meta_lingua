@@ -1049,7 +1049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/students", async (req: any, res) => {
 
     try {
-      const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes, selectedCourses, totalFee } = req.body;
+      const { firstName, lastName, email, phone, nationalId, birthday, level, status, guardianName, guardianPhone, notes, selectedCourses, totalFee } = req.body;
       
       // Check if email already exists
       const existingUser = await storage.getUserByEmail(email);
@@ -1067,7 +1067,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phoneNumber: phone,
         role: 'student' as const,
         password: hashedPassword,
-        isActive: true,
+        isActive: status === 'active',
         credits: 0,
         streakDays: 0,
         preferences: {
@@ -1081,13 +1081,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create course enrollments if courses were selected
       if (selectedCourses && selectedCourses.length > 0) {
+        // Verify courses exist before enrolling
+        const availableCourses = await storage.getCourses();
+        const validCourseIds = availableCourses.map(c => c.id);
+        
         for (const courseId of selectedCourses) {
-          await storage.enrollInCourse({
-            userId: newStudent.id,
-            courseId: courseId,
-            enrollmentDate: new Date(),
-            status: 'active'
-          });
+          if (validCourseIds.includes(courseId)) {
+            await storage.enrollInCourse({
+              userId: newStudent.id,
+              courseId: courseId,
+              enrollmentDate: new Date(),
+              status: 'active'
+            });
+          }
         }
       }
       
