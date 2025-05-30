@@ -960,18 +960,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const users = await storage.getAllUsers();
       const students = users.filter(u => u.role === 'student').map(student => ({
         id: student.id,
-        name: `${student.firstName} ${student.lastName}`,
+        firstName: student.firstName,
+        lastName: student.lastName,
         email: student.email,
-        phone: student.phoneNumber || 'N/A',
+        phone: student.phoneNumber || '',
         status: student.isActive ? 'active' : 'inactive',
-        enrolledCourses: 2,
-        totalPayments: 1250,
-        lastActivity: '2 days ago'
+        level: 'Intermediate',
+        progress: 65,
+        attendance: 85,
+        courses: ['Persian Grammar', 'Conversation'],
+        enrollmentDate: student.createdAt,
+        lastActivity: '2 days ago',
+        avatar: student.avatar || '/api/placeholder/40/40'
       }));
 
       res.json(students);
     } catch (error) {
       res.status(500).json({ message: "Failed to get students" });
+    }
+  });
+
+  // Create new student
+  app.post("/api/admin/students", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes } = req.body;
+      
+      // Create user account for the student
+      const hashedPassword = await bcrypt.hash('student123', 10); // Default password
+      
+      const studentData = {
+        firstName,
+        lastName,
+        email,
+        phoneNumber: phone,
+        role: 'student' as const,
+        password: hashedPassword,
+        isActive: true,
+        credits: 0,
+        streakDays: 0,
+        preferences: {
+          language: 'en',
+          notifications: true,
+          theme: 'light'
+        }
+      };
+
+      const newStudent = await storage.createUser(studentData);
+      
+      res.status(201).json({
+        message: "Student created successfully",
+        student: {
+          id: newStudent.id,
+          firstName: newStudent.firstName,
+          lastName: newStudent.lastName,
+          email: newStudent.email,
+          phone: phone,
+          nationalId,
+          birthday,
+          level,
+          guardianName,
+          guardianPhone,
+          notes
+        }
+      });
+    } catch (error) {
+      console.error("Error creating student:", error);
+      res.status(400).json({ message: "Failed to create student" });
     }
   });
 
