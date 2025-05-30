@@ -1240,6 +1240,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete student
+  app.delete("/api/admin/students/:id", async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.id);
+      
+      // Get the existing student first
+      const existingStudent = await storage.getUser(studentId);
+      if (!existingStudent) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      
+      if (existingStudent.role !== 'student') {
+        return res.status(400).json({ message: "User is not a student" });
+      }
+      
+      // For safety, mark as inactive instead of actually deleting
+      const updatedStudent = await storage.updateUser(studentId, { isActive: false });
+      if (!updatedStudent) {
+        return res.status(500).json({ message: "Failed to delete student" });
+      }
+      
+      res.json({ 
+        message: "Student deleted successfully",
+        studentId: studentId
+      });
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      res.status(500).json({ message: "Failed to delete student" });
+    }
+  });
+
   app.get("/api/admin/leads", authenticateToken, async (req: any, res) => {
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: "Access denied" });
