@@ -74,6 +74,7 @@ export function AdminStudents() {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/students'] });
+      queryClient.refetchQueries({ queryKey: ['/api/admin/students'] });
       setIsCreateDialogOpen(false);
       setNewStudentData({
         firstName: "",
