@@ -60,13 +60,44 @@ export function AdminStudents() {
     guardianName: "",
     guardianPhone: "",
     profileImage: null,
-    notes: ""
+    notes: "",
+    selectedCourses: [],
+    totalFee: 0
   });
   const queryClient = useQueryClient();
+
+  // Handle course selection and fee calculation
+  const handleCourseSelection = (courseId: number, selected: boolean) => {
+    setNewStudentData(prev => {
+      let updatedCourses;
+      if (selected) {
+        updatedCourses = [...prev.selectedCourses, courseId];
+      } else {
+        updatedCourses = prev.selectedCourses.filter(id => id !== courseId);
+      }
+      
+      // Calculate total fee
+      const totalFee = updatedCourses.reduce((sum, id) => {
+        const course = (courses as any[])?.find((c: any) => c.id === id);
+        return sum + (course?.price || 0);
+      }, 0);
+
+      return {
+        ...prev,
+        selectedCourses: updatedCourses,
+        totalFee
+      };
+    });
+  };
 
   // Fetch students data
   const { data: students, isLoading } = useQuery({
     queryKey: ['/api/students/list', { search: searchTerm, status: filterStatus }],
+  });
+
+  // Fetch available courses
+  const { data: courses } = useQuery({
+    queryKey: ['/api/courses'],
   });
 
   console.log('AdminStudents component rendered');
@@ -94,7 +125,9 @@ export function AdminStudents() {
         guardianName: "",
         guardianPhone: "",
         profileImage: null,
-        notes: ""
+        notes: "",
+        selectedCourses: [],
+        totalFee: 0
       });
     }
   });
@@ -513,6 +546,48 @@ export function AdminStudents() {
                       className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
                     <Upload className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+                <div className="col-span-2 space-y-4">
+                  <div>
+                    <Label>Course Registration</Label>
+                    <p className="text-sm text-gray-600 mb-3">Select courses for the student</p>
+                    <div className="grid grid-cols-1 gap-3 max-h-40 overflow-y-auto border rounded-md p-3">
+                      {courses && courses.length > 0 ? courses.map((course) => (
+                        <div key={course.id} className="flex items-center justify-between space-x-3 p-2 border rounded-md hover:bg-gray-50">
+                          <div className="flex items-center space-x-3">
+                            <input
+                              type="checkbox"
+                              id={`course-${course.id}`}
+                              checked={newStudentData.selectedCourses.includes(course.id)}
+                              onChange={(e) => handleCourseSelection(course.id, e.target.checked)}
+                              className="rounded border-gray-300"
+                            />
+                            <label htmlFor={`course-${course.id}`} className="flex-1 cursor-pointer">
+                              <div className="font-medium">{course.title}</div>
+                              <div className="text-sm text-gray-600">{course.level} • {course.language}</div>
+                            </label>
+                          </div>
+                          <div className="text-sm font-medium">
+                            {course.price ? `${course.price.toLocaleString()} IRR` : 'Free'}
+                          </div>
+                        </div>
+                      )) : (
+                        <div className="text-center text-gray-500 py-4">
+                          No courses available. Create courses first.
+                        </div>
+                      )}
+                    </div>
+                    {newStudentData.selectedCourses.length > 0 && (
+                      <div className="mt-3 p-3 bg-blue-50 rounded-md">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">Total Fee:</span>
+                          <span className="text-lg font-bold text-blue-600">
+                            {newStudentData.totalFee.toLocaleString()} IRR
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="col-span-2 space-y-2">
