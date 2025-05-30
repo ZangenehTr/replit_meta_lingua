@@ -50,6 +50,11 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
     const value = e.target.value.replace(/\D/g, '').slice(0, 2);
     if (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 31)) {
       setDay(value);
+      // Auto-advance to month field when day is complete
+      if (value.length === 2) {
+        const monthInput = e.target.parentElement?.parentElement?.children[1]?.querySelector('input');
+        monthInput?.focus();
+      }
     }
   };
 
@@ -57,6 +62,11 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
     const value = e.target.value.replace(/\D/g, '').slice(0, 2);
     if (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 12)) {
       setMonth(value);
+      // Auto-advance to year field when month is complete
+      if (value.length === 2) {
+        const yearInput = e.target.parentElement?.parentElement?.children[2]?.querySelector('input');
+        yearInput?.focus();
+      }
     }
   };
 
