@@ -110,6 +110,37 @@ export function AdminStudents() {
       queryClient.refetchQueries({ queryKey: ['/api/students/list'] });
       setIsEditDialogOpen(false);
       setEditingStudent(null);
+      toast({
+        title: "Success",
+        description: "Student updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Edit mutation error:', error);
+      let errorMessage = 'Failed to update student. Please try again.';
+      
+      if (error?.message) {
+        const message = error.message;
+        if (message.includes('Email already exists')) {
+          errorMessage = 'This email address is already registered. Please use a different email address.';
+        } else if (message.includes('400:')) {
+          const match = message.match(/400:\s*({.*})/);
+          if (match) {
+            try {
+              const errorData = JSON.parse(match[1]);
+              errorMessage = errorData.message || errorMessage;
+            } catch (e) {
+              errorMessage = message.replace('400:', '').trim();
+            }
+          }
+        }
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   });
 
@@ -605,8 +636,8 @@ export function AdminStudents() {
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="editBirthday">Birthday</Label>
                 <RotatingDatePicker
-                  selectedDate={editingStudent.birthday}
-                  onDateChange={(date) => setEditingStudent({...editingStudent, birthday: date})}
+                  value={editingStudent.birthday}
+                  onChange={(date) => setEditingStudent({...editingStudent, birthday: date})}
                 />
               </div>
               <div className="col-span-2 space-y-2">

@@ -1080,6 +1080,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update student
+  app.put("/api/admin/students/:id", async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.id);
+      const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes } = req.body;
+      
+      // Get the existing student
+      const existingStudent = await storage.getUser(studentId);
+      if (!existingStudent) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      
+      // Check if email is being changed and if it already exists
+      if (email !== existingStudent.email) {
+        const emailExists = await storage.getUserByEmail(email);
+        if (emailExists) {
+          return res.status(400).json({ message: "Email already exists. Please use a different email address." });
+        }
+      }
+      
+      // Update the user data
+      const updateData = {
+        firstName,
+        lastName,
+        email,
+        phoneNumber: phone
+      };
+
+      const updatedStudent = await storage.updateUser(studentId, updateData);
+      if (!updatedStudent) {
+        return res.status(404).json({ message: "Failed to update student" });
+      }
+
+      res.json({
+        message: "Student updated successfully",
+        student: {
+          id: updatedStudent.id,
+          firstName: updatedStudent.firstName,
+          lastName: updatedStudent.lastName,
+          email: updatedStudent.email,
+          phone: updatedStudent.phoneNumber,
+          nationalId,
+          birthday,
+          level,
+          guardianName,
+          guardianPhone,
+          notes
+        }
+      });
+    } catch (error) {
+      console.error("Error updating student:", error);
+      res.status(400).json({ message: "Failed to update student" });
+    }
+  });
+
   app.get("/api/admin/leads", authenticateToken, async (req: any, res) => {
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: "Access denied" });
