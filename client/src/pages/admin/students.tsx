@@ -734,12 +734,57 @@ export function AdminStudents() {
                   placeholder="Enter guardian phone number"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="editStatus">Status</Label>
+                <Select 
+                  value={editingStudent.status || 'active'} 
+                  onValueChange={(value) => setEditingStudent({...editingStudent, status: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="editBirthday">Birthday</Label>
                 <SimpleDateInput
                   value={editingStudent.birthday}
                   onChange={(date) => setEditingStudent({...editingStudent, birthday: date})}
                 />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label>Course Enrollments</Label>
+                <div className="border rounded-lg p-4 max-h-32 overflow-y-auto">
+                  {coursesList.map((course: any) => (
+                    <div key={course.id} className="flex items-center justify-between py-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`edit-course-${course.id}`}
+                          checked={editingStudent.selectedCourses?.includes(course.id) || false}
+                          onChange={(e) => {
+                            const updatedCourses = e.target.checked 
+                              ? [...(editingStudent.selectedCourses || []), course.id]
+                              : (editingStudent.selectedCourses || []).filter(id => id !== course.id);
+                            setEditingStudent({...editingStudent, selectedCourses: updatedCourses});
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <label htmlFor={`edit-course-${course.id}`} className="text-sm font-medium">
+                          {course.title}
+                        </label>
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {course.price?.toLocaleString()} IRR
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="editNotes">Notes</Label>
