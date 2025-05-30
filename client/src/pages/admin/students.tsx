@@ -201,7 +201,9 @@ export function AdminStudents() {
         level: newStudentData.level,
         guardianName: newStudentData.guardianName,
         guardianPhone: newStudentData.guardianPhone,
-        notes: newStudentData.notes
+        notes: newStudentData.notes,
+        selectedCourses: newStudentData.selectedCourses,
+        totalFee: newStudentData.totalFee
       };
 
       await createStudentMutation.mutateAsync(studentData);
