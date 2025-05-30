@@ -63,6 +63,9 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
     const [isDragging, setIsDragging] = useState(false);
     const [startY, setStartY] = useState(0);
     const [currentTranslate, setCurrentTranslate] = useState(0);
+    const [velocity, setVelocity] = useState(0);
+    const [lastMoveTime, setLastMoveTime] = useState(0);
+    const [lastMoveY, setLastMoveY] = useState(0);
 
     const itemHeight = 44;
     const visibleItems = 5;
@@ -75,12 +78,25 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
     const handleStart = (clientY: number) => {
       setIsDragging(true);
       setStartY(clientY);
+      setLastMoveY(clientY);
+      setLastMoveTime(Date.now());
+      setVelocity(0);
     };
 
     const handleMove = (clientY: number) => {
       if (!isDragging) return;
       
+      const currentTime = Date.now();
       const deltaY = clientY - startY;
+      const deltaTime = currentTime - lastMoveTime;
+      
+      if (deltaTime > 0) {
+        const currentVelocity = (clientY - lastMoveY) / deltaTime;
+        setVelocity(currentVelocity);
+        setLastMoveY(clientY);
+        setLastMoveTime(currentTime);
+      }
+      
       const newTranslate = -selectedIndex * itemHeight + centerOffset + deltaY;
       setCurrentTranslate(newTranslate);
     };
@@ -89,7 +105,13 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
       if (!isDragging) return;
       setIsDragging(false);
       
-      const newIndex = Math.round((-currentTranslate + centerOffset) / itemHeight);
+      // Calculate final position with momentum
+      let finalTranslate = currentTranslate;
+      if (Math.abs(velocity) > 0.5) {
+        finalTranslate += velocity * 200; // Momentum factor
+      }
+      
+      const newIndex = Math.round((-finalTranslate + centerOffset) / itemHeight);
       const clampedIndex = Math.max(0, Math.min(items.length - 1, newIndex));
       onSelect(clampedIndex);
     };
@@ -97,6 +119,35 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
     return (
       <div className="flex-1">
         <div className="text-center text-sm font-medium text-gray-600 mb-2">{label}</div>
+        {/* Quick navigation for years */}
+        {label === "Year" && (
+          <div className="flex justify-center gap-1 mb-2">
+            <button
+              onClick={() => onSelect(items.indexOf(1980))}
+              className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded"
+            >
+              1980
+            </button>
+            <button
+              onClick={() => onSelect(items.indexOf(1990))}
+              className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded"
+            >
+              1990
+            </button>
+            <button
+              onClick={() => onSelect(items.indexOf(2000))}
+              className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded"
+            >
+              2000
+            </button>
+            <button
+              onClick={() => onSelect(items.indexOf(2010))}
+              className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded"
+            >
+              2010
+            </button>
+          </div>
+        )}
         <div className="relative h-48 overflow-hidden bg-white dark:bg-gray-900 rounded-lg">
           {/* Selection indicator */}
           <div className="absolute inset-x-0 top-20 h-11 border-y border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/50 pointer-events-none z-10" />
@@ -119,6 +170,12 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
               handleMove(e.touches[0].clientY);
             }}
             onTouchEnd={handleEnd}
+            onWheel={(e) => {
+              e.preventDefault();
+              const direction = e.deltaY > 0 ? 1 : -1;
+              const newIndex = Math.max(0, Math.min(items.length - 1, selectedIndex + direction));
+              onSelect(newIndex);
+            }}
           >
             {items.map((item, index) => {
               const offset = index * itemHeight - (-currentTranslate - centerOffset);
