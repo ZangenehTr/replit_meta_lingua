@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SimpleDateInput } from "@/components/ui/simple-date-input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { VoIPContactButton } from "@/components/voip-contact-button";
 import { useLanguage } from "@/hooks/use-language";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -853,6 +854,13 @@ export function AdminStudents() {
               </div>
 
               <div className="flex gap-2 pt-2">
+                {student.phone && (
+                  <VoIPContactButton 
+                    phoneNumber={student.phone}
+                    contactName={`${student.firstName} ${student.lastName}`}
+                    className="flex-1"
+                  />
+                )}
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="flex-1">
