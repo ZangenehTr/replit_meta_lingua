@@ -1013,20 +1013,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const users = await storage.getAllUsers();
-      const students = users.filter(u => u.role === 'student').map(student => ({
-        id: student.id,
-        firstName: student.firstName,
-        lastName: student.lastName,
-        email: student.email,
-        phone: student.phoneNumber || '',
-        status: student.isActive ? 'active' : 'inactive',
-        level: 'Intermediate',
-        progress: 65,
-        attendance: 85,
-        courses: ['Persian Grammar', 'Conversation'],
-        enrollmentDate: student.createdAt,
-        lastActivity: '2 days ago',
-        avatar: student.avatar || '/api/placeholder/40/40'
+      const courses = await storage.getAllCourses();
+      const enrollments = await storage.getAllEnrollments();
+      
+      const students = await Promise.all(users.filter(u => u.role === 'student').map(async student => {
+        // Get enrolled courses for this student
+        const studentEnrollments = enrollments.filter(e => e.studentId === student.id);
+        const enrolledCourses = studentEnrollments.map(enrollment => {
+          const course = courses.find(c => c.id === enrollment.courseId);
+          return course ? course.title : 'Unknown Course';
+        }).filter(Boolean);
+        
+        // Get student profile for level and other details
+        const profile = await storage.getUserProfile(student.id);
+        
+        return {
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          phone: student.phoneNumber || '',
+          status: student.isActive ? 'active' : 'inactive',
+          level: profile?.level || 'Beginner',
+          progress: profile?.progressPercentage || 0,
+          attendance: profile?.attendanceRate || 0,
+          courses: enrolledCourses,
+          enrollmentDate: student.createdAt,
+          lastActivity: profile?.lastLoginAt ? new Date(profile.lastLoginAt).toLocaleDateString() : 'Never',
+          avatar: student.avatar || '/api/placeholder/40/40'
+        };
       }));
 
       res.json(students);
@@ -1039,7 +1054,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/students", async (req: any, res) => {
 
     try {
-      const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes } = req.body;
+      const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes, selectedCourses, totalFee } = req.body;
       
       // Check if email already exists
       const existingUser = await storage.getUserByEmail(email);
@@ -1069,6 +1084,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const newStudent = await storage.createUser(studentData);
       
+      // Create course enrollments if courses were selected
+      if (selectedCourses && selectedCourses.length > 0) {
+        for (const courseId of selectedCourses) {
+          await storage.createEnrollment({
+            studentId: newStudent.id,
+            courseId: courseId,
+            enrollmentDate: new Date(),
+            status: 'active'
+          });
+        }
+      }
+      
+      // Get course names for display
+      let courseNames = [];
+      if (selectedCourses && selectedCourses.length > 0) {
+        const courses = await storage.getCourses();
+        courseNames = courses
+          .filter(course => selectedCourses.includes(course.id))
+          .map(course => course.title);
+      }
+      
       res.status(201).json({
         message: "Student created successfully",
         student: {
@@ -1082,7 +1118,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           level,
           guardianName,
           guardianPhone,
-          notes
+          notes,
+          selectedCourses: courseNames,
+          totalFee
         }
       });
     } catch (error) {
