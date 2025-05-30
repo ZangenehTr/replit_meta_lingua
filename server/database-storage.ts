@@ -39,7 +39,7 @@ export class DatabaseStorage implements IStorage {
   async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
     const [updatedUser] = await db
       .update(users)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(updates)
       .where(eq(users.id, id))
       .returning();
     return updatedUser;
@@ -48,7 +48,7 @@ export class DatabaseStorage implements IStorage {
   async updateUserPreferences(id: number, preferences: any): Promise<User | undefined> {
     const [updatedUser] = await db
       .update(users)
-      .set({ preferences, updatedAt: new Date() })
+      .set({ role: preferences.role || updates.role })
       .where(eq(users.id, id))
       .returning();
     return updatedUser;
