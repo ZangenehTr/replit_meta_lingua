@@ -71,6 +71,7 @@ export const userSessions = pgTable("user_sessions", {
 // Courses table
 export const courses = pgTable("courses", {
   id: serial("id").primaryKey(),
+  courseCode: text("course_code").notNull().unique(), // e.g., "ONL-FA-MWF-1800-001"
   title: text("title").notNull(),
   description: text("description"),
   language: text("language").notNull(), // en, fa, de, es, etc.
@@ -78,8 +79,21 @@ export const courses = pgTable("courses", {
   thumbnail: text("thumbnail"),
   instructorId: integer("instructor_id").references(() => users.id),
   price: integer("price").default(0),
-  duration: integer("duration"), // in minutes
-  totalLessons: integer("total_lessons").default(0),
+  
+  // Session-based structure
+  totalSessions: integer("total_sessions").notNull(),
+  sessionDuration: integer("session_duration").notNull(), // minutes per session (60, 90, 180)
+  
+  // Scheduling
+  classType: text("class_type").notNull(), // "online" or "offline"
+  weekdays: text("weekdays").array().notNull(), // ["monday", "wednesday", "friday"]
+  startTime: text("start_time").notNull(), // "18:00"
+  endTime: text("end_time").notNull(), // "19:30"
+  
+  // Recording settings (for online classes)
+  autoRecord: boolean("auto_record").default(false),
+  recordingAvailable: boolean("recording_available").default(false),
+  
   category: text("category").notNull(),
   tags: text("tags").array(),
   prerequisites: text("prerequisites").array(),

@@ -82,6 +82,36 @@ export function IOSDatePicker({ value, onChange, placeholder = "Pick a date", cl
       }
     };
 
+    // Add momentum scrolling for better mobile experience
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const handleTouchStart = (e: TouchEvent) => {
+        container.style.scrollBehavior = 'auto';
+      };
+
+      const handleTouchEnd = (e: TouchEvent) => {
+        setTimeout(() => {
+          container.style.scrollBehavior = 'smooth';
+          const itemHeight = 44;
+          const scrollTop = container.scrollTop;
+          const centerIndex = Math.round((scrollTop + container.clientHeight / 2 - itemHeight / 2) / itemHeight);
+          const clampedIndex = Math.max(0, Math.min(items.length - 1, centerIndex));
+          scrollToIndex(clampedIndex);
+          onSelect(clampedIndex);
+        }, 100);
+      };
+
+      container.addEventListener('touchstart', handleTouchStart);
+      container.addEventListener('touchend', handleTouchEnd);
+      
+      return () => {
+        container.removeEventListener('touchstart', handleTouchStart);
+        container.removeEventListener('touchend', handleTouchEnd);
+      };
+    }, []);
+
     return (
       <div 
         ref={containerRef}
