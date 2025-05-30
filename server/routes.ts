@@ -41,10 +41,29 @@ const requireRole = (roles: string[]) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Debug endpoint to see all users
+  app.get("/api/debug/users", async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users.map(u => ({
+        id: u.id,
+        email: u.email,
+        role: u.role,
+        firstName: u.firstName,
+        lastName: u.lastName
+      })));
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get users" });
+    }
+  });
+
   // Simple students list endpoint (no auth for testing)
   app.get("/api/students/list", async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
+      console.log('All users:', users.length);
+      console.log('User roles:', users.map(u => ({ email: u.email, role: u.role })));
+      
       const students = users.filter(u => u.role === 'student').map(student => ({
         id: student.id,
         firstName: student.firstName,
@@ -60,6 +79,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastActivity: '2 days ago',
         avatar: student.avatar || '/api/placeholder/40/40'
       }));
+      
+      console.log('Filtered students:', students.length);
       res.json(students);
     } catch (error) {
       console.error('Error fetching students:', error);
