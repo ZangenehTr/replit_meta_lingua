@@ -64,21 +64,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('All users:', users.length);
       console.log('User roles:', users.map(u => ({ email: u.email, role: u.role })));
       
-      const students = users.filter(u => u.role === 'student').map(student => ({
-        id: student.id,
-        firstName: student.firstName,
-        lastName: student.lastName,
-        email: student.email,
-        phone: student.phoneNumber || '',
-        status: student.isActive ? 'active' : 'inactive',
-        level: 'Intermediate',
-        progress: 65,
-        attendance: 85,
-        courses: ['Persian Grammar', 'Conversation'],
-        enrollmentDate: student.createdAt,
-        lastActivity: '2 days ago',
-        avatar: student.avatar || '/api/placeholder/40/40'
-      }));
+      const students = [];
+      const studentUsers = users.filter(u => u.role === 'student');
+      
+      for (const student of studentUsers) {
+        // Get actual course enrollments for each student
+        const userCourses = await storage.getUserCourses(student.id);
+        const profile = await storage.getUserProfile(student.id);
+        
+        students.push({
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          phone: student.phoneNumber || '',
+          status: student.isActive ? 'active' : 'inactive',
+          level: profile?.proficiencyLevel || 'Beginner',
+          progress: 65, // Default for now
+          attendance: 85, // Default for now
+          courses: userCourses.map(c => c.title),
+          enrollmentDate: student.createdAt,
+          lastActivity: '2 days ago', // Default for now
+          avatar: student.avatar || '/api/placeholder/40/40'
+        });
+      }
       
       console.log('Filtered students:', students.length);
       res.json(students);

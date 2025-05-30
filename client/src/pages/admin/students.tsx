@@ -79,7 +79,7 @@ export function AdminStudents() {
       
       // Calculate total fee
       const totalFee = updatedCourses.reduce((sum, id) => {
-        const course = (courses as any[])?.find((c: any) => c.id === id);
+        const course = coursesList.find((c: any) => c.id === id);
         return sum + (course?.price || 0);
       }, 0);
 
@@ -100,6 +100,9 @@ export function AdminStudents() {
   const { data: courses } = useQuery({
     queryKey: ['/api/courses'],
   });
+
+  // Ensure courses is an array to prevent errors
+  const coursesList = Array.isArray(courses) ? courses : [];
 
   console.log('AdminStudents component rendered');
   console.log('Students data:', students);
@@ -123,6 +126,7 @@ export function AdminStudents() {
         nationalId: "",
         birthday: null,
         level: "",
+        status: "active",
         guardianName: "",
         guardianPhone: "",
         profileImage: null,
@@ -569,7 +573,7 @@ export function AdminStudents() {
                     <Label>Course Registration</Label>
                     <p className="text-sm text-gray-600 mb-3">Select courses for the student</p>
                     <div className="grid grid-cols-1 gap-3 max-h-40 overflow-y-auto border rounded-md p-3">
-                      {courses && courses.length > 0 ? courses.map((course) => (
+                      {coursesList && coursesList.length > 0 ? coursesList.map((course: any) => (
                         <div key={course.id} className="flex items-center justify-between space-x-3 p-2 border rounded-md hover:bg-gray-50">
                           <div className="flex items-center space-x-3">
                             <input
