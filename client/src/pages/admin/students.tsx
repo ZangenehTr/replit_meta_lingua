@@ -261,7 +261,13 @@ export function AdminStudents() {
   const handleEditStudent = (student: any) => {
     setEditingStudent({
       ...student,
-      birthday: student.birthday ? new Date(student.birthday) : null
+      birthday: student.birthday ? new Date(student.birthday) : null,
+      nationalId: student.nationalId || '',
+      guardianName: student.guardianName || '',
+      guardianPhone: student.guardianPhone || '',
+      notes: student.notes || '',
+      selectedCourses: student.courses?.map((c: any) => c.id) || [],
+      status: student.status || 'active'
     });
     setIsEditDialogOpen(true);
   };
@@ -287,7 +293,9 @@ export function AdminStudents() {
         level: editingStudent.level,
         guardianName: editingStudent.guardianName,
         guardianPhone: editingStudent.guardianPhone,
-        notes: editingStudent.notes
+        notes: editingStudent.notes,
+        status: editingStudent.status,
+        selectedCourses: editingStudent.selectedCourses || []
       };
 
       await editStudentMutation.mutateAsync({ id: editingStudent.id, studentData });
