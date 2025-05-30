@@ -172,9 +172,13 @@ export function AdminStudents() {
   ];
 
   const filteredStudents = (Array.isArray(studentData) ? studentData : []).filter(student => {
-    const matchesSearch = student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = searchTerm === "" || 
+                         student.firstName.toLowerCase().includes(searchLower) ||
+                         student.lastName.toLowerCase().includes(searchLower) ||
+                         student.email.toLowerCase().includes(searchLower) ||
+                         (student.phone && student.phone.toLowerCase().includes(searchLower)) ||
+                         `${student.firstName} ${student.lastName}`.toLowerCase().includes(searchLower);
     const matchesStatus = filterStatus === "all" || student.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
@@ -218,16 +222,18 @@ export function AdminStudents() {
             </p>
           </div>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button variant="outline" className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
-            Export Data
+            <span className="hidden sm:inline">Export Data</span>
+            <span className="sm:hidden">Export</span>
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Student
+                <span className="hidden sm:inline">Add Student</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
