@@ -952,7 +952,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/admin/students", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'admin') {
+    if (!req.user || !['admin', 'manager', 'supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -982,7 +982,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create new student
   app.post("/api/admin/students", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'admin') {
+    if (!req.user || !['admin', 'manager', 'supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
