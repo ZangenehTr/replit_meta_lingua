@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,8 +22,8 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => currentYear - 50 + i);
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
   
   const getDaysInMonth = (year: number, month: number) => {
@@ -48,7 +48,7 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
     setIsOpen(false);
   };
 
-  const WheelSelector = ({ 
+  const IOSWheelPicker = ({ 
     items, 
     selectedIndex, 
     onSelect, 
@@ -58,50 +58,99 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
     selectedIndex: number;
     onSelect: (index: number) => void;
     label: string;
-  }) => (
-    <div className="flex-1">
-      <Label className="text-sm font-medium mb-2 block">{label}</Label>
-      <div className="h-40 overflow-hidden border rounded-lg bg-gray-50 dark:bg-gray-800 relative">
-        <div 
-          className="absolute inset-x-0 transition-all duration-500 ease-in-out"
-          style={{
-            transform: `translateY(${-selectedIndex * 40 + 80}px)`,
-            filter: 'blur(0px)'
-          }}
-        >
-          {items.map((item, index) => {
-            const distance = Math.abs(index - selectedIndex);
-            const opacity = distance === 0 ? 1 : distance === 1 ? 0.7 : distance === 2 ? 0.4 : 0.2;
-            const scale = distance === 0 ? 1 : distance === 1 ? 0.9 : 0.8;
-            
-            return (
-              <div
-                key={index}
-                className={`h-10 flex items-center justify-center cursor-pointer transition-all duration-300 ${
-                  index === selectedIndex
-                    ? 'bg-blue-500 text-white font-semibold shadow-lg'
-                    : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
-                }`}
-                style={{
-                  opacity,
-                  transform: `scale(${scale})`,
-                  filter: distance > 0 ? `blur(${distance * 0.5}px)` : 'blur(0px)'
-                }}
-                onClick={() => onSelect(index)}
-              >
-                {item}
-              </div>
-            );
-          })}
+  }) => {
+    const wheelRef = useRef<HTMLDivElement>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [startY, setStartY] = useState(0);
+    const [currentTranslate, setCurrentTranslate] = useState(0);
+
+    const itemHeight = 44;
+    const visibleItems = 5;
+    const centerOffset = Math.floor(visibleItems / 2) * itemHeight;
+
+    useEffect(() => {
+      setCurrentTranslate(-selectedIndex * itemHeight + centerOffset);
+    }, [selectedIndex, centerOffset]);
+
+    const handleStart = (clientY: number) => {
+      setIsDragging(true);
+      setStartY(clientY);
+    };
+
+    const handleMove = (clientY: number) => {
+      if (!isDragging) return;
+      
+      const deltaY = clientY - startY;
+      const newTranslate = -selectedIndex * itemHeight + centerOffset + deltaY;
+      setCurrentTranslate(newTranslate);
+    };
+
+    const handleEnd = () => {
+      if (!isDragging) return;
+      setIsDragging(false);
+      
+      const newIndex = Math.round((-currentTranslate + centerOffset) / itemHeight);
+      const clampedIndex = Math.max(0, Math.min(items.length - 1, newIndex));
+      onSelect(clampedIndex);
+    };
+
+    return (
+      <div className="flex-1">
+        <div className="text-center text-sm font-medium text-gray-600 mb-2">{label}</div>
+        <div className="relative h-48 overflow-hidden bg-white dark:bg-gray-900 rounded-lg">
+          {/* Selection indicator */}
+          <div className="absolute inset-x-0 top-20 h-11 border-y border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/50 pointer-events-none z-10" />
+          
+          {/* Wheel container */}
+          <div
+            ref={wheelRef}
+            className="absolute inset-x-0 cursor-grab active:cursor-grabbing"
+            style={{
+              transform: `translateY(${currentTranslate}px)`,
+              transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67)'
+            }}
+            onMouseDown={(e) => handleStart(e.clientY)}
+            onMouseMove={(e) => handleMove(e.clientY)}
+            onMouseUp={handleEnd}
+            onMouseLeave={handleEnd}
+            onTouchStart={(e) => handleStart(e.touches[0].clientY)}
+            onTouchMove={(e) => {
+              e.preventDefault();
+              handleMove(e.touches[0].clientY);
+            }}
+            onTouchEnd={handleEnd}
+          >
+            {items.map((item, index) => {
+              const offset = index * itemHeight - (-currentTranslate - centerOffset);
+              const distance = Math.abs(offset) / itemHeight;
+              const opacity = Math.max(0.3, 1 - distance * 0.3);
+              const scale = Math.max(0.8, 1 - distance * 0.1);
+              
+              return (
+                <div
+                  key={index}
+                  className="flex items-center justify-center text-lg font-medium select-none"
+                  style={{
+                    height: `${itemHeight}px`,
+                    opacity,
+                    transform: `scale(${scale})`,
+                    color: index === selectedIndex ? '#007AFF' : undefined
+                  }}
+                  onClick={() => onSelect(index)}
+                >
+                  {item}
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Gradient overlays for iOS effect */}
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white dark:from-gray-900 to-transparent pointer-events-none z-20" />
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none z-20" />
         </div>
-        {/* Selection indicator with gradient */}
-        <div className="absolute inset-x-0 top-16 h-10 border-y-2 border-blue-400 pointer-events-none bg-gradient-to-r from-blue-100/20 via-blue-200/40 to-blue-100/20 rounded" />
-        {/* Top and bottom gradients for fade effect */}
-        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-gray-50 dark:from-gray-800 to-transparent pointer-events-none" />
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-gray-50 dark:from-gray-800 to-transparent pointer-events-none" />
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -114,23 +163,25 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
           {selectedDate ? format(selectedDate, "PPP") : placeholder}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-4">
-        <div className="space-y-4">
-          <h4 className="font-medium text-center">Select Date</h4>
-          <div className="flex gap-3">
-            <WheelSelector
+      <PopoverContent className="w-80 p-0">
+        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-t-lg">
+          <h4 className="font-medium text-center text-gray-900 dark:text-gray-100">Select Date</h4>
+        </div>
+        <div className="p-4 space-y-4">
+          <div className="flex gap-2">
+            <IOSWheelPicker
               items={months}
               selectedIndex={month}
               onSelect={setMonth}
               label="Month"
             />
-            <WheelSelector
+            <IOSWheelPicker
               items={days}
               selectedIndex={day - 1}
               onSelect={(index) => setDay(index + 1)}
               label="Day"
             />
-            <WheelSelector
+            <IOSWheelPicker
               items={years}
               selectedIndex={years.indexOf(year)}
               onSelect={(index) => setYear(years[index])}
@@ -146,10 +197,10 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
               Cancel
             </Button>
             <Button 
-              className="flex-1"
+              className="flex-1 bg-blue-500 hover:bg-blue-600"
               onClick={handleDateChange}
             >
-              Select
+              Done
             </Button>
           </div>
         </div>
