@@ -61,29 +61,44 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
   }) => (
     <div className="flex-1">
       <Label className="text-sm font-medium mb-2 block">{label}</Label>
-      <div className="h-32 overflow-hidden border rounded-lg bg-gray-50 dark:bg-gray-800 relative">
+      <div className="h-40 overflow-hidden border rounded-lg bg-gray-50 dark:bg-gray-800 relative">
         <div 
-          className="absolute inset-x-0 transition-transform duration-300 ease-out"
+          className="absolute inset-x-0 transition-all duration-500 ease-in-out"
           style={{
-            transform: `translateY(${-selectedIndex * 32 + 48}px)`
+            transform: `translateY(${-selectedIndex * 40 + 80}px)`,
+            filter: 'blur(0px)'
           }}
         >
-          {items.map((item, index) => (
-            <div
-              key={index}
-              className={`h-8 flex items-center justify-center cursor-pointer transition-all duration-200 ${
-                index === selectedIndex
-                  ? 'bg-blue-500 text-white font-medium scale-105'
-                  : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
-              }`}
-              onClick={() => onSelect(index)}
-            >
-              {item}
-            </div>
-          ))}
+          {items.map((item, index) => {
+            const distance = Math.abs(index - selectedIndex);
+            const opacity = distance === 0 ? 1 : distance === 1 ? 0.7 : distance === 2 ? 0.4 : 0.2;
+            const scale = distance === 0 ? 1 : distance === 1 ? 0.9 : 0.8;
+            
+            return (
+              <div
+                key={index}
+                className={`h-10 flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                  index === selectedIndex
+                    ? 'bg-blue-500 text-white font-semibold shadow-lg'
+                    : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
+                }`}
+                style={{
+                  opacity,
+                  transform: `scale(${scale})`,
+                  filter: distance > 0 ? `blur(${distance * 0.5}px)` : 'blur(0px)'
+                }}
+                onClick={() => onSelect(index)}
+              >
+                {item}
+              </div>
+            );
+          })}
         </div>
-        {/* Selection indicator */}
-        <div className="absolute inset-x-0 top-12 h-8 border-y-2 border-blue-500 pointer-events-none bg-blue-500/10" />
+        {/* Selection indicator with gradient */}
+        <div className="absolute inset-x-0 top-16 h-10 border-y-2 border-blue-400 pointer-events-none bg-gradient-to-r from-blue-100/20 via-blue-200/40 to-blue-100/20 rounded" />
+        {/* Top and bottom gradients for fade effect */}
+        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-gray-50 dark:from-gray-800 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-gray-50 dark:from-gray-800 to-transparent pointer-events-none" />
       </div>
     </div>
   );
