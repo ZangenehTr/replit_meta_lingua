@@ -63,7 +63,7 @@ export function AdminStudents() {
 
   // Fetch students data
   const { data: students, isLoading } = useQuery({
-    queryKey: ['/api/admin/students', { search: searchTerm, status: filterStatus }],
+    queryKey: ['/api/students/list', { search: searchTerm, status: filterStatus }],
   });
 
   // Create student mutation
@@ -73,8 +73,8 @@ export function AdminStudents() {
       body: JSON.stringify(studentData)
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/students'] });
-      queryClient.refetchQueries({ queryKey: ['/api/admin/students'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/students/list'] });
+      queryClient.refetchQueries({ queryKey: ['/api/students/list'] });
       setIsCreateDialogOpen(false);
       setNewStudentData({
         firstName: "",

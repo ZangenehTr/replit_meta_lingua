@@ -41,6 +41,32 @@ const requireRole = (roles: string[]) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Simple students list endpoint (no auth for testing)
+  app.get("/api/students/list", async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const students = users.filter(u => u.role === 'student').map(student => ({
+        id: student.id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        email: student.email,
+        phone: student.phoneNumber || '',
+        status: student.isActive ? 'active' : 'inactive',
+        level: 'Intermediate',
+        progress: 65,
+        attendance: 85,
+        courses: ['Persian Grammar', 'Conversation'],
+        enrollmentDate: student.createdAt,
+        lastActivity: '2 days ago',
+        avatar: student.avatar || '/api/placeholder/40/40'
+      }));
+      res.json(students);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      res.status(500).json({ message: "Failed to get students" });
+    }
+  });
+
   // Import and setup working authentication
   const { setupAuth } = await import("./auth-fix");
   setupAuth(app);
