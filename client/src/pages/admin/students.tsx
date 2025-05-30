@@ -99,11 +99,25 @@ export function AdminStudents() {
     }
 
     try {
-      await createStudentMutation.mutateAsync(newStudentData);
+      // Format the data properly
+      const studentData = {
+        firstName: newStudentData.firstName,
+        lastName: newStudentData.lastName,
+        email: newStudentData.email,
+        phone: newStudentData.phone,
+        nationalId: newStudentData.nationalId,
+        birthday: newStudentData.birthday ? newStudentData.birthday.toISOString() : null,
+        level: newStudentData.level,
+        guardianName: newStudentData.guardianName,
+        guardianPhone: newStudentData.guardianPhone,
+        notes: newStudentData.notes
+      };
+
+      await createStudentMutation.mutateAsync(studentData);
       // Success handled in onSuccess callback
     } catch (error) {
       console.error('Error creating student:', error);
-      alert('Failed to create student. Please try again.');
+      alert('Failed to create student. Please check all fields and try again.');
     }
   };
 

@@ -123,18 +123,19 @@ export function RotatingDatePicker({ value, onChange, placeholder = "Pick a date
             {items.map((item, index) => {
               const offset = index * itemHeight - (-currentTranslate - centerOffset);
               const distance = Math.abs(offset) / itemHeight;
-              const opacity = Math.max(0.3, 1 - distance * 0.3);
-              const scale = Math.max(0.8, 1 - distance * 0.1);
+              const opacity = Math.max(0.6, 1 - distance * 0.2);
+              const scale = Math.max(0.85, 1 - distance * 0.08);
               
               return (
                 <div
                   key={index}
-                  className="flex items-center justify-center text-lg font-medium select-none"
+                  className="flex items-center justify-center text-lg font-semibold select-none text-gray-900 dark:text-gray-100"
                   style={{
                     height: `${itemHeight}px`,
                     opacity,
                     transform: `scale(${scale})`,
-                    color: index === selectedIndex ? '#007AFF' : undefined
+                    color: index === selectedIndex ? '#007AFF' : undefined,
+                    fontWeight: index === selectedIndex ? '600' : '500'
                   }}
                   onClick={() => onSelect(index)}
                 >
