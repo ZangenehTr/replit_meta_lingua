@@ -116,9 +116,10 @@ export function AdminStudents() {
 
       await createStudentMutation.mutateAsync(studentData);
       // Success handled in onSuccess callback
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating student:', error);
-      alert('Failed to create student. Please check all fields and try again.');
+      const errorMessage = error?.message || 'Failed to create student. Please check all fields and try again.';
+      alert(errorMessage);
     }
   };
 

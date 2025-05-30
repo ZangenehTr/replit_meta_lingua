@@ -986,6 +986,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes } = req.body;
       
+      // Check if email already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already exists. Please use a different email address." });
+      }
+      
       // Create user account for the student
       const hashedPassword = await bcrypt.hash('student123', 10); // Default password
       
