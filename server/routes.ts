@@ -1083,7 +1083,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (selectedCourses && selectedCourses.length > 0) {
         for (const courseId of selectedCourses) {
           await storage.enrollInCourse({
-            studentId: newStudent.id,
+            userId: newStudent.id,
             courseId: courseId,
             enrollmentDate: new Date(),
             status: 'active'

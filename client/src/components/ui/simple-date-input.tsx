@@ -62,9 +62,7 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-    if (value === '' || (parseInt(value) >= 1900 && parseInt(value) <= 2100)) {
-      setYear(value);
-    }
+    setYear(value);
   };
 
   return (
