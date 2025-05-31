@@ -1162,13 +1162,13 @@ export function AdminStudents() {
                 </div>
                 <div className="col-span-2">
                   <div className="flex gap-1">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => setSelectedStudent(student)}>
                       <Eye className="h-3 w-3" />
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => handleEditStudent(student)}>
                       <Edit3 className="h-3 w-3" />
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleDeleteStudent(student.id)}>
                       <MoreHorizontal className="h-3 w-3" />
                     </Button>
                   </div>
