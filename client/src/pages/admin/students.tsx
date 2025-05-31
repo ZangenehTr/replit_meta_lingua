@@ -38,7 +38,10 @@ import {
   CreditCard,
   GraduationCap,
   History,
-  ChevronLeft
+  ChevronLeft,
+  Grid3X3,
+  List,
+  MoreHorizontal
 } from "lucide-react";
 
 export function AdminStudents() {
@@ -48,6 +51,7 @@ export function AdminStudents() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("cards"); // "cards" or "list"
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [newStudentData, setNewStudentData] = useState({
@@ -442,6 +446,27 @@ export function AdminStudents() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
+          {/* View Mode Toggle */}
+          <div className="flex border rounded-lg overflow-hidden">
+            <Button
+              variant={viewMode === "cards" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("cards")}
+              className="rounded-none border-0"
+            >
+              <Grid3X3 className="h-4 w-4 mr-2" />
+              Cards
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="rounded-none border-0"
+            >
+              <List className="h-4 w-4 mr-2" />
+              List
+            </Button>
+          </div>
           <Button variant="outline" className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Export Data</span>
