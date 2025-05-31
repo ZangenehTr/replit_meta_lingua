@@ -873,9 +873,10 @@ export function AdminStudents() {
         </Select>
       </div>
 
-      {/* Students Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredStudents.map((student) => (
+      {/* Students View */}
+      {viewMode === "cards" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredStudents.map((student) => (
           <Card key={student.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -1102,8 +1103,81 @@ export function AdminStudents() {
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        // List View
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border">
+            <div className="grid grid-cols-12 gap-4 p-4 border-b font-medium text-sm text-gray-600 dark:text-gray-400">
+              <div className="col-span-3">Student</div>
+              <div className="col-span-2">Contact</div>
+              <div className="col-span-1">Status</div>
+              <div className="col-span-2">Level</div>
+              <div className="col-span-2">Progress</div>
+              <div className="col-span-2">Actions</div>
+            </div>
+            {filteredStudents.map((student) => (
+              <div key={student.id} className="grid grid-cols-12 gap-4 p-4 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <div className="col-span-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      {student.firstName[0]}{student.lastName[0]}
+                    </div>
+                    <div>
+                      <div className="font-medium">{student.firstName} {student.lastName}</div>
+                      <div className="text-sm text-gray-500">ID: {student.id}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-sm">
+                    <div>{student.email}</div>
+                    <div className="text-gray-500">{student.phone}</div>
+                  </div>
+                </div>
+                <div className="col-span-1">
+                  <Badge className={getStatusColor(student.status)}>
+                    {student.status}
+                  </Badge>
+                </div>
+                <div className="col-span-2">
+                  <Badge className={getLevelColor(student.level)}>
+                    {student.level}
+                  </Badge>
+                </div>
+                <div className="col-span-2">
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span>Progress</span>
+                      <span>{student.progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full" 
+                        style={{ width: `${student.progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <div className="flex gap-1">
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleEditStudent(student)}>
+                      <Edit3 className="h-3 w-3" />
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <MoreHorizontal className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Statistics Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
