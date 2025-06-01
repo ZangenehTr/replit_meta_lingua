@@ -1151,7 +1151,10 @@ export function AdminStudents() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => handleEditStudent(student)}
+                  onClick={() => {
+                    console.log('Edit button clicked for student:', student.firstName, student.lastName);
+                    handleEditStudent(student);
+                  }}
                 >
                   <Edit3 className="h-4 w-4 mr-1" />
                   Edit
