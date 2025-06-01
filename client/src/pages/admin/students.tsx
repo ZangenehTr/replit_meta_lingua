@@ -283,11 +283,19 @@ export function AdminStudents() {
   };
 
   const handleEditStudent = (student: any) => {
+    // Debug logging
+    console.log('Editing student:', student);
+    console.log('Student courses:', student.courses);
+    console.log('Available courses:', coursesList);
+    
     // Map course names to course IDs
     const selectedCourseIds = student.courses?.map((courseName: string) => {
       const course = coursesList.find((c: any) => c.title === courseName);
+      console.log(`Mapping course "${courseName}" to ID:`, course?.id);
       return course?.id;
     }).filter(Boolean) || [];
+
+    console.log('Selected course IDs:', selectedCourseIds);
 
     setEditingStudent({
       ...student,
