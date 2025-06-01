@@ -463,6 +463,19 @@ export function AdminStudents() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
+          {/* Sort Dropdown */}
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest to Oldest</SelectItem>
+              <SelectItem value="oldest">Oldest to Newest</SelectItem>
+              <SelectItem value="course">Course Based</SelectItem>
+              <SelectItem value="level">Level</SelectItem>
+            </SelectContent>
+          </Select>
+          
           {/* View Mode Toggle */}
           <div className="flex border rounded-lg overflow-hidden">
             <Button
