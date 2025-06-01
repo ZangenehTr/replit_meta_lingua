@@ -97,6 +97,25 @@ export function AdminStudents() {
     });
   };
 
+  // Handle course selection for editing student
+  const handleEditCourseSelection = (courseId: number, selected: boolean) => {
+    setEditingStudent(prev => {
+      if (!prev) return prev;
+      
+      let updatedCourses;
+      if (selected) {
+        updatedCourses = [...prev.selectedCourses, courseId];
+      } else {
+        updatedCourses = prev.selectedCourses.filter(id => id !== courseId);
+      }
+      
+      return {
+        ...prev,
+        selectedCourses: updatedCourses
+      };
+    });
+  };
+
   // Fetch students data
   const { data: students, isLoading } = useQuery({
     queryKey: ['/api/students/list', { search: searchTerm, status: filterStatus }],
@@ -264,6 +283,12 @@ export function AdminStudents() {
   };
 
   const handleEditStudent = (student: any) => {
+    // Map course names to course IDs
+    const selectedCourseIds = student.courses?.map((courseName: string) => {
+      const course = coursesList.find((c: any) => c.title === courseName);
+      return course?.id;
+    }).filter(Boolean) || [];
+
     setEditingStudent({
       ...student,
       birthday: student.birthday ? new Date(student.birthday) : null,
@@ -271,7 +296,7 @@ export function AdminStudents() {
       guardianName: student.guardianName || '',
       guardianPhone: student.guardianPhone || '',
       notes: student.notes || '',
-      selectedCourses: student.courses?.map((c: any) => c.id) || [],
+      selectedCourses: selectedCourseIds,
       status: student.status || 'active'
     });
     setIsEditDialogOpen(true);
@@ -830,12 +855,7 @@ export function AdminStudents() {
                           type="checkbox"
                           id={`edit-course-${course.id}`}
                           checked={editingStudent.selectedCourses?.includes(course.id) || false}
-                          onChange={(e) => {
-                            const updatedCourses = e.target.checked 
-                              ? [...(editingStudent.selectedCourses || []), course.id]
-                              : (editingStudent.selectedCourses || []).filter(id => id !== course.id);
-                            setEditingStudent({...editingStudent, selectedCourses: updatedCourses});
-                          }}
+                          onChange={(e) => handleEditCourseSelection(course.id, e.target.checked)}
                           className="rounded border-gray-300"
                         />
                         <label htmlFor={`edit-course-${course.id}`} className="text-sm font-medium">
