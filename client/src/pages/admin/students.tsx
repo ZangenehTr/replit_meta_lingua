@@ -1212,9 +1212,207 @@ export function AdminStudents() {
                 </div>
                 <div className="col-span-2">
                   <div className="flex gap-1">
-                    <Button variant="outline" size="sm" onClick={() => setSelectedStudent(student)}>
-                      <Eye className="h-3 w-3" />
-                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl">
+                        <DialogHeader>
+                          <DialogTitle>Student Profile: {student.firstName} {student.lastName}</DialogTitle>
+                        </DialogHeader>
+                        
+                        <Tabs defaultValue="overview" className="w-full">
+                          <TabsList className="grid w-full grid-cols-4">
+                            <TabsTrigger value="overview">Overview</TabsTrigger>
+                            <TabsTrigger value="academic">Academic</TabsTrigger>
+                            <TabsTrigger value="communication">Communication</TabsTrigger>
+                            <TabsTrigger value="reports">Reports</TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="overview" className="space-y-4">
+                            <div className="grid grid-cols-2 gap-6">
+                              <Card>
+                                <CardHeader>
+                                  <CardTitle className="text-lg">Personal Information</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                  <div className="flex items-center gap-2">
+                                    <Mail className="h-4 w-4 text-gray-500" />
+                                    <span>{student.email}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Phone className="h-4 w-4 text-gray-500" />
+                                    <span>{student.phone}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                                    <span>Enrolled: {new Date(student.enrollmentDate).toLocaleDateString()}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-gray-500" />
+                                    <span>Last Active: {student.lastActivity}</span>
+                                  </div>
+                                </CardContent>
+                              </Card>
+
+                              <Card>
+                                <CardHeader>
+                                  <CardTitle className="text-lg">Academic Progress</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                  <div className="space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                      <span>Overall Progress</span>
+                                      <span>{student.progress}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                      <div 
+                                        className="bg-blue-600 h-2 rounded-full" 
+                                        style={{ width: `${student.progress}%` }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                      <span>Attendance</span>
+                                      <span>{student.attendance}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                      <div 
+                                        className="bg-green-600 h-2 rounded-full" 
+                                        style={{ width: `${student.attendance}%` }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="text-sm text-gray-600">Level: </span>
+                                    <Badge className={getLevelColor(student.level)}>
+                                      {student.level}
+                                    </Badge>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </div>
+
+                            <Card>
+                              <CardHeader>
+                                <CardTitle className="text-lg">Enrolled Courses</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-2">
+                                  {student.courses?.length > 0 ? (
+                                    student.courses.map((course, index) => (
+                                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                        <span>{course}</span>
+                                        <Badge variant="outline">Active</Badge>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <p className="text-gray-500">No courses enrolled</p>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </TabsContent>
+                          
+                          <TabsContent value="academic" className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <Card>
+                                <CardHeader>
+                                  <CardTitle>Recent Assignments</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="space-y-3">
+                                    <div className="flex justify-between items-center p-2 border rounded">
+                                      <span>Grammar Exercise 1</span>
+                                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                                    </div>
+                                    <div className="flex justify-between items-center p-2 border rounded">
+                                      <span>Vocabulary Quiz</span>
+                                      <Badge className="bg-yellow-100 text-yellow-800">In Progress</Badge>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                              
+                              <Card>
+                                <CardHeader>
+                                  <CardTitle>Performance Metrics</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="space-y-3">
+                                    <div className="flex justify-between">
+                                      <span>Average Score</span>
+                                      <span className="font-bold">85%</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Completed Lessons</span>
+                                      <span className="font-bold">24/30</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Study Hours</span>
+                                      <span className="font-bold">48h</span>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </div>
+                          </TabsContent>
+                          
+                          <TabsContent value="communication" className="space-y-4">
+                            <Card>
+                              <CardHeader>
+                                <CardTitle>Communication History</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-3">
+                                  <div className="p-3 border rounded">
+                                    <div className="flex justify-between text-sm text-gray-600 mb-1">
+                                      <span>Email</span>
+                                      <span>2 days ago</span>
+                                    </div>
+                                    <p>Welcome to your new course! Here are the materials...</p>
+                                  </div>
+                                  <div className="p-3 border rounded">
+                                    <div className="flex justify-between text-sm text-gray-600 mb-1">
+                                      <span>SMS</span>
+                                      <span>1 week ago</span>
+                                    </div>
+                                    <p>Reminder: Your lesson is tomorrow at 3 PM</p>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </TabsContent>
+                          
+                          <TabsContent value="reports" className="space-y-4">
+                            <Card>
+                              <CardHeader>
+                                <CardTitle>Progress Reports</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-3">
+                                  <Button variant="outline" className="w-full justify-start">
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    Monthly Progress Report - December 2024
+                                  </Button>
+                                  <Button variant="outline" className="w-full justify-start">
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    Attendance Report - December 2024
+                                  </Button>
+                                  <Button variant="outline" className="w-full justify-start">
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    Grade Report - December 2024
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </TabsContent>
+                        </Tabs>
+                      </DialogContent>
+                    </Dialog>
                     <Button variant="outline" size="sm" onClick={() => handleEditStudent(student)}>
                       <Edit3 className="h-3 w-3" />
                     </Button>
