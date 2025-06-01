@@ -131,6 +131,7 @@ export function AdminStudents() {
 
   console.log('AdminStudents component rendered');
   console.log('Students data:', students);
+  console.log('Available courses in component:', coursesList);
   console.log('Is loading:', isLoading);
 
   // Create student mutation
