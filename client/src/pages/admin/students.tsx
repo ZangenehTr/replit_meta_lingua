@@ -132,6 +132,7 @@ export function AdminStudents() {
   console.log('AdminStudents component rendered');
   console.log('Students data:', students);
   console.log('Available courses in component:', coursesList);
+  console.log('Course titles:', coursesList.map(c => c.title));
   console.log('Is loading:', isLoading);
 
   // Create student mutation
@@ -1422,7 +1423,10 @@ export function AdminStudents() {
                         </Tabs>
                       </DialogContent>
                     </Dialog>
-                    <Button variant="outline" size="sm" onClick={() => handleEditStudent(student)}>
+                    <Button variant="outline" size="sm" onClick={() => {
+                      console.log('Edit button clicked for student:', student.firstName, student.lastName);
+                      handleEditStudent(student);
+                    }}>
                       <Edit3 className="h-3 w-3" />
                     </Button>
                     <Dialog>
