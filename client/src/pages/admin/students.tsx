@@ -1151,8 +1151,11 @@ export function AdminStudents() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => {
-                    console.log('Edit button clicked for student:', student.firstName, student.lastName);
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('CARD EDIT BUTTON CLICKED - Student:', student.firstName, student.lastName);
+                    console.log('Student data:', student);
                     handleEditStudent(student);
                   }}
                 >
