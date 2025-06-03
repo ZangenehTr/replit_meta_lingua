@@ -40,6 +40,15 @@ export const userProfiles = pgTable("user_profiles", {
   strengths: text("strengths").array().default([]), // memory, pattern_recognition, analytical, creative
   interests: text("interests").array().default([]), // business, travel, culture, technology, arts, sports
   bio: text("bio"),
+  
+  // Student-specific fields
+  nationalId: text("national_id"),
+  dateOfBirth: date("date_of_birth"),
+  guardianName: text("guardian_name"),
+  guardianPhone: text("guardian_phone"),
+  notes: text("notes"),
+  currentLevel: text("current_level"), // Override for display level
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
