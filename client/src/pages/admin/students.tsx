@@ -285,15 +285,29 @@ export function AdminStudents() {
   };
 
   const handleEditStudent = (student: any) => {
-    // Debug logging
-    console.log('Editing student:', student);
+    console.log('EDIT FUNCTION CALLED - Student:', student.firstName, student.lastName);
     console.log('Student courses:', student.courses);
     console.log('Available courses:', coursesList);
     
-    // Map course names to course IDs
+    // Improved course mapping with fuzzy matching
     const selectedCourseIds = student.courses?.map((courseName: string) => {
-      const course = coursesList.find((c: any) => c.title === courseName);
-      console.log(`Mapping course "${courseName}" to ID:`, course?.id);
+      // First try exact match
+      let course = coursesList.find((c: any) => c.title === courseName);
+      
+      // If no exact match, try partial matching
+      if (!course) {
+        course = coursesList.find((c: any) => 
+          c.title.toLowerCase().includes(courseName.toLowerCase()) ||
+          courseName.toLowerCase().includes(c.title.toLowerCase())
+        );
+      }
+      
+      // Special mappings for known mismatches
+      if (!course && courseName === "Business Communication") {
+        course = coursesList.find((c: any) => c.title === "Business English for Iranians");
+      }
+      
+      console.log(`Mapping course "${courseName}" to:`, course?.title, `(ID: ${course?.id})`);
       return course?.id;
     }).filter(Boolean) || [];
 
