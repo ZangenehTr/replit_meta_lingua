@@ -210,6 +210,15 @@ export class DatabaseStorage implements IStorage {
     return newEnrollment;
   }
 
+  async unenrollFromCourse(userId: number, courseId: number): Promise<void> {
+    await db
+      .delete(enrollments)
+      .where(and(
+        eq(enrollments.userId, userId),
+        eq(enrollments.courseId, courseId)
+      ));
+  }
+
   // Sessions
   async getUserSessions(userId: number): Promise<(Session & { tutorName: string })[]> {
     const userSessions = await db
