@@ -1220,6 +1220,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Failed to update student" });
       }
 
+      // Update student profile data if provided
+      if (nationalId !== undefined || birthday !== undefined || level !== undefined || 
+          guardianName !== undefined || guardianPhone !== undefined || notes !== undefined) {
+        
+        console.log('Updating student profile with:', { nationalId, birthday, level, guardianName, guardianPhone, notes });
+        
+        try {
+          const profileData: any = {};
+          if (nationalId !== undefined) profileData.nationalId = nationalId;
+          if (birthday !== undefined) profileData.dateOfBirth = birthday;
+          if (level !== undefined) profileData.currentLevel = level;
+          if (guardianName !== undefined) profileData.guardianName = guardianName;
+          if (guardianPhone !== undefined) profileData.guardianPhone = guardianPhone;
+          if (notes !== undefined) profileData.notes = notes;
+
+          await storage.updateUserProfile(studentId, profileData);
+          console.log('Student profile updated successfully');
+        } catch (profileError) {
+          console.error('Error updating student profile:', profileError);
+          // Don't fail the entire request if profile update fails
+        }
+      }
+
       // Handle course enrollments if selectedCourses is provided
       if (selectedCourses && Array.isArray(selectedCourses)) {
         console.log('Processing course enrollments:', selectedCourses);
