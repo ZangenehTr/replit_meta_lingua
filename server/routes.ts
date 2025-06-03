@@ -1202,7 +1202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = parseInt(req.params.id);
       const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes, selectedCourses, status } = req.body;
       
-      console.log('Updating student with data:', { studentId, firstName, lastName, email, phone, selectedCourses });
+      console.log('Updating student with data:', { studentId, firstName, lastName, email, phone, birthday, level, status, selectedCourses });
       
       // Get the existing student
       const existingStudent = await storage.getUser(studentId);
