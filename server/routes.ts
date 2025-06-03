@@ -94,12 +94,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             email: student.email,
             phone: student.phoneNumber || '',
             status: student.isActive ? 'active' : 'inactive',
-            level: profile?.proficiencyLevel || 'Beginner',
-            progress: 65, // Default for now
-            attendance: 85, // Default for now
+            level: profile?.currentLevel || 'Beginner',
+            nationalId: profile?.nationalId || '',
+            birthday: profile?.dateOfBirth || null,
+            guardianName: profile?.guardianName || '',
+            guardianPhone: profile?.guardianPhone || '',
+            notes: profile?.notes || '',
+            progress: 65,
+            attendance: 85,
             courses: userCourses.map(c => c.title),
             enrollmentDate: student.createdAt,
-            lastActivity: '2 days ago', // Default for now
+            lastActivity: '2 days ago',
             avatar: student.avatar || '/api/placeholder/40/40'
           });
         } catch (studentError) {
