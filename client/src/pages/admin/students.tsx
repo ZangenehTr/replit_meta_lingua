@@ -99,15 +99,27 @@ export function AdminStudents() {
 
   // Handle course selection for editing student
   const handleEditCourseSelection = (courseId: number, selected: boolean) => {
+    console.log(`Course selection changed: Course ${courseId}, Selected: ${selected}`);
+    
     setEditingStudent(prev => {
       if (!prev) return prev;
       
+      const currentSelectedCourses = prev.selectedCourses || [];
       let updatedCourses;
+      
       if (selected) {
-        updatedCourses = [...prev.selectedCourses, courseId];
+        // Add course if not already selected
+        if (!currentSelectedCourses.includes(courseId)) {
+          updatedCourses = [...currentSelectedCourses, courseId];
+        } else {
+          updatedCourses = currentSelectedCourses;
+        }
       } else {
-        updatedCourses = prev.selectedCourses.filter(id => id !== courseId);
+        // Remove course if selected
+        updatedCourses = currentSelectedCourses.filter(id => id !== courseId);
       }
+      
+      console.log('Updated selected courses:', updatedCourses);
       
       return {
         ...prev,
