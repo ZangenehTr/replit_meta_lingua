@@ -82,6 +82,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           try {
             profile = await storage.getUserProfile(student.id);
+            console.log(`Profile for student ${student.id}:`, profile ? {
+              nationalId: profile.nationalId,
+              currentLevel: profile.currentLevel,
+              guardianName: profile.guardianName,
+              notes: profile.notes
+            } : 'No profile found');
           } catch (profileError) {
             console.error(`Error fetching profile for student ${student.id}:`, profileError);
             profile = null;
