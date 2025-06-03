@@ -284,6 +284,8 @@ export function AdminStudents() {
     }
   };
 
+
+
   const handleEditStudent = (student: any) => {
     console.log('EDIT FUNCTION CALLED - Student:', student.firstName, student.lastName);
     console.log('Student courses:', student.courses);
@@ -998,11 +1000,15 @@ export function AdminStudents() {
               <div className="text-sm">
                 <p className="text-gray-600">Courses:</p>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {student.courses.map((course, idx) => (
-                    <Badge key={idx} variant="outline" className="text-xs">
-                      {course}
-                    </Badge>
-                  ))}
+                  {student.courses && student.courses.length > 0 ? (
+                    student.courses.map((course, idx) => (
+                      <Badge key={idx} variant="outline" className="text-xs">
+                        {course}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-gray-400 text-xs">No courses enrolled</span>
+                  )}
                 </div>
               </div>
 
