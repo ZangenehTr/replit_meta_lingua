@@ -94,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             email: student.email,
             phone: student.phoneNumber || '',
             status: student.isActive ? 'active' : 'inactive',
-            level: profile?.currentLevel || 'Beginner',
+            level: profile?.currentLevel || profile?.proficiencyLevel || 'Beginner',
             nationalId: profile?.nationalId || '',
             birthday: profile?.dateOfBirth || null,
             guardianName: profile?.guardianName || '',
@@ -1232,6 +1232,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Updating student profile with:', { nationalId, birthday, level, guardianName, guardianPhone, notes });
         
         try {
+          // Check if profile exists, create if it doesn't
+          let profile = await storage.getUserProfile(studentId);
+          
+          if (!profile) {
+            console.log('Creating new profile for student:', studentId);
+            profile = await storage.createUserProfile({
+              userId: studentId,
+              nativeLanguage: 'en',
+              targetLanguages: [],
+              proficiencyLevel: level || 'beginner'
+            });
+          }
+
           const profileData: any = {};
           if (nationalId !== undefined) profileData.nationalId = nationalId;
           if (birthday !== undefined) profileData.dateOfBirth = birthday;
