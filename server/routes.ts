@@ -1189,7 +1189,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/students/:id", async (req: any, res) => {
     try {
       const studentId = parseInt(req.params.id);
-      const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes } = req.body;
+      const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes, selectedCourses } = req.body;
+      
+      console.log('Updating student with data:', { studentId, firstName, lastName, email, phone, selectedCourses });
       
       // Get the existing student
       const existingStudent = await storage.getUser(studentId);
@@ -1216,6 +1218,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedStudent = await storage.updateUser(studentId, updateData);
       if (!updatedStudent) {
         return res.status(404).json({ message: "Failed to update student" });
+      }
+
+      // Handle course enrollments if selectedCourses is provided
+      if (selectedCourses && Array.isArray(selectedCourses)) {
+        console.log('Processing course enrollments:', selectedCourses);
+        
+        // Get current enrollments
+        const currentEnrollments = await storage.getUserCourses(studentId);
+        const currentCourseIds = currentEnrollments.map(c => c.id);
+        
+        console.log('Current enrollments:', currentCourseIds);
+        
+        // Determine courses to add and remove
+        const coursesToAdd = selectedCourses.filter(courseId => !currentCourseIds.includes(courseId));
+        const coursesToRemove = currentCourseIds.filter(courseId => !selectedCourses.includes(courseId));
+        
+        console.log('Courses to add:', coursesToAdd);
+        console.log('Courses to remove:', coursesToRemove);
+        
+        // Add new enrollments
+        for (const courseId of coursesToAdd) {
+          try {
+            await storage.enrollInCourse({
+              userId: studentId,
+              courseId
+            });
+            console.log(`Enrolled student ${studentId} in course ${courseId}`);
+          } catch (error) {
+            console.error(`Failed to enroll in course ${courseId}:`, error);
+          }
+        }
+        
+        // Remove old enrollments (we'll need to add this method to storage)
+        for (const courseId of coursesToRemove) {
+          try {
+            await storage.unenrollFromCourse(studentId, courseId);
+            console.log(`Unenrolled student ${studentId} from course ${courseId}`);
+          } catch (error) {
+            console.error(`Failed to unenroll from course ${courseId}:`, error);
+          }
+        }
       }
 
       res.json({

@@ -48,6 +48,7 @@ export interface IStorage {
   getUserCourses(userId: number): Promise<(Course & { progress: number })[]>;
   createCourse(course: InsertCourse): Promise<Course>;
   enrollInCourse(enrollment: InsertEnrollment): Promise<Enrollment>;
+  unenrollFromCourse(userId: number, courseId: number): Promise<void>;
 
   // Sessions
   getUserSessions(userId: number): Promise<(Session & { tutorName: string })[]>;
