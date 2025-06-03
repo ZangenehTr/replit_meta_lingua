@@ -1200,7 +1200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/students/:id", async (req: any, res) => {
     try {
       const studentId = parseInt(req.params.id);
-      const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes, selectedCourses } = req.body;
+      const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes, selectedCourses, status } = req.body;
       
       console.log('Updating student with data:', { studentId, firstName, lastName, email, phone, selectedCourses });
       
@@ -1223,7 +1223,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName,
         lastName,
         email,
-        phoneNumber: phone
+        phoneNumber: phone,
+        isActive: status === 'active'
       };
 
       const updatedStudent = await storage.updateUser(studentId, updateData);
@@ -1253,7 +1254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const profileData: any = {};
           if (nationalId !== undefined) profileData.nationalId = nationalId;
-          if (birthday !== undefined) profileData.dateOfBirth = birthday;
+          if (birthday !== undefined) profileData.dateOfBirth = birthday ? new Date(birthday).toISOString().split('T')[0] : null;
           if (level !== undefined) profileData.currentLevel = level;
           if (guardianName !== undefined) profileData.guardianName = guardianName;
           if (guardianPhone !== undefined) profileData.guardianPhone = guardianPhone;

@@ -184,6 +184,8 @@ export function AdminStudents() {
         body: JSON.stringify(studentData)
       }),
     onSuccess: () => {
+      // Force cache invalidation and immediate refetch
+      queryClient.removeQueries({ queryKey: ['/api/students/list'] });
       queryClient.invalidateQueries({ queryKey: ['/api/students/list'] });
       queryClient.refetchQueries({ queryKey: ['/api/students/list'] });
       setIsEditDialogOpen(false);
