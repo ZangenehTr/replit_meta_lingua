@@ -353,13 +353,17 @@ export function AdminStudents() {
     }
 
     try {
+      console.log('Frontend birthday value before processing:', editingStudent.birthday);
+      const birthdayValue = editingStudent.birthday ? editingStudent.birthday.toISOString() : null;
+      console.log('Frontend birthday value after processing:', birthdayValue);
+      
       const studentData = {
         firstName: editingStudent.firstName,
         lastName: editingStudent.lastName,
         email: editingStudent.email,
         phone: editingStudent.phone,
         nationalId: editingStudent.nationalId,
-        birthday: editingStudent.birthday ? editingStudent.birthday.toISOString() : null,
+        birthday: birthdayValue,
         level: editingStudent.level,
         guardianName: editingStudent.guardianName,
         guardianPhone: editingStudent.guardianPhone,
@@ -367,6 +371,8 @@ export function AdminStudents() {
         status: editingStudent.status,
         selectedCourses: editingStudent.selectedCourses || []
       };
+      
+      console.log('Complete student data being sent:', studentData);
 
       await editStudentMutation.mutateAsync({ id: editingStudent.id, studentData });
       toast({

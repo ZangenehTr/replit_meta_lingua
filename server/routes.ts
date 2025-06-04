@@ -1236,6 +1236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (nationalId !== undefined || birthday !== undefined || level !== undefined || 
           guardianName !== undefined || guardianPhone !== undefined || notes !== undefined) {
         
+        console.log('Backend received birthday value:', birthday, 'type:', typeof birthday);
         console.log('Updating student profile with:', { nationalId, birthday, level, guardianName, guardianPhone, notes });
         
         try {
