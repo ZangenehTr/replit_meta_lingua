@@ -1255,7 +1255,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const profileData: any = {};
           if (nationalId !== undefined) profileData.nationalId = nationalId;
-          if (birthday !== undefined) profileData.dateOfBirth = birthday ? new Date(birthday) : null;
+          if (birthday !== undefined) {
+            profileData.dateOfBirth = birthday ? new Date(birthday) : null;
+            console.log('Setting dateOfBirth to:', profileData.dateOfBirth);
+          }
           if (level !== undefined) profileData.currentLevel = level;
           if (guardianName !== undefined) profileData.guardianName = guardianName;
           if (guardianPhone !== undefined) profileData.guardianPhone = guardianPhone;
