@@ -1254,7 +1254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const profileData: any = {};
           if (nationalId !== undefined) profileData.nationalId = nationalId;
-          if (birthday !== undefined) profileData.dateOfBirth = birthday ? new Date(birthday).toISOString().split('T')[0] : null;
+          if (birthday !== undefined) profileData.dateOfBirth = birthday ? new Date(birthday) : null;
           if (level !== undefined) profileData.currentLevel = level;
           if (guardianName !== undefined) profileData.guardianName = guardianName;
           if (guardianPhone !== undefined) profileData.guardianPhone = guardianPhone;
@@ -1285,8 +1285,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Courses to add:', coursesToAdd);
         console.log('Courses to remove:', coursesToRemove);
         
+        // Get all available courses to validate course IDs
+        const allCourses = await storage.getCourses();
+        const validCourseIds = allCourses.map(c => c.id);
+        
+        // Filter out invalid course IDs
+        const validCoursesToAdd = coursesToAdd.filter(courseId => validCourseIds.includes(courseId));
+        const invalidCourseIds = coursesToAdd.filter(courseId => !validCourseIds.includes(courseId));
+        
+        if (invalidCourseIds.length > 0) {
+          console.log('Invalid course IDs detected:', invalidCourseIds);
+        }
+        
         // Add new enrollments
-        for (const courseId of coursesToAdd) {
+        for (const courseId of validCoursesToAdd) {
           try {
             await storage.enrollInCourse({
               userId: studentId,
