@@ -38,11 +38,19 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
         const newDate = new Date(yearNum, monthNum - 1, dayNum);
         // Validate the date is actually valid (handles things like Feb 30)
         if (newDate.getDate() === dayNum && newDate.getMonth() === monthNum - 1 && newDate.getFullYear() === yearNum) {
+          console.log('SimpleDateInput: Creating valid date:', newDate);
           onChange?.(newDate);
+        } else {
+          console.log('SimpleDateInput: Invalid date combination:', { day, month, year });
         }
+      } else {
+        console.log('SimpleDateInput: Date values out of range:', { day, month, year });
       }
     } else if (!day && !month && !year) {
+      console.log('SimpleDateInput: Clearing date (all fields empty)');
       onChange?.(null);
+    } else {
+      console.log('SimpleDateInput: Partial date entry:', { day, month, year });
     }
   }, [day, month, year, onChange]);
 

@@ -1286,6 +1286,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const coursesToAdd = selectedCourses.filter(courseId => !currentCourseIds.includes(courseId));
         const coursesToRemove = currentCourseIds.filter(courseId => !selectedCourses.includes(courseId));
         
+        console.log('Selected courses:', selectedCourses);
+        console.log('Current course IDs:', currentCourseIds);
+        console.log('Courses to add:', coursesToAdd);
+        console.log('Courses to remove:', coursesToRemove);
+        
         console.log('Courses to add:', coursesToAdd);
         console.log('Courses to remove:', coursesToRemove);
         
