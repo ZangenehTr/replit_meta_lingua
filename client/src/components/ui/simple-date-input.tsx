@@ -16,11 +16,17 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
 
   // Initialize from value prop
   useEffect(() => {
-    if (value) {
-      setDay(value.getDate().toString().padStart(2, '0'));
-      setMonth((value.getMonth() + 1).toString().padStart(2, '0'));
-      setYear(value.getFullYear().toString());
+    console.log('SimpleDateInput: Received value prop:', value);
+    if (value && value instanceof Date && !isNaN(value.getTime())) {
+      const day = value.getDate().toString().padStart(2, '0');
+      const month = (value.getMonth() + 1).toString().padStart(2, '0');
+      const year = value.getFullYear().toString();
+      console.log('SimpleDateInput: Setting date fields:', { day, month, year });
+      setDay(day);
+      setMonth(month);
+      setYear(year);
     } else {
+      console.log('SimpleDateInput: Clearing date fields (invalid or null value)');
       setDay("");
       setMonth("");
       setYear("");

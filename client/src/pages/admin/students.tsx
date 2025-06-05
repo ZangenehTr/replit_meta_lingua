@@ -305,7 +305,7 @@ export function AdminStudents() {
     console.log('Student courses:', student.courses);
     console.log('Available courses:', coursesList);
     
-    // Improved course mapping with fuzzy matching
+    // Fixed course mapping - only map courses that actually exist
     const selectedCourseIds = student.courses?.map((courseName: string) => {
       // First try exact match
       let course = coursesList.find((c: any) => c.title === courseName);
@@ -323,12 +323,19 @@ export function AdminStudents() {
         course = coursesList.find((c: any) => c.title === "Business English for Iranians");
       }
       
-      console.log(`Mapping course "${courseName}" to:`, course?.title, `(ID: ${course?.id})`);
-      return course?.id;
-    }).filter(Boolean) || [];
+      if (course) {
+        console.log(`Mapping course "${courseName}" to:`, course.title, `(ID: ${course.id})`);
+        return course.id;
+      } else {
+        console.log(`No matching course found for: "${courseName}"`);
+        return null;
+      }
+    }).filter(id => id !== null && id !== undefined) || [];
 
     console.log('Selected course IDs:', selectedCourseIds);
 
+    console.log('Student birthday data:', student.birthday);
+    
     setEditingStudent({
       ...student,
       birthday: student.birthday ? new Date(student.birthday) : null,
