@@ -65,11 +65,20 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
   }, [day, month, year, isInitialized]); // Removed onChange from dependencies
 
   const handleDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 2);
-    if (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 31)) {
-      setDay(value);
-      // Auto-advance to month field when day is complete
-      if (value.length === 2) {
+    const inputValue = e.target.value.replace(/\D/g, '').slice(0, 2);
+    
+    // Allow empty input
+    if (inputValue === '') {
+      setDay('');
+      return;
+    }
+    
+    // Validate range and set value
+    const numValue = parseInt(inputValue);
+    if (numValue >= 1 && numValue <= 31) {
+      setDay(inputValue);
+      // Auto-advance to month field when day is complete (2 digits)
+      if (inputValue.length === 2) {
         const monthInput = e.target.parentElement?.parentElement?.children[1]?.querySelector('input');
         monthInput?.focus();
       }
@@ -77,11 +86,20 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
   };
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 2);
-    if (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 12)) {
-      setMonth(value);
-      // Auto-advance to year field when month is complete
-      if (value.length === 2) {
+    const inputValue = e.target.value.replace(/\D/g, '').slice(0, 2);
+    
+    // Allow empty input
+    if (inputValue === '') {
+      setMonth('');
+      return;
+    }
+    
+    // Validate range and set value
+    const numValue = parseInt(inputValue);
+    if (numValue >= 1 && numValue <= 12) {
+      setMonth(inputValue);
+      // Auto-advance to year field when month is complete (2 digits)
+      if (inputValue.length === 2) {
         const yearInput = e.target.parentElement?.parentElement?.children[2]?.querySelector('input');
         yearInput?.focus();
       }
