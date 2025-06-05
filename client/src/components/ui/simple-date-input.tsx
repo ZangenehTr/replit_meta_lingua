@@ -62,7 +62,7 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
     } else {
       console.log('SimpleDateInput: Partial date entry:', { day, month, year });
     }
-  }, [day, month, year, onChange, isInitialized]);
+  }, [day, month, year, isInitialized]); // Removed onChange from dependencies
 
   const handleDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 2);
