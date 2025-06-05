@@ -67,42 +67,50 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
   const handleDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value.replace(/\D/g, '').slice(0, 2);
     
-    // Allow empty input
+    // Always allow the value change for empty or valid range
     if (inputValue === '') {
       setDay('');
       return;
     }
     
-    // Validate range and set value
     const numValue = parseInt(inputValue);
     if (numValue >= 1 && numValue <= 31) {
       setDay(inputValue);
       // Auto-advance to month field when day is complete (2 digits)
       if (inputValue.length === 2) {
-        const monthInput = e.target.parentElement?.parentElement?.children[1]?.querySelector('input');
-        monthInput?.focus();
+        setTimeout(() => {
+          const monthInput = e.target.parentElement?.parentElement?.children[1]?.querySelector('input');
+          monthInput?.focus();
+        }, 0);
       }
+    } else if (inputValue.length === 1) {
+      // Allow single digits even if they would be out of range when complete
+      setDay(inputValue);
     }
   };
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value.replace(/\D/g, '').slice(0, 2);
     
-    // Allow empty input
+    // Always allow the value change for empty or valid range
     if (inputValue === '') {
       setMonth('');
       return;
     }
     
-    // Validate range and set value
     const numValue = parseInt(inputValue);
     if (numValue >= 1 && numValue <= 12) {
       setMonth(inputValue);
       // Auto-advance to year field when month is complete (2 digits)
       if (inputValue.length === 2) {
-        const yearInput = e.target.parentElement?.parentElement?.children[2]?.querySelector('input');
-        yearInput?.focus();
+        setTimeout(() => {
+          const yearInput = e.target.parentElement?.parentElement?.children[2]?.querySelector('input');
+          yearInput?.focus();
+        }, 0);
       }
+    } else if (inputValue.length === 1) {
+      // Allow single digits even if they would be out of range when complete
+      setMonth(inputValue);
     }
   };
 
@@ -121,6 +129,7 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
             placeholder="DD"
             value={day}
             onChange={handleDayChange}
+            onFocus={(e) => e.target.select()}
             maxLength={2}
             className="text-center"
           />
@@ -132,6 +141,7 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
             placeholder="MM"
             value={month}
             onChange={handleMonthChange}
+            onFocus={(e) => e.target.select()}
             maxLength={2}
             className="text-center"
           />
