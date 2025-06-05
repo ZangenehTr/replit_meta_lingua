@@ -13,28 +13,32 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
   const [day, setDay] = useState("");
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize from value prop
   useEffect(() => {
     console.log('SimpleDateInput: Received value prop:', value);
     if (value && value instanceof Date && !isNaN(value.getTime())) {
-      const day = value.getDate().toString().padStart(2, '0');
-      const month = (value.getMonth() + 1).toString().padStart(2, '0');
-      const year = value.getFullYear().toString();
-      console.log('SimpleDateInput: Setting date fields:', { day, month, year });
-      setDay(day);
-      setMonth(month);
-      setYear(year);
+      const dayStr = value.getDate().toString().padStart(2, '0');
+      const monthStr = (value.getMonth() + 1).toString().padStart(2, '0');
+      const yearStr = value.getFullYear().toString();
+      console.log('SimpleDateInput: Setting date fields:', { day: dayStr, month: monthStr, year: yearStr });
+      setDay(dayStr);
+      setMonth(monthStr);
+      setYear(yearStr);
     } else {
       console.log('SimpleDateInput: Clearing date fields (invalid or null value)');
       setDay("");
       setMonth("");
       setYear("");
     }
+    setIsInitialized(true);
   }, [value]);
 
-  // Update parent when values change
+  // Update parent when values change (but only after initialization)
   useEffect(() => {
+    if (!isInitialized) return;
+    
     if (day && month && year) {
       const dayNum = parseInt(day);
       const monthNum = parseInt(month);
@@ -58,7 +62,7 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
     } else {
       console.log('SimpleDateInput: Partial date entry:', { day, month, year });
     }
-  }, [day, month, year, onChange]);
+  }, [day, month, year, onChange, isInitialized]);
 
   const handleDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 2);
