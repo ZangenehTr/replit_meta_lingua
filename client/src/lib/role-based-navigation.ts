@@ -19,6 +19,7 @@ export const getStudentNavigation = (t: any): NavigationItem[] => [
   { path: "/messages", icon: "MessageSquare", label: t('messages'), roles: ["student"] },
   { path: "/progress", icon: "TrendingUp", label: t('progress'), roles: ["student"] },
   { path: "/wallet", icon: "CreditCard", label: "کیف پول", roles: ["student"] },
+  { path: "/referrals", icon: "Share2", label: "سیستم معرفی", roles: ["student"] },
   { path: "/payment", icon: "DollarSign", label: t('credits'), roles: ["student"] },
 ];
 
