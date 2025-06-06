@@ -924,49 +924,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(payments);
   });
 
+  // Enhanced Shetab Payment Integration
   app.post("/api/payments/shetab/initiate", authenticateToken, async (req: any, res) => {
     try {
-      const { amount, creditsPurchase } = req.body;
+      const { amount, creditsPurchase, description } = req.body;
+      
+      // Validate amount
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid payment amount" });
+      }
 
-      const payment = await storage.createPayment({
-        userId: req.user.id,
-        amount: amount.toString(),
-        currency: "IRR",
-        creditsAwarded: creditsPurchase,
-        provider: "shetab"
+      // Get client IP and user agent for security
+      const ipAddress = req.ip || req.connection.remoteAddress;
+      const userAgent = req.get('User-Agent');
+
+      // Get user details for payment
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Import Shetab service
+      const { createShetabService } = await import('./shetab-service');
+      const shetabService = createShetabService();
+      
+      if (!shetabService) {
+        return res.status(503).json({ 
+          message: "Payment service temporarily unavailable. Please contact support.",
+          error: "SHETAB_NOT_CONFIGURED"
+        });
+      }
+
+      // Initialize payment
+      const paymentRequest = {
+        amount: parseInt(amount),
+        orderId: `ORDER_${Date.now()}_${req.user.id}`,
+        description: description || 'Language Learning Credits Purchase',
+        customerEmail: user.email,
+        customerPhone: user.phoneNumber,
+        metadata: {
+          creditsAwarded: creditsPurchase || 0,
+          userId: req.user.id
+        }
+      };
+
+      const result = await shetabService.initializePayment(
+        req.user.id,
+        paymentRequest,
+        ipAddress,
+        userAgent
+      );
+
+      res.json({
+        success: true,
+        paymentUrl: result.gatewayUrl,
+        transactionId: result.payment.merchantTransactionId,
+        amount: amount,
+        creditsAwarded: creditsPurchase || 0
       });
 
-      // Mock Shetab payment URL
-      const paymentUrl = `https://shetab.ir/payment/${payment.id}?amount=${amount}&callback=${encodeURIComponent(process.env.CALLBACK_URL || 'http://localhost:5000/api/payments/callback')}`;
-
-      res.json({ 
-        paymentUrl,
-        transactionId: payment.id
+    } catch (error: any) {
+      console.error('Shetab payment initiation error:', error);
+      res.status(400).json({ 
+        message: "Failed to initiate payment",
+        error: error.message
       });
-    } catch (error) {
-      res.status(400).json({ message: "Failed to initiate payment" });
     }
   });
 
-  app.post("/api/payments/callback", async (req, res) => {
+  // Shetab payment callback handler
+  app.post("/api/payments/shetab/callback", async (req, res) => {
     try {
-      const { transactionId, status } = req.body;
+      const callbackData = req.body;
+      console.log('Shetab callback received:', callbackData);
+
+      // Import Shetab service
+      const { createShetabService } = await import('./shetab-service');
+      const shetabService = createShetabService();
       
-      const payment = await storage.updatePaymentStatus(parseInt(transactionId), status);
-      
-      if (payment && status === "completed") {
-        // Award credits to user
-        const user = await storage.getUser(payment.userId);
-        if (user) {
-          await storage.updateUser(payment.userId, {
-            credits: (user.credits || 0) + (payment.creditsAwarded || 0)
-          });
-        }
+      if (!shetabService) {
+        return res.status(503).json({ message: "Payment service unavailable" });
       }
 
-      res.json({ message: "Payment processed" });
-    } catch (error) {
-      res.status(400).json({ message: "Payment callback failed" });
+      // Handle callback
+      const payment = await shetabService.handleCallback(callbackData);
+      
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+
+      // Create notification for user
+      await storage.createNotification({
+        userId: payment.userId,
+        title: payment.status === 'completed' ? "Payment Successful" : "Payment Failed",
+        message: payment.status === 'completed' 
+          ? `Your payment of ${payment.amount} IRR was successful. ${payment.creditsAwarded} credits have been added to your account.`
+          : `Your payment of ${payment.amount} IRR failed. ${payment.failureReason || 'Please try again.'}`,
+        type: payment.status === 'completed' ? "success" : "error"
+      });
+
+      // Redirect user based on payment status
+      const redirectUrl = payment.status === 'completed' 
+        ? `${process.env.FRONTEND_URL}/dashboard?payment=success`
+        : `${process.env.FRONTEND_URL}/dashboard?payment=failed`;
+
+      res.redirect(redirectUrl);
+
+    } catch (error: any) {
+      console.error('Shetab callback error:', error);
+      res.status(400).json({ message: "Payment callback processing failed" });
+    }
+  });
+
+  // Verify payment status endpoint
+  app.post("/api/payments/shetab/verify", authenticateToken, async (req: any, res) => {
+    try {
+      const { merchantTransactionId, gatewayTransactionId } = req.body;
+
+      if (!merchantTransactionId || !gatewayTransactionId) {
+        return res.status(400).json({ message: "Missing required transaction IDs" });
+      }
+
+      // Import Shetab service
+      const { createShetabService } = await import('./shetab-service');
+      const shetabService = createShetabService();
+      
+      if (!shetabService) {
+        return res.status(503).json({ message: "Payment service unavailable" });
+      }
+
+      // Verify payment
+      const verifyResult = await shetabService.verifyPayment(merchantTransactionId, gatewayTransactionId);
+      
+      res.json({
+        success: verifyResult.success,
+        status: verifyResult.status,
+        transactionId: verifyResult.transactionId,
+        referenceNumber: verifyResult.referenceNumber,
+        amount: verifyResult.amount,
+        error: verifyResult.error
+      });
+
+    } catch (error: any) {
+      console.error('Payment verification error:', error);
+      res.status(400).json({ 
+        message: "Payment verification failed",
+        error: error.message
+      });
     }
   });
 

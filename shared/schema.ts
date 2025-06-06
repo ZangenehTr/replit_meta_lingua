@@ -167,17 +167,27 @@ export const homework = pgTable("homework", {
   assignedAt: timestamp("assigned_at").defaultNow()
 });
 
-// Payment transactions
+// Payment transactions with enhanced Shetab integration
 export const payments = pgTable("payments", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   currency: text("currency").default("IRR"),
   creditsAwarded: integer("credits_awarded").default(0),
-  provider: text("provider").default("shetab"), // shetab, cash
+  provider: text("provider").default("shetab"), // shetab, cash, bank_transfer
   transactionId: text("transaction_id"),
-  status: text("status").default("pending"), // pending, completed, failed
-  createdAt: timestamp("created_at").defaultNow()
+  merchantTransactionId: text("merchant_transaction_id"), // Shetab merchant transaction ID
+  gatewayTransactionId: text("gateway_transaction_id"), // Shetab gateway transaction ID
+  referenceNumber: text("reference_number"), // Bank reference number
+  cardNumber: text("card_number"), // Last 4 digits of card
+  status: text("status").default("pending"), // pending, completed, failed, cancelled, reversed
+  failureReason: text("failure_reason"), // Error details for failed transactions
+  shetabResponse: jsonb("shetab_response"), // Full Shetab gateway response
+  ipAddress: text("ip_address"), // Client IP for security
+  userAgent: text("user_agent"), // Client user agent
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Notifications
