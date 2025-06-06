@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Share2, Users, TrendingUp, DollarSign, MessageSquare, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { BackButton } from '@/components/ui/back-button';
+import { useLanguage } from '@/hooks/use-language';
 
 interface ReferralSettings {
   id: number;
@@ -44,6 +46,7 @@ export default function ReferralsPage() {
   const [referredPercentage, setReferredPercentage] = useState(5);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { currentLanguage, t, isRTL } = useLanguage();
 
   useEffect(() => {
     fetchReferralData();
