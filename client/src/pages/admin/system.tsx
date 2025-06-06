@@ -466,6 +466,7 @@ export function AdminSystem() {
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="maintenance">System Maintenance</TabsTrigger>
         </TabsList>
         
         <TabsContent value="branding" className="space-y-4">
@@ -925,6 +926,211 @@ export function AdminSystem() {
                   <div>
                     <p className="font-medium">Failed login attempt</p>
                     <p className="text-sm text-gray-600">unknown@domain.com - 45.123.45.67 - 15 minutes ago</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="maintenance" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  System Backup
+                </CardTitle>
+                <CardDescription>
+                  Create and manage system backups
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded">
+                  <div>
+                    <span className="font-medium">Last Backup</span>
+                    <p className="text-sm text-gray-600">2 hours ago (347 MB)</p>
+                  </div>
+                  <Badge variant="outline" className="text-green-600 border-green-600">
+                    Success
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Backup Schedule</Label>
+                  <Select defaultValue="daily">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual Only</SelectItem>
+                      <SelectItem value="daily">Daily at 2 AM</SelectItem>
+                      <SelectItem value="weekly">Weekly (Sunday)</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button 
+                  className="w-full"
+                  onClick={handleCreateBackup}
+                  disabled={createBackupMutation.isPending}
+                >
+                  {createBackupMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Backup...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Create Backup Now
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  System Export
+                </CardTitle>
+                <CardDescription>
+                  Export system configuration and data
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <input type="checkbox" id="exportUsers" defaultChecked />
+                    <Label htmlFor="exportUsers">User Data</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input type="checkbox" id="exportCourses" defaultChecked />
+                    <Label htmlFor="exportCourses">Course Content</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input type="checkbox" id="exportSettings" defaultChecked />
+                    <Label htmlFor="exportSettings">System Settings</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input type="checkbox" id="exportBranding" />
+                    <Label htmlFor="exportBranding">Branding Assets</Label>
+                  </div>
+                </div>
+
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={handleExportConfiguration}
+                  disabled={exportMutation.isPending}
+                >
+                  {exportMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Export Configuration
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Maintenance Mode
+              </CardTitle>
+              <CardDescription>
+                Control system access during maintenance operations
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                <div>
+                  <span className="font-medium">Maintenance Mode</span>
+                  <p className="text-sm text-gray-600">
+                    {maintenanceMode ? 
+                      "System is currently in maintenance mode. Only admins can access." : 
+                      "System is operational. All users can access normally."
+                    }
+                  </p>
+                </div>
+                <Switch 
+                  checked={maintenanceMode}
+                  onCheckedChange={handleMaintenanceModeToggle}
+                />
+              </div>
+
+              {maintenanceMode && (
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-amber-800 dark:text-amber-200">
+                        System in Maintenance Mode
+                      </h4>
+                      <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                        Regular users cannot access the system. Only administrators can log in and perform operations.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="maintenanceMessage">Maintenance Message</Label>
+                <Textarea
+                  id="maintenanceMessage"
+                  placeholder="Enter a message to display to users during maintenance..."
+                  value="We're performing scheduled maintenance to improve your experience. We'll be back shortly!"
+                  rows={3}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>System Information</CardTitle>
+              <CardDescription>Current system status and information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">System Version:</span>
+                    <span className="text-sm font-medium">2.1.4</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Database Version:</span>
+                    <span className="text-sm font-medium">PostgreSQL 15.3</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Last Update:</span>
+                    <span className="text-sm font-medium">3 days ago</span>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Uptime:</span>
+                    <span className="text-sm font-medium">{systemData?.systemHealth?.uptime || "99.9%"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Active Users:</span>
+                    <span className="text-sm font-medium">{systemData?.systemHealth?.activeUsers || 1247}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">System Load:</span>
+                    <span className="text-sm font-medium">{systemData?.systemHealth?.systemLoad || "Normal"}</span>
                   </div>
                 </div>
               </div>
