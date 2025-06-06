@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { BackButton } from "@/components/ui/back-button";
+import { useLanguage } from "@/hooks/use-language";
 
 interface Tutor {
   id: number;
@@ -67,6 +69,7 @@ export default function TutorMarketplace() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currentLanguage, isRTL } = useLanguage();
 
   // Fetch tutors
   const { data: tutors, isLoading } = useQuery<Tutor[]>({
@@ -157,16 +160,23 @@ export default function TutorMarketplace() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
       <div className="border-b bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto p-6">
+          <div className="flex items-center gap-4 mb-6">
+            <BackButton href="/dashboard" />
+          </div>
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              بازار مربیان / Tutor Marketplace
+              {currentLanguage === 'fa' ? 'بازار مربیان' :
+               currentLanguage === 'ar' ? 'سوق المدرسين' :
+               'Tutor Marketplace'}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              بهترین مربیان زبان فارسی را پیدا کنید / Find the best Persian language tutors
+              {currentLanguage === 'fa' ? 'بهترین مربیان زبان را پیدا کنید' :
+               currentLanguage === 'ar' ? 'ابحث عن أفضل مدرسي اللغة' :
+               'Find the best language tutors'}
             </p>
           </div>
 
