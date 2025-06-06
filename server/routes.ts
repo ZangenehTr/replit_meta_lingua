@@ -3435,19 +3435,79 @@ Return JSON format:
     }
   });
 
-  // Referral System Routes
+  // Course Referral System Routes
   
-  // Get user's referral links
-  app.get("/api/referrals/links", authenticateToken, async (req: any, res) => {
+  // Generate "tell a friend" link for a specific course
+  app.post("/api/courses/:courseId/refer", authenticateToken, async (req: any, res) => {
     try {
-      const links = await storage.getUserReferralLinks(req.user.id);
-      res.json(links);
+      const courseId = parseInt(req.params.courseId);
+      const userId = req.user.id;
+      
+      // Generate unique referral code
+      const referralCode = `COURSE${courseId}_USER${userId}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+      
+      // Create course referral entry
+      const courseReferral = await storage.createCourseReferral({
+        referrerUserId: userId,
+        courseId,
+        referralCode
+      });
+      
+      // Generate shareable link
+      const shareUrl = `${req.protocol}://${req.get('host')}/course/${courseId}?ref=${referralCode}`;
+      
+      res.json({
+        referralCode,
+        shareUrl,
+        courseReferral
+      });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch referral links" });
+      res.status(500).json({ message: "Failed to create course referral" });
     }
   });
 
-  // Create new referral link
+  // Get user's referral settings
+  app.get("/api/referrals/settings", authenticateToken, async (req: any, res) => {
+    try {
+      const settings = await storage.getReferralSettings(req.user.id);
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch referral settings" });
+    }
+  });
+
+  // Update referral settings
+  app.post("/api/referrals/settings", authenticateToken, async (req: any, res) => {
+    try {
+      const { referrerPercentage, referredPercentage } = req.body;
+      
+      // Validate that total doesn't exceed 20%
+      if (referrerPercentage + referredPercentage > 20) {
+        return res.status(400).json({ message: "Total commission cannot exceed 20%" });
+      }
+      
+      const settings = await storage.updateReferralSettings(req.user.id, {
+        referrerPercentage,
+        referredPercentage
+      });
+      
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update referral settings" });
+    }
+  });
+
+  // Get referral statistics
+  app.get("/api/referrals/stats", authenticateToken, async (req: any, res) => {
+    try {
+      const stats = await storage.getReferralStats(req.user.id);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch referral stats" });
+    }
+  });
+
+  // Legacy route - to be removed
   app.post("/api/referrals/links", authenticateToken, async (req: any, res) => {
     try {
       const linkData = {
