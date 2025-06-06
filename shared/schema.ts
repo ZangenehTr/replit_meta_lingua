@@ -43,6 +43,11 @@ export const userProfiles = pgTable("user_profiles", {
   interests: text("interests").array().default([]), // business, travel, culture, technology, arts, sports
   bio: text("bio"),
   
+  // Learning goals and targets
+  targetLanguage: text("target_language"), // "persian", "english", "arabic", "german", etc.
+  currentProficiency: text("current_proficiency"), // "beginner", "intermediate", "advanced"
+  learningGoals: text("learning_goals").array().default([]), // "conversation", "business", "academic", "travel"
+  
   // Student-specific fields
   nationalId: text("national_id"),
   dateOfBirth: date("date_of_birth"),
@@ -95,11 +100,19 @@ export const courses = pgTable("courses", {
   totalSessions: integer("total_sessions").notNull(),
   sessionDuration: integer("session_duration").notNull(), // minutes per session (60, 90, 180)
   
-  // Scheduling
-  classType: text("class_type").notNull(), // "online" or "offline"
-  weekdays: text("weekdays").array().notNull(), // ["monday", "wednesday", "friday"]
-  startTime: text("start_time").notNull(), // "18:00"
-  endTime: text("end_time").notNull(), // "19:30"
+  // Course delivery and format
+  deliveryMode: text("delivery_mode").notNull(), // "online", "in_person", "self_paced"
+  classFormat: text("class_format").notNull(), // "group", "one_on_one" (not applicable for self_paced)
+  maxStudents: integer("max_students"), // null for one-on-one, number for group classes
+  
+  // Scheduling (not applicable for self_paced)
+  weekdays: text("weekdays").array(), // ["monday", "wednesday", "friday"]
+  startTime: text("start_time"), // "18:00"
+  endTime: text("end_time"), // "19:30"
+  
+  // Target language and proficiency (for matching students)
+  targetLanguage: text("target_language").notNull(), // "persian", "english", "arabic", etc.
+  targetLevel: text("target_level").array().notNull(), // ["beginner", "intermediate"] - levels this course is suitable for
   
   // Recording settings (for online classes)
   autoRecord: boolean("auto_record").default(false),
