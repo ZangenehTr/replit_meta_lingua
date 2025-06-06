@@ -1,737 +1,416 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Share2, Copy, Plus, Edit, TrendingUp, Users, Eye, DollarSign, Settings, Link as LinkIcon } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Share2, Users, TrendingUp, DollarSign, MessageSquare, Phone } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-interface ReferralLink {
+interface ReferralSettings {
   id: number;
-  title: string;
-  description: string;
-  referralCode: string;
-  selfCommissionRate: number;
-  referredCommissionRate: number;
-  totalClicks: number;
-  totalSignups: number;
-  totalEarnings: number;
-  isActive: boolean;
-  createdAt: string;
+  referrerPercentage: number;
+  referredPercentage: number;
+  totalReferrals: number;
+  totalEnrollments: number;
+  totalCommissionEarned: number;
 }
 
 interface ReferralStats {
-  totalLinks: number;
+  totalShares: number;
   totalClicks: number;
-  totalSignups: number;
-  totalEarnings: number;
-  pendingCommissions: number;
+  totalEnrollments: number;
+  totalCommissionEarned: number;
   conversionRate: number;
 }
 
-interface Commission {
+interface Course {
   id: number;
-  commissionType: string;
-  baseAmount: number;
-  commissionAmount: number;
-  referrerAmount: number;
-  referredAmount: number;
-  status: string;
-  createdAt: string;
+  title: string;
+  price: number;
+  thumbnail: string;
+  description: string;
+  language: string;
+  level: string;
 }
 
 export default function ReferralsPage() {
+  const [settings, setSettings] = useState<ReferralSettings | null>(null);
+  const [stats, setStats] = useState<ReferralStats | null>(null);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [referrerPercentage, setReferrerPercentage] = useState(15);
+  const [referredPercentage, setReferredPercentage] = useState(5);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingLink, setEditingLink] = useState<ReferralLink | null>(null);
 
-  const { data: referralLinks = [], isLoading: linksLoading } = useQuery<ReferralLink[]>({
-    queryKey: ["/api/referrals/links"]
-  });
+  useEffect(() => {
+    fetchReferralData();
+    fetchCourses();
+  }, []);
 
-  const { data: stats, isLoading: statsLoading } = useQuery<ReferralStats>({
-    queryKey: ["/api/referrals/stats"]
-  });
-
-  const { data: commissions = [], isLoading: commissionsLoading } = useQuery<Commission[]>({
-    queryKey: ["/api/referrals/commissions"]
-  });
-
-  const createLinkMutation = useMutation({
-    mutationFn: async (data: {
-      title: string;
-      description: string;
-      selfCommissionRate: number;
-      referredCommissionRate: number;
-    }) => {
-      return await apiRequest("/api/referrals/links", {
-        method: "POST",
-        body: JSON.stringify(data)
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/referrals/links"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/referrals/stats"] });
-      setIsCreateDialogOpen(false);
-      toast({
-        title: "لینک معرفی ایجاد شد",
-        description: "لینک معرفی جدید با موفقیت ایجاد شد",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "خطا",
-        description: "ایجاد لینک معرفی با خطا مواجه شد",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const updateLinkMutation = useMutation({
-    mutationFn: async (data: {
-      id: number;
-      title: string;
-      description: string;
-      selfCommissionRate: number;
-      referredCommissionRate: number;
-      isActive: boolean;
-    }) => {
-      return await apiRequest(`/api/referrals/links/${data.id}`, {
-        method: "PUT",
-        body: JSON.stringify(data)
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/referrals/links"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/referrals/stats"] });
-      setEditingLink(null);
-      toast({
-        title: "لینک معرفی بروزرسانی شد",
-        description: "تغییرات با موفقیت ذخیره شد",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "خطا",
-        description: "بروزرسانی لینک معرفی با خطا مواجه شد",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const copyToClipboard = async (text: string) => {
+  const fetchReferralData = async () => {
     try {
-      await navigator.clipboard.writeText(text);
-      toast({
-        title: "کپی شد",
-        description: "لینک در کلیپ‌بورد کپی شد",
-      });
-    } catch (err) {
+      const [settingsRes, statsRes] = await Promise.all([
+        fetch('/api/referrals/settings'),
+        fetch('/api/referrals/stats')
+      ]);
+
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        setSettings(settingsData);
+        setReferrerPercentage(settingsData.referrerPercentage);
+        setReferredPercentage(settingsData.referredPercentage);
+      }
+
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setStats(statsData);
+      }
+    } catch (error) {
+      console.error('Error fetching referral data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCourses = async () => {
+    try {
+      const response = await fetch('/api/courses');
+      if (response.ok) {
+        const coursesData = await response.json();
+        setCourses(coursesData);
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+    }
+  };
+
+  const updateReferralSettings = async () => {
+    if (referrerPercentage + referredPercentage > 20) {
       toast({
         title: "خطا",
-        description: "امکان کپی لینک وجود ندارد",
+        description: "مجموع درصد کمیسیون نمی‌تواند بیش از 20% باشد",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/referrals/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          referrerPercentage,
+          referredPercentage,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedSettings = await response.json();
+        setSettings(updatedSettings);
+        toast({
+          title: "موفق",
+          description: "تنظیمات کمیسیون بروزرسانی شد",
+        });
+      } else {
+        throw new Error('Failed to update settings');
+      }
+    } catch (error) {
+      toast({
+        title: "خطا",
+        description: "خطا در بروزرسانی تنظیمات",
         variant: "destructive",
       });
     }
   };
 
-  const getReferralUrl = (code: string) => {
-    return `${window.location.origin}/signup?ref=${code}`;
+  const generateCourseReferralLink = async (courseId: number) => {
+    try {
+      const response = await fetch(`/api/courses/${courseId}/refer`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.shareUrl;
+      }
+      throw new Error('Failed to generate referral link');
+    } catch (error) {
+      toast({
+        title: "خطا",
+        description: "خطا در ایجاد لینک معرفی",
+        variant: "destructive",
+      });
+      return null;
+    }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR').format(amount) + ' ریال';
+  const shareViaSMS = async (courseId: number, courseTitle: string) => {
+    const shareUrl = await generateCourseReferralLink(courseId);
+    if (shareUrl) {
+      const message = `سلام! دوره عالی "${courseTitle}" رو بهت پیشنهاد می‌دم. با این لینک ثبت‌نام کن و تخفیف بگیر: ${shareUrl}`;
+      window.open(`sms:?body=${encodeURIComponent(message)}`);
+    }
   };
+
+  const shareViaWhatsApp = async (courseId: number, courseTitle: string) => {
+    const shareUrl = await generateCourseReferralLink(courseId);
+    if (shareUrl) {
+      const message = `سلام! دوره عالی "${courseTitle}" رو بهت پیشنهاد می‌دم. با این لینک ثبت‌نام کن و تخفیف بگیر: ${shareUrl}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`);
+    }
+  };
+
+  const totalPercentage = referrerPercentage + referredPercentage;
+  const remainingPercentage = 20 - totalPercentage;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-6" dir="rtl">
+    <div className="p-6 max-w-7xl mx-auto" dir="rtl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">سیستم معرفی و کمیسیون</h1>
-        <p className="text-muted-foreground">
-          لینک‌های معرفی خود را ایجاد کنید و درآمد کسب کنید
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          سیستم معرفی دوره‌ها
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300">
+          با معرفی دوره‌ها به دوستان، کمیسیون دریافت کنید (حداکثر 20% از قیمت دوره)
         </p>
       </div>
 
-      {/* Stats Cards */}
-      {!statsLoading && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">تعداد لینک‌ها</p>
-                  <p className="text-2xl font-bold">{stats.totalLinks}</p>
-                </div>
-                <LinkIcon className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">کل کلیک‌ها</p>
-                  <p className="text-2xl font-bold">{stats.totalClicks}</p>
-                </div>
-                <Eye className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">ثبت‌نام‌ها</p>
-                  <p className="text-2xl font-bold">{stats.totalSignups}</p>
-                </div>
-                <Users className="h-8 w-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">کل درآمد</p>
-                  <p className="text-2xl font-bold">{formatCurrency(stats.totalEarnings)}</p>
-                </div>
-                <DollarSign className="h-8 w-8 text-yellow-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <Tabs defaultValue="links" className="space-y-6">
+      <Tabs defaultValue="settings" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="links">لینک‌های معرفی</TabsTrigger>
-          <TabsTrigger value="commissions">کمیسیون‌ها</TabsTrigger>
-          <TabsTrigger value="analytics">آمار تفصیلی</TabsTrigger>
+          <TabsTrigger value="settings">تنظیمات کمیسیون</TabsTrigger>
+          <TabsTrigger value="courses">معرفی دوره‌ها</TabsTrigger>
+          <TabsTrigger value="stats">آمار و گزارش</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="links" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold">لینک‌های معرفی شما</h2>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  ایجاد لینک جدید
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]" dir="rtl">
-                <CreateReferralLinkForm
-                  onSubmit={(data) => createLinkMutation.mutate(data)}
-                  isLoading={createLinkMutation.isPending}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          <div className="grid gap-6">
-            {linksLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i}>
-                    <CardContent className="p-6">
-                      <div className="animate-pulse space-y-4">
-                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : referralLinks.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Share2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">هنوز لینک معرفی‌ای ندارید</h3>
-                  <p className="text-muted-foreground mb-4">
-                    اولین لینک معرفی خود را ایجاد کنید و شروع به کسب درآمد کنید
+        <TabsContent value="settings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                تنظیمات توزیع کمیسیون
+              </CardTitle>
+              <CardDescription>
+                تعیین کنید که 20% کمیسیون چگونه بین شما و فرد معرفی‌شده تقسیم شود
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="referrer">درصد کمیسیون شما</Label>
+                  <Input
+                    id="referrer"
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={referrerPercentage}
+                    onChange={(e) => setReferrerPercentage(Number(e.target.value))}
+                  />
+                  <p className="text-sm text-gray-500">
+                    درصدی که شما از هر فروش دریافت می‌کنید
                   </p>
-                  <Button onClick={() => setIsCreateDialogOpen(true)}>
-                    ایجاد اولین لینک
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              referralLinks.map((link) => (
-                <ReferralLinkCard
-                  key={link.id}
-                  link={link}
-                  onEdit={setEditingLink}
-                  onCopy={copyToClipboard}
-                  getReferralUrl={getReferralUrl}
-                />
-              ))
-            )}
-          </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="referred">درصد تخفیف فرد معرفی‌شده</Label>
+                  <Input
+                    id="referred"
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={referredPercentage}
+                    onChange={(e) => setReferredPercentage(Number(e.target.value))}
+                  />
+                  <p className="text-sm text-gray-500">
+                    درصد تخفیفی که فرد معرفی‌شده دریافت می‌کند
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span>مجموع استفاده شده:</span>
+                  <span className={totalPercentage > 20 ? 'text-red-500' : 'text-green-500'}>
+                    {totalPercentage}%
+                  </span>
+                </div>
+                <Progress value={Math.min(totalPercentage, 20)} className="w-full" />
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>باقی‌مانده: {Math.max(remainingPercentage, 0)}%</span>
+                  <span>حداکثر: 20%</span>
+                </div>
+              </div>
+
+              {totalPercentage > 20 && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-700 text-sm">
+                    مجموع درصدها نمی‌تواند بیش از 20% باشد
+                  </p>
+                </div>
+              )}
+
+              <Button 
+                onClick={updateReferralSettings} 
+                className="w-full"
+                disabled={totalPercentage > 20}
+              >
+                ذخیره تنظیمات
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="commissions" className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-semibold mb-4">تاریخچه کمیسیون‌ها</h2>
-            
-            {commissionsLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i}>
-                    <CardContent className="p-4">
-                      <div className="animate-pulse space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : commissions.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">هنوز کمیسیونی دریافت نکرده‌اید</h3>
-                  <p className="text-muted-foreground">
-                    با معرفی دوستان و دانشجویان جدید، کمیسیون کسب کنید
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {commissions.map((commission) => (
-                  <Card key={commission.id}>
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Badge variant={commission.status === 'paid' ? 'default' : 'secondary'}>
-                              {commission.status === 'paid' ? 'پرداخت شده' : 'در انتظار'}
-                            </Badge>
-                            <span className="text-sm text-muted-foreground">
-                              {commission.commissionType === 'payment' ? 'پرداخت دوره' : 'ثبت‌نام'}
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(commission.createdAt).toLocaleDateString('fa-IR')}
-                          </p>
-                        </div>
-                        <div className="text-left">
-                          <p className="text-lg font-semibold text-green-600">
-                            {formatCurrency(commission.referrerAmount)}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            از {formatCurrency(commission.baseAmount)}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-semibold mb-4">آمار تفصیلی</h2>
-            
-            {!statsLoading && stats && (
-              <div className="grid gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>نرخ تبدیل</CardTitle>
-                    <CardDescription>
-                      درصد تبدیل کلیک‌ها به ثبت‌نام
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between text-sm">
-                        <span>نرخ تبدیل</span>
-                        <span>%{stats.conversionRate}</span>
-                      </div>
-                      <Progress value={stats.conversionRate} className="h-2" />
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">کل کلیک‌ها: </span>
-                          <span className="font-medium">{stats.totalClicks}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">کل ثبت‌نام‌ها: </span>
-                          <span className="font-medium">{stats.totalSignups}</span>
-                        </div>
-                      </div>
+        <TabsContent value="courses" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.map((course) => (
+              <Card key={course.id} className="relative">
+                <CardHeader>
+                  <img 
+                    src={course.thumbnail} 
+                    alt={course.title}
+                    className="w-full h-32 object-cover rounded-lg mb-3"
+                  />
+                  <CardTitle className="text-lg">{course.title}</CardTitle>
+                  <CardDescription className="text-sm">
+                    {course.description.substring(0, 100)}...
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Badge variant="secondary">{course.language}</Badge>
+                      <Badge variant="outline">{course.level}</Badge>
                     </div>
-                  </CardContent>
-                </Card>
+                    
+                    <div className="text-lg font-bold text-green-600">
+                      {course.price.toLocaleString()} تومان
+                    </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>کمیسیون در انتظار</CardTitle>
-                    <CardDescription>
-                      مبلغ کمیسیون‌هایی که هنوز پرداخت نشده‌اند
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-yellow-600">
-                      {formatCurrency(stats.pendingCommissions)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+                    <div className="text-sm text-gray-600">
+                      کمیسیون شما: {((course.price * referrerPercentage) / 100).toLocaleString()} تومان
+                    </div>
+
+                    <div className="flex gap-2 pt-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => shareViaSMS(course.id, course.title)}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        SMS
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => shareViaWhatsApp(course.id, course.title)}
+                      >
+                        <Phone className="h-4 w-4 mr-1" />
+                        WhatsApp
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="stats" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">تعداد اشتراک‌گذاری</CardTitle>
+                <Share2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.totalShares || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  لینک‌های ارسال شده
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">تعداد بازدید</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.totalClicks || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  کلیک روی لینک‌ها
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">تعداد ثبت‌نام</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.totalEnrollments || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  ثبت‌نام‌های موفق
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">کل کمیسیون</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {(stats?.totalCommissionEarned || 0).toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  تومان دریافتی
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {stats && stats.totalClicks > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>نرخ تبدیل</CardTitle>
+                <CardDescription>
+                  درصد افرادی که پس از کلیک روی لینک، ثبت‌نام کرده‌اند
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span>نرخ تبدیل:</span>
+                    <span className="font-medium">
+                      {((stats.totalEnrollments / stats.totalClicks) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(stats.totalEnrollments / stats.totalClicks) * 100} 
+                    className="w-full"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
-
-      {/* Edit Dialog */}
-      {editingLink && (
-        <Dialog open={!!editingLink} onOpenChange={() => setEditingLink(null)}>
-          <DialogContent className="sm:max-w-[600px]" dir="rtl">
-            <EditReferralLinkForm
-              link={editingLink}
-              onSubmit={(data) => updateLinkMutation.mutate({ ...data, id: editingLink.id })}
-              isLoading={updateLinkMutation.isPending}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
-  );
-}
-
-function CreateReferralLinkForm({
-  onSubmit,
-  isLoading
-}: {
-  onSubmit: (data: any) => void;
-  isLoading: boolean;
-}) {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    selfCommissionRate: 70,
-    referredCommissionRate: 30
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.selfCommissionRate + formData.referredCommissionRate > 100) {
-      return;
-    }
-    onSubmit(formData);
-  };
-
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle>ایجاد لینک معرفی جدید</DialogTitle>
-        <DialogDescription>
-          لینک معرفی خود را با تنظیمات کمیسیون دلخواه ایجاد کنید
-        </DialogDescription>
-      </DialogHeader>
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="title">عنوان لینک</Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            placeholder="مثال: معرفی دوره زبان انگلیسی"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="description">توضیحات (اختیاری)</Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="توضیحات کوتاهی درباره این لینک معرفی..."
-            rows={3}
-          />
-        </div>
-
-        <div className="space-y-4">
-          <Label>تقسیم کمیسیون</Label>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="selfCommission">سهم شما (%)</Label>
-              <Input
-                id="selfCommission"
-                type="number"
-                min="0"
-                max="100"
-                value={formData.selfCommissionRate}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  selfCommissionRate: parseInt(e.target.value) || 0,
-                  referredCommissionRate: Math.max(0, 100 - (parseInt(e.target.value) || 0))
-                })}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="referredCommission">سهم معرفی شده (%)</Label>
-              <Input
-                id="referredCommission"
-                type="number"
-                min="0"
-                max="100"
-                value={formData.referredCommissionRate}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  referredCommissionRate: parseInt(e.target.value) || 0,
-                  selfCommissionRate: Math.max(0, 100 - (parseInt(e.target.value) || 0))
-                })}
-              />
-            </div>
-          </div>
-
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-700">
-              <strong>توضیح:</strong> از هر پرداختی که از طریق این لینک انجام شود، 
-              %{formData.selfCommissionRate} به کیف پول شما و %{formData.referredCommissionRate} به 
-              کیف پول کاربر معرفی شده اضافه می‌شود.
-            </p>
-          </div>
-          
-          {formData.selfCommissionRate + formData.referredCommissionRate > 100 && (
-            <p className="text-sm text-red-600">
-              مجموع درصدها نمی‌تواند بیش از 100% باشد
-            </p>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button type="submit" disabled={isLoading || formData.selfCommissionRate + formData.referredCommissionRate > 100}>
-            {isLoading ? "در حال ایجاد..." : "ایجاد لینک"}
-          </Button>
-        </DialogFooter>
-      </form>
-    </>
-  );
-}
-
-function EditReferralLinkForm({
-  link,
-  onSubmit,
-  isLoading
-}: {
-  link: ReferralLink;
-  onSubmit: (data: any) => void;
-  isLoading: boolean;
-}) {
-  const [formData, setFormData] = useState({
-    title: link.title,
-    description: link.description,
-    selfCommissionRate: link.selfCommissionRate,
-    referredCommissionRate: link.referredCommissionRate,
-    isActive: link.isActive
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.selfCommissionRate + formData.referredCommissionRate > 100) {
-      return;
-    }
-    onSubmit(formData);
-  };
-
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle>ویرایش لینک معرفی</DialogTitle>
-        <DialogDescription>
-          تنظیمات لینک معرفی خود را ویرایش کنید
-        </DialogDescription>
-      </DialogHeader>
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="title">عنوان لینک</Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="description">توضیحات</Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            rows={3}
-          />
-        </div>
-
-        <div className="space-y-4">
-          <Label>تقسیم کمیسیون</Label>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="selfCommission">سهم شما (%)</Label>
-              <Input
-                id="selfCommission"
-                type="number"
-                min="0"
-                max="100"
-                value={formData.selfCommissionRate}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  selfCommissionRate: parseInt(e.target.value) || 0,
-                  referredCommissionRate: Math.max(0, 100 - (parseInt(e.target.value) || 0))
-                })}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="referredCommission">سهم معرفی شده (%)</Label>
-              <Input
-                id="referredCommission"
-                type="number"
-                min="0"
-                max="100"
-                value={formData.referredCommissionRate}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  referredCommissionRate: parseInt(e.target.value) || 0,
-                  selfCommissionRate: Math.max(0, 100 - (parseInt(e.target.value) || 0))
-                })}
-              />
-            </div>
-          </div>
-          
-          {formData.selfCommissionRate + formData.referredCommissionRate > 100 && (
-            <p className="text-sm text-red-600">
-              مجموع درصدها نمی‌تواند بیش از 100% باشد
-            </p>
-          )}
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="isActive"
-            checked={formData.isActive}
-            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-            className="rounded"
-          />
-          <Label htmlFor="isActive">فعال</Label>
-        </div>
-
-        <DialogFooter>
-          <Button type="submit" disabled={isLoading || formData.selfCommissionRate + formData.referredCommissionRate > 100}>
-            {isLoading ? "در حال بروزرسانی..." : "بروزرسانی"}
-          </Button>
-        </DialogFooter>
-      </form>
-    </>
-  );
-}
-
-function ReferralLinkCard({
-  link,
-  onEdit,
-  onCopy,
-  getReferralUrl
-}: {
-  link: ReferralLink;
-  onEdit: (link: ReferralLink) => void;
-  onCopy: (text: string) => void;
-  getReferralUrl: (code: string) => string;
-}) {
-  const referralUrl = getReferralUrl(link.referralCode);
-  const conversionRate = link.totalClicks > 0 ? (link.totalSignups / link.totalClicks) * 100 : 0;
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              {link.title}
-              <Badge variant={link.isActive ? "default" : "secondary"}>
-                {link.isActive ? "فعال" : "غیرفعال"}
-              </Badge>
-            </CardTitle>
-            {link.description && (
-              <CardDescription className="mt-2">{link.description}</CardDescription>
-            )}
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => onEdit(link)}>
-            <Edit className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label>لینک معرفی</Label>
-          <div className="flex gap-2">
-            <Input value={referralUrl} readOnly className="font-mono text-sm" />
-            <Button size="sm" variant="outline" onClick={() => onCopy(referralUrl)}>
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">کد معرفی: {link.referralCode}</p>
-        </div>
-
-        <Separator />
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">سهم شما</p>
-            <p className="text-lg font-semibold text-green-600">%{link.selfCommissionRate}</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">سهم معرفی شده</p>
-            <p className="text-lg font-semibold text-blue-600">%{link.referredCommissionRate}</p>
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="grid grid-cols-4 gap-4 text-center">
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-blue-600">{link.totalClicks}</p>
-            <p className="text-xs text-muted-foreground">کلیک</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-green-600">{link.totalSignups}</p>
-            <p className="text-xs text-muted-foreground">ثبت‌نام</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-purple-600">{conversionRate.toFixed(1)}%</p>
-            <p className="text-xs text-muted-foreground">تبدیل</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-yellow-600">
-              {new Intl.NumberFormat('fa-IR').format(link.totalEarnings)}
-            </p>
-            <p className="text-xs text-muted-foreground">درآمد</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
