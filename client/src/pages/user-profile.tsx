@@ -251,22 +251,33 @@ export default function UserProfile() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto p-6 space-y-8">
-      <div className="flex items-center space-x-4 mb-8">
-        <Avatar className="h-20 w-20">
-          <AvatarImage src={user?.avatar} />
-          <AvatarFallback className="text-lg">
-            {user?.firstName?.[0]}{user?.lastName?.[0]}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <h1 className="text-3xl font-bold">Profile Settings</h1>
-          <p className="text-muted-foreground">
-            Manage your account and learning preferences
-          </p>
-          <Badge variant="secondary" className="mt-2">
-            {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}
-          </Badge>
+    <div className={`container max-w-4xl mx-auto p-6 space-y-8 ${isRTL ? 'rtl' : 'ltr'}`}>
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-6">
+          <BackButton href="/dashboard" />
+        </div>
+        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
+          <Avatar className="h-20 w-20">
+            <AvatarImage src={user?.avatar} />
+            <AvatarFallback className="text-lg">
+              {user?.firstName?.[0]}{user?.lastName?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-3xl font-bold">
+              {currentLanguage === 'fa' ? 'تنظیمات پروفایل' :
+               currentLanguage === 'ar' ? 'إعدادات الملف الشخصي' :
+               'Profile Settings'}
+            </h1>
+            <p className="text-muted-foreground">
+              {currentLanguage === 'fa' ? 'مدیریت حساب کاربری و تنظیمات یادگیری' :
+               currentLanguage === 'ar' ? 'إدارة الحساب وتفضيلات التعلم' :
+               'Manage your account and learning preferences'}
+            </p>
+            <Badge variant="secondary" className="mt-2">
+              {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}
+            </Badge>
+          </div>
         </div>
       </div>
 

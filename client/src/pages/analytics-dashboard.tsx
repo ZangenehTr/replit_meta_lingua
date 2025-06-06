@@ -37,6 +37,8 @@ import {
   Filter,
   RefreshCw
 } from "lucide-react";
+import { BackButton } from "@/components/ui/back-button";
+import { useLanguage } from "@/hooks/use-language";
 
 interface AnalyticsData {
   revenue: {
@@ -85,6 +87,7 @@ export default function AnalyticsDashboard() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [timeRange, setTimeRange] = useState("6months");
   const [courseFilter, setCourseFilter] = useState("all");
+  const { currentLanguage, isRTL } = useLanguage();
 
   const { data: analytics, isLoading, refetch } = useQuery<AnalyticsData>({
     queryKey: ['/api/analytics', timeRange, courseFilter],
@@ -118,38 +121,47 @@ export default function AnalyticsDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className={`min-h-screen bg-background p-4 md:p-8 ${isRTL ? 'rtl' : 'ltr'}`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Analytics & Reports Dashboard
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Comprehensive institute performance analytics and insights
-            </p>
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-6">
+            <BackButton href="/dashboard" />
           </div>
-          <div className="flex items-center space-x-4">
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Time Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1month">Last Month</SelectItem>
-                <SelectItem value="3months">Last 3 Months</SelectItem>
-                <SelectItem value="6months">Last 6 Months</SelectItem>
-                <SelectItem value="1year">Last Year</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={() => refetch()}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-            <Button>
-              <Download className="h-4 w-4 mr-2" />
-              Export Report
-            </Button>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                {currentLanguage === 'fa' ? 'داشبورد تحلیل و گزارشات' :
+                 currentLanguage === 'ar' ? 'لوحة التحليلات والتقارير' :
+                 'Analytics & Reports Dashboard'}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">
+                {currentLanguage === 'fa' ? 'تحلیل جامع عملکرد موسسه و بینش‌ها' :
+                 currentLanguage === 'ar' ? 'تحليل شامل لأداء المعهد والرؤى' :
+                 'Comprehensive institute performance analytics and insights'}
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Time Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1month">Last Month</SelectItem>
+                  <SelectItem value="3months">Last 3 Months</SelectItem>
+                  <SelectItem value="6months">Last 6 Months</SelectItem>
+                  <SelectItem value="1year">Last Year</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" onClick={() => refetch()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              <Button>
+                <Download className="h-4 w-4 mr-2" />
+                Export Report
+              </Button>
+            </div>
           </div>
         </div>
 
