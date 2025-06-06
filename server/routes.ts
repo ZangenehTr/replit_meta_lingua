@@ -1354,7 +1354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const updatedProfile = await storage.getUserProfile(studentId);
         if (updatedProfile) {
-          finalBirthday = updatedProfile.dateOfBirth ? (updatedProfile.dateOfBirth instanceof Date ? updatedProfile.dateOfBirth.toISOString() : updatedProfile.dateOfBirth) : null;
+          finalBirthday = updatedProfile.dateOfBirth ? (typeof updatedProfile.dateOfBirth === 'string' ? updatedProfile.dateOfBirth : new Date(updatedProfile.dateOfBirth).toISOString()) : null;
           finalNationalId = updatedProfile.nationalId || nationalId;
           finalLevel = updatedProfile.currentLevel || level;
           finalGuardianName = updatedProfile.guardianName || guardianName;
