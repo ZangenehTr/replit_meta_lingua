@@ -38,6 +38,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { BackButton } from "@/components/ui/back-button";
+import { useLanguage } from "@/hooks/use-language";
 
 interface ClassroomSession {
   id: number;
@@ -118,6 +120,7 @@ export default function LiveClassroom() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currentLanguage, isRTL } = useLanguage();
 
   // Fetch classroom sessions
   const { data: sessions, isLoading } = useQuery<ClassroomSession[]>({
@@ -499,18 +502,30 @@ export default function LiveClassroom() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
       <div className="border-b bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                کلاس‌های زنده / Live Classrooms
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                در کلاس‌های تعاملی شرکت کنید / Join interactive live classes
-              </p>
+            <div className="flex items-center space-x-4">
+              <BackButton 
+                href="/dashboard" 
+                label={currentLanguage === 'fa' ? 'بازگشت' :
+                       currentLanguage === 'ar' ? 'رجوع' :
+                       'Back'}
+              />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  {currentLanguage === 'fa' ? 'کلاس‌های زنده' :
+                   currentLanguage === 'ar' ? 'الفصول المباشرة' :
+                   'Live Classrooms'}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {currentLanguage === 'fa' ? 'در کلاس‌های تعاملی شرکت کنید' :
+                   currentLanguage === 'ar' ? 'انضم إلى الفصول التفاعلية المباشرة' :
+                   'Join interactive live classes'}
+                </p>
+              </div>
             </div>
             
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
