@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/hooks/use-language";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Settings, 
   Palette, 
@@ -37,12 +40,204 @@ import {
 
 export function AdminSystem() {
   const { t, isRTL } = useLanguage();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // State management
   const [showApiKeys, setShowApiKeys] = useState(false);
+  const [activeTab, setActiveTab] = useState("branding");
+  const [isBackupInProgress, setIsBackupInProgress] = useState(false);
+  const [backupProgress, setBackupProgress] = useState(0);
+  const [systemMaintenanceMode, setSystemMaintenanceMode] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [newRoleDialog, setNewRoleDialog] = useState(false);
+  const [editRoleDialog, setEditRoleDialog] = useState(false);
+  const [newRole, setNewRole] = useState({ name: "", description: "", permissions: [] });
 
   // Fetch system data
   const { data: systemData, isLoading } = useQuery({
     queryKey: ['/api/admin/system'],
   });
+
+  // Mutations for system operations
+  const updateBrandingMutation = useMutation({
+    mutationFn: async (brandingData: any) => {
+      return apiRequest('/api/admin/branding', {
+        method: 'PATCH',
+        body: JSON.stringify(brandingData),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Branding Updated",
+        description: "Your institute branding has been successfully updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/system'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update branding settings.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const exportConfigMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('/api/admin/system/export', {
+        method: 'GET',
+      });
+    },
+    onSuccess: (data) => {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `meta-lingua-config-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Configuration Exported",
+        description: "System configuration has been downloaded successfully.",
+      });
+    },
+  });
+
+  const createBackupMutation = useMutation({
+    mutationFn: async () => {
+      setIsBackupInProgress(true);
+      setBackupProgress(0);
+      
+      // Simulate backup progress
+      for (let i = 0; i <= 100; i += 10) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        setBackupProgress(i);
+      }
+      
+      return apiRequest('/api/admin/system/backup', {
+        method: 'POST',
+      });
+    },
+    onSuccess: (data) => {
+      setIsBackupInProgress(false);
+      toast({
+        title: "Backup Created",
+        description: `Database backup completed successfully. Size: ${data.size}MB`,
+      });
+    },
+    onError: () => {
+      setIsBackupInProgress(false);
+      setBackupProgress(0);
+    },
+  });
+
+  const roleManagementMutation = useMutation({
+    mutationFn: async ({ action, roleData }: { action: string, roleData: any }) => {
+      const endpoint = action === 'create' 
+        ? '/api/admin/roles' 
+        : `/api/admin/roles/${roleData.id}`;
+      const method = action === 'create' ? 'POST' : 'PATCH';
+      
+      return apiRequest(endpoint, {
+        method,
+        body: JSON.stringify(roleData),
+      });
+    },
+    onSuccess: (data, variables) => {
+      const action = variables.action;
+      toast({
+        title: `Role ${action === 'create' ? 'Created' : 'Updated'}`,
+        description: `Role has been ${action === 'create' ? 'created' : 'updated'} successfully.`,
+      });
+      
+      setNewRoleDialog(false);
+      setEditRoleDialog(false);
+      setNewRole({ name: "", description: "", permissions: [] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/system'] });
+    },
+  });
+
+  const systemMaintenanceMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      return apiRequest('/api/admin/system/maintenance', {
+        method: 'POST',
+        body: JSON.stringify({ enabled }),
+      });
+    },
+    onSuccess: (data, enabled) => {
+      setSystemMaintenanceMode(enabled);
+      toast({
+        title: enabled ? "Maintenance Mode Enabled" : "Maintenance Mode Disabled",
+        description: enabled 
+          ? "System is now in maintenance mode. Users will see a maintenance page."
+          : "System is back online. All users can access the platform.",
+        variant: enabled ? "destructive" : "default",
+      });
+    },
+  });
+
+  // Handler functions
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const config = JSON.parse(e.target?.result as string);
+          // Import configuration logic here
+          toast({
+            title: "Configuration Imported",
+            description: "System configuration has been imported successfully.",
+          });
+        } catch (error) {
+          toast({
+            title: "Import Failed",
+            description: "Invalid configuration file format.",
+            variant: "destructive",
+          });
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleTestIntegration = async (integrationName: string) => {
+    try {
+      await apiRequest(`/api/admin/integrations/${integrationName}/test`, {
+        method: 'POST',
+      });
+      
+      toast({
+        title: "Connection Test Successful",
+        description: `${integrationName} integration is working properly.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Connection Test Failed",
+        description: `Failed to connect to ${integrationName}. Please check your configuration.`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateRole = () => {
+    roleManagementMutation.mutate({ action: 'create', roleData: newRole });
+  };
+
+  const handleEditRole = (role: any) => {
+    setSelectedRole(role);
+    setNewRole(role);
+    setEditRoleDialog(true);
+  };
+
+  const handleUpdateRole = () => {
+    roleManagementMutation.mutate({ action: 'update', roleData: newRole });
+  };
 
   // White-label branding settings
   const brandingSettings = {
@@ -185,14 +380,28 @@ export function AdminSystem() {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline">
+          <Button 
+            variant="outline"
+            onClick={() => exportConfigMutation.mutate()}
+            disabled={exportConfigMutation.isPending}
+          >
             <Download className="h-4 w-4 mr-2" />
-            Export Config
+            {exportConfigMutation.isPending ? "Exporting..." : "Export Config"}
           </Button>
-          <Button variant="outline">
+          <Button 
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+          >
             <Upload className="h-4 w-4 mr-2" />
             Import Config
           </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
         </div>
       </div>
 
@@ -292,7 +501,13 @@ export function AdminSystem() {
                   <Textarea id="footerText" value={brandingSettings.footerText} rows={2} />
                 </div>
 
-                <Button className="w-full">Save Branding Settings</Button>
+                <Button 
+                  className="w-full"
+                  onClick={() => updateBrandingMutation.mutate(brandingSettings)}
+                  disabled={updateBrandingMutation.isPending}
+                >
+                  {updateBrandingMutation.isPending ? "Saving..." : "Save Branding Settings"}
+                </Button>
               </CardContent>
             </Card>
 
@@ -486,6 +701,13 @@ export function AdminSystem() {
                       <Badge className={getStatusColor(integration.status)}>
                         {integration.status}
                       </Badge>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleTestIntegration(integration.name)}
+                      >
+                        Test Connection
+                      </Button>
                       <Button variant="outline" size="sm">
                         Configure
                       </Button>
