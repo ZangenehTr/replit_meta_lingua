@@ -3446,11 +3446,12 @@ Return JSON format:
       // Generate unique referral code
       const referralCode = `COURSE${courseId}_USER${userId}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
       
-      // Create course referral entry
-      const courseReferral = await storage.createCourseReferral({
-        referrerUserId: userId,
+      // Create referral link entry
+      const referralLink = await storage.createReferralLink({
+        userId: userId,
         courseId,
-        referralCode
+        code: referralCode,
+        isActive: true
       });
       
       // Generate shareable link
@@ -3458,8 +3459,8 @@ Return JSON format:
       
       res.json({
         referralCode,
-        shareUrl,
-        courseReferral
+        referralLink: shareUrl,
+        linkData: referralLink
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to create course referral" });
