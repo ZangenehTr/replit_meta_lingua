@@ -14,7 +14,9 @@ export const users = pgTable("users", {
   avatar: text("avatar"),
   isActive: boolean("is_active").default(true),
   preferences: jsonb("preferences"), // theme, language, notifications
-  credits: integer("credits").default(0),
+  walletBalance: integer("wallet_balance").default(0), // IRR amount in wallet
+  totalCredits: integer("total_credits").default(0), // Lifetime accumulated credits for tier calculation
+  memberTier: text("member_tier").default("bronze"), // bronze, silver, gold, diamond
   streakDays: integer("streak_days").default(0),
   totalLessons: integer("total_lessons").default(0),
   createdAt: timestamp("created_at").defaultNow(),
@@ -188,6 +190,64 @@ export const payments = pgTable("payments", {
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Admin Settings for Payment System Configuration
+export const adminSettings = pgTable("admin_settings", {
+  id: serial("id").primaryKey(),
+  creditValueInRials: integer("credit_value_in_rials").default(10000), // 1 credit = X rials
+  walletTopupIncrement: integer("wallet_topup_increment").default(100000), // Minimum increment for wallet top-up
+  
+  // Member Tier Thresholds (in credits)
+  bronzeTierThreshold: integer("bronze_tier_threshold").default(10000),
+  silverTierThreshold: integer("silver_tier_threshold").default(100000),
+  goldTierThreshold: integer("gold_tier_threshold").default(1000000),
+  diamondTierThreshold: integer("diamond_tier_threshold").default(10000000),
+  
+  // Member Tier Discounts (percentage)
+  bronzeDiscount: integer("bronze_discount").default(10),
+  silverDiscount: integer("silver_discount").default(15),
+  goldDiscount: integer("gold_discount").default(20),
+  diamondDiscount: integer("diamond_discount").default(30),
+  
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Wallet Transactions for incremental top-ups
+export const walletTransactions = pgTable("wallet_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  type: text("type").notNull(), // "topup", "course_payment", "refund", "admin_adjustment"
+  amount: integer("amount").notNull(), // IRR amount
+  description: text("description"),
+  status: text("status").notNull().default("pending"), // pending, completed, failed
+  merchantTransactionId: text("merchant_transaction_id"),
+  shetabTransactionId: text("shetab_transaction_id"),
+  shetabReferenceNumber: text("shetab_reference_number"),
+  cardNumber: text("card_number"), // Masked card number
+  gatewayResponse: jsonb("gateway_response"),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at")
+});
+
+// Course Enrollment Payments (direct payments for courses)
+export const coursePayments = pgTable("course_payments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  originalPrice: integer("original_price").notNull(), // Course price before discount
+  discountPercentage: integer("discount_percentage").default(0), // Member tier discount
+  finalPrice: integer("final_price").notNull(), // Price after discount
+  creditsAwarded: integer("credits_awarded").default(0), // Credits earned from this payment
+  paymentMethod: text("payment_method").notNull(), // "shetab", "wallet"
+  status: text("status").notNull().default("pending"), // pending, completed, failed, refunded
+  merchantTransactionId: text("merchant_transaction_id"),
+  shetabTransactionId: text("shetab_transaction_id"),
+  shetabReferenceNumber: text("shetab_reference_number"),
+  cardNumber: text("card_number"),
+  gatewayResponse: jsonb("gateway_response"),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at")
 });
 
 // Notifications
@@ -551,7 +611,26 @@ export const insertHomeworkSchema = createInsertSchema(homework).omit({
 
 export const insertPaymentSchema = createInsertSchema(payments).omit({
   id: true,
-  createdAt: true
+  createdAt: true,
+  updatedAt: true,
+  completedAt: true
+});
+
+export const insertAdminSettingsSchema = createInsertSchema(adminSettings).omit({
+  id: true,
+  updatedAt: true
+});
+
+export const insertWalletTransactionSchema = createInsertSchema(walletTransactions).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true
+});
+
+export const insertCoursePaymentSchema = createInsertSchema(coursePayments).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true
 });
 
 export const insertNotificationSchema = createInsertSchema(notifications).omit({
