@@ -807,9 +807,9 @@ export type StudentReport = typeof studentReports.$inferSelect;
 export type InsertStudentReport = z.infer<typeof insertStudentReportSchema>;
 
 // Referral System Types
-export type ReferralLink = typeof referralLinks.$inferSelect;
-export type InsertReferralLink = z.infer<typeof insertReferralLinkSchema>;
-export type ReferralActivity = typeof referralActivities.$inferSelect;
-export type InsertReferralActivity = z.infer<typeof insertReferralActivitySchema>;
+export type ReferralSettings = typeof referralSettings.$inferSelect;
+export type InsertReferralSettings = z.infer<typeof insertReferralSettingsSchema>;
+export type CourseReferral = typeof courseReferrals.$inferSelect;
+export type InsertCourseReferral = z.infer<typeof insertCourseReferralSchema>;
 export type ReferralCommission = typeof referralCommissions.$inferSelect;
 export type InsertReferralCommission = z.infer<typeof insertReferralCommissionSchema>;
