@@ -9,114 +9,89 @@ interface SimpleDateInputProps {
   className?: string;
 }
 
-export function SimpleDateInput({ value, onChange, placeholder = "Select date", className }: SimpleDateInputProps) {
+export function SimpleDateInput({
+  value,
+  onChange,
+  placeholder = "Select date",
+  className,
+}: SimpleDateInputProps) {
   const [day, setDay] = useState("");
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Initialize from value prop
+  // Only initialize from value once
   useEffect(() => {
-    console.log('SimpleDateInput: Received value prop:', value);
-    if (value && value instanceof Date && !isNaN(value.getTime())) {
-      const dayStr = value.getDate().toString().padStart(2, '0');
-      const monthStr = (value.getMonth() + 1).toString().padStart(2, '0');
-      const yearStr = value.getFullYear().toString();
-      console.log('SimpleDateInput: Setting date fields:', { day: dayStr, month: monthStr, year: yearStr });
-      setDay(dayStr);
-      setMonth(monthStr);
-      setYear(yearStr);
-    } else {
-      console.log('SimpleDateInput: Clearing date fields (invalid or null value)');
-      setDay("");
-      setMonth("");
-      setYear("");
+    if (!hasInitialized && value instanceof Date && !isNaN(value.getTime())) {
+      setDay(value.getDate().toString().padStart(2, "0"));
+      setMonth((value.getMonth() + 1).toString().padStart(2, "0"));
+      setYear(value.getFullYear().toString());
+      setHasInitialized(true);
     }
-    setIsInitialized(true);
-  }, [value]);
+  }, [value, hasInitialized]);
 
-  // Update parent when values change (but only after initialization)
+  // Update parent when all fields are filled correctly
   useEffect(() => {
-    if (!isInitialized) return;
-    
-    if (day && month && year) {
+    if (day.length === 2 && month.length === 2 && year.length === 4) {
       const dayNum = parseInt(day);
       const monthNum = parseInt(month);
       const yearNum = parseInt(year);
-      
-      if (dayNum >= 1 && dayNum <= 31 && monthNum >= 1 && monthNum <= 12 && yearNum >= 1900 && yearNum <= 2100) {
+
+      if (
+        dayNum >= 1 &&
+        dayNum <= 31 &&
+        monthNum >= 1 &&
+        monthNum <= 12 &&
+        yearNum >= 1900 &&
+        yearNum <= 2100
+      ) {
         const newDate = new Date(yearNum, monthNum - 1, dayNum);
-        // Validate the date is actually valid (handles things like Feb 30)
-        if (newDate.getDate() === dayNum && newDate.getMonth() === monthNum - 1 && newDate.getFullYear() === yearNum) {
-          console.log('SimpleDateInput: Creating valid date:', newDate);
+        newDate.setHours(12, 0, 0, 0); // Prevent timezone shift
+        if (
+          newDate.getDate() === dayNum &&
+          newDate.getMonth() === monthNum - 1 &&
+          newDate.getFullYear() === yearNum
+        ) {
           onChange?.(newDate);
-        } else {
-          console.log('SimpleDateInput: Invalid date combination:', { day, month, year });
         }
-      } else {
-        console.log('SimpleDateInput: Date values out of range:', { day, month, year });
       }
     } else if (!day && !month && !year) {
-      console.log('SimpleDateInput: Clearing date (all fields empty)');
       onChange?.(null);
-    } else {
-      console.log('SimpleDateInput: Partial date entry:', { day, month, year });
     }
-  }, [day, month, year, isInitialized]); // Removed onChange from dependencies
+  }, [day, month, year]);
 
+  // Input Handlers
   const handleDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value.replace(/\D/g, '').slice(0, 2);
-    
-    // Always allow the value change for empty or valid range
-    if (inputValue === '') {
-      setDay('');
-      return;
-    }
-    
-    const numValue = parseInt(inputValue);
-    if (numValue >= 1 && numValue <= 31) {
-      setDay(inputValue);
-      // Auto-advance to month field when day is complete (2 digits)
-      if (inputValue.length === 2) {
-        setTimeout(() => {
-          const monthInput = e.target.parentElement?.parentElement?.children[1]?.querySelector('input');
-          monthInput?.focus();
-        }, 0);
-      }
-    } else if (inputValue.length === 1) {
-      // Allow single digits even if they would be out of range when complete
-      setDay(inputValue);
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setDay(val);
+    if (val.length === 2) {
+      setTimeout(() => {
+        const monthInput =
+          e.target.parentElement?.parentElement?.children[1]?.querySelector(
+            "input",
+          );
+        monthInput?.focus();
+      }, 0);
     }
   };
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value.replace(/\D/g, '').slice(0, 2);
-    
-    // Always allow the value change for empty or valid range
-    if (inputValue === '') {
-      setMonth('');
-      return;
-    }
-    
-    const numValue = parseInt(inputValue);
-    if (numValue >= 1 && numValue <= 12) {
-      setMonth(inputValue);
-      // Auto-advance to year field when month is complete (2 digits)
-      if (inputValue.length === 2) {
-        setTimeout(() => {
-          const yearInput = e.target.parentElement?.parentElement?.children[2]?.querySelector('input');
-          yearInput?.focus();
-        }, 0);
-      }
-    } else if (inputValue.length === 1) {
-      // Allow single digits even if they would be out of range when complete
-      setMonth(inputValue);
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setMonth(val);
+    if (val.length === 2) {
+      setTimeout(() => {
+        const yearInput =
+          e.target.parentElement?.parentElement?.children[2]?.querySelector(
+            "input",
+          );
+        yearInput?.focus();
+      }, 0);
     }
   };
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-    setYear(value);
+    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+    setYear(val);
   };
 
   return (
@@ -153,6 +128,7 @@ export function SimpleDateInput({ value, onChange, placeholder = "Select date", 
             placeholder="YYYY"
             value={year}
             onChange={handleYearChange}
+            onFocus={(e) => e.target.select()}
             maxLength={4}
             className="text-center"
           />
