@@ -1,10 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { CreditCard, Plus } from "lucide-react";
+import { CreditCard, Plus, Shield, Banknote, CheckCircle, XCircle, Clock, Star } from "lucide-react";
+import { useState } from "react";
 
 interface Payment {
   id: number;
@@ -12,7 +18,43 @@ interface Payment {
   creditsAwarded: number;
   createdAt: string;
   status: string;
+  provider: string;
+  merchantTransactionId?: string;
+  referenceNumber?: string;
+  cardNumber?: string;
 }
+
+const CREDIT_PACKAGES = [
+  { 
+    amount: 25000, 
+    credits: 10, 
+    title: "Starter Package", 
+    description: "Perfect for beginners",
+    pricePerCredit: 2500
+  },
+  { 
+    amount: 50000, 
+    credits: 25, 
+    title: "Popular Package", 
+    description: "Most popular choice", 
+    popular: true,
+    pricePerCredit: 2000
+  },
+  { 
+    amount: 100000, 
+    credits: 55, 
+    title: "Premium Package", 
+    description: "Best value for money",
+    pricePerCredit: 1818
+  },
+  { 
+    amount: 200000, 
+    credits: 120, 
+    title: "Professional Package", 
+    description: "For serious learners",
+    pricePerCredit: 1667
+  },
+];
 
 export function PaymentCredits() {
   const { user } = useAuth();

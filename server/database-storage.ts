@@ -413,7 +413,21 @@ export class DatabaseStorage implements IStorage {
 
   // Payments
   async getUserPayments(userId: number): Promise<Payment[]> {
-    return await db.select().from(payments).where(eq(payments.userId, userId));
+    return await db.select().from(payments).where(eq(payments.userId, userId)).orderBy(desc(payments.createdAt));
+  }
+
+  async getAllPayments(): Promise<Payment[]> {
+    return await db.select().from(payments).orderBy(desc(payments.createdAt));
+  }
+
+  async getPaymentByMerchantId(merchantTransactionId: string): Promise<Payment | undefined> {
+    const [payment] = await db.select().from(payments).where(eq(payments.merchantTransactionId, merchantTransactionId));
+    return payment;
+  }
+
+  async getPaymentById(id: number): Promise<Payment | undefined> {
+    const [payment] = await db.select().from(payments).where(eq(payments.id, id));
+    return payment;
   }
 
   async createPayment(payment: InsertPayment): Promise<Payment> {
@@ -424,7 +438,31 @@ export class DatabaseStorage implements IStorage {
   async updatePaymentStatus(id: number, status: string): Promise<Payment | undefined> {
     const [updatedPayment] = await db
       .update(payments)
-      .set({ status })
+      .set({ 
+        status,
+        updatedAt: new Date(),
+        ...(status === 'completed' ? { completedAt: new Date() } : {})
+      })
+      .where(eq(payments.id, id))
+      .returning();
+    return updatedPayment;
+  }
+
+  async updatePaymentWithShetabData(id: number, data: Partial<{
+    gatewayTransactionId: string;
+    referenceNumber: string;
+    cardNumber: string;
+    status: string;
+    failureReason: string;
+    shetabResponse: any;
+    completedAt: Date;
+  }>): Promise<Payment | undefined> {
+    const [updatedPayment] = await db
+      .update(payments)
+      .set({ 
+        ...data,
+        updatedAt: new Date()
+      })
       .where(eq(payments.id, id))
       .returning();
     return updatedPayment;
