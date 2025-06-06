@@ -18,7 +18,8 @@ export const getStudentNavigation = (t: any): NavigationItem[] => [
   { path: "/homework", icon: "ClipboardList", label: t('homework'), roles: ["student"] },
   { path: "/messages", icon: "MessageSquare", label: t('messages'), roles: ["student"] },
   { path: "/progress", icon: "TrendingUp", label: t('progress'), roles: ["student"] },
-  { path: "/payment", icon: "CreditCard", label: t('credits'), roles: ["student"] },
+  { path: "/wallet", icon: "CreditCard", label: "کیف پول", roles: ["student"] },
+  { path: "/payment", icon: "DollarSign", label: t('credits'), roles: ["student"] },
 ];
 
 // Teacher/Tutor navigation

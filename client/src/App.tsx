@@ -23,6 +23,7 @@ import { AdminStudents } from "@/pages/admin/students";
 import { AdminCourses } from "@/pages/admin/courses";
 import { AdminFinancial } from "@/pages/admin/financial";
 import { AdminSystem } from "@/pages/admin/system";
+import WalletPage from "@/pages/wallet";
 import { LanguageProvider } from "@/hooks/use-language";
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
@@ -111,6 +112,11 @@ function Router() {
       <Route path="/admin/students">
         <ProtectedRoute>
           <StudentInformationSystem />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/wallet">
+        <ProtectedRoute>
+          <WalletPage />
         </ProtectedRoute>
       </Route>
       <Route path="/dashboard">
