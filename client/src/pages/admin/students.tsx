@@ -1222,7 +1222,7 @@ export function AdminStudents() {
               <div className="col-span-3">Student</div>
               <div className="col-span-2">Contact</div>
               <div className="col-span-1">Status</div>
-              <div className="col-span-2">Level</div>
+              <div className="col-span-2">Active Courses</div>
               <div className="col-span-2">Progress</div>
               <div className="col-span-2">Actions</div>
             </div>
@@ -1251,9 +1251,19 @@ export function AdminStudents() {
                   </Badge>
                 </div>
                 <div className="col-span-2">
-                  <Badge className={getLevelColor(student.level)}>
-                    {student.level}
-                  </Badge>
+                  <div className="space-y-1">
+                    {student.courses && student.courses.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {student.courses.map((course, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {course}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-500">No active courses</span>
+                    )}
+                  </div>
                 </div>
                 <div className="col-span-2">
                   <div className="space-y-1">
@@ -1271,6 +1281,14 @@ export function AdminStudents() {
                 </div>
                 <div className="col-span-2">
                   <div className="flex gap-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleVoIPCall(student)}
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                    >
+                      <Phone className="h-3 w-3" />
+                    </Button>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm">
