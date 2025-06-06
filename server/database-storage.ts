@@ -1,9 +1,10 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { db } from "./db";
 import { 
   users, userProfiles, userSessions, rolePermissions, courses, enrollments,
   sessions, messages, homework, payments, notifications, instituteBranding,
-  achievements, userAchievements, userStats, dailyGoals,
+  achievements, userAchievements, userStats, dailyGoals, adminSettings,
+  walletTransactions, coursePayments,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
@@ -11,7 +12,9 @@ import {
   type Homework, type InsertHomework, type Payment, type InsertPayment,
   type Notification, type InsertNotification, type InstituteBranding, type InsertBranding,
   type Achievement, type InsertAchievement, type UserAchievement, type InsertUserAchievement,
-  type UserStats, type InsertUserStats, type DailyGoal, type InsertDailyGoal
+  type UserStats, type InsertUserStats, type DailyGoal, type InsertDailyGoal,
+  type AdminSettings, type InsertAdminSettings, type WalletTransaction, type InsertWalletTransaction,
+  type CoursePayment, type InsertCoursePayment
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -623,5 +626,237 @@ export class DatabaseStorage implements IStorage {
       .where(eq(dailyGoals.id, id))
       .returning();
     return updatedGoal;
+  }
+
+  // Wallet-based Payment System Methods
+  async getAdminSettings(): Promise<AdminSettings | undefined> {
+    const [settings] = await db.select().from(adminSettings).limit(1);
+    return settings;
+  }
+
+  async updateAdminSettings(settings: Partial<AdminSettings>): Promise<AdminSettings> {
+    const existingSettings = await this.getAdminSettings();
+    
+    if (existingSettings) {
+      const [updated] = await db
+        .update(adminSettings)
+        .set({ ...settings, updatedAt: new Date() })
+        .where(eq(adminSettings.id, existingSettings.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(adminSettings)
+        .values(settings as InsertAdminSettings)
+        .returning();
+      return created;
+    }
+  }
+
+  async getUserWalletData(userId: number): Promise<{
+    walletBalance: number;
+    totalCredits: number;
+    memberTier: string;
+    discountPercentage: number;
+  } | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) return undefined;
+
+    const settings = await this.getAdminSettings();
+    if (!settings) return undefined;
+
+    // Calculate member tier and discount based on total credits
+    let memberTier = 'bronze';
+    let discountPercentage = settings.bronzeDiscount;
+
+    if (user.totalCredits >= settings.diamondTierThreshold) {
+      memberTier = 'diamond';
+      discountPercentage = settings.diamondDiscount;
+    } else if (user.totalCredits >= settings.goldTierThreshold) {
+      memberTier = 'gold';
+      discountPercentage = settings.goldDiscount;
+    } else if (user.totalCredits >= settings.silverTierThreshold) {
+      memberTier = 'silver';
+      discountPercentage = settings.silverDiscount;
+    }
+
+    // Update user's member tier if changed
+    if (user.memberTier !== memberTier) {
+      await this.updateUser(userId, { memberTier });
+    }
+
+    return {
+      walletBalance: user.walletBalance || 0,
+      totalCredits: user.totalCredits || 0,
+      memberTier,
+      discountPercentage
+    };
+  }
+
+  async createWalletTransaction(transaction: InsertWalletTransaction): Promise<WalletTransaction> {
+    const [newTransaction] = await db.insert(walletTransactions).values(transaction).returning();
+    return newTransaction;
+  }
+
+  async getUserWalletTransactions(userId: number): Promise<WalletTransaction[]> {
+    return await db
+      .select()
+      .from(walletTransactions)
+      .where(eq(walletTransactions.userId, userId))
+      .orderBy(desc(walletTransactions.createdAt));
+  }
+
+  async updateWalletTransactionStatus(
+    id: number, 
+    status: string,
+    gatewayData?: Partial<{
+      shetabTransactionId: string;
+      shetabReferenceNumber: string;
+      cardNumber: string;
+      gatewayResponse: any;
+    }>
+  ): Promise<WalletTransaction | undefined> {
+    const updateData: any = { 
+      status,
+      ...(status === 'completed' ? { completedAt: new Date() } : {})
+    };
+
+    if (gatewayData) {
+      Object.assign(updateData, gatewayData);
+    }
+
+    const [updated] = await db
+      .update(walletTransactions)
+      .set(updateData)
+      .where(eq(walletTransactions.id, id))
+      .returning();
+
+    // If transaction completed and is a top-up, update user wallet balance
+    if (updated && status === 'completed' && updated.type === 'topup') {
+      await this.updateUserWalletBalance(updated.userId, updated.amount);
+    }
+
+    return updated;
+  }
+
+  async updateUserWalletBalance(userId: number, amount: number): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+
+    const newBalance = (user.walletBalance || 0) + amount;
+    return await this.updateUser(userId, { walletBalance: newBalance });
+  }
+
+  async createCoursePayment(payment: InsertCoursePayment): Promise<CoursePayment> {
+    const [newPayment] = await db.insert(coursePayments).values(payment).returning();
+    return newPayment;
+  }
+
+  async updateCoursePaymentStatus(
+    id: number,
+    status: string,
+    gatewayData?: Partial<{
+      shetabTransactionId: string;
+      shetabReferenceNumber: string;
+      cardNumber: string;
+      gatewayResponse: any;
+    }>
+  ): Promise<CoursePayment | undefined> {
+    const updateData: any = { 
+      status,
+      ...(status === 'completed' ? { completedAt: new Date() } : {})
+    };
+
+    if (gatewayData) {
+      Object.assign(updateData, gatewayData);
+    }
+
+    const [updated] = await db
+      .update(coursePayments)
+      .set(updateData)
+      .where(eq(coursePayments.id, id))
+      .returning();
+
+    // If payment completed, handle post-payment actions
+    if (updated && status === 'completed') {
+      await this.handleCompletedCoursePayment(updated);
+    }
+
+    return updated;
+  }
+
+  private async handleCompletedCoursePayment(payment: CoursePayment): Promise<void> {
+    // Enroll user in course
+    await this.enrollInCourse({
+      userId: payment.userId,
+      courseId: payment.courseId,
+      progress: 0
+    });
+
+    // Award credits based on payment amount and admin settings
+    if (payment.creditsAwarded > 0) {
+      const user = await this.getUser(payment.userId);
+      if (user) {
+        const newTotalCredits = (user.totalCredits || 0) + payment.creditsAwarded;
+        await this.updateUser(payment.userId, { totalCredits: newTotalCredits });
+      }
+    }
+
+    // If paid from wallet, deduct from balance
+    if (payment.paymentMethod === 'wallet') {
+      await this.updateUserWalletBalance(payment.userId, -payment.finalPrice);
+    }
+
+    // Create notification
+    await this.createNotification({
+      userId: payment.userId,
+      title: 'ثبت نام موفق',
+      message: 'شما با موفقیت در دوره ثبت نام شدید',
+      type: 'success'
+    });
+  }
+
+  async getAvailableCoursesForUser(userId: number): Promise<Course[]> {
+    // Get all active courses
+    const allCourses = await db
+      .select()
+      .from(courses)
+      .where(eq(courses.isActive, true));
+
+    // Get user's enrolled courses
+    const userEnrollments = await db
+      .select({ courseId: enrollments.courseId })
+      .from(enrollments)
+      .where(eq(enrollments.userId, userId));
+
+    const enrolledCourseIds = userEnrollments.map(e => e.courseId);
+
+    // Filter out enrolled courses
+    return allCourses.filter(course => !enrolledCourseIds.includes(course.id));
+  }
+
+  async calculateCoursePrice(courseId: number, userId: number): Promise<{
+    originalPrice: number;
+    discountPercentage: number;
+    finalPrice: number;
+    creditsAwarded: number;
+  } | undefined> {
+    const course = await this.getCourse(courseId);
+    const walletData = await this.getUserWalletData(userId);
+    const settings = await this.getAdminSettings();
+
+    if (!course || !walletData || !settings) return undefined;
+
+    const originalPrice = course.price;
+    const discountPercentage = walletData.discountPercentage;
+    const finalPrice = originalPrice - (originalPrice * discountPercentage / 100);
+    const creditsAwarded = Math.floor(finalPrice / settings.creditValueInRials);
+
+    return {
+      originalPrice,
+      discountPercentage,
+      finalPrice,
+      creditsAwarded
+    };
   }
 }

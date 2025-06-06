@@ -924,6 +924,208 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(payments);
   });
 
+  // Wallet-based Payment System Endpoints
+  app.get("/api/wallet", authenticateToken, async (req: any, res) => {
+    try {
+      const walletData = await storage.getUserWalletData(req.user.id);
+      if (!walletData) {
+        return res.status(404).json({ message: "Wallet data not found" });
+      }
+      res.json(walletData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch wallet data" });
+    }
+  });
+
+  app.get("/api/wallet/transactions", authenticateToken, async (req: any, res) => {
+    try {
+      const transactions = await storage.getUserWalletTransactions(req.user.id);
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch wallet transactions" });
+    }
+  });
+
+  app.post("/api/wallet/topup", authenticateToken, async (req: any, res) => {
+    try {
+      const { amount } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+
+      const settings = await storage.getAdminSettings();
+      if (!settings) {
+        return res.status(500).json({ message: "Admin settings not configured" });
+      }
+
+      // Check if amount is in valid increments
+      if (amount % settings.walletTopupIncrement !== 0) {
+        return res.status(400).json({ 
+          message: `Amount must be in increments of ${settings.walletTopupIncrement} IRR` 
+        });
+      }
+
+      // Create wallet transaction
+      const transaction = await storage.createWalletTransaction({
+        userId: req.user.id,
+        type: 'topup',
+        amount,
+        description: `Wallet top-up of ${amount.toLocaleString('fa-IR')} IRR`,
+        status: 'pending',
+        merchantTransactionId: `WALLET_${Date.now()}_${req.user.id}`
+      });
+
+      // Import Shetab service for payment processing
+      const { createShetabService } = await import('./shetab-service');
+      const shetabService = createShetabService();
+      
+      if (!shetabService) {
+        return res.status(503).json({ 
+          message: "Payment gateway not configured. Please contact support." 
+        });
+      }
+
+      // Initialize Shetab payment for wallet top-up
+      const paymentRequest = {
+        amount,
+        orderId: transaction.merchantTransactionId!,
+        description: `Wallet Top-up - ${amount.toLocaleString('fa-IR')} IRR`,
+        customerEmail: req.user.email,
+        customerPhone: req.user.phoneNumber,
+        metadata: { 
+          transactionId: transaction.id, 
+          type: 'wallet_topup' 
+        }
+      };
+
+      // For now, simulate payment success - in production, redirect to Shetab gateway
+      await storage.updateWalletTransactionStatus(transaction.id, 'completed');
+
+      res.json({
+        success: true,
+        message: "Wallet topped up successfully",
+        transaction
+      });
+
+    } catch (error: any) {
+      console.error('Wallet top-up error:', error);
+      res.status(400).json({ 
+        message: "Failed to process wallet top-up",
+        error: error.message
+      });
+    }
+  });
+
+  app.get("/api/courses/available", authenticateToken, async (req: any, res) => {
+    try {
+      const courses = await storage.getAvailableCoursesForUser(req.user.id);
+      res.json(courses);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch available courses" });
+    }
+  });
+
+  app.post("/api/courses/enroll", authenticateToken, async (req: any, res) => {
+    try {
+      const { courseId, paymentMethod } = req.body;
+      
+      if (!courseId || !paymentMethod) {
+        return res.status(400).json({ message: "Course ID and payment method required" });
+      }
+
+      if (!['wallet', 'shetab'].includes(paymentMethod)) {
+        return res.status(400).json({ message: "Invalid payment method" });
+      }
+
+      // Calculate course price with member tier discount
+      const priceData = await storage.calculateCoursePrice(courseId, req.user.id);
+      if (!priceData) {
+        return res.status(404).json({ message: "Course not found or price calculation failed" });
+      }
+
+      // Check wallet balance if paying from wallet
+      if (paymentMethod === 'wallet') {
+        const walletData = await storage.getUserWalletData(req.user.id);
+        if (!walletData || walletData.walletBalance < priceData.finalPrice) {
+          return res.status(400).json({ 
+            message: "Insufficient wallet balance",
+            required: priceData.finalPrice,
+            available: walletData?.walletBalance || 0
+          });
+        }
+      }
+
+      // Create course payment record
+      const coursePayment = await storage.createCoursePayment({
+        userId: req.user.id,
+        courseId,
+        originalPrice: priceData.originalPrice,
+        discountPercentage: priceData.discountPercentage,
+        finalPrice: priceData.finalPrice,
+        creditsAwarded: priceData.creditsAwarded,
+        paymentMethod,
+        status: 'pending',
+        merchantTransactionId: `COURSE_${Date.now()}_${req.user.id}_${courseId}`
+      });
+
+      if (paymentMethod === 'wallet') {
+        // Process wallet payment immediately
+        await storage.updateCoursePaymentStatus(coursePayment.id, 'completed');
+        
+        res.json({
+          success: true,
+          message: "Course enrollment successful",
+          payment: coursePayment
+        });
+      } else {
+        // For Shetab payment, return payment URL
+        const { createShetabService } = await import('./shetab-service');
+        const shetabService = createShetabService();
+        
+        if (!shetabService) {
+          return res.status(503).json({ 
+            message: "Payment gateway not configured. Please contact support." 
+          });
+        }
+
+        // For now, simulate payment - in production, redirect to Shetab gateway
+        await storage.updateCoursePaymentStatus(coursePayment.id, 'completed');
+
+        res.json({
+          success: true,
+          message: "Course enrollment successful via Shetab",
+          payment: coursePayment
+        });
+      }
+
+    } catch (error: any) {
+      console.error('Course enrollment error:', error);
+      res.status(400).json({ 
+        message: "Failed to enroll in course",
+        error: error.message
+      });
+    }
+  });
+
+  app.get("/api/admin/settings", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+    try {
+      const settings = await storage.getAdminSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch admin settings" });
+    }
+  });
+
+  app.put("/api/admin/settings", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const settings = await storage.updateAdminSettings(req.body);
+      res.json(settings);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update admin settings" });
+    }
+  });
+
   // Enhanced Shetab Payment Integration
   app.post("/api/payments/shetab/initiate", authenticateToken, async (req: any, res) => {
     try {
