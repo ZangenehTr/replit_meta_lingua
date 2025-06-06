@@ -654,6 +654,105 @@ export const insertStudentReportSchema = createInsertSchema(studentReports).omit
   createdAt: true
 });
 
+// Referral Links - Each user can have multiple referral links with different commission splits
+export const referralLinks = pgTable("referral_links", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  referralCode: varchar("referral_code", { length: 20 }).unique().notNull(),
+  title: varchar("title", { length: 100 }).notNull(), // Custom title for the referral link
+  description: text("description"), // Optional description
+  
+  // Commission split settings (similar to Binance)
+  commissionType: varchar("commission_type", { length: 20 }).default("percentage").notNull(), // percentage or fixed
+  selfCommissionRate: integer("self_commission_rate").default(100).notNull(), // 0-100, how much referrer gets
+  referredCommissionRate: integer("referred_commission_rate").default(0).notNull(), // 0-100, how much referred user gets
+  
+  // Activity tracking
+  totalClicks: integer("total_clicks").default(0).notNull(),
+  totalSignups: integer("total_signups").default(0).notNull(),
+  totalEarnings: integer("total_earnings").default(0).notNull(), // in IRR
+  
+  isActive: boolean("is_active").default(true).notNull(),
+  expiresAt: timestamp("expires_at"), // Optional expiration
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Referral Activities - Track clicks, signups, and conversions
+export const referralActivities = pgTable("referral_activities", {
+  id: serial("id").primaryKey(),
+  referralLinkId: integer("referral_link_id").references(() => referralLinks.id).notNull(),
+  activityType: varchar("activity_type", { length: 20 }).notNull(), // click, signup, enrollment, payment
+  
+  // User information
+  visitorId: varchar("visitor_id", { length: 50 }), // Anonymous visitor tracking
+  referredUserId: integer("referred_user_id").references(() => users.id), // When user signs up
+  
+  // Transaction details (for payments/enrollments)
+  relatedPaymentId: integer("related_payment_id").references(() => payments.id),
+  relatedCourseId: integer("related_course_id").references(() => courses.id),
+  
+  // Commission earned from this activity
+  commissionAmount: integer("commission_amount").default(0).notNull(), // in IRR
+  
+  // Tracking data
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  referrerUrl: text("referrer_url"),
+  
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Referral Commissions - Track and manage commission payouts
+export const referralCommissions = pgTable("referral_commissions", {
+  id: serial("id").primaryKey(),
+  referralLinkId: integer("referral_link_id").references(() => referralLinks.id).notNull(),
+  referrerUserId: integer("referrer_user_id").references(() => users.id).notNull(),
+  referredUserId: integer("referred_user_id").references(() => users.id),
+  
+  // Commission details
+  commissionType: varchar("commission_type", { length: 20 }).notNull(), // enrollment, payment, signup
+  baseAmount: integer("base_amount").notNull(), // Original transaction amount
+  commissionRate: integer("commission_rate").notNull(), // Percentage used
+  commissionAmount: integer("commission_amount").notNull(), // Final commission in IRR
+  
+  // Split information
+  referrerAmount: integer("referrer_amount").notNull(), // Amount for referrer
+  referredAmount: integer("referred_amount").default(0).notNull(), // Amount for referred user
+  
+  // Status tracking
+  status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, paid, cancelled
+  paidAt: timestamp("paid_at"),
+  
+  // Related transaction
+  relatedPaymentId: integer("related_payment_id").references(() => payments.id),
+  relatedEnrollmentId: integer("related_enrollment_id").references(() => enrollments.id),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Referral system insert schemas
+export const insertReferralLinkSchema = createInsertSchema(referralLinks).omit({
+  id: true,
+  totalClicks: true,
+  totalSignups: true,
+  totalEarnings: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertReferralActivitySchema = createInsertSchema(referralActivities).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertReferralCommissionSchema = createInsertSchema(referralCommissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -723,3 +822,11 @@ export type CommunicationLog = typeof communicationLogs.$inferSelect;
 export type InsertCommunicationLog = z.infer<typeof insertCommunicationLogSchema>;
 export type StudentReport = typeof studentReports.$inferSelect;
 export type InsertStudentReport = z.infer<typeof insertStudentReportSchema>;
+
+// Referral System Types
+export type ReferralLink = typeof referralLinks.$inferSelect;
+export type InsertReferralLink = z.infer<typeof insertReferralLinkSchema>;
+export type ReferralActivity = typeof referralActivities.$inferSelect;
+export type InsertReferralActivity = z.infer<typeof insertReferralActivitySchema>;
+export type ReferralCommission = typeof referralCommissions.$inferSelect;
+export type InsertReferralCommission = z.infer<typeof insertReferralCommissionSchema>;

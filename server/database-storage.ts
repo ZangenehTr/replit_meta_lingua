@@ -859,4 +859,212 @@ export class DatabaseStorage implements IStorage {
       creditsAwarded
     };
   }
+
+  // Referral System Methods
+  async getUserReferralLinks(userId: number): Promise<ReferralLink[]> {
+    return await db
+      .select()
+      .from(referralLinks)
+      .where(eq(referralLinks.userId, userId))
+      .orderBy(desc(referralLinks.createdAt));
+  }
+
+  async createReferralLink(linkData: InsertReferralLink): Promise<ReferralLink> {
+    // Generate unique referral code
+    const referralCode = this.generateReferralCode();
+    
+    const [link] = await db
+      .insert(referralLinks)
+      .values({
+        ...linkData,
+        referralCode
+      })
+      .returning();
+    
+    return link;
+  }
+
+  async getReferralLinkByCode(code: string): Promise<ReferralLink | undefined> {
+    const [link] = await db
+      .select()
+      .from(referralLinks)
+      .where(eq(referralLinks.referralCode, code));
+    
+    return link;
+  }
+
+  async trackReferralActivity(activityData: InsertReferralActivity): Promise<ReferralActivity> {
+    const [activity] = await db
+      .insert(referralActivities)
+      .values(activityData)
+      .returning();
+
+    // Update referral link statistics
+    if (activityData.activityType === 'click') {
+      await db
+        .update(referralLinks)
+        .set({
+          totalClicks: sql`${referralLinks.totalClicks} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(referralLinks.id, activityData.referralLinkId));
+    } else if (activityData.activityType === 'signup') {
+      await db
+        .update(referralLinks)
+        .set({
+          totalSignups: sql`${referralLinks.totalSignups} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(referralLinks.id, activityData.referralLinkId));
+    }
+
+    return activity;
+  }
+
+  async createReferralCommission(commissionData: InsertReferralCommission): Promise<ReferralCommission> {
+    const [commission] = await db
+      .insert(referralCommissions)
+      .values(commissionData)
+      .returning();
+
+    // Update referral link total earnings
+    await db
+      .update(referralLinks)
+      .set({
+        totalEarnings: sql`${referralLinks.totalEarnings} + ${commissionData.commissionAmount}`,
+        updatedAt: new Date()
+      })
+      .where(eq(referralLinks.id, commissionData.referralLinkId));
+
+    return commission;
+  }
+
+  async getUserReferralCommissions(userId: number): Promise<ReferralCommission[]> {
+    return await db
+      .select()
+      .from(referralCommissions)
+      .where(eq(referralCommissions.referrerUserId, userId))
+      .orderBy(desc(referralCommissions.createdAt));
+  }
+
+  async processReferralPayment(
+    referralLinkId: number,
+    paymentId: number,
+    baseAmount: number
+  ): Promise<ReferralCommission | null> {
+    // Get referral link details
+    const [link] = await db
+      .select()
+      .from(referralLinks)
+      .where(eq(referralLinks.id, referralLinkId));
+
+    if (!link || !link.isActive) {
+      return null;
+    }
+
+    // Calculate commission amounts
+    const commissionAmount = Math.floor((baseAmount * link.selfCommissionRate) / 100);
+    const referredAmount = Math.floor((baseAmount * link.referredCommissionRate) / 100);
+    const referrerAmount = commissionAmount - referredAmount;
+
+    // Create commission record
+    const commissionData: InsertReferralCommission = {
+      referralLinkId: link.id,
+      referrerUserId: link.userId,
+      commissionType: 'payment',
+      baseAmount,
+      commissionRate: link.selfCommissionRate,
+      commissionAmount,
+      referrerAmount,
+      referredAmount,
+      relatedPaymentId: paymentId,
+      status: 'pending'
+    };
+
+    const commission = await this.createReferralCommission(commissionData);
+
+    // Add commission to referrer's wallet
+    if (referrerAmount > 0) {
+      await this.updateUserWalletBalance(link.userId, referrerAmount);
+      
+      // Create wallet transaction record
+      await this.createWalletTransaction({
+        userId: link.userId,
+        type: 'credit',
+        amount: referrerAmount,
+        description: `Referral commission from payment #${paymentId}`,
+        status: 'completed'
+      });
+    }
+
+    return commission;
+  }
+
+  async getReferralStats(userId: number): Promise<{
+    totalLinks: number;
+    totalClicks: number;
+    totalSignups: number;
+    totalEarnings: number;
+    pendingCommissions: number;
+    conversionRate: number;
+  }> {
+    const links = await this.getUserReferralLinks(userId);
+    
+    const totalLinks = links.length;
+    const totalClicks = links.reduce((sum, link) => sum + link.totalClicks, 0);
+    const totalSignups = links.reduce((sum, link) => sum + link.totalSignups, 0);
+    const totalEarnings = links.reduce((sum, link) => sum + link.totalEarnings, 0);
+
+    const pendingCommissions = await db
+      .select({ total: sql<number>`SUM(${referralCommissions.commissionAmount})` })
+      .from(referralCommissions)
+      .where(
+        and(
+          eq(referralCommissions.referrerUserId, userId),
+          eq(referralCommissions.status, 'pending')
+        )
+      );
+
+    const conversionRate = totalClicks > 0 ? (totalSignups / totalClicks) * 100 : 0;
+
+    return {
+      totalLinks,
+      totalClicks,
+      totalSignups,
+      totalEarnings,
+      pendingCommissions: pendingCommissions[0]?.total || 0,
+      conversionRate: Math.round(conversionRate * 100) / 100
+    };
+  }
+
+  async updateReferralLink(
+    linkId: number,
+    userId: number,
+    updates: Partial<ReferralLink>
+  ): Promise<ReferralLink | undefined> {
+    const [updated] = await db
+      .update(referralLinks)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(referralLinks.id, linkId),
+          eq(referralLinks.userId, userId)
+        )
+      )
+      .returning();
+
+    return updated;
+  }
+
+  private generateReferralCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
 }

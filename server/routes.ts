@@ -3435,6 +3435,158 @@ Return JSON format:
     }
   });
 
+  // Referral System Routes
+  
+  // Get user's referral links
+  app.get("/api/referrals/links", authenticateToken, async (req: any, res) => {
+    try {
+      const links = await storage.getUserReferralLinks(req.user.id);
+      res.json(links);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch referral links" });
+    }
+  });
+
+  // Create new referral link
+  app.post("/api/referrals/links", authenticateToken, async (req: any, res) => {
+    try {
+      const linkData = {
+        userId: req.user.id,
+        title: req.body.title,
+        description: req.body.description,
+        selfCommissionRate: req.body.selfCommissionRate || 100,
+        referredCommissionRate: req.body.referredCommissionRate || 0,
+        commissionType: req.body.commissionType || 'percentage'
+      };
+
+      // Validate commission rates
+      if (linkData.selfCommissionRate + linkData.referredCommissionRate > 100) {
+        return res.status(400).json({ 
+          message: "Total commission rate cannot exceed 100%" 
+        });
+      }
+
+      const link = await storage.createReferralLink(linkData);
+      res.status(201).json(link);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create referral link" });
+    }
+  });
+
+  // Update referral link
+  app.put("/api/referrals/links/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const linkId = parseInt(req.params.id);
+      const updates = {
+        title: req.body.title,
+        description: req.body.description,
+        selfCommissionRate: req.body.selfCommissionRate,
+        referredCommissionRate: req.body.referredCommissionRate,
+        isActive: req.body.isActive
+      };
+
+      // Validate commission rates if provided
+      if (updates.selfCommissionRate !== undefined && updates.referredCommissionRate !== undefined) {
+        if (updates.selfCommissionRate + updates.referredCommissionRate > 100) {
+          return res.status(400).json({ 
+            message: "Total commission rate cannot exceed 100%" 
+          });
+        }
+      }
+
+      const updated = await storage.updateReferralLink(linkId, req.user.id, updates);
+      if (!updated) {
+        return res.status(404).json({ message: "Referral link not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update referral link" });
+    }
+  });
+
+  // Get referral statistics
+  app.get("/api/referrals/stats", authenticateToken, async (req: any, res) => {
+    try {
+      const stats = await storage.getReferralStats(req.user.id);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch referral statistics" });
+    }
+  });
+
+  // Get referral commissions
+  app.get("/api/referrals/commissions", authenticateToken, async (req: any, res) => {
+    try {
+      const commissions = await storage.getUserReferralCommissions(req.user.id);
+      res.json(commissions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch commissions" });
+    }
+  });
+
+  // Track referral click (public endpoint)
+  app.post("/api/referrals/track/:code", async (req, res) => {
+    try {
+      const referralCode = req.params.code;
+      const link = await storage.getReferralLinkByCode(referralCode);
+      
+      if (!link || !link.isActive) {
+        return res.status(404).json({ message: "Invalid referral code" });
+      }
+
+      // Track the click
+      await storage.trackReferralActivity({
+        referralLinkId: link.id,
+        activityType: 'click',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        referrerUrl: req.get('Referer')
+      });
+
+      res.json({ 
+        success: true, 
+        referralLink: {
+          title: link.title,
+          description: link.description,
+          referrerCommission: link.selfCommissionRate,
+          referredBonus: link.referredCommissionRate
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to track referral" });
+    }
+  });
+
+  // Register with referral code
+  app.post("/api/referrals/signup/:code", async (req, res) => {
+    try {
+      const referralCode = req.params.code;
+      const link = await storage.getReferralLinkByCode(referralCode);
+      
+      if (!link || !link.isActive) {
+        return res.status(404).json({ message: "Invalid referral code" });
+      }
+
+      // The actual user registration would happen here
+      // For now, we'll just track the signup activity
+      await storage.trackReferralActivity({
+        referralLinkId: link.id,
+        activityType: 'signup',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        referrerUrl: req.get('Referer')
+      });
+
+      res.json({ 
+        success: true,
+        message: "Signup tracked successfully",
+        bonus: link.referredCommissionRate
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to process referral signup" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
