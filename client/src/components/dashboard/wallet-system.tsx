@@ -103,7 +103,10 @@ export function WalletSystem() {
     mutationFn: async (amount: number) => {
       return await apiRequest("/api/wallet/topup", {
         method: "POST",
-        body: { amount }
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ amount })
       });
     },
     onSuccess: () => {
@@ -128,7 +131,10 @@ export function WalletSystem() {
     mutationFn: async ({ courseId, paymentMethod }: { courseId: number; paymentMethod: 'wallet' | 'shetab' }) => {
       return await apiRequest("/api/courses/enroll", {
         method: "POST",
-        body: { courseId, paymentMethod }
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ courseId, paymentMethod })
       });
     },
     onSuccess: () => {
