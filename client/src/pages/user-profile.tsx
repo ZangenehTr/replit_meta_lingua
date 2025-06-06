@@ -17,6 +17,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Settings, Globe, BookOpen, Trophy, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { BackButton } from "@/components/ui/back-button";
+import { useLanguage } from "@/hooks/use-language";
 
 const profileSchema = z.object({
   culturalBackground: z.string().optional(),
@@ -135,6 +137,7 @@ export default function UserProfile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("basic");
+  const { currentLanguage, isRTL } = useLanguage();
 
   // Fetch current user data
   const { data: user, isLoading: userLoading } = useQuery({
