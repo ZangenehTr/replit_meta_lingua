@@ -30,6 +30,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { BackButton } from "@/components/ui/back-button";
+import { useLanguage } from "@/hooks/use-language";
 
 interface CoursePlayerProps {
   courseId: string;
@@ -81,6 +83,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currentLanguage, isRTL } = useLanguage();
 
   // Fetch course data
   const { data: course, isLoading } = useQuery<Course>({
@@ -231,15 +234,17 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
       <div className="border-b p-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              بازگشت به دوره / Back to Course
-            </Button>
+            <BackButton 
+              href="/dashboard" 
+              label={currentLanguage === 'fa' ? 'بازگشت به دوره' :
+                     currentLanguage === 'ar' ? 'العودة إلى الدورة' :
+                     'Back to Course'}
+            />
             <div>
               <h1 className="text-xl font-bold">{course.title}</h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -249,7 +254,11 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
           </div>
           <div className="flex items-center space-x-2">
             <Badge variant="secondary">
-              {course.completedLessons} / {course.totalLessons} دروس
+              {course.completedLessons} / {course.totalLessons} {
+                currentLanguage === 'fa' ? 'دروس' :
+                currentLanguage === 'ar' ? 'الدروس' :
+                'lessons'
+              }
             </Badge>
             <Progress value={course.progress} className="w-32" />
           </div>
