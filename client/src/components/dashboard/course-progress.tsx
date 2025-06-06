@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, BookOpen, Clock, DollarSign } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
+import { useToast } from "@/hooks/use-toast";
 
 interface Course {
   id: number;
@@ -27,6 +28,40 @@ interface Course {
 export function CourseProgress() {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const shareViaSMS = async (courseId: number, courseTitle: string) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(`/api/courses/${courseId}/refer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const message = `بیا این دوره رو ببین: ${courseTitle}\n${data.referralLink}`;
+        const encodedMessage = encodeURIComponent(message);
+        
+        // Open SMS app with pre-filled message
+        window.open(`sms:?body=${encodedMessage}`, '_self');
+        
+        toast({
+          title: "لینک معرفی آماده شد",
+          description: "پیام در اپلیکیشن پیامک شما آماده شده است",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "خطا",
+        description: "مشکلی در ایجاد لینک معرفی پیش آمد",
+        variant: "destructive",
+      });
+    }
+  };
   
   const { data: courses, isLoading } = useQuery<Course[]>({
     queryKey: ["/api/courses/my"],
@@ -146,7 +181,7 @@ export function CourseProgress() {
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    className="w-full sm:w-auto text-xs sm:text-sm"
+                    className="flex-1 text-xs sm:text-sm"
                     onClick={() => progressMutation.mutate({ 
                       courseId: course.id, 
                       lessonId: (course.completedLessons || 0) + 1 
@@ -155,6 +190,14 @@ export function CourseProgress() {
                   >
                     {progressMutation.isPending ? t('updating') : t('continueLearning')}
                     <ArrowRight className="ml-1 h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs sm:text-sm"
+                    onClick={() => shareViaSMS(course.id, course.title)}
+                  >
+                    معرفی
                   </Button>
                 </div>
               </div>

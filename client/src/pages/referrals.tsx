@@ -215,7 +215,13 @@ export default function ReferralsPage() {
                     min="0"
                     max="20"
                     value={referrerPercentage}
-                    onChange={(e) => setReferrerPercentage(Number(e.target.value))}
+                    onChange={(e) => {
+                      const newValue = Number(e.target.value);
+                      if (newValue >= 0 && newValue <= 20) {
+                        setReferrerPercentage(newValue);
+                        setReferredPercentage(20 - newValue); // Auto-adjust to maintain 20% total
+                      }
+                    }}
                   />
                   <p className="text-sm text-gray-500">
                     درصدی که شما از هر فروش دریافت می‌کنید
@@ -230,7 +236,13 @@ export default function ReferralsPage() {
                     min="0"
                     max="20"
                     value={referredPercentage}
-                    onChange={(e) => setReferredPercentage(Number(e.target.value))}
+                    onChange={(e) => {
+                      const newValue = Number(e.target.value);
+                      if (newValue >= 0 && newValue <= 20) {
+                        setReferredPercentage(newValue);
+                        setReferrerPercentage(20 - newValue); // Auto-adjust to maintain 20% total
+                      }
+                    }}
                   />
                   <p className="text-sm text-gray-500">
                     درصد تخفیفی که فرد معرفی‌شده دریافت می‌کند
