@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
+import { BackButton } from "@/components/ui/back-button";
 
 interface StudentProfile {
   id: number;
@@ -137,12 +138,25 @@ export default function StudentInformationSystem() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">سیستم اطلاعات دانش‌آموزان</h2>
-          <p className="text-muted-foreground">مدیریت جامع پروفایل و پیشرفت دانش‌آموزان</p>
+          <div className="flex items-center gap-4 mb-4">
+            <BackButton href="/dashboard" />
+          </div>
+          <h2 className="text-2xl font-bold">
+            {currentLanguage === 'fa' ? 'سیستم اطلاعات دانش‌آموزان' :
+             currentLanguage === 'ar' ? 'نظام معلومات الطلاب' :
+             'Student Information System'}
+          </h2>
+          <p className="text-muted-foreground">
+            {currentLanguage === 'fa' ? 'مدیریت جامع پروفایل و پیشرفت دانش‌آموزان' :
+             currentLanguage === 'ar' ? 'إدارة شاملة لملفات الطلاب وتقدمهم' :
+             'Comprehensive management of student profiles and progress'}
+          </p>
         </div>
         <Button>
           <UserPlus className="h-4 w-4 mr-2" />
-          ثبت‌نام دانش‌آموز جدید
+          {currentLanguage === 'fa' ? 'ثبت‌نام دانش‌آموز جدید' :
+           currentLanguage === 'ar' ? 'تسجيل طالب جديد' :
+           'Register New Student'}
         </Button>
       </div>
 
@@ -649,7 +663,7 @@ export default function StudentInformationSystem() {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className={`container mx-auto p-6 ${isRTL ? 'rtl' : 'ltr'}`}>
       {selectedStudent ? <StudentDetailView /> : <StudentListView />}
     </div>
   );
