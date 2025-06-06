@@ -11,6 +11,7 @@ import { RecentMessages } from "@/components/dashboard/recent-messages";
 import { HomeworkTasks } from "@/components/dashboard/homework-tasks";
 import { PaymentCredits } from "@/components/dashboard/payment-credits";
 import { LiveClassroom } from "@/components/dashboard/live-classroom";
+import { AvailableCourses } from "@/components/dashboard/available-courses";
 import { DailyChallenges } from "@/components/daily-challenges";
 import { Leaderboard } from "@/components/leaderboard";
 import { AchievementNotifications } from "@/components/achievement-notifications";

@@ -709,6 +709,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(courses);
   });
 
+  // Available courses for enrollment (group classes matching student profile)
+  app.get("/api/courses/available", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const userProfile = await storage.getUserProfile(userId);
+      
+      if (!userProfile || !userProfile.targetLanguage) {
+        // Return sample group courses if no profile
+        return res.json([
+          {
+            id: 1,
+            title: "Persian Language Fundamentals - Group",
+            description: "Master the basics of Persian language with native instructors in a group setting",
+            thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop",
+            deliveryMode: "online",
+            classFormat: "group",
+            targetLanguage: "persian",
+            targetLevel: ["beginner"],
+            maxStudents: 8,
+            currentStudents: 5,
+            price: 25000,
+            weekdays: ["monday", "wednesday", "friday"],
+            startTime: "18:00",
+            endTime: "19:30",
+            instructorName: "Dr. Sarah Johnson",
+            duration: "8 weeks",
+            isActive: true
+          },
+          {
+            id: 2,
+            title: "English Conversation Group",
+            description: "Improve your English speaking skills in an interactive group environment",
+            thumbnail: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300&h=200&fit=crop",
+            deliveryMode: "in_person",
+            classFormat: "group",
+            targetLanguage: "english",
+            targetLevel: ["intermediate"],
+            maxStudents: 10,
+            currentStudents: 7,
+            price: 30000,
+            weekdays: ["tuesday", "thursday"],
+            startTime: "19:00",
+            endTime: "20:30",
+            instructorName: "Michael Smith",
+            duration: "10 weeks",
+            isActive: true
+          }
+        ]);
+      }
+
+      const availableCourses = await storage.getAvailableCoursesForUser(userId);
+      
+      // Filter for group classes (online and in-person) that match student's target language
+      const relevantCourses = availableCourses.filter(course => 
+        course.classFormat === 'group' && 
+        course.targetLanguage === userProfile.targetLanguage &&
+        (course.deliveryMode === 'online' || course.deliveryMode === 'in_person') &&
+        course.targetLevel.includes(userProfile.currentProficiency || 'beginner')
+      );
+
+      res.json(relevantCourses);
+    } catch (error) {
+      console.error("Error fetching available courses:", error);
+      res.status(500).json({ message: "Failed to fetch available courses" });
+    }
+  });
+
   app.get("/api/courses/my", authenticateToken, async (req: any, res) => {
     const courses = await storage.getUserCourses(req.user.id);
     res.json(courses);
