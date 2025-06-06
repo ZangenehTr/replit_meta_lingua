@@ -46,7 +46,6 @@ export const userProfiles = pgTable("user_profiles", {
   // Learning goals and targets
   targetLanguage: text("target_language"), // "persian", "english", "arabic", "german", etc.
   currentProficiency: text("current_proficiency"), // "beginner", "intermediate", "advanced"
-  learningGoals: text("learning_goals").array().default([]), // "conversation", "business", "academic", "travel"
   
   // Student-specific fields
   nationalId: text("national_id"),
