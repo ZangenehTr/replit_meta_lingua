@@ -1068,7 +1068,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: user.email,
           phone: user.phoneNumber || '',
           status: user.isActive ? 'active' : 'inactive',
-          level: profile?.proficiencyLevel || 'Beginner',
+          level: profile?.currentLevel || profile?.proficiencyLevel || 'Beginner',
+          nationalId: profile?.nationalId || '',
+          birthday: profile?.dateOfBirth ? (typeof profile.dateOfBirth === 'string' ? profile.dateOfBirth : new Date(profile.dateOfBirth).toISOString()) : null,
+          guardianName: profile?.guardianName || '',
+          guardianPhone: profile?.guardianPhone || '',
+          notes: profile?.notes || '',
           progress: 65, // Default for now
           attendance: 85, // Default for now
           courses: userCourses.map(c => c.title),
@@ -1338,6 +1343,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Final verified course enrollments after update:', updatedCourseIds);
       }
 
+      // Get the updated profile to ensure we return the correct birthday value
+      let finalBirthday = birthday;
+      let finalNationalId = nationalId;
+      let finalLevel = level;
+      let finalGuardianName = guardianName;
+      let finalGuardianPhone = guardianPhone;
+      let finalNotes = notes;
+      
+      try {
+        const updatedProfile = await storage.getUserProfile(studentId);
+        if (updatedProfile) {
+          finalBirthday = updatedProfile.dateOfBirth ? (updatedProfile.dateOfBirth instanceof Date ? updatedProfile.dateOfBirth.toISOString() : updatedProfile.dateOfBirth) : null;
+          finalNationalId = updatedProfile.nationalId || nationalId;
+          finalLevel = updatedProfile.currentLevel || level;
+          finalGuardianName = updatedProfile.guardianName || guardianName;
+          finalGuardianPhone = updatedProfile.guardianPhone || guardianPhone;
+          finalNotes = updatedProfile.notes || notes;
+        }
+      } catch (profileError) {
+        console.error('Error fetching updated profile:', profileError);
+        // Use the original values if profile fetch fails
+      }
+
       res.json({
         message: "Student updated successfully",
         student: {
@@ -1346,12 +1374,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: updatedStudent.lastName,
           email: updatedStudent.email,
           phone: updatedStudent.phoneNumber,
-          nationalId,
-          birthday,
-          level,
-          guardianName,
-          guardianPhone,
-          notes
+          nationalId: finalNationalId,
+          birthday: finalBirthday,
+          level: finalLevel,
+          guardianName: finalGuardianName,
+          guardianPhone: finalGuardianPhone,
+          notes: finalNotes
         }
       });
     } catch (error) {
