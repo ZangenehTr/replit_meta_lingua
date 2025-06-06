@@ -52,9 +52,15 @@ export default function ReferralsPage() {
 
   const fetchReferralData = async () => {
     try {
+      const token = localStorage.getItem("auth_token");
+      const headers = {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      };
+
       const [settingsRes, statsRes] = await Promise.all([
-        fetch('/api/referrals/settings'),
-        fetch('/api/referrals/stats')
+        fetch('/api/referrals/settings', { headers }),
+        fetch('/api/referrals/stats', { headers })
       ]);
 
       if (settingsRes.ok) {
@@ -98,10 +104,12 @@ export default function ReferralsPage() {
     }
 
     try {
+      const token = localStorage.getItem("auth_token");
       const response = await fetch('/api/referrals/settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           referrerPercentage,
@@ -188,9 +196,8 @@ export default function ReferralsPage() {
       </div>
 
       <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="settings">تنظیمات کمیسیون</TabsTrigger>
-          <TabsTrigger value="courses">معرفی دوره‌ها</TabsTrigger>
           <TabsTrigger value="stats">آمار و گزارش</TabsTrigger>
         </TabsList>
 
@@ -283,62 +290,7 @@ export default function ReferralsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="courses" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <Card key={course.id} className="relative">
-                <CardHeader>
-                  <img 
-                    src={course.thumbnail} 
-                    alt={course.title}
-                    className="w-full h-32 object-cover rounded-lg mb-3"
-                  />
-                  <CardTitle className="text-lg">{course.title}</CardTitle>
-                  <CardDescription className="text-sm">
-                    {course.description.substring(0, 100)}...
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <Badge variant="secondary">{course.language}</Badge>
-                      <Badge variant="outline">{course.level}</Badge>
-                    </div>
-                    
-                    <div className="text-lg font-bold text-green-600">
-                      {course.price.toLocaleString()} تومان
-                    </div>
 
-                    <div className="text-sm text-gray-600">
-                      کمیسیون شما: {((course.price * referrerPercentage) / 100).toLocaleString()} تومان
-                    </div>
-
-                    <div className="flex gap-2 pt-3">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => shareViaSMS(course.id, course.title)}
-                      >
-                        <MessageSquare className="h-4 w-4 mr-1" />
-                        SMS
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => shareViaWhatsApp(course.id, course.title)}
-                      >
-                        <Phone className="h-4 w-4 mr-1" />
-                        WhatsApp
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
 
         <TabsContent value="stats" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
