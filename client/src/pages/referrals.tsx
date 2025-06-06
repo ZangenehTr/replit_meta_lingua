@@ -188,20 +188,35 @@ export default function ReferralsPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto" dir="rtl">
+    <div className={`p-6 max-w-7xl mx-auto ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <BackButton href="/dashboard" />
+        </div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          سیستم معرفی دوره‌ها
+          {currentLanguage === 'fa' ? 'سیستم معرفی دوره‌ها' : 
+           currentLanguage === 'ar' ? 'نظام إحالة الدورات' : 
+           'Course Referral System'}
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
-          با معرفی دوره‌ها به دوستان، کمیسیون دریافت کنید (حداکثر 20% از قیمت دوره)
+          {currentLanguage === 'fa' ? 'با معرفی دوره‌ها به دوستان، کمیسیون دریافت کنید (حداکثر 20% از قیمت دوره)' :
+           currentLanguage === 'ar' ? 'احصل على عمولة من خلال إحالة الدورات للأصدقاء (حد أقصى 20% من سعر الدورة)' :
+           'Earn commission by referring courses to friends (maximum 20% of course price)'}
         </p>
       </div>
 
       <Tabs defaultValue="settings" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="settings">تنظیمات کمیسیون</TabsTrigger>
-          <TabsTrigger value="stats">آمار و گزارش</TabsTrigger>
+          <TabsTrigger value="settings">
+            {currentLanguage === 'fa' ? 'تنظیمات کمیسیون' : 
+             currentLanguage === 'ar' ? 'إعدادات العمولة' : 
+             'Commission Settings'}
+          </TabsTrigger>
+          <TabsTrigger value="stats">
+            {currentLanguage === 'fa' ? 'آمار و گزارش' : 
+             currentLanguage === 'ar' ? 'الإحصائيات والتقارير' : 
+             'Statistics & Reports'}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="settings" className="space-y-6">
@@ -209,16 +224,24 @@ export default function ReferralsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                تنظیمات توزیع کمیسیون
+                {currentLanguage === 'fa' ? 'تنظیمات توزیع کمیسیون' :
+                 currentLanguage === 'ar' ? 'إعدادات توزيع العمولة' :
+                 'Commission Distribution Settings'}
               </CardTitle>
               <CardDescription>
-                تعیین کنید که 20% کمیسیون چگونه بین شما و فرد معرفی‌شده تقسیم شود
+                {currentLanguage === 'fa' ? 'تعیین کنید که 20% کمیسیون چگونه بین شما و فرد معرفی‌شده تقسیم شود' :
+                 currentLanguage === 'ar' ? 'حدد كيف يتم تقسيم عمولة 20% بينك وبين الشخص المُحال' :
+                 'Determine how the 20% commission is split between you and the referred person'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="referrer">درصد کمیسیون شما</Label>
+                  <Label htmlFor="referrer">
+                    {currentLanguage === 'fa' ? 'درصد کمیسیون شما' :
+                     currentLanguage === 'ar' ? 'نسبة عمولتك' :
+                     'Your Commission Percentage'}
+                  </Label>
                   <Input
                     id="referrer"
                     type="number"
@@ -234,12 +257,18 @@ export default function ReferralsPage() {
                     }}
                   />
                   <p className="text-sm text-gray-500">
-                    درصدی که شما از هر فروش دریافت می‌کنید
+                    {currentLanguage === 'fa' ? 'درصدی که شما از هر فروش دریافت می‌کنید' :
+                     currentLanguage === 'ar' ? 'النسبة التي تحصل عليها من كل بيعة' :
+                     'Percentage you earn from each sale'}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="referred">درصد تخفیف فرد معرفی‌شده</Label>
+                  <Label htmlFor="referred">
+                    {currentLanguage === 'fa' ? 'درصد تخفیف فرد معرفی‌شده' :
+                     currentLanguage === 'ar' ? 'نسبة خصم الشخص المُحال' :
+                     'Referred Person Discount Percentage'}
+                  </Label>
                   <Input
                     id="referred"
                     type="number"
