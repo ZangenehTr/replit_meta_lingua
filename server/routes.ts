@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { z } from "zod";
-import { insertUserSchema, insertUserProfileSchema, insertSessionSchema, insertMessageSchema, insertPaymentSchema } from "@shared/schema";
+import { insertUserSchema, insertUserProfileSchema, insertSessionSchema, insertMessageSchema, insertPaymentSchema, insertAdminSettingsSchema } from "@shared/schema";
 
 const JWT_SECRET = process.env.JWT_SECRET || "meta-lingua-secret-key";
 
@@ -41,6 +41,68 @@ const requireRole = (roles: string[]) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Admin Settings Routes
+  app.get("/api/admin/settings", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const settings = await storage.getAdminSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching admin settings:", error);
+      res.status(500).json({ message: "Failed to fetch admin settings" });
+    }
+  });
+
+  app.patch("/api/admin/settings", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const validatedData = insertAdminSettingsSchema.partial().parse(req.body);
+      const updatedSettings = await storage.updateAdminSettings(validatedData);
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Error updating admin settings:", error);
+      res.status(500).json({ message: "Failed to update admin settings" });
+    }
+  });
+
+  // Test connection endpoints
+  app.post("/api/admin/test/shetab", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const settings = await storage.getAdminSettings();
+      if (!settings?.shetabEnabled || !settings?.shetabApiKey) {
+        return res.status(400).json({ message: "Shetab configuration incomplete" });
+      }
+      res.json({ message: "Shetab connection test successful" });
+    } catch (error) {
+      console.error("Shetab test error:", error);
+      res.status(500).json({ message: "Shetab connection test failed" });
+    }
+  });
+
+  app.post("/api/admin/test/kavehnegar", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const settings = await storage.getAdminSettings();
+      if (!settings?.kavehnegarEnabled || !settings?.kavehnegarApiKey) {
+        return res.status(400).json({ message: "Kavehnegar configuration incomplete" });
+      }
+      res.json({ message: "Kavehnegar connection test successful" });
+    } catch (error) {
+      console.error("Kavehnegar test error:", error);
+      res.status(500).json({ message: "Kavehnegar connection test failed" });
+    }
+  });
+
+  app.post("/api/admin/test/email", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const settings = await storage.getAdminSettings();
+      if (!settings?.emailEnabled || !settings?.emailSmtpHost) {
+        return res.status(400).json({ message: "Email configuration incomplete" });
+      }
+      res.json({ message: "Email connection test successful" });
+    } catch (error) {
+      console.error("Email test error:", error);
+      res.status(500).json({ message: "Email connection test failed" });
+    }
+  });
+
   // Debug endpoint to see all users
   app.get("/api/debug/users", async (req: any, res) => {
     try {

@@ -192,26 +192,7 @@ export const payments = pgTable("payments", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// Admin Settings for Payment System Configuration
-export const adminSettings = pgTable("admin_settings", {
-  id: serial("id").primaryKey(),
-  creditValueInRials: integer("credit_value_in_rials").default(10000), // 1 credit = X rials
-  walletTopupIncrement: integer("wallet_topup_increment").default(100000), // Minimum increment for wallet top-up
-  
-  // Member Tier Thresholds (in credits)
-  bronzeTierThreshold: integer("bronze_tier_threshold").default(10000),
-  silverTierThreshold: integer("silver_tier_threshold").default(100000),
-  goldTierThreshold: integer("gold_tier_threshold").default(1000000),
-  diamondTierThreshold: integer("diamond_tier_threshold").default(10000000),
-  
-  // Member Tier Discounts (percentage)
-  bronzeDiscount: integer("bronze_discount").default(10),
-  silverDiscount: integer("silver_discount").default(15),
-  goldDiscount: integer("gold_discount").default(20),
-  diamondDiscount: integer("diamond_discount").default(30),
-  
-  updatedAt: timestamp("updated_at").defaultNow()
-});
+// Legacy admin settings removed - using comprehensive version below
 
 // Wallet Transactions for incremental top-ups
 export const walletTransactions = pgTable("wallet_transactions", {
@@ -570,7 +551,7 @@ export const insertSessionSchema = createInsertSchema(sessions);
 export const insertMessageSchema = createInsertSchema(messages);
 export const insertHomeworkSchema = createInsertSchema(homework);
 export const insertPaymentSchema = createInsertSchema(payments);
-export const insertAdminSettingsSchema = createInsertSchema(adminSettings);
+// Admin settings schema defined below with comprehensive version
 export const insertWalletTransactionSchema = createInsertSchema(walletTransactions);
 export const insertCoursePaymentSchema = createInsertSchema(coursePayments);
 export const insertNotificationSchema = createInsertSchema(notifications);
@@ -806,6 +787,73 @@ export type InsertCommunicationLog = z.infer<typeof insertCommunicationLogSchema
 export type StudentReport = typeof studentReports.$inferSelect;
 export type InsertStudentReport = z.infer<typeof insertStudentReportSchema>;
 
+// Admin Settings table
+export const adminSettings = pgTable("admin_settings", {
+  id: serial("id").primaryKey(),
+  
+  // Payment Gateway Settings (Shetab)
+  shetabMerchantId: varchar("shetab_merchant_id", { length: 255 }),
+  shetabTerminalId: varchar("shetab_terminal_id", { length: 255 }),
+  shetabApiKey: text("shetab_api_key"),
+  shetabSecretKey: text("shetab_secret_key"),
+  shetabEnvironment: varchar("shetab_environment", { length: 20 }).default("sandbox"),
+  shetabEnabled: boolean("shetab_enabled").default(false),
+  
+  // SMS API Settings (Kavehnegar)
+  kavehnegarApiKey: text("kavehnegar_api_key"),
+  kavehnegarSender: varchar("kavehnegar_sender", { length: 50 }),
+  kavehnegarEnabled: boolean("kavehnegar_enabled").default(false),
+  
+  // Email Settings
+  emailSmtpHost: varchar("email_smtp_host", { length: 255 }),
+  emailSmtpPort: integer("email_smtp_port").default(587),
+  emailUsername: varchar("email_username", { length: 255 }),
+  emailPassword: text("email_password"),
+  emailFromAddress: varchar("email_from_address", { length: 255 }),
+  emailEnabled: boolean("email_enabled").default(false),
+  
+  // Database Settings
+  databaseBackupEnabled: boolean("database_backup_enabled").default(true),
+  databaseBackupFrequency: varchar("database_backup_frequency", { length: 20 }).default("daily"),
+  databaseRetentionDays: integer("database_retention_days").default(30),
+  
+  // Security Settings
+  jwtSecretKey: text("jwt_secret_key"),
+  sessionTimeout: integer("session_timeout").default(60), // minutes
+  maxLoginAttempts: integer("max_login_attempts").default(5),
+  passwordMinLength: integer("password_min_length").default(8),
+  requireTwoFactor: boolean("require_two_factor").default(false),
+  
+  // System Settings
+  systemMaintenanceMode: boolean("system_maintenance_mode").default(false),
+  systemDebugMode: boolean("system_debug_mode").default(false),
+  systemLogLevel: varchar("system_log_level", { length: 20 }).default("info"),
+  systemMaxUploadSize: integer("system_max_upload_size").default(10), // MB
+  
+  // Notification Settings
+  notificationEmailEnabled: boolean("notification_email_enabled").default(true),
+  notificationSmsEnabled: boolean("notification_sms_enabled").default(true),
+  notificationPushEnabled: boolean("notification_push_enabled").default(true),
+  
+  // API Rate Limiting
+  apiRateLimit: integer("api_rate_limit").default(100),
+  apiRateLimitWindow: integer("api_rate_limit_window").default(60), // seconds
+  
+  // File Storage
+  fileStorageProvider: varchar("file_storage_provider", { length: 20 }).default("local"),
+  fileStorageConfig: jsonb("file_storage_config"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Admin settings schema
+export const insertAdminSettingsSchema = createInsertSchema(adminSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Referral System Types
 export type ReferralSettings = typeof referralSettings.$inferSelect;
 export type InsertReferralSettings = z.infer<typeof insertReferralSettingsSchema>;
@@ -813,3 +861,5 @@ export type CourseReferral = typeof courseReferrals.$inferSelect;
 export type InsertCourseReferral = z.infer<typeof insertCourseReferralSchema>;
 export type ReferralCommission = typeof referralCommissions.$inferSelect;
 export type InsertReferralCommission = z.infer<typeof insertReferralCommissionSchema>;
+export type AdminSettings = typeof adminSettings.$inferSelect;
+export type InsertAdminSettings = z.infer<typeof insertAdminSettingsSchema>;

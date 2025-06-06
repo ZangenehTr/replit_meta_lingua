@@ -99,15 +99,28 @@ export default function ReferralsPage() {
   const updateReferralSettings = async () => {
     if (referrerPercentage + referredPercentage > 20) {
       toast({
-        title: "خطا",
-        description: "مجموع درصد کمیسیون نمی‌تواند بیش از 20% باشد",
+        title: currentLanguage === 'fa' ? "خطا" : currentLanguage === 'ar' ? "خطأ" : "Error",
+        description: currentLanguage === 'fa' ? "مجموع درصد کمیسیون نمی‌تواند بیش از 20% باشد" :
+                    currentLanguage === 'ar' ? "لا يمكن أن يتجاوز إجمالي نسبة العمولة 20%" :
+                    "Total commission percentage cannot exceed 20%",
         variant: "destructive",
+        duration: 4000,
       });
       return;
     }
 
     try {
-      const token = localStorage.getItem("auth_token");
+      const token = localStorage.getItem("auth_token") || localStorage.getItem("token");
+      if (!token) {
+        toast({
+          title: currentLanguage === 'fa' ? "خطا در احراز هویت" : currentLanguage === 'ar' ? "خطأ في المصادقة" : "Authentication Error",
+          description: currentLanguage === 'fa' ? "لطفاً دوباره وارد شوید" : currentLanguage === 'ar' ? "يرجى تسجيل الدخول مرة أخرى" : "Please log in again",
+          variant: "destructive",
+          duration: 4000,
+        });
+        return;
+      }
+
       const response = await fetch('/api/referrals/settings', {
         method: 'POST',
         headers: {
@@ -120,21 +133,29 @@ export default function ReferralsPage() {
         }),
       });
 
+      const responseData = await response.json();
+
       if (response.ok) {
-        const updatedSettings = await response.json();
-        setSettings(updatedSettings);
+        setSettings(responseData);
         toast({
-          title: "موفق",
-          description: "تنظیمات کمیسیون بروزرسانی شد",
+          title: currentLanguage === 'fa' ? "موفق" : currentLanguage === 'ar' ? "نجح" : "Success",
+          description: currentLanguage === 'fa' ? "تنظیمات کمیسیون بروزرسانی شد" :
+                      currentLanguage === 'ar' ? "تم تحديث إعدادات العمولة" :
+                      "Commission settings updated successfully",
+          duration: 3000,
         });
       } else {
-        throw new Error('Failed to update settings');
+        throw new Error(responseData.message || 'Failed to update settings');
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Referral settings update error:', error);
       toast({
-        title: "خطا",
-        description: "خطا در بروزرسانی تنظیمات",
+        title: currentLanguage === 'fa' ? "خطا" : currentLanguage === 'ar' ? "خطأ" : "Error",
+        description: currentLanguage === 'fa' ? "خطا در بروزرسانی تنظیمات" :
+                    currentLanguage === 'ar' ? "خطأ في تحديث الإعدادات" :
+                    `Failed to update settings: ${error.message}`,
         variant: "destructive",
+        duration: 5000,
       });
     }
   };
