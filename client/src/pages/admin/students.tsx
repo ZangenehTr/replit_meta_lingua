@@ -73,6 +73,30 @@ export function AdminStudents() {
   });
   const queryClient = useQueryClient();
 
+  // Handle VoIP call functionality
+  const handleVoIPCall = (student: any) => {
+    // Check if student has a phone number
+    if (!student.phone) {
+      toast({
+        title: "No Phone Number",
+        description: `${student.firstName} ${student.lastName} does not have a phone number on file.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // For now, this will be a placeholder that connects to the VoIP system
+    // In production, this would interface with your VoIP provider
+    toast({
+      title: "Initiating VoIP Call",
+      description: `Connecting to ${student.firstName} ${student.lastName} at ${student.phone}...`,
+    });
+
+    // Here you would integrate with your VoIP system
+    // Example: window.voipSystem.initiateCall(student.phone);
+    console.log(`VoIP call initiated to ${student.firstName} ${student.lastName} at ${student.phone}`);
+  };
+
   // Handle course selection and fee calculation
   const handleCourseSelection = (courseId: number, selected: boolean) => {
     setNewStudentData(prev => {
