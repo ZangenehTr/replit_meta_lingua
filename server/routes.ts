@@ -1328,6 +1328,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error(`Failed to unenroll from course ${courseId}:`, error);
           }
         }
+
+        // Wait briefly for database transactions to commit and verify the changes
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Verify enrollment changes are reflected
+        const updatedEnrollments = await storage.getUserCourses(studentId);
+        const updatedCourseIds = updatedEnrollments.map(c => c.id);
+        console.log('Final verified course enrollments after update:', updatedCourseIds);
       }
 
       res.json({
