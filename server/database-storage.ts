@@ -72,9 +72,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserProfile(userId: number, updates: Partial<UserProfile>): Promise<UserProfile | undefined> {
+    // Filter out undefined values and invalid fields
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([key, value]) => value !== undefined && key !== 'id' && key !== 'userId')
+    );
+    
+    if (Object.keys(cleanUpdates).length === 0) {
+      // No valid updates, return existing profile
+      return this.getUserProfile(userId);
+    }
+    
     const [updatedProfile] = await db
       .update(userProfiles)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...cleanUpdates, updatedAt: new Date() })
       .where(eq(userProfiles.userId, userId))
       .returning();
     return updatedProfile;
@@ -167,40 +177,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserCourses(userId: number): Promise<(Course & { progress: number })[]> {
-    const userCourses = await db
-      .select({
-        id: courses.id,
-        title: courses.title,
-        description: courses.description,
-        language: courses.language,
-        level: courses.level,
-        thumbnail: courses.thumbnail,
-        instructorId: courses.instructorId,
-        price: courses.price,
-        courseCode: courses.courseCode,
-        totalSessions: courses.totalSessions,
-        sessionDuration: courses.sessionDuration,
-        classType: courses.classType,
-        weekdays: courses.weekdays,
-        startTime: courses.startTime,
-        endTime: courses.endTime,
-        category: courses.category,
-        tags: courses.tags,
-        prerequisites: courses.prerequisites,
-        learningObjectives: courses.learningObjectives,
-        difficulty: courses.difficulty,
-        certificateTemplate: courses.certificateTemplate,
-        isActive: courses.isActive,
-        isFeatured: courses.isFeatured,
-        createdAt: courses.createdAt,
-        updatedAt: courses.updatedAt,
-        progress: enrollments.progress
-      })
-      .from(courses)
-      .innerJoin(enrollments, eq(courses.id, enrollments.courseId))
-      .where(eq(enrollments.userId, userId));
-    
-    return userCourses;
+    try {
+      const userCourses = await db
+        .select({
+          id: courses.id,
+          title: courses.title,
+          description: courses.description,
+          language: courses.language,
+          level: courses.level,
+          thumbnail: courses.thumbnail,
+          instructorId: courses.instructorId,
+          price: courses.price,
+          duration: courses.duration,
+          isActive: courses.isActive,
+          progress: enrollments.progress
+        })
+        .from(courses)
+        .innerJoin(enrollments, eq(courses.id, enrollments.courseId))
+        .where(eq(enrollments.userId, userId));
+      
+      return userCourses as (Course & { progress: number })[];
+    } catch (error) {
+      console.error('Error fetching user courses:', error);
+      return [];
+    }
   }
 
   async createCourse(course: InsertCourse): Promise<Course> {
