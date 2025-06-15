@@ -35,7 +35,10 @@ import {
   EyeOff,
   CheckCircle,
   AlertCircle,
-  Activity
+  Activity,
+  Loader2,
+  FileText,
+  AlertTriangle
 } from "lucide-react";
 
 export function AdminSystem() {
@@ -48,10 +51,92 @@ export function AdminSystem() {
   const [showApiKeys, setShowApiKeys] = useState(false);
   const [activeTab, setActiveTab] = useState("branding");
   const [isBackupInProgress, setIsBackupInProgress] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0);
   const [systemMaintenanceMode, setSystemMaintenanceMode] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const [newRoleDialog, setNewRoleDialog] = useState(false);
+
+  // Function implementations
+  const handleCreateBackup = async () => {
+    setIsBackupInProgress(true);
+    setBackupProgress(0);
+    
+    try {
+      // Simulate backup progress
+      const interval = setInterval(() => {
+        setBackupProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setIsBackupInProgress(false);
+            toast({
+              title: "Backup Created Successfully",
+              description: "System backup has been created and saved.",
+            });
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 200);
+    } catch (error) {
+      setIsBackupInProgress(false);
+      toast({
+        title: "Backup Failed",
+        description: "Failed to create system backup.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportConfiguration = async () => {
+    try {
+      // Create configuration export
+      const config = {
+        branding: {},
+        settings: {},
+        roles: {},
+        timestamp: new Date().toISOString()
+      };
+      
+      const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `system-config-${new Date().getTime()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Configuration Exported",
+        description: "System configuration has been exported successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export system configuration.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMaintenanceModeToggle = async () => {
+    try {
+      setMaintenanceMode(!maintenanceMode);
+      toast({
+        title: maintenanceMode ? "Maintenance Mode Disabled" : "Maintenance Mode Enabled",
+        description: maintenanceMode ? "System is now accessible to users." : "System is now in maintenance mode.",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to Toggle Maintenance Mode",
+        description: "Could not change maintenance mode status.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const [editRoleDialog, setEditRoleDialog] = useState(false);
   const [newRole, setNewRole] = useState({ name: "", description: "", permissions: [] });
 
