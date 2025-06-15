@@ -112,9 +112,34 @@ function Router() {
           <CRMDashboard />
         </ProtectedRoute>
       </Route>
+      <Route path="/admin">
+        <ProtectedRoute>
+          <EnhancedAdminDashboard />
+        </ProtectedRoute>
+      </Route>
       <Route path="/admin/students">
         <ProtectedRoute>
-          <StudentInformationSystem />
+          <AdminStudents />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/courses">
+        <ProtectedRoute>
+          <AdminCourses />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/financial">
+        <ProtectedRoute>
+          <AdminFinancial />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/system">
+        <ProtectedRoute>
+          <AdminSystem />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/settings">
+        <ProtectedRoute>
+          <AdminSettings />
         </ProtectedRoute>
       </Route>
       <Route path="/courses">
