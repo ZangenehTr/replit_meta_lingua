@@ -209,8 +209,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async enrollInCourse(enrollment: InsertEnrollment): Promise<Enrollment> {
-    const [newEnrollment] = await db.insert(enrollments).values(enrollment).returning();
-    return newEnrollment;
+    try {
+      const [newEnrollment] = await db.insert(enrollments).values({
+        userId: enrollment.userId,
+        courseId: enrollment.courseId,
+        progress: enrollment.progress || 0
+      }).returning();
+      return newEnrollment;
+    } catch (error) {
+      console.error('Error enrolling in course:', error);
+      throw error;
+    }
   }
 
   async unenrollFromCourse(userId: number, courseId: number): Promise<void> {
