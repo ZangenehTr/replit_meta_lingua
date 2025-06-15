@@ -22,7 +22,7 @@ import { AdminDashboard as EnhancedAdminDashboard } from "@/pages/admin/admin-da
 import { AdminStudents } from "@/pages/admin/students";
 import { AdminCourses } from "@/pages/admin/courses";
 import { AdminFinancial } from "@/pages/admin/financial";
-import { AdminSystem } from "@/pages/admin/system";
+import { AdminSystem } from "@/pages/admin/system-simple";
 import AdminSettings from "@/pages/admin/settings";
 import WalletPage from "@/pages/wallet";
 import ReferralsPage from "@/pages/referrals";
