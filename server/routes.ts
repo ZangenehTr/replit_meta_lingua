@@ -1887,9 +1887,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const profileData: any = {};
           if (nationalId !== undefined) profileData.nationalId = nationalId;
-          if (birthday !== undefined) {
-            profileData.dateOfBirth = birthday ? new Date(birthday) : null;
-            console.log('Setting dateOfBirth to:', profileData.dateOfBirth);
+          if (birthday !== undefined && birthday !== null && birthday !== '') {
+            // Handle birthday properly - convert to YYYY-MM-DD format for date field
+            const birthdayDate = new Date(birthday);
+            if (!isNaN(birthdayDate.getTime())) {
+              profileData.dateOfBirth = birthdayDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+              console.log('Setting dateOfBirth to:', profileData.dateOfBirth);
+            }
           }
           if (level !== undefined) profileData.currentLevel = level;
           if (guardianName !== undefined) profileData.guardianName = guardianName;
