@@ -244,7 +244,7 @@ export function AdminCourseManagement() {
                          (filterStatus === "active" && course.isActive) ||
                          (filterStatus === "inactive" && !course.isActive);
     return matchesSearch && matchesCategory && matchesStatus;
-  }) || [];
+  }) : [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -315,7 +315,7 @@ export function AdminCourseManagement() {
               <Users className="h-8 w-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-muted-foreground">Active Students</p>
-                <p className="text-2xl font-bold">{courses?.reduce((acc: number, course: any) => acc + (course.enrolledStudents || 0), 0) || 0}</p>
+                <p className="text-2xl font-bold">{Array.isArray(courses) ? courses.reduce((acc: number, course: any) => acc + (course.enrolledStudents || 0), 0) : 0}</p>
               </div>
             </div>
           </CardContent>
