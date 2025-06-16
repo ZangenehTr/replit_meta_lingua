@@ -33,9 +33,10 @@ import { LanguageProvider } from "@/hooks/use-language";
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, error } = useAuth();
 
-  if (isLoading) {
+  // Show loading state only for initial load
+  if (isLoading && !error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -46,7 +47,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  // If there's an error or no user, redirect to auth
+  if (error || !user) {
     return <Redirect to="/auth" />;
   }
 
@@ -169,7 +171,9 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/">
-        <Redirect to="/dashboard" />
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
     </Switch>
@@ -179,17 +183,7 @@ function Router() {
 function AppWithBranding() {
   const { branding, isLoading } = useBranding();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Always render the app - don't block on branding
   return (
     <LanguageProvider>
       <TooltipProvider>
