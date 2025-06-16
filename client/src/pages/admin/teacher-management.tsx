@@ -137,6 +137,73 @@ export function AdminTeacherManagement() {
     createTeacherMutation.mutate(data);
   };
 
+  // Edit form
+  const editForm = useForm<TeacherFormData>({
+    resolver: zodResolver(teacherSchema),
+  });
+
+  const updateTeacherMutation = useMutation({
+    mutationFn: async (data: { id: number; formData: TeacherFormData }) => {
+      return apiRequest(`/api/teachers/${data.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          firstName: data.formData.firstName,
+          lastName: data.formData.lastName,
+          email: data.formData.email,
+          phone: data.formData.phone,
+          specialization: data.formData.specialization,
+          qualifications: data.formData.qualifications,
+          experience: data.formData.experience,
+          languages: data.formData.languages,
+          hourlyRate: data.formData.hourlyRate,
+          bio: data.formData.bio,
+          status: data.formData.status,
+        }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/teachers/list'] });
+      setIsEditDialogOpen(false);
+      editForm.reset();
+      toast({
+        title: "Success",
+        description: "Teacher updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update teacher",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onEditSubmit = (data: TeacherFormData) => {
+    if (selectedTeacher) {
+      updateTeacherMutation.mutate({ id: selectedTeacher.id, formData: data });
+    }
+  };
+
+  // Set form values when teacher is selected for editing
+  const handleEditTeacher = (teacher: any) => {
+    setSelectedTeacher(teacher);
+    editForm.reset({
+      firstName: teacher.firstName || "",
+      lastName: teacher.lastName || "",
+      email: teacher.email || "",
+      phone: teacher.phoneNumber || "",
+      specialization: teacher.specialization || "",
+      qualifications: teacher.qualifications || "",
+      experience: teacher.experience || "",
+      languages: teacher.languages || "",
+      hourlyRate: teacher.hourlyRate || 500000,
+      bio: teacher.bio || "",
+      status: teacher.isActive !== false ? "active" : "inactive",
+    });
+    setIsEditDialogOpen(true);
+  };
+
   const filteredTeachers = Array.isArray(teachers) ? teachers.filter((teacher: any) => {
     const matchesSearch = teacher.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          teacher.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -511,10 +578,7 @@ export function AdminTeacherManagement() {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => {
-                          setSelectedTeacher(teacher);
-                          setIsEditDialogOpen(true);
-                        }}
+                        onClick={() => handleEditTeacher(teacher)}
                       >
                         <Edit3 className="h-4 w-4" />
                       </Button>
@@ -632,10 +696,7 @@ export function AdminTeacherManagement() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => {
-                                setSelectedTeacher(teacher);
-                                setIsEditDialogOpen(true);
-                              }}
+                              onClick={() => handleEditTeacher(teacher)}
                             >
                               <Edit3 className="h-4 w-4" />
                             </Button>
