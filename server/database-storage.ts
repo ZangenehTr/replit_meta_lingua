@@ -168,7 +168,7 @@ export class DatabaseStorage implements IStorage {
 
   // Courses
   async getCourses(): Promise<Course[]> {
-    return await db.select().from(courses).where(eq(courses.isActive, true));
+    return await db.select().from(courses).orderBy(courses.createdAt);
   }
 
   async getCourse(id: number): Promise<Course | undefined> {
@@ -206,6 +206,49 @@ export class DatabaseStorage implements IStorage {
   async createCourse(course: InsertCourse): Promise<Course> {
     const [newCourse] = await db.insert(courses).values(course).returning();
     return newCourse;
+  }
+
+  async updateCourse(id: number, updates: Partial<Course>): Promise<Course | undefined> {
+    try {
+      const [updatedCourse] = await db
+        .update(courses)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(courses.id, id))
+        .returning();
+      return updatedCourse;
+    } catch (error) {
+      console.error('Error updating course:', error);
+      return undefined;
+    }
+  }
+
+  async deleteCourse(id: number): Promise<void> {
+    await db.delete(courses).where(eq(courses.id, id));
+  }
+
+  async getCourseEnrollments(courseId: number): Promise<any[]> {
+    try {
+      const courseEnrollments = await db
+        .select({
+          id: enrollments.id,
+          userId: enrollments.userId,
+          courseId: enrollments.courseId,
+          progress: enrollments.progress,
+          enrolledAt: enrollments.enrolledAt,
+          completedAt: enrollments.completedAt,
+          studentName: users.firstName,
+          studentLastName: users.lastName,
+          studentEmail: users.email
+        })
+        .from(enrollments)
+        .innerJoin(users, eq(enrollments.userId, users.id))
+        .where(eq(enrollments.courseId, courseId));
+      
+      return courseEnrollments;
+    } catch (error) {
+      console.error('Error fetching course enrollments:', error);
+      return [];
+    }
   }
 
   async enrollInCourse(enrollment: InsertEnrollment): Promise<Enrollment> {

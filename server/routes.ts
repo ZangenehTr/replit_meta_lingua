@@ -1646,6 +1646,259 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Course Management API Routes
+  
+  // Get all courses for admin
+  app.get("/api/admin/courses", authenticateToken, requireRole(['admin', 'teacher']), async (req: any, res) => {
+    try {
+      const courses = await storage.getCourses();
+      res.json(courses);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+
+  // Get single course details
+  app.get("/api/admin/courses/:id", authenticateToken, requireRole(['admin', 'teacher']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      res.json(course);
+    } catch (error) {
+      console.error('Error fetching course:', error);
+      res.status(500).json({ message: "Failed to fetch course" });
+    }
+  });
+
+  // Create new course
+  app.post("/api/admin/courses", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const courseData = req.body;
+      
+      // Validate required fields
+      if (!courseData.courseCode || !courseData.title || !courseData.targetLanguage) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Create course with all required fields
+      const newCourse = await storage.createCourse({
+        courseCode: courseData.courseCode,
+        title: courseData.title,
+        description: courseData.description || '',
+        language: courseData.language || 'English',
+        level: courseData.level || 'Beginner',
+        thumbnail: courseData.thumbnail || '',
+        instructorId: courseData.instructorId || 1,
+        price: courseData.price || 0,
+        totalSessions: courseData.totalSessions || 1,
+        sessionDuration: courseData.sessionDuration || 60,
+        deliveryMode: courseData.deliveryMode || 'online',
+        classFormat: courseData.classFormat || 'group',
+        maxStudents: courseData.maxStudents,
+        weekdays: courseData.weekdays || [],
+        startTime: courseData.startTime,
+        endTime: courseData.endTime,
+        targetLanguage: courseData.targetLanguage,
+        targetLevel: courseData.targetLevel || ['beginner'],
+        autoRecord: courseData.autoRecord || false,
+        recordingAvailable: courseData.recordingAvailable || false,
+        category: courseData.category || 'Language Learning',
+        tags: courseData.tags || [],
+        prerequisites: courseData.prerequisites || [],
+        learningObjectives: courseData.learningObjectives || [],
+        difficulty: courseData.difficulty || 'beginner',
+        isActive: courseData.isActive !== undefined ? courseData.isActive : true,
+        isFeatured: courseData.isFeatured || false
+      });
+
+      res.status(201).json({ message: "Course created successfully", course: newCourse });
+    } catch (error) {
+      console.error('Error creating course:', error);
+      res.status(500).json({ message: "Failed to create course" });
+    }
+  });
+
+  // Update course
+  app.put("/api/admin/courses/:id", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const updateData = req.body;
+
+      const updatedCourse = await storage.updateCourse(courseId, updateData);
+      if (!updatedCourse) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      res.json({ message: "Course updated successfully", course: updatedCourse });
+    } catch (error) {
+      console.error('Error updating course:', error);
+      res.status(500).json({ message: "Failed to update course" });
+    }
+  });
+
+  // Delete course
+  app.delete("/api/admin/courses/:id", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      
+      // Check if course exists
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Check if course has enrollments
+      const enrollments = await storage.getCourseEnrollments(courseId);
+      if (enrollments && enrollments.length > 0) {
+        return res.status(400).json({ 
+          message: "Cannot delete course with active enrollments. Please remove all students first." 
+        });
+      }
+
+      await storage.deleteCourse(courseId);
+      res.json({ message: "Course deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      res.status(500).json({ message: "Failed to delete course" });
+    }
+  });
+
+  // Get course enrollments
+  app.get("/api/admin/courses/:id/enrollments", authenticateToken, requireRole(['admin', 'teacher']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const enrollments = await storage.getCourseEnrollments(courseId);
+      res.json(enrollments || []);
+    } catch (error) {
+      console.error('Error fetching course enrollments:', error);
+      res.status(500).json({ message: "Failed to fetch enrollments" });
+    }
+  });
+
+  // Get instructors for course assignment
+  app.get("/api/admin/instructors", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const instructors = await storage.getTutors();
+      res.json(instructors);
+    } catch (error) {
+      console.error('Error fetching instructors:', error);
+      res.status(500).json({ message: "Failed to fetch instructors" });
+    }
+  });
+
+  // Duplicate course
+  app.post("/api/admin/courses/:id/duplicate", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const originalCourse = await storage.getCourse(courseId);
+      
+      if (!originalCourse) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Create duplicate with modified title and code
+      const duplicateData = {
+        ...originalCourse,
+        id: undefined, // Remove ID to create new
+        courseCode: `${originalCourse.courseCode}_COPY`,
+        title: `${originalCourse.title} (Copy)`,
+        isActive: false, // Start as inactive
+        isFeatured: false,
+        createdAt: undefined,
+        updatedAt: undefined
+      };
+
+      const duplicatedCourse = await storage.createCourse(duplicateData);
+      res.status(201).json({ message: "Course duplicated successfully", course: duplicatedCourse });
+    } catch (error) {
+      console.error('Error duplicating course:', error);
+      res.status(500).json({ message: "Failed to duplicate course" });
+    }
+  });
+
+  // Bulk course operations
+  app.post("/api/admin/courses/bulk", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const { action, courseIds } = req.body;
+      
+      if (!action || !courseIds || !Array.isArray(courseIds)) {
+        return res.status(400).json({ message: "Invalid request data" });
+      }
+
+      let updatedCount = 0;
+      for (const courseId of courseIds) {
+        try {
+          switch (action) {
+            case 'activate':
+              await storage.updateCourse(courseId, { isActive: true });
+              updatedCount++;
+              break;
+            case 'deactivate':
+              await storage.updateCourse(courseId, { isActive: false });
+              updatedCount++;
+              break;
+            case 'feature':
+              await storage.updateCourse(courseId, { isFeatured: true });
+              updatedCount++;
+              break;
+            case 'unfeature':
+              await storage.updateCourse(courseId, { isFeatured: false });
+              updatedCount++;
+              break;
+          }
+        } catch (error) {
+          console.error(`Error updating course ${courseId}:`, error);
+        }
+      }
+
+      res.json({ 
+        message: `Bulk operation completed. ${updatedCount} courses updated.`,
+        updatedCount 
+      });
+    } catch (error) {
+      console.error('Error performing bulk operation:', error);
+      res.status(500).json({ message: "Failed to perform bulk operation" });
+    }
+  });
+
+  // Course analytics
+  app.get("/api/admin/courses/:id/analytics", authenticateToken, requireRole(['admin', 'teacher']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const course = await storage.getCourse(courseId);
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      const enrollments = await storage.getCourseEnrollments(courseId);
+      const totalEnrollments = enrollments?.length || 0;
+      const completedEnrollments = enrollments?.filter((e: any) => e.progress === 100).length || 0;
+      const activeEnrollments = enrollments?.filter((e: any) => e.progress > 0 && e.progress < 100).length || 0;
+
+      const analytics = {
+        courseId,
+        totalEnrollments,
+        activeEnrollments,
+        completedEnrollments,
+        completionRate: totalEnrollments > 0 ? Math.round((completedEnrollments / totalEnrollments) * 100) : 0,
+        averageProgress: totalEnrollments > 0 ? 
+          Math.round(enrollments.reduce((sum: number, e: any) => sum + (e.progress || 0), 0) / totalEnrollments) : 0,
+        revenue: (course.price || 0) * totalEnrollments,
+        enrollmentTrend: [] // Could be populated with time-series data
+      };
+
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching course analytics:', error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   // Admin CRM endpoints
   app.get("/api/admin/stats", authenticateToken, async (req: any, res) => {
     if (req.user.role !== 'admin') {
