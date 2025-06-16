@@ -311,6 +311,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin user creation endpoint
+  app.post("/api/admin/users", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const userData = req.body;
+      
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(userData.password || "teacher123", 10);
+      
+      const userToCreate = {
+        ...userData,
+        password: hashedPassword,
+        isActive: userData.status === "active",
+        credits: 0,
+        streakDays: 0,
+        totalLessons: 0,
+        preferences: {}
+      };
+
+      const user = await storage.createUser(userToCreate);
+      
+      // Don't return the password in the response
+      const { password, ...userResponse } = user;
+      
+      res.status(201).json(userResponse);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
   // Simple students list endpoint (no auth for testing)
   app.get("/api/students/list", async (req: any, res) => {
     try {
