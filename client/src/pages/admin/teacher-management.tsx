@@ -42,6 +42,8 @@ const teacherSchema = z.object({
   hourlyRate: z.number().min(1, "Hourly rate must be greater than 0"),
   bio: z.string().optional(),
   status: z.enum(["active", "inactive"]).default("active"),
+  teachingLevels: z.array(z.string()).min(1, "At least one teaching level is required"),
+  availableTimeSlots: z.array(z.string()).min(1, "At least one time slot is required"),
 });
 
 type TeacherFormData = z.infer<typeof teacherSchema>;
@@ -52,6 +54,9 @@ export function AdminTeacherManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
 
   // Fetch teachers
   const { data: teachers = [], isLoading: teachersLoading, error } = useQuery({
@@ -132,14 +137,31 @@ export function AdminTeacherManagement() {
           <h1 className="text-3xl font-bold">Teacher Management</h1>
           <p className="text-muted-foreground">Manage instructors and teaching staff</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Teacher
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === "cards" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("cards")}
+            >
+              Cards
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+            >
+              List
+            </Button>
+          </div>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Teacher
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Teacher</DialogTitle>
               <DialogDescription>
@@ -467,11 +489,40 @@ export function AdminTeacherManagement() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setEditingTeacher(teacher);
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
                       <Eye className="h-4 w-4 mr-2" />
                       View
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setEditingTeacher(teacher);
+                        form.reset({
+                          firstName: teacher.firstName,
+                          lastName: teacher.lastName,
+                          email: teacher.email,
+                          phone: teacher.phoneNumber || '',
+                          specialization: teacher.specialization || '',
+                          qualifications: teacher.qualifications || '',
+                          experience: teacher.experience || '',
+                          languages: teacher.languages || '',
+                          hourlyRate: teacher.hourlyRate || 500000,
+                          bio: teacher.bio || '',
+                          status: teacher.isActive ? 'active' : 'inactive',
+                          teachingLevels: teacher.teachingLevels || [],
+                          availableTimeSlots: teacher.availableTimeSlots || []
+                        });
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
                       <Edit3 className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
@@ -494,7 +545,7 @@ export function AdminTeacherManagement() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    <span>{teacher.hourlyRate || '500,000'} T/hour</span>
+                    <span>{new Intl.NumberFormat('fa-IR').format(teacher.hourlyRate || 500000)} تومان/ساعت</span>
                   </div>
                 </div>
                 {teacher.qualifications && (
