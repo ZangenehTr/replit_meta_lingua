@@ -11,6 +11,7 @@ import {
   DollarSign, 
   TrendingUp, 
   Calendar,
+  CalendarDays,
   MessageCircle,
   BookOpen,
   BarChart3,
