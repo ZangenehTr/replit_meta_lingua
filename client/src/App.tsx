@@ -143,6 +143,11 @@ function Router() {
           <AdminSettings />
         </ProtectedRoute>
       </Route>
+      <Route path="/admin/course-management">
+        <ProtectedRoute>
+          <AdminCourseManagement />
+        </ProtectedRoute>
+      </Route>
       <Route path="/courses">
         <ProtectedRoute>
           <Courses />

@@ -96,7 +96,7 @@ export function AdminCourseManagement() {
   });
 
   // Fetch instructors for dropdown
-  const { data: instructors } = useQuery({
+  const { data: instructors = [] } = useQuery({
     queryKey: ['/api/admin/instructors'],
   });
 
@@ -289,7 +289,7 @@ export function AdminCourseManagement() {
             <CourseForm
               form={form}
               onSubmit={onSubmit}
-              instructors={instructors || []}
+              instructors={instructors}
               isLoading={createCourseMutation.isPending}
             />
           </DialogContent>
@@ -527,7 +527,7 @@ export function AdminCourseManagement() {
           <CourseForm
             form={form}
             onSubmit={onSubmit}
-            instructors={instructors || []}
+            instructors={instructors}
             isLoading={updateCourseMutation.isPending}
             isEdit={true}
           />
