@@ -390,6 +390,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get teachers endpoint without auth for development
+  app.get("/api/teachers/list", async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const teachers = users.filter(u => u.role === 'instructor').map(teacher => ({
+        id: teacher.id,
+        firstName: teacher.firstName,
+        lastName: teacher.lastName,
+        email: teacher.email,
+        phoneNumber: teacher.phoneNumber,
+        role: teacher.role,
+        isActive: teacher.isActive,
+        createdAt: teacher.createdAt,
+        specialization: teacher.specialization || 'Not specified',
+        qualifications: teacher.qualifications || 'Not specified',
+        experience: teacher.experience || 'Not specified',
+        hourlyRate: teacher.hourlyRate || 500000
+      }));
+      res.json(teachers);
+    } catch (error) {
+      console.error("Error fetching teachers:", error);
+      res.status(500).json({ message: "Failed to fetch teachers" });
+    }
+  });
+
   // Simple students list endpoint (no auth for testing)
   app.get("/api/students/list", async (req: any, res) => {
     try {
