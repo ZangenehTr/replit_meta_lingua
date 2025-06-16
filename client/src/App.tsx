@@ -23,6 +23,7 @@ import { AdminStudents } from "@/pages/admin/students";
 import { AdminCourses } from "@/pages/admin/courses";
 import { AdminCourseManagement } from "@/pages/admin/course-management-simple";
 import { EnhancedCourseCreation } from "@/pages/admin/enhanced-course-creation";
+import { AdminTeacherManagement } from "@/pages/admin/teacher-management";
 import { AdminFinancial } from "@/pages/admin/financial";
 import { AdminSystem } from "@/pages/admin/system-simple";
 import AdminSettings from "@/pages/admin/settings";

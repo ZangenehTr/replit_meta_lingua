@@ -152,12 +152,13 @@ export function EnhancedCourseCreation() {
     },
   });
 
-  const watchedFields = form.watch(['totalHours', 'sessionDurationMinutes', 'firstSessionDate', 'deliveryMode']);
+  const totalHours = form.watch("totalHours");
+  const sessionDurationMinutes = form.watch("sessionDurationMinutes");
+  const firstSessionDate = form.watch("firstSessionDate");
+  const deliveryMode = form.watch("deliveryMode");
 
   // Calculate sessions when relevant fields change
   useEffect(() => {
-    const [totalHours, sessionDurationMinutes, firstSessionDate, deliveryMode] = watchedFields;
-    
     if (deliveryMode !== "self_paced" && totalHours && sessionDurationMinutes && firstSessionDate && weeklySchedule.length > 0) {
       const errors = validateWeeklySchedule(weeklySchedule);
       setScheduleErrors(errors);
@@ -176,7 +177,7 @@ export function EnhancedCourseCreation() {
     } else {
       setSessionCalculations(null);
     }
-  }, [watchedFields, weeklySchedule]);
+  }, [totalHours, sessionDurationMinutes, firstSessionDate, deliveryMode, weeklySchedule]);
 
   const addWeeklySession = () => {
     setWeeklySchedule([...weeklySchedule, { day: "", startTime: "", endTime: "" }]);
@@ -195,10 +196,6 @@ export function EnhancedCourseCreation() {
   const onSubmit = (data: EnhancedCourseFormData) => {
     createCourseMutation.mutate(data);
   };
-
-  const deliveryMode = form.watch("deliveryMode");
-  const totalHours = form.watch("totalHours");
-  const sessionDurationMinutes = form.watch("sessionDurationMinutes");
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -608,7 +605,7 @@ export function EnhancedCourseCreation() {
                                 <p><strong>Course Schedule Summary:</strong></p>
                                 <p>• Total Sessions: {sessionCalculations.totalSessions}</p>
                                 <p>• Course End Date: {formatDateByCalendar(sessionCalculations.calculatedEndDate)}</p>
-                                <p>• Duration: {formatDuration(totalHours * 60)} over {sessionCalculations.sessionDates.length} sessions</p>
+                                <p>• Duration: {formatDuration((form.watch("totalHours") || 0) * 60)} over {sessionCalculations.sessionDates.length} sessions</p>
                               </div>
                             </AlertDescription>
                           </Alert>
@@ -761,8 +758,8 @@ export function EnhancedCourseCreation() {
                             <p><strong>Course Schedule Preview:</strong></p>
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div>
-                                <p>• Total Hours: {totalHours}</p>
-                                <p>• Session Duration: {formatDuration(sessionDurationMinutes)}</p>
+                                <p>• Total Hours: {form.watch("totalHours")}</p>
+                                <p>• Session Duration: {formatDuration(form.watch("sessionDurationMinutes") || 60)}</p>
                                 <p>• Total Sessions: {sessionCalculations.totalSessions}</p>
                               </div>
                               <div>
