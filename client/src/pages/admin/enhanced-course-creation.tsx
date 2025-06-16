@@ -124,10 +124,11 @@ export function EnhancedCourseCreation() {
     mutationFn: async (data: EnhancedCourseFormData) => {
       const courseData = {
         ...data,
+        instructorId: parseInt(data.instructorId),
         weeklySchedule: data.deliveryMode !== "self_paced" ? weeklySchedule : undefined,
         sessionCalculations: sessionCalculations
       };
-      return apiRequest("/admin/courses", {
+      return apiRequest("/api/admin/courses", {
         method: "POST",
         body: JSON.stringify(courseData),
       });
