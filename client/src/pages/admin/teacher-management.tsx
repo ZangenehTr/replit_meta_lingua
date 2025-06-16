@@ -54,9 +54,14 @@ export function AdminTeacherManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   // Fetch teachers
-  const { data: teachers = [], isLoading: teachersLoading } = useQuery({
+  const { data: teachers = [], isLoading: teachersLoading, error } = useQuery({
     queryKey: ['/api/teachers/list']
   });
+
+  // Debug logging
+  console.log('Teachers data:', teachers);
+  console.log('Loading state:', teachersLoading);
+  console.log('Error state:', error);
 
   const form = useForm<TeacherFormData>({
     resolver: zodResolver(teacherSchema),
