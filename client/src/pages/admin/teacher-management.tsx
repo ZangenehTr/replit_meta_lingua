@@ -83,7 +83,7 @@ export function AdminTeacherManagement() {
         role: "instructor",
         password: "teacher123", // Default password - should be changed on first login
       };
-      return apiRequest("/api/admin/users", {
+      return apiRequest("/api/teachers/create", {
         method: "POST",
         body: JSON.stringify(teacherData),
       });
