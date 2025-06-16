@@ -311,6 +311,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Quick admin promotion endpoint for development
+  app.post("/api/debug/promote-admin", async (req: any, res) => {
+    try {
+      const { email } = req.body;
+      const users = await storage.getAllUsers();
+      const user = users.find(u => u.email === email);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const updatedUser = await storage.updateUser(user.id, { role: 'admin' });
+      res.json({ message: "User promoted to admin", user: updatedUser });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to promote user" });
+    }
+  });
+
   // Admin user creation endpoint
   app.post("/api/admin/users", authenticateToken, requireRole(['admin']), async (req: any, res) => {
     try {
