@@ -121,6 +121,7 @@ export function useAuth() {
   return {
     user,
     isLoading,
+    error,
     isAuthenticated: !!user,
     login: loginMutation.mutate,
     register: registerMutation.mutate,
