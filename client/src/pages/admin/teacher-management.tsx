@@ -820,142 +820,221 @@ export function AdminTeacherManagement() {
             </DialogDescription>
           </DialogHeader>
           
-          {selectedTeacher && (
-            <div className="space-y-4">
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">First Name</label>
-                  <Input 
-                    defaultValue={selectedTeacher.firstName}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Last Name</label>
-                  <Input 
-                    defaultValue={selectedTeacher.lastName}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Email</label>
-                  <Input 
-                    type="email"
-                    defaultValue={selectedTeacher.email}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Phone</label>
-                  <Input 
-                    defaultValue={selectedTeacher.phoneNumber || ''}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Specialization</label>
-                  <Select defaultValue={selectedTeacher.specialization}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Persian Language">Persian Language</SelectItem>
-                      <SelectItem value="English Language">English Language</SelectItem>
-                      <SelectItem value="Arabic Language">Arabic Language</SelectItem>
-                      <SelectItem value="French Language">French Language</SelectItem>
-                      <SelectItem value="Mathematics">Mathematics</SelectItem>
-                      <SelectItem value="Literature">Literature</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Experience</label>
-                  <Select defaultValue={selectedTeacher.experience}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1-2 years">1-2 years</SelectItem>
-                      <SelectItem value="3-5 years">3-5 years</SelectItem>
-                      <SelectItem value="5-10 years">5-10 years</SelectItem>
-                      <SelectItem value="10+ years">10+ years</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Languages Taught</label>
-                  <Input 
-                    defaultValue={selectedTeacher.languages || ''}
-                    placeholder="e.g., Persian, English"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Hourly Rate (Toman)</label>
-                  <Input 
-                    type="number"
-                    defaultValue={selectedTeacher.hourlyRate || 500000}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium">Qualifications</label>
-                <Textarea 
-                  defaultValue={selectedTeacher.qualifications || ''}
-                  placeholder="Degree, certifications, and relevant qualifications..."
-                  className="mt-1"
+                <FormField
+                  control={editForm.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editForm.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              
-              <div>
-                <label className="text-sm font-medium">Biography</label>
-                <Textarea 
-                  defaultValue={selectedTeacher.bio || ''}
-                  placeholder="Brief description of teaching approach and background..."
-                  className="mt-1"
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="teacher@institute.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+98 912 345 6789" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              
-              <div>
-                <label className="text-sm font-medium">Status</label>
-                <Select defaultValue={selectedTeacher.isActive !== false ? "active" : "inactive"}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="specialization"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Specialization</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select specialization" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Persian Language">Persian Language</SelectItem>
+                          <SelectItem value="English Language">English Language</SelectItem>
+                          <SelectItem value="Arabic Language">Arabic Language</SelectItem>
+                          <SelectItem value="French Language">French Language</SelectItem>
+                          <SelectItem value="Mathematics">Mathematics</SelectItem>
+                          <SelectItem value="Literature">Literature</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="experience"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Experience</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Years of experience" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="1-2 years">1-2 years</SelectItem>
+                          <SelectItem value="3-5 years">3-5 years</SelectItem>
+                          <SelectItem value="5-10 years">5-10 years</SelectItem>
+                          <SelectItem value="10+ years">10+ years</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </div>
-          )}
-          
-          <div className="flex justify-end gap-3 mt-6">
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => {
-              toast({
-                title: "Teacher Updated",
-                description: `Changes saved for ${selectedTeacher?.firstName} ${selectedTeacher?.lastName}`,
-              });
-              setIsEditDialogOpen(false);
-            }}>
-              Save Changes
-            </Button>
-          </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="languages"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Languages Taught</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Persian, English" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="hourlyRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hourly Rate (Toman)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="500000"
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={editForm.control}
+                name="qualifications"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Qualifications</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Degree, certifications, and relevant qualifications..."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bio (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Brief description of teaching approach and background..."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-3 mt-6">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateTeacherMutation.isPending}>
+                  {updateTeacherMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
