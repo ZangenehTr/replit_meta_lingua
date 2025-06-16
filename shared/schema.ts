@@ -105,9 +105,13 @@ export const courses = pgTable("courses", {
   maxStudents: integer("max_students"), // null for one-on-one, number for group classes
   
   // Scheduling (not applicable for self_paced)
+  firstSessionDate: date("first_session_date"), // Start date of the course
+  lastSessionDate: date("last_session_date"), // Calculated end date
   weekdays: text("weekdays").array(), // ["monday", "wednesday", "friday"]
   startTime: text("start_time"), // "18:00"
   endTime: text("end_time"), // "19:30"
+  timeZone: text("time_zone").default("Asia/Tehran"), // Course timezone
+  calendarType: text("calendar_type").default("gregorian"), // "gregorian" or "persian"
   
   // Target language and proficiency (for matching students)
   targetLanguage: text("target_language").notNull(), // "persian", "english", "arabic", etc.
@@ -137,6 +141,27 @@ export const enrollments = pgTable("enrollments", {
   progress: integer("progress").default(0), // 0-100
   enrolledAt: timestamp("enrolled_at").defaultNow(),
   completedAt: timestamp("completed_at")
+});
+
+// Course Sessions - Scheduled class sessions for courses
+export const courseSessions = pgTable("course_sessions", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  sessionNumber: integer("session_number").notNull(), // 1, 2, 3...
+  title: text("title").notNull(),
+  description: text("description"),
+  scheduledDate: date("scheduled_date").notNull(),
+  startTime: text("start_time").notNull(), // "18:00"
+  endTime: text("end_time").notNull(), // "19:30"
+  durationMinutes: integer("duration_minutes").notNull(), // 90
+  status: text("status").default("scheduled"), // scheduled, completed, cancelled, rescheduled
+  actualStartTime: timestamp("actual_start_time"),
+  actualEndTime: timestamp("actual_end_time"),
+  attendanceCount: integer("attendance_count").default(0),
+  recording_url: text("recording_url"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Tutoring sessions

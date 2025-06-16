@@ -17,6 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/hooks/use-language";
+import { calculateSessionDates, formatDuration, validateWeeklySchedule, formatDateByCalendar, type WeeklySchedule } from "@/lib/calendar";
 import { 
   BookOpen, 
   Search, 
@@ -28,6 +29,9 @@ import {
   Clock,
   Star,
   TrendingUp,
+  CalendarDays,
+  Timer,
+  MapPin,
   Video,
   FileText,
   Download,
