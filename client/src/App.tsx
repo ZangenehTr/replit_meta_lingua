@@ -21,7 +21,7 @@ import StudentInformationSystem from "@/pages/student-information-system";
 import { AdminDashboard as EnhancedAdminDashboard } from "@/pages/admin/admin-dashboard";
 import { AdminStudents } from "@/pages/admin/students";
 import { AdminCourses } from "@/pages/admin/courses";
-import { AdminCourseManagement } from "@/pages/admin/course-management";
+import { AdminCourseManagement } from "@/pages/admin/course-management-simple";
 import { EnhancedCourseCreation } from "@/pages/admin/enhanced-course-creation";
 import { AdminFinancial } from "@/pages/admin/financial";
 import { AdminSystem } from "@/pages/admin/system-simple";
