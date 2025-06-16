@@ -89,7 +89,8 @@ export function EnhancedCourseCreation() {
 
   // Fetch instructors for dropdown
   const { data: instructors = [] } = useQuery({
-    queryKey: ['/api/admin/instructors'],
+    queryKey: ['/api/admin/users'],
+    select: (data: any) => data?.filter((user: any) => user.role === 'instructor') || []
   });
 
   const form = useForm<EnhancedCourseFormData>({
