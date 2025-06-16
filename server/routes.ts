@@ -394,24 +394,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/teachers/list", async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
-      const teachers = users.filter(u => u.role === 'instructor').map(teacher => ({
-        id: teacher.id,
-        firstName: teacher.firstName,
-        lastName: teacher.lastName,
-        email: teacher.email,
-        phoneNumber: teacher.phoneNumber,
-        role: teacher.role,
-        isActive: teacher.isActive,
-        createdAt: teacher.createdAt,
-        specialization: teacher.specialization || 'Not specified',
-        qualifications: teacher.qualifications || 'Not specified',
-        experience: teacher.experience || 'Not specified',
-        hourlyRate: teacher.hourlyRate || 500000
-      }));
+      const teachers = users.filter(u => u.role === 'instructor').map(teacher => {
+        // Parse preferences if they exist
+        let preferences = {};
+        if (teacher.preferences && typeof teacher.preferences === 'object') {
+          preferences = teacher.preferences;
+        } else if (teacher.preferences && typeof teacher.preferences === 'string') {
+          try {
+            preferences = JSON.parse(teacher.preferences);
+          } catch (e) {
+            preferences = {};
+          }
+        }
+
+        return {
+          id: teacher.id,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName,
+          email: teacher.email,
+          phoneNumber: teacher.phoneNumber,
+          role: teacher.role,
+          isActive: teacher.isActive,
+          createdAt: teacher.createdAt,
+          specialization: preferences.specialization || null,
+          qualifications: preferences.qualifications || null,
+          experience: preferences.experience || null,
+          languages: preferences.languages || null,
+          hourlyRate: preferences.hourlyRate || 500000,
+          bio: preferences.bio || null
+        };
+      });
       res.json(teachers);
     } catch (error) {
       console.error("Error fetching teachers:", error);
       res.status(500).json({ message: "Failed to fetch teachers" });
+    }
+  });
+
+  // Update teacher endpoint
+  app.put("/api/teachers/:id", async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      // Update the user record
+      const updatedUser = await storage.updateUser(teacherId, {
+        firstName: updateData.firstName,
+        lastName: updateData.lastName,
+        email: updateData.email,
+        phoneNumber: updateData.phone,
+        isActive: updateData.status === 'active'
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Teacher not found" });
+      }
+
+      // Update user preferences with teaching-specific data
+      const teacherPreferences = {
+        specialization: updateData.specialization,
+        qualifications: updateData.qualifications,
+        experience: updateData.experience,
+        languages: updateData.languages,
+        hourlyRate: updateData.hourlyRate,
+        bio: updateData.bio
+      };
+
+      await storage.updateUserPreferences(teacherId, teacherPreferences);
+
+      res.json({ 
+        message: "Teacher updated successfully",
+        teacher: {
+          ...updatedUser,
+          ...teacherPreferences
+        }
+      });
+    } catch (error) {
+      console.error("Error updating teacher:", error);
+      res.status(500).json({ message: "Failed to update teacher" });
     }
   });
 
