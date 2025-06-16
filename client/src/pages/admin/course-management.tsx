@@ -276,14 +276,22 @@ export function AdminCourseManagement() {
           <h1 className="text-3xl font-bold">Course Management</h1>
           <p className="text-muted-foreground">Create and manage language courses</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Course
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex gap-3">
+          <Button 
+            onClick={() => window.location.href = '/admin/create-course'} 
+            className="bg-primary"
+          >
+            <CalendarDays className="h-4 w-4 mr-2" />
+            Enhanced Course Creator
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Quick Create
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Course</DialogTitle>
               <DialogDescription>
@@ -298,6 +306,7 @@ export function AdminCourseManagement() {
             />
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Stats Cards */}
