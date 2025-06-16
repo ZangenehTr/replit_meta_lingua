@@ -18,9 +18,19 @@ export interface BrandingSettings {
 }
 
 export function useBranding() {
-  const { data: branding, isLoading } = useQuery<BrandingSettings>({
+  const { data: branding, isLoading, error } = useQuery<BrandingSettings>({
     queryKey: ["/api/branding"],
-    retry: false,
+    retry: (failureCount, error: any) => {
+      // Don't retry if it's a server error, but retry network errors
+      if (error?.response?.status >= 500) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    // Don't block the app if branding fails to load
+    throwOnError: false,
   });
 
   // Apply branding to CSS variables when branding data changes

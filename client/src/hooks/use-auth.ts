@@ -30,7 +30,7 @@ interface RegisterData {
 export function useAuth() {
   const queryClient = useQueryClient();
 
-  const { data: user, isLoading } = useQuery<User | null>({
+  const { data: user, isLoading, error } = useQuery<User | null>({
     queryKey: ["/api/users/me"],
     queryFn: async () => {
       const token = localStorage.getItem("auth_token");
@@ -39,14 +39,24 @@ export function useAuth() {
       try {
         const response = await apiClient.get("/users/me");
         return response.data;
-      } catch (error) {
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("refresh_token");
+      } catch (error: any) {
+        // Only clear tokens if it's an auth error, not a network error
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("refresh_token");
+        }
         return null;
       }
     },
-    retry: false,
+    retry: (failureCount, error: any) => {
+      // Don't retry auth errors, but retry network errors up to 3 times
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      return failureCount < 3;
+    },
     refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const loginMutation = useMutation({
