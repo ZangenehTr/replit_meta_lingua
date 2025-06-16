@@ -1,6 +1,3 @@
-// Calendar utilities for course scheduling
-import { format, addDays, addWeeks, isSaturday, isSunday, isMonday, isTuesday, isWednesday, isThursday, isFriday } from 'date-fns';
-
 export interface WeeklySchedule {
   day: string;
   startTime: string;
@@ -10,162 +7,209 @@ export interface WeeklySchedule {
 export interface SessionCalculation {
   totalSessions: number;
   calculatedEndDate: Date;
-  sessionDates: Array<{
-    sessionNumber: number;
-    date: Date;
-    startTime: string;
-    endTime: string;
-    dayOfWeek: string;
-  }>;
+  sessionDates: Date[];
+  weeklyHours: number;
 }
 
-// Persian calendar utilities
-export const PERSIAN_MONTHS = [
-  'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
-  'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
-];
-
-export const WEEKDAYS = {
-  en: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-  fa: ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه', 'یکشنبه']
+const WEEKDAY_MAP: Record<string, number> = {
+  sunday: 0,
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6
 };
 
-export function getDayOfWeekNumber(dayName: string): number {
-  const dayMap: { [key: string]: number } = {
-    'monday': 1,
-    'tuesday': 2,
-    'wednesday': 3,
-    'thursday': 4,
-    'friday': 5,
-    'saturday': 6,
-    'sunday': 0
-  };
-  return dayMap[dayName.toLowerCase()] || 0;
-}
-
-export function isDayOfWeek(date: Date, dayName: string): boolean {
-  const dayCheckers: { [key: string]: (date: Date) => boolean } = {
-    'monday': isMonday,
-    'tuesday': isTuesday,
-    'wednesday': isWednesday,
-    'thursday': isThursday,
-    'friday': isFriday,
-    'saturday': isSaturday,
-    'sunday': isSunday
-  };
-  return dayCheckers[dayName.toLowerCase()]?.(date) || false;
-}
-
+/**
+ * Calculate session dates based on total hours, session duration, and weekly schedule
+ */
 export function calculateSessionDates(
   totalHours: number,
   sessionDurationMinutes: number,
-  firstSessionDate: Date,
+  startDate: Date,
   weeklySchedule: WeeklySchedule[]
 ): SessionCalculation {
   const totalMinutes = totalHours * 60;
   const totalSessions = Math.ceil(totalMinutes / sessionDurationMinutes);
+  const sessionDates: Date[] = [];
   
-  const sessionDates: SessionCalculation['sessionDates'] = [];
-  let currentDate = new Date(firstSessionDate);
-  let sessionCount = 0;
-  let maxIterations = 365 * 2; // Prevent infinite loops
-  
-  while (sessionCount < totalSessions && maxIterations > 0) {
-    // Check if current date matches any of the weekly schedule days
-    for (const schedule of weeklySchedule) {
-      if (isDayOfWeek(currentDate, schedule.day)) {
-        sessionCount++;
-        sessionDates.push({
-          sessionNumber: sessionCount,
-          date: new Date(currentDate),
-          startTime: schedule.startTime,
-          endTime: schedule.endTime,
-          dayOfWeek: schedule.day
-        });
-        
-        if (sessionCount >= totalSessions) break;
-      }
-    }
-    
-    currentDate = addDays(currentDate, 1);
-    maxIterations--;
+  // Sort weekly schedule by day of week
+  const sortedSchedule = weeklySchedule
+    .filter(schedule => schedule.day && schedule.startTime && schedule.endTime)
+    .sort((a, b) => WEEKDAY_MAP[a.day] - WEEKDAY_MAP[b.day]);
+
+  if (sortedSchedule.length === 0) {
+    throw new Error("No valid weekly schedule provided");
   }
-  
-  const calculatedEndDate = sessionDates.length > 0 
-    ? sessionDates[sessionDates.length - 1].date 
-    : new Date(firstSessionDate);
-  
+
+  let currentDate = new Date(startDate);
+  let sessionsScheduled = 0;
+  let weekCounter = 0;
+
+  // Calculate weekly hours
+  const weeklyHours = sortedSchedule.reduce((total, schedule) => {
+    const startTime = parseTime(schedule.startTime);
+    const endTime = parseTime(schedule.endTime);
+    return total + (endTime - startTime) / 60; // Convert minutes to hours
+  }, 0);
+
+  while (sessionsScheduled < totalSessions) {
+    for (const schedule of sortedSchedule) {
+      if (sessionsScheduled >= totalSessions) break;
+
+      const dayOfWeek = WEEKDAY_MAP[schedule.day];
+      const sessionDate = new Date(currentDate);
+      
+      // Calculate the date for this day of the week in the current week
+      const daysToAdd = (dayOfWeek - currentDate.getDay() + 7) % 7;
+      sessionDate.setDate(currentDate.getDate() + daysToAdd + (weekCounter * 7));
+
+      // Set the time
+      const [hours, minutes] = schedule.startTime.split(':').map(Number);
+      sessionDate.setHours(hours, minutes, 0, 0);
+
+      sessionDates.push(new Date(sessionDate));
+      sessionsScheduled++;
+    }
+    weekCounter++;
+  }
+
+  const calculatedEndDate = sessionDates[sessionDates.length - 1] || startDate;
+
   return {
     totalSessions,
     calculatedEndDate,
-    sessionDates
+    sessionDates,
+    weeklyHours
   };
 }
 
-export function calculateSessionDuration(startTime: string, endTime: string): number {
-  const [startHour, startMinute] = startTime.split(':').map(Number);
-  const [endHour, endMinute] = endTime.split(':').map(Number);
-  
-  const startTotalMinutes = startHour * 60 + startMinute;
-  const endTotalMinutes = endHour * 60 + endMinute;
-  
-  return endTotalMinutes - startTotalMinutes;
-}
-
-export function formatDuration(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  
-  if (hours === 0) return `${mins} minutes`;
-  if (mins === 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
-  return `${hours} hour${hours > 1 ? 's' : ''} ${mins} minutes`;
-}
-
-export function validateWeeklySchedule(schedule: WeeklySchedule[]): string[] {
+/**
+ * Validate weekly schedule for conflicts and completeness
+ */
+export function validateWeeklySchedule(weeklySchedule: WeeklySchedule[]): string[] {
   const errors: string[] = [];
-  
-  if (schedule.length === 0) {
-    errors.push('At least one weekly session is required');
-    return errors;
-  }
-  
-  for (const session of schedule) {
-    if (!session.day) {
-      errors.push('Day of week is required for all sessions');
+
+  for (let i = 0; i < weeklySchedule.length; i++) {
+    const schedule = weeklySchedule[i];
+
+    // Check required fields
+    if (!schedule.day) {
+      errors.push(`Session ${i + 1}: Day is required`);
     }
-    
-    if (!session.startTime || !session.endTime) {
-      errors.push('Start and end times are required for all sessions');
+    if (!schedule.startTime) {
+      errors.push(`Session ${i + 1}: Start time is required`);
     }
-    
-    if (session.startTime && session.endTime) {
-      const duration = calculateSessionDuration(session.startTime, session.endTime);
-      if (duration <= 0) {
-        errors.push(`Invalid time range for ${session.day}: end time must be after start time`);
+    if (!schedule.endTime) {
+      errors.push(`Session ${i + 1}: End time is required`);
+    }
+
+    if (schedule.startTime && schedule.endTime) {
+      const startMinutes = parseTime(schedule.startTime);
+      const endMinutes = parseTime(schedule.endTime);
+
+      // Check if end time is after start time
+      if (endMinutes <= startMinutes) {
+        errors.push(`Session ${i + 1}: End time must be after start time`);
       }
-      if (duration < 30) {
-        errors.push(`Session duration too short for ${session.day}: minimum 30 minutes required`);
+
+      // Check for conflicts with other sessions on the same day
+      for (let j = i + 1; j < weeklySchedule.length; j++) {
+        const otherSchedule = weeklySchedule[j];
+        if (schedule.day === otherSchedule.day && otherSchedule.startTime && otherSchedule.endTime) {
+          const otherStartMinutes = parseTime(otherSchedule.startTime);
+          const otherEndMinutes = parseTime(otherSchedule.endTime);
+
+          // Check for time overlap
+          if (
+            (startMinutes < otherEndMinutes && endMinutes > otherStartMinutes) ||
+            (otherStartMinutes < endMinutes && otherEndMinutes > startMinutes)
+          ) {
+            errors.push(`Sessions ${i + 1} and ${j + 1}: Time conflict on ${schedule.day}`);
+          }
+        }
       }
     }
   }
-  
+
   return errors;
 }
 
-// Persian calendar conversion (simplified)
-export function toPersianDate(date: Date): string {
-  // This is a simplified implementation
-  // In a real app, you'd use a library like moment-jalaali
-  const persianYear = date.getFullYear() - 621;
-  const persianMonth = Math.min(date.getMonth() + 1, 12);
-  const persianDay = date.getDate();
-  
-  return `${persianYear}/${persianMonth.toString().padStart(2, '0')}/${persianDay.toString().padStart(2, '0')}`;
+/**
+ * Parse time string (HH:MM) to minutes since midnight
+ */
+function parseTime(timeString: string): number {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  return hours * 60 + minutes;
 }
 
-export function formatDateByCalendar(date: Date, calendarType: 'gregorian' | 'persian' = 'gregorian'): string {
-  if (calendarType === 'persian') {
-    return toPersianDate(date);
+/**
+ * Format duration in minutes to human-readable string
+ */
+export function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours === 0) {
+    return `${remainingMinutes} min`;
+  } else if (remainingMinutes === 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''}`;
+  } else {
+    return `${hours}h ${remainingMinutes}m`;
   }
-  return format(date, 'yyyy-MM-dd');
+}
+
+/**
+ * Format date according to calendar type preference
+ */
+export function formatDateByCalendar(date: Date, calendarType: string = "gregorian"): string {
+  if (calendarType === "persian") {
+    // Basic Persian date formatting (would need proper Persian calendar library for production)
+    return date.toLocaleDateString('fa-IR');
+  }
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+/**
+ * Calculate estimated course duration in weeks
+ */
+export function calculateCourseDurationWeeks(
+  totalHours: number,
+  weeklySchedule: WeeklySchedule[]
+): number {
+  if (weeklySchedule.length === 0) return 0;
+
+  const weeklyHours = weeklySchedule.reduce((total, schedule) => {
+    if (!schedule.startTime || !schedule.endTime) return total;
+    const startMinutes = parseTime(schedule.startTime);
+    const endMinutes = parseTime(schedule.endTime);
+    return total + (endMinutes - startMinutes) / 60;
+  }, 0);
+
+  return weeklyHours > 0 ? Math.ceil(totalHours / weeklyHours) : 0;
+}
+
+/**
+ * Generate time slots for a given duration and interval
+ */
+export function generateTimeSlots(
+  startHour: number = 8,
+  endHour: number = 22,
+  intervalMinutes: number = 30
+): string[] {
+  const slots: string[] = [];
+  
+  for (let hour = startHour; hour < endHour; hour++) {
+    for (let minute = 0; minute < 60; minute += intervalMinutes) {
+      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      slots.push(timeString);
+    }
+  }
+  
+  return slots;
 }
