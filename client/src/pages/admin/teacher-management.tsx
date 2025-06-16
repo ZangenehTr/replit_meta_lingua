@@ -77,6 +77,9 @@ export function AdminTeacherManagement() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
+  const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch teachers
   const { data: teachers = [], isLoading: teachersLoading, error } = useQuery({
@@ -473,102 +476,427 @@ export function AdminTeacherManagement() {
       </div>
 
       {/* Teachers List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {teachersLoading ? (
-          <div className="col-span-full text-center py-8">Loading teachers...</div>
-        ) : filteredTeachers.length === 0 ? (
-          <div className="col-span-full text-center py-8 text-muted-foreground">
-            No teachers found matching your criteria
-          </div>
-        ) : (
-          filteredTeachers.map((teacher: any) => (
-            <Card key={teacher.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg">
-                      {teacher.firstName} {teacher.lastName}
-                    </CardTitle>
-                    <Badge variant={teacher.isActive !== false ? "default" : "secondary"}>
-                      {teacher.isActive !== false ? "Active" : "Inactive"}
-                    </Badge>
+      {viewMode === "cards" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {teachersLoading ? (
+            <div className="col-span-full text-center py-8">Loading teachers...</div>
+          ) : filteredTeachers.length === 0 ? (
+            <div className="col-span-full text-center py-8 text-muted-foreground">
+              No teachers found matching your criteria
+            </div>
+          ) : (
+            filteredTeachers.map((teacher: any) => (
+              <Card key={teacher.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="space-y-1">
+                      <CardTitle className="text-lg">
+                        {teacher.firstName} {teacher.lastName}
+                      </CardTitle>
+                      <Badge variant={teacher.isActive !== false ? "default" : "secondary"}>
+                        {teacher.isActive !== false ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedTeacher(teacher);
+                          setIsViewDialogOpen(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedTeacher(teacher);
+                          setIsEditDialogOpen(true);
+                        }}
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Mail className="h-4 w-4" />
                       <span>{teacher.email}</span>
                     </div>
                     {teacher.phoneNumber && (
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Phone className="h-4 w-4" />
                         <span>{teacher.phoneNumber}</span>
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        toast({
-                          title: "View Teacher",
-                          description: `Viewing details for ${teacher.firstName} ${teacher.lastName}`,
-                        });
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        toast({
-                          title: "Edit Teacher",
-                          description: `Edit functionality for ${teacher.firstName} ${teacher.lastName} will be implemented`,
-                        });
-                      }}
-                    >
-                      <Edit3 className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <BookOpen className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">Specialization:</span>
+                      <span>{teacher.specialization || 'Not specified'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">Experience:</span>
+                      <span>{teacher.experience || 'Not specified'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">Rate:</span>
+                      <span>{new Intl.NumberFormat('fa-IR').format(teacher.hourlyRate || 500000)} تومان/ساعت</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Star className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">Rating:</span>
+                      <span>4.8/5.0</span>
+                    </div>
+                  </div>
+                  {teacher.qualifications && (
+                    <div className="mt-3 pt-3 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Qualifications:</strong> {teacher.qualifications}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="text-left p-4 font-medium">Name</th>
+                    <th className="text-left p-4 font-medium">Email</th>
+                    <th className="text-left p-4 font-medium">Specialization</th>
+                    <th className="text-left p-4 font-medium">Experience</th>
+                    <th className="text-left p-4 font-medium">Rate</th>
+                    <th className="text-left p-4 font-medium">Status</th>
+                    <th className="text-left p-4 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teachersLoading ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-8">Loading teachers...</td>
+                    </tr>
+                  ) : filteredTeachers.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-8 text-muted-foreground">
+                        No teachers found matching your criteria
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredTeachers.map((teacher: any) => (
+                      <tr key={teacher.id} className="border-b hover:bg-muted/25">
+                        <td className="p-4">
+                          <div>
+                            <div className="font-medium">{teacher.firstName} {teacher.lastName}</div>
+                            {teacher.phoneNumber && (
+                              <div className="text-sm text-muted-foreground">{teacher.phoneNumber}</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4 text-sm">{teacher.email}</td>
+                        <td className="p-4 text-sm">{teacher.specialization || 'Not specified'}</td>
+                        <td className="p-4 text-sm">{teacher.experience || 'Not specified'}</td>
+                        <td className="p-4 text-sm">
+                          {new Intl.NumberFormat('fa-IR').format(teacher.hourlyRate || 500000)} تومان
+                        </td>
+                        <td className="p-4">
+                          <Badge variant={teacher.isActive !== false ? "default" : "secondary"}>
+                            {teacher.isActive !== false ? "Active" : "Inactive"}
+                          </Badge>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTeacher(teacher);
+                                setIsViewDialogOpen(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTeacher(teacher);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* View Teacher Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Teacher Details</DialogTitle>
+            <DialogDescription>
+              View complete information for {selectedTeacher?.firstName} {selectedTeacher?.lastName}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTeacher && (
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                  <p className="text-lg font-medium">{selectedTeacher.firstName} {selectedTeacher.lastName}</p>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Email</label>
+                  <p>{selectedTeacher.email}</p>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Phone</label>
+                  <p>{selectedTeacher.phoneNumber || 'Not provided'}</p>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <div className="mt-1">
+                    <Badge variant={selectedTeacher.isActive !== false ? "default" : "secondary"}>
+                      {selectedTeacher.isActive !== false ? "Active" : "Inactive"}
+                    </Badge>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <BookOpen className="h-4 w-4" />
-                    <span>{teacher.specialization || 'Not specified'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Star className="h-4 w-4" />
-                    <span>4.8 rating</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>{teacher.experience || '5 years'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span>{new Intl.NumberFormat('fa-IR').format(teacher.hourlyRate || 500000)} تومان/ساعت</span>
-                  </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Specialization</label>
+                  <p>{selectedTeacher.specialization || 'Not specified'}</p>
                 </div>
-                {teacher.qualifications && (
-                  <p className="text-sm text-muted-foreground mb-2">
-                    <strong>Qualifications:</strong> {teacher.qualifications}
+                
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Experience</label>
+                  <p>{selectedTeacher.experience || 'Not specified'}</p>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Hourly Rate</label>
+                  <p className="text-lg font-medium">
+                    {new Intl.NumberFormat('fa-IR').format(selectedTeacher.hourlyRate || 500000)} تومان/ساعت
                   </p>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Languages</label>
+                  <p>{selectedTeacher.languages || 'Not specified'}</p>
+                </div>
+              </div>
+              
+              <div className="col-span-2 space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Qualifications</label>
+                  <p className="mt-1 text-sm">{selectedTeacher.qualifications || 'Not specified'}</p>
+                </div>
+                
+                {selectedTeacher.bio && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Biography</label>
+                    <p className="mt-1 text-sm">{selectedTeacher.bio}</p>
+                  </div>
                 )}
-                {teacher.bio && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {teacher.bio}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Member Since</label>
+                  <p className="text-sm">{new Date(selectedTeacher.createdAt).toLocaleDateString('fa-IR')}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={() => {
+              setIsViewDialogOpen(false);
+              setIsEditDialogOpen(true);
+            }}>
+              <Edit3 className="h-4 w-4 mr-2" />
+              Edit Teacher
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Teacher Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Teacher</DialogTitle>
+            <DialogDescription>
+              Update information for {selectedTeacher?.firstName} {selectedTeacher?.lastName}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTeacher && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">First Name</label>
+                  <Input 
+                    defaultValue={selectedTeacher.firstName}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Last Name</label>
+                  <Input 
+                    defaultValue={selectedTeacher.lastName}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <Input 
+                    type="email"
+                    defaultValue={selectedTeacher.email}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Phone</label>
+                  <Input 
+                    defaultValue={selectedTeacher.phoneNumber || ''}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Specialization</label>
+                  <Select defaultValue={selectedTeacher.specialization}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Persian Language">Persian Language</SelectItem>
+                      <SelectItem value="English Language">English Language</SelectItem>
+                      <SelectItem value="Arabic Language">Arabic Language</SelectItem>
+                      <SelectItem value="French Language">French Language</SelectItem>
+                      <SelectItem value="Mathematics">Mathematics</SelectItem>
+                      <SelectItem value="Literature">Literature</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Experience</label>
+                  <Select defaultValue={selectedTeacher.experience}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1-2 years">1-2 years</SelectItem>
+                      <SelectItem value="3-5 years">3-5 years</SelectItem>
+                      <SelectItem value="5-10 years">5-10 years</SelectItem>
+                      <SelectItem value="10+ years">10+ years</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Languages Taught</label>
+                  <Input 
+                    defaultValue={selectedTeacher.languages || ''}
+                    placeholder="e.g., Persian, English"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Hourly Rate (Toman)</label>
+                  <Input 
+                    type="number"
+                    defaultValue={selectedTeacher.hourlyRate || 500000}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Qualifications</label>
+                <Textarea 
+                  defaultValue={selectedTeacher.qualifications || ''}
+                  placeholder="Degree, certifications, and relevant qualifications..."
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Biography</label>
+                <Textarea 
+                  defaultValue={selectedTeacher.bio || ''}
+                  placeholder="Brief description of teaching approach and background..."
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Status</label>
+                <Select defaultValue={selectedTeacher.isActive !== false ? "active" : "inactive"}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              toast({
+                title: "Teacher Updated",
+                description: `Changes saved for ${selectedTeacher?.firstName} ${selectedTeacher?.lastName}`,
+              });
+              setIsEditDialogOpen(false);
+            }}>
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
