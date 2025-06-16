@@ -55,14 +55,7 @@ export function AdminTeacherManagement() {
 
   // Fetch teachers
   const { data: teachers = [], isLoading: teachersLoading } = useQuery({
-    queryKey: ['/api/admin/users'],
-    select: (data: any) => {
-      console.log('All users:', data);
-      const instructors = data?.filter((user: any) => user.role === 'instructor') || [];
-      console.log('Filtered instructors:', instructors);
-      return instructors;
-    },
-    refetchInterval: 3000 // Refresh every 3 seconds to show new teachers
+    queryKey: ['/api/teachers/list']
   });
 
   const form = useForm<TeacherFormData>({
@@ -95,7 +88,7 @@ export function AdminTeacherManagement() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/teachers/list'] });
       setIsCreateDialogOpen(false);
       form.reset();
       toast({
