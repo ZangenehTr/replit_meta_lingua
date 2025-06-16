@@ -157,6 +157,11 @@ function Router() {
           <EnhancedCourseCreation />
         </ProtectedRoute>
       </Route>
+      <Route path="/admin/teachers">
+        <ProtectedRoute>
+          <AdminTeacherManagement />
+        </ProtectedRoute>
+      </Route>
       <Route path="/courses">
         <ProtectedRoute>
           <Courses />
