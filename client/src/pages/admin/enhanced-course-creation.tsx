@@ -22,6 +22,7 @@ import { calculateSessionDates, formatDuration, validateWeeklySchedule, formatDa
 
 const enhancedCourseSchema = z.object({
   // Basic Information
+  courseCode: z.string().min(2, "Course code is required"),
   title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   shortDescription: z.string().min(5, "Short description must be at least 5 characters"),
@@ -96,6 +97,7 @@ export function EnhancedCourseCreation() {
   const form = useForm<EnhancedCourseFormData>({
     resolver: zodResolver(enhancedCourseSchema),
     defaultValues: {
+      courseCode: "",
       title: "",
       description: "",
       shortDescription: "",
@@ -109,7 +111,7 @@ export function EnhancedCourseCreation() {
       timeZone: "Asia/Tehran",
       calendarType: "gregorian",
       category: "",
-      targetLanguage: "",
+      targetLanguage: "persian",
       targetLevel: [],
       difficulty: "beginner",
       tags: [],
@@ -228,6 +230,47 @@ export function EnhancedCourseCreation() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="courseCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Course Code</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., PER101" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Language Learning">Language Learning</SelectItem>
+                              <SelectItem value="Persian Language">Persian Language</SelectItem>
+                              <SelectItem value="Conversation">Conversation</SelectItem>
+                              <SelectItem value="Grammar">Grammar</SelectItem>
+                              <SelectItem value="Writing">Writing</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <FormField
                     control={form.control}
                     name="title"
