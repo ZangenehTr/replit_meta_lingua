@@ -51,39 +51,45 @@ export function calculateSessionDates(
   }, 0);
 
   let sessionsScheduled = 0;
-  let currentWeekStart = new Date(startDate);
-  
-  // Adjust to the start of the week containing the start date
-  const startDayOfWeek = currentWeekStart.getDay();
-  const daysToSubtract = startDayOfWeek; // Sunday = 0, so this gives us Sunday of the week
-  currentWeekStart.setDate(currentWeekStart.getDate() - daysToSubtract);
+  let currentDate = new Date(startDate);
+  currentDate.setHours(0, 0, 0, 0); // Start from beginning of start date
 
+  // Generate session dates by going through each week and finding matching days
   while (sessionsScheduled < totalSessions) {
-    for (const schedule of sortedSchedule) {
+    // Check each day of the current week
+    for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
       if (sessionsScheduled >= totalSessions) break;
-
-      const dayOfWeek = WEEKDAY_MAP[schedule.day];
-      const sessionDate = new Date(currentWeekStart);
       
-      // Set to the correct day of the current week
-      sessionDate.setDate(currentWeekStart.getDate() + dayOfWeek);
-
-      // Set the time
-      const [hours, minutes] = schedule.startTime.split(':').map(Number);
-      sessionDate.setHours(hours, minutes, 0, 0);
-
-      // Only add sessions that are on or after the start date
-      if (sessionDate >= startDate) {
-        sessionDates.push(new Date(sessionDate));
-        sessionsScheduled++;
+      const checkDate = new Date(currentDate);
+      checkDate.setDate(currentDate.getDate() + dayOffset);
+      const dayOfWeek = checkDate.getDay();
+      
+      // Find if this day has a scheduled session
+      const scheduleForDay = sortedSchedule.find(schedule => 
+        WEEKDAY_MAP[schedule.day] === dayOfWeek
+      );
+      
+      if (scheduleForDay) {
+        const sessionDate = new Date(checkDate);
+        const [hours, minutes] = scheduleForDay.startTime.split(':').map(Number);
+        sessionDate.setHours(hours, minutes, 0, 0);
+        
+        // Only add sessions that are on or after the start date
+        if (sessionDate >= startDate) {
+          sessionDates.push(new Date(sessionDate));
+          sessionsScheduled++;
+        }
       }
     }
     
-    // Move to next week
-    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    // Move to next week (Sunday of next week)
+    currentDate.setDate(currentDate.getDate() + 7);
   }
 
-  const calculatedEndDate = sessionDates[sessionDates.length - 1] || startDate;
+  // The last session date is our calculated end date
+  const calculatedEndDate = sessionDates.length > 0 
+    ? sessionDates[sessionDates.length - 1] 
+    : startDate;
 
   return {
     totalSessions,
