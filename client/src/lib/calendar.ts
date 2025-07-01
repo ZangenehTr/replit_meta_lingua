@@ -43,10 +43,6 @@ export function calculateSessionDates(
     throw new Error("No valid weekly schedule provided");
   }
 
-  let currentDate = new Date(startDate);
-  let sessionsScheduled = 0;
-  let weekCounter = 0;
-
   // Calculate weekly hours
   const weeklyHours = sortedSchedule.reduce((total, schedule) => {
     const startTime = parseTime(schedule.startTime);
@@ -54,25 +50,37 @@ export function calculateSessionDates(
     return total + (endTime - startTime) / 60; // Convert minutes to hours
   }, 0);
 
+  let sessionsScheduled = 0;
+  let currentWeekStart = new Date(startDate);
+  
+  // Adjust to the start of the week containing the start date
+  const startDayOfWeek = currentWeekStart.getDay();
+  const daysToSubtract = startDayOfWeek; // Sunday = 0, so this gives us Sunday of the week
+  currentWeekStart.setDate(currentWeekStart.getDate() - daysToSubtract);
+
   while (sessionsScheduled < totalSessions) {
     for (const schedule of sortedSchedule) {
       if (sessionsScheduled >= totalSessions) break;
 
       const dayOfWeek = WEEKDAY_MAP[schedule.day];
-      const sessionDate = new Date(currentDate);
+      const sessionDate = new Date(currentWeekStart);
       
-      // Calculate the date for this day of the week in the current week
-      const daysToAdd = (dayOfWeek - currentDate.getDay() + 7) % 7;
-      sessionDate.setDate(currentDate.getDate() + daysToAdd + (weekCounter * 7));
+      // Set to the correct day of the current week
+      sessionDate.setDate(currentWeekStart.getDate() + dayOfWeek);
 
       // Set the time
       const [hours, minutes] = schedule.startTime.split(':').map(Number);
       sessionDate.setHours(hours, minutes, 0, 0);
 
-      sessionDates.push(new Date(sessionDate));
-      sessionsScheduled++;
+      // Only add sessions that are on or after the start date
+      if (sessionDate >= startDate) {
+        sessionDates.push(new Date(sessionDate));
+        sessionsScheduled++;
+      }
     }
-    weekCounter++;
+    
+    // Move to next week
+    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
   }
 
   const calculatedEndDate = sessionDates[sessionDates.length - 1] || startDate;
