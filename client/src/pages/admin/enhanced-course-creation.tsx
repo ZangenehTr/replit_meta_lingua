@@ -192,6 +192,21 @@ export function EnhancedCourseCreation() {
   const updateWeeklySession = (index: number, field: keyof WeeklySchedule, value: string) => {
     const updated = [...weeklySchedule];
     updated[index] = { ...updated[index], [field]: value };
+    
+    // Auto-calculate end time when start time is set
+    if (field === 'startTime' && value && sessionDurationMinutes) {
+      const [hours, minutes] = value.split(':').map(Number);
+      const startMinutes = hours * 60 + minutes;
+      const endMinutes = startMinutes + sessionDurationMinutes;
+      
+      const endHours = Math.floor(endMinutes / 60);
+      const endMins = endMinutes % 60;
+      
+      // Format as HH:MM
+      const endTime = `${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`;
+      updated[index].endTime = endTime;
+    }
+    
     setWeeklySchedule(updated);
   };
 
@@ -575,6 +590,13 @@ export function EnhancedCourseCreation() {
                             Add Session Time
                           </Button>
                         </div>
+                        
+                        <Alert>
+                          <Clock className="h-4 w-4" />
+                          <AlertDescription>
+                            Just select the day and start time - end times are automatically calculated based on your {formatDuration(sessionDurationMinutes || 90)} session duration.
+                          </AlertDescription>
+                        </Alert>
 
                         {weeklySchedule.map((session, index) => (
                           <Card key={index} className="p-4">
@@ -608,11 +630,17 @@ export function EnhancedCourseCreation() {
                               </div>
 
                               <div>
-                                <Label>End Time</Label>
+                                <Label className="flex items-center gap-1">
+                                  End Time 
+                                  <span className="text-xs text-muted-foreground">(auto)</span>
+                                </Label>
                                 <Input 
                                   type="time" 
                                   value={session.endTime}
-                                  onChange={(e) => updateWeeklySession(index, 'endTime', e.target.value)}
+                                  readOnly
+                                  disabled
+                                  className="bg-gray-50 text-gray-600"
+                                  title={`Auto-calculated based on ${formatDuration(sessionDurationMinutes || 90)} session duration`}
                                 />
                               </div>
 
