@@ -112,6 +112,7 @@ Meta Lingua is an AI-enhanced multilingual language learning and institute manag
 
 ## Changelog
 - July 01, 2025. Initial setup
+- July 01, 2025. Enhanced course creation UX: Auto-calculate end times from session duration, eliminating redundant user input
 
 ## User Preferences
 
