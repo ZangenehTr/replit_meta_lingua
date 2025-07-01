@@ -82,8 +82,11 @@ export function AdminTeacherManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch teachers
-  const { data: teachers = [], isLoading: teachersLoading, error } = useQuery({
-    queryKey: ['/api/teachers/list']
+  const { data: teachers = [], isLoading: teachersLoading, error, refetch } = useQuery({
+    queryKey: ['/api/teachers/list'],
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const form = useForm<TeacherFormData>({
@@ -542,17 +545,48 @@ export function AdminTeacherManagement() {
         </Select>
       </div>
 
-      {/* Teachers List */}
-      {viewMode === "cards" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {teachersLoading ? (
-            <div className="col-span-full text-center py-8">Loading teachers...</div>
-          ) : filteredTeachers.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-muted-foreground">
-              No teachers found matching your criteria
+      {/* Error Display */}
+      {error && (
+        <Card className="border-destructive">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-destructive/10 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-medium text-destructive">Failed to load teachers</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {error.message || 'An error occurred while fetching teacher data'}
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => refetch()}
+                disabled={teachersLoading}
+              >
+                {teachersLoading ? "Retrying..." : "Retry"}
+              </Button>
             </div>
-          ) : (
-            filteredTeachers.map((teacher: any) => (
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Teachers List */}
+      {!error && (
+        viewMode === "cards" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {teachersLoading ? (
+              <div className="col-span-full text-center py-8">Loading teachers...</div>
+            ) : filteredTeachers.length === 0 ? (
+              <div className="col-span-full text-center py-8 text-muted-foreground">
+                No teachers found matching your criteria
+              </div>
+            ) : (
+              filteredTeachers.map((teacher: any) => (
               <Card key={teacher.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start mb-2">
@@ -710,6 +744,7 @@ export function AdminTeacherManagement() {
             </div>
           </CardContent>
         </Card>
+        )
       )}
 
       {/* View Teacher Dialog */}
