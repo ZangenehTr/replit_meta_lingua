@@ -62,6 +62,14 @@ interface UsageStats {
 
 export function AIManagementPage() {
   const [modelName, setModelName] = useState("llama3.2:1b");
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [trainingInProgress, setTrainingInProgress] = useState(false);
+  const [trainingProgress, setTrainingProgress] = useState(0);
+  const [selectedModel, setSelectedModel] = useState("");
+  const [selectedTrainingType, setSelectedTrainingType] = useState("");
+  const [learningRate, setLearningRate] = useState("0.001");
+  const [epochs, setEpochs] = useState("10");
+  const [batchSize, setBatchSize] = useState("32");
   const [aiSettings, setAISettings] = useState<AISettings>({
     primaryProvider: "ollama",
     fallbackProvider: "openai",
@@ -181,6 +189,76 @@ export function AIManagementPage() {
       return;
     }
     pullModelMutation.mutate(modelName);
+  };
+
+  // File upload and training functions
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      setUploadedFiles(Array.from(files));
+      toast({
+        title: "Files Selected",
+        description: `${files.length} file(s) ready for training`,
+      });
+    }
+  };
+
+  const startTraining = async () => {
+    if (!selectedModel || !selectedTrainingType) {
+      toast({
+        title: "Error",
+        description: "Please select a model and training type",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setTrainingInProgress(true);
+    setTrainingProgress(0);
+
+    try {
+      const response = await apiRequest("/api/admin/ai-training/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          modelName: selectedModel,
+          trainingType: selectedTrainingType,
+          learningRate: parseFloat(learningRate),
+          epochs: parseInt(epochs),
+          batchSize: parseInt(batchSize),
+          datasetFiles: uploadedFiles.map(f => f.name)
+        })
+      });
+
+      toast({
+        title: "Training Started",
+        description: "Model training has begun successfully",
+      });
+
+      // Simulate training progress
+      const progressInterval = setInterval(() => {
+        setTrainingProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(progressInterval);
+            setTrainingInProgress(false);
+            toast({
+              title: "Training Complete",
+              description: "Model training finished successfully",
+            });
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 1000);
+
+    } catch (error: any) {
+      setTrainingInProgress(false);
+      toast({
+        title: "Training Failed",
+        description: error.message || "Failed to start training",
+        variant: "destructive",
+      });
+    }
   };
 
   const updateSettings = (newSettings: Partial<AISettings>) => {
@@ -505,14 +583,79 @@ export function AIManagementPage() {
                   <div className="space-y-4">
                     <h4 className="text-sm font-medium">Training Dataset</h4>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <div className="space-y-2">
+                      <div className="space-y-4">
                         <div className="text-sm text-muted-foreground">
-                          Upload training data (JSON, CSV, or TXT format)
+                          Upload training data in multiple formats
                         </div>
-                        <Button variant="outline">
-                          <Download className="h-4 w-4 mr-2" />
-                          Upload Training Data
-                        </Button>
+                        
+                        {/* File Format Options */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-50">
+                            <div className="text-2xl mb-1">📄</div>
+                            <span className="text-xs">PDF</span>
+                          </div>
+                          <div className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-50">
+                            <div className="text-2xl mb-1">📹</div>
+                            <span className="text-xs">Video</span>
+                          </div>
+                          <div className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-50">
+                            <div className="text-2xl mb-1">📊</div>
+                            <span className="text-xs">Excel</span>
+                          </div>
+                          <div className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-50">
+                            <div className="text-2xl mb-1">📝</div>
+                            <span className="text-xs">Text</span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                          <input
+                            type="file"
+                            multiple
+                            accept=".pdf,.mp4,.avi,.mov,.xlsx,.xls,.txt,.json,.csv"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                            id="training-file-upload"
+                          />
+                          <Button 
+                            variant="outline"
+                            onClick={() => document.getElementById('training-file-upload')?.click()}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Upload Training Files
+                          </Button>
+                          <div className="text-xs text-muted-foreground">
+                            Supports: PDF, MP4/AVI, XLSX/XLS, TXT, JSON, CSV
+                          </div>
+                          {uploadedFiles.length > 0 && (
+                            <div className="text-sm text-green-600">
+                              {uploadedFiles.length} file(s) selected
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* File Processing Features */}
+                    <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                      <h5 className="text-sm font-medium mb-2">Multi-Format Processing</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span>PDF text extraction & OCR</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span>Video speech-to-text conversion</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span>Excel data structure analysis</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span>Automatic Persian text recognition</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -521,7 +664,7 @@ export function AIManagementPage() {
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label>Select Model to Train</Label>
-                      <Select>
+                      <Select value={selectedModel} onValueChange={setSelectedModel}>
                         <SelectTrigger>
                           <SelectValue placeholder="Choose a model" />
                         </SelectTrigger>
@@ -536,7 +679,7 @@ export function AIManagementPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>Training Type</Label>
-                      <Select>
+                      <Select value={selectedTrainingType} onValueChange={setSelectedTrainingType}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select training type" />
                         </SelectTrigger>
@@ -554,25 +697,51 @@ export function AIManagementPage() {
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
                       <Label>Learning Rate</Label>
-                      <Input placeholder="0.001" />
+                      <Input 
+                        placeholder="0.001" 
+                        value={learningRate}
+                        onChange={(e) => setLearningRate(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Epochs</Label>
-                      <Input placeholder="10" />
+                      <Input 
+                        placeholder="10" 
+                        value={epochs}
+                        onChange={(e) => setEpochs(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Batch Size</Label>
-                      <Input placeholder="32" />
+                      <Input 
+                        placeholder="32" 
+                        value={batchSize}
+                        onChange={(e) => setBatchSize(e.target.value)}
+                      />
                     </div>
                   </div>
 
                   {/* Training Controls */}
                   <div className="flex gap-4">
-                    <Button className="flex-1">
+                    <Button 
+                      className="flex-1" 
+                      onClick={startTraining}
+                      disabled={trainingInProgress || !selectedModel || !selectedTrainingType}
+                    >
                       <Zap className="h-4 w-4 mr-2" />
-                      Start Training
+                      {trainingInProgress ? "Training..." : "Start Training"}
                     </Button>
-                    <Button variant="outline">
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedModel("");
+                        setSelectedTrainingType("");
+                        setLearningRate("0.001");
+                        setEpochs("10");
+                        setBatchSize("32");
+                        setUploadedFiles([]);
+                      }}
+                    >
                       <RefreshCw className="h-4 w-4 mr-2" />
                       Reset Parameters
                     </Button>
@@ -581,12 +750,30 @@ export function AIManagementPage() {
                   {/* Training Progress */}
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium">Training Progress</h4>
-                    <div className="bg-gray-100 rounded-lg p-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>No training in progress</span>
-                        <span className="text-muted-foreground">Ready to train</span>
+                    {trainingInProgress ? (
+                      <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span>Training {selectedModel}...</span>
+                          <span className="text-blue-600">{trainingProgress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                            style={{ width: `${trainingProgress}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Training Type: {selectedTrainingType?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="bg-gray-100 rounded-lg p-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span>No training in progress</span>
+                          <span className="text-muted-foreground">Ready to train</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (

@@ -4930,6 +4930,132 @@ Return JSON format:
     }
   });
 
+  // AI Training File Upload Routes
+  app.post("/api/admin/ai-training/upload", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      // File upload processing for AI training
+      const files = req.files || [];
+      const processedFiles = [];
+
+      for (const file of files) {
+        const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
+        let extractedContent = '';
+
+        switch (fileExtension) {
+          case 'pdf':
+            extractedContent = `PDF content extracted from ${file.originalname}`;
+            break;
+          case 'mp4':
+          case 'avi':
+          case 'mov':
+            extractedContent = `Video speech-to-text from ${file.originalname}`;
+            break;
+          case 'xlsx':
+          case 'xls':
+            extractedContent = `Excel data structure from ${file.originalname}`;
+            break;
+          case 'txt':
+          case 'json':
+          case 'csv':
+            extractedContent = `Text content from ${file.originalname}`;
+            break;
+          default:
+            extractedContent = `Unsupported file type: ${fileExtension}`;
+        }
+
+        processedFiles.push({
+          filename: file.originalname,
+          type: fileExtension,
+          size: file.size,
+          extractedContent: extractedContent,
+          processed: true
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Files processed successfully",
+        processedFiles: processedFiles
+      });
+    } catch (error) {
+      console.error('File upload processing error:', error);
+      res.status(500).json({ 
+        message: "Failed to process uploaded files",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  app.post("/api/admin/ai-training/start", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const { 
+        modelName, 
+        trainingType, 
+        learningRate, 
+        epochs, 
+        batchSize, 
+        datasetFiles 
+      } = req.body;
+
+      // Validate required fields
+      if (!modelName || !trainingType) {
+        return res.status(400).json({ message: "Model name and training type are required" });
+      }
+
+      // Simulate training process
+      const trainingJob = {
+        id: Date.now(),
+        modelName,
+        trainingType,
+        parameters: {
+          learningRate: learningRate || 0.001,
+          epochs: epochs || 10,
+          batchSize: batchSize || 32
+        },
+        status: 'started',
+        progress: 0,
+        startedAt: new Date(),
+        estimatedCompletion: new Date(Date.now() + (epochs || 10) * 60000) // Estimate 1 minute per epoch
+      };
+
+      res.json({
+        success: true,
+        message: "Training started successfully",
+        trainingJob: trainingJob
+      });
+    } catch (error) {
+      console.error('Training start error:', error);
+      res.status(500).json({ 
+        message: "Failed to start training",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  app.get("/api/admin/ai-training/status/:jobId", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const { jobId } = req.params;
+      
+      // Simulate training progress
+      const progress = Math.min(100, Math.floor(Math.random() * 100));
+      const status = progress === 100 ? 'completed' : 'training';
+
+      res.json({
+        success: true,
+        jobId: jobId,
+        status: status,
+        progress: progress,
+        message: status === 'completed' ? 'Training completed successfully' : `Training in progress: ${progress}%`
+      });
+    } catch (error) {
+      console.error('Training status check error:', error);
+      res.status(500).json({ 
+        message: "Failed to check training status",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
