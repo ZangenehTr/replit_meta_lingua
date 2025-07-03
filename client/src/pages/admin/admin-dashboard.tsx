@@ -18,7 +18,8 @@ import {
   UserCheck,
   Clock,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Bot
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -285,6 +286,33 @@ export function AdminDashboard() {
                 <span className="font-bold">94.3%</span>
               </div>
               <Progress value={94} className="mt-2" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* AI Services Management */}
+        <Card 
+          className="hover:shadow-lg transition-shadow cursor-pointer"
+          onClick={() => setLocation('/admin/ai-management')}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              AI Services
+            </CardTitle>
+            <CardDescription>Local AI processing & model management</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Service Status:</span>
+                <span className="font-bold text-green-600">Running</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Processing Mode:</span>
+                <span className="font-bold">Local + Fallback</span>
+              </div>
+              <Progress value={100} className="mt-2" />
             </div>
           </CardContent>
         </Card>
