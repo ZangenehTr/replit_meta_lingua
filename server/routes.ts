@@ -4581,6 +4581,71 @@ Return JSON format:
     }
   });
 
+  app.get("/api/admin/ai/usage-stats", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      // Mock usage statistics - in production this would come from analytics
+      const usageStats = {
+        totalTokensUsed: 45230,
+        averageResponseTime: 2.4,
+        requestsToday: 127
+      };
+      
+      res.json(usageStats);
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to fetch usage statistics",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  app.get("/api/admin/ai/settings", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      // Get current AI settings - in production this would be stored in database
+      const settings = {
+        primaryProvider: "ollama",
+        fallbackProvider: "openai",
+        responseCaching: true,
+        features: {
+          personalizedRecommendations: true,
+          progressAnalysis: true,
+          conversationScenarios: true,
+          culturalInsights: true,
+        }
+      };
+      
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to fetch AI settings",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  app.put("/api/admin/ai/settings", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const settings = req.body;
+      
+      // In production, save settings to database
+      console.log('AI Settings updated:', settings);
+      
+      res.json({
+        success: true,
+        message: "AI settings updated successfully",
+        settings
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to update AI settings",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
   // Advanced Reporting & Analytics Routes
   app.get("/api/reports/financial-summary", authenticateToken, requireRole(['admin', 'accountant']), async (req: any, res) => {
     try {
