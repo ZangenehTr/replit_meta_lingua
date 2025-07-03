@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Bot, 
   Server, 
@@ -34,17 +35,6 @@ interface OllamaStatus {
   endpoint: string;
 }
 
-const POPULAR_MODELS = [
-  { name: 'llama3.2:1b', description: 'Llama 3.2 1B - Fast, lightweight model' },
-  { name: 'llama3.2:3b', description: 'Llama 3.2 3B - Balanced performance' },
-  { name: 'llama3:8b', description: 'Llama 3 8B - High quality responses' },
-  { name: 'deepseek-coder:1.3b', description: 'DeepSeek Coder 1.3B - Code generation' },
-  { name: 'deepseek-coder:6.7b', description: 'DeepSeek Coder 6.7B - Advanced coding' },
-  { name: 'deepseek-llm:7b', description: 'DeepSeek LLM 7B - General purpose' },
-  { name: 'qwen2:1.5b', description: 'Qwen2 1.5B - Multilingual support' },
-  { name: 'phi3:3.8b', description: 'Phi-3 3.8B - Microsoft model' },
-];
-
 interface AISettings {
   primaryProvider: string;
   fallbackProvider: string;
@@ -63,37 +53,39 @@ interface UsageStats {
   requestsToday: number;
 }
 
+const POPULAR_MODELS = [
+  { name: 'llama3.2:1b', description: 'Llama 3.2 1B - Fast, lightweight model' },
+  { name: 'llama3.2:3b', description: 'Llama 3.2 3B - Balanced performance' },
+  { name: 'llama3:8b', description: 'Llama 3 8B - High quality responses' },
+  { name: 'deepseek-coder:1.3b', description: 'DeepSeek Coder 1.3B - Code generation' },
+  { name: 'deepseek-coder:6.7b', description: 'DeepSeek Coder 6.7B - Advanced coding' },
+  { name: 'deepseek-llm:7b', description: 'DeepSeek LLM 7B - General purpose' },
+  { name: 'qwen2:1.5b', description: 'Qwen2 1.5B - Multilingual support' },
+  { name: 'phi3:3.8b', description: 'Phi-3 3.8B - Microsoft model' },
+];
+
 export function AIManagementPage() {
-  // Debug: Add console log to check if component is loading
   console.log("AIManagementPage component loading...");
   
-  try {
-    const [modelName, setModelName] = useState("llama3.2:1b");
-    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-    const [trainingInProgress, setTrainingInProgress] = useState(false);
-    const [trainingProgress, setTrainingProgress] = useState(0);
-    const [selectedModel, setSelectedModel] = useState("");
-    const [selectedTrainingType, setSelectedTrainingType] = useState("");
-    const [learningRate, setLearningRate] = useState("0.001");
-    const [epochs, setEpochs] = useState("10");
-    const [batchSize, setBatchSize] = useState("32");
-    const [testPrompt, setTestPrompt] = useState('');
-    const [testResponse, setTestResponse] = useState('');
-    const [testingModel, setTestingModel] = useState(false);
-    const [aiSettings, setAISettings] = useState<AISettings>({
-      primaryProvider: "ollama",
-      fallbackProvider: "openai",
-      responseCaching: true,
-      features: {
-        personalizedRecommendations: true,
-        progressAnalysis: true,
-        conversationScenarios: true,
-        culturalInsights: true,
-      }
-    });
-    
-    const { toast } = useToast();
-    const queryClient = useQueryClient();
+  const [modelName, setModelName] = useState("llama3.2:1b");
+  const [selectedModel, setSelectedModel] = useState("");
+  const [testPrompt, setTestPrompt] = useState('');
+  const [testResponse, setTestResponse] = useState('');
+  const [testingModel, setTestingModel] = useState(false);
+  const [aiSettings, setAISettings] = useState<AISettings>({
+    primaryProvider: "ollama",
+    fallbackProvider: "openai",
+    responseCaching: true,
+    features: {
+      personalizedRecommendations: true,
+      progressAnalysis: true,
+      conversationScenarios: true,
+      culturalInsights: true,
+    }
+  });
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: ollamaStatus, isLoading, refetch } = useQuery<OllamaStatus>({
     queryKey: ["/api/test/ollama-status"],
@@ -112,7 +104,6 @@ export function AIManagementPage() {
     queryFn: () => apiRequest("/admin/ai/settings"),
   });
 
-  // Update local settings when data is fetched
   useEffect(() => {
     if (currentSettings) {
       setAISettings(currentSettings);
@@ -201,103 +192,6 @@ export function AIManagementPage() {
     pullModelMutation.mutate(modelName);
   };
 
-  // File upload and training functions
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      const fileArray = Array.from(files);
-      const maxSizeBytes = 50 * 1024 * 1024 * 1024; // 50GB in bytes
-      
-      // Check file sizes
-      const oversizedFiles = fileArray.filter(file => file.size > maxSizeBytes);
-      if (oversizedFiles.length > 0) {
-        toast({
-          title: "File Size Error",
-          description: `${oversizedFiles.length} file(s) exceed 50GB limit. Please select smaller files.`,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setUploadedFiles(fileArray);
-      
-      // Calculate total size
-      const totalSizeGB = fileArray.reduce((sum, file) => sum + file.size, 0) / (1024 * 1024 * 1024);
-      
-      toast({
-        title: "Files Selected",
-        description: `${files.length} multimodal file(s) ready • ${totalSizeGB.toFixed(2)}GB total`,
-      });
-    }
-  };
-
-  const startTraining = async () => {
-    if (!selectedModel) {
-      toast({
-        title: "Error",
-        description: "Please select a model to train",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (uploadedFiles.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please upload training files before starting",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setTrainingInProgress(true);
-    setTrainingProgress(0);
-
-    try {
-      const response = await apiRequest("/api/test/ai-training/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          modelName: selectedModel,
-          trainingType: selectedTrainingType || "general",
-          learningRate: parseFloat(learningRate),
-          epochs: parseInt(epochs),
-          batchSize: parseInt(batchSize),
-          datasetFiles: uploadedFiles.map(f => f.name)
-        })
-      });
-
-      toast({
-        title: "Training Started",
-        description: "Model training has begun successfully",
-      });
-
-      // Simulate training progress
-      const progressInterval = setInterval(() => {
-        setTrainingProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(progressInterval);
-            setTrainingInProgress(false);
-            toast({
-              title: "Training Complete",
-              description: "Model training finished successfully",
-            });
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 1000);
-
-    } catch (error: any) {
-      setTrainingInProgress(false);
-      toast({
-        title: "Training Failed",
-        description: error.message || "Failed to start training",
-        variant: "destructive",
-      });
-    }
-  };
-
   const testModel = async () => {
     if (!testPrompt.trim()) {
       toast({
@@ -367,7 +261,6 @@ export function AIManagementPage() {
   };
 
   const availableModels = ollamaStatus?.models || [];
-  const availableProviders = ['ollama', 'openai', 'anthropic'];
   
   const formatNumber = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -391,156 +284,86 @@ export function AIManagementPage() {
     </div>
   );
 
-    console.log("Rendering AI Management page...");
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">AI Services Management</h1>
-            <p className="text-muted-foreground">
-              Manage local AI processing with Ollama and monitor service status
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => refetch()}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh Status
-          </Button>
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">AI Services Management</h1>
+          <p className="text-muted-foreground">
+            Manage local AI processing with Ollama and monitor service status
+          </p>
         </div>
+        <Button
+          variant="outline"
+          onClick={() => refetch()}
+          disabled={isLoading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh Status
+        </Button>
+      </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="overview">
-            <Monitor className="h-4 w-4 mr-2" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="models">
-            <Bot className="h-4 w-4 mr-2" />
-            Models
-          </TabsTrigger>
-          <TabsTrigger value="training">
-            <Zap className="h-4 w-4 mr-2" />
-            Training
-          </TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="models">Models</TabsTrigger>
           <TabsTrigger value="testing">
             <TestTube className="h-4 w-4 mr-2" />
             Testing
           </TabsTrigger>
-          <TabsTrigger value="settings">
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Service Status Cards */}
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Server className="h-5 w-5" />
-                  Ollama Service
-                </CardTitle>
-                <CardDescription>Local AI processing service status</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span>Checking status...</span>
-                  </div>
-                ) : ollamaStatus ? (
-                  <>
-                    <StatusIndicator status={ollamaStatus.status} />
-                    <div className="text-sm text-muted-foreground">
-                      <div>Endpoint: {ollamaStatus.endpoint}</div>
-                      <div>Models loaded: {ollamaStatus.models.length}</div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2 text-red-600">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>Unable to connect to Ollama service</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5" />
-                  AI Features
-                </CardTitle>
-                <CardDescription>Meta Lingua AI capabilities</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Personalized Recommendations</span>
-                  <Switch
-                    checked={aiSettings.features.personalizedRecommendations}
-                    onCheckedChange={() => toggleFeature('personalizedRecommendations')}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Progress Analysis</span>
-                  <Switch
-                    checked={aiSettings.features.progressAnalysis}
-                    onCheckedChange={() => toggleFeature('progressAnalysis')}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Conversation Scenarios</span>
-                  <Switch
-                    checked={aiSettings.features.conversationScenarios}
-                    onCheckedChange={() => toggleFeature('conversationScenarios')}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Cultural Insights</span>
-                  <Switch
-                    checked={aiSettings.features.culturalInsights}
-                    onCheckedChange={() => toggleFeature('culturalInsights')}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Performance Metrics */}
+          {/* Service Status */}
           <Card>
             <CardHeader>
-              <CardTitle>Service Performance</CardTitle>
-              <CardDescription>AI service usage and performance metrics</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Server className="h-5 w-5" />
+                Ollama Service Status
+              </CardTitle>
+              <CardDescription>Current status of local AI processing service</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {ollamaStatus?.status === 'running' ? '100%' : '0%'}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Service Uptime</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground">Status</div>
+                  <StatusIndicator status={ollamaStatus?.status || 'offline'} />
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {formatNumber(usageStats?.totalTokensUsed || 0)}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Tokens Used</div>
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground">Models Installed</div>
+                  <div className="text-2xl font-bold">{availableModels.length}</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {usageStats?.requestsToday || 0}
-                  </div>
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground">Endpoint</div>
+                  <div className="text-sm font-mono">http://localhost:11434</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Usage Statistics */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Monitor className="h-5 w-5" />
+                Usage Statistics
+              </CardTitle>
+              <CardDescription>AI processing metrics and performance</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground">Tokens Used Today</div>
+                  <div className="text-2xl font-bold">{formatNumber(usageStats?.totalTokensUsed || 0)}</div>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground">Avg Response Time</div>
+                  <div className="text-2xl font-bold">{usageStats?.averageResponseTime || 0}ms</div>
+                </div>
+                <div className="space-y-2">
                   <div className="text-sm text-muted-foreground">Requests Today</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {(usageStats?.averageResponseTime || 2.3).toFixed(1)}s
-                  </div>
-                  <div className="text-sm text-muted-foreground">Avg Response</div>
+                  <div className="text-2xl font-bold">{usageStats?.requestsToday || 0}</div>
                 </div>
               </div>
             </CardContent>
@@ -548,47 +371,48 @@ export function AIManagementPage() {
         </TabsContent>
 
         <TabsContent value="models" className="space-y-6">
-          {/* Model Management */}
+          {/* Model Download */}
           <Card>
             <CardHeader>
-              <CardTitle>Download AI Model</CardTitle>
-              <CardDescription>
-                Download and install AI models for local processing
-              </CardDescription>
+              <CardTitle>Download Models</CardTitle>
+              <CardDescription>Download and manage AI models for local processing</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Popular Models Grid */}
-              <div>
-                <h4 className="text-sm font-medium mb-3">Popular Models</h4>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Popular Models */}
+              <div className="space-y-4">
+                <Label className="text-base">Popular Models</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {POPULAR_MODELS.map((model) => (
-                    <Button
+                    <div
                       key={model.name}
-                      variant="outline"
-                      size="sm"
-                      className="justify-start text-left h-auto p-3"
+                      className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-muted/50"
                       onClick={() => setModelName(model.name)}
-                      disabled={availableModels.includes(model.name)}
                     >
-                      <div className="w-full">
-                        <div className="font-medium text-sm">{model.name}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{model.description}</div>
-                        {availableModels.includes(model.name) && (
-                          <div className="text-xs text-green-600 mt-1 flex items-center">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Installed
-                          </div>
-                        )}
+                      <div>
+                        <div className="font-medium">{model.name}</div>
+                        <div className="text-sm text-muted-foreground">{model.description}</div>
                       </div>
-                    </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          pullModelMutation.mutate(model.name);
+                        }}
+                        disabled={pullModelMutation.isPending}
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        Download
+                      </Button>
+                    </div>
                   ))}
                 </div>
               </div>
 
-              {/* Custom Model Input */}
-              <div className="border-t pt-4">
-                <h4 className="text-sm font-medium mb-3">Custom Model</h4>
-                <div className="flex gap-4">
+              {/* Custom Model */}
+              <div className="space-y-4">
+                <Label className="text-base">Custom Model</Label>
+                <div className="flex gap-3">
                   <div className="flex-1">
                     <Input
                       value={modelName}
@@ -615,9 +439,9 @@ export function AIManagementPage() {
               <CardDescription>Currently available AI models</CardDescription>
             </CardHeader>
             <CardContent>
-              {ollamaStatus?.models.length ? (
+              {availableModels.length ? (
                 <div className="space-y-3">
-                  {ollamaStatus.models.map((model, index) => (
+                  {availableModels.map((model, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <Bot className="h-5 w-5 text-blue-500" />
@@ -625,9 +449,6 @@ export function AIManagementPage() {
                           <div className="font-medium">{model}</div>
                           <div className="text-sm text-muted-foreground">
                             Ready for AI processing
-                          </div>
-                          <div className="text-xs text-blue-600 mt-1">
-                            Training Data: {model.includes('llama3.2') ? '340 MB • 28 files' : model.includes('mistral') ? '185 MB • 15 files' : '250 MB • 22 files'}
                           </div>
                         </div>
                       </div>
@@ -657,363 +478,26 @@ export function AIManagementPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="training" className="space-y-6">
-          {/* Model Training */}
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Model Training & Fine-tuning</CardTitle>
-              <CardDescription>
-                Train your AI models with specialized data for Persian language learning
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {availableModels.length > 0 ? (
-                <>
-                  {/* Training Dataset Upload */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">Training Dataset</h4>
-                    <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                      uploadedFiles.length === 0 
-                        ? 'border-red-300 bg-red-50' 
-                        : 'border-green-300 bg-green-50'
-                    }`}>
-                      <div className="space-y-4">
-                        <div className={`text-sm ${
-                          uploadedFiles.length === 0 
-                            ? 'text-red-600 font-medium' 
-                            : 'text-green-600'
-                        }`}>
-                          {uploadedFiles.length === 0 
-                            ? 'Training files required - Upload data to start training' 
-                            : 'Training data ready - Multiple formats supported'
-                          }
-                        </div>
-                        
-                        {/* Multimodal File Format Options */}
-                        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
-                            <div className="text-lg mb-1">📄</div>
-                            <span className="text-xs">Documents</span>
-                          </div>
-                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
-                            <div className="text-lg mb-1">🎥</div>
-                            <span className="text-xs">Videos</span>
-                          </div>
-                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
-                            <div className="text-lg mb-1">🎵</div>
-                            <span className="text-xs">Audio</span>
-                          </div>
-                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
-                            <div className="text-lg mb-1">🖼️</div>
-                            <span className="text-xs">Images</span>
-                          </div>
-                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
-                            <div className="text-lg mb-1">📊</div>
-                            <span className="text-xs">Spreadsheets</span>
-                          </div>
-                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
-                            <div className="text-lg mb-1">📦</div>
-                            <span className="text-xs">Archives</span>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                          <input
-                            type="file"
-                            multiple
-                            accept=".pdf,.mp4,.avi,.mov,.mkv,.webm,.xlsx,.xls,.txt,.json,.csv,.docx,.doc,.pptx,.ppt,.jpg,.jpeg,.png,.gif,.bmp,.svg,.wav,.mp3,.m4a,.flac,.ogg,.zip,.rar,.7z"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                            id="training-file-upload"
-                          />
-                          <Button 
-                            variant="outline"
-                            onClick={() => document.getElementById('training-file-upload')?.click()}
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Upload Training Files
-                          </Button>
-                          <div className="text-xs text-muted-foreground text-center">
-                            Multimodal support: Documents, Videos, Audio, Images, Spreadsheets, Archives
-                          </div>
-                          <div className="text-xs text-gray-500 text-center font-medium">
-                            Maximum file size: 50GB per file
-                          </div>
-                          {uploadedFiles.length > 0 && (
-                            <div className="text-sm text-green-600">
-                              {uploadedFiles.length} file(s) selected
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* File Processing Features */}
-                    <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                      <h5 className="text-sm font-medium mb-2">Multi-Format Processing</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span>PDF text extraction & OCR</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span>Video speech-to-text conversion</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span>Excel data structure analysis</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span>Automatic Persian text recognition</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Training Configuration */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Select Model to Train</Label>
-                      <Select value={selectedModel} onValueChange={setSelectedModel}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose a model" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableModels.map((model) => (
-                            <SelectItem key={model} value={model}>
-                              {model}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Training Type <span className="text-xs text-muted-foreground">(Optional)</span></Label>
-                      <Select value={selectedTrainingType} onValueChange={setSelectedTrainingType}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="General training (default)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="persian-language">Persian Language Enhancement</SelectItem>
-                          <SelectItem value="cultural-context">Cultural Context Training</SelectItem>
-                          <SelectItem value="conversation">Conversation Patterns</SelectItem>
-                          <SelectItem value="grammar">Grammar Correction</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Training Parameters */}
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="space-y-2">
-                      <Label>Learning Rate</Label>
-                      <Input 
-                        placeholder="0.001" 
-                        value={learningRate}
-                        onChange={(e) => setLearningRate(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Epochs</Label>
-                      <Input 
-                        placeholder="10" 
-                        value={epochs}
-                        onChange={(e) => setEpochs(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Batch Size</Label>
-                      <Input 
-                        placeholder="32" 
-                        value={batchSize}
-                        onChange={(e) => setBatchSize(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Training Controls */}
-                  <div className="flex gap-4">
-                    <Button 
-                      className="flex-1" 
-                      onClick={startTraining}
-                      disabled={trainingInProgress || !selectedModel || uploadedFiles.length === 0}
-                    >
-                      <Zap className="h-4 w-4 mr-2" />
-                      {trainingInProgress ? "Training..." : "Start Training"}
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedModel("");
-                        setSelectedTrainingType("");
-                        setLearningRate("0.001");
-                        setEpochs("10");
-                        setBatchSize("32");
-                        setUploadedFiles([]);
-                      }}
-                    >
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Reset Parameters
-                    </Button>
-                  </div>
-
-                  {/* Training Progress */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium">Training Progress</h4>
-                    {trainingInProgress ? (
-                      <div className="bg-blue-50 rounded-lg p-4 space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Training {selectedModel}...</span>
-                          <span className="text-blue-600">{trainingProgress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-500" 
-                            style={{ width: `${trainingProgress}%` }}
-                          ></div>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Training Type: {selectedTrainingType?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-gray-100 rounded-lg p-4">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>No training in progress</span>
-                          <span className="text-muted-foreground">Ready to train</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Zap className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No models available for training</p>
-                  <p className="text-sm">Download a model first to enable training features</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Service Configuration</CardTitle>
-              <CardDescription>
-                Configure AI processing preferences and fallback options
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-base">Primary AI Provider</Label>
-                  <Select
-                    value={aiSettings.primaryProvider}
-                    onValueChange={(value) => updateSettings({ primaryProvider: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select primary provider" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ollama">Ollama (Local)</SelectItem>
-                      <SelectItem value="openai">OpenAI GPT-4o</SelectItem>
-                      <SelectItem value="anthropic">Anthropic Claude</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">
-                    Primary service for AI processing
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-base">Fallback Provider</Label>
-                  <Select
-                    value={aiSettings.fallbackProvider}
-                    onValueChange={(value) => updateSettings({ fallbackProvider: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select fallback provider" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="openai">OpenAI GPT-4o</SelectItem>
-                      <SelectItem value="anthropic">Anthropic Claude</SelectItem>
-                      <SelectItem value="ollama">Ollama (Local)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">
-                    Backup service when primary is unavailable
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base">Response Caching</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Cache AI responses to improve performance
-                    </p>
-                  </div>
-                  <Switch
-                    checked={aiSettings.responseCaching}
-                    onCheckedChange={(checked) => updateSettings({ responseCaching: checked })}
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4 border-t">
-                <h4 className="font-medium mb-3">Service Health</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Local Processing:</span>
-                    <span className={ollamaStatus?.status === 'running' ? 'text-green-600' : 'text-red-600'}>
-                      {ollamaStatus?.status === 'running' ? 'Available' : 'Unavailable'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Fallback Service:</span>
-                    <span className="text-green-600">Available</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Response Time:</span>
-                    <span className="text-blue-600">
-                      ~{(usageStats?.averageResponseTime || 2.3).toFixed(1)}s average
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Cache Status:</span>
-                    <span className={aiSettings.responseCaching ? 'text-green-600' : 'text-gray-600'}>
-                      {aiSettings.responseCaching ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         <TabsContent value="testing" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Model Testing & Validation</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <TestTube className="h-5 w-5" />
+                Model Testing
+              </CardTitle>
               <CardDescription>
-                Test your trained AI models instantly to verify training success
+                Test trained models instantly to verify performance and effectiveness
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent>
               {availableModels.length > 0 ? (
                 <>
                   {/* Model Selection */}
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium">Select Model to Test</h4>
-                    <Select
-                      value={selectedModel}
-                      onValueChange={setSelectedModel}
-                    >
+                    <Label className="text-base">Select Model to Test</Label>
+                    <Select value={selectedModel} onValueChange={setSelectedModel}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose a trained model to test" />
+                        <SelectValue placeholder="Choose a trained model" />
                       </SelectTrigger>
                       <SelectContent>
                         {availableModels.map((model) => (
@@ -1025,49 +509,50 @@ export function AIManagementPage() {
                     </Select>
                   </div>
 
-                  {/* Test Input */}
+                  {/* Test Prompt */}
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium">Test Prompt</h4>
-                    <div className="space-y-2">
-                      <Label>Enter a test prompt to evaluate model performance</Label>
-                      <textarea
-                        className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Example: 'Translate this English sentence to Persian: Hello, how are you today?'"
-                        value={testPrompt}
-                        onChange={(e) => setTestPrompt(e.target.value)}
-                      />
-                    </div>
+                    <Label className="text-base">Test Prompt</Label>
+                    <Textarea
+                      value={testPrompt}
+                      onChange={(e) => setTestPrompt(e.target.value)}
+                      placeholder="Enter a test prompt to evaluate the model's training effectiveness..."
+                      rows={4}
+                      className="min-h-[100px]"
+                    />
                     
                     {/* Quick Test Examples */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setTestPrompt("Translate this English sentence to Persian: Hello, how are you today?")}
-                      >
-                        Translation Test
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setTestPrompt("Explain Persian grammar rules for beginners in simple terms.")}
-                      >
-                        Grammar Test
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setTestPrompt("Create a conversation scenario for ordering food in a Persian restaurant.")}
-                      >
-                        Conversation Test
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setTestPrompt("What are some important Persian cultural customs for language learners?")}
-                      >
-                        Cultural Test
-                      </Button>
+                    <div className="space-y-2">
+                      <Label className="text-sm text-muted-foreground">Quick Test Examples:</Label>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setTestPrompt("Translate this English sentence to Persian: 'Hello, how are you today?'")}
+                        >
+                          Translation Test
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setTestPrompt("Explain the basic grammar rules for Persian sentence structure.")}
+                        >
+                          Grammar Test
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setTestPrompt("Create a conversation scenario for ordering food in a Persian restaurant.")}
+                        >
+                          Conversation Test
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setTestPrompt("What are some important Persian cultural customs for language learners?")}
+                        >
+                          Cultural Test
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
@@ -1149,22 +634,114 @@ export function AIManagementPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="settings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Service Configuration</CardTitle>
+              <CardDescription>
+                Configure AI processing preferences and fallback options
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-base">Primary AI Provider</Label>
+                  <Select
+                    value={aiSettings.primaryProvider}
+                    onValueChange={(value) => updateSettings({ primaryProvider: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select primary provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ollama">Ollama (Local)</SelectItem>
+                      <SelectItem value="openai">OpenAI GPT-4o</SelectItem>
+                      <SelectItem value="anthropic">Anthropic Claude</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    Primary service for AI processing
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-base">Fallback Provider</Label>
+                  <Select
+                    value={aiSettings.fallbackProvider}
+                    onValueChange={(value) => updateSettings({ fallbackProvider: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select fallback provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="openai">OpenAI GPT-4o</SelectItem>
+                      <SelectItem value="anthropic">Anthropic Claude</SelectItem>
+                      <SelectItem value="ollama">Ollama (Local)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    Backup service when primary is unavailable
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label className="text-base">Response Caching</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Cache AI responses to improve performance
+                    </p>
+                  </div>
+                  <Switch
+                    checked={aiSettings.responseCaching}
+                    onCheckedChange={(checked) => updateSettings({ responseCaching: checked })}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5" />
+                AI Features
+              </CardTitle>
+              <CardDescription>Meta Lingua AI capabilities</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Personalized Recommendations</span>
+                <Switch
+                  checked={aiSettings.features.personalizedRecommendations}
+                  onCheckedChange={() => toggleFeature('personalizedRecommendations')}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Progress Analysis</span>
+                <Switch
+                  checked={aiSettings.features.progressAnalysis}
+                  onCheckedChange={() => toggleFeature('progressAnalysis')}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Conversation Scenarios</span>
+                <Switch
+                  checked={aiSettings.features.conversationScenarios}
+                  onCheckedChange={() => toggleFeature('conversationScenarios')}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Cultural Insights</span>
+                <Switch
+                  checked={aiSettings.features.culturalInsights}
+                  onCheckedChange={() => toggleFeature('culturalInsights')}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
-  } catch (error: any) {
-    console.error("Error in AIManagementPage:", error);
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold text-red-600">Page Error</h1>
-          <p className="text-gray-600">There was an error loading the AI Management page.</p>
-          <p className="text-sm text-gray-500">{error.message}</p>
-          <Button onClick={() => window.location.reload()}>
-            Reload Page
-          </Button>
-        </div>
-      </div>
-    );
-  }
 }
