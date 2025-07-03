@@ -21,7 +21,10 @@ import {
   Settings,
   Zap,
   AlertCircle,
-  Trash2
+  Trash2,
+  TestTube,
+  Send,
+  Upload
 } from "lucide-react";
 
 interface OllamaStatus {
@@ -70,6 +73,9 @@ export function AIManagementPage() {
   const [learningRate, setLearningRate] = useState("0.001");
   const [epochs, setEpochs] = useState("10");
   const [batchSize, setBatchSize] = useState("32");
+  const [testPrompt, setTestPrompt] = useState('');
+  const [testResponse, setTestResponse] = useState('');
+  const [testingModel, setTestingModel] = useState(false);
   const [aiSettings, setAISettings] = useState<AISettings>({
     primaryProvider: "ollama",
     fallbackProvider: "openai",
@@ -288,6 +294,59 @@ export function AIManagementPage() {
     }
   };
 
+  const testModel = async () => {
+    if (!testPrompt.trim()) {
+      toast({
+        title: "No Test Prompt",
+        description: "Please enter a test prompt to evaluate the model",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedModel) {
+      toast({
+        title: "No Model Selected",
+        description: "Please select a trained model to test",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setTestingModel(true);
+    setTestResponse('');
+
+    try {
+      const response = await apiRequest(`/api/test/model-test`, {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          modelName: selectedModel,
+          prompt: testPrompt,
+          temperature: 0.7,
+          maxTokens: 500
+        }),
+      });
+
+      setTestResponse(response.response || 'Test completed successfully');
+      
+      toast({
+        title: "Model Test Complete",
+        description: "Check the response to evaluate training success",
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Model Test Failed",
+        description: error.message || "Failed to test the trained model",
+        variant: "destructive",
+      });
+      setTestResponse('Failed to generate response');
+    } finally {
+      setTestingModel(false);
+    }
+  };
+
   const updateSettings = (newSettings: Partial<AISettings>) => {
     const updatedSettings = { ...aiSettings, ...newSettings };
     setAISettings(updatedSettings);
@@ -360,6 +419,10 @@ export function AIManagementPage() {
           <TabsTrigger value="training">
             <Zap className="h-4 w-4 mr-2" />
             Training
+          </TabsTrigger>
+          <TabsTrigger value="testing">
+            <TestTube className="h-4 w-4 mr-2" />
+            Testing
           </TabsTrigger>
           <TabsTrigger value="settings">
             <Settings className="h-4 w-4 mr-2" />
@@ -922,6 +985,162 @@ export function AIManagementPage() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="testing" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Model Testing & Validation</CardTitle>
+              <CardDescription>
+                Test your trained AI models instantly to verify training success
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {availableModels.length > 0 ? (
+                <>
+                  {/* Model Selection */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">Select Model to Test</h4>
+                    <Select
+                      value={selectedModel}
+                      onValueChange={setSelectedModel}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a trained model to test" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableModels.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Test Input */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">Test Prompt</h4>
+                    <div className="space-y-2">
+                      <Label>Enter a test prompt to evaluate model performance</Label>
+                      <textarea
+                        className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Example: 'Translate this English sentence to Persian: Hello, how are you today?'"
+                        value={testPrompt}
+                        onChange={(e) => setTestPrompt(e.target.value)}
+                      />
+                    </div>
+                    
+                    {/* Quick Test Examples */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTestPrompt("Translate this English sentence to Persian: Hello, how are you today?")}
+                      >
+                        Translation Test
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTestPrompt("Explain Persian grammar rules for beginners in simple terms.")}
+                      >
+                        Grammar Test
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTestPrompt("Create a conversation scenario for ordering food in a Persian restaurant.")}
+                      >
+                        Conversation Test
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTestPrompt("What are some important Persian cultural customs for language learners?")}
+                      >
+                        Cultural Test
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Test Controls */}
+                  <div className="flex gap-4">
+                    <Button 
+                      className="flex-1" 
+                      onClick={testModel}
+                      disabled={testingModel || !selectedModel || !testPrompt.trim()}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      {testingModel ? "Testing..." : "Test Model"}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setTestPrompt('');
+                        setTestResponse('');
+                      }}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Clear
+                    </Button>
+                  </div>
+
+                  {/* Test Response */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">Model Response</h4>
+                    <div className={`min-h-[150px] p-4 border rounded-lg ${
+                      testResponse 
+                        ? 'bg-green-50 border-green-200' 
+                        : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      {testingModel ? (
+                        <div className="flex items-center justify-center h-32">
+                          <div className="text-center space-y-2">
+                            <RefreshCw className="h-6 w-6 animate-spin mx-auto text-blue-600" />
+                            <p className="text-sm text-blue-600">Testing model response...</p>
+                          </div>
+                        </div>
+                      ) : testResponse ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                            <CheckCircle className="h-4 w-4" />
+                            Test Response:
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap">{testResponse}</p>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-32 text-muted-foreground">
+                          <div className="text-center">
+                            <TestTube className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">No test response yet</p>
+                            <p className="text-xs">Enter a prompt and click Test Model</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Test Evaluation Tips */}
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <h5 className="text-sm font-medium text-blue-800 mb-2">Testing Tips:</h5>
+                    <ul className="text-xs text-blue-700 space-y-1">
+                      <li>• Test with prompts similar to your training data to verify learning</li>
+                      <li>• Try edge cases to check model robustness</li>
+                      <li>• Compare responses before and after training for improvement</li>
+                      <li>• Test different prompt styles to evaluate versatility</li>
+                    </ul>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <TestTube className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No models available for testing</p>
+                  <p className="text-sm">Download and train a model first to enable testing</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

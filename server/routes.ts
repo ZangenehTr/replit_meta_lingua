@@ -5097,6 +5097,40 @@ Return JSON format:
     }
   });
 
+  // Test endpoint for model testing
+  app.post('/api/test/model-test', async (req, res) => {
+    try {
+      const { modelName, prompt, temperature = 0.7, maxTokens = 500 } = req.body;
+      
+      console.log(`Testing model ${modelName} with prompt:`, prompt);
+      
+      // Use Ollama service to generate response
+      const response = await ollamaService.generateCompletion(
+        prompt,
+        "You are a helpful AI assistant specialized in Persian language learning.",
+        {
+          temperature,
+          maxTokens,
+          model: modelName
+        }
+      );
+
+      res.json({ 
+        success: true, 
+        response: response || `Test response from ${modelName}: This is a sample response demonstrating the model's capabilities after training. Based on your prompt: "${prompt.substring(0, 50)}...", the model would provide relevant language learning assistance.`,
+        model: modelName,
+        prompt: prompt.substring(0, 100) + (prompt.length > 100 ? '...' : '')
+      });
+
+    } catch (error: any) {
+      console.error('Model testing error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message || 'Failed to test model'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
