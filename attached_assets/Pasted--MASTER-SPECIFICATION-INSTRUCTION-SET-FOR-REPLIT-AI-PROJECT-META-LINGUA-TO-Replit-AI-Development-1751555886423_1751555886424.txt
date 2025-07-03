@@ -1,0 +1,408 @@
+
+MASTER SPECIFICATION & INSTRUCTION SET FOR REPLIT AI: PROJECT META LINGUA
+TO: Replit AI Development Agent
+FROM: Project Lead
+DATE: July 3, 2025
+VERSION: 3.0 (COMPLETE & FINAL)
+
+SUBJECT: ABSOLUTE & FINAL INSTRUCTIONS for Generating the "Meta Lingua" Platform
+
+Part 0: MASTER DIRECTIVES FOR AI AGENT (READ AND OBEY AT ALL TIMES)
+Your mission is to generate the complete, fully-functional source code for the "Meta Lingua" platform based only on this document. This document is your single, immutable source of truth.
+
+NON-NEGOTIABLE CORE RULES:
+
+NO DEVIATION: Implement every feature, component, and line of logic exactly as described below. Do not add, remove, or modify features. If a button is described, its onClick logic must also be implemented in the same step.
+
+SELF-HOSTING IS PARAMOUNT: The final code must be 100% portable and self-hostable. This means NO Replit DB, NO Repl Auth, NO Firebase, NO Google Fonts, and no other external cloud services that cannot be installed on a private server. This is the most critical constraint.
+
+STICK TO THE BLUEPRINT: Follow the architecture (Part 1), database schema (Part 2), and file structure (Part 3) with absolute precision. Create the files and directories first before adding code.
+
+REMEMBER THIS DOCUMENT: Before generating any new file or function, re-read the relevant section of this document to ensure you have not forgotten the instructions. Your context is this document alone.
+
+Part 1: UNIFIED & FINALIZED ARCHITECTURE
+The contradictions in the original PRD have been resolved. The following is the final and only approved technology stack.
+
+Backend: Python 3.10+ with FastAPI.
+
+Justification: Provides a structured, high-performance, and easily containerized ASGI application ideal for self-hosting.
+
+Frontend: React 18+ with TypeScript, bootstrapped with Vite.
+
+Justification: Compiles to a standard dist folder of static assets, which is universally portable.
+
+Database: PostgreSQL 15+ with the SQLAlchemy 2.0 ORM.
+
+Justification: The most robust open-source relational database. Using the ORM ensures queries are safe and the data layer is portable.
+
+Authentication: Self-Managed JWT System within FastAPI.
+
+Justification: This is the only approach that guarantees a fully self-hostable and portable authentication system. We are NOT using Supabase Auth.
+
+File Storage: Self-hosted MinIO (or any S3-compatible service).
+
+Justification: The backend will use the standard boto3 library to handle file uploads, making it compatible with the industry-standard S3 API.
+
+WebRTC / Live Classroom: Self-hosted LiveKit.
+
+Justification: A powerful, open-source SFU designed for self-hosting scalable video conferencing.
+
+AI Features: Self-hosted Ollama.
+
+Justification: Ensures data privacy and independence by running open-source LLMs on private servers.
+
+Iran-Specific Integrations:
+
+Payment: Shetab gateway.
+
+SMS: Kavenegar gateway.
+
+Local Assets: All fonts, icons, and images must be stored locally in the frontend/src/assets directory and imported directly into components. Do not use external CDNs.
+
+Part 2: COMPLETE DATABASE SCHEMA (POSTGRESQL DEFINITION)
+This is the definitive schema. Create these tables exactly as written.
+
+SQL
+
+-- init.sql
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TYPE user_role AS ENUM ('Student', 'Teacher', 'Mentor', 'Supervisor', 'Admin', 'Accountant', 'Call Center Agent');
+
+CREATE TABLE users (
+    user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    hashed_password VARCHAR(255) NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    role user_role NOT NULL DEFAULT 'Student',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE user_profiles (
+    user_id UUID PRIMARY KEY REFERENCES users(user_id) ON DELETE CASCADE,
+    profile_picture_url TEXT, -- Points to self-hosted MinIO
+    bio TEXT,
+    preferences JSONB NOT NULL DEFAULT '{"theme": "light", "language": "en"}'
+);
+
+CREATE TABLE tutor_details (
+    tutor_id UUID PRIMARY KEY REFERENCES users(user_id) ON DELETE CASCADE,
+    hourly_rate NUMERIC(10, 2) NOT NULL,
+    specialties TEXT[], -- e.g., ARRAY['IELTS', 'Business English']
+    video_intro_url TEXT,
+    is_verified BOOLEAN NOT NULL DEFAULT false
+);
+
+CREATE TABLE courses (
+    course_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    tutor_id UUID NOT NULL REFERENCES users(user_id),
+    thumbnail_url TEXT
+);
+
+CREATE TABLE lessons (
+    lesson_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    course_id UUID NOT NULL REFERENCES courses(course_id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    lesson_order INT NOT NULL,
+    video_url TEXT,
+    text_content TEXT,
+    UNIQUE(course_id, lesson_order)
+);
+
+CREATE TABLE enrollments (
+    enrollment_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    course_id UUID NOT NULL REFERENCES courses(course_id) ON DELETE CASCADE,
+    enrolled_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    progress_percentage INT NOT NULL DEFAULT 0,
+    UNIQUE(student_id, course_id)
+);
+
+CREATE TABLE lesson_completions (
+    completion_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES users(user_id),
+    lesson_id UUID NOT NULL REFERENCES lessons(lesson_id),
+    completed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE(student_id, lesson_id)
+);
+
+CREATE TABLE bookings (
+    booking_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES users(user_id),
+    tutor_id UUID NOT NULL REFERENCES users(user_id),
+    start_time TIMESTAMPTZ NOT NULL,
+    end_time TIMESTAMPTZ NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'pending', -- pending_payment, confirmed, completed, cancelled
+    livekit_room_name VARCHAR(255) UNIQUE NOT NULL,
+    payment_id UUID -- Can be linked to a payments table
+);
+Part 3: DIRECTORY & FILE STRUCTURE BLUEPRINT
+AI INSTRUCTION: Before writing any code, create this exact directory and file structure. This is your map.
+
+meta-lingua/
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── deps.py             # Reusable dependencies
+│   │   │   └── endpoints/
+│   │   │       ├── auth.py         # Login, Register
+│   │   │       ├── users.py        # Profile management
+│   │   │       ├── courses.py      # Course/Lesson Browse & interaction
+│   │   │       ├── tutors.py       # Tutor marketplace
+│   │   │       ├── bookings.py     # Booking & joining live sessions
+│   │   │       └── ai.py           # Endpoints for Ollama interaction
+│   │   ├── core/
+│   │   │   ├── config.py           # Environment variable loading
+│   │   │   └── security.py         # Password hashing, JWT creation
+│   │   ├── db/
+│   │   │   └── session.py          # Database session management
+│   │   ├── models/                 # SQLAlchemy ORM Models (user.py, course.py etc.)
+│   │   ├── schemas/                # Pydantic Schemas (user.py, course.py, token.py etc.)
+│   │   └── main.py                 # Main FastAPI app instance and router setup
+│   ├── requirements.txt
+│   └── .env.example
+└── frontend/
+    ├── public/
+    │   └── fonts/                  # Place font files here (e.g., Vazirmatn.woff2)
+    ├── src/
+    │   ├── api/
+    │   │   └── index.ts            # Centralized Axios API client
+    │   ├── assets/                 # For images, icons, etc.
+    │   ├── components/
+    │   │   ├── common/             # Buttons, Modals, Spinners
+    │   │   ├── layout/             # Header, Sidebar, Footer
+    │   │   ├── auth/               # LoginForm, RegisterForm
+    │   │   ├── dashboard/          # Dashboard widgets
+    │   │   ├── courses/            # CourseCard, LessonPlayer
+    │   │   └── classroom/          # VideoGrid, ControlBar
+    │   ├── hooks/                  # Custom hooks (e.g., useAuth.ts)
+    │   ├── pages/
+    │   │   ├── LoginPage.tsx
+    │   │   ├── RegisterPage.tsx
+    │   │   ├── StudentDashboardPage.tsx
+    │   │   ├── MyCoursesPage.tsx
+    │   │   ├── CoursePlayerPage.tsx
+    │   │   ├── TutorsPage.tsx
+    │   │   ├── LiveClassroomPage.tsx
+    │   │   └── SettingsPage.tsx
+    │   ├── services/               # For interacting with browser APIs (localStorage)
+    │   ├── styles/
+    │   │   └── main.css            # Global styles and font-face definitions
+    │   ├── App.tsx                 # Main router setup
+    │   └── main.tsx                # Application entry point
+    ├── index.html
+    └── package.json
+Part 4: BACKEND API IMPLEMENTATION (FASTAPI)
+AI INSTRUCTION: Implement the files in the backend/ directory as specified. Define Pydantic schemas first, then the endpoints that use them.
+
+File: backend/app/schemas/user.py
+Python
+
+# Pydantic model for user data transfer
+from pydantic import BaseModel, EmailStr
+from uuid import UUID
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: str
+
+class UserPublic(BaseModel):
+    user_id: UUID
+    full_name: str
+    email: EmailStr
+    role: str
+
+    class Config:
+        orm_mode = True
+File: backend/app/api/endpoints/auth.py
+Python
+
+# Endpoint for user authentication
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from app.core import security
+from app.schemas.user import UserCreate, UserPublic
+from app.schemas.token import Token
+from app.db import session
+# ... other necessary imports
+
+router = APIRouter()
+
+@router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
+def register_user(user_in: UserCreate, db: Session = Depends(session.get_db)):
+    # 1. Check if a user with this email already exists in the 'users' table.
+    # 2. If yes, raise HTTPException 400 with detail "Email already registered."
+    # 3. Hash the plain-text password using `security.get_password_hash()`.
+    # 4. Create a new User model instance and save it to the database.
+    # 5. Return the newly created user object.
+    pass
+
+@router.post("/token", response_model=Token)
+def login_for_access_token(db: Session = Depends(session.get_db), form_data: OAuth2PasswordRequestForm = Depends()):
+    # 1. Fetch user by email (form_data.username).
+    # 2. If user not found or password doesn't match (use `security.verify_password`), raise HTTPException 401.
+    # 3. Create a JWT access token using `security.create_access_token()` with subject=user.user_id and role=user.role.
+    # 4. Return the token in the Token schema format: {"access_token": "...", "token_type": "bearer"}.
+    pass
+Part 5: FRONTEND UI & LOGIC IMPLEMENTATION (REACT)
+AI INSTRUCTION: Implement the files in the frontend/ directory. Connect every UI element to its required logic and API call.
+
+File: frontend/src/api/index.ts
+TypeScript
+
+// Centralized Axios client
+import axios from 'axios';
+import { getAuthToken, removeAuthToken } from '../services/tokenService';
+
+const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api',
+});
+
+// AI REMINDER: This interceptor ensures every request to the backend is authenticated.
+apiClient.interceptors.request.use(config => {
+  const token = getAuthToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Add a response interceptor to handle 401 errors globally (e.g., log out user)
+
+export default apiClient;
+File: frontend/src/pages/StudentDashboardPage.tsx
+TypeScript
+
+import React from 'react';
+// Import components: NextLessonWidget, MyCoursesWidget, etc.
+// Import a custom hook `useDashboardData` which fetches data from the backend.
+
+export const StudentDashboardPage: React.FC = () => {
+    // const { data, isLoading, error } = useDashboardData(); // This hook calls GET /api/users/me/dashboard
+
+    // if (isLoading) return <Spinner />;
+    // if (error) return <ErrorMessage message="Could not load dashboard." />;
+
+    return (
+        <div>
+            <h1>My Dashboard</h1>
+            <section>
+                <h2>Next Lesson</h2>
+                {/* <NextLessonWidget lesson={data.nextLesson} /> */}
+            </section>
+            <section>
+                <h2>My Courses</h2>
+                {/* <MyCoursesWidget courses={data.enrolledCourses} /> */}
+            </section>
+        </div>
+    );
+};
+File: frontend/src/components/courses/LessonPlayer.tsx
+AI INSTRUCTION: Implement a fully functional lesson player. This is a critical component.
+
+TypeScript
+
+import React, { useState } from 'react';
+import apiClient from '../../api';
+// Assume 'lesson' prop is passed with details like video_url, text_content, lesson_id
+
+interface LessonPlayerProps {
+  lesson: {
+    lesson_id: string;
+    title: string;
+    video_url: string;
+    text_content: string;
+  };
+  onLessonComplete: (lessonId: string) => void;
+}
+
+export const LessonPlayer: React.FC<LessonPlayerProps> = ({ lesson, onLessonComplete }) => {
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // AI REMINDER: This function connects the button to the backend logic.
+  const handleMarkAsComplete = async () => {
+    setIsLoading(true);
+    try {
+      // 1. Send a POST request to the backend to mark the lesson as complete.
+      await apiClient.post(`/api/lessons/${lesson.lesson_id}/complete`);
+      
+      // 2. Update the local UI state.
+      setIsCompleted(true);
+      
+      // 3. Notify the parent component.
+      onLessonComplete(lesson.lesson_id);
+
+    } catch (error) {
+      console.error("Failed to mark lesson as complete", error);
+      // Optionally show an error message to the user.
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <h3>{lesson.title}</h3>
+      
+      {/* Video Player Component */}
+      <video src={lesson.video_url} controls width="100%" />
+
+      {/* Lesson Text Content */}
+      <article>{lesson.text_content}</article>
+
+      {/* "Mark as Complete" Button with full logic */}
+      <button onClick={handleMarkAsComplete} disabled={isCompleted || isLoading}>
+        {isLoading ? 'Saving...' : isCompleted ? '✅ Completed' : 'Mark as Complete'}
+      </button>
+    </div>
+  );
+};
+Part 6: CRITICAL END-TO-END WORKFLOW: BOOKING A TUTOR
+AI INSTRUCTION: Implement this complex workflow precisely to ensure frontend and backend are perfectly synchronized.
+
+Frontend (Tutor Profile Page): A student views a tutor's profile which displays their availability in a calendar component (e.g., react-big-calendar). The availability data is fetched from GET /api/tutors/{tutorId}/availability.
+
+User Action: The student clicks on an available time slot (e.g., "Tuesday, 4:00 PM").
+
+Frontend (Booking Modal): A modal opens with the title "Confirm Your Booking".
+
+It displays: "Tutor: [Tutor Name]", "Time: Tuesday, 4:00 PM - 5:00 PM".
+
+It contains one primary button with the text: [Proceed to Payment].
+
+Frontend onClick Logic: When [Proceed to Payment] is clicked:
+
+An API call is made: POST /api/bookings/initiate
+
+The request body includes: { "tutor_id": "...", "start_time": "..." }
+
+Backend Logic (/api/bookings/initiate):
+
+The endpoint authenticates the student.
+
+It creates a new record in the bookings table with status: 'pending_payment'.
+
+It calls the Shetab payment gateway service with the amount and a unique order ID (the booking_id).
+
+Shetab returns a payment URL.
+
+The backend responds to the frontend with the payment_url.
+
+Frontend Redirection: The React app receives the payment_url and redirects the user's browser to the Shetab payment page: window.location.href = response.data.payment_url;.
+
+Backend Webhook: After payment, Shetab calls a pre-configured webhook endpoint on your backend: POST /api/webhooks/payment-confirmation.
+
+The backend verifies the webhook data.
+
+It finds the corresponding booking in the bookings table via the order ID.
+
+It updates the booking status to 'confirmed'.
+
+It triggers a notification (SMS/Email via Kavenegar) to the student and tutor.
+
+AI FINAL REMINDER: Your task is to generate a complete, working, and fully tested application based only on the detailed instructions in this document. Adhere strictly to the architecture and implementation details provided. The success of this project depends on your precision. Begin generation now.
