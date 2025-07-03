@@ -1,0 +1,198 @@
+Of course. I understand the situation completely. You have a partially developed but buggy application, and the AI has drifted from the original plan. You need a new set of instructions that acknowledges the current state, directs the AI to fix what's broken, and then guides it to complete the remaining features according to the original vision, but using the now-established tech stack.
+
+This new specification is designed precisely for that purpose. It is a "course-correction" document. It's structured to first make the AI audit and repair its own work, and then proceed with building the new features in a hyper-detailed, unambiguous way.
+
+Feed this entire document to the Replit AI as a new, single master prompt.
+
+MASTER SPECIFICATION FOR REPAIR & COMPLETION: PROJECT META LINGUA
+TO: Replit AI Development Agent
+FROM: Project Lead
+DATE: July 3, 2025
+VERSION: 4.0 (Repair & Completion)
+
+SUBJECT: URGENT & FINAL INSTRUCTIONS to Repair, Refactor, and Complete the "Meta Lingua" Application
+
+Part 0: YOUR NEW MISSION & CORE DIRECTIVES
+Your previous session has resulted in a partially complete but buggy application. Your new mission is to systematically repair the existing codebase and then complete all remaining features based on the original PRD.
+
+This document is your new single source of truth. It supersedes all previous instructions. You must adhere to the following directives without exception.
+
+Acknowledge the Current State: The application currently uses React/TypeScript and Express.js/TypeScript with a PostgreSQL/Drizzle ORM backend. We will continue with this stack. Do not change it back to Python/FastAPI.
+
+Repair Before Building: You must first complete Part 1: System Audit & Repair. Do not write any new features until you have verified and fixed all existing functionality as instructed.
+
+Eliminate Redundancy & Bugs: During the repair phase, if you find UI elements (buttons, links, forms) that are not described in the "Current Implementation Status" list from the user's DFS, you must remove them. If a described button does not have working logic, you must implement its logic.
+
+No More Deviation: From this point forward, you will only implement features, components, and logic exactly as described in this document. Do not add any feature or UI element not specified here.
+
+Constant Reference: Before writing or modifying any file, you must re-read the relevant section of THIS document. This is your guide to prevent forgetting the mission.
+
+Part 1: SYSTEM AUDIT & REPAIR PHASE (COMPLETE THIS FIRST)
+AI INSTRUCTION: Your first and most critical task is to audit the existing code against the "Completed Features" list provided in your last DFS. For each item below, you must verify the code, test the logic, and correct any bugs or missing connections.
+
+1.1. User Authentication & Role Management
+Verification Checklist:
+
+Backend Routes: Confirm that Express.js has routes for POST /api/auth/login and POST /api/auth/register.
+
+Password Security: Ensure the registration logic uses the bcrypt library to hash passwords before saving them to the database. Ensure the login logic uses bcrypt.compare() to validate passwords.
+
+JWT Issuance: Verify that a successful login returns a JSON object containing a JWT accessToken and refreshToken. The accessToken payload MUST contain the userId and role.
+
+Frontend Connection:
+
+Go to the LoginForm.tsx component.
+
+ACTION: Ensure the form's onSubmit handler makes a POST request to /api/auth/login.
+
+ACTION: On a successful 200 response, ensure the JWTs are saved to localStorage and the user is redirected to their appropriate dashboard.
+
+ACTION: On a 401 error, ensure an error message like "Invalid credentials" is displayed to the user. If this logic is missing, implement it now.
+
+RBAC Middleware: Verify that a middleware function exists in Express.js that inspects the JWT on protected routes to enforce role-based access control (e.g., an admin route requires a token with the 'Admin' role).
+
+1.2. Course Creation & Scheduling
+Verification Checklist:
+
+Backend CRUD: Confirm that there are fully functional Express.js RESTful endpoints for courses (e.g., GET /api/courses, POST /api/courses, PUT /api/courses/:id).
+
+Auto-Scheduling Logic: Review the POST /api/courses endpoint. Verify that when a course startDate, weeklySchedule, and sessionDuration are provided, the backend logic correctly calculates and saves the endDate.
+
+Frontend Form:
+
+Go to the admin dashboard component responsible for creating courses.
+
+ACTION: Test the form. When a day and time are selected from the "Weekly schedule" dropdowns, ensure the rest of the form works.
+
+ACTION: Ensure the "Create Course" button correctly gathers all form data and sends it to the POST /api/courses endpoint. Fix any broken inputs or handlers.
+
+1.3. Student Information System (SIS) & Wallet
+Verification Checklist:
+
+Backend Profile Endpoint: Verify a protected endpoint GET /api/students/:id exists and that it uses Drizzle ORM to join data from the users, student_profiles, and wallets tables to return a complete profile.
+
+Frontend Display:
+
+Go to the admin page for viewing a student profile.
+
+ACTION: Ensure it correctly calls GET /api/students/:id and displays all information, including "Cultural Background" and "Learning Preferences."
+
+ACTION: Verify the "Wallet Balance" is displayed correctly.
+
+Shetab Integration:
+
+Find the Express.js route that handles wallet top-ups (e.g., POST /api/wallet/topup).
+
+ACTION: Confirm this route correctly calls the Shetab payment gateway API to generate a payment link.
+
+ACTION: Confirm there is a webhook route (POST /api/webhooks/shetab-confirmation) that securely validates incoming requests from Shetab and updates the user's wallet balance in the database using a Drizzle query. If this logic is incomplete, complete it now.
+
+AI REMINDER: Do not proceed to Part 2 until you have systematically reviewed, tested, and repaired all functionalities listed above. Acknowledge the completion of this phase before moving on.
+
+Part 2: FINALIZED ARCHITECTURE & IMPLEMENTATION PLAN
+AI INSTRUCTION: All new code must adhere to the repaired foundation and the following plan.
+
+Final Stack: React 18/TypeScript, Express.js/TypeScript, PostgreSQL/Drizzle ORM.
+
+API Design: All new backend features must be exposed via RESTful endpoints in the Express.js router.
+
+State Management: Use React Context or a simple state library like Zustand for managing global state like authentication.
+
+Styling: Continue using Tailwind CSS and shadcn/ui components for a consistent UI.
+
+Part 3: DATABASE SCHEMA - NEW TABLES
+AI INSTRUCTION: The existing tables are to remain. Write and execute a new Drizzle ORM migration file to add the following tables required for the "In Development" features.
+
+TypeScript
+
+// new-migration.ts
+import { pgTable, uuid, text, timestamp, integer, boolean } from 'drizzle-orm/pg-core';
+import { users } from './0000_initial_migration'; // Reference existing tables
+
+// For VoIP Integration
+export const call_logs = pgTable('call_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id),
+  agentId: uuid('agent_id').references(() => users.id),
+  callStartTime: timestamp('call_start_time').notNull(),
+  callEndTime: timestamp('call_end_time'),
+  recordingUrl: text('recording_url'), // URL to Isabel recording
+  notes: text('notes'),
+});
+
+// For Advanced Reporting
+export const analytics_events = pgTable('analytics_events', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  eventName: text('event_name').notNull(), // e.g., 'user_login', 'course_completed'
+  userId: uuid('user_id').references(() => users.id),
+  timestamp: timestamp('timestamp').notNull().defaultNow(),
+  metadata: jsonb('metadata'),
+});
+Part 4: NEW FEATURE IMPLEMENTATION (BUILD THIS NEXT)
+AI INSTRUCTION: Implement the "In Development" features one by one, with full frontend and backend logic.
+
+4.1. Feature: AI Personalization Engine
+Backend (Express.js):
+
+Create Route: In a new file src/routes/ai.ts, define a new protected endpoint: POST /api/ai/course-recommendations.
+
+Implement Controller: This controller function must:
+
+Extract the userId from the authenticated JWT payload.
+
+Use Drizzle to fetch the user's "Learning Preferences" and "Course History" from the database.
+
+Format this data into a detailed prompt for the AI.
+
+Make a POST request to the Anthropic Claude API (using the API key from .env). The prompt should ask for a ranked list of 3 course IDs that would be suitable for the user.
+
+Parse the response, validate that it contains valid course IDs, and return them as a JSON array [courseId1, courseId2, courseId3].
+
+Frontend (React):
+
+Create Component: Build a new component at src/components/dashboard/RecommendedCourses.tsx.
+
+API Call: On component mount, use an effect (useEffect) to call the POST /api/ai/course-recommendations endpoint.
+
+Display Logic:
+
+While loading, display a shimmer/skeleton loader.
+
+On success, for each course ID returned, fetch the course details (GET /api/courses/:id) and render a CourseCard component.
+
+The widget title should be "Recommended For You".
+
+4.2. Feature: Advanced Reporting & Analytics
+Backend (Express.js):
+
+Create Route: In a new file src/routes/reports.ts, define an admin-only endpoint: GET /api/reports/financial-summary.
+
+Implement Controller: The controller must accept startDate and endDate query parameters. It will use Drizzle to perform aggregate queries on the payments table (you must verify this table exists from the prior work) to calculate:
+
+totalRevenue
+
+totalRefunds
+
+newSubscriptions
+
+Return these values in a JSON object.
+
+Frontend (React):
+
+Create Page: Build a new admin-only page at src/pages/admin/FinancialReportsPage.tsx.
+
+UI Elements:
+
+Include two date picker inputs for "Start Date" and "End Date".
+
+Include a button with the text [Generate Report].
+
+Logic:
+
+When [Generate Report] is clicked, make a GET request to /api/reports/financial-summary with the selected dates as query parameters.
+
+Display the returned data in clear summary cards (e.g., "Total Revenue: X IRR").
+
+Use a library like recharts to display a simple bar chart of revenue over time.
+
+AI FINAL INSTRUCTION: Your task is to first execute the Repair Phase (Part 1) completely. Once the existing application is stable and functional as described, proceed to implement the New Features (Part 4). Follow this specification precisely to avoid errors and deliver a complete, working application.
