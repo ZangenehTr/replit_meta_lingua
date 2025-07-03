@@ -20,7 +20,8 @@ import {
   Monitor,
   Settings,
   Zap,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from "lucide-react";
 
 interface OllamaStatus {
@@ -29,6 +30,17 @@ interface OllamaStatus {
   models: string[];
   endpoint: string;
 }
+
+const POPULAR_MODELS = [
+  { name: 'llama3.2:1b', description: 'Llama 3.2 1B - Fast, lightweight model' },
+  { name: 'llama3.2:3b', description: 'Llama 3.2 3B - Balanced performance' },
+  { name: 'llama3:8b', description: 'Llama 3 8B - High quality responses' },
+  { name: 'deepseek-coder:1.3b', description: 'DeepSeek Coder 1.3B - Code generation' },
+  { name: 'deepseek-coder:6.7b', description: 'DeepSeek Coder 6.7B - Advanced coding' },
+  { name: 'deepseek-llm:7b', description: 'DeepSeek LLM 7B - General purpose' },
+  { name: 'qwen2:1.5b', description: 'Qwen2 1.5B - Multilingual support' },
+  { name: 'phi3:3.8b', description: 'Phi-3 3.8B - Microsoft model' },
+];
 
 interface AISettings {
   primaryProvider: string;
@@ -108,6 +120,29 @@ export function AIManagementPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to download model",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const uninstallModelMutation = useMutation({
+    mutationFn: (modelName: string) => 
+      apiRequest("/api/test/model-uninstall", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ modelName })
+      }),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Model uninstalled successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to uninstall model",
         variant: "destructive",
       });
     },
@@ -216,6 +251,10 @@ export function AIManagementPage() {
           <TabsTrigger value="models">
             <Bot className="h-4 w-4 mr-2" />
             Models
+          </TabsTrigger>
+          <TabsTrigger value="training">
+            <Zap className="h-4 w-4 mr-2" />
+            Training
           </TabsTrigger>
           <TabsTrigger value="settings">
             <Settings className="h-4 w-4 mr-2" />
@@ -344,35 +383,54 @@ export function AIManagementPage() {
                 Download and install AI models for local processing
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <Label htmlFor="modelName">Model Name</Label>
-                  <Input
-                    id="modelName"
-                    value={modelName}
-                    onChange={(e) => setModelName(e.target.value)}
-                    placeholder="e.g., llama3.2:1b, llama3.2:3b"
-                  />
+            <CardContent className="space-y-6">
+              {/* Popular Models Grid */}
+              <div>
+                <h4 className="text-sm font-medium mb-3">Popular Models</h4>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {POPULAR_MODELS.map((model) => (
+                    <Button
+                      key={model.name}
+                      variant="outline"
+                      size="sm"
+                      className="justify-start text-left h-auto p-3"
+                      onClick={() => setModelName(model.name)}
+                      disabled={availableModels.includes(model.name)}
+                    >
+                      <div className="w-full">
+                        <div className="font-medium text-sm">{model.name}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{model.description}</div>
+                        {availableModels.includes(model.name) && (
+                          <div className="text-xs text-green-600 mt-1 flex items-center">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Installed
+                          </div>
+                        )}
+                      </div>
+                    </Button>
+                  ))}
                 </div>
-                <div className="flex items-end">
+              </div>
+
+              {/* Custom Model Input */}
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-medium mb-3">Custom Model</h4>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <Input
+                      value={modelName}
+                      onChange={(e) => setModelName(e.target.value)}
+                      placeholder="Enter model name (e.g., llama3.2:1b)"
+                    />
+                  </div>
                   <Button
                     onClick={handlePullModel}
                     disabled={pullModelMutation.isPending || !modelName.trim()}
                   >
                     <Download className={`h-4 w-4 mr-2 ${pullModelMutation.isPending ? 'animate-spin' : ''}`} />
-                    {pullModelMutation.isPending ? 'Downloading...' : 'Download Model'}
+                    {pullModelMutation.isPending ? 'Downloading...' : 'Download'}
                   </Button>
                 </div>
-              </div>
-              
-              <div className="text-sm text-muted-foreground">
-                <p><strong>Recommended models for Persian language:</strong></p>
-                <ul className="list-disc list-inside mt-1 space-y-1">
-                  <li><code>llama3.2:1b</code> - Lightweight, fast processing (1GB)</li>
-                  <li><code>llama3.2:3b</code> - Better quality, moderate size (2GB)</li>
-                  <li><code>llama3.1:8b</code> - High quality, larger size (4.7GB)</li>
-                </ul>
               </div>
             </CardContent>
           </Card>
@@ -397,7 +455,26 @@ export function AIManagementPage() {
                           </div>
                         </div>
                       </div>
-                      <Badge variant="default">Installed</Badge>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {/* TODO: Add training modal */}}
+                        >
+                          <Zap className="h-3 w-3 mr-1" />
+                          Train
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => uninstallModelMutation.mutate(model)}
+                          disabled={uninstallModelMutation.isPending}
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Uninstall
+                        </Button>
+                        <Badge variant="default">Installed</Badge>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -406,6 +483,117 @@ export function AIManagementPage() {
                   <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>No models installed</p>
                   <p className="text-sm">Download a model to enable local AI processing</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="training" className="space-y-6">
+          {/* Model Training */}
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Model Training & Fine-tuning</CardTitle>
+              <CardDescription>
+                Train your AI models with specialized data for Persian language learning
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {availableModels.length > 0 ? (
+                <>
+                  {/* Training Dataset Upload */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">Training Dataset</h4>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                      <div className="space-y-2">
+                        <div className="text-sm text-muted-foreground">
+                          Upload training data (JSON, CSV, or TXT format)
+                        </div>
+                        <Button variant="outline">
+                          <Download className="h-4 w-4 mr-2" />
+                          Upload Training Data
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Training Configuration */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Select Model to Train</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableModels.map((model) => (
+                            <SelectItem key={model} value={model}>
+                              {model}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Training Type</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select training type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="persian-language">Persian Language Enhancement</SelectItem>
+                          <SelectItem value="cultural-context">Cultural Context Training</SelectItem>
+                          <SelectItem value="conversation">Conversation Patterns</SelectItem>
+                          <SelectItem value="grammar">Grammar Correction</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Training Parameters */}
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label>Learning Rate</Label>
+                      <Input placeholder="0.001" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Epochs</Label>
+                      <Input placeholder="10" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Batch Size</Label>
+                      <Input placeholder="32" />
+                    </div>
+                  </div>
+
+                  {/* Training Controls */}
+                  <div className="flex gap-4">
+                    <Button className="flex-1">
+                      <Zap className="h-4 w-4 mr-2" />
+                      Start Training
+                    </Button>
+                    <Button variant="outline">
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Reset Parameters
+                    </Button>
+                  </div>
+
+                  {/* Training Progress */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium">Training Progress</h4>
+                    <div className="bg-gray-100 rounded-lg p-4">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>No training in progress</span>
+                        <span className="text-muted-foreground">Ready to train</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Zap className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No models available for training</p>
+                  <p className="text-sm">Download a model first to enable training features</p>
                 </div>
               )}
             </CardContent>

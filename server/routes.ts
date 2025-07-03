@@ -70,6 +70,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Model uninstall endpoint
+  app.post("/api/test/model-uninstall", async (req: any, res) => {
+    try {
+      const { modelName } = req.body;
+      console.log(`Test uninstall requested for model: ${modelName}`);
+      
+      // Remove model from downloaded list
+      downloadedModels = downloadedModels.filter(model => model !== modelName);
+      
+      res.json({
+        success: true,
+        message: `Model ${modelName} uninstalled successfully`
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to uninstall model",
+        error: error.message
+      });
+    }
+  });
+
   // Ollama status endpoint  
   app.get("/api/test/ollama-status", async (req: any, res) => {
     try {
