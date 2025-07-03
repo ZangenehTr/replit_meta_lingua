@@ -65,11 +65,11 @@ export function useAuth() {
       const data = response.data;
       
       // Store both tokens
-      if (data.accessToken) {
-        localStorage.setItem("auth_token", data.accessToken);
+      if (data.access_token) {
+        localStorage.setItem("auth_token", data.access_token);
       }
-      if (data.refreshToken) {
-        localStorage.setItem("refresh_token", data.refreshToken);
+      if (data.refresh_token) {
+        localStorage.setItem("refresh_token", data.refresh_token);
       }
       
       return data;
@@ -86,11 +86,11 @@ export function useAuth() {
       const data = response.data;
       
       // Store both tokens
-      if (data.accessToken) {
-        localStorage.setItem("auth_token", data.accessToken);
+      if (data.access_token) {
+        localStorage.setItem("auth_token", data.access_token);
       }
-      if (data.refreshToken) {
-        localStorage.setItem("refresh_token", data.refreshToken);
+      if (data.refresh_token) {
+        localStorage.setItem("refresh_token", data.refresh_token);
       }
       
       return data;
