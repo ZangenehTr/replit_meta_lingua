@@ -4986,6 +4986,47 @@ Return JSON format:
     }
   });
 
+  // Test training endpoint without authentication for development
+  app.post("/api/test/ai-training/start", async (req: any, res) => {
+    try {
+      const { 
+        modelName, 
+        trainingType, 
+        learningRate, 
+        epochs, 
+        batchSize, 
+        datasetFiles 
+      } = req.body;
+
+      // Validate required fields - training type is now optional
+      if (!modelName) {
+        return res.status(400).json({ message: "Model name is required" });
+      }
+
+      // Simulate training process
+      res.json({
+        success: true,
+        message: "Training started successfully",
+        trainingId: `training-${Date.now()}`,
+        modelName,
+        trainingType: trainingType || "general",
+        parameters: {
+          learningRate: learningRate || 0.001,
+          epochs: epochs || 10,
+          batchSize: batchSize || 32
+        },
+        estimatedTime: "10-15 minutes",
+        datasetFiles: datasetFiles || []
+      });
+    } catch (error) {
+      console.error('Training start error:', error);
+      res.status(500).json({ 
+        message: "Failed to start training",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
   app.post("/api/admin/ai-training/start", authenticateToken, requireRole(['admin']), async (req: any, res) => {
     try {
       const { 
@@ -4997,9 +5038,9 @@ Return JSON format:
         datasetFiles 
       } = req.body;
 
-      // Validate required fields
-      if (!modelName || !trainingType) {
-        return res.status(400).json({ message: "Model name and training type are required" });
+      // Validate required fields - training type is now optional
+      if (!modelName) {
+        return res.status(400).json({ message: "Model name is required" });
       }
 
       // Simulate training process
