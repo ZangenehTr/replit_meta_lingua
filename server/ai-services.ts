@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { ollamaService } from './ollama-service';
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -36,6 +37,17 @@ export class AIPersonalizationService {
     profile: LearningProfile,
     recentActivity: any[]
   ): Promise<PersonalizedRecommendation[]> {
+    // Try Ollama first, fallback to OpenAI
+    try {
+      if (await ollamaService.isServiceAvailable()) {
+        console.log('Using Ollama for personalized recommendations');
+        return await ollamaService.generatePersonalizedRecommendations(profile, recentActivity);
+      }
+    } catch (error) {
+      console.log('Ollama failed, falling back to OpenAI:', error.message);
+    }
+
+    // Fallback to OpenAI
     try {
       const prompt = `You are an expert Persian language learning advisor with deep knowledge of cross-cultural education.
 
@@ -102,6 +114,17 @@ Return a JSON array with this exact structure:
     nextSteps: string[];
     culturalInsights: string[];
   }> {
+    // Try Ollama first, fallback to OpenAI
+    try {
+      if (await ollamaService.isServiceAvailable()) {
+        console.log('Using Ollama for progress analysis');
+        return await ollamaService.analyzeProgressAndProvideFeedback(profile, completedLessons, quizResults);
+      }
+    } catch (error) {
+      console.log('Ollama failed, falling back to OpenAI:', error.message);
+    }
+
+    // Fallback to OpenAI
     try {
       const prompt = `You are an expert Persian language instructor analyzing a student's progress.
 

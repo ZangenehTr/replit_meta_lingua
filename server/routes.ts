@@ -4528,6 +4528,59 @@ Return JSON format:
     }
   });
 
+  // Ollama Management Routes
+  app.get("/api/admin/ollama/status", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const { ollamaService } = await import('./ollama-service');
+      const isAvailable = await ollamaService.isServiceAvailable();
+      const models = await ollamaService.listModels();
+      
+      res.json({
+        success: true,
+        status: isAvailable ? 'running' : 'offline',
+        models: models,
+        endpoint: 'http://localhost:11434'
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to check Ollama status",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  app.post("/api/admin/ollama/pull-model", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const { modelName } = req.body;
+      
+      if (!modelName) {
+        return res.status(400).json({ message: "Model name is required" });
+      }
+
+      const { ollamaService } = await import('./ollama-service');
+      const success = await ollamaService.pullModel(modelName);
+      
+      if (success) {
+        res.json({
+          success: true,
+          message: `Model ${modelName} pulled successfully`
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: `Failed to pull model ${modelName}`
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to pull model",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
   // Advanced Reporting & Analytics Routes
   app.get("/api/reports/financial-summary", authenticateToken, requireRole(['admin', 'accountant']), async (req: any, res) => {
     try {
