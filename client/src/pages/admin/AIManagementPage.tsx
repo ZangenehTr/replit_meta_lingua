@@ -56,14 +56,12 @@ export function AIManagementPage() {
     setTestResponse('');
 
     try {
-      const response = await apiRequest(`/api/test/model-test`, {
+      const response = await apiRequest(`/api/test/model`, {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          modelName: selectedModel || 'llama3.2:1b',
-          prompt: testPrompt,
-          temperature: 0.7,
-          maxTokens: 500
+          model: selectedModel || 'llama3.2:1b',
+          prompt: testPrompt
         }),
       });
 
