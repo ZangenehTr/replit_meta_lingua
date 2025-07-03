@@ -213,6 +213,15 @@ export function AIManagementPage() {
       return;
     }
 
+    if (uploadedFiles.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please upload training files before starting",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setTrainingInProgress(true);
     setTrainingProgress(0);
 
@@ -577,10 +586,21 @@ export function AIManagementPage() {
                   {/* Training Dataset Upload */}
                   <div className="space-y-4">
                     <h4 className="text-sm font-medium">Training Dataset</h4>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                      uploadedFiles.length === 0 
+                        ? 'border-red-300 bg-red-50' 
+                        : 'border-green-300 bg-green-50'
+                    }`}>
                       <div className="space-y-4">
-                        <div className="text-sm text-muted-foreground">
-                          Upload training data in multiple formats
+                        <div className={`text-sm ${
+                          uploadedFiles.length === 0 
+                            ? 'text-red-600 font-medium' 
+                            : 'text-green-600'
+                        }`}>
+                          {uploadedFiles.length === 0 
+                            ? 'Training files required - Upload data to start training' 
+                            : 'Training data ready - Multiple formats supported'
+                          }
                         </div>
                         
                         {/* File Format Options */}
@@ -721,7 +741,7 @@ export function AIManagementPage() {
                     <Button 
                       className="flex-1" 
                       onClick={startTraining}
-                      disabled={trainingInProgress || !selectedModel}
+                      disabled={trainingInProgress || !selectedModel || uploadedFiles.length === 0}
                     >
                       <Zap className="h-4 w-4 mr-2" />
                       {trainingInProgress ? "Training..." : "Start Training"}
