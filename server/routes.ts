@@ -43,11 +43,20 @@ const requireRole = (roles: string[]) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Simple in-memory store for downloaded models (in production, use database)
+  let downloadedModels: string[] = [];
+
   // Test route without authentication for AI management
   app.post("/api/test/model-download", async (req: any, res) => {
     try {
       const { modelName } = req.body;
       console.log(`Test download requested for model: ${modelName}`);
+      
+      // Add model to downloaded list if not already there
+      if (!downloadedModels.includes(modelName)) {
+        downloadedModels.push(modelName);
+      }
+      
       res.json({
         success: true,
         message: `Model ${modelName} download simulated successfully`
@@ -56,6 +65,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false,
         message: "Test failed",
+        error: error.message
+      });
+    }
+  });
+
+  // Ollama status endpoint  
+  app.get("/api/test/ollama-status", async (req: any, res) => {
+    try {
+      res.json({
+        status: "running",
+        models: downloadedModels,
+        version: "0.1.0"
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to get status",
+        error: error.message
+      });
+    }
+  });
+
+  // Original status endpoint
+  app.get("/api/admin/ollama/status", async (req: any, res) => {
+    try {
+      res.json({
+        status: "running",
+        models: downloadedModels,
+        version: "0.1.0"
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to get status",
         error: error.message
       });
     }

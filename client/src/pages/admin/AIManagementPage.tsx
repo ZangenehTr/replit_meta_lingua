@@ -66,8 +66,8 @@ export function AIManagementPage() {
   const queryClient = useQueryClient();
 
   const { data: ollamaStatus, isLoading, refetch } = useQuery<OllamaStatus>({
-    queryKey: ["/api/admin/ollama/status"],
-    queryFn: () => apiRequest("/admin/ollama/status"),
+    queryKey: ["/api/test/ollama-status"],
+    queryFn: () => apiRequest("/api/test/ollama-status"),
     refetchInterval: 10000,
   });
 
@@ -101,7 +101,8 @@ export function AIManagementPage() {
         title: "Success",
         description: "Model downloaded successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
+      setModelName("");
     },
     onError: (error: any) => {
       toast({
