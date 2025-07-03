@@ -64,32 +64,36 @@ interface UsageStats {
 }
 
 export function AIManagementPage() {
-  const [modelName, setModelName] = useState("llama3.2:1b");
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [trainingInProgress, setTrainingInProgress] = useState(false);
-  const [trainingProgress, setTrainingProgress] = useState(0);
-  const [selectedModel, setSelectedModel] = useState("");
-  const [selectedTrainingType, setSelectedTrainingType] = useState("");
-  const [learningRate, setLearningRate] = useState("0.001");
-  const [epochs, setEpochs] = useState("10");
-  const [batchSize, setBatchSize] = useState("32");
-  const [testPrompt, setTestPrompt] = useState('');
-  const [testResponse, setTestResponse] = useState('');
-  const [testingModel, setTestingModel] = useState(false);
-  const [aiSettings, setAISettings] = useState<AISettings>({
-    primaryProvider: "ollama",
-    fallbackProvider: "openai",
-    responseCaching: true,
-    features: {
-      personalizedRecommendations: true,
-      progressAnalysis: true,
-      conversationScenarios: true,
-      culturalInsights: true,
-    }
-  });
+  // Debug: Add console log to check if component is loading
+  console.log("AIManagementPage component loading...");
   
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  try {
+    const [modelName, setModelName] = useState("llama3.2:1b");
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+    const [trainingInProgress, setTrainingInProgress] = useState(false);
+    const [trainingProgress, setTrainingProgress] = useState(0);
+    const [selectedModel, setSelectedModel] = useState("");
+    const [selectedTrainingType, setSelectedTrainingType] = useState("");
+    const [learningRate, setLearningRate] = useState("0.001");
+    const [epochs, setEpochs] = useState("10");
+    const [batchSize, setBatchSize] = useState("32");
+    const [testPrompt, setTestPrompt] = useState('');
+    const [testResponse, setTestResponse] = useState('');
+    const [testingModel, setTestingModel] = useState(false);
+    const [aiSettings, setAISettings] = useState<AISettings>({
+      primaryProvider: "ollama",
+      fallbackProvider: "openai",
+      responseCaching: true,
+      features: {
+        personalizedRecommendations: true,
+        progressAnalysis: true,
+        conversationScenarios: true,
+        culturalInsights: true,
+      }
+    });
+    
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
 
   const { data: ollamaStatus, isLoading, refetch } = useQuery<OllamaStatus>({
     queryKey: ["/api/test/ollama-status"],
@@ -387,24 +391,25 @@ export function AIManagementPage() {
     </div>
   );
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">AI Services Management</h1>
-          <p className="text-muted-foreground">
-            Manage local AI processing with Ollama and monitor service status
-          </p>
+    console.log("Rendering AI Management page...");
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">AI Services Management</h1>
+            <p className="text-muted-foreground">
+              Manage local AI processing with Ollama and monitor service status
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh Status
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => refetch()}
-          disabled={isLoading}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh Status
-        </Button>
-      </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
@@ -1147,4 +1152,19 @@ export function AIManagementPage() {
       </Tabs>
     </div>
   );
+  } catch (error: any) {
+    console.error("Error in AIManagementPage:", error);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold text-red-600">Page Error</h1>
+          <p className="text-gray-600">There was an error loading the AI Management page.</p>
+          <p className="text-sm text-gray-500">{error.message}</p>
+          <Button onClick={() => window.location.reload()}>
+            Reload Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
 }
