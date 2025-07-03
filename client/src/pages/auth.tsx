@@ -54,7 +54,10 @@ export default function Auth() {
     setAuthError("");
     try {
       await login(data);
-      setLocation("/dashboard");
+      // Wait for the login to complete and user data to be available
+      setTimeout(() => {
+        setLocation("/admin");
+      }, 100);
     } catch (error: any) {
       setAuthError(error.message || "Login failed. Please check your credentials.");
     }
