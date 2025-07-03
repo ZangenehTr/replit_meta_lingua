@@ -4409,6 +4409,331 @@ Return JSON format:
     }
   });
 
+  // AI Personalization Routes
+  app.post("/api/ai/course-recommendations", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get user profile and learning data
+      const userProfile = await storage.getUserProfile(userId);
+      const userCourses = await storage.getUserCourses(userId);
+      const user = await storage.getUser(userId);
+      
+      if (!userProfile) {
+        return res.status(404).json({ message: "User profile not found" });
+      }
+
+      // Prepare learning profile for AI
+      const learningProfile = {
+        userId: userId,
+        nativeLanguage: userProfile.nativeLanguage || 'en',
+        targetLanguage: userProfile.targetLanguage || 'persian',
+        proficiencyLevel: (userProfile.proficiencyLevel as 'beginner' | 'intermediate' | 'advanced') || 'beginner',
+        learningGoals: userProfile.learningGoals || [],
+        culturalBackground: userProfile.culturalBackground || 'western',
+        preferredLearningStyle: (userProfile.learningStyle as 'visual' | 'auditory' | 'kinesthetic' | 'reading') || 'visual',
+        weaknesses: userProfile.learningChallenges || [],
+        strengths: userProfile.strengths || [],
+        progressHistory: userCourses || []
+      };
+
+      // Get recent activity (enrollment, completions, etc.)
+      const recentActivity = userCourses.map(course => ({
+        courseId: course.id,
+        title: course.title,
+        progress: course.progress || 0,
+        lastAccessed: new Date()
+      }));
+
+      // Use AI service to generate recommendations
+      const { aiPersonalizationService } = await import('./ai-services');
+      const recommendations = await aiPersonalizationService.generatePersonalizedRecommendations(
+        learningProfile,
+        recentActivity
+      );
+
+      res.json({
+        success: true,
+        recommendations: recommendations,
+        profile: {
+          targetLanguage: learningProfile.targetLanguage,
+          proficiencyLevel: learningProfile.proficiencyLevel,
+          culturalBackground: learningProfile.culturalBackground
+        }
+      });
+    } catch (error) {
+      console.error('AI recommendations error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate recommendations",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // AI Progress Analysis
+  app.post("/api/ai/progress-analysis", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get user data for analysis
+      const userProfile = await storage.getUserProfile(userId);
+      const userCourses = await storage.getUserCourses(userId);
+      const userStats = await storage.getUserStats(userId);
+      
+      if (!userProfile) {
+        return res.status(404).json({ message: "User profile not found" });
+      }
+
+      const learningProfile = {
+        userId: userId,
+        nativeLanguage: userProfile.nativeLanguage || 'en',
+        targetLanguage: userProfile.targetLanguage || 'persian',
+        proficiencyLevel: userProfile.proficiencyLevel || 'beginner',
+        learningGoals: userProfile.learningGoals || [],
+        culturalBackground: userProfile.culturalBackground || 'western',
+        preferredLearningStyle: userProfile.learningStyle || 'visual',
+        weaknesses: userProfile.learningChallenges || [],
+        strengths: userProfile.strengths || [],
+        progressHistory: userCourses || []
+      };
+
+      const progressData = {
+        coursesCompleted: userCourses.filter(c => c.progress === 100).length,
+        averageProgress: userCourses.reduce((sum, c) => sum + c.progress, 0) / (userCourses.length || 1),
+        streakDays: userStats?.streakDays || 0,
+        totalStudyTime: userStats?.totalStudyTime || 0,
+        weakAreas: userProfile.learningChallenges || [],
+        strongAreas: userProfile.strengths || []
+      };
+
+      const { aiPersonalizationService } = await import('./ai-services');
+      const analysis = await aiPersonalizationService.analyzeProgressAndProvideFeedback(
+        learningProfile,
+        userCourses,
+        [] // quiz results - TODO: implement quiz system
+      );
+
+      res.json({
+        success: true,
+        analysis: analysis,
+        progressData: progressData
+      });
+    } catch (error) {
+      console.error('AI progress analysis error:', error);
+      res.status(500).json({ 
+        message: "Failed to analyze progress",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Advanced Reporting & Analytics Routes
+  app.get("/api/reports/financial-summary", authenticateToken, requireRole(['admin', 'accountant']), async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "Start date and end date are required" });
+      }
+
+      // Get all payments in date range
+      const allPayments = await storage.getAllPayments();
+      const paymentsInRange = allPayments.filter(payment => {
+        const paymentDate = new Date(payment.createdAt);
+        return paymentDate >= new Date(startDate) && paymentDate <= new Date(endDate);
+      });
+
+      // Calculate metrics
+      const completedPayments = paymentsInRange.filter(p => p.status === 'completed');
+      const failedPayments = paymentsInRange.filter(p => p.status === 'failed');
+      const refundedPayments = paymentsInRange.filter(p => p.status === 'reversed');
+
+      const totalRevenue = completedPayments.reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0);
+      const totalRefunds = refundedPayments.reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0);
+      const totalTransactions = paymentsInRange.length;
+      const successRate = totalTransactions > 0 ? (completedPayments.length / totalTransactions) * 100 : 0;
+
+      // Get wallet top-ups
+      const walletTransactions = await storage.getUserWalletTransactions(0); // Get all transactions
+      const walletTopups = walletTransactions.filter(wt => 
+        wt.type === 'topup' && 
+        wt.status === 'completed' &&
+        new Date(wt.createdAt) >= new Date(startDate) &&
+        new Date(wt.createdAt) <= new Date(endDate)
+      );
+
+      const totalWalletTopups = walletTopups.reduce((sum, wt) => sum + wt.amount, 0);
+
+      // Course enrollment metrics
+      const coursePayments = paymentsInRange.filter(p => p.creditsAwarded > 0);
+      const newEnrollments = coursePayments.length;
+
+      // Revenue by payment method
+      const shetabRevenue = completedPayments
+        .filter(p => p.provider === 'shetab')
+        .reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0);
+      
+      const cashRevenue = completedPayments
+        .filter(p => p.provider === 'cash')
+        .reduce((sum, p) => sum + parseFloat(p.amount.toString()), 0);
+
+      // Daily revenue breakdown for charts
+      const dailyRevenue = {};
+      completedPayments.forEach(payment => {
+        const date = new Date(payment.createdAt).toISOString().split('T')[0];
+        dailyRevenue[date] = (dailyRevenue[date] || 0) + parseFloat(payment.amount.toString());
+      });
+
+      const chartData = Object.entries(dailyRevenue).map(([date, revenue]) => ({
+        date,
+        revenue: Number(revenue)
+      })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      res.json({
+        success: true,
+        period: { startDate, endDate },
+        summary: {
+          totalRevenue: Math.round(totalRevenue),
+          totalRefunds: Math.round(totalRefunds),
+          netRevenue: Math.round(totalRevenue - totalRefunds),
+          totalTransactions,
+          successRate: Math.round(successRate * 100) / 100,
+          newEnrollments,
+          totalWalletTopups: Math.round(totalWalletTopups)
+        },
+        breakdown: {
+          shetabRevenue: Math.round(shetabRevenue),
+          cashRevenue: Math.round(cashRevenue),
+          walletTopups: Math.round(totalWalletTopups)
+        },
+        chartData,
+        trends: {
+          averageDailyRevenue: chartData.length > 0 ? Math.round(totalRevenue / chartData.length) : 0,
+          peakDay: chartData.length > 0 ? chartData.reduce((max, day) => day.revenue > max.revenue ? day : max) : null
+        }
+      });
+    } catch (error) {
+      console.error('Financial summary error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate financial summary",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Student enrollment analytics
+  app.get("/api/reports/enrollment-analytics", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+    try {
+      const { period = '30d' } = req.query;
+      
+      // Calculate date range based on period
+      const endDate = new Date();
+      const startDate = new Date();
+      
+      switch (period) {
+        case '7d':
+          startDate.setDate(endDate.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(endDate.getDate() - 30);
+          break;
+        case '90d':
+          startDate.setDate(endDate.getDate() - 90);
+          break;
+        case '1y':
+          startDate.setFullYear(endDate.getFullYear() - 1);
+          break;
+        default:
+          startDate.setDate(endDate.getDate() - 30);
+      }
+
+      // Get enrollment data
+      const allUsers = await storage.getAllUsers();
+      const students = allUsers.filter(user => user.role === 'student');
+      
+      const newStudents = students.filter(student => 
+        new Date(student.createdAt) >= startDate && new Date(student.createdAt) <= endDate
+      );
+
+      // Get course enrollment data
+      const courses = await storage.getCourses();
+      const courseEnrollmentData = await Promise.all(
+        courses.map(async (course) => {
+          const enrollments = await storage.getCourseEnrollments(course.id);
+          const recentEnrollments = enrollments.filter(enrollment =>
+            new Date(enrollment.enrolledAt) >= startDate && new Date(enrollment.enrolledAt) <= endDate
+          );
+          
+          return {
+            courseId: course.id,
+            courseTitle: course.title,
+            totalEnrollments: enrollments.length,
+            recentEnrollments: recentEnrollments.length,
+            language: course.language,
+            level: course.level
+          };
+        })
+      );
+
+      // Enrollment trends by day
+      const dailyEnrollments = {};
+      newStudents.forEach(student => {
+        const date = new Date(student.createdAt).toISOString().split('T')[0];
+        dailyEnrollments[date] = (dailyEnrollments[date] || 0) + 1;
+      });
+
+      const enrollmentChartData = Object.entries(dailyEnrollments).map(([date, count]) => ({
+        date,
+        enrollments: Number(count)
+      })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      // Language and level distribution
+      const languageStats = {};
+      const levelStats = {};
+      
+      courseEnrollmentData.forEach(course => {
+        languageStats[course.language] = (languageStats[course.language] || 0) + course.recentEnrollments;
+        levelStats[course.level] = (levelStats[course.level] || 0) + course.recentEnrollments;
+      });
+
+      res.json({
+        success: true,
+        period: { startDate: startDate.toISOString(), endDate: endDate.toISOString() },
+        summary: {
+          totalStudents: students.length,
+          newStudents: newStudents.length,
+          totalCourses: courses.length,
+          activeCourses: courses.filter(c => c.isActive).length
+        },
+        trends: {
+          dailyEnrollments: enrollmentChartData,
+          averageDailyEnrollments: enrollmentChartData.length > 0 
+            ? Math.round((newStudents.length / enrollmentChartData.length) * 100) / 100 
+            : 0
+        },
+        distribution: {
+          languages: Object.entries(languageStats).map(([language, count]) => ({
+            language, 
+            enrollments: Number(count)
+          })),
+          levels: Object.entries(levelStats).map(([level, count]) => ({
+            level, 
+            enrollments: Number(count)
+          }))
+        },
+        topCourses: courseEnrollmentData
+          .sort((a, b) => b.recentEnrollments - a.recentEnrollments)
+          .slice(0, 10)
+      });
+    } catch (error) {
+      console.error('Enrollment analytics error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate enrollment analytics",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

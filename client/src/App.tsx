@@ -27,6 +27,7 @@ import { AdminTeacherManagement } from "@/pages/admin/teacher-management";
 import { AdminFinancial } from "@/pages/admin/financial";
 import { AdminSystem } from "@/pages/admin/system-simple";
 import AdminSettings from "@/pages/admin/settings";
+import { FinancialReportsPage } from "@/pages/admin/FinancialReportsPage";
 import WalletPage from "@/pages/wallet";
 import ReferralsPage from "@/pages/referrals";
 import Courses from "@/pages/courses";
@@ -145,6 +146,11 @@ function Router() {
       <Route path="/admin/settings">
         <ProtectedRoute>
           <AdminSettings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/financial-reports">
+        <ProtectedRoute>
+          <FinancialReportsPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/course-management">

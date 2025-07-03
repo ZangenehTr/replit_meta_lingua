@@ -265,26 +265,26 @@ export function AdminDashboard() {
         {/* Advanced Reporting & Analytics */}
         <Card 
           className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setLocation('/admin/reports')}
+          onClick={() => setLocation('/admin/financial-reports')}
         >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              Reports & Analytics
+              Financial Reports
             </CardTitle>
-            <CardDescription>Complex analytics & insights</CardDescription>
+            <CardDescription>Revenue analytics & financial insights</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Reports Generated:</span>
-                <span className="font-bold">147</span>
+                <span>Revenue Tracked:</span>
+                <span className="font-bold">₹45.2M</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Data Points:</span>
-                <span className="font-bold">2.3M</span>
+                <span>Success Rate:</span>
+                <span className="font-bold">94.3%</span>
               </div>
-              <Progress value={67} className="mt-2" />
+              <Progress value={94} className="mt-2" />
             </div>
           </CardContent>
         </Card>
