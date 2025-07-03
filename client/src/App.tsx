@@ -157,7 +157,7 @@ function Router() {
       </Route>
       <Route path="/admin/ai-management">
         <ProtectedRoute>
-          <AIManagementPageSimple />
+          <AIManagementPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/course-management">
