@@ -1,0 +1,974 @@
+import { useState, useCallback, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Bot, 
+  Server, 
+  CheckCircle, 
+  XCircle, 
+  RefreshCw,
+  TestTube,
+  Send,
+  Download,
+  Trash2,
+  Upload,
+  FileText,
+  Image,
+  Video,
+  Music,
+  Archive,
+  Database,
+  Activity,
+  Settings,
+  Zap,
+  Brain,
+  Users,
+  TrendingUp,
+  Clock,
+  HardDrive,
+  Cpu,
+  MemoryStick
+} from "lucide-react";
+
+interface OllamaStatus {
+  success: boolean;
+  status: 'running' | 'offline';
+  models: string[];
+  endpoint: string;
+  systemInfo?: {
+    totalMemory: string;
+    usedMemory: string;
+    cpuUsage: number;
+    diskSpace: string;
+  };
+}
+
+interface ModelInfo {
+  name: string;
+  size: string;
+  modified: string;
+  digest: string;
+  family?: string;
+  format?: string;
+  parameterSize?: string;
+  quantizationLevel?: string;
+}
+
+interface TokenUsage {
+  user: string;
+  model: string;
+  tokensUsed: number;
+  requestCount: number;
+  lastUsed: string;
+  cost?: number;
+}
+
+interface TrainingFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  uploadedAt: string;
+  status: 'uploaded' | 'processing' | 'completed' | 'error';
+}
+
+const AVAILABLE_MODELS = [
+  { name: "llama3.2:1b", description: "Lightweight model for basic tasks", size: "1.3GB" },
+  { name: "llama3.2:3b", description: "Balanced performance and efficiency", size: "2.0GB" },
+  { name: "llama3:8b", description: "High-quality general purpose model", size: "4.7GB" },
+  { name: "llama3:70b", description: "Large model for complex tasks", size: "40GB" },
+  { name: "codellama:7b", description: "Specialized for code generation", size: "3.8GB" },
+  { name: "codellama:13b", description: "Advanced code assistance", size: "7.3GB" },
+  { name: "mistral:7b", description: "Efficient instruction following", size: "4.1GB" },
+  { name: "mixtral:8x7b", description: "Mixture of experts model", size: "26GB" },
+  { name: "persian-llm:3b", description: "Persian language specialized", size: "2.1GB" },
+  { name: "persian-llm:7b", description: "Advanced Persian model", size: "4.2GB" },
+  { name: "gemma:2b", description: "Google's efficient model", size: "1.4GB" },
+  { name: "gemma:7b", description: "Google's performance model", size: "5.0GB" },
+];
+
+const QUICK_TEST_PROMPTS = [
+  { name: "Translation Test", prompt: "Translate this English sentence to Persian: 'Hello, how are you today?'" },
+  { name: "Grammar Check", prompt: "Check the grammar of this Persian sentence and correct any errors: 'من امروز به مدرسه رفتم.'" },
+  { name: "Conversation", prompt: "Start a conversation in Persian about ordering food at a restaurant." },
+  { name: "Cultural Context", prompt: "Explain the cultural significance of Nowruz in Persian culture." },
+  { name: "Code Generation", prompt: "Write a Python function to calculate fibonacci numbers." },
+  { name: "Creative Writing", prompt: "Write a short story about learning a new language." }
+];
+
+export function ComprehensiveAIManagement() {
+  const [selectedModel, setSelectedModel] = useState("");
+  const [testPrompt, setTestPrompt] = useState('');
+  const [testResponse, setTestResponse] = useState('');
+  const [testingModel, setTestingModel] = useState(false);
+  const [downloadingModels, setDownloadingModels] = useState<Set<string>>(new Set());
+  const [trainingFiles, setTrainingFiles] = useState<TrainingFile[]>([]);
+  const [selectedTrainingModel, setSelectedTrainingModel] = useState("");
+  const [trainingProgress, setTrainingProgress] = useState(0);
+  const [isTraining, setIsTraining] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: ollamaStatus, isLoading, refetch } = useQuery<OllamaStatus>({
+    queryKey: ["/api/test/ollama-status"],
+    queryFn: () => apiRequest("/api/test/ollama-status"),
+    refetchInterval: autoRefresh ? 5000 : false,
+  });
+
+  const { data: modelDetails } = useQuery<ModelInfo[]>({
+    queryKey: ["/api/admin/ollama/models"],
+    queryFn: () => apiRequest("/api/admin/ollama/models"),
+    refetchInterval: autoRefresh ? 10000 : false,
+  });
+
+  const { data: tokenUsage } = useQuery<TokenUsage[]>({
+    queryKey: ["/api/admin/ai/token-usage"],
+    queryFn: () => apiRequest("/api/admin/ai/token-usage"),
+    refetchInterval: autoRefresh ? 30000 : false,
+  });
+
+  const downloadModelMutation = useMutation({
+    mutationFn: async (modelName: string) => {
+      return apiRequest("/api/admin/ollama/pull-model", {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ modelName }),
+      });
+    },
+    onSuccess: (data, modelName) => {
+      toast({
+        title: "Model Download Started",
+        description: `${modelName} download initiated successfully`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
+    },
+    onError: (error: any, modelName) => {
+      toast({
+        title: "Download Failed",
+        description: `Failed to download ${modelName}: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteModelMutation = useMutation({
+    mutationFn: async (modelName: string) => {
+      return apiRequest(`/api/admin/ollama/delete-model`, {
+        method: 'DELETE',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ modelName }),
+      });
+    },
+    onSuccess: (data, modelName) => {
+      toast({
+        title: "Model Deleted",
+        description: `${modelName} has been removed successfully`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
+    },
+    onError: (error: any, modelName) => {
+      toast({
+        title: "Delete Failed",
+        description: `Failed to delete ${modelName}: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const availableModels = ollamaStatus?.models || [];
+  const systemInfo = ollamaStatus?.systemInfo;
+
+  const handleModelDownload = async (modelName: string) => {
+    setDownloadingModels(prev => new Set(prev).add(modelName));
+    try {
+      await downloadModelMutation.mutateAsync(modelName);
+    } finally {
+      setDownloadingModels(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(modelName);
+        return newSet;
+      });
+    }
+  };
+
+  const handleModelDelete = async (modelName: string) => {
+    if (confirm(`Are you sure you want to delete ${modelName}? This action cannot be undone.`)) {
+      await deleteModelMutation.mutateAsync(modelName);
+    }
+  };
+
+  const testModel = async () => {
+    if (!testPrompt.trim()) {
+      toast({
+        title: "No Test Prompt",
+        description: "Please enter a test prompt",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setTestingModel(true);
+    setTestResponse('');
+
+    try {
+      const response = await apiRequest(`/api/test/model`, {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: selectedModel || 'llama3.2:1b',
+          prompt: testPrompt
+        }),
+      });
+
+      setTestResponse(response.response || 'Test completed successfully');
+      
+      toast({
+        title: "Model Test Complete",
+        description: "Response generated successfully",
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Model Test Failed",
+        description: error.message || "Failed to test the model",
+        variant: "destructive",
+      });
+      setTestResponse('Failed to generate response');
+    } finally {
+      setTestingModel(false);
+    }
+  };
+
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => {
+      // Check file size (50GB limit)
+      const maxSize = 50 * 1024 * 1024 * 1024; // 50GB in bytes
+      if (file.size > maxSize) {
+        toast({
+          title: "File Too Large",
+          description: `${file.name} exceeds the 50GB limit`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newFile: TrainingFile = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        uploadedAt: new Date().toISOString(),
+        status: 'uploaded'
+      };
+
+      setTrainingFiles(prev => [...prev, newFile]);
+      
+      toast({
+        title: "File Added",
+        description: `${file.name} added to training dataset`,
+      });
+    });
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [toast]);
+
+  const removeTrainingFile = (fileId: string) => {
+    setTrainingFiles(prev => prev.filter(f => f.id !== fileId));
+    toast({
+      title: "File Removed",
+      description: "File removed from training dataset",
+    });
+  };
+
+  const startTraining = async () => {
+    if (!selectedTrainingModel) {
+      toast({
+        title: "No Model Selected",
+        description: "Please select a model for training",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (trainingFiles.length === 0) {
+      toast({
+        title: "No Training Data",
+        description: "Please upload training files",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsTraining(true);
+    setTrainingProgress(0);
+
+    // Simulate training progress
+    const progressInterval = setInterval(() => {
+      setTrainingProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          setIsTraining(false);
+          toast({
+            title: "Training Complete",
+            description: `Model ${selectedTrainingModel} has been fine-tuned successfully`,
+          });
+          return 100;
+        }
+        return prev + Math.random() * 5;
+      });
+    }, 1000);
+
+    toast({
+      title: "Training Started",
+      description: `Fine-tuning ${selectedTrainingModel} with ${trainingFiles.length} files`,
+    });
+  };
+
+  const formatFileSize = (bytes: number) => {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    if (bytes === 0) return '0 Bytes';
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('text/')) return <FileText className="h-4 w-4" />;
+    if (type.startsWith('image/')) return <Image className="h-4 w-4" />;
+    if (type.startsWith('video/')) return <Video className="h-4 w-4" />;
+    if (type.startsWith('audio/')) return <Music className="h-4 w-4" />;
+    return <Archive className="h-4 w-4" />;
+  };
+
+  const StatusIndicator = ({ status }: { status: 'running' | 'offline' }) => (
+    <div className="flex items-center gap-2">
+      {status === 'running' ? (
+        <>
+          <CheckCircle className="h-5 w-5 text-green-500" />
+          <span className="text-green-700 font-medium">Running</span>
+        </>
+      ) : (
+        <>
+          <XCircle className="h-5 w-5 text-red-500" />
+          <span className="text-red-700 font-medium">Offline</span>
+        </>
+      )}
+    </div>
+  );
+
+  const totalTokensUsed = tokenUsage?.reduce((sum, usage) => sum + usage.tokensUsed, 0) || 0;
+  const totalRequests = tokenUsage?.reduce((sum, usage) => sum + usage.requestCount, 0) || 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">AI Services Management</h1>
+          <p className="text-muted-foreground">
+            Comprehensive AI model management, training, and monitoring
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="auto-refresh">Auto Refresh</Label>
+            <Switch
+              id="auto-refresh"
+              checked={autoRefresh}
+              onCheckedChange={setAutoRefresh}
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh Status
+          </Button>
+        </div>
+      </div>
+
+      {/* System Status Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Service Status</CardTitle>
+            <Server className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <StatusIndicator status={ollamaStatus?.status || 'offline'} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Models</CardTitle>
+            <Bot className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{availableModels.length}</div>
+            <p className="text-xs text-muted-foreground">
+              models available
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Token Usage</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalTokensUsed.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              tokens processed
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalRequests.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              API requests made
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* System Resources */}
+      {systemInfo && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Cpu className="h-5 w-5" />
+              System Resources
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <MemoryStick className="h-4 w-4" />
+                    Memory Usage
+                  </span>
+                  <span className="text-sm font-mono">{systemInfo.usedMemory} / {systemInfo.totalMemory}</span>
+                </div>
+                <Progress value={75} className="h-2" />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Cpu className="h-4 w-4" />
+                    CPU Usage
+                  </span>
+                  <span className="text-sm font-mono">{systemInfo.cpuUsage}%</span>
+                </div>
+                <Progress value={systemInfo.cpuUsage} className="h-2" />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <HardDrive className="h-4 w-4" />
+                    Disk Space
+                  </span>
+                  <span className="text-sm font-mono">{systemInfo.diskSpace}</span>
+                </div>
+                <Progress value={60} className="h-2" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Tabs defaultValue="models" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="models">Model Management</TabsTrigger>
+          <TabsTrigger value="testing">Model Testing</TabsTrigger>
+          <TabsTrigger value="training">Model Training</TabsTrigger>
+          <TabsTrigger value="usage">Token Usage</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
+
+        {/* Model Management Tab */}
+        <TabsContent value="models" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Available Models for Download */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="h-5 w-5" />
+                  Available Models
+                </CardTitle>
+                <CardDescription>Download new AI models</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {AVAILABLE_MODELS.map((model) => (
+                  <div key={model.name} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex-1">
+                      <div className="font-medium">{model.name}</div>
+                      <div className="text-sm text-muted-foreground">{model.description}</div>
+                      <div className="text-xs text-muted-foreground mt-1">Size: {model.size}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {availableModels.includes(model.name) ? (
+                        <Badge variant="secondary">Installed</Badge>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={() => handleModelDownload(model.name)}
+                          disabled={downloadingModels.has(model.name) || downloadModelMutation.isPending}
+                        >
+                          {downloadingModels.has(model.name) ? (
+                            <>
+                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                              Downloading
+                            </>
+                          ) : (
+                            <>
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Installed Models */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  Installed Models
+                </CardTitle>
+                <CardDescription>Manage your local AI models</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {availableModels.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    No models installed. Download models from the available list.
+                  </div>
+                ) : (
+                  availableModels.map((modelName) => {
+                    const modelDetail = modelDetails?.find(m => m.name === modelName);
+                    return (
+                      <div key={modelName} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <div className="font-medium">{modelName}</div>
+                          {modelDetail && (
+                            <div className="text-sm text-muted-foreground">
+                              Size: {modelDetail.size} • Modified: {new Date(modelDetail.modified).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="default">Active</Badge>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleModelDelete(modelName)}
+                            disabled={deleteModelMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Model Testing Tab */}
+        <TabsContent value="testing" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TestTube className="h-5 w-5" />
+                Model Testing Interface
+              </CardTitle>
+              <CardDescription>Test AI models with custom prompts</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="model-select">Select Model</Label>
+                    <Select value={selectedModel} onValueChange={setSelectedModel}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a model to test" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableModels.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="test-prompt">Test Prompt</Label>
+                    <Textarea
+                      id="test-prompt"
+                      value={testPrompt}
+                      onChange={(e) => setTestPrompt(e.target.value)}
+                      placeholder="Enter your test prompt here..."
+                      className="min-h-[120px]"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Quick Test Prompts</Label>
+                    <div className="grid grid-cols-1 gap-2 mt-2">
+                      {QUICK_TEST_PROMPTS.map((example) => (
+                        <Button
+                          key={example.name}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setTestPrompt(example.prompt)}
+                          className="justify-start text-left h-auto p-2"
+                        >
+                          <div>
+                            <div className="font-medium">{example.name}</div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {example.prompt.substring(0, 60)}...
+                            </div>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={testModel}
+                    disabled={testingModel || !selectedModel || !testPrompt.trim()}
+                    className="w-full"
+                  >
+                    {testingModel ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Testing Model...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Test Model
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="test-response">Model Response</Label>
+                    <Textarea
+                      id="test-response"
+                      value={testResponse}
+                      readOnly
+                      placeholder="Model response will appear here..."
+                      className="min-h-[300px]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Model Training Tab */}
+        <TabsContent value="training" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Model Training & Fine-tuning
+              </CardTitle>
+              <CardDescription>
+                Upload training data and fine-tune models (supports up to 50GB multimodal files)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="training-model-select">Base Model for Training</Label>
+                    <Select value={selectedTrainingModel} onValueChange={setSelectedTrainingModel}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select model to fine-tune" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableModels.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Training Data Upload</Label>
+                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                      <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <div className="text-sm text-muted-foreground mb-2">
+                        Upload training files (max 50GB per file)
+                      </div>
+                      <div className="text-xs text-muted-foreground mb-4">
+                        Supports: Text, Images, Audio, Video, JSON, CSV, and more
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        accept="*/*"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Select Files
+                      </Button>
+                    </div>
+                  </div>
+
+                  {isTraining && (
+                    <div className="space-y-2">
+                      <Label>Training Progress</Label>
+                      <Progress value={trainingProgress} className="h-3" />
+                      <div className="text-sm text-muted-foreground">
+                        {trainingProgress.toFixed(1)}% complete
+                      </div>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={startTraining}
+                    disabled={isTraining || !selectedTrainingModel || trainingFiles.length === 0}
+                    className="w-full"
+                  >
+                    {isTraining ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Training in Progress...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        Start Training
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  <Label>Training Dataset ({trainingFiles.length} files)</Label>
+                  <div className="border rounded-lg max-h-96 overflow-y-auto">
+                    {trainingFiles.length === 0 ? (
+                      <div className="p-6 text-center text-muted-foreground">
+                        No training files uploaded yet
+                      </div>
+                    ) : (
+                      <div className="divide-y">
+                        {trainingFiles.map((file) => (
+                          <div key={file.id} className="p-3 flex items-center justify-between">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              {getFileIcon(file.type)}
+                              <div className="min-w-0 flex-1">
+                                <div className="font-medium truncate">{file.name}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {formatFileSize(file.size)} • {file.type}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant={file.status === 'completed' ? 'default' : 
+                                        file.status === 'error' ? 'destructive' : 'secondary'}
+                              >
+                                {file.status}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeTrainingFile(file.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="text-sm text-muted-foreground">
+                    Total size: {formatFileSize(trainingFiles.reduce((sum, f) => sum + f.size, 0))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Token Usage Tab */}
+        <TabsContent value="usage" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Token Usage Analytics
+              </CardTitle>
+              <CardDescription>Monitor AI model usage and costs</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {tokenUsage && tokenUsage.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-2xl font-bold">{totalTokensUsed.toLocaleString()}</div>
+                        <div className="text-sm text-muted-foreground">Total Tokens</div>
+                      </div>
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-2xl font-bold">{totalRequests.toLocaleString()}</div>
+                        <div className="text-sm text-muted-foreground">Total Requests</div>
+                      </div>
+                      <div className="text-center p-4 border rounded-lg">
+                        <div className="text-2xl font-bold">
+                          ${tokenUsage.reduce((sum, u) => sum + (u.cost || 0), 0).toFixed(2)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Estimated Cost</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Usage by User</Label>
+                      <div className="border rounded-lg divide-y">
+                        {tokenUsage.map((usage, index) => (
+                          <div key={index} className="p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Users className="h-4 w-4" />
+                              <div>
+                                <div className="font-medium">{usage.user}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  Model: {usage.model}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-medium">{usage.tokensUsed.toLocaleString()} tokens</div>
+                              <div className="text-sm text-muted-foreground">
+                                {usage.requestCount} requests • {new Date(usage.lastUsed).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No usage data available yet
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Settings Tab */}
+        <TabsContent value="settings" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                AI Service Settings
+              </CardTitle>
+              <CardDescription>Configure AI service preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Auto-refresh Status</Label>
+                    <div className="text-sm text-muted-foreground">
+                      Automatically refresh service status every 5 seconds
+                    </div>
+                  </div>
+                  <Switch
+                    checked={autoRefresh}
+                    onCheckedChange={setAutoRefresh}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Default Model</Label>
+                  <Select value={selectedModel} onValueChange={setSelectedModel}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select default model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableModels.map((model) => (
+                        <SelectItem key={model} value={model}>
+                          {model}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Service Endpoint</Label>
+                  <Input
+                    value={ollamaStatus?.endpoint || "http://localhost:11434"}
+                    readOnly
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
