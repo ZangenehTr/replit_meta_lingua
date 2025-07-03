@@ -679,8 +679,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Import and setup working authentication
-  const { setupAuth } = await import("./auth-fix");
-  setupAuth(app);
+  // const { setupAuth } = await import("./auth-fix");
+  // setupAuth(app);
 
   // Legacy authentication endpoints (keeping for compatibility)
   app.post("/api/auth/register", async (req, res) => {
