@@ -91,7 +91,7 @@ export function AIManagementPage() {
 
   const pullModelMutation = useMutation({
     mutationFn: (modelName: string) => 
-      apiRequest("/admin/ollama/pull-model", {
+      apiRequest("/api/admin/ollama/pull-model", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ modelName })
@@ -114,7 +114,7 @@ export function AIManagementPage() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: (settings: Partial<AISettings>) => 
-      apiRequest("/admin/ai/settings", {
+      apiRequest("/api/admin/ai/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings)
