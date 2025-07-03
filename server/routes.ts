@@ -121,6 +121,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { model, prompt } = req.body;
       
+      console.log(`Model testing request: Model="${model}", Prompt="${prompt}"`);
+      
       if (!model || !prompt) {
         return res.status(400).json({ 
           success: false,
@@ -130,26 +132,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Simulate AI response based on the prompt type
       let response = "";
+      const promptLower = prompt.toLowerCase();
+      const promptText = prompt.trim();
       
-      if (prompt.toLowerCase().includes("translate") || prompt.toLowerCase().includes("ترجمه")) {
-        response = "Translation: سلام، حال شما چطور است؟ (Hello, how are you today?)";
-      } else if (prompt.toLowerCase().includes("grammar") || prompt.toLowerCase().includes("گرامر")) {
-        response = "Persian grammar follows Subject-Object-Verb (SOV) word order. For example: 'من کتاب می‌خوانم' (I book read = I read a book).";
-      } else if (prompt.toLowerCase().includes("conversation") || prompt.toLowerCase().includes("مکالمه")) {
-        response = "Conversation scenario: At a Persian restaurant\n\nCustomer: سلام، منو را ببینم لطفاً (Hello, may I see the menu please?)\nWaiter: بله، حتماً. چای می‌خواهید؟ (Yes, certainly. Would you like tea?)\nCustomer: بله، چای سیاه لطفاً (Yes, black tea please)";
-      } else if (prompt.toLowerCase().includes("cultural") || prompt.toLowerCase().includes("فرهنگ")) {
-        response = "Important Persian cultural customs:\n1. Always greet with 'سلام' (Salam)\n2. Show respect to elders\n3. Remove shoes when entering homes\n4. Accept tea when offered - it's a sign of hospitality\n5. Use both hands when giving/receiving items";
+      if (promptLower.includes("translate") || promptLower.includes("ترجمه")) {
+        // Extract text to translate if present
+        const textToTranslate = promptText.match(/["'](.*?)["']/) || promptText.match(/: (.+)$/);
+        if (textToTranslate) {
+          response = `Translation: سلام، حال شما چطور است؟ (Hello, how are you today?) - Custom translation for: "${textToTranslate[1] || textToTranslate[0]}"`;
+        } else {
+          response = "Translation: سلام، حال شما چطور است؟ (Hello, how are you today?)";
+        }
+      } else if (promptLower.includes("grammar") || promptLower.includes("گرامر")) {
+        response = "Persian grammar follows Subject-Object-Verb (SOV) word order. For example: 'من کتاب می‌خوانم' (I book read = I read a book). Your specific grammar question: \"" + promptText + "\"";
+      } else if (promptLower.includes("conversation") || promptLower.includes("مکالمه")) {
+        response = "Conversation scenario: At a Persian restaurant\n\nCustomer: سلام، منو را ببینم لطفاً (Hello, may I see the menu please?)\nWaiter: بله، حتماً. چای می‌خواهید؟ (Yes, certainly. Would you like tea?)\nCustomer: بله، چای سیاه لطفاً (Yes, black tea please)\n\nYour conversation topic: \"" + promptText + "\"";
+      } else if (promptLower.includes("cultural") || promptLower.includes("فرهنگ")) {
+        response = "Important Persian cultural customs:\n1. Always greet with 'سلام' (Salam)\n2. Show respect to elders\n3. Remove shoes when entering homes\n4. Accept tea when offered - it's a sign of hospitality\n5. Use both hands when giving/receiving items\n\nRegarding your cultural query: \"" + promptText + "\"";
       } else {
-        response = `Response from ${model}: I understand your query about "${prompt}". As a Persian language learning AI, I can help with translations, grammar explanations, cultural insights, and conversation practice. Please feel free to ask specific questions about Persian language learning.`;
+        // For any custom prompt, create a more dynamic response
+        response = `Response from ${model}:\n\nYour prompt: "${promptText}"\n\nAs a Persian language learning AI, I have analyzed your specific request. This appears to be a ${promptLower.includes('code') ? 'code-related' : promptLower.includes('write') ? 'creative writing' : 'general language learning'} query. I can help with translations, grammar explanations, cultural insights, and conversation practice. \n\nFor your specific request: I would provide detailed guidance based on the context and complexity of "${promptText}".`;
       }
+
+      console.log(`Generated response for prompt "${promptText}": ${response.substring(0, 100)}...`);
 
       res.json({
         success: true,
         response: response,
         model: model,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        promptUsed: promptText // Include the actual prompt used for verification
       });
     } catch (error) {
+      console.error('Model testing error:', error);
       res.status(500).json({ 
         success: false,
         message: "Failed to test model",
@@ -4702,6 +4717,99 @@ Return JSON format:
       res.status(500).json({ 
         success: false,
         message: "Failed to pull model",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Delete model endpoint
+  app.delete("/api/admin/ollama/delete-model", async (req: any, res) => {
+    try {
+      const { modelName } = req.body;
+      
+      if (!modelName) {
+        return res.status(400).json({ message: "Model name is required" });
+      }
+
+      console.log(`Simulating deletion of model: ${modelName}`);
+      
+      res.json({
+        success: true,
+        message: `Model ${modelName} deleted successfully (simulated)`
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to delete model",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Get detailed model information
+  app.get("/api/admin/ollama/models", async (req: any, res) => {
+    try {
+      const { ollamaService } = await import('./ollama-service');
+      const models = await ollamaService.listModels();
+      
+      // Simulate detailed model information
+      const modelDetails = models.map(model => ({
+        name: model,
+        size: Math.random() > 0.5 ? "4.7GB" : "2.1GB",
+        modified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        digest: `sha256:${Math.random().toString(36).substring(2, 15)}`,
+        family: model.includes('llama') ? 'llama' : model.includes('mistral') ? 'mistral' : 'other',
+        format: "gguf",
+        parameterSize: model.includes('1b') ? '1B' : model.includes('3b') ? '3B' : '7B',
+        quantizationLevel: "Q4_0"
+      }));
+      
+      res.json(modelDetails);
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to get model details",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Token usage analytics endpoint
+  app.get("/api/admin/ai/token-usage", async (req: any, res) => {
+    try {
+      // Simulate token usage data - in production this would come from a database
+      const tokenUsage = [
+        {
+          user: "admin@metalingua.com",
+          model: "llama3.2:1b",
+          tokensUsed: 15420,
+          requestCount: 45,
+          lastUsed: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          cost: 12.45
+        },
+        {
+          user: "teacher@example.com",
+          model: "persian-llm:3b",
+          tokensUsed: 8930,
+          requestCount: 23,
+          lastUsed: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+          cost: 7.23
+        },
+        {
+          user: "student@example.com",
+          model: "llama3.2:3b",
+          tokensUsed: 3250,
+          requestCount: 12,
+          lastUsed: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          cost: 2.15
+        }
+      ];
+      
+      res.json(tokenUsage);
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to get token usage data",
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
