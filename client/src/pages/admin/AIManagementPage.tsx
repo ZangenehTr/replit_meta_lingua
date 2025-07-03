@@ -21,11 +21,9 @@ import {
   Monitor,
   Settings,
   Zap,
-  AlertCircle,
   Trash2,
   TestTube,
-  Send,
-  Upload
+  Send
 } from "lucide-react";
 
 interface OllamaStatus {
@@ -57,16 +55,9 @@ const POPULAR_MODELS = [
   { name: 'llama3.2:1b', description: 'Llama 3.2 1B - Fast, lightweight model' },
   { name: 'llama3.2:3b', description: 'Llama 3.2 3B - Balanced performance' },
   { name: 'llama3:8b', description: 'Llama 3 8B - High quality responses' },
-  { name: 'deepseek-coder:1.3b', description: 'DeepSeek Coder 1.3B - Code generation' },
-  { name: 'deepseek-coder:6.7b', description: 'DeepSeek Coder 6.7B - Advanced coding' },
-  { name: 'deepseek-llm:7b', description: 'DeepSeek LLM 7B - General purpose' },
-  { name: 'qwen2:1.5b', description: 'Qwen2 1.5B - Multilingual support' },
-  { name: 'phi3:3.8b', description: 'Phi-3 3.8B - Microsoft model' },
 ];
 
 export function AIManagementPage() {
-  console.log("AIManagementPage component loading...");
-  
   const [modelName, setModelName] = useState("llama3.2:1b");
   const [selectedModel, setSelectedModel] = useState("");
   const [testPrompt, setTestPrompt] = useState('');
@@ -93,119 +84,11 @@ export function AIManagementPage() {
     refetchInterval: 10000,
   });
 
-  const { data: usageStats } = useQuery<UsageStats>({
-    queryKey: ["/api/admin/ai/usage-stats"],
-    queryFn: () => apiRequest("/admin/ai/usage-stats"),
-    refetchInterval: 30000,
-  });
-
-  const { data: currentSettings } = useQuery<AISettings>({
-    queryKey: ["/api/admin/ai/settings"],
-    queryFn: () => apiRequest("/admin/ai/settings"),
-  });
-
-  useEffect(() => {
-    if (currentSettings) {
-      setAISettings(currentSettings);
-    }
-  }, [currentSettings]);
-
-  const pullModelMutation = useMutation({
-    mutationFn: (modelName: string) => 
-      apiRequest("/api/test/model-download", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modelName })
-      }),
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Model downloaded successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
-      setModelName("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to download model",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const uninstallModelMutation = useMutation({
-    mutationFn: (modelName: string) => 
-      apiRequest("/api/test/model-uninstall", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modelName })
-      }),
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Model uninstalled successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to uninstall model",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateSettingsMutation = useMutation({
-    mutationFn: (settings: Partial<AISettings>) => 
-      apiRequest("/api/admin/ai/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings)
-      }),
-    onSuccess: () => {
-      toast({
-        title: "Settings Updated",
-        description: "AI configuration has been saved",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/ai/settings"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update settings",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handlePullModel = () => {
-    if (!modelName.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a model name",
-        variant: "destructive",
-      });
-      return;
-    }
-    pullModelMutation.mutate(modelName);
-  };
-
   const testModel = async () => {
     if (!testPrompt.trim()) {
       toast({
         title: "No Test Prompt",
-        description: "Please enter a test prompt to evaluate the model",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!selectedModel) {
-      toast({
-        title: "No Model Selected",
-        description: "Please select a trained model to test",
+        description: "Please enter a test prompt",
         variant: "destructive",
       });
       return;
@@ -219,7 +102,7 @@ export function AIManagementPage() {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          modelName: selectedModel,
+          modelName: selectedModel || 'llama3.2:1b',
           prompt: testPrompt,
           temperature: 0.7,
           maxTokens: 500
@@ -230,13 +113,13 @@ export function AIManagementPage() {
       
       toast({
         title: "Model Test Complete",
-        description: "Check the response to evaluate training success",
+        description: "Response generated successfully",
       });
 
     } catch (error: any) {
       toast({
         title: "Model Test Failed",
-        description: error.message || "Failed to test the trained model",
+        description: error.message || "Failed to test the model",
         variant: "destructive",
       });
       setTestResponse('Failed to generate response');
@@ -245,28 +128,7 @@ export function AIManagementPage() {
     }
   };
 
-  const updateSettings = (newSettings: Partial<AISettings>) => {
-    const updatedSettings = { ...aiSettings, ...newSettings };
-    setAISettings(updatedSettings);
-    updateSettingsMutation.mutate(updatedSettings);
-  };
-
-  const toggleFeature = (feature: keyof AISettings['features']) => {
-    updateSettings({
-      features: {
-        ...aiSettings.features,
-        [feature]: !aiSettings.features[feature]
-      }
-    });
-  };
-
   const availableModels = ollamaStatus?.models || [];
-  
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
-  };
 
   const StatusIndicator = ({ status }: { status: 'running' | 'offline' }) => (
     <div className="flex items-center gap-2">
@@ -315,7 +177,6 @@ export function AIManagementPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Service Status */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -341,102 +202,13 @@ export function AIManagementPage() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Usage Statistics */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Monitor className="h-5 w-5" />
-                Usage Statistics
-              </CardTitle>
-              <CardDescription>AI processing metrics and performance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Tokens Used Today</div>
-                  <div className="text-2xl font-bold">{formatNumber(usageStats?.totalTokensUsed || 0)}</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Avg Response Time</div>
-                  <div className="text-2xl font-bold">{usageStats?.averageResponseTime || 0}ms</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Requests Today</div>
-                  <div className="text-2xl font-bold">{usageStats?.requestsToday || 0}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="models" className="space-y-6">
-          {/* Model Download */}
           <Card>
             <CardHeader>
-              <CardTitle>Download Models</CardTitle>
-              <CardDescription>Download and manage AI models for local processing</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Popular Models */}
-              <div className="space-y-4">
-                <Label className="text-base">Popular Models</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {POPULAR_MODELS.map((model) => (
-                    <div
-                      key={model.name}
-                      className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-muted/50"
-                      onClick={() => setModelName(model.name)}
-                    >
-                      <div>
-                        <div className="font-medium">{model.name}</div>
-                        <div className="text-sm text-muted-foreground">{model.description}</div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          pullModelMutation.mutate(model.name);
-                        }}
-                        disabled={pullModelMutation.isPending}
-                      >
-                        <Download className="h-3 w-3 mr-1" />
-                        Download
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom Model */}
-              <div className="space-y-4">
-                <Label className="text-base">Custom Model</Label>
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <Input
-                      value={modelName}
-                      onChange={(e) => setModelName(e.target.value)}
-                      placeholder="Enter model name (e.g., llama3.2:1b)"
-                    />
-                  </div>
-                  <Button
-                    onClick={handlePullModel}
-                    disabled={pullModelMutation.isPending || !modelName.trim()}
-                  >
-                    <Download className={`h-4 w-4 mr-2 ${pullModelMutation.isPending ? 'animate-spin' : ''}`} />
-                    {pullModelMutation.isPending ? 'Downloading...' : 'Download'}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Available Models */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Installed Models</CardTitle>
-              <CardDescription>Currently available AI models</CardDescription>
+              <CardTitle>Available Models</CardTitle>
+              <CardDescription>Currently installed AI models</CardDescription>
             </CardHeader>
             <CardContent>
               {availableModels.length ? (
@@ -452,18 +224,7 @@ export function AIManagementPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => uninstallModelMutation.mutate(model)}
-                          disabled={uninstallModelMutation.isPending}
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Uninstall
-                        </Button>
-                        <Badge variant="default">Installed</Badge>
-                      </div>
+                      <Badge variant="default">Installed</Badge>
                     </div>
                   ))}
                 </div>
@@ -471,7 +232,7 @@ export function AIManagementPage() {
                 <div className="text-center py-8 text-muted-foreground">
                   <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>No models installed</p>
-                  <p className="text-sm">Download a model to enable local AI processing</p>
+                  <p className="text-sm">Install Ollama to enable local AI processing</p>
                 </div>
               )}
             </CardContent>
@@ -486,18 +247,17 @@ export function AIManagementPage() {
                 Model Testing
               </CardTitle>
               <CardDescription>
-                Test trained models instantly to verify performance and effectiveness
+                Test AI models instantly to verify performance
               </CardDescription>
             </CardHeader>
             <CardContent>
               {availableModels.length > 0 ? (
                 <>
-                  {/* Model Selection */}
                   <div className="space-y-4">
                     <Label className="text-base">Select Model to Test</Label>
                     <Select value={selectedModel} onValueChange={setSelectedModel}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose a trained model" />
+                        <SelectValue placeholder="Choose a model" />
                       </SelectTrigger>
                       <SelectContent>
                         {availableModels.map((model) => (
@@ -509,18 +269,16 @@ export function AIManagementPage() {
                     </Select>
                   </div>
 
-                  {/* Test Prompt */}
                   <div className="space-y-4">
                     <Label className="text-base">Test Prompt</Label>
                     <Textarea
                       value={testPrompt}
                       onChange={(e) => setTestPrompt(e.target.value)}
-                      placeholder="Enter a test prompt to evaluate the model's training effectiveness..."
+                      placeholder="Enter a test prompt to evaluate the model..."
                       rows={4}
                       className="min-h-[100px]"
                     />
                     
-                    {/* Quick Test Examples */}
                     <div className="space-y-2">
                       <Label className="text-sm text-muted-foreground">Quick Test Examples:</Label>
                       <div className="flex flex-wrap gap-2">
@@ -556,12 +314,11 @@ export function AIManagementPage() {
                     </div>
                   </div>
 
-                  {/* Test Controls */}
                   <div className="flex gap-4">
                     <Button 
                       className="flex-1" 
                       onClick={testModel}
-                      disabled={testingModel || !selectedModel || !testPrompt.trim()}
+                      disabled={testingModel || !testPrompt.trim()}
                     >
                       <Send className="h-4 w-4 mr-2" />
                       {testingModel ? "Testing..." : "Test Model"}
@@ -578,7 +335,6 @@ export function AIManagementPage() {
                     </Button>
                   </div>
 
-                  {/* Test Response */}
                   <div className="space-y-4">
                     <h4 className="text-sm font-medium">Model Response</h4>
                     <div className={`min-h-[150px] p-4 border rounded-lg ${
@@ -613,14 +369,13 @@ export function AIManagementPage() {
                     </div>
                   </div>
 
-                  {/* Test Evaluation Tips */}
                   <div className="bg-blue-50 rounded-lg p-4">
                     <h5 className="text-sm font-medium text-blue-800 mb-2">Testing Tips:</h5>
                     <ul className="text-xs text-blue-700 space-y-1">
-                      <li>• Test with prompts similar to your training data to verify learning</li>
-                      <li>• Try edge cases to check model robustness</li>
-                      <li>• Compare responses before and after training for improvement</li>
-                      <li>• Test different prompt styles to evaluate versatility</li>
+                      <li>• Test with different prompt styles to evaluate model capabilities</li>
+                      <li>• Try both simple and complex queries to check performance</li>
+                      <li>• Use Persian language examples for language learning tests</li>
+                      <li>• Compare responses to assess quality and accuracy</li>
                     </ul>
                   </div>
                 </>
@@ -628,7 +383,7 @@ export function AIManagementPage() {
                 <div className="text-center py-8 text-muted-foreground">
                   <TestTube className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p>No models available for testing</p>
-                  <p className="text-sm">Download and train a model first to enable testing</p>
+                  <p className="text-sm">Install Ollama and download models to enable testing</p>
                 </div>
               )}
             </CardContent>
@@ -640,7 +395,7 @@ export function AIManagementPage() {
             <CardHeader>
               <CardTitle>AI Service Configuration</CardTitle>
               <CardDescription>
-                Configure AI processing preferences and fallback options
+                Configure AI processing preferences
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -649,7 +404,7 @@ export function AIManagementPage() {
                   <Label className="text-base">Primary AI Provider</Label>
                   <Select
                     value={aiSettings.primaryProvider}
-                    onValueChange={(value) => updateSettings({ primaryProvider: value })}
+                    onValueChange={(value) => setAISettings({...aiSettings, primaryProvider: value})}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select primary provider" />
@@ -660,16 +415,13 @@ export function AIManagementPage() {
                       <SelectItem value="anthropic">Anthropic Claude</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-muted-foreground">
-                    Primary service for AI processing
-                  </p>
                 </div>
                 
                 <div className="space-y-2">
                   <Label className="text-base">Fallback Provider</Label>
                   <Select
                     value={aiSettings.fallbackProvider}
-                    onValueChange={(value) => updateSettings({ fallbackProvider: value })}
+                    onValueChange={(value) => setAISettings({...aiSettings, fallbackProvider: value})}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select fallback provider" />
@@ -680,9 +432,6 @@ export function AIManagementPage() {
                       <SelectItem value="ollama">Ollama (Local)</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-muted-foreground">
-                    Backup service when primary is unavailable
-                  </p>
                 </div>
 
                 <div className="flex items-center justify-between">
@@ -694,7 +443,7 @@ export function AIManagementPage() {
                   </div>
                   <Switch
                     checked={aiSettings.responseCaching}
-                    onCheckedChange={(checked) => updateSettings({ responseCaching: checked })}
+                    onCheckedChange={(checked) => setAISettings({...aiSettings, responseCaching: checked})}
                   />
                 </div>
               </div>
@@ -714,28 +463,40 @@ export function AIManagementPage() {
                 <span className="text-sm">Personalized Recommendations</span>
                 <Switch
                   checked={aiSettings.features.personalizedRecommendations}
-                  onCheckedChange={() => toggleFeature('personalizedRecommendations')}
+                  onCheckedChange={(checked) => setAISettings({
+                    ...aiSettings, 
+                    features: {...aiSettings.features, personalizedRecommendations: checked}
+                  })}
                 />
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Progress Analysis</span>
                 <Switch
                   checked={aiSettings.features.progressAnalysis}
-                  onCheckedChange={() => toggleFeature('progressAnalysis')}
+                  onCheckedChange={(checked) => setAISettings({
+                    ...aiSettings, 
+                    features: {...aiSettings.features, progressAnalysis: checked}
+                  })}
                 />
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Conversation Scenarios</span>
                 <Switch
                   checked={aiSettings.features.conversationScenarios}
-                  onCheckedChange={() => toggleFeature('conversationScenarios')}
+                  onCheckedChange={(checked) => setAISettings({
+                    ...aiSettings, 
+                    features: {...aiSettings.features, conversationScenarios: checked}
+                  })}
                 />
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Cultural Insights</span>
                 <Switch
                   checked={aiSettings.features.culturalInsights}
-                  onCheckedChange={() => toggleFeature('culturalInsights')}
+                  onCheckedChange={(checked) => setAISettings({
+                    ...aiSettings, 
+                    features: {...aiSettings.features, culturalInsights: checked}
+                  })}
                 />
               </div>
             </CardContent>
