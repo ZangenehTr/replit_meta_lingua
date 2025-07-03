@@ -91,7 +91,7 @@ export function AIManagementPage() {
 
   const pullModelMutation = useMutation({
     mutationFn: (modelName: string) => 
-      apiRequest("/api/admin/ollama/pull-model", {
+      apiRequest("/api/test/model-download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ modelName })
