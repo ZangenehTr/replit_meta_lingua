@@ -12,6 +12,7 @@ import { HomeworkTasks } from "@/components/dashboard/homework-tasks";
 import { PaymentCredits } from "@/components/dashboard/payment-credits";
 import { LiveClassroom } from "@/components/dashboard/live-classroom";
 import { AvailableCourses } from "@/components/dashboard/available-courses";
+import { RecommendedCourses } from "@/components/dashboard/RecommendedCourses";
 import { DailyChallenges } from "@/components/daily-challenges";
 import { Leaderboard } from "@/components/leaderboard";
 import { AchievementNotifications } from "@/components/achievement-notifications";
@@ -124,6 +125,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6 w-full">
               {/* Main Content Area */}
               <div className="lg:col-span-1 xl:col-span-2 space-y-3 sm:space-y-4 md:space-y-6">
+                <RecommendedCourses />
                 <AvailableCourses />
                 <LiveClassroom />
                 <CourseProgress />
