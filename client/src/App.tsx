@@ -29,6 +29,7 @@ import { AdminSystem } from "@/pages/admin/system-simple";
 import AdminSettings from "@/pages/admin/settings";
 import { FinancialReportsPage } from "@/pages/admin/FinancialReportsPage";
 import { AIManagementPage } from "@/pages/admin/AIManagementPage";
+import { AIManagementPageSimple } from "@/pages/admin/AIManagementPageSimple";
 import WalletPage from "@/pages/wallet";
 import ReferralsPage from "@/pages/referrals";
 import Courses from "@/pages/courses";
@@ -156,7 +157,7 @@ function Router() {
       </Route>
       <Route path="/admin/ai-management">
         <ProtectedRoute>
-          <AIManagementPage />
+          <AIManagementPageSimple />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/course-management">
