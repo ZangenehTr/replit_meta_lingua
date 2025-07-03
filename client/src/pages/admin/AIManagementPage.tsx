@@ -195,10 +195,28 @@ export function AIManagementPage() {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      setUploadedFiles(Array.from(files));
+      const fileArray = Array.from(files);
+      const maxSizeBytes = 50 * 1024 * 1024 * 1024; // 50GB in bytes
+      
+      // Check file sizes
+      const oversizedFiles = fileArray.filter(file => file.size > maxSizeBytes);
+      if (oversizedFiles.length > 0) {
+        toast({
+          title: "File Size Error",
+          description: `${oversizedFiles.length} file(s) exceed 50GB limit. Please select smaller files.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setUploadedFiles(fileArray);
+      
+      // Calculate total size
+      const totalSizeGB = fileArray.reduce((sum, file) => sum + file.size, 0) / (1024 * 1024 * 1024);
+      
       toast({
         title: "Files Selected",
-        description: `${files.length} file(s) ready for training`,
+        description: `${files.length} multimodal file(s) ready • ${totalSizeGB.toFixed(2)}GB total`,
       });
     }
   };
@@ -603,23 +621,31 @@ export function AIManagementPage() {
                           }
                         </div>
                         
-                        {/* File Format Options */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          <div className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-50">
-                            <div className="text-2xl mb-1">📄</div>
-                            <span className="text-xs">PDF</span>
+                        {/* Multimodal File Format Options */}
+                        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
+                            <div className="text-lg mb-1">📄</div>
+                            <span className="text-xs">Documents</span>
                           </div>
-                          <div className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-50">
-                            <div className="text-2xl mb-1">📹</div>
-                            <span className="text-xs">Video</span>
+                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
+                            <div className="text-lg mb-1">🎥</div>
+                            <span className="text-xs">Videos</span>
                           </div>
-                          <div className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-50">
-                            <div className="text-2xl mb-1">📊</div>
-                            <span className="text-xs">Excel</span>
+                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
+                            <div className="text-lg mb-1">🎵</div>
+                            <span className="text-xs">Audio</span>
                           </div>
-                          <div className="flex flex-col items-center p-3 border rounded-lg hover:bg-gray-50">
-                            <div className="text-2xl mb-1">📝</div>
-                            <span className="text-xs">Text</span>
+                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
+                            <div className="text-lg mb-1">🖼️</div>
+                            <span className="text-xs">Images</span>
+                          </div>
+                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
+                            <div className="text-lg mb-1">📊</div>
+                            <span className="text-xs">Spreadsheets</span>
+                          </div>
+                          <div className="flex flex-col items-center p-2 border rounded-lg hover:bg-gray-50">
+                            <div className="text-lg mb-1">📦</div>
+                            <span className="text-xs">Archives</span>
                           </div>
                         </div>
 
@@ -627,7 +653,7 @@ export function AIManagementPage() {
                           <input
                             type="file"
                             multiple
-                            accept=".pdf,.mp4,.avi,.mov,.xlsx,.xls,.txt,.json,.csv"
+                            accept=".pdf,.mp4,.avi,.mov,.mkv,.webm,.xlsx,.xls,.txt,.json,.csv,.docx,.doc,.pptx,.ppt,.jpg,.jpeg,.png,.gif,.bmp,.svg,.wav,.mp3,.m4a,.flac,.ogg,.zip,.rar,.7z"
                             onChange={handleFileUpload}
                             className="hidden"
                             id="training-file-upload"
@@ -639,8 +665,11 @@ export function AIManagementPage() {
                             <Download className="h-4 w-4 mr-2" />
                             Upload Training Files
                           </Button>
-                          <div className="text-xs text-muted-foreground">
-                            Supports: PDF, MP4/AVI, XLSX/XLS, TXT, JSON, CSV
+                          <div className="text-xs text-muted-foreground text-center">
+                            Multimodal support: Documents, Videos, Audio, Images, Spreadsheets, Archives
+                          </div>
+                          <div className="text-xs text-gray-500 text-center font-medium">
+                            Maximum file size: 50GB per file
                           </div>
                           {uploadedFiles.length > 0 && (
                             <div className="text-sm text-green-600">
