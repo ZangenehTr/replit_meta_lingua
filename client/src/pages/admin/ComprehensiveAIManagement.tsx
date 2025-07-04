@@ -136,11 +136,19 @@ export function ComprehensiveAIManagement() {
 
   const downloadModelMutation = useMutation({
     mutationFn: async (modelName: string) => {
-      return apiRequest("/api/admin/ollama/pull-model", {
-        method: 'POST',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modelName }),
-      });
+      console.log('Making download request for model:', modelName);
+      try {
+        const result = await apiRequest("/api/admin/ollama/pull-model", {
+          method: 'POST',
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ modelName }),
+        });
+        console.log('Download request successful:', result);
+        return result;
+      } catch (error) {
+        console.log('Download request failed with error:', error);
+        throw error;
+      }
     },
     onSuccess: (data, modelName) => {
       toast({
@@ -176,11 +184,19 @@ export function ComprehensiveAIManagement() {
 
   const deleteModelMutation = useMutation({
     mutationFn: async (modelName: string) => {
-      return apiRequest(`/api/admin/ollama/delete-model`, {
-        method: 'DELETE',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modelName }),
-      });
+      console.log('Making delete request for model:', modelName);
+      try {
+        const result = await apiRequest(`/api/admin/ollama/delete-model`, {
+          method: 'DELETE',
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ modelName }),
+        });
+        console.log('Delete request successful:', result);
+        return result;
+      } catch (error) {
+        console.log('Delete request failed with error:', error);
+        throw error;
+      }
     },
     onSuccess: (data, modelName) => {
       toast({
