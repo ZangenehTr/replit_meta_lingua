@@ -5187,7 +5187,7 @@ Return JSON format:
   });
 
   // Get download progress for a specific model
-  app.get("/api/admin/ollama/download-progress/:modelName", async (req: any, res) => {
+  app.get("/api/admin/ollama/download-progress/:modelName", authenticateToken, requireRole(['admin']), async (req: any, res) => {
     try {
       const { modelName } = req.params;
       const { ollamaService } = await import('./ollama-service');
@@ -5195,6 +5195,11 @@ Return JSON format:
       const progress = await ollamaService.getDownloadProgress(modelName);
       
       res.json({
+        success: true,
+        modelName,
+        progress: progress || { percent: 0, status: 'unknown' },
+        status: progress?.status || 'unknown'
+      });son({
         success: true,
         modelName,
         progress
