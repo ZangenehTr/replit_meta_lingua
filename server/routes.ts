@@ -4910,24 +4910,38 @@ Return JSON format:
       const { modelName } = req.body;
       
       if (!modelName) {
-        return res.status(400).json({ message: "Model name is required" });
+        return res.status(400).json({ 
+          success: false,
+          message: "Model name is required" 
+        });
       }
 
       const { ollamaService } = await import('./ollama-service');
+      
+      // Check if Ollama service is available first
+      const isAvailable = await ollamaService.isServiceAvailable();
+      if (!isAvailable) {
+        return res.status(503).json({
+          success: false,
+          message: `Cannot download model ${modelName}. Ollama service is not running or available.`
+        });
+      }
+
       const success = await ollamaService.pullModel(modelName);
       
       if (success) {
         res.json({
           success: true,
-          message: `Model ${modelName} downloaded successfully`
+          message: `Model ${modelName} download started successfully`
         });
       } else {
         res.status(500).json({
           success: false,
-          message: `Failed to download model ${modelName}. Make sure Ollama is running.`
+          message: `Failed to download model ${modelName}. The model may not exist or download failed.`
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Pull model error:', error);
       res.status(500).json({ 
         success: false,
         message: "Failed to pull model",
