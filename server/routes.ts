@@ -4942,10 +4942,23 @@ Return JSON format:
       const { modelName } = req.body;
       
       if (!modelName) {
-        return res.status(400).json({ message: "Model name is required" });
+        return res.status(400).json({ 
+          success: false,
+          message: "Model name is required" 
+        });
       }
 
       const { ollamaService } = await import('./ollama-service');
+      
+      // Check if Ollama service is available first
+      const isAvailable = await ollamaService.isServiceAvailable();
+      if (!isAvailable) {
+        return res.status(503).json({
+          success: false,
+          message: `Cannot delete model ${modelName}. Ollama service is not running or available.`
+        });
+      }
+
       const success = await ollamaService.deleteModel(modelName);
       
       if (success) {
@@ -4956,10 +4969,11 @@ Return JSON format:
       } else {
         res.status(500).json({
           success: false,
-          message: `Failed to delete model ${modelName}. Make sure Ollama is running.`
+          message: `Failed to delete model ${modelName}. The model may not exist or cannot be removed.`
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Delete model error:', error);
       res.status(500).json({ 
         success: false,
         message: "Failed to delete model",

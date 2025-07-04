@@ -176,9 +176,21 @@ export function ComprehensiveAIManagement() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
     },
     onError: (error: any, modelName) => {
+      let errorMessage = "Unknown error occurred";
+      
+      if (error.message.includes("503")) {
+        errorMessage = "Ollama service is not running. Please start Ollama and try again.";
+      } else if (error.message.includes("400")) {
+        errorMessage = "Invalid request. Please try again.";
+      } else if (error.message.includes("500")) {
+        errorMessage = "Server error. The model may not exist or cannot be removed.";
+      } else {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Delete Failed",
-        description: `Failed to delete ${modelName}: ${error.message}`,
+        description: `Failed to delete ${modelName}: ${errorMessage}`,
         variant: "destructive",
       });
     },
