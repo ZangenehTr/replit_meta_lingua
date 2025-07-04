@@ -735,6 +735,33 @@ export const referralCommissions = pgTable("referral_commissions", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// AI Training Data Storage
+export const aiTrainingData = pgTable("ai_training_data", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  modelName: varchar("model_name", { length: 100 }).notNull(), // Model this data is trained for
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  fileType: varchar("file_type", { length: 50 }).notNull(), // pdf, txt, docx, etc.
+  content: text("content").notNull(), // Extracted text content
+  tags: text("tags").array().default([]), // Topic tags for categorization
+  isActive: boolean("is_active").default(true),
+  trainedAt: timestamp("trained_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// AI Knowledge Base - Processed training data ready for retrieval
+export const aiKnowledgeBase = pgTable("ai_knowledge_base", {
+  id: serial("id").primaryKey(),
+  trainingDataId: integer("training_data_id").references(() => aiTrainingData.id).notNull(),
+  modelName: varchar("model_name", { length: 100 }).notNull(),
+  topic: varchar("topic", { length: 255 }).notNull(), // Main topic/subject
+  keyTerms: text("key_terms").array().default([]), // Important keywords
+  content: text("content").notNull(), // Processed content chunk
+  metadata: jsonb("metadata"), // Additional context
+  similarity_score: decimal("similarity_score", { precision: 5, scale: 3 }), // For semantic search
+  createdAt: timestamp("created_at").defaultNow()
+});
+
 // Referral system insert schemas
 export const insertReferralSettingsSchema = createInsertSchema(referralSettings).omit({
   id: true,
@@ -752,6 +779,17 @@ export const insertReferralCommissionSchema = createInsertSchema(referralCommiss
   id: true,
   createdAt: true,
   updatedAt: true
+});
+
+export const insertAiTrainingDataSchema = createInsertSchema(aiTrainingData).omit({
+  id: true,
+  trainedAt: true,
+  createdAt: true
+});
+
+export const insertAiKnowledgeBaseSchema = createInsertSchema(aiKnowledgeBase).omit({
+  id: true,
+  createdAt: true
 });
 
 // Types
@@ -898,3 +936,9 @@ export type ReferralCommission = typeof referralCommissions.$inferSelect;
 export type InsertReferralCommission = z.infer<typeof insertReferralCommissionSchema>;
 export type AdminSettings = typeof adminSettings.$inferSelect;
 export type InsertAdminSettings = z.infer<typeof insertAdminSettingsSchema>;
+
+// AI Training Data Types
+export type AiTrainingData = typeof aiTrainingData.$inferSelect;
+export type InsertAiTrainingData = z.infer<typeof insertAiTrainingDataSchema>;
+export type AiKnowledgeBase = typeof aiKnowledgeBase.$inferSelect;
+export type InsertAiKnowledgeBase = z.infer<typeof insertAiKnowledgeBaseSchema>;
