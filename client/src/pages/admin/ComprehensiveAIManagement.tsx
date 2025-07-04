@@ -834,6 +834,53 @@ export function ComprehensiveAIManagement() {
 
         {/* Model Management Tab */}
         <TabsContent value="models" className="space-y-4">
+          {/* Model Management Controls */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Server className="h-5 w-5" />
+                  AI Model Management
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
+                      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
+                      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models-enhanced"] });
+                      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/active-model"] });
+                      toast({
+                        title: "Status Refreshed",
+                        description: "Model status updated successfully",
+                      });
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Refresh Status
+                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={autoRefresh}
+                      onCheckedChange={setAutoRefresh}
+                      id="auto-refresh"
+                    />
+                    <Label htmlFor="auto-refresh" className="text-sm">Auto Refresh</Label>
+                  </div>
+                </div>
+              </CardTitle>
+              <CardDescription>
+                Manage your local AI models. Only one model can be active at a time.
+                {activeModelData?.storagePath && (
+                  <div className="mt-2 text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">
+                    📁 Storage Location: {activeModelData.storagePath}
+                  </div>
+                )}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Available Models for Download */}
             <Card>
@@ -885,59 +932,83 @@ export function ComprehensiveAIManagement() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Database className="h-5 w-5" />
-                  Installed Models
+                  Installed Models ({modelsWithActiveStatus.length})
                 </CardTitle>
-                <CardDescription>Manage your local AI models</CardDescription>
+                <CardDescription>
+                  Manage your local AI models. Click "Set Active" to make a model the default for training.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {modelsWithActiveStatus.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8">
-                    No models installed. Download models from the available list.
+                    <Database className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p className="font-medium">No models installed</p>
+                    <p className="text-sm">Download models from the available list to get started.</p>
                   </div>
                 ) : (
                   modelsWithActiveStatus.map((model) => {
                     const isActive = model.isActive;
                     return (
-                      <div key={model.name} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div key={model.name} className={`flex items-center justify-between p-4 border rounded-lg transition-all ${isActive ? 'border-green-500 bg-green-50 dark:bg-green-950 shadow-md' : 'border-gray-200 hover:border-gray-300'}`}>
                         <div className="flex-1">
                           <div className="font-medium flex items-center gap-2">
-                            {model.name}
-                            {isActive && <Badge variant="default" className="bg-green-600">Active</Badge>}
-                            {!isActive && <Badge variant="secondary">Inactive</Badge>}
+                            <div className="flex items-center gap-2">
+                              {isActive ? (
+                                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                              ) : (
+                                <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                              )}
+                              {model.name}
+                            </div>
+                            {isActive ? (
+                              <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white">
+                                <Zap className="h-3 w-3 mr-1" />
+                                Active
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-gray-600">Inactive</Badge>
+                            )}
                           </div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-sm text-muted-foreground mt-1">
                             Size: {model.size} • Modified: {new Date(model.modified).toLocaleDateString()}
                           </div>
                           {model.storagePath && (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Location: {model.storagePath}
+                            <div className="text-xs text-muted-foreground mt-2 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded inline-block">
+                              📁 {model.storagePath}
                             </div>
                           )}
                           {model.downloadProgress && (
-                            <div className="text-xs text-blue-600 mt-1">
-                              Download: {model.downloadProgress}%
+                            <div className="text-xs text-blue-600 mt-2">
+                              <div className="flex items-center gap-2">
+                                <RefreshCw className="h-3 w-3 animate-spin" />
+                                Download: {model.downloadProgress}%
+                              </div>
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant={isActive ? "secondary" : "default"}
-                            onClick={() => handleSetActiveModel(model.name)}
-                            disabled={setActiveModelMutation.isPending || isActive}
-                          >
-                            {isActive ? (
-                              <>
-                                <Zap className="h-4 w-4 mr-1" />
-                                Default
-                              </>
-                            ) : (
-                              <>
-                                <Settings className="h-4 w-4 mr-1" />
-                                Set Active
-                              </>
-                            )}
-                          </Button>
+                        <div className="flex items-center gap-2 ml-4">
+                          {isActive ? (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              disabled
+                              className="opacity-75 cursor-not-allowed"
+                            >
+                              <Zap className="h-4 w-4 mr-1" />
+                              Active
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => handleSetActiveModel(model.name)}
+                              disabled={setActiveModelMutation.isPending}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <Settings className="h-4 w-4 mr-1" />
+                              Set Active
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="destructive"
