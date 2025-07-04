@@ -5199,10 +5199,6 @@ Return JSON format:
         modelName,
         progress: progress || { percent: 0, status: 'unknown' },
         status: progress?.status || 'unknown'
-      });son({
-        success: true,
-        modelName,
-        progress
       });
     } catch (error) {
       res.status(500).json({ 
