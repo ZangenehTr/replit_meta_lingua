@@ -44,17 +44,24 @@ export default function AIConversation() {
   // Send audio message mutation
   const sendAudioMessage = useMutation({
     mutationFn: async (audioBlob: Blob) => {
-      // For now, send simple JSON with language
-      // In production, you would convert audio to base64 or use proper audio processing
-      return apiRequest({
-        url: '/api/student/ai/voice-message',
-        options: {
-          method: 'POST',
-          body: JSON.stringify({ 
-            language: selectedLanguage 
-          })
-        }
+      // Send the voice message request with language selection
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/student/ai/voice-message', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          language: selectedLanguage 
+        })
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send voice message');
+      }
+      
+      return response.json();
     },
     onSuccess: (response) => {
       // Add user message
