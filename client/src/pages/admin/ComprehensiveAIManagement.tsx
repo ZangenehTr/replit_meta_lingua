@@ -23,6 +23,8 @@ import {
   Download,
   Trash2,
   Upload,
+  Rocket,
+  AlertTriangle,
   FileText,
   Image,
   Video,
@@ -111,6 +113,7 @@ export function ComprehensiveAIManagement() {
   const [trainingProgress, setTrainingProgress] = useState(0);
   const [isTraining, setIsTraining] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [isBootstrapping, setIsBootstrapping] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -242,6 +245,60 @@ export function ComprehensiveAIManagement() {
     },
   });
 
+  // Bootstrap mutation to solve circular dependency
+  const bootstrapMutation = useMutation({
+    mutationFn: async () => {
+      console.log('Starting Ollama bootstrap process...');
+      try {
+        const result = await apiRequest("/api/admin/ollama/bootstrap", {
+          method: 'POST',
+          headers: { "Content-Type": "application/json" },
+        });
+        console.log('Bootstrap request successful:', result);
+        return result;
+      } catch (error) {
+        console.log('Bootstrap request failed with error:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Ollama Bootstrap Successful",
+        description: data.message || "Ollama has been installed and configured successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
+    },
+    onError: (error: any) => {
+      console.log("Bootstrap error details:", error);
+      
+      let errorMessage = "Bootstrap failed";
+      const errorString = error.message || error.toString() || "";
+      
+      if (errorString.includes("503") || errorString.includes("Service Unavailable")) {
+        errorMessage = "Bootstrap service is temporarily unavailable. Please try again.";
+      } else if (errorString.includes("Failed to install")) {
+        errorMessage = "Failed to install Ollama. Please check system permissions.";
+      } else if (errorString.includes("Failed to start")) {
+        errorMessage = "Failed to start Ollama service. Please check system resources.";
+      } else if (errorString.includes("Failed to download")) {
+        errorMessage = "Failed to download bootstrap model. Please check internet connection.";
+      } else if (errorString.includes("401") || errorString.includes("Unauthorized")) {
+        errorMessage = "Unauthorized. Please check your admin permissions.";
+      } else if (errorString.includes("Permission denied")) {
+        errorMessage = "Permission denied. Please run with appropriate privileges.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast({
+        title: "Bootstrap Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+
   const availableModels = ollamaStatus?.models || [];
   const systemInfo = ollamaStatus?.systemInfo;
 
@@ -269,6 +326,17 @@ export function ComprehensiveAIManagement() {
         // Error is already handled by the mutation's onError callback
         console.error('Delete model error:', error);
       }
+    }
+  };
+
+  const handleBootstrap = async () => {
+    setIsBootstrapping(true);
+    try {
+      await bootstrapMutation.mutateAsync();
+    } catch (error) {
+      console.error('Bootstrap error:', error);
+    } finally {
+      setIsBootstrapping(false);
     }
   };
 
@@ -534,6 +602,46 @@ export function ComprehensiveAIManagement() {
           </Button>
         </div>
       </div>
+
+      {/* Bootstrap Alert Card - Shows when Ollama is offline */}
+      {ollamaStatus?.status === 'offline' && (
+        <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+              <AlertTriangle className="h-5 w-5" />
+              Ollama Service Not Running - Bootstrap Required
+            </CardTitle>
+            <CardDescription className="text-yellow-700 dark:text-yellow-300">
+              Ollama AI service is not running. This prevents downloading models and using AI features. 
+              Use the bootstrap button below to automatically install, configure, and start Ollama with a minimal model.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <Button 
+                onClick={handleBootstrap}
+                disabled={isBootstrapping || bootstrapMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {isBootstrapping || bootstrapMutation.isPending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Bootstrapping Ollama...
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="h-4 w-4 mr-2" />
+                    Bootstrap Ollama
+                  </>
+                )}
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                This will install Ollama, start the service, and download a minimal AI model (~2GB)
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* System Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

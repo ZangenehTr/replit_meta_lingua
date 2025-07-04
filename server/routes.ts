@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ollamaService } from "./ollama-service";
+import { ollamaInstaller } from "./ollama-installer";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { z } from "zod";
@@ -5118,6 +5119,77 @@ Return JSON format:
       res.status(500).json({ 
         success: false,
         message: "Failed to fetch usage statistics",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Ollama Bootstrap and Installation Endpoints
+  app.get("/api/admin/ollama/installation-status", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const status = await ollamaInstaller.checkInstallationStatus();
+      res.json(status);
+    } catch (error: any) {
+      console.error('Installation status check error:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to check installation status",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  app.post("/api/admin/ollama/install", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const result = await ollamaInstaller.installOllama();
+      res.json(result);
+    } catch (error: any) {
+      console.error('Ollama installation error:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to install Ollama",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  app.post("/api/admin/ollama/start-service", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const result = await ollamaInstaller.startOllamaService();
+      res.json(result);
+    } catch (error: any) {
+      console.error('Ollama service start error:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to start Ollama service",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  app.post("/api/admin/ollama/bootstrap", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const result = await ollamaInstaller.bootstrap();
+      res.json(result);
+    } catch (error: any) {
+      console.error('Ollama bootstrap error:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to bootstrap Ollama",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  app.post("/api/admin/ollama/verify", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const result = await ollamaInstaller.verifyInstallation();
+      res.json(result);
+    } catch (error: any) {
+      console.error('Ollama verification error:', error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to verify Ollama installation",
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
