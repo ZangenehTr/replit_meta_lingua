@@ -98,14 +98,7 @@ const AVAILABLE_MODELS = [
   { name: "gemma:7b", description: "Google's performance model", size: "5.0GB" },
 ];
 
-const QUICK_TEST_PROMPTS = [
-  { name: "Translation Test", prompt: "Translate this English sentence to Persian: 'Hello, how are you today?'" },
-  { name: "Grammar Check", prompt: "Check the grammar of this Persian sentence and correct any errors: 'من امروز به مدرسه رفتم.'" },
-  { name: "Conversation", prompt: "Start a conversation in Persian about ordering food at a restaurant." },
-  { name: "Cultural Context", prompt: "Explain the cultural significance of Nowruz in Persian culture." },
-  { name: "Code Generation", prompt: "Write a Python function to calculate fibonacci numbers." },
-  { name: "Creative Writing", prompt: "Write a short story about learning a new language." }
-];
+
 
 export function ComprehensiveAIManagement() {
   const [selectedModel, setSelectedModel] = useState("");
@@ -217,7 +210,16 @@ export function ComprehensiveAIManagement() {
     if (!testPrompt.trim()) {
       toast({
         title: "No Test Prompt",
-        description: "Please enter a test prompt",
+        description: "Please enter a test prompt related to your training data",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedTrainingModel) {
+      toast({
+        title: "No Training Model Selected",
+        description: "Please select a training model to test",
         variant: "destructive",
       });
       return;
@@ -231,7 +233,7 @@ export function ComprehensiveAIManagement() {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: selectedModel || 'llama3.2:1b',
+          model: selectedTrainingModel,
           prompt: testPrompt
         }),
       });
@@ -239,14 +241,14 @@ export function ComprehensiveAIManagement() {
       setTestResponse(response.response || 'Test completed successfully');
       
       toast({
-        title: "Model Test Complete",
-        description: "Response generated successfully",
+        title: "Training Model Test Complete",
+        description: "Check if the model learned from your uploaded data",
       });
 
     } catch (error: any) {
       toast({
         title: "Model Test Failed",
-        description: error.message || "Failed to test the model",
+        description: error.message || "Failed to test the training model",
         variant: "destructive",
       });
       setTestResponse('Failed to generate response');
@@ -510,10 +512,9 @@ export function ComprehensiveAIManagement() {
       )}
 
       <Tabs defaultValue="models" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="models">Model Management</TabsTrigger>
-          <TabsTrigger value="testing">Model Testing</TabsTrigger>
-          <TabsTrigger value="training">Model Training</TabsTrigger>
+          <TabsTrigger value="training">Model Training & Testing</TabsTrigger>
           <TabsTrigger value="usage">Token Usage</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
@@ -613,103 +614,7 @@ export function ComprehensiveAIManagement() {
           </div>
         </TabsContent>
 
-        {/* Model Testing Tab */}
-        <TabsContent value="testing" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TestTube className="h-5 w-5" />
-                Model Testing Interface
-              </CardTitle>
-              <CardDescription>Test AI models with custom prompts</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="model-select">Select Model</Label>
-                    <Select value={selectedModel} onValueChange={setSelectedModel}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a model to test" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableModels.map((model) => (
-                          <SelectItem key={model} value={model}>
-                            {model}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
 
-                  <div>
-                    <Label htmlFor="test-prompt">Test Prompt</Label>
-                    <Textarea
-                      id="test-prompt"
-                      value={testPrompt}
-                      onChange={(e) => setTestPrompt(e.target.value)}
-                      placeholder="Enter your test prompt here..."
-                      className="min-h-[120px]"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Quick Test Prompts</Label>
-                    <div className="grid grid-cols-1 gap-2 mt-2">
-                      {QUICK_TEST_PROMPTS.map((example) => (
-                        <Button
-                          key={example.name}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setTestPrompt(example.prompt)}
-                          className="justify-start text-left h-auto p-2"
-                        >
-                          <div>
-                            <div className="font-medium">{example.name}</div>
-                            <div className="text-xs text-muted-foreground truncate">
-                              {example.prompt.substring(0, 60)}...
-                            </div>
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Button
-                    onClick={testModel}
-                    disabled={testingModel || !selectedModel || !testPrompt.trim()}
-                    className="w-full"
-                  >
-                    {testingModel ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Testing Model...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Test Model
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="test-response">Model Response</Label>
-                    <Textarea
-                      id="test-response"
-                      value={testResponse}
-                      readOnly
-                      placeholder="Model response will appear here..."
-                      className="min-h-[300px]"
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* Model Training Tab */}
         <TabsContent value="training" className="space-y-4">
@@ -842,6 +747,70 @@ export function ComprehensiveAIManagement() {
                   
                   <div className="text-sm text-muted-foreground">
                     Total size: {formatFileSize(trainingFiles.reduce((sum, f) => sum + f.size, 0))}
+                  </div>
+                </div>
+
+                {/* Training-specific Testing Section */}
+                <div className="space-y-4">
+                  <div className="border-t pt-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <TestTube className="h-5 w-5" />
+                      <h3 className="text-lg font-semibold">Test Model with Training Data</h3>
+                    </div>
+                    <div className="text-sm text-muted-foreground mb-4">
+                      Test your model with prompts related to the uploaded training information to verify if the new knowledge has been learned.
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="training-test-prompt">Test Prompt (related to uploaded data)</Label>
+                        <Textarea
+                          id="training-test-prompt"
+                          value={testPrompt}
+                          onChange={(e) => setTestPrompt(e.target.value)}
+                          placeholder="Ask a question about the information you uploaded to test if the model learned it..."
+                          className="min-h-[100px]"
+                        />
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Example: "What did the document say about [specific topic]?" or "Summarize the key points from the uploaded material"
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={testModel}
+                        disabled={testingModel || !selectedTrainingModel || !testPrompt.trim()}
+                        className="w-full"
+                        variant="outline"
+                      >
+                        {testingModel ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Testing Model with Training Data...
+                          </>
+                        ) : (
+                          <>
+                            <TestTube className="h-4 w-4 mr-2" />
+                            Test Model Knowledge
+                          </>
+                        )}
+                      </Button>
+
+                      {testResponse && (
+                        <div>
+                          <Label htmlFor="training-test-response">Model Response</Label>
+                          <Textarea
+                            id="training-test-response"
+                            value={testResponse}
+                            readOnly
+                            placeholder="Model response will appear here..."
+                            className="min-h-[200px] bg-muted/50"
+                          />
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Analyze the response to determine if the model has learned from your training data.
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
