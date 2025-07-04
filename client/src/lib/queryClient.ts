@@ -71,26 +71,46 @@ export const queryClient = new QueryClient({
 
 // API request function for mutations
 export const apiRequest = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('auth_token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...options.headers as Record<string, string>,
-  };
-  
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
+  try {
+    console.log('apiRequest called with:', { url, options });
+    
+    const token = localStorage.getItem('auth_token');
+    console.log('Auth token exists:', !!token);
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...options.headers as Record<string, string>,
+    };
+    
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    console.log('Making fetch request with headers:', headers);
+    
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include',
+    });
+
+    console.log('Response received:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.log('Error response text:', text);
+      throw new Error(`${response.status}: ${text}`);
+    }
+
+    const result = await response.json();
+    console.log('Successful response:', result);
+    return result;
+  } catch (error) {
+    console.error('apiRequest error:', error);
+    throw error;
   }
-
-  const response = await fetch(url, {
-    ...options,
-    headers,
-    credentials: 'include',
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`${response.status}: ${text}`);
-  }
-
-  return response.json();
 };
