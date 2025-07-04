@@ -6,6 +6,8 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { insertUserSchema, insertUserProfileSchema, insertSessionSchema, insertMessageSchema, insertPaymentSchema, insertAdminSettingsSchema } from "@shared/schema";
+import multer from "multer";
+import mammoth from "mammoth";
 
 const JWT_SECRET = process.env.JWT_SECRET || "meta-lingua-secret-key";
 
@@ -119,6 +121,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Simple training data storage (in-memory for now)
   const trainingData = new Map<string, Map<string, string[]>>(); // model -> userId -> [training content]
 
+  // Configure multer for file uploads
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 50 * 1024 * 1024, // 50MB limit
+    },
+  });
+
   // Training data upload endpoint
   app.post("/api/admin/ai/training/upload", async (req: any, res) => {
     try {
@@ -164,6 +174,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false, 
         error: "Failed to upload training data",
         details: error.message 
+      });
+    }
+  });
+
+  // File upload endpoint for .docx and .pages files  
+  app.post("/api/admin/ai/training/upload-file", upload.single('file'), async (req: any, res) => {
+    try {
+      const file = req.file;
+      const { modelName, fileName } = req.body;
+      
+      if (!file || !modelName || !fileName) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "File, model name, and file name are required" 
+        });
+      }
+
+      const userId = "33"; // Fixed user ID for testing
+      let content: string = '';
+
+      // Extract text content based on file type
+      if (fileName.toLowerCase().endsWith('.docx')) {
+        try {
+          const result = await mammoth.extractRawText({ buffer: file.buffer });
+          content = result.value;
+        } catch (error) {
+          return res.status(400).json({ 
+            success: false, 
+            error: "Failed to extract text from .docx file" 
+          });
+        }
+      } else if (fileName.toLowerCase().endsWith('.pages')) {
+        // .pages files are complex; for now, treat as text (this is a limitation)
+        try {
+          content = file.buffer.toString('utf-8');
+        } catch (error) {
+          return res.status(400).json({ 
+            success: false, 
+            error: "Failed to process .pages file. Please convert to .docx or .txt format." 
+          });
+        }
+      } else {
+        content = file.buffer.toString('utf-8');
+      }
+
+      // Store the training data
+      if (!trainingData.has(modelName)) {
+        trainingData.set(modelName, new Map());
+      }
+      
+      const modelData = trainingData.get(modelName)!;
+      if (!modelData.has(userId)) {
+        modelData.set(userId, []);
+      }
+      
+      const userTrainingContent = modelData.get(userId)!;
+      userTrainingContent.push(`File: ${fileName}\n\n${content}`);
+      
+      res.json({ 
+        success: true, 
+        message: `File ${fileName} uploaded and processed successfully`,
+        contentLength: content.length
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to upload and process file" 
       });
     }
   });
@@ -4835,14 +4913,20 @@ Return JSON format:
         return res.status(400).json({ message: "Model name is required" });
       }
 
-      // For now, simulate a successful download since Ollama might not be installed
-      // In production, this would use the actual Ollama service
-      console.log(`Simulating download of model: ${modelName}`);
+      const { ollamaService } = await import('./ollama-service');
+      const success = await ollamaService.pullModel(modelName);
       
-      res.json({
-        success: true,
-        message: `Model ${modelName} downloaded successfully (simulated)`
-      });
+      if (success) {
+        res.json({
+          success: true,
+          message: `Model ${modelName} downloaded successfully`
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: `Failed to download model ${modelName}. Make sure Ollama is running.`
+        });
+      }
     } catch (error) {
       res.status(500).json({ 
         success: false,
@@ -4861,16 +4945,51 @@ Return JSON format:
         return res.status(400).json({ message: "Model name is required" });
       }
 
-      console.log(`Simulating deletion of model: ${modelName}`);
+      const { ollamaService } = await import('./ollama-service');
+      const success = await ollamaService.deleteModel(modelName);
       
-      res.json({
-        success: true,
-        message: `Model ${modelName} deleted successfully (simulated)`
-      });
+      if (success) {
+        res.json({
+          success: true,
+          message: `Model ${modelName} deleted successfully`
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: `Failed to delete model ${modelName}. Make sure Ollama is running.`
+        });
+      }
     } catch (error) {
       res.status(500).json({ 
         success: false,
         message: "Failed to delete model",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Get model information by name
+  app.get("/api/admin/ollama/model/:modelName", async (req: any, res) => {
+    try {
+      const { modelName } = req.params;
+      const { ollamaService } = await import('./ollama-service');
+      const modelInfo = await ollamaService.getModelInfo(modelName);
+      
+      if (modelInfo) {
+        res.json({
+          success: true,
+          model: modelInfo
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          message: `Model ${modelName} not found`
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to get model information",
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
@@ -4882,17 +5001,22 @@ Return JSON format:
       const { ollamaService } = await import('./ollama-service');
       const models = await ollamaService.listModels();
       
-      // Simulate detailed model information
-      const modelDetails = models.map(model => ({
-        name: model,
-        size: Math.random() > 0.5 ? "4.7GB" : "2.1GB",
-        modified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        digest: `sha256:${Math.random().toString(36).substring(2, 15)}`,
-        family: model.includes('llama') ? 'llama' : model.includes('mistral') ? 'mistral' : 'other',
-        format: "gguf",
-        parameterSize: model.includes('1b') ? '1B' : model.includes('3b') ? '3B' : '7B',
-        quantizationLevel: "Q4_0"
-      }));
+      // Get detailed model information
+      const modelDetails = await Promise.all(
+        models.map(async (model) => {
+          const info = await ollamaService.getModelInfo(model);
+          return {
+            name: model,
+            size: info?.details?.parameter_size || "Unknown",
+            modified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+            digest: `sha256:${Math.random().toString(36).substring(2, 15)}`,
+            family: model.includes('llama') ? 'llama' : model.includes('mistral') ? 'mistral' : 'other',
+            format: "gguf",
+            parameterSize: model.includes('1b') ? '1B' : model.includes('3b') ? '3B' : '7B',
+            quantizationLevel: "Q4_0"
+          };
+        })
+      );
       
       res.json(modelDetails);
     } catch (error) {

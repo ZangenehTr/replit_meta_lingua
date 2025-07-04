@@ -276,29 +276,50 @@ export function ComprehensiveAIManagement() {
         continue;
       }
 
-      // Only process text files
-      if (!file.type.startsWith('text/') && !file.name.endsWith('.txt') && !file.name.endsWith('.md')) {
+      // Support text files, .docx, and .pages
+      const supportedTypes = ['text/', '.txt', '.md', '.docx', '.pages'];
+      const isSupported = supportedTypes.some(type => 
+        file.type.startsWith(type) || file.name.toLowerCase().endsWith(type)
+      );
+      
+      if (!isSupported) {
         toast({
           title: "Unsupported File Type",
-          description: `${file.name} must be a text file (.txt, .md)`,
+          description: `${file.name} must be a text file (.txt, .md, .docx, .pages)`,
           variant: "destructive",
         });
         continue;
       }
 
       try {
-        const content = await file.text();
+        let content: string;
         
-        // Upload to server
-        await apiRequest("/api/admin/ai/training/upload", {
-          method: 'POST',
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            modelName: selectedTrainingModel,
-            fileName: file.name,
-            content: content
-          }),
-        });
+        // Handle different file types
+        if (file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.pages')) {
+          // For .docx and .pages files, send as FormData to server for processing
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('modelName', selectedTrainingModel);
+          formData.append('fileName', file.name);
+          
+          await apiRequest("/api/admin/ai/training/upload-file", {
+            method: 'POST',
+            body: formData, // Don't set Content-Type for FormData
+          });
+        } else {
+          // Handle text files as before
+          content = await file.text();
+          
+          await apiRequest("/api/admin/ai/training/upload", {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              modelName: selectedTrainingModel,
+              fileName: file.name,
+              content: content
+            }),
+          });
+        }
 
         const newFile: TrainingFile = {
           id: Math.random().toString(36).substr(2, 9),
@@ -390,8 +411,10 @@ export function ComprehensiveAIManagement() {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const getFileIcon = (type: string) => {
-    if (type.startsWith('text/')) return <FileText className="h-4 w-4" />;
+  const getFileIcon = (type: string, filename?: string) => {
+    if (filename?.toLowerCase().endsWith('.docx')) return <FileText className="h-4 w-4 text-blue-600" />;
+    if (filename?.toLowerCase().endsWith('.pages')) return <FileText className="h-4 w-4 text-orange-600" />;
+    if (type.startsWith('text/') || filename?.toLowerCase().endsWith('.txt') || filename?.toLowerCase().endsWith('.md')) return <FileText className="h-4 w-4" />;
     if (type.startsWith('image/')) return <Image className="h-4 w-4" />;
     if (type.startsWith('video/')) return <Video className="h-4 w-4" />;
     if (type.startsWith('audio/')) return <Music className="h-4 w-4" />;
@@ -690,7 +713,7 @@ export function ComprehensiveAIManagement() {
                         Upload training files (max 50GB per file)
                       </div>
                       <div className="text-xs text-muted-foreground mb-4">
-                        Supports: Text, Images, Audio, Video, JSON, CSV, and more
+                        Supports: Text (.txt), Word Documents (.docx), Pages (.pages), JSON, CSV, and more
                       </div>
                       <input
                         ref={fileInputRef}
@@ -698,7 +721,7 @@ export function ComprehensiveAIManagement() {
                         multiple
                         onChange={handleFileUpload}
                         className="hidden"
-                        accept="*/*"
+                        accept=".txt,.md,.docx,.pages,.json,.csv,text/*"
                       />
                       <Button
                         variant="outline"
@@ -751,7 +774,7 @@ export function ComprehensiveAIManagement() {
                         {trainingFiles.map((file) => (
                           <div key={file.id} className="p-3 flex items-center justify-between">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                              {getFileIcon(file.type)}
+                              {getFileIcon(file.type, file.name)}
                               <div className="min-w-0 flex-1">
                                 <div className="font-medium truncate">{file.name}</div>
                                 <div className="text-sm text-muted-foreground">
