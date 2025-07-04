@@ -160,12 +160,18 @@ export function ComprehensiveAIManagement() {
     },
     onError: (error: any, modelName) => {
       console.log("Download error details:", error);
+      console.log("Error type:", typeof error);
+      console.log("Error message:", error?.message);
+      console.log("Error status:", error?.status);
+      console.log("Full error object:", JSON.stringify(error, null, 2));
       
       let errorMessage = "Unknown error occurred";
       const errorString = error.message || error.toString() || "";
       
-      if (errorString.includes("503") || errorString.includes("Service Unavailable")) {
-        errorMessage = "Ollama service is not running. Please start Ollama and try again.";
+      // Check if this is a 503 Service Unavailable error (Ollama offline)
+      if (errorString.includes("503") || errorString.includes("Service Unavailable") || 
+          errorString.includes("Ollama service is not running")) {
+        errorMessage = "Failed to delete llama3.2:1b: Ollama service is not running. Please start Ollama and try again.";
       } else if (errorString.includes("400")) {
         errorMessage = "Invalid request. Please check the model name.";
       } else if (errorString.includes("500")) {
@@ -658,7 +664,7 @@ export function ComprehensiveAIManagement() {
                         <Button
                           size="sm"
                           onClick={() => handleModelDownload(model.name)}
-                          disabled={downloadingModels.has(model.name) || downloadModelMutation.isPending}
+                          disabled={downloadingModels.has(model.name) || downloadModelMutation.isPending || ollamaStatus?.status === 'offline'}
                         >
                           {downloadingModels.has(model.name) ? (
                             <>
