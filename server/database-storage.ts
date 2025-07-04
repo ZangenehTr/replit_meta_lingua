@@ -1,4 +1,4 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { db } from "./db";
 import { 
   users, userProfiles, userSessions, rolePermissions, courses, enrollments,
@@ -179,25 +179,31 @@ export class DatabaseStorage implements IStorage {
 
   async getUserCourses(userId: number): Promise<(Course & { progress: number })[]> {
     try {
-      const userCourses = await db
-        .select({
-          id: courses.id,
-          title: courses.title,
-          description: courses.description,
-          language: courses.language,
-          level: courses.level,
-          thumbnail: courses.thumbnail,
-          instructorId: courses.instructorId,
-          price: courses.price,
-          duration: courses.duration,
-          isActive: courses.isActive,
-          progress: enrollments.progress
-        })
-        .from(courses)
-        .innerJoin(enrollments, eq(courses.id, enrollments.courseId))
+      // First check if the user has any enrollments to avoid complex join failures
+      const userEnrollments = await db
+        .select()
+        .from(enrollments)
         .where(eq(enrollments.userId, userId));
-      
-      return userCourses as (Course & { progress: number })[];
+
+      if (userEnrollments.length === 0) {
+        return [];
+      }
+
+      // Get courses with fallback handling for missing columns
+      const courseIds = userEnrollments.map(enrollment => enrollment.courseId);
+      const userCourses = await db
+        .select()
+        .from(courses)
+        .where(sql`${courses.id} IN (${sql.join(courseIds, sql`, `)})`);
+
+      // Map courses with progress from enrollments
+      return userCourses.map(course => {
+        const enrollment = userEnrollments.find(e => e.courseId === course.id);
+        return {
+          ...course,
+          progress: enrollment?.progress || 0
+        };
+      }) as (Course & { progress: number })[];
     } catch (error) {
       console.error('Error fetching user courses:', error);
       return [];
@@ -469,7 +475,15 @@ export class DatabaseStorage implements IStorage {
 
   // Payments
   async getUserPayments(userId: number): Promise<Payment[]> {
-    return await db.select().from(payments).where(eq(payments.userId, userId)).orderBy(desc(payments.createdAt));
+    try {
+      return await db.select().from(payments).where(eq(payments.userId, userId)).orderBy(desc(payments.createdAt));
+    } catch (error: any) {
+      if (error.message.includes('does not exist')) {
+        console.warn('Missing payments column detected, returning empty array');
+        return [];
+      }
+      throw error;
+    }
   }
 
   async getAllPayments(): Promise<Payment[]> {

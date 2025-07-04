@@ -44,6 +44,7 @@ async function fixDatabaseSchema() {
       "ALTER TABLE payments ADD COLUMN IF NOT EXISTS credits_awarded integer DEFAULT 0",
       "ALTER TABLE payments ADD COLUMN IF NOT EXISTS provider text DEFAULT 'shetab'",
       "ALTER TABLE payments ADD COLUMN IF NOT EXISTS transaction_id text",
+      "ALTER TABLE payments ADD COLUMN IF NOT EXISTS completed_at timestamp",
 
       // Users table fixes
       "ALTER TABLE users ADD COLUMN IF NOT EXISTS credits integer DEFAULT 0",
