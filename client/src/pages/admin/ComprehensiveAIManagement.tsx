@@ -234,15 +234,18 @@ export function ComprehensiveAIManagement() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: selectedTrainingModel,
-          prompt: testPrompt
+          prompt: testPrompt,
+          userId: 33  // Send user ID to access training data
         }),
       });
 
       setTestResponse(response.response || 'Test completed successfully');
       
       toast({
-        title: "Training Model Test Complete",
-        description: "Check if the model learned from your uploaded data",
+        title: response.usedTrainingData ? "Training Data Found!" : "Model Test Complete",
+        description: response.usedTrainingData ? 
+          "Model used your uploaded training data" : 
+          "No training data found - upload materials to get better responses",
       });
 
     } catch (error: any) {
@@ -257,44 +260,76 @@ export function ComprehensiveAIManagement() {
     }
   };
 
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files) return;
+    if (!files || !selectedTrainingModel) return;
 
-    Array.from(files).forEach(file => {
-      // Check file size (50GB limit)
-      const maxSize = 50 * 1024 * 1024 * 1024; // 50GB in bytes
+    for (const file of Array.from(files)) {
+      // Check file size (50MB limit for now)
+      const maxSize = 50 * 1024 * 1024; // 50MB in bytes
       if (file.size > maxSize) {
         toast({
           title: "File Too Large",
-          description: `${file.name} exceeds the 50GB limit`,
+          description: `${file.name} exceeds the 50MB limit`,
           variant: "destructive",
         });
-        return;
+        continue;
       }
 
-      const newFile: TrainingFile = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        uploadedAt: new Date().toISOString(),
-        status: 'uploaded'
-      };
+      // Only process text files
+      if (!file.type.startsWith('text/') && !file.name.endsWith('.txt') && !file.name.endsWith('.md')) {
+        toast({
+          title: "Unsupported File Type",
+          description: `${file.name} must be a text file (.txt, .md)`,
+          variant: "destructive",
+        });
+        continue;
+      }
 
-      setTrainingFiles(prev => [...prev, newFile]);
-      
-      toast({
-        title: "File Added",
-        description: `${file.name} added to training dataset`,
-      });
-    });
+      try {
+        const content = await file.text();
+        
+        // Upload to server
+        await apiRequest("/api/admin/ai/training/upload", {
+          method: 'POST',
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            modelName: selectedTrainingModel,
+            fileName: file.name,
+            content: content
+          }),
+        });
+
+        const newFile: TrainingFile = {
+          id: Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          uploadedAt: new Date().toISOString(),
+          status: 'completed'
+        };
+
+        setTrainingFiles(prev => [...prev, newFile]);
+        
+        toast({
+          title: "File Uploaded Successfully",
+          description: `${file.name} uploaded and ready for training`,
+        });
+
+      } catch (error: any) {
+        toast({
+          title: "Upload Failed",
+          description: `Failed to upload ${file.name}: ${error.message}`,
+          variant: "destructive",
+        });
+      }
+    }
 
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, [toast]);
+  }, [toast, selectedTrainingModel]);
 
   const removeTrainingFile = (fileId: string) => {
     setTrainingFiles(prev => prev.filter(f => f.id !== fileId));

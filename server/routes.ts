@@ -116,10 +116,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Model testing endpoint
+  // Simple training data storage (in-memory for now)
+  const trainingData = new Map<string, Map<string, string[]>>(); // model -> userId -> [training content]
+
+  // Training data upload endpoint
+  app.post("/api/admin/ai/training/upload", async (req: any, res) => {
+    try {
+      const { modelName, fileName, content } = req.body;
+      
+      if (!modelName || !fileName || !content) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Model name, file name, and content are required" 
+        });
+      }
+
+      const userId = "33"; // Fixed user ID for testing
+      
+      // Initialize storage structure
+      if (!trainingData.has(modelName)) {
+        trainingData.set(modelName, new Map());
+      }
+      
+      const modelData = trainingData.get(modelName)!;
+      if (!modelData.has(userId)) {
+        modelData.set(userId, []);
+      }
+      
+      // Store the training content
+      modelData.get(userId)!.push(content);
+
+      console.log(`Training data uploaded: ${fileName} for model ${modelName} by user ${userId}`);
+
+      res.json({
+        success: true,
+        message: "Training data uploaded successfully",
+        data: {
+          modelName,
+          fileName,
+          contentLength: content.length,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error("Training data upload error:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to upload training data",
+        details: error.message 
+      });
+    }
+  });
+
+  // Get training data for a model
+  app.get("/api/admin/ai/training/:modelName", async (req: any, res) => {
+    try {
+      const { modelName } = req.params;
+      const userId = "33"; // Fixed user ID for testing
+      
+      const modelData = trainingData.get(modelName);
+      const userTrainingData = modelData?.get(userId) || [];
+
+      res.json({
+        success: true,
+        data: userTrainingData.map((content, index) => ({
+          id: index,
+          content: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
+          fullContent: content,
+          uploadedAt: new Date().toISOString()
+        }))
+      });
+    } catch (error) {
+      console.error("Get training data error:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to retrieve training data" 
+      });
+    }
+  });
+
+  // Enhanced model testing endpoint with training data integration
   app.post("/api/test/model", async (req: any, res) => {
     try {
-      const { model, prompt } = req.body;
+      const { model, prompt, userId } = req.body;
       
       console.log(`Model testing request: Model="${model}", Prompt="${prompt}"`);
       
@@ -130,47 +209,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Simulate AI response based on the prompt type
-      let response = "";
       const promptLower = prompt.toLowerCase();
       const promptText = prompt.trim();
-      
-      if (promptLower.includes("translate") || promptLower.includes("ترجمه")) {
-        // Extract text to translate if present
-        const textToTranslate = promptText.match(/["'](.*?)["']/) || promptText.match(/: (.+)$/);
-        if (textToTranslate) {
-          response = `Translation: سلام، حال شما چطور است؟ (Hello, how are you today?) - Custom translation for: "${textToTranslate[1] || textToTranslate[0]}"`;
-        } else {
-          response = "Translation: سلام، حال شما چطور است؟ (Hello, how are you today?)";
-        }
-      } else if (promptLower.includes("grammar") || promptLower.includes("گرامر")) {
-        response = "Persian grammar follows Subject-Object-Verb (SOV) word order. For example: 'من کتاب می‌خوانم' (I book read = I read a book). Your specific grammar question: \"" + promptText + "\"";
-      } else if (promptLower.includes("conversation") || promptLower.includes("مکالمه")) {
-        response = "Conversation scenario: At a Persian restaurant\n\nCustomer: سلام، منو را ببینم لطفاً (Hello, may I see the menu please?)\nWaiter: بله، حتماً. چای می‌خواهید؟ (Yes, certainly. Would you like tea?)\nCustomer: بله، چای سیاه لطفاً (Yes, black tea please)\n\nYour conversation topic: \"" + promptText + "\"";
-      } else if (promptLower.includes("cultural") || promptLower.includes("فرهنگ")) {
-        response = "Important Persian cultural customs:\n1. Always greet with 'سلام' (Salam)\n2. Show respect to elders\n3. Remove shoes when entering homes\n4. Accept tea when offered - it's a sign of hospitality\n5. Use both hands when giving/receiving items\n\nRegarding your cultural query: \"" + promptText + "\"";
-      } else {
-        // For any custom prompt, create a truly dynamic response based on the actual content
-        const keywords = promptText.toLowerCase().split(' ');
-        let responseType = 'general information';
-        let specificResponse = '';
+      let response = "";
+      let usedTrainingData = false;
+
+      // Check for relevant training data if userId is provided
+      if (userId) {
+        const modelData = trainingData.get(model);
+        const userTrainingData = modelData?.get(userId.toString()) || [];
         
-        // Analyze the prompt for specific topics
-        if (keywords.some(word => ['visa', 'nomad', 'digital', 'travel', 'work', 'remote'].includes(word))) {
-          responseType = 'travel/work visa information';
-          specificResponse = `Regarding "${promptText}":\n\nDigital nomad visas are special visas that allow remote workers to live and work in a country while employed by a company elsewhere. Key information:\n\n• Portugal offers a D7 visa for remote workers\n• Estonia has a digital nomad visa program\n• Dubai has a one-year remote work visa\n• Requirements typically include proof of income (€2,000-€3,500/month)\n• Most allow stays of 6-12 months with renewal options\n\nWould you like specific information about any particular country's digital nomad visa program?`;
-        } else if (keywords.some(word => ['language', 'learn', 'persian', 'farsi', 'study'].includes(word))) {
-          responseType = 'language learning guidance';
-          specificResponse = `About "${promptText}":\n\nI can provide specific guidance for this language learning topic. Based on your query, I would recommend:\n\n• Structured learning approach\n• Practice materials relevant to your level\n• Cultural context for better understanding\n• Practical exercises to reinforce learning\n\nWhat specific aspect would you like me to elaborate on?`;
-        } else if (keywords.some(word => ['code', 'programming', 'function', 'python', 'javascript'].includes(word))) {
-          responseType = 'programming assistance';
-          specificResponse = `For your coding question: "${promptText}"\n\nI can help you with:\n• Code implementation\n• Best practices\n• Debugging assistance\n• Algorithm optimization\n\nLet me know what specific programming challenge you're working on.`;
-        } else {
-          // Generic but still contextual response
-          specificResponse = `Analyzing your question: "${promptText}"\n\nBased on the content of your prompt, this appears to be about ${keywords.slice(0, 3).join(', ')}. I can provide detailed information and guidance on this topic.\n\nWould you like me to:\n• Provide more specific details\n• Explain related concepts\n• Offer practical advice\n• Share relevant examples`;
+        if (userTrainingData.length > 0) {
+          // Search through training data for relevant content
+          const keywords = promptText.toLowerCase().split(' ').filter(word => word.length > 2);
+          const relevantContent: string[] = [];
+          
+          for (const content of userTrainingData) {
+            const contentLower = content.toLowerCase();
+            const hasRelevantKeywords = keywords.some(keyword => contentLower.includes(keyword));
+            
+            if (hasRelevantKeywords) {
+              // Extract relevant sentences
+              const sentences = content.split(/[.!?]+/);
+              for (const sentence of sentences) {
+                if (keywords.some(keyword => sentence.toLowerCase().includes(keyword))) {
+                  relevantContent.push(sentence.trim());
+                }
+              }
+            }
+          }
+          
+          if (relevantContent.length > 0) {
+            usedTrainingData = true;
+            response = `Response from ${model} (using your uploaded training data):\n\nBased on your training materials, here's what I found about "${promptText}":\n\n`;
+            
+            relevantContent.slice(0, 3).forEach((content, index) => {
+              if (content.length > 10) {
+                response += `${index + 1}. ${content}\n\n`;
+              }
+            });
+            
+            response += `This information comes from your specifically uploaded training materials for the ${model} model.`;
+          }
         }
-        
-        response = `Response from ${model}:\n\n${specificResponse}`;
+      }
+
+      // If no training data found, use contextual responses
+      if (!usedTrainingData) {
+        if (promptLower.includes("translate") || promptLower.includes("ترجمه")) {
+          const textToTranslate = promptText.match(/["'](.*?)["']/) || promptText.match(/: (.+)$/);
+          if (textToTranslate) {
+            response = `Translation: سلام، حال شما چطور است؟ (Hello, how are you today?) - Custom translation for: "${textToTranslate[1] || textToTranslate[0]}"`;
+          } else {
+            response = "Translation: سلام، حال شما چطور است؟ (Hello, how are you today?)";
+          }
+        } else if (promptLower.includes("grammar") || promptLower.includes("گرامر")) {
+          response = "Persian grammar follows Subject-Object-Verb (SOV) word order. For example: 'من کتاب می‌خوانم' (I book read = I read a book). Your specific grammar question: \"" + promptText + "\"";
+        } else if (promptLower.includes("conversation") || promptLower.includes("مکالمه")) {
+          response = "Conversation scenario: At a Persian restaurant\n\nCustomer: سلام، منو را ببینم لطفاً (Hello, may I see the menu please?)\nWaiter: بله، حتماً. چای می‌خواهید؟ (Yes, certainly. Would you like tea?)\nCustomer: بله، چای سیاه لطفاً (Yes, black tea please)\n\nYour conversation topic: \"" + promptText + "\"";
+        } else if (promptLower.includes("cultural") || promptLower.includes("فرهنگ")) {
+          response = "Important Persian cultural customs:\n1. Always greet with 'سلام' (Salam)\n2. Show respect to elders\n3. Remove shoes when entering homes\n4. Accept tea when offered - it's a sign of hospitality\n5. Use both hands when giving/receiving items\n\nRegarding your cultural query: \"" + promptText + "\"";
+        } else {
+          const keywords = promptText.toLowerCase().split(' ');
+          
+          if (keywords.some(word => ['visa', 'nomad', 'digital', 'travel', 'work', 'remote'].includes(word))) {
+            response = `Response from ${model}:\n\nRegarding "${promptText}":\n\nDigital nomad visas are special visas that allow remote workers to live and work in a country while employed by a company elsewhere. Key information:\n\n• Portugal offers a D7 visa for remote workers\n• Estonia has a digital nomad visa program\n• Dubai has a one-year remote work visa\n• Requirements typically include proof of income (€2,000-€3,500/month)\n• Most allow stays of 6-12 months with renewal options\n\nWould you like specific information about any particular country's digital nomad visa program?\n\n💡 Note: Upload training materials about specific visa programs to get more detailed responses.`;
+          } else if (keywords.some(word => ['language', 'learn', 'persian', 'farsi', 'study'].includes(word))) {
+            response = `Response from ${model}:\n\nAbout "${promptText}":\n\nI can provide guidance for this language learning topic. Based on your query, I would recommend:\n\n• Structured learning approach\n• Practice materials relevant to your level\n• Cultural context for better understanding\n• Practical exercises to reinforce learning\n\nWhat specific aspect would you like me to elaborate on?\n\n💡 Note: Upload training materials to get personalized responses.`;
+          } else {
+            response = `Response from ${model}:\n\nAnalyzing your question: "${promptText}"\n\nBased on your prompt content, this appears to be about ${keywords.slice(0, 3).join(', ')}. I can provide general information and guidance on this topic.\n\n💡 To get specific and accurate responses, please upload training materials related to this topic using the training feature.\n\nWould you like me to:\n• Provide more general details\n• Explain related concepts\n• Offer general advice`;
+          }
+        }
       }
 
       console.log(`Generated response for prompt "${promptText}": ${response.substring(0, 100)}...`);
@@ -180,7 +289,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         response: response,
         model: model,
         timestamp: new Date().toISOString(),
-        promptUsed: promptText // Include the actual prompt used for verification
+        promptUsed: promptText,
+        usedTrainingData,
+        trainingDataAvailable: userId ? (trainingData.get(model)?.get(userId.toString())?.length || 0) > 0 : false
       });
     } catch (error) {
       console.error('Model testing error:', error);

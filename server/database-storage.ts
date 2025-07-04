@@ -4,7 +4,7 @@ import {
   users, userProfiles, userSessions, rolePermissions, courses, enrollments,
   sessions, messages, homework, payments, notifications, instituteBranding,
   achievements, userAchievements, userStats, dailyGoals, adminSettings,
-  walletTransactions, coursePayments,
+  walletTransactions, coursePayments, aiTrainingData, aiKnowledgeBase,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
@@ -14,7 +14,8 @@ import {
   type Achievement, type InsertAchievement, type UserAchievement, type InsertUserAchievement,
   type UserStats, type InsertUserStats, type DailyGoal, type InsertDailyGoal,
   type AdminSettings, type InsertAdminSettings, type WalletTransaction, type InsertWalletTransaction,
-  type CoursePayment, type InsertCoursePayment
+  type CoursePayment, type InsertCoursePayment, type AiTrainingData, type InsertAiTrainingData,
+  type AiKnowledgeBase, type InsertAiKnowledgeBase
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -1118,5 +1119,73 @@ export class DatabaseStorage implements IStorage {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
+  }
+
+  // AI Training Data Methods
+  async saveTrainingData(trainingData: InsertAiTrainingData): Promise<AiTrainingData> {
+    const [saved] = await db.insert(aiTrainingData).values(trainingData).returning();
+    return saved;
+  }
+
+  async getTrainingDataByModel(modelName: string, userId: number): Promise<AiTrainingData[]> {
+    return await db
+      .select()
+      .from(aiTrainingData)
+      .where(
+        and(
+          eq(aiTrainingData.modelName, modelName),
+          eq(aiTrainingData.userId, userId),
+          eq(aiTrainingData.isActive, true)
+        )
+      )
+      .orderBy(desc(aiTrainingData.createdAt));
+  }
+
+  async searchTrainingContent(query: string, modelName: string, userId: number): Promise<string[]> {
+    const trainingData = await db
+      .select({ content: aiTrainingData.content })
+      .from(aiTrainingData)
+      .where(
+        and(
+          eq(aiTrainingData.modelName, modelName),
+          eq(aiTrainingData.userId, userId),
+          eq(aiTrainingData.isActive, true)
+        )
+      );
+
+    // Simple keyword search through training content
+    const keywords = query.toLowerCase().split(' ').filter(word => word.length > 2);
+    const relevantContent: string[] = [];
+
+    for (const data of trainingData) {
+      const content = data.content.toLowerCase();
+      const hasRelevantKeywords = keywords.some(keyword => content.includes(keyword));
+      
+      if (hasRelevantKeywords) {
+        // Extract relevant paragraphs
+        const sentences = data.content.split(/[.!?]+/);
+        for (const sentence of sentences) {
+          if (keywords.some(keyword => sentence.toLowerCase().includes(keyword))) {
+            relevantContent.push(sentence.trim());
+          }
+        }
+      }
+    }
+
+    return relevantContent.slice(0, 3); // Return top 3 relevant pieces
+  }
+
+  async deleteTrainingData(id: number, userId: number): Promise<boolean> {
+    const result = await db
+      .update(aiTrainingData)
+      .set({ isActive: false })
+      .where(
+        and(
+          eq(aiTrainingData.id, id),
+          eq(aiTrainingData.userId, userId)
+        )
+      );
+
+    return result.rowCount > 0;
   }
 }
