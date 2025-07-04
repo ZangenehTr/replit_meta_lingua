@@ -64,9 +64,6 @@ function Router() {
     <Switch>
       <Route path="/auth" component={Auth} />
       <Route path="/demo" component={DemoDashboard} />
-      <Route path="/">
-        <Redirect to="/auth" />
-      </Route>
       <Route path="/admin">
         <ProtectedRoute>
           <EnhancedAdminDashboard />
