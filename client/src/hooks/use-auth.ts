@@ -115,7 +115,8 @@ export function useAuth() {
     localStorage.removeItem("refresh_token");
     queryClient.setQueryData(["/api/users/me"], null);
     queryClient.clear();
-    window.location.href = "/auth";
+    // Use location.reload() instead of window.location.href to avoid connection reset
+    window.location.reload();
   };
 
   return {
