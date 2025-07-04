@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
+import { AppLayout } from "@/components/layout/app-layout";
 
 import NotFound from "@/pages/not-found";
 import Auth from "@/pages/auth";
@@ -56,7 +57,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Redirect to="/auth" />;
   }
 
-  return <>{children}</>;
+  return <AppLayout>{children}</AppLayout>;
 }
 
 function Router() {

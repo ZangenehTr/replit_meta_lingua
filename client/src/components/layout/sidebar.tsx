@@ -99,31 +99,17 @@ export function Sidebar() {
         
         <Separator className="my-6" />
         
+        {/* Profile and Settings moved to global header */}
         <div className="space-y-2">
+          <div className="text-xs text-muted-foreground px-3 py-2">
+            {t('userArea')}
+          </div>
           <Link href="/profile">
-            <Button variant="ghost" className="w-full justify-start">
+            <Button variant="ghost" className="w-full justify-start text-sm">
               <User className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
               <span>{t('profile')}</span>
             </Button>
           </Link>
-          <Link href="/settings">
-            <Button variant="ghost" className="w-full justify-start">
-              <Settings className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-              <span>{t('settings')}</span>
-            </Button>
-          </Link>
-          
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start"
-            onClick={() => {
-              localStorage.removeItem("auth_token");
-              window.location.href = "/auth";
-            }}
-          >
-            <LogOut className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-            <span>{t('signOut')}</span>
-          </Button>
         </div>
       </div>
     </aside>
