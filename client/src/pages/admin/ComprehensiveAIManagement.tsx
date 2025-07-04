@@ -151,16 +151,19 @@ export function ComprehensiveAIManagement() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
     },
     onError: (error: any, modelName) => {
-      let errorMessage = "Unknown error occurred";
+      console.log("Download error details:", error);
       
-      if (error.message.includes("503")) {
+      let errorMessage = "Unknown error occurred";
+      const errorString = error.message || error.toString() || "";
+      
+      if (errorString.includes("503") || errorString.includes("Service Unavailable")) {
         errorMessage = "Ollama service is not running. Please start Ollama and try again.";
-      } else if (error.message.includes("400")) {
+      } else if (errorString.includes("400")) {
         errorMessage = "Invalid request. Please check the model name.";
-      } else if (error.message.includes("500")) {
+      } else if (errorString.includes("500")) {
         errorMessage = "Server error. The model may not exist or download failed.";
-      } else {
-        errorMessage = error.message;
+      } else if (errorString) {
+        errorMessage = errorString;
       }
       
       toast({
@@ -188,16 +191,19 @@ export function ComprehensiveAIManagement() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
     },
     onError: (error: any, modelName) => {
-      let errorMessage = "Unknown error occurred";
+      console.log("Delete error details:", error);
       
-      if (error.message.includes("503")) {
+      let errorMessage = "Unknown error occurred";
+      const errorString = error.message || error.toString() || "";
+      
+      if (errorString.includes("503") || errorString.includes("Service Unavailable")) {
         errorMessage = "Ollama service is not running. Please start Ollama and try again.";
-      } else if (error.message.includes("400")) {
+      } else if (errorString.includes("400")) {
         errorMessage = "Invalid request. Please try again.";
-      } else if (error.message.includes("500")) {
+      } else if (errorString.includes("500")) {
         errorMessage = "Server error. The model may not exist or cannot be removed.";
-      } else {
-        errorMessage = error.message;
+      } else if (errorString) {
+        errorMessage = errorString;
       }
       
       toast({
