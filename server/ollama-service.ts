@@ -319,6 +319,10 @@ Return JSON format:
       return [];
     }
   }
+
+  async getAvailableModels(): Promise<string[]> {
+    return this.listModels();
+  }
 }
 
 export const ollamaService = new OllamaService();
