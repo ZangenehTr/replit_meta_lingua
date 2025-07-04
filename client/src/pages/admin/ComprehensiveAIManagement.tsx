@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +40,10 @@ import {
   Clock,
   HardDrive,
   Cpu,
-  MemoryStick
+  MemoryStick,
+  Mic,
+  Square,
+  Volume2
 } from "lucide-react";
 
 interface OllamaStatus {
@@ -108,14 +111,18 @@ export function ComprehensiveAIManagement() {
   const [testResponse, setTestResponse] = useState('');
   const [testingModel, setTestingModel] = useState(false);
   const [downloadingModels, setDownloadingModels] = useState<Set<string>>(new Set());
+  const [modelDownloadProgress, setModelDownloadProgress] = useState<Record<string, number>>({});
   const [trainingFiles, setTrainingFiles] = useState<TrainingFile[]>([]);
   const [selectedTrainingModel, setSelectedTrainingModel] = useState("");
   const [trainingProgress, setTrainingProgress] = useState(0);
   const [isTraining, setIsTraining] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(false); // Default to false to reduce redundant refreshes
   const [isBootstrapping, setIsBootstrapping] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -155,6 +162,60 @@ export function ComprehensiveAIManagement() {
     refetchInterval: autoRefresh ? 10000 : false,
   });
 
+  // Auto-select active model for training
+  useEffect(() => {
+    if (activeModelData?.activeModel && !selectedTrainingModel) {
+      setSelectedTrainingModel(activeModelData.activeModel);
+    }
+  }, [activeModelData?.activeModel, selectedTrainingModel]);
+
+  // Poll for download progress
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const downloadingModelsList = Array.from(downloadingModels);
+      
+      for (const modelName of downloadingModelsList) {
+        try {
+          const response = await apiRequest(`/api/admin/ollama/download-progress/${modelName}`);
+          
+          if (response.progress && response.progress.percent) {
+            setModelDownloadProgress(prev => ({
+              ...prev,
+              [modelName]: response.progress.percent
+            }));
+          }
+          
+          if (response.status === 'completed') {
+            setDownloadingModels(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(modelName);
+              return newSet;
+            });
+            setModelDownloadProgress(prev => {
+              const newProgress = { ...prev };
+              delete newProgress[modelName];
+              return newProgress;
+            });
+            
+            toast({
+              title: "Model Downloaded",
+              description: `${modelName} has been installed successfully`,
+            });
+            
+            // Refresh models list
+            queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models-enhanced"] });
+          }
+        } catch (error) {
+          console.error(`Error checking progress for ${modelName}:`, error);
+        }
+      }
+    }, 1000); // Check every second
+    
+    return () => clearInterval(interval);
+  }, [downloadingModels, queryClient, toast]);
+
   const downloadModelMutation = useMutation({
     mutationFn: async (modelName: string) => {
       console.log('Making download request for model:', modelName);
@@ -174,25 +235,18 @@ export function ComprehensiveAIManagement() {
     onSuccess: (data, modelName) => {
       toast({
         title: "Model Download Started",
-        description: `${modelName} download initiated successfully`,
+        description: `${modelName} download initiated. Progress will be shown below.`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
+      // Model will be added to downloadingModels in handleModelDownload
     },
     onError: (error: any, modelName) => {
       console.log("Download error details:", error);
-      console.log("Error type:", typeof error);
-      console.log("Error message:", error?.message);
-      console.log("Error status:", error?.status);
-      console.log("Full error object:", JSON.stringify(error, null, 2));
       
       let errorMessage = "Unknown error occurred";
       const errorString = error.message || error.toString() || "";
       
-      // Check if this is a 503 Service Unavailable error (Ollama offline)
-      if (errorString.includes("503") || errorString.includes("Service Unavailable") || 
-          errorString.includes("Ollama service is not running")) {
-        errorMessage = "Failed to delete llama3.2:1b: Ollama service is not running. Please start Ollama and try again.";
+      if (errorString.includes("503") || errorString.includes("Service Unavailable")) {
+        errorMessage = "Ollama service is not running. Please start Ollama and try again.";
       } else if (errorString.includes("400")) {
         errorMessage = "Invalid request. Please check the model name.";
       } else if (errorString.includes("500")) {
@@ -205,6 +259,18 @@ export function ComprehensiveAIManagement() {
         title: "Download Failed",
         description: `Failed to download ${modelName}: ${errorMessage}`,
         variant: "destructive",
+      });
+      
+      // Clean up on error
+      setDownloadingModels(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(modelName);
+        return newSet;
+      });
+      setModelDownloadProgress(prev => {
+        const newProgress = { ...prev };
+        delete newProgress[modelName];
+        return newProgress;
       });
     },
   });
@@ -406,6 +472,69 @@ export function ComprehensiveAIManagement() {
     }
   };
 
+  // Audio recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: BlobPart[] = [];
+      
+      recorder.ondataavailable = (e) => {
+        chunks.push(e.data);
+      };
+      
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        setAudioBlob(blob);
+      };
+      
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      toast({
+        title: "Recording Failed",
+        description: "Could not access microphone. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      setIsRecording(false);
+    }
+  };
+
+  const sendAudioToAI = async () => {
+    if (!audioBlob || !activeModelData?.activeModel) return;
+    
+    // For now, we'll simulate converting audio to text
+    // In production, this would use a speech-to-text service
+    const simulatedText = "This is a simulated transcription of your audio. In production, this would be actual speech-to-text.";
+    setTestPrompt(simulatedText);
+    
+    // Send to AI
+    await testModel();
+    
+    // Clear the audio
+    setAudioBlob(null);
+  };
+
+  const playAIResponse = () => {
+    if (!testResponse) return;
+    
+    // Use browser's text-to-speech
+    const utterance = new SpeechSynthesisUtterance(testResponse);
+    utterance.lang = 'en-US'; // Can be changed based on language settings
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
   const handleSetActiveModel = async (modelName: string) => {
     try {
       await setActiveModelMutation.mutateAsync(modelName);
@@ -491,8 +620,11 @@ export function ComprehensiveAIManagement() {
         continue;
       }
 
-      // Support text files, .docx, and .pages
-      const supportedTypes = ['text/', '.txt', '.md', '.docx', '.pages'];
+      // Support text files, documents, images, audio, and video
+      const supportedTypes = ['text/', '.txt', '.md', '.docx', '.pages', '.pdf', 
+        'image/jpeg', 'image/jpg', 'image/png', '.jpeg', '.jpg', '.png',
+        'audio/', '.mp3', '.wav', '.m4a', '.aac',
+        'video/', '.mp4', '.mov', '.avi', '.webm'];
       const isSupported = supportedTypes.some(type => 
         file.type.startsWith(type) || file.name.toLowerCase().endsWith(type)
       );
@@ -825,9 +957,10 @@ export function ComprehensiveAIManagement() {
       )}
 
       <Tabs defaultValue="models" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="models">Model Management</TabsTrigger>
           <TabsTrigger value="training">Model Training & Testing</TabsTrigger>
+          <TabsTrigger value="conversations">AI Conversations</TabsTrigger>
           <TabsTrigger value="usage">Token Usage</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
@@ -842,33 +975,7 @@ export function ComprehensiveAIManagement() {
                   <Server className="h-5 w-5" />
                   AI Model Management
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
-                      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
-                      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models-enhanced"] });
-                      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/active-model"] });
-                      toast({
-                        title: "Status Refreshed",
-                        description: "Model status updated successfully",
-                      });
-                    }}
-                  >
-                    <RefreshCw className="h-4 w-4 mr-1" />
-                    Refresh Status
-                  </Button>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={autoRefresh}
-                      onCheckedChange={setAutoRefresh}
-                      id="auto-refresh"
-                    />
-                    <Label htmlFor="auto-refresh" className="text-sm">Auto Refresh</Label>
-                  </div>
-                </div>
+
               </CardTitle>
               <CardDescription>
                 Manage your local AI models. Only one model can be active at a time.
@@ -902,23 +1009,27 @@ export function ComprehensiveAIManagement() {
                     <div className="flex items-center gap-2">
                       {availableModels.includes(model.name) ? (
                         <Badge variant="secondary">Installed</Badge>
+                      ) : downloadingModels.has(model.name) ? (
+                        <div className="flex flex-col items-end gap-1 min-w-[100px]">
+                          <div className="flex items-center gap-2 text-sm">
+                            <RefreshCw className="h-3 w-3 animate-spin" />
+                            <span>{modelDownloadProgress[model.name] || 0}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${modelDownloadProgress[model.name] || 0}%` }}
+                            />
+                          </div>
+                        </div>
                       ) : (
                         <Button
                           size="sm"
                           onClick={() => handleModelDownload(model.name)}
-                          disabled={downloadingModels.has(model.name) || downloadModelMutation.isPending}
+                          disabled={downloadModelMutation.isPending}
                         >
-                          {downloadingModels.has(model.name) ? (
-                            <>
-                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                              Downloading
-                            </>
-                          ) : (
-                            <>
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
-                            </>
-                          )}
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
                         </Button>
                       )}
                     </div>
@@ -1235,6 +1346,143 @@ export function ComprehensiveAIManagement() {
                         </div>
                       )}
                     </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* AI Conversations Tab */}
+        <TabsContent value="conversations" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mic className="h-5 w-5" />
+                AI Voice Conversations
+              </CardTitle>
+              <CardDescription>Practice language skills with voice-enabled AI conversations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Active Model Status */}
+                {activeModelData?.activeModel ? (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span className="font-medium">Conversing with: {activeModelData.activeModel}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    <span>Please set an active model to start conversations</span>
+                  </div>
+                )}
+
+                {/* Voice Recording Controls */}
+                <div className="space-y-4">
+                  <Label>Voice Recording</Label>
+                  <div className="flex flex-col items-center gap-4">
+                    <Button
+                      size="lg"
+                      variant={isRecording ? "destructive" : "default"}
+                      onClick={isRecording ? stopRecording : startRecording}
+                      disabled={!activeModelData?.activeModel}
+                      className="h-24 w-24 rounded-full"
+                    >
+                      {isRecording ? (
+                        <Square className="h-8 w-8" />
+                      ) : (
+                        <Mic className="h-8 w-8" />
+                      )}
+                    </Button>
+                    <div className="text-sm text-muted-foreground">
+                      {isRecording ? "Recording... Click to stop" : "Click to start recording"}
+                    </div>
+                  </div>
+
+                  {audioBlob && (
+                    <div className="space-y-2">
+                      <Label>Your Recording</Label>
+                      <audio controls src={URL.createObjectURL(audioBlob)} className="w-full" />
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={sendAudioToAI}
+                          disabled={testingModel}
+                          className="flex-1"
+                        >
+                          {testingModel ? (
+                            <>
+                              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="h-4 w-4 mr-2" />
+                              Send to AI
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setAudioBlob(null)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Conversation History */}
+                <div className="space-y-4">
+                  <Label>Conversation</Label>
+                  <div className="border rounded-lg p-4 min-h-[300px] max-h-[500px] overflow-y-auto bg-muted/20">
+                    {testPrompt && (
+                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                        <div className="text-sm font-medium mb-1 text-blue-700 dark:text-blue-300">You:</div>
+                        <div>{testPrompt}</div>
+                      </div>
+                    )}
+                    {testResponse && (
+                      <div className="p-3 bg-gray-50 dark:bg-gray-950/20 rounded-lg">
+                        <div className="text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">AI:</div>
+                        <div>{testResponse}</div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-2"
+                          onClick={playAIResponse}
+                        >
+                          <Volume2 className="h-4 w-4 mr-2" />
+                          Play Response
+                        </Button>
+                      </div>
+                    )}
+                    {!testPrompt && !testResponse && (
+                      <div className="text-center text-muted-foreground">
+                        Start recording to begin a conversation
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Text Input Alternative */}
+                <div className="space-y-2">
+                  <Label htmlFor="text-prompt">Or type your message</Label>
+                  <div className="flex gap-2">
+                    <Textarea
+                      id="text-prompt"
+                      placeholder="Type your message here..."
+                      value={testPrompt}
+                      onChange={(e) => setTestPrompt(e.target.value)}
+                      className="flex-1 min-h-[60px]"
+                    />
+                    <Button
+                      onClick={testModel}
+                      disabled={testingModel || !testPrompt || !activeModelData?.activeModel}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </div>

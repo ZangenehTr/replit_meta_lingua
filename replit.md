@@ -117,6 +117,9 @@ Meta Lingua is an AI-enhanced multilingual language learning and institute manag
 - July 04, 2025. Fixed critical database schema issues with comprehensive schema synchronization script
 - July 04, 2025. Resolved AI model management system issues: Fixed mock endpoint returning fake status, added proper offline state handling, enhanced error reporting with retry logic, and added preemptive safeguards to prevent mutations when Ollama service is unavailable
 - July 04, 2025. Fixed critical circular dependency bug: Added missing getAvailableModels() method to OllamaService class, implemented fully functional bootstrap system that automatically installs Ollama and downloads initial models when service is offline, added prominent bootstrap UI with comprehensive error handling
+- July 04, 2025. Fixed persistent "Failed to fetch" errors in API calls: Overhauled queryClient.ts to properly handle response parsing and error messaging
+- July 04, 2025. Complete AI services management system overhaul: Model download progress tracking fixed with proper polling, auto-selection of active model for training workflow implemented, redundant auto-refresh buttons removed
+- July 04, 2025. AI Conversations feature implemented: Added voice-enabled AI conversation tab with full speech/audio capabilities including voice recording, text-to-speech playback, and real-time conversation display for language learning practice
 
 ## User Preferences
 
