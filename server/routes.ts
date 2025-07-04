@@ -4917,16 +4917,6 @@ Return JSON format:
       }
 
       const { ollamaService } = await import('./ollama-service');
-      
-      // Check if Ollama service is available first
-      const isAvailable = await ollamaService.isServiceAvailable();
-      if (!isAvailable) {
-        return res.status(503).json({
-          success: false,
-          message: `Cannot download model ${modelName}. Ollama service is not running or available.`
-        });
-      }
-
       const success = await ollamaService.pullModel(modelName);
       
       if (success) {
@@ -4942,6 +4932,14 @@ Return JSON format:
       }
     } catch (error: any) {
       console.error('Pull model error:', error);
+      
+      if (error.message === 'SERVICE_UNAVAILABLE') {
+        return res.status(503).json({
+          success: false,
+          message: `Cannot download model. Ollama service is not running or available.`
+        });
+      }
+      
       res.status(500).json({ 
         success: false,
         message: "Failed to pull model",
@@ -4963,16 +4961,6 @@ Return JSON format:
       }
 
       const { ollamaService } = await import('./ollama-service');
-      
-      // Check if Ollama service is available first
-      const isAvailable = await ollamaService.isServiceAvailable();
-      if (!isAvailable) {
-        return res.status(503).json({
-          success: false,
-          message: `Cannot delete model ${modelName}. Ollama service is not running or available.`
-        });
-      }
-
       const success = await ollamaService.deleteModel(modelName);
       
       if (success) {
@@ -4988,6 +4976,14 @@ Return JSON format:
       }
     } catch (error: any) {
       console.error('Delete model error:', error);
+      
+      if (error.message === 'SERVICE_UNAVAILABLE') {
+        return res.status(503).json({
+          success: false,
+          message: `Cannot delete model. Ollama service is not running or available.`
+        });
+      }
+      
       res.status(500).json({ 
         success: false,
         message: "Failed to delete model",

@@ -254,7 +254,7 @@ Return JSON format:
   async pullModel(modelName: string): Promise<boolean> {
     if (!await this.isServiceAvailable()) {
       console.log('Cannot pull model: Ollama service not available');
-      return false;
+      throw new Error('SERVICE_UNAVAILABLE');
     }
 
     try {
@@ -273,7 +273,7 @@ Return JSON format:
   async deleteModel(modelName: string): Promise<boolean> {
     if (!await this.isServiceAvailable()) {
       console.log('Cannot delete model: Ollama service not available');
-      return false;
+      throw new Error('SERVICE_UNAVAILABLE');
     }
 
     try {
