@@ -22,8 +22,13 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [, setLocation] = useLocation();
 
   const handleLogout = () => {
-    logout();
+    // Clear authentication data
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
+    // Navigate to auth page
     setLocation("/auth");
+    // Force a page refresh to clear all state
+    setTimeout(() => window.location.reload(), 100);
   };
 
   const handleSwitchAccount = () => {
