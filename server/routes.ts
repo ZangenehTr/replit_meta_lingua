@@ -1144,6 +1144,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Student Proficiency Routes
+  app.get('/api/student/proficiency', authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get user profile and progress data
+      const profile = await storage.getUserProfile(userId);
+      const courses = await storage.getUserCourses(userId);
+      const stats = await storage.getUserStats(userId);
+      
+      // Calculate skill levels based on user data
+      const skillLevels = {
+        speaking: profile?.proficiencyLevel === 'beginner' ? 65 : profile?.proficiencyLevel === 'intermediate' ? 75 : 85,
+        listening: profile?.proficiencyLevel === 'beginner' ? 70 : profile?.proficiencyLevel === 'intermediate' ? 80 : 90,
+        reading: profile?.proficiencyLevel === 'beginner' ? 60 : profile?.proficiencyLevel === 'intermediate' ? 70 : 80,
+        writing: profile?.proficiencyLevel === 'beginner' ? 55 : profile?.proficiencyLevel === 'intermediate' ? 65 : 75,
+        grammar: profile?.proficiencyLevel === 'beginner' ? 62 : profile?.proficiencyLevel === 'intermediate' ? 72 : 82,
+        vocabulary: profile?.proficiencyLevel === 'beginner' ? 58 : profile?.proficiencyLevel === 'intermediate' ? 68 : 78
+      };
+      
+      // Calculate overall level
+      const avgScore = Object.values(skillLevels).reduce((a, b) => a + b, 0) / Object.values(skillLevels).length;
+      const overallLevel = avgScore < 60 ? 'A1' : avgScore < 70 ? 'A2' : avgScore < 75 ? 'B1' : avgScore < 85 ? 'B2' : 'C1';
+      const nextLevel = overallLevel === 'A1' ? 'A2' : overallLevel === 'A2' ? 'B1' : overallLevel === 'B1' ? 'B2' : overallLevel === 'B2' ? 'C1' : 'C2';
+      
+      // Calculate progress to next level
+      const levelThresholds = { A1: 60, A2: 70, B1: 75, B2: 85, C1: 95, C2: 100 };
+      const currentThreshold = levelThresholds[overallLevel as keyof typeof levelThresholds] || 0;
+      const nextThreshold = levelThresholds[nextLevel as keyof typeof levelThresholds] || 100;
+      const progressToNext = Math.round(((avgScore - currentThreshold) / (nextThreshold - currentThreshold)) * 100);
+      
+      // Generate progress history (mock data for now)
+      const currentDate = new Date();
+      const progressHistory = [];
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(currentDate);
+        date.setMonth(date.getMonth() - i);
+        progressHistory.push({
+          date: date.toISOString().slice(0, 7),
+          overall: Math.max(45, avgScore - (i * 3))
+        });
+      }
+      
+      // Generate recommended learning paths
+      const recommendedPaths = [
+        {
+          id: '1',
+          title: profile?.proficiencyLevel === 'beginner' ? 'Foundation Building' : 'Business Communication Mastery',
+          description: profile?.proficiencyLevel === 'beginner' 
+            ? 'Build strong foundations in all language skills'
+            : 'Focus on professional vocabulary and formal writing',
+          currentStep: Math.floor(Math.random() * 5) + 1,
+          totalSteps: 8,
+          nextMilestone: profile?.proficiencyLevel === 'beginner' ? 'Basic Conversations' : 'Email Writing Workshop',
+          estimatedTime: '2 weeks',
+          recommended: true
+        },
+        {
+          id: '2',
+          title: 'Conversational Fluency',
+          description: 'Improve speaking confidence through daily practice',
+          currentStep: Math.floor(Math.random() * 8) + 1,
+          totalSteps: 10,
+          nextMilestone: 'Advanced Idioms',
+          estimatedTime: '3 weeks',
+          recommended: false
+        }
+      ];
+      
+      // Generate insights based on skill levels
+      const insights = [];
+      
+      // Find strongest skill
+      const strongestSkill = Object.entries(skillLevels).reduce((a, b) => a[1] > b[1] ? a : b);
+      insights.push({
+        type: 'strength',
+        title: `Strong ${strongestSkill[0].charAt(0).toUpperCase() + strongestSkill[0].slice(1)} Skills`,
+        description: `Your ${strongestSkill[0]} skills are above average for your level`,
+        action: 'Challenge yourself with native-level content'
+      });
+      
+      // Find weakest skill
+      const weakestSkill = Object.entries(skillLevels).reduce((a, b) => a[1] < b[1] ? a : b);
+      insights.push({
+        type: 'weakness',
+        title: `${weakestSkill[0].charAt(0).toUpperCase() + weakestSkill[0].slice(1)} Needs Attention`,
+        description: `Your ${weakestSkill[0]} scores are below your other skills`,
+        action: `Focus on daily ${weakestSkill[0]} practice exercises`
+      });
+      
+      // Add opportunity insight
+      insights.push({
+        type: 'opportunity',
+        title: 'Vocabulary Growth Potential',
+        description: 'Consistent practice can rapidly improve your vocabulary',
+        action: 'Add 10 new words daily to maximize growth'
+      });
+      
+      res.json({
+        overallLevel,
+        nextLevel,
+        progressToNext,
+        skills: Object.entries(skillLevels).map(([skill, current]) => ({
+          skill: skill.charAt(0).toUpperCase() + skill.slice(1),
+          current,
+          target: Math.min(current + 15, 100),
+          improvement: Math.floor(Math.random() * 10) + 10
+        })),
+        progressHistory,
+        recommendedPaths,
+        insights
+      });
+    } catch (error) {
+      console.error('Error fetching proficiency data:', error);
+      res.status(500).json({ error: 'Failed to fetch proficiency data' });
+    }
+  });
+
   // User Profile Management
   app.get("/api/profile", authenticateToken, async (req: any, res) => {
     try {

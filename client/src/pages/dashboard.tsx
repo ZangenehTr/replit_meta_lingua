@@ -17,12 +17,13 @@ import { DailyChallenges } from "@/components/daily-challenges";
 import { Leaderboard } from "@/components/leaderboard";
 import { AchievementNotifications } from "@/components/achievement-notifications";
 import { MobileGamificationWidget } from "@/components/mobile-gamification-widget";
+import { LanguageProficiencyVisualization } from "@/components/dashboard/language-proficiency-visualization";
 import AICompanion from "@/components/ai-companion";
 import AIConversation from "@/pages/student/AIConversation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, Trophy, Star, Target, Users, Zap, Menu, Mic } from "lucide-react";
+import { TrendingUp, Trophy, Star, Target, Users, Zap, Menu, Mic, BarChart3 } from "lucide-react";
 import { Link } from "wouter";
 import { useLanguage } from "@/hooks/use-language";
 
@@ -93,10 +94,14 @@ export default function Dashboard() {
             {/* Enhanced Gamification Section */}
             <div className="mb-4 md:mb-6">
               <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-3 md:mb-4 h-9 sm:h-10">
+                <TabsList className="grid w-full grid-cols-5 mb-3 md:mb-4 h-9 sm:h-10">
                   <TabsTrigger value="overview" className="text-xs sm:text-sm px-2">
                     <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                     <span className="truncate">{t('overview')}</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="proficiency" className="text-xs sm:text-sm px-2">
+                    <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <span className="truncate">{currentLanguage === 'fa' ? 'مهارت‌ها' : 'Skills'}</span>
                   </TabsTrigger>
                   <TabsTrigger value="ai-practice" className="text-xs sm:text-sm px-2">
                     <Mic className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
@@ -114,6 +119,10 @@ export default function Dashboard() {
                 
                 <TabsContent value="overview" className="space-y-3 md:space-y-4">
                   <StatsCards />
+                </TabsContent>
+                
+                <TabsContent value="proficiency">
+                  <LanguageProficiencyVisualization />
                 </TabsContent>
                 
                 <TabsContent value="ai-practice">
