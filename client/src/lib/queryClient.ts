@@ -88,11 +88,17 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
 
     console.log('Making fetch request with headers:', headers);
     
-    const response = await fetch(url, {
-      ...options,
-      headers,
-      credentials: 'include',
-    });
+    let response;
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers,
+        credentials: 'include',
+      });
+    } catch (fetchError: any) {
+      console.error('Fetch error occurred:', fetchError);
+      throw new Error(`Network error: ${fetchError.message || 'Failed to fetch'}`);
+    }
 
     console.log('Response received:', {
       status: response.status,

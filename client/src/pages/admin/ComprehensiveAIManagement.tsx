@@ -120,6 +120,12 @@ export function ComprehensiveAIManagement() {
     queryKey: ["/api/test/ollama-status"],
     queryFn: () => apiRequest("/api/test/ollama-status"),
     refetchInterval: autoRefresh ? 5000 : false,
+    retry: (failureCount, error) => {
+      // Don't retry more than 2 times for network errors
+      if (failureCount >= 2) return false;
+      return true;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
   });
 
   const { data: modelDetails } = useQuery<ModelInfo[]>({
@@ -136,6 +142,11 @@ export function ComprehensiveAIManagement() {
 
   const downloadModelMutation = useMutation({
     mutationFn: async (modelName: string) => {
+      // Check if Ollama is offline before attempting download
+      if (ollamaStatus?.status === 'offline') {
+        throw new Error('Ollama service is not running. Please start Ollama and try again.');
+      }
+      
       console.log('Making download request for model:', modelName);
       try {
         const result = await apiRequest("/api/admin/ollama/pull-model", {
@@ -190,6 +201,11 @@ export function ComprehensiveAIManagement() {
 
   const deleteModelMutation = useMutation({
     mutationFn: async (modelName: string) => {
+      // Check if Ollama is offline before attempting deletion
+      if (ollamaStatus?.status === 'offline') {
+        throw new Error('Ollama service is not running. Please start Ollama and try again.');
+      }
+      
       console.log('Making delete request for model:', modelName);
       try {
         const result = await apiRequest(`/api/admin/ollama/delete-model`, {
