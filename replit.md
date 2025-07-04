@@ -122,6 +122,13 @@ Meta Lingua is an AI-enhanced multilingual language learning and institute manag
 - July 04, 2025. AI Conversations feature implemented: Added voice-enabled AI conversation tab with full speech/audio capabilities including voice recording, text-to-speech playback, and real-time conversation display for language learning practice
 - July 04, 2025. Student AI Practice integration: Added AI Practice tab to student dashboard with hold-to-speak voice interface, backend routes for AI conversation processing, and real-time status monitoring for language learning practice sessions
 
+## Test Accounts
+
+For development and testing purposes, the following accounts are available:
+- **Admin**: admin@test.com / admin123
+- **Student**: student@test.com / student123
+- **Teacher**: teacher@test.com / teacher123
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
