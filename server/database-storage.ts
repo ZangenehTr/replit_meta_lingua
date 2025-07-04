@@ -5,6 +5,7 @@ import {
   sessions, messages, homework, payments, notifications, instituteBranding,
   achievements, userAchievements, userStats, dailyGoals, adminSettings,
   walletTransactions, coursePayments, aiTrainingData, aiKnowledgeBase,
+  skillAssessments, learningActivities, progressSnapshots,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
@@ -15,7 +16,8 @@ import {
   type UserStats, type InsertUserStats, type DailyGoal, type InsertDailyGoal,
   type AdminSettings, type InsertAdminSettings, type WalletTransaction, type InsertWalletTransaction,
   type CoursePayment, type InsertCoursePayment, type AiTrainingData, type InsertAiTrainingData,
-  type AiKnowledgeBase, type InsertAiKnowledgeBase
+  type AiKnowledgeBase, type InsertAiKnowledgeBase, type SkillAssessment, type InsertSkillAssessment,
+  type LearningActivity, type InsertLearningActivity, type ProgressSnapshot, type InsertProgressSnapshot
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -693,6 +695,77 @@ export class DatabaseStorage implements IStorage {
       .where(eq(dailyGoals.id, id))
       .returning();
     return updatedGoal;
+  }
+
+  // Skill Assessment & Activity Tracking
+  async getSkillAssessments(userId: number): Promise<SkillAssessment[]> {
+    return await db
+      .select()
+      .from(skillAssessments)
+      .where(eq(skillAssessments.userId, userId))
+      .orderBy(desc(skillAssessments.assessedAt));
+  }
+
+  async getLatestSkillAssessment(userId: number, skillType: string): Promise<SkillAssessment | undefined> {
+    const [assessment] = await db
+      .select()
+      .from(skillAssessments)
+      .where(
+        and(
+          eq(skillAssessments.userId, userId),
+          eq(skillAssessments.skillType, skillType)
+        )
+      )
+      .orderBy(desc(skillAssessments.assessedAt))
+      .limit(1);
+    return assessment;
+  }
+
+  async createSkillAssessment(assessment: InsertSkillAssessment): Promise<SkillAssessment> {
+    const [newAssessment] = await db.insert(skillAssessments).values(assessment).returning();
+    return newAssessment;
+  }
+
+  async getLearningActivities(userId: number): Promise<LearningActivity[]> {
+    return await db
+      .select()
+      .from(learningActivities)
+      .where(eq(learningActivities.userId, userId))
+      .orderBy(desc(learningActivities.createdAt));
+  }
+
+  async createLearningActivity(activity: InsertLearningActivity): Promise<LearningActivity> {
+    const [newActivity] = await db.insert(learningActivities).values(activity).returning();
+    return newActivity;
+  }
+
+  async getLatestProgressSnapshot(userId: number): Promise<ProgressSnapshot | undefined> {
+    const [snapshot] = await db
+      .select()
+      .from(progressSnapshots)
+      .where(eq(progressSnapshots.userId, userId))
+      .orderBy(desc(progressSnapshots.createdAt))
+      .limit(1);
+    return snapshot;
+  }
+
+  async createProgressSnapshot(snapshot: InsertProgressSnapshot): Promise<ProgressSnapshot> {
+    const [newSnapshot] = await db.insert(progressSnapshots).values(snapshot).returning();
+    return newSnapshot;
+  }
+
+  async getProgressSnapshots(userId: number, limit?: number): Promise<ProgressSnapshot[]> {
+    let query = db
+      .select()
+      .from(progressSnapshots)
+      .where(eq(progressSnapshots.userId, userId))
+      .orderBy(desc(progressSnapshots.createdAt));
+    
+    if (limit) {
+      query = query.limit(limit);
+    }
+    
+    return await query;
   }
 
   // Wallet-based Payment System Methods

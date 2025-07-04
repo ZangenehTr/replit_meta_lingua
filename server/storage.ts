@@ -2,7 +2,7 @@ import {
   users, courses, enrollments, sessions, messages, homework, 
   payments, notifications, instituteBranding, studentProfiles, leads, invoices,
   teacherPerformance, attendance, communicationLogs, achievements, userAchievements,
-  userStats, dailyGoals,
+  userStats, dailyGoals, skillAssessments, learningActivities, progressSnapshots,
   type User, type InsertUser, type Course, type InsertCourse,
   type Enrollment, type InsertEnrollment, type Session, type InsertSession,
   type Message, type InsertMessage, type Homework, type InsertHomework,
@@ -12,7 +12,9 @@ import {
   type TeacherPerformance, type InsertTeacherPerformance, type Attendance, type InsertAttendance,
   type CommunicationLog, type InsertCommunicationLog,
   type Achievement, type InsertAchievement, type UserAchievement, type InsertUserAchievement,
-  type UserStats, type InsertUserStats, type DailyGoal, type InsertDailyGoal
+  type UserStats, type InsertUserStats, type DailyGoal, type InsertDailyGoal,
+  type SkillAssessment, type InsertSkillAssessment, type LearningActivity, type InsertLearningActivity,
+  type ProgressSnapshot, type InsertProgressSnapshot
 } from "@shared/schema";
 
 export interface IStorage {
@@ -126,6 +128,16 @@ export interface IStorage {
   getDailyGoals(userId: number, date?: string): Promise<DailyGoal[]>;
   createDailyGoal(goal: InsertDailyGoal): Promise<DailyGoal>;
   updateDailyGoal(id: number, updates: Partial<DailyGoal>): Promise<DailyGoal | undefined>;
+
+  // Skill Assessment & Activity Tracking
+  getSkillAssessments(userId: number): Promise<SkillAssessment[]>;
+  getLatestSkillAssessment(userId: number, skillType: string): Promise<SkillAssessment | undefined>;
+  createSkillAssessment(assessment: InsertSkillAssessment): Promise<SkillAssessment>;
+  getLearningActivities(userId: number): Promise<LearningActivity[]>;
+  createLearningActivity(activity: InsertLearningActivity): Promise<LearningActivity>;
+  getLatestProgressSnapshot(userId: number): Promise<ProgressSnapshot | undefined>;
+  getProgressSnapshots(userId: number, limit?: number): Promise<ProgressSnapshot[]>;
+  createProgressSnapshot(snapshot: InsertProgressSnapshot): Promise<ProgressSnapshot>;
 }
 
 export class MemStorage implements IStorage {

@@ -749,6 +749,67 @@ export const aiTrainingData = pgTable("ai_training_data", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// Skill Assessment Tracking
+export const skillAssessments = pgTable("skill_assessments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  skillType: varchar("skill_type", { length: 20 }).notNull(), // speaking, listening, reading, writing, grammar, vocabulary
+  score: decimal("score", { precision: 5, scale: 2 }).notNull(),
+  activityType: varchar("activity_type", { length: 50 }).notNull(), // quiz, assignment, ai_conversation, etc.
+  activityId: integer("activity_id"),
+  metadata: jsonb("metadata").$type<{
+    errors?: string[],
+    timeTaken?: number,
+    wordsPerMinute?: number,
+    accuracy?: number,
+    feedback?: string
+  }>(), // Additional context
+  assessedAt: timestamp("assessed_at").defaultNow().notNull()
+});
+
+// Learning Activities Tracking
+export const learningActivities = pgTable("learning_activities", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  activityType: varchar("activity_type", { length: 50 }).notNull(),
+  courseId: integer("course_id").references(() => courses.id),
+  durationMinutes: integer("duration_minutes"),
+  completionRate: decimal("completion_rate", { precision: 5, scale: 2 }),
+  skillPoints: jsonb("skill_points").$type<{
+    speaking?: number,
+    listening?: number,
+    reading?: number,
+    writing?: number,
+    grammar?: number,
+    vocabulary?: number
+  }>(), // Points earned for each skill
+  metadata: jsonb("metadata").$type<{
+    title?: string,
+    description?: string,
+    difficulty?: string,
+    performance?: any
+  }>(), // Additional activity-specific data
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Progress Snapshots for Historical Tracking
+export const progressSnapshots = pgTable("progress_snapshots", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  skillScores: jsonb("skill_scores").$type<{
+    speaking: number,
+    listening: number,
+    reading: number,
+    writing: number,
+    grammar: number,
+    vocabulary: number
+  }>().notNull(), // Current scores for all skills
+  overallLevel: varchar("overall_level", { length: 10 }).notNull(), // A1, A2, B1, B2, C1, C2
+  averageScore: decimal("average_score", { precision: 5, scale: 2 }).notNull(),
+  snapshotDate: date("snapshot_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
 // AI Knowledge Base - Processed training data ready for retrieval
 export const aiKnowledgeBase = pgTable("ai_knowledge_base", {
   id: serial("id").primaryKey(),
@@ -784,6 +845,22 @@ export const insertReferralCommissionSchema = createInsertSchema(referralCommiss
 export const insertAiTrainingDataSchema = createInsertSchema(aiTrainingData).omit({
   id: true,
   trainedAt: true,
+  createdAt: true
+});
+
+// Skill tracking insert schemas
+export const insertSkillAssessmentSchema = createInsertSchema(skillAssessments).omit({
+  id: true,
+  assessedAt: true
+});
+
+export const insertLearningActivitySchema = createInsertSchema(learningActivities).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertProgressSnapshotSchema = createInsertSchema(progressSnapshots).omit({
+  id: true,
   createdAt: true
 });
 
@@ -942,3 +1019,11 @@ export type AiTrainingData = typeof aiTrainingData.$inferSelect;
 export type InsertAiTrainingData = z.infer<typeof insertAiTrainingDataSchema>;
 export type AiKnowledgeBase = typeof aiKnowledgeBase.$inferSelect;
 export type InsertAiKnowledgeBase = z.infer<typeof insertAiKnowledgeBaseSchema>;
+
+// Skill Assessment Types
+export type SkillAssessment = typeof skillAssessments.$inferSelect;
+export type InsertSkillAssessment = z.infer<typeof insertSkillAssessmentSchema>;
+export type LearningActivity = typeof learningActivities.$inferSelect;
+export type InsertLearningActivity = z.infer<typeof insertLearningActivitySchema>;
+export type ProgressSnapshot = typeof progressSnapshots.$inferSelect;
+export type InsertProgressSnapshot = z.infer<typeof insertProgressSnapshotSchema>;
