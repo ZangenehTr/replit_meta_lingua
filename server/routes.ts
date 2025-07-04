@@ -5994,12 +5994,39 @@ Return JSON format:
       const { modelId } = req.body;
       const { ollamaService } = await import('./ollama-service');
       
-      // Start model download
-      console.log(`Installing model: ${modelId}`);
-      await ollamaService.pullModel(modelId);
+      console.log(`Starting download for model: ${modelId}`);
       
-      res.json({ success: true });
+      // Check if model already exists
+      const existingModels = await ollamaService.getAvailableModels();
+      if (existingModels.some((model: any) => model.id === modelId)) {
+        console.log(`Model ${modelId} already installed`);
+        return res.json({ 
+          success: true, 
+          message: "Model already installed",
+          alreadyInstalled: true 
+        });
+      }
+      
+      // Start model download with progress tracking
+      const downloadResult = await ollamaService.pullModel(modelId, (progress) => {
+        console.log(`Download progress for ${modelId}:`, progress);
+      });
+      
+      if (downloadResult) {
+        console.log(`Successfully downloaded model: ${modelId}`);
+        res.json({ 
+          success: true, 
+          message: `Model ${modelId} downloaded successfully` 
+        });
+      } else {
+        console.log(`Failed to download model: ${modelId}`);
+        res.status(500).json({ 
+          success: false,
+          message: `Failed to download model ${modelId}` 
+        });
+      }
     } catch (error) {
+      console.error(`Error installing model:`, error);
       res.status(500).json({ 
         success: false,
         message: "Failed to start model installation",
