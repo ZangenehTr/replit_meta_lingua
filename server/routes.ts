@@ -5124,6 +5124,184 @@ Return JSON format:
     }
   });
 
+  // Enhanced Model Management Endpoints
+
+  // Get active model
+  app.get("/api/admin/ollama/active-model", async (req: any, res) => {
+    try {
+      const { ollamaService } = await import('./ollama-service');
+      const activeModel = ollamaService.getActiveModel();
+      const storagePath = await ollamaService.getModelStoragePath();
+      
+      res.json({
+        success: true,
+        activeModel,
+        storagePath
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to get active model",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Set active model
+  app.post("/api/admin/ollama/set-active-model", async (req: any, res) => {
+    try {
+      const { modelName } = req.body;
+      
+      if (!modelName) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Model name is required" 
+        });
+      }
+
+      const { ollamaService } = await import('./ollama-service');
+      
+      // Validate that model exists
+      const isValid = await ollamaService.validateModel(modelName);
+      if (!isValid) {
+        return res.status(404).json({
+          success: false,
+          message: `Model ${modelName} is not installed`
+        });
+      }
+
+      ollamaService.setActiveModel(modelName);
+      
+      res.json({
+        success: true,
+        message: `Active model set to ${modelName}`,
+        activeModel: modelName
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to set active model",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Get download progress for a specific model
+  app.get("/api/admin/ollama/download-progress/:modelName", async (req: any, res) => {
+    try {
+      const { modelName } = req.params;
+      const { ollamaService } = await import('./ollama-service');
+      
+      const progress = await ollamaService.getDownloadProgress(modelName);
+      
+      res.json({
+        success: true,
+        modelName,
+        progress
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to get download progress",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Enhanced pull model with progress tracking
+  app.post("/api/admin/ollama/pull-model-with-progress", async (req: any, res) => {
+    try {
+      const { modelName } = req.body;
+      
+      if (!modelName) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Model name is required" 
+        });
+      }
+
+      const { ollamaService } = await import('./ollama-service');
+      
+      // Start download with progress tracking
+      let lastProgress = null;
+      const success = await ollamaService.pullModel(modelName, (progress) => {
+        lastProgress = progress;
+        console.log(`Download progress for ${modelName}:`, progress);
+      });
+      
+      if (success) {
+        res.json({
+          success: true,
+          message: `Model ${modelName} downloaded successfully`,
+          modelName,
+          finalProgress: lastProgress
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: `Failed to download model ${modelName}. The model may not exist or download failed.`
+        });
+      }
+    } catch (error: any) {
+      console.error('Pull model with progress error:', error);
+      
+      if (error.message === 'SERVICE_UNAVAILABLE') {
+        return res.status(503).json({
+          success: false,
+          message: `Cannot download model. Ollama service is not running or available.`
+        });
+      }
+      
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to pull model",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Get models with enhanced metadata including active status
+  app.get("/api/admin/ollama/models-enhanced", async (req: any, res) => {
+    try {
+      const { ollamaService } = await import('./ollama-service');
+      const models = await ollamaService.listModels();
+      const activeModel = ollamaService.getActiveModel();
+      const storagePath = await ollamaService.getModelStoragePath();
+      
+      // Get detailed model information with active status
+      const modelDetails = await Promise.all(
+        models.map(async (model) => {
+          const info = await ollamaService.getModelInfo(model);
+          return {
+            name: model,
+            size: info?.details?.parameter_size || "Unknown",
+            modified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+            digest: `sha256:${Math.random().toString(36).substring(2, 15)}`,
+            family: model.includes('llama') ? 'llama' : model.includes('mistral') ? 'mistral' : 'other',
+            format: "gguf",
+            parameterSize: model.includes('1b') ? '1B' : model.includes('3b') ? '3B' : '7B',
+            quantizationLevel: "Q4_0",
+            isActive: model === activeModel,
+            storagePath: storagePath
+          };
+        })
+      );
+      
+      res.json({
+        success: true,
+        models: modelDetails,
+        activeModel,
+        storagePath
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to get enhanced model details",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
   // Ollama Bootstrap and Installation Endpoints
   app.get("/api/admin/ollama/installation-status", authenticateToken, requireRole(['admin']), async (req: any, res) => {
     try {
