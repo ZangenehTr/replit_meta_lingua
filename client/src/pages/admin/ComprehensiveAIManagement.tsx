@@ -142,11 +142,6 @@ export function ComprehensiveAIManagement() {
 
   const downloadModelMutation = useMutation({
     mutationFn: async (modelName: string) => {
-      // Check if Ollama is offline before attempting download
-      if (ollamaStatus?.status === 'offline') {
-        throw new Error('Ollama service is not running. Please start Ollama and try again.');
-      }
-      
       console.log('Making download request for model:', modelName);
       try {
         const result = await apiRequest("/api/admin/ollama/pull-model", {
@@ -201,11 +196,6 @@ export function ComprehensiveAIManagement() {
 
   const deleteModelMutation = useMutation({
     mutationFn: async (modelName: string) => {
-      // Check if Ollama is offline before attempting deletion
-      if (ollamaStatus?.status === 'offline') {
-        throw new Error('Ollama service is not running. Please start Ollama and try again.');
-      }
-      
       console.log('Making delete request for model:', modelName);
       try {
         const result = await apiRequest(`/api/admin/ollama/delete-model`, {
@@ -680,7 +670,7 @@ export function ComprehensiveAIManagement() {
                         <Button
                           size="sm"
                           onClick={() => handleModelDownload(model.name)}
-                          disabled={downloadingModels.has(model.name) || downloadModelMutation.isPending || ollamaStatus?.status === 'offline'}
+                          disabled={downloadingModels.has(model.name) || downloadModelMutation.isPending}
                         >
                           {downloadingModels.has(model.name) ? (
                             <>
