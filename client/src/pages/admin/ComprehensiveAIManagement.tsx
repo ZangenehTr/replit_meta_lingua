@@ -299,7 +299,16 @@ export function ComprehensiveAIManagement() {
     },
   });
 
-  const availableModels = ollamaStatus?.models || [];
+  // Fix for duplicate key warning: filter null values and use model details as fallback
+  const availableModels = (() => {
+    const statusModels = (ollamaStatus?.models || []).filter(model => model != null);
+    // If status models are empty or null, fallback to model details
+    if (statusModels.length === 0 && modelDetails?.length > 0) {
+      return modelDetails.map(m => m.name);
+    }
+    return statusModels;
+  })();
+  
   const systemInfo = ollamaStatus?.systemInfo;
 
   const handleModelDownload = async (modelName: string) => {
