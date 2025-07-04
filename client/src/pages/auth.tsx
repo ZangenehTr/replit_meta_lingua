@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,8 +29,21 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Auth() {
   const [, setLocation] = useLocation();
-  const { login, register: registerUser, loginLoading, registerLoading } = useAuth();
+  const { user, login, register: registerUser, loginLoading, registerLoading } = useAuth();
   const [authError, setAuthError] = useState<string>("");
+
+  // Redirect based on user role when user data is available
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') {
+        setLocation("/admin");
+      } else if (user.role === 'teacher') {
+        setLocation("/teacher");
+      } else {
+        setLocation("/dashboard");
+      }
+    }
+  }, [user, setLocation]);
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -54,10 +67,8 @@ export default function Auth() {
     setAuthError("");
     try {
       await login(data);
-      // Wait for the login to complete and user data to be available
-      setTimeout(() => {
-        setLocation("/admin");
-      }, 100);
+      // Login doesn't return user directly, we need to wait for the user query to refetch
+      // The redirect will happen in a useEffect that watches for user changes
     } catch (error: any) {
       setAuthError(error.message || "Login failed. Please check your credentials.");
     }
