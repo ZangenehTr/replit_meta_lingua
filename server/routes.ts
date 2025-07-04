@@ -104,11 +104,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ollama status endpoint  
   app.get("/api/test/ollama-status", async (req: any, res) => {
     try {
-      res.json({
-        status: "running",
-        models: downloadedModels,
-        version: "0.1.0"
-      });
+      const isAvailable = await ollamaService.isServiceAvailable();
+      if (isAvailable) {
+        const models = await ollamaService.getAvailableModels();
+        res.json({
+          status: "running",
+          models: models.map(m => m.name),
+          version: "0.1.0"
+        });
+      } else {
+        res.json({
+          status: "offline",
+          models: [],
+          version: "0.1.0",
+          message: "Ollama service is not running. Please start Ollama to manage AI models."
+        });
+      }
     } catch (error) {
       res.status(500).json({ 
         success: false,
