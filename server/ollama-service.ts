@@ -270,6 +270,42 @@ Return JSON format:
     }
   }
 
+  async deleteModel(modelName: string): Promise<boolean> {
+    if (!await this.isServiceAvailable()) {
+      console.log('Cannot delete model: Ollama service not available');
+      return false;
+    }
+
+    try {
+      console.log(`Deleting model: ${modelName}`);
+      const response = await axios.delete(`${this.baseUrl}/api/delete`, {
+        data: { name: modelName }
+      });
+
+      return response.status === 200;
+    } catch (error) {
+      console.error(`Failed to delete model ${modelName}:`, error.message);
+      return false;
+    }
+  }
+
+  async getModelInfo(modelName: string): Promise<any> {
+    if (!await this.isServiceAvailable()) {
+      return null;
+    }
+
+    try {
+      const response = await axios.post(`${this.baseUrl}/api/show`, {
+        name: modelName
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Failed to get model info for ${modelName}:`, error.message);
+      return null;
+    }
+  }
+
   async listModels(): Promise<string[]> {
     if (!await this.isServiceAvailable()) {
       return [];
