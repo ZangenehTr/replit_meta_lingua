@@ -110,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const models = await ollamaService.getAvailableModels();
         res.json({
           status: "running",
-          models: models.map(m => m.name),
+          models: models, // models is already an array of strings
           version: "0.1.0"
         });
       } else {
