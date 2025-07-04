@@ -1154,15 +1154,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const courses = await storage.getUserCourses(userId);
       const stats = await storage.getUserStats(userId);
       
-      // Calculate skill levels based on user data
-      const skillLevels = {
-        speaking: profile?.proficiencyLevel === 'beginner' ? 65 : profile?.proficiencyLevel === 'intermediate' ? 75 : 85,
-        listening: profile?.proficiencyLevel === 'beginner' ? 70 : profile?.proficiencyLevel === 'intermediate' ? 80 : 90,
-        reading: profile?.proficiencyLevel === 'beginner' ? 60 : profile?.proficiencyLevel === 'intermediate' ? 70 : 80,
-        writing: profile?.proficiencyLevel === 'beginner' ? 55 : profile?.proficiencyLevel === 'intermediate' ? 65 : 75,
-        grammar: profile?.proficiencyLevel === 'beginner' ? 62 : profile?.proficiencyLevel === 'intermediate' ? 72 : 82,
-        vocabulary: profile?.proficiencyLevel === 'beginner' ? 58 : profile?.proficiencyLevel === 'intermediate' ? 68 : 78
-      };
+      // Get latest skill assessments for each skill type
+      const skills = ['speaking', 'listening', 'reading', 'writing', 'grammar', 'vocabulary'];
+      const skillLevels: Record<string, number> = {};
+      
+      for (const skill of skills) {
+        const latestAssessment = await storage.getLatestSkillAssessment(userId, skill);
+        if (latestAssessment) {
+          skillLevels[skill] = Number(latestAssessment.score);
+        } else {
+          // Default scores based on proficiency level if no assessment exists
+          const defaultScores: Record<string, Record<string, number>> = {
+            beginner: { speaking: 65, listening: 70, reading: 60, writing: 55, grammar: 62, vocabulary: 58 },
+            intermediate: { speaking: 75, listening: 80, reading: 70, writing: 65, grammar: 72, vocabulary: 68 },
+            advanced: { speaking: 85, listening: 90, reading: 80, writing: 75, grammar: 82, vocabulary: 78 }
+          };
+          const level = profile?.proficiencyLevel || 'beginner';
+          skillLevels[skill] = defaultScores[level]?.[skill] || 60;
+        }
+      }
       
       // Calculate overall level
       const avgScore = Object.values(skillLevels).reduce((a, b) => a + b, 0) / Object.values(skillLevels).length;
@@ -1175,16 +1185,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const nextThreshold = levelThresholds[nextLevel as keyof typeof levelThresholds] || 100;
       const progressToNext = Math.round(((avgScore - currentThreshold) / (nextThreshold - currentThreshold)) * 100);
       
-      // Generate progress history (mock data for now)
-      const currentDate = new Date();
-      const progressHistory = [];
-      for (let i = 5; i >= 0; i--) {
-        const date = new Date(currentDate);
-        date.setMonth(date.getMonth() - i);
-        progressHistory.push({
-          date: date.toISOString().slice(0, 7),
-          overall: Math.max(45, avgScore - (i * 3))
-        });
+      // Get progress history from snapshots
+      const snapshots = await storage.getProgressSnapshots(userId, 6); // Get last 6 months
+      const progressHistory = snapshots.map(snapshot => ({
+        date: new Date(snapshot.createdAt).toISOString().slice(0, 7),
+        overall: Number(snapshot.averageScore)
+      }));
+      
+      // If not enough history, generate some based on current score
+      if (progressHistory.length < 6) {
+        const currentDate = new Date();
+        const existingMonths = new Set(progressHistory.map(p => p.date));
+        
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date(currentDate);
+          date.setMonth(date.getMonth() - i);
+          const monthStr = date.toISOString().slice(0, 7);
+          
+          if (!existingMonths.has(monthStr)) {
+            progressHistory.push({
+              date: monthStr,
+              overall: Math.max(45, avgScore - (i * 3))
+            });
+          }
+        }
+        
+        // Sort by date
+        progressHistory.sort((a, b) => a.date.localeCompare(b.date));
       }
       
       // Generate recommended learning paths
@@ -4431,6 +4458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { aiPersonalizationService } = await import('./ai-services');
       const { message, context, proficiencyLevel } = req.body;
+      const userId = req.user.id;
 
       const aiResponse = await aiPersonalizationService.generateConversationResponse(
         message,
@@ -4439,10 +4467,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "Western"
       );
 
+      // Track this learning activity
+      await storage.createLearningActivity({
+        userId,
+        activityType: 'ai_conversation',
+        skillType: 'speaking', // AI conversations primarily practice speaking
+        duration: 60, // Estimate 1 minute per conversation turn
+        score: null, // No direct score for conversations
+        metadata: {
+          messageLength: message.length,
+          proficiencyLevel: proficiencyLevel || "intermediate",
+          conversationContext: context
+        }
+      });
+
+      // Also track listening skill since they're processing AI responses
+      await storage.createLearningActivity({
+        userId,
+        activityType: 'ai_conversation',
+        skillType: 'listening',
+        duration: 60,
+        score: null,
+        metadata: {
+          responseLength: aiResponse.response?.length || 0,
+          proficiencyLevel: proficiencyLevel || "intermediate"
+        }
+      });
+
+      // Periodically create skill assessments based on conversation quality
+      const activities = await storage.getLearningActivities(userId);
+      const recentConversations = activities.filter(a => 
+        a.activityType === 'ai_conversation' && 
+        new Date(a.createdAt).getTime() > Date.now() - 24 * 60 * 60 * 1000 // Last 24 hours
+      );
+
+      // Every 10 conversations, create an assessment
+      if (recentConversations.length % 10 === 0) {
+        // Estimate speaking skill based on message complexity
+        const avgMessageLength = recentConversations.reduce((sum, a) => 
+          sum + (a.metadata?.messageLength || 0), 0) / recentConversations.length;
+        
+        const speakingScore = Math.min(100, Math.max(60, 50 + (avgMessageLength / 10)));
+        
+        await storage.createSkillAssessment({
+          userId,
+          skillType: 'speaking',
+          score: speakingScore,
+          assessmentType: 'ai_conversation',
+          metadata: {
+            conversationCount: recentConversations.length,
+            avgMessageLength,
+            proficiencyLevel
+          }
+        });
+
+        // Also assess listening based on engagement
+        await storage.createSkillAssessment({
+          userId,
+          skillType: 'listening',
+          score: Math.min(100, speakingScore + 5), // Listening usually slightly ahead
+          assessmentType: 'ai_conversation',
+          metadata: {
+            conversationCount: recentConversations.length,
+            proficiencyLevel
+          }
+        });
+      }
+
       res.json(aiResponse);
     } catch (error) {
       console.error('AI conversation error:', error);
       res.status(500).json({ message: "Failed to generate conversation response" });
+    }
+  });
+
+  // Create progress snapshot based on current assessments
+  app.post("/api/student/create-progress-snapshot", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Get latest assessments for all skills
+      const skills = ['speaking', 'listening', 'reading', 'writing', 'grammar', 'vocabulary'];
+      const skillScores: Record<string, number> = {};
+      
+      for (const skill of skills) {
+        const assessment = await storage.getLatestSkillAssessment(userId, skill);
+        skillScores[skill] = assessment ? Number(assessment.score) : 60; // Default to 60 if no assessment
+      }
+      
+      // Calculate average score
+      const avgScore = Object.values(skillScores).reduce((sum, score) => sum + score, 0) / skills.length;
+      
+      // Determine overall level based on average
+      const overallLevel = 
+        avgScore < 60 ? 'A1' : 
+        avgScore < 70 ? 'A2' : 
+        avgScore < 75 ? 'B1' : 
+        avgScore < 85 ? 'B2' : 
+        avgScore < 95 ? 'C1' : 'C2';
+      
+      // Create snapshot
+      const snapshot = await storage.createProgressSnapshot({
+        userId,
+        skillScores: {
+          speaking: skillScores.speaking,
+          listening: skillScores.listening,
+          reading: skillScores.reading,
+          writing: skillScores.writing,
+          grammar: skillScores.grammar,
+          vocabulary: skillScores.vocabulary
+        },
+        overallLevel,
+        averageScore: avgScore.toString(),
+        snapshotDate: new Date().toISOString().split('T')[0]
+      });
+      
+      res.json({ 
+        success: true, 
+        snapshot,
+        message: 'Progress snapshot created successfully' 
+      });
+    } catch (error) {
+      console.error('Error creating progress snapshot:', error);
+      res.status(500).json({ message: "Failed to create progress snapshot" });
     }
   });
 
