@@ -251,7 +251,7 @@ Return JSON format:
     };
   }
 
-  async pullModel(modelName: string): Promise<boolean> {
+  async pullModel(modelName: string, progressCallback?: (progress: any) => void): Promise<boolean> {
     if (!await this.isServiceAvailable()) {
       console.log('Cannot pull model: Ollama service not available');
       throw new Error('SERVICE_UNAVAILABLE');
@@ -259,11 +259,57 @@ Return JSON format:
 
     try {
       console.log(`Pulling model: ${modelName}`);
+      
+      // Make streaming request to track progress
       const response = await axios.post(`${this.baseUrl}/api/pull`, {
-        name: modelName
-      }, { timeout: 300000 }); // 5 minute timeout for model download
+        name: modelName,
+        stream: true
+      }, { 
+        timeout: 600000, // 10 minute timeout for model download
+        responseType: 'stream'
+      });
 
-      return response.status === 200;
+      return new Promise((resolve, reject) => {
+        let buffer = '';
+        
+        response.data.on('data', (chunk: Buffer) => {
+          buffer += chunk.toString();
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          
+          lines.forEach(line => {
+            if (line.trim()) {
+              try {
+                const progressData = JSON.parse(line);
+                if (progressCallback) {
+                  progressCallback(progressData);
+                }
+                
+                // Log progress to console
+                if (progressData.status) {
+                  console.log(`Model ${modelName}: ${progressData.status}`);
+                  if (progressData.completed && progressData.total) {
+                    const percent = Math.round((progressData.completed / progressData.total) * 100);
+                    console.log(`Download progress: ${percent}%`);
+                  }
+                }
+              } catch (e) {
+                // Ignore JSON parse errors for non-JSON lines
+              }
+            }
+          });
+        });
+
+        response.data.on('end', () => {
+          console.log(`Model ${modelName} download completed`);
+          resolve(true);
+        });
+
+        response.data.on('error', (error: any) => {
+          console.error(`Failed to pull model ${modelName}:`, error.message);
+          reject(error);
+        });
+      });
     } catch (error) {
       console.error(`Failed to pull model ${modelName}:`, error.message);
       return false;
@@ -322,6 +368,48 @@ Return JSON format:
 
   async getAvailableModels(): Promise<string[]> {
     return this.listModels();
+  }
+
+  async getModelStoragePath(): Promise<string> {
+    // Default Ollama model storage path
+    return process.env.OLLAMA_MODELS || '~/.ollama/models';
+  }
+
+  async getDownloadProgress(modelName: string): Promise<any> {
+    try {
+      // Check if model is currently being downloaded by checking running processes
+      const response = await axios.get(`${this.baseUrl}/api/ps`);
+      const runningModels = response.data.models || [];
+      
+      const downloading = runningModels.find((m: any) => m.name === modelName && m.status === 'downloading');
+      
+      if (downloading) {
+        return {
+          status: 'downloading',
+          progress: downloading.progress || 0,
+          total: downloading.total || 0,
+          completed: downloading.completed || 0
+        };
+      }
+      
+      return { status: 'idle' };
+    } catch (error) {
+      return { status: 'unknown' };
+    }
+  }
+
+  setActiveModel(modelName: string): void {
+    this.defaultModel = modelName;
+    console.log(`Active model set to: ${modelName}`);
+  }
+
+  getActiveModel(): string {
+    return this.defaultModel;
+  }
+
+  async validateModel(modelName: string): Promise<boolean> {
+    const availableModels = await this.getAvailableModels();
+    return availableModels.includes(modelName);
   }
 }
 

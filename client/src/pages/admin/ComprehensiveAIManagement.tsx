@@ -143,6 +143,18 @@ export function ComprehensiveAIManagement() {
     refetchInterval: autoRefresh ? 30000 : false,
   });
 
+  const { data: enhancedModels } = useQuery({
+    queryKey: ["/api/admin/ollama/models-enhanced"],
+    queryFn: () => apiRequest("/api/admin/ollama/models-enhanced"),
+    refetchInterval: autoRefresh ? 5000 : false,
+  });
+
+  const { data: activeModelData } = useQuery({
+    queryKey: ["/api/admin/ollama/active-model"],
+    queryFn: () => apiRequest("/api/admin/ollama/active-model"),
+    refetchInterval: autoRefresh ? 10000 : false,
+  });
+
   const downloadModelMutation = useMutation({
     mutationFn: async (modelName: string) => {
       console.log('Making download request for model:', modelName);
@@ -245,6 +257,43 @@ export function ComprehensiveAIManagement() {
     },
   });
 
+  // Set active model mutation
+  const setActiveModelMutation = useMutation({
+    mutationFn: async (modelName: string) => {
+      return await apiRequest("/api/admin/ollama/set-active-model", {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ modelName }),
+      });
+    },
+    onSuccess: (data, modelName) => {
+      toast({
+        title: "Active Model Updated",
+        description: `${modelName} is now the active model for training and fine-tuning`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/active-model"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models-enhanced"] });
+    },
+    onError: (error: any, modelName) => {
+      let errorMessage = "Unknown error occurred";
+      const errorString = error.message || error.toString() || "";
+      
+      if (errorString.includes("404")) {
+        errorMessage = "Model not found or not installed";
+      } else if (errorString.includes("500")) {
+        errorMessage = "Server error occurred";
+      } else if (errorString) {
+        errorMessage = errorString;
+      }
+      
+      toast({
+        title: "Failed to Set Active Model",
+        description: `Failed to set ${modelName} as active: ${errorMessage}`,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Bootstrap mutation to solve circular dependency
   const bootstrapMutation = useMutation({
     mutationFn: async () => {
@@ -299,6 +348,14 @@ export function ComprehensiveAIManagement() {
     },
   });
 
+  // Use enhanced models if available, otherwise fallback to basic model details with active status
+  const modelsWithActiveStatus = enhancedModels?.models || modelDetails?.map(model => ({
+    ...model,
+    isActive: model.name === activeModelData?.activeModel,
+    storagePath: activeModelData?.storagePath,
+    downloadProgress: null
+  })) || [];
+
   // Fix for duplicate key warning: filter null values and use model details as fallback
   const availableModels = (() => {
     const statusModels = (ollamaStatus?.models || []).filter(model => model != null);
@@ -349,6 +406,14 @@ export function ComprehensiveAIManagement() {
     }
   };
 
+  const handleSetActiveModel = async (modelName: string) => {
+    try {
+      await setActiveModelMutation.mutateAsync(modelName);
+    } catch (error) {
+      console.error('Set active model error:', error);
+    }
+  };
+
   const testModel = async () => {
     if (!testPrompt.trim()) {
       toast({
@@ -359,10 +424,10 @@ export function ComprehensiveAIManagement() {
       return;
     }
 
-    if (!selectedTrainingModel) {
+    if (!activeModelData?.activeModel) {
       toast({
-        title: "No Training Model Selected",
-        description: "Please select a training model to test",
+        title: "No Active Model Set",
+        description: "Please set an active model in the Model Management tab before testing",
         variant: "destructive",
       });
       return;
@@ -376,7 +441,7 @@ export function ComprehensiveAIManagement() {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: selectedTrainingModel,
+          model: activeModelData.activeModel,
           prompt: testPrompt,
           userId: 33  // Send user ID to access training data
         }),
@@ -405,7 +470,14 @@ export function ComprehensiveAIManagement() {
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files || !selectedTrainingModel) return;
+    if (!files || !activeModelData?.activeModel) {
+      toast({
+        title: "No Active Model",
+        description: "Please set an active model before uploading training files",
+        variant: "destructive",
+      });
+      return;
+    }
 
     for (const file of Array.from(files)) {
       // Check file size (50MB limit for now)
@@ -442,7 +514,7 @@ export function ComprehensiveAIManagement() {
           // For .docx and .pages files, send as FormData to server for processing
           const formData = new FormData();
           formData.append('file', file);
-          formData.append('modelName', selectedTrainingModel);
+          formData.append('modelName', activeModelData.activeModel);
           formData.append('fileName', file.name);
           
           await apiRequest("/api/admin/ai/training/upload-file", {
@@ -504,10 +576,10 @@ export function ComprehensiveAIManagement() {
   };
 
   const startTraining = async () => {
-    if (!selectedTrainingModel) {
+    if (!activeModelData?.activeModel) {
       toast({
-        title: "No Model Selected",
-        description: "Please select a model for training",
+        title: "No Active Model Set",
+        description: "Please set an active model in the Model Management tab before training",
         variant: "destructive",
       });
       return;
@@ -533,7 +605,7 @@ export function ComprehensiveAIManagement() {
           setIsTraining(false);
           toast({
             title: "Training Complete",
-            description: `Model ${selectedTrainingModel} has been fine-tuned successfully`,
+            description: `Model ${activeModelData.activeModel} has been fine-tuned successfully`,
           });
           return 100;
         }
@@ -543,7 +615,7 @@ export function ComprehensiveAIManagement() {
 
     toast({
       title: "Training Started",
-      description: `Fine-tuning ${selectedTrainingModel} with ${trainingFiles.length} files`,
+      description: `Fine-tuning ${activeModelData.activeModel} with ${trainingFiles.length} files`,
     });
   };
 
@@ -818,30 +890,60 @@ export function ComprehensiveAIManagement() {
                 <CardDescription>Manage your local AI models</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {availableModels.length === 0 ? (
+                {modelsWithActiveStatus.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8">
                     No models installed. Download models from the available list.
                   </div>
                 ) : (
-                  availableModels.map((modelName) => {
-                    const modelDetail = modelDetails?.find(m => m.name === modelName);
+                  modelsWithActiveStatus.map((model) => {
+                    const isActive = model.isActive;
                     return (
-                      <div key={modelName} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div key={model.name} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex-1">
-                          <div className="font-medium">{modelName}</div>
-                          {modelDetail && (
-                            <div className="text-sm text-muted-foreground">
-                              Size: {modelDetail.size} • Modified: {new Date(modelDetail.modified).toLocaleDateString()}
+                          <div className="font-medium flex items-center gap-2">
+                            {model.name}
+                            {isActive && <Badge variant="default" className="bg-green-600">Active</Badge>}
+                            {!isActive && <Badge variant="secondary">Inactive</Badge>}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Size: {model.size} • Modified: {new Date(model.modified).toLocaleDateString()}
+                          </div>
+                          {model.storagePath && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Location: {model.storagePath}
+                            </div>
+                          )}
+                          {model.downloadProgress && (
+                            <div className="text-xs text-blue-600 mt-1">
+                              Download: {model.downloadProgress}%
                             </div>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant="default">Active</Badge>
+                          <Button
+                            size="sm"
+                            variant={isActive ? "secondary" : "default"}
+                            onClick={() => handleSetActiveModel(model.name)}
+                            disabled={setActiveModelMutation.isPending || isActive}
+                          >
+                            {isActive ? (
+                              <>
+                                <Zap className="h-4 w-4 mr-1" />
+                                Default
+                              </>
+                            ) : (
+                              <>
+                                <Settings className="h-4 w-4 mr-1" />
+                                Set Active
+                              </>
+                            )}
+                          </Button>
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleModelDelete(modelName)}
-                            disabled={deleteModelMutation.isPending}
+                            onClick={() => handleModelDelete(model.name)}
+                            disabled={deleteModelMutation.isPending || isActive}
+                            title={isActive ? "Cannot delete active model" : "Delete model"}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -874,18 +976,28 @@ export function ComprehensiveAIManagement() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="training-model-select">Base Model for Training</Label>
-                    <Select value={selectedTrainingModel} onValueChange={setSelectedTrainingModel}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select model to fine-tune" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableModels.map((model) => (
-                          <SelectItem key={model} value={model}>
-                            {model}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {activeModelData?.activeModel ? (
+                      <div className="p-3 border rounded-lg bg-green-50 dark:bg-green-950">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-green-600" />
+                          <span className="font-medium">{activeModelData.activeModel}</span>
+                          <Badge variant="default" className="bg-green-600">Active Model</Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          This is your default training model. Training will use this model automatically.
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 border rounded-lg bg-yellow-50 dark:bg-yellow-950">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                          <span className="font-medium">No Active Model Set</span>
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          Please set an active model in the "Model Management" tab before training.
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -928,7 +1040,7 @@ export function ComprehensiveAIManagement() {
 
                   <Button
                     onClick={startTraining}
-                    disabled={isTraining || !selectedTrainingModel || trainingFiles.length === 0}
+                    disabled={isTraining || !activeModelData?.activeModel || trainingFiles.length === 0}
                     className="w-full"
                   >
                     {isTraining ? (
