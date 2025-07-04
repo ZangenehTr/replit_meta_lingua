@@ -151,9 +151,21 @@ export function ComprehensiveAIManagement() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
     },
     onError: (error: any, modelName) => {
+      let errorMessage = "Unknown error occurred";
+      
+      if (error.message.includes("503")) {
+        errorMessage = "Ollama service is not running. Please start Ollama and try again.";
+      } else if (error.message.includes("400")) {
+        errorMessage = "Invalid request. Please check the model name.";
+      } else if (error.message.includes("500")) {
+        errorMessage = "Server error. The model may not exist or download failed.";
+      } else {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Download Failed",
-        description: `Failed to download ${modelName}: ${error.message}`,
+        description: `Failed to download ${modelName}: ${errorMessage}`,
         variant: "destructive",
       });
     },
@@ -203,6 +215,9 @@ export function ComprehensiveAIManagement() {
     setDownloadingModels(prev => new Set(prev).add(modelName));
     try {
       await downloadModelMutation.mutateAsync(modelName);
+    } catch (error) {
+      // Error is already handled by the mutation's onError callback
+      console.error('Download model error:', error);
     } finally {
       setDownloadingModels(prev => {
         const newSet = new Set(prev);
@@ -214,7 +229,12 @@ export function ComprehensiveAIManagement() {
 
   const handleModelDelete = async (modelName: string) => {
     if (confirm(`Are you sure you want to delete ${modelName}? This action cannot be undone.`)) {
-      await deleteModelMutation.mutateAsync(modelName);
+      try {
+        await deleteModelMutation.mutateAsync(modelName);
+      } catch (error) {
+        // Error is already handled by the mutation's onError callback
+        console.error('Delete model error:', error);
+      }
     }
   };
 
