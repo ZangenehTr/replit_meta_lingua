@@ -29,12 +29,24 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Auth() {
   const [, setLocation] = useLocation();
-  const { user, login, register: registerUser, loginLoading, registerLoading } = useAuth();
+  const { user, login, register: registerUser, loginLoading, registerLoading, logout } = useAuth();
   const [authError, setAuthError] = useState<string>("");
+  const [forceLogin, setForceLogin] = useState(false);
 
-  // Redirect based on user role when user data is available
+  // Check for logout parameter in URL
   useEffect(() => {
-    if (user) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('logout') === 'true') {
+      logout();
+      setForceLogin(true);
+      // Clean URL
+      window.history.replaceState({}, document.title, "/auth");
+    }
+  }, [logout]);
+
+  // Redirect based on user role when user data is available (unless forcing login)
+  useEffect(() => {
+    if (user && !forceLogin) {
       if (user.role === 'admin') {
         setLocation("/admin");
       } else if (user.role === 'teacher') {
@@ -43,7 +55,7 @@ export default function Auth() {
         setLocation("/dashboard");
       }
     }
-  }, [user, setLocation]);
+  }, [user, setLocation, forceLogin]);
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -83,6 +95,57 @@ export default function Auth() {
       setAuthError(error.message || "Registration failed. Please try again.");
     }
   };
+
+  const handleLogout = () => {
+    logout();
+    setForceLogin(true);
+  };
+
+  // Show logout option if user is logged in and not forcing login
+  if (user && !forceLogin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                <GraduationCap className="h-6 w-6 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold">Meta Lingua</h1>
+            </div>
+            <CardDescription>
+              You are logged in as {user.firstName} {user.lastName} ({user.role})
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            <Button 
+              onClick={() => {
+                if (user.role === 'admin') {
+                  setLocation("/admin");
+                } else if (user.role === 'teacher') {
+                  setLocation("/teacher");
+                } else {
+                  setLocation("/dashboard");
+                }
+              }}
+              className="w-full"
+            >
+              Go to Dashboard
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleLogout}
+              className="w-full"
+            >
+              Switch Account
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
