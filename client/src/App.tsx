@@ -37,6 +37,37 @@ import CallCenterDashboard from "@/pages/callcenter/dashboard";
 import TeacherDashboardNew from "@/pages/teacher/dashboard";
 import AccountantDashboard from "@/pages/accountant/dashboard";
 import MentorDashboard from "@/pages/mentor/dashboard";
+
+// Student pages
+import TutorsPage from "@/pages/student/tutors";
+import SessionsPage from "@/pages/student/sessions";
+import HomeworkPage from "@/pages/student/homework";
+import MessagesPage from "@/pages/student/messages";
+import PaymentPage from "@/pages/student/payment";
+
+// Teacher pages
+import TeacherClassesPage from "@/pages/teacher/classes";
+import TeacherSchedulePage from "@/pages/teacher/schedule";
+import TeacherHomeworkPage from "@/pages/teacher/homework";
+import TeacherStudentsPage from "@/pages/teacher/students";
+import TeacherResourcesPage from "@/pages/teacher/resources";
+import TeacherReportsPage from "@/pages/teacher/reports";
+
+// Mentor pages
+import MentorStudentsPage from "@/pages/mentor/students";
+import MentorSessionsPage from "@/pages/mentor/sessions";
+import MentorProgressPage from "@/pages/mentor/progress";
+
+// Call Center pages
+import CallLogsPage from "@/pages/callcenter/calls";
+import ProspectsPage from "@/pages/callcenter/prospects";
+import CampaignsPage from "@/pages/callcenter/campaigns";
+
+// Admin pages
+import AdminClassesPage from "@/pages/admin/classes";
+import AdminReportsPage from "@/pages/admin/reports";
+import AdminCommunicationsPage from "@/pages/admin/communications";
+
 import { LanguageProvider } from "@/hooks/use-language";
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
@@ -69,31 +100,6 @@ function Router() {
     <Switch>
       <Route path="/auth" component={Auth} />
       <Route path="/demo" component={DemoDashboard} />
-      <Route path="/admin">
-        <ProtectedRoute>
-          <EnhancedAdminDashboard />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/admin/students">
-        <ProtectedRoute>
-          <AdminStudents />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/admin/courses">
-        <ProtectedRoute>
-          <AdminCourses />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/admin/financial">
-        <ProtectedRoute>
-          <AdminFinancial />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/admin/system">
-        <ProtectedRoute>
-          <AdminSystem />
-        </ProtectedRoute>
-      </Route>
       <Route path="/manager">
         <ProtectedRoute>
           <ManagerDashboard />
@@ -106,7 +112,7 @@ function Router() {
       </Route>
       <Route path="/analytics">
         <ProtectedRoute>
-          <AnalyticsDashboard />
+          <GamificationProgress />
         </ProtectedRoute>
       </Route>
       <Route path="/progress">
@@ -233,6 +239,133 @@ function Router() {
           <ReferralsPage />
         </ProtectedRoute>
       </Route>
+      
+      {/* Student Routes */}
+      <Route path="/tutors">
+        <ProtectedRoute>
+          <TutorsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/sessions">
+        <ProtectedRoute>
+          <SessionsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/homework">
+        <ProtectedRoute>
+          <HomeworkPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/messages">
+        <ProtectedRoute>
+          <MessagesPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/payment">
+        <ProtectedRoute>
+          <PaymentPage />
+        </ProtectedRoute>
+      </Route>
+
+      {/* Teacher Routes */}
+      <Route path="/teacher/dashboard">
+        <ProtectedRoute>
+          <TeacherDashboardNew />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/classes">
+        <ProtectedRoute>
+          <TeacherClassesPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/schedule">
+        <ProtectedRoute>
+          <TeacherSchedulePage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/homework">
+        <ProtectedRoute>
+          <TeacherHomeworkPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/students">
+        <ProtectedRoute>
+          <TeacherStudentsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/resources">
+        <ProtectedRoute>
+          <TeacherResourcesPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/reports">
+        <ProtectedRoute>
+          <TeacherReportsPage />
+        </ProtectedRoute>
+      </Route>
+
+      {/* Mentor Routes */}
+      <Route path="/mentor/dashboard">
+        <ProtectedRoute>
+          <MentorDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/mentor/students">
+        <ProtectedRoute>
+          <MentorStudentsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/mentor/sessions">
+        <ProtectedRoute>
+          <MentorSessionsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/mentor/progress">
+        <ProtectedRoute>
+          <MentorProgressPage />
+        </ProtectedRoute>
+      </Route>
+
+      {/* Call Center Routes */}
+      <Route path="/callcenter/calls">
+        <ProtectedRoute>
+          <CallLogsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/callcenter/prospects">
+        <ProtectedRoute>
+          <ProspectsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/callcenter/campaigns">
+        <ProtectedRoute>
+          <CampaignsPage />
+        </ProtectedRoute>
+      </Route>
+
+      {/* Admin Routes */}
+      <Route path="/admin/classes">
+        <ProtectedRoute>
+          <AppLayout>
+            <AdminClassesPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/reports">
+        <ProtectedRoute>
+          <AppLayout>
+            <AdminReportsPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/communications">
+        <ProtectedRoute>
+          <AppLayout>
+            <AdminCommunicationsPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/dashboard">
         <ProtectedRoute>
           <Dashboard />
