@@ -34,6 +34,10 @@ import WalletPage from "@/pages/wallet";
 import ReferralsPage from "@/pages/referrals";
 import Courses from "@/pages/courses";
 import LeadManagement from "@/pages/lead-management";
+import CallCenterDashboard from "@/pages/callcenter/dashboard";
+import TeacherDashboardNew from "@/pages/teacher/dashboard";
+import AccountantDashboard from "@/pages/accountant/dashboard";
+import MentorDashboard from "@/pages/mentor/dashboard";
 import { LanguageProvider } from "@/hooks/use-language";
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
@@ -176,9 +180,29 @@ function Router() {
           <AdminTeacherManagement />
         </ProtectedRoute>
       </Route>
+      <Route path="/callcenter">
+        <ProtectedRoute>
+          <CallCenterDashboard />
+        </ProtectedRoute>
+      </Route>
       <Route path="/callcenter/leads">
         <ProtectedRoute>
           <LeadManagement />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher-new">
+        <ProtectedRoute>
+          <TeacherDashboardNew />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/accountant">
+        <ProtectedRoute>
+          <AccountantDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/mentor">
+        <ProtectedRoute>
+          <MentorDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/courses">
