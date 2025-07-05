@@ -134,8 +134,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Sidebar */}
         <Sidebar />
         
-        {/* Main Content */}
-        <main className="flex-1 overflow-hidden">
+        {/* Main Content - with proper spacing to avoid sidebar overlap */}
+        <main className="flex-1 ml-64 p-6 overflow-y-auto">
           {children}
         </main>
       </div>
