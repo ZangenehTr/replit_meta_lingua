@@ -2719,6 +2719,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Communication Center endpoints
+  app.get("/api/communication/templates", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const templates = await storage.getCommunicationTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching communication templates:', error);
+      res.status(500).json({ error: 'Failed to fetch communication templates' });
+    }
+  });
+
+  app.post("/api/communication/templates", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const templateData = {
+        ...req.body,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      const template = await storage.createCommunicationTemplate(templateData);
+      res.status(201).json(template);
+    } catch (error) {
+      console.error('Error creating communication template:', error);
+      res.status(500).json({ error: 'Failed to create communication template' });
+    }
+  });
+
+  app.get("/api/communication/campaigns", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const campaigns = await storage.getCampaigns();
+      res.json(campaigns);
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+      res.status(500).json({ error: 'Failed to fetch campaigns' });
+    }
+  });
+
+  app.post("/api/communication/campaigns", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const campaignData = {
+        ...req.body,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      const campaign = await storage.createCampaign(campaignData);
+      res.status(201).json(campaign);
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      res.status(500).json({ error: 'Failed to create campaign' });
+    }
+  });
+
+  app.get("/api/communication/automation-rules", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const rules = await storage.getAutomationRules();
+      res.json(rules);
+    } catch (error) {
+      console.error('Error fetching automation rules:', error);
+      res.status(500).json({ error: 'Failed to fetch automation rules' });
+    }
+  });
+
+  app.post("/api/communication/automation-rules", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const ruleData = {
+        ...req.body,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      const rule = await storage.createAutomationRule(ruleData);
+      res.status(201).json(rule);
+    } catch (error) {
+      console.error('Error creating automation rule:', error);
+      res.status(500).json({ error: 'Failed to create automation rule' });
+    }
+  });
+
+  app.get("/api/communication/stats", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const templates = await storage.getCommunicationTemplates();
+      const campaigns = await storage.getCampaigns();
+      const rules = await storage.getAutomationRules();
+      
+      const stats = {
+        totalTemplates: templates.length,
+        activeTemplates: templates.filter(t => t.isActive).length,
+        totalCampaigns: campaigns.length,
+        activeCampaigns: campaigns.filter(c => c.status === 'active').length,
+        totalRules: rules.length,
+        activeRules: rules.filter(r => r.isActive).length,
+        totalSent: campaigns.reduce((sum, c) => sum + c.sentCount, 0),
+        totalDelivered: campaigns.reduce((sum, c) => sum + c.deliveredCount, 0),
+        averageOpenRate: campaigns.length > 0 ? 
+          campaigns.reduce((sum, c) => sum + c.openRate, 0) / campaigns.length : 0,
+        averageClickRate: campaigns.length > 0 ? 
+          campaigns.reduce((sum, c) => sum + c.clickRate, 0) / campaigns.length : 0
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching communication stats:', error);
+      res.status(500).json({ error: 'Failed to fetch communication stats' });
+    }
+  });
+
   // Admin CRM endpoints
   app.get("/api/admin/stats", authenticateToken, async (req: any, res) => {
     if (req.user.role !== 'Admin') {
