@@ -125,42 +125,58 @@ function Router() {
       </Route>
       <Route path="/admin">
         <ProtectedRoute>
-          <EnhancedAdminDashboard />
+          <AppLayout>
+            <EnhancedAdminDashboard />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/students">
         <ProtectedRoute>
-          <AdminStudents />
+          <AppLayout>
+            <AdminStudents />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/courses">
         <ProtectedRoute>
-          <AdminCourses />
+          <AppLayout>
+            <AdminCourses />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/financial">
         <ProtectedRoute>
-          <AdminFinancial />
+          <AppLayout>
+            <AdminFinancial />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/system">
         <ProtectedRoute>
-          <AdminSystem />
+          <AppLayout>
+            <AdminSystem />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/settings">
         <ProtectedRoute>
-          <AdminSettings />
+          <AppLayout>
+            <AdminSettings />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/financial-reports">
         <ProtectedRoute>
-          <FinancialReportsPage />
+          <AppLayout>
+            <FinancialReportsPage />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/ai-management">
         <ProtectedRoute>
-          <AIServicesManagement />
+          <AppLayout>
+            <AIServicesManagement />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
 
