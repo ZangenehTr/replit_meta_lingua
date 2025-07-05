@@ -125,6 +125,7 @@ Meta Lingua is an AI-enhanced multilingual language learning and institute manag
 - July 04, 2025. Implemented dynamic language proficiency visualization: Added comprehensive skills tracking with radar charts, progress timelines, personalized learning paths, and actionable insights for all 6 language skills (Speaking, Listening, Reading, Writing, Grammar, Vocabulary)
 - July 05, 2025. Implemented global navigation system: Created standardized AppLayout component with sticky header, role-based sidebar navigation, user dropdown menu with logout/account switching, and consistent navigation format across all protected routes
 - July 05, 2025. Fixed admin routing issue: Resolved dual admin entry pages problem by implementing automatic role-based redirects - admin users now properly access administrative dashboard content instead of student learning interfaces
+- July 05, 2025. Comprehensive RBAC System Implementation: Created industry-standard role-based access control system with detailed permissions for all 7 roles (Admin, Teacher, Mentor, Student, Supervisor, Call Center Agent, Accountant). Each role has specific powers for viewing, editing, creating, and deleting resources, plus role-specific capabilities like grade management, lead tracking, financial reporting, etc. Includes Iranian market compliance features for Shetab payments and Kavenegar SMS integration.
 
 ## Test Accounts
 

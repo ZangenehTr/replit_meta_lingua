@@ -6,56 +6,126 @@ interface Permission {
   canEdit: string[];
   canDelete: string[];
   canCreate: string[];
+  
+  // Role-specific powers (optional)
+  systemConfig?: boolean;
+  userManagement?: boolean;
+  financialControl?: boolean;
+  auditAccess?: boolean;
+  globalSettings?: boolean;
+  
+  teamManagement?: boolean;
+  performanceReports?: boolean;
+  businessAnalytics?: boolean;
+  
+  qualityAssurance?: boolean;
+  teacherEvaluation?: boolean;
+  complianceMonitoring?: boolean;
+  
+  gradeManagement?: boolean;
+  contentCreation?: boolean;
+  studentCommunication?: boolean;
+  
+  goalSetting?: boolean;
+  progressTracking?: boolean;
+  motivationalSupport?: boolean;
+  
+  leadManagement?: boolean;
+  customerCommunication?: boolean;
+  salesTracking?: boolean;
+  
+  financialReporting?: boolean;
+  paymentProcessing?: boolean;
+  taxCompliance?: boolean;
+  
+  learningAccess?: boolean;
+  progressViewing?: boolean;
+  courseFeedback?: boolean;
 }
 
+// Enhanced RBAC based on industry best practices
 export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
   admin: {
-    canView: ['*'], // Full access
+    canView: ['*'], // Full system access
     canEdit: ['*'],
     canDelete: ['*'],
-    canCreate: ['*']
+    canCreate: ['*'],
+    // Admin-specific powers
+    systemConfig: true,
+    userManagement: true,
+    financialControl: true,
+    auditAccess: true,
+    globalSettings: true
   },
   manager: {
-    canView: ['students', 'teachers', 'courses', 'payments', 'reports', 'leads', 'sessions'],
-    canEdit: ['students', 'teachers', 'courses', 'payments', 'leads'],
-    canDelete: ['leads'],
-    canCreate: ['students', 'teachers', 'courses', 'leads', 'sessions']
+    canView: ['students', 'teachers', 'courses', 'payments', 'reports', 'leads', 'sessions', 'analytics'],
+    canEdit: ['students', 'teachers', 'courses', 'payments', 'leads', 'schedules'],
+    canDelete: ['leads', 'draft_courses'],
+    canCreate: ['students', 'teachers', 'courses', 'leads', 'sessions', 'reports'],
+    // Manager-specific powers
+    teamManagement: true,
+    performanceReports: true,
+    businessAnalytics: true
   },
   supervisor: {
-    canView: ['students', 'teachers', 'courses', 'sessions', 'reports', 'attendance'],
-    canEdit: ['students', 'attendance', 'sessions'],
+    canView: ['teacher_performance', 'quality_metrics', 'compliance_reports', 'audit_trails', 'class_observations'],
+    canEdit: ['teacher_evaluations', 'quality_standards', 'compliance_settings'],
     canDelete: [],
-    canCreate: ['sessions', 'attendance']
+    canCreate: ['evaluation_reports', 'quality_audits', 'compliance_checks'],
+    // Supervisor-specific powers
+    qualityAssurance: true,
+    teacherEvaluation: true,
+    complianceMonitoring: true
   },
   teacher: {
-    canView: ['own_students', 'own_courses', 'own_sessions', 'attendance', 'homework'],
-    canEdit: ['own_sessions', 'attendance', 'homework', 'grades'],
-    canDelete: [],
-    canCreate: ['homework', 'sessions', 'attendance']
+    canView: ['own_students', 'own_courses', 'own_sessions', 'class_analytics', 'student_progress'],
+    canEdit: ['own_courses', 'grades', 'assignments', 'class_schedule', 'teaching_materials'],
+    canDelete: ['own_assignments', 'draft_materials'],
+    canCreate: ['assignments', 'lessons', 'progress_reports', 'parent_communications'],
+    // Teacher-specific powers
+    gradeManagement: true,
+    contentCreation: true,
+    studentCommunication: true
   },
   mentor: {
-    canView: ['assigned_students', 'progress', 'sessions', 'homework'],
-    canEdit: ['student_progress', 'homework_feedback'],
+    canView: ['assigned_students', 'learning_progress', 'goal_tracking', 'mentorship_analytics'],
+    canEdit: ['student_goals', 'progress_notes', 'recommendations', 'mentorship_plans'],
     canDelete: [],
-    canCreate: ['progress_notes', 'recommendations']
+    canCreate: ['goal_plans', 'progress_updates', 'motivation_content', 'achievement_rewards'],
+    // Mentor-specific powers
+    goalSetting: true,
+    progressTracking: true,
+    motivationalSupport: true
   },
   call_center: {
-    canView: ['leads', 'students', 'communication_logs'],
-    canEdit: ['leads', 'communication_logs', 'student_contact'],
-    canDelete: [],
-    canCreate: ['leads', 'communication_logs', 'follow_ups']
+    canView: ['leads', 'conversion_metrics', 'communication_history', 'sales_funnel', 'customer_journey'],
+    canEdit: ['lead_status', 'contact_information', 'follow_up_schedules', 'communication_logs'],
+    canDelete: ['duplicate_leads'],
+    canCreate: ['new_leads', 'follow_up_tasks', 'communication_records', 'conversion_reports'],
+    // Call Center-specific powers
+    leadManagement: true,
+    customerCommunication: true,
+    salesTracking: true
   },
   accountant: {
-    canView: ['payments', 'invoices', 'financial_reports', 'students'],
-    canEdit: ['invoices', 'payments', 'financial_records'],
-    canDelete: [],
-    canCreate: ['invoices', 'payment_records']
+    canView: ['financial_data', 'payment_records', 'invoices', 'tax_reports', 'revenue_analytics'],
+    canEdit: ['invoices', 'payment_status', 'financial_records', 'tax_settings'],
+    canDelete: ['draft_invoices'],
+    canCreate: ['invoices', 'financial_reports', 'tax_documents', 'audit_trails'],
+    // Accountant-specific powers
+    financialReporting: true,
+    paymentProcessing: true,
+    taxCompliance: true
   },
   student: {
-    canView: ['own_profile', 'own_courses', 'own_sessions', 'own_homework', 'own_payments'],
-    canEdit: ['own_profile', 'homework_submissions'],
-    canDelete: [],
-    canCreate: ['homework_submissions', 'session_feedback']
+    canView: ['own_profile', 'enrolled_courses', 'progress_tracking', 'achievements', 'payment_history'],
+    canEdit: ['profile_settings', 'learning_preferences', 'homework_submissions'],
+    canDelete: ['own_notes'],
+    canCreate: ['homework_submissions', 'course_feedback', 'learning_notes'],
+    // Student-specific powers
+    learningAccess: true,
+    progressViewing: true,
+    courseFeedback: true
   }
 };
 
