@@ -6819,6 +6819,337 @@ Return JSON format:
     }
   });
 
+  // MOOD-BASED LEARNING RECOMMENDATION SYSTEM - IRANIAN COMPLIANT (OFFLINE-FIRST)
+  
+  // Submit mood entry and get personalized recommendations
+  app.post("/api/mood/track", authenticateToken, async (req: any, res) => {
+    try {
+      const { 
+        moodScore, 
+        moodCategory, 
+        energyLevel, 
+        motivationLevel, 
+        stressLevel, 
+        focusLevel, 
+        context, 
+        notes,
+        userInput = '',
+        inputType = 'manual'
+      } = req.body;
+
+      // Create mood entry
+      const moodEntry: InsertMoodEntry = {
+        userId: req.user.id,
+        moodScore,
+        moodCategory,
+        energyLevel,
+        motivationLevel,
+        stressLevel,
+        focusLevel,
+        context,
+        notes,
+        detectedFrom: inputType,
+        metadata: { userInput, inputType }
+      };
+
+      const createdMood = await storage.createMoodEntry(moodEntry);
+
+      // Generate personalized recommendations using local analysis
+      const { localMoodAnalyzer } = await import('./local-mood-analyzer');
+      
+      // Get user context for personalized recommendations
+      const userProfile = await storage.getUserProfile(req.user.id);
+      const learningContext = {
+        userId: req.user.id,
+        currentLevel: userProfile?.currentProficiency || 'beginner',
+        targetLanguage: userProfile?.targetLanguage || 'persian',
+        nativeLanguage: userProfile?.nativeLanguage || 'en',
+        learningGoals: userProfile?.learningGoals || [],
+        culturalBackground: userProfile?.culturalBackground || '',
+        recentPerformance: {
+          averageScore: 75, // Would get from real performance data
+          completedLessons: req.user.totalLessons || 0,
+          strugglingAreas: userProfile?.learningChallenges || [],
+          strengths: userProfile?.strengths || []
+        },
+        personalityProfile: {
+          preferredLearningStyle: userProfile?.learningStyle || 'visual',
+          motivationFactors: userProfile?.motivationFactors || ['personal_growth'],
+          stressResponse: 'adaptive',
+          culturalPreferences: ['traditional', 'persian_culture']
+        },
+        timeContext: {
+          timeOfDay: new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening',
+          dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+          availableTime: 30, // Default 30 minutes
+          localTime: new Date().toLocaleString('fa-IR')
+        }
+      };
+
+      // Generate recommendations using offline local analysis
+      const analysis = await localMoodAnalyzer.analyzeMoodOffline(userInput || notes || '', inputType, learningContext);
+
+      // Save recommendations to database
+      const recommendations = [];
+      for (const rec of analysis.recommendations) {
+        const recommendation: InsertMoodRecommendation = {
+          userId: req.user.id,
+          moodEntryId: createdMood.id,
+          recommendationType: rec.type,
+          contentType: rec.type === 'content' ? 'lesson' : rec.type,
+          difficulty: rec.difficulty,
+          duration: rec.duration,
+          title: rec.title,
+          description: rec.description,
+          reasoning: rec.reasoning,
+          priority: rec.priority
+        };
+        
+        const savedRec = await storage.createMoodRecommendation(recommendation);
+        recommendations.push(savedRec);
+      }
+
+      res.json({
+        mood: createdMood,
+        analysis: analysis.detectedMood,
+        contextualFactors: analysis.contextualFactors,
+        recommendations,
+        culturalAdaptation: 'Persian learning context applied'
+      });
+
+    } catch (error) {
+      console.error('Error tracking mood:', error);
+      res.status(500).json({ message: "Failed to track mood and generate recommendations" });
+    }
+  });
+
+  // Get user's mood history and patterns
+  app.get("/api/mood/history", authenticateToken, async (req: any, res) => {
+    try {
+      const { days = 30, includeRecommendations = true } = req.query;
+      const history = await storage.getMoodHistory(req.user.id, parseInt(days));
+      
+      let recommendations = [];
+      if (includeRecommendations === 'true') {
+        recommendations = await storage.getMoodRecommendations(req.user.id, parseInt(days));
+      }
+
+      // Analyze patterns using local analysis
+      const { localMoodAnalyzer } = await import('./local-mood-analyzer');
+      const userProfile = await storage.getUserProfile(req.user.id);
+      
+      const patterns = localMoodAnalyzer.analyzeUserMoodPatterns ? 
+        await localMoodAnalyzer.analyzeUserMoodPatterns(history, [], {
+          userId: req.user.id,
+          currentLevel: userProfile?.currentProficiency || 'beginner',
+          targetLanguage: userProfile?.targetLanguage || 'persian',
+          nativeLanguage: userProfile?.nativeLanguage || 'en',
+          learningGoals: userProfile?.learningGoals || [],
+          culturalBackground: userProfile?.culturalBackground || '',
+          recentPerformance: {
+            averageScore: 75,
+            completedLessons: req.user.totalLessons || 0,
+            strugglingAreas: userProfile?.learningChallenges || [],
+            strengths: userProfile?.strengths || []
+          },
+          personalityProfile: {
+            preferredLearningStyle: userProfile?.learningStyle || 'visual',
+            motivationFactors: userProfile?.motivationFactors || ['personal_growth'],
+            stressResponse: 'adaptive',
+            culturalPreferences: ['traditional']
+          },
+          timeContext: {
+            timeOfDay: 'any',
+            dayOfWeek: 'any',
+            availableTime: 30,
+            localTime: new Date().toLocaleString('fa-IR')
+          }
+        }) : {
+          patterns: { bestMoodTimes: ['morning'], worstMoodTimes: ['evening'], optimalLearningConditions: ['well-rested'] },
+          predictions: { nextOptimalSession: 'morning', recommendedDuration: 20, suggestedContent: ['review'] }
+        };
+
+      res.json({
+        history,
+        recommendations,
+        patterns: patterns.patterns || {},
+        predictions: patterns.predictions || {},
+        insights: {
+          averageMoodScore: history.length > 0 ? history.reduce((sum, m) => sum + m.moodScore, 0) / history.length : 5,
+          averageEnergyLevel: history.length > 0 ? history.reduce((sum, m) => sum + m.energyLevel, 0) / history.length : 5,
+          mostCommonMood: history.length > 0 ? history.reduce((acc, curr) => 
+            (acc[curr.moodCategory] = (acc[curr.moodCategory] || 0) + 1, acc), {} as any) : {},
+          culturalContext: 'Persian language learning patterns'
+        }
+      });
+
+    } catch (error) {
+      console.error('Error fetching mood history:', error);
+      res.status(500).json({ message: "Failed to fetch mood history" });
+    }
+  });
+
+  // Update recommendation feedback (accepted/completed/effectiveness rating)
+  app.patch("/api/mood/recommendation/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { isAccepted, completedAt, effectivenessRating, sessionOutcome } = req.body;
+
+      const updates: any = {};
+      if (isAccepted !== undefined) updates.isAccepted = isAccepted;
+      if (completedAt) updates.completedAt = new Date(completedAt);
+      if (effectivenessRating) updates.effectivenessRating = effectivenessRating;
+
+      const updated = await storage.updateMoodRecommendation(parseInt(id), updates);
+
+      // If effectiveness rating provided, analyze the session for learning
+      if (effectivenessRating && sessionOutcome) {
+        const { localMoodAnalyzer } = await import('./local-mood-analyzer');
+        const recommendation = await storage.getMoodRecommendationById(parseInt(id));
+        if (recommendation) {
+          const moodEntry = await storage.getMoodEntryById(recommendation.moodEntryId);
+          if (moodEntry) {
+            const effectiveness = localMoodAnalyzer.analyzeLocalEffectiveness(moodEntry, sessionOutcome);
+            
+            // Save learning adaptation insights
+            if (effectiveness.adaptations.length > 0) {
+              const adaptation: InsertLearningAdaptation = {
+                userId: req.user.id,
+                moodPattern: moodEntry.moodCategory,
+                adaptationStrategy: effectiveness.adaptations.join('; '),
+                preferredContentTypes: [recommendation.contentType],
+                optimalDuration: recommendation.duration,
+                bestTimeOfDay: new Date(moodEntry.createdAt).getHours() < 12 ? 'morning' : 'afternoon',
+                successRate: Math.round(effectiveness.effectivenessScore * 10)
+              };
+              
+              await storage.createLearningAdaptation(adaptation);
+            }
+          }
+        }
+      }
+
+      res.json({ updated, message: "Recommendation feedback recorded" });
+
+    } catch (error) {
+      console.error('Error updating recommendation:', error);
+      res.status(500).json({ message: "Failed to update recommendation" });
+    }
+  });
+
+  // Get learning adaptations and patterns
+  app.get("/api/mood/adaptations", authenticateToken, async (req: any, res) => {
+    try {
+      const adaptations = await storage.getLearningAdaptations(req.user.id);
+      
+      // Calculate optimization suggestions
+      const suggestions = adaptations.length > 0 ? {
+        bestTimeToStudy: adaptations
+          .filter(a => a.successRate > 70)
+          .map(a => a.bestTimeOfDay)
+          .reduce((acc, time) => {
+            acc[time] = (acc[time] || 0) + 1;
+            return acc;
+          }, {} as any),
+        optimalDuration: adaptations.length > 0 ? 
+          Math.round(adaptations.reduce((sum, a) => sum + (a.optimalDuration || 20), 0) / adaptations.length) : 20,
+        preferredContent: adaptations
+          .filter(a => a.successRate > 70)
+          .flatMap(a => a.preferredContentTypes as string[])
+          .filter(Boolean),
+        culturalOptimization: 'Persian cultural context enhances learning effectiveness'
+      } : {
+        bestTimeToStudy: { morning: 1 },
+        optimalDuration: 20,
+        preferredContent: ['interactive', 'cultural'],
+        culturalOptimization: 'Building initial learning patterns'
+      };
+
+      res.json({
+        adaptations,
+        suggestions,
+        insights: {
+          totalPatterns: adaptations.length,
+          averageSuccessRate: adaptations.length > 0 ? 
+            adaptations.reduce((sum, a) => sum + a.successRate, 0) / adaptations.length : 0,
+          personalizedForPersianLearning: true
+        }
+      });
+
+    } catch (error) {
+      console.error('Error fetching learning adaptations:', error);
+      res.status(500).json({ message: "Failed to fetch learning adaptations" });
+    }
+  });
+
+  // Quick mood check (simplified mood entry for fast tracking)
+  app.post("/api/mood/quick-check", authenticateToken, async (req: any, res) => {
+    try {
+      const { quickMood, energyLevel, availableTime = 15 } = req.body;
+      
+      // Map quick mood to full mood entry
+      const moodMapping: any = {
+        'great': { moodScore: 9, moodCategory: 'excited', motivationLevel: 8, stressLevel: 2, focusLevel: 8 },
+        'good': { moodScore: 7, moodCategory: 'motivated', motivationLevel: 7, stressLevel: 3, focusLevel: 7 },
+        'okay': { moodScore: 5, moodCategory: 'calm', motivationLevel: 5, stressLevel: 5, focusLevel: 5 },
+        'tired': { moodScore: 3, moodCategory: 'tired', motivationLevel: 3, stressLevel: 6, focusLevel: 3 },
+        'stressed': { moodScore: 2, moodCategory: 'stressed', motivationLevel: 2, stressLevel: 8, focusLevel: 2 }
+      };
+
+      const moodData = moodMapping[quickMood] || moodMapping['okay'];
+      
+      const moodEntry: InsertMoodEntry = {
+        userId: req.user.id,
+        energyLevel: energyLevel || moodData.energyLevel || 5,
+        detectedFrom: 'quick_check',
+        context: `Quick check - ${availableTime} minutes available`,
+        ...moodData
+      };
+
+      const createdMood = await storage.createMoodEntry(moodEntry);
+
+      // Generate 2-3 quick recommendations
+      const quickRecommendations = [
+        {
+          type: 'content',
+          title: moodData.moodScore > 6 ? 'Persian Conversation Practice' : 'Gentle Vocabulary Review',
+          description: moodData.moodScore > 6 ? 
+            'Interactive speaking practice with cultural context' : 
+            'Relaxed vocabulary building with visual aids',
+          reasoning: `Adapted for ${quickMood} mood and ${availableTime} minutes`,
+          priority: 8,
+          duration: Math.min(availableTime, moodData.moodScore > 6 ? 20 : 10),
+          difficulty: moodData.moodScore > 6 ? 'medium' : 'easy',
+          cultural_adaptation: 'Persian language focus'
+        }
+      ];
+
+      // Add break recommendation if stressed
+      if (moodData.stressLevel > 6) {
+        quickRecommendations.unshift({
+          type: 'meditation',
+          title: 'Persian Mindfulness Break',
+          description: 'Traditional Persian breathing techniques',
+          reasoning: 'High stress detected - relaxation first',
+          priority: 9,
+          duration: 5,
+          difficulty: 'easy',
+          cultural_adaptation: 'Persian mindfulness tradition'
+        });
+      }
+
+      res.json({
+        mood: createdMood,
+        recommendations: quickRecommendations,
+        message: `Personalized for ${quickMood} mood with ${availableTime} minutes available`
+      });
+
+    } catch (error) {
+      console.error('Error processing quick mood check:', error);
+      res.status(500).json({ message: "Failed to process quick mood check" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
