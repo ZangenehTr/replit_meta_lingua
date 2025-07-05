@@ -48,10 +48,14 @@ export default function LeadManagement() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showNewLeadForm, setShowNewLeadForm] = useState(false);
 
+  // Debug authentication
+  const hasToken = !!localStorage.getItem('auth_token');
+  console.log('Has auth token:', hasToken);
+
   // Fetch leads from local database - works offline in Iran
-  const { data: leads = [], isLoading } = useQuery<Lead[]>({
+  const { data: leads = [], isLoading, error } = useQuery<Lead[]>({
     queryKey: ["/api/leads"],
-    queryFn: () => fetch("/api/leads").then(res => res.json())
+    enabled: hasToken // Only run query if user has token
   });
 
   // Calculate real statistics from database data
@@ -85,14 +89,14 @@ export default function LeadManagement() {
 
   // Filter leads based on search and status - all data from local Iranian database
   const filteredLeads = useMemo(() => {
-    if (!leads) return [];
+    if (!leads || !Array.isArray(leads)) return [];
     
     return leads.filter(lead => {
       const matchesSearch = searchTerm === "" || 
-        lead.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.phoneNumber.includes(searchTerm);
+        (lead.firstName && lead.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (lead.lastName && lead.lastName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (lead.email && lead.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (lead.phoneNumber && lead.phoneNumber.includes(searchTerm));
       
       const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
       
@@ -341,6 +345,15 @@ export default function LeadManagement() {
                   <tr>
                     <td colSpan={8} className="p-8 text-center text-gray-500">
                       در حال بارگذاری اطلاعات لیدها...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-red-500">
+                      {!hasToken 
+                        ? "جهت دسترسی به لیدها، ابتدا وارد سیستم شوید" 
+                        : "خطا در بارگذاری لیدها. لطفاً صفحه را مجدداً بارگذاری کنید."
+                      }
                     </td>
                   </tr>
                 ) : filteredLeads.length === 0 ? (
