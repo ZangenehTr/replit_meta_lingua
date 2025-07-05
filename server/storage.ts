@@ -1030,17 +1030,7 @@ export class MemStorage implements IStorage {
     return undefined; // Mock implementation
   }
 
-  async deleteLead(id: number): Promise<boolean> {
-    return true; // Mock implementation
-  }
-
-  async getLeadsByStatus(status: string): Promise<Lead[]> {
-    return []; // Mock implementation
-  }
-
-  async getLeadsByAssignee(assignee: string): Promise<Lead[]> {
-    return []; // Mock implementation
-  }
+  // Removed duplicate methods - implemented later in the class
 
   // CRM - Financial Management
   async getInvoices(): Promise<(Invoice & { studentName: string, courseName?: string })[]> {
@@ -1055,18 +1045,18 @@ export class MemStorage implements IStorage {
     const id = this.currentId++;
     const newInvoice: Invoice = {
       id,
-      studentId: invoice.studentId || 1,
-      amount: invoice.amount || 0,
-      currency: invoice.currency || "IRR",
-      status: invoice.status || "pending",
-      dueDate: invoice.dueDate || new Date(),
-      description: invoice.description || "",
-      items: invoice.items || [],
-      discountAmount: invoice.discountAmount || 0,
-      taxAmount: invoice.taxAmount || 0,
-      totalAmount: invoice.totalAmount || 0,
-      paidAt: invoice.paidAt || null,
-      paymentMethod: invoice.paymentMethod || null,
+      studentId: 1,
+      amount: 500000,
+      currency: "IRR",
+      status: "pending",
+      dueDate: new Date(),
+      description: "Course fee",
+      courseId: 1,
+      notes: "",
+      invoiceNumber: `INV-${id}`,
+      issuedAt: new Date(),
+      taxRate: 9,
+      shetabTransactionId: "",
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -1095,12 +1085,15 @@ export class MemStorage implements IStorage {
     const id = this.currentId++;
     const newAttendance: AttendanceRecord = {
       id,
-      sessionId: attendance.sessionId || 1,
-      studentId: attendance.studentId || 1,
-      status: attendance.status || "present",
-      notes: attendance.notes || "",
-      checkedInAt: attendance.checkedInAt || null,
-      checkedOutAt: attendance.checkedOutAt || null,
+      sessionId: 1,
+      studentId: 1,
+      status: "present",
+      notes: "",
+      date: new Date().toISOString().split('T')[0],
+      groupId: 1,
+      checkInTime: new Date(),
+      checkOutTime: new Date(),
+      markedBy: 1,
       createdAt: new Date()
     };
     return newAttendance;
@@ -1115,15 +1108,17 @@ export class MemStorage implements IStorage {
     const id = this.currentId++;
     const newLog: CommunicationLog = {
       id,
-      contactId: log.contactId || 1,
-      staffId: log.staffId || 1,
-      type: log.type || "call",
-      subject: log.subject || "",
-      content: log.content || "",
-      outcome: log.outcome || "",
-      nextAction: log.nextAction || "",
-      scheduledAt: log.scheduledAt || null,
-      completedAt: log.completedAt || new Date(),
+      leadId: 1,
+      studentId: 1,
+      agentId: 1,
+      type: "call",
+      direction: "outbound",
+      duration: 10,
+      outcome: "answered",
+      notes: "",
+      followUpRequired: false,
+      followUpDate: new Date(),
+      recordingUrl: "",
       createdAt: new Date()
     };
     return newLog;
@@ -1142,10 +1137,10 @@ export class MemStorage implements IStorage {
     const id = this.currentId++;
     const newUserAchievement: UserAchievement = {
       id,
-      userId: userAchievement.userId || 1,
-      achievementId: userAchievement.achievementId || 1,
+      userId: 1,
+      achievementId: 1,
       unlockedAt: new Date(),
-      progress: userAchievement.progress || 100
+      isNotified: false
     };
     return newUserAchievement;
   }
@@ -1166,13 +1161,14 @@ export class MemStorage implements IStorage {
     const id = this.currentId++;
     const newGoal: DailyGoal = {
       id,
-      userId: goal.userId || 1,
-      goalType: goal.goalType || "practice",
-      targetValue: goal.targetValue || 1,
-      currentValue: goal.currentValue || 0,
-      goalDate: goal.goalDate || new Date(),
-      completed: goal.completed || false,
-      completedAt: goal.completedAt || null,
+      userId: 1,
+      goalType: "practice",
+      targetValue: 1,
+      currentValue: 0,
+      goalDate: new Date(),
+      isCompleted: false,
+      completedAt: new Date(),
+      xpReward: 100,
       createdAt: new Date()
     };
     return newGoal;
@@ -1180,6 +1176,123 @@ export class MemStorage implements IStorage {
 
   async updateDailyGoal(id: number, updates: Partial<DailyGoal>): Promise<DailyGoal | undefined> {
     return undefined; // Mock implementation
+  }
+
+  // Progress snapshots
+  async getLatestProgressSnapshot(userId: number): Promise<ProgressSnapshot | undefined> {
+    return undefined; // Mock implementation
+  }
+
+  // Dashboard stats
+  async getAdminDashboardStats(): Promise<any> {
+    return {
+      totalUsers: 42,
+      totalCourses: 12,
+      totalRevenue: 150000000,
+      revenueGrowth: 15.2,
+      systemHealth: {
+        database: "healthy",
+        api: "healthy",
+        storage: "healthy"
+      }
+    };
+  }
+
+  async getTeacherDashboardStats(teacherId: number): Promise<any> {
+    return {
+      completedLessons: 45,
+      totalStudents: 28,
+      averageRating: 4.8,
+      monthlyEarnings: 12500000
+    };
+  }
+
+  async getCallCenterStats(agentId: number): Promise<any> {
+    return {
+      dailyCalls: 18,
+      totalLeads: 26,
+      conversionRate: 0.423,
+      responseRate: 0.945
+    };
+  }
+
+  async getAccountantDashboardStats(): Promise<any> {
+    return {
+      totalStudents: 26,
+      monthlyRevenue: 45000000,
+      pendingInvoices: 8,
+      revenueGrowth: 12.5
+    };
+  }
+
+  // Mentor assignments
+  async getMentorAssignments(mentorId: number): Promise<any[]> {
+    return [{
+      id: 1,
+      mentorId,
+      studentId: 1,
+      status: "active",
+      createdAt: new Date(),
+      studentName: "علی احمدی",
+      progress: 75
+    }];
+  }
+
+  async createMentorAssignment(assignment: InsertMentorAssignment): Promise<MentorAssignment> {
+    const id = this.currentId++;
+    const newAssignment: MentorAssignment = {
+      id,
+      mentorId: 1,
+      studentId: 1,
+      status: "active",
+      notes: "",
+      assignedDate: new Date(),
+      completedDate: new Date(),
+      goals: [],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    return newAssignment;
+  }
+
+  async getMentoringSessions(assignmentId: number): Promise<MentoringSession[]> {
+    return [{
+      id: 1,
+      assignmentId,
+      scheduledDate: new Date(),
+      duration: 60,
+      sessionType: "conversation",
+      topics: ["pronunciation"],
+      outcomes: "Great progress on Persian pronunciation",
+      nextSteps: ["Practice daily"],
+      studentProgress: 85,
+      mentorNotes: "Excellent improvement",
+      status: "completed",
+      completedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }];
+  }
+
+  async createMentoringSession(session: InsertMentoringSession): Promise<MentoringSession> {
+    const id = this.currentId++;
+    const newSession: MentoringSession = {
+      id,
+      assignmentId: 1,
+      scheduledDate: new Date(),
+      duration: 60,
+      sessionType: "conversation",
+      topics: [],
+      outcomes: "",
+      nextSteps: [],
+      studentProgress: 0,
+      mentorNotes: "",
+      status: "scheduled",
+      completedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    return newSession;
   }
 
   // Skill Assessment Methods
@@ -1365,6 +1478,223 @@ export class MemStorage implements IStorage {
       createdAt: new Date()
     };
     return newAdaptation;
+  }
+
+  // Extended CRM Methods
+  async getCRMStats(): Promise<any> {
+    return {
+      totalStudents: 156,
+      activeStudents: 142,
+      newStudentsThisMonth: 18,
+      conversionRate: 0.72
+    };
+  }
+
+  async getStudentsWithFilters(filters: any): Promise<any> {
+    return [];
+  }
+
+  async getStudentDetails(id: number): Promise<any> {
+    return null;
+  }
+
+  async createStudent(student: any): Promise<any> {
+    return null;
+  }
+
+  async updateStudent(id: number, updates: any): Promise<any> {
+    return null;
+  }
+
+  async getTeachersWithFilters(filters: any): Promise<any> {
+    return [];
+  }
+
+  async getTeacherDetails(id: number): Promise<any> {
+    return null;
+  }
+
+  async createTeacher(teacher: any): Promise<any> {
+    return null;
+  }
+
+  async getStudentGroupsWithFilters(filters: any): Promise<any> {
+    return [];
+  }
+
+  async getStudentGroupDetails(id: number): Promise<any> {
+    return null;
+  }
+
+  async createStudentGroup(group: any): Promise<any> {
+    return null;
+  }
+
+  async getAttendanceRecords(filters: any): Promise<any> {
+    return [];
+  }
+
+  async createAttendanceRecord(record: any): Promise<any> {
+    return null;
+  }
+
+  async getStudentNotes(studentId: number): Promise<any> {
+    return [];
+  }
+
+  async createStudentNote(note: any): Promise<any> {
+    return null;
+  }
+
+  async getStudentParents(studentId: number): Promise<any> {
+    return [];
+  }
+
+  async createParentGuardian(parent: any): Promise<any> {
+    return null;
+  }
+
+  async getStudentReports(filters: any): Promise<any> {
+    return [];
+  }
+
+  async createStudentReport(report: any): Promise<any> {
+    return null;
+  }
+
+  async getInstitutes(): Promise<any> {
+    return [];
+  }
+
+  async createInstitute(institute: any): Promise<any> {
+    return null;
+  }
+
+  async getPaymentTransactions(filters: any): Promise<any> {
+    return [];
+  }
+
+  async getDailyRevenue(date: string): Promise<any> {
+    return { revenue: 0, date };
+  }
+
+  async getFinancialStats(): Promise<any> {
+    return {
+      totalRevenue: 45000000,
+      monthlyGrowth: 12.5,
+      pendingPayments: 8500000
+    };
+  }
+
+  async getTeacherEvaluations(filters: any): Promise<any> {
+    return [];
+  }
+
+  async createTeacherEvaluation(evaluation: any): Promise<any> {
+    return null;
+  }
+
+  async getClassObservations(filters: any): Promise<any> {
+    return [];
+  }
+
+  async createClassObservation(observation: any): Promise<any> {
+    return null;
+  }
+
+  async getSupervisorReports(filters: any): Promise<any> {
+    return [];
+  }
+
+  async createSupervisorReport(report: any): Promise<any> {
+    return null;
+  }
+
+  async deleteLead(id: number): Promise<boolean> {
+    return true;
+  }
+
+  async getLeadsByStatus(status: string): Promise<Lead[]> {
+    return [];
+  }
+
+  async getLeadsByAssignee(assignee: string): Promise<Lead[]> {
+    return [];
+  }
+
+  async getTeacherPerformance(teacherId?: number): Promise<any[]> {
+    return [];
+  }
+
+  async createTeacherPerformance(performance: any): Promise<any> {
+    return null;
+  }
+
+  // Remaining missing methods from IStorage interface
+  async getSystemMetrics(): Promise<any> {
+    return {
+      cpuUsage: 45,
+      memoryUsage: 72,
+      diskSpace: 88,
+      activeUsers: 142
+    };
+  }
+
+  async createSystemMetric(metric: any): Promise<any> {
+    return null;
+  }
+
+  async getMoodHistory(userId: number, limit?: number): Promise<any[]> {
+    return [];
+  }
+
+  async getMoodEntryById(id: number): Promise<any> {
+    return null;
+  }
+
+  async updateMoodEntry(id: number, updates: any): Promise<any> {
+    return null;
+  }
+
+  async deleteMoodEntry(id: number): Promise<boolean> {
+    return true;
+  }
+
+  async getMoodAnalytics(userId: number, dateFrom?: string, dateTo?: string): Promise<any> {
+    return {
+      averageMood: 7.2,
+      moodTrend: "improving",
+      patterns: []
+    };
+  }
+
+  async getPersonalizedRecommendations(userId: number, context: any): Promise<any[]> {
+    return [];
+  }
+
+  async updateRecommendationFeedback(recommendationId: number, feedback: any): Promise<void> {
+    // Mock implementation
+  }
+
+  // Additional missing methods for complete IStorage compliance
+  async getMoodRecommendationById(id: number): Promise<any> {
+    return null;
+  }
+
+  async updateMoodRecommendation(id: number, updates: any): Promise<any> {
+    return null;
+  }
+
+  async createLearningAdaptation(adaptation: any): Promise<any> {
+    return null;
+  }
+
+  async getLearningAdaptations(userId: number): Promise<any[]> {
+    return [];
+  }
+
+  async updateLearningAdaptation(id: number, updates: any): Promise<any> {
+    return null;
   }
 }
 
