@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,25 +26,8 @@ import {
   FileText
 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
-
-interface Lead {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  source: string;
-  status: string;
-  priority: string;
-  targetLanguage: string;
-  level: string;
-  budget: number;
-  notes: string;
-  assignedTo: string;
-  createdAt: string;
-  lastContact: string;
-  nextFollowUp: string;
-}
+import { apiRequest } from "@/lib/queryClient";
+import type { Lead } from "@shared/schema";
 
 interface LeadStats {
   totalLeads: number;
@@ -58,61 +42,63 @@ interface LeadStats {
 
 export default function LeadManagement() {
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showNewLeadForm, setShowNewLeadForm] = useState(false);
 
-  // Mock data - in real implementation, this would come from API
-  const stats: LeadStats = {
-    totalLeads: 156,
-    newLeads: 23,
-    qualifiedLeads: 45,
-    convertedLeads: 67,
-    conversionRate: 42.9,
-    avgResponseTime: 2.5,
-    hotLeads: 12,
-    followUpsDue: 8
-  };
+  // Fetch leads from local database - works offline in Iran
+  const { data: leads = [], isLoading } = useQuery<Lead[]>({
+    queryKey: ["/api/leads"],
+    queryFn: () => fetch("/api/leads").then(res => res.json())
+  });
 
-  const leads: Lead[] = [
-    {
-      id: 1,
-      firstName: "محمد",
-      lastName: "احمدی",
-      email: "mohammad.ahmadi@email.com",
-      phoneNumber: "+98 912 345 6789",
-      source: "وب‌سایت",
-      status: "new",
-      priority: "high",
-      targetLanguage: "English",
-      level: "beginner",
-      budget: 2000000,
-      notes: "علاقه‌مند به کلاس‌های صبحگاهی",
-      assignedTo: "سارا محمدی",
-      createdAt: "2024-05-29",
-      lastContact: "2024-05-29",
-      nextFollowUp: "2024-05-30"
-    },
-    {
-      id: 2,
-      firstName: "فاطمه",
-      lastName: "کریمی",
-      email: "fateme.karimi@email.com",
-      phoneNumber: "+98 913 456 7890",
-      source: "تماس تلفنی",
-      status: "qualified",
-      priority: "medium",
-      targetLanguage: "German",
-      level: "intermediate",
-      budget: 1500000,
-      notes: "نیاز به برنامه انعطاف‌پذیر",
-      assignedTo: "علی رضایی",
-      createdAt: "2024-05-28",
-      lastContact: "2024-05-29",
-      nextFollowUp: "2024-06-01"
-    }
-  ];
+  // Calculate real statistics from database data
+  const stats: LeadStats = useMemo(() => {
+    const totalLeads = leads.length;
+    const newLeads = leads.filter(lead => lead.status === 'new').length;
+    const qualifiedLeads = leads.filter(lead => lead.status === 'qualified').length;
+    const convertedLeads = leads.filter(lead => lead.status === 'converted').length;
+    const hotLeads = leads.filter(lead => lead.priority === 'high').length;
+    
+    const now = new Date();
+    const followUpsDue = leads.filter(lead => {
+      if (!lead.nextFollowUp) return false;
+      const followUpDate = new Date(lead.nextFollowUp);
+      return followUpDate <= now;
+    }).length;
+
+    const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads) * 100 : 0;
+    
+    return {
+      totalLeads,
+      newLeads,
+      qualifiedLeads,
+      convertedLeads,
+      conversionRate: parseFloat(conversionRate.toFixed(1)),
+      avgResponseTime: 2.5, // This would need separate tracking
+      hotLeads,
+      followUpsDue
+    };
+  }, [leads]);
+
+  // Filter leads based on search and status - all data from local Iranian database
+  const filteredLeads = useMemo(() => {
+    if (!leads) return [];
+    
+    return leads.filter(lead => {
+      const matchesSearch = searchTerm === "" || 
+        lead.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.phoneNumber.includes(searchTerm);
+      
+      const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [leads, searchTerm, statusFilter]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -351,54 +337,75 @@ export default function LeadManagement() {
                 </tr>
               </thead>
               <tbody>
-                {leads.map((lead) => (
-                  <tr key={lead.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4">
-                      <div>
-                        <p className="font-medium">{lead.firstName} {lead.lastName}</p>
-                        <p className="text-sm text-gray-500">{lead.email}</p>
-                        <p className="text-sm text-gray-500">{lead.phoneNumber}</p>
-                      </div>
-                    </td>
-                    <td className="p-4">{lead.source}</td>
-                    <td className="p-4">
-                      <div>
-                        <p>{lead.targetLanguage}</p>
-                        <p className="text-sm text-gray-500">{lead.level}</p>
-                      </div>
-                    </td>
-                    <td className="p-4">{lead.budget.toLocaleString()} تومان</td>
-                    <td className="p-4">
-                      <Badge className={getStatusColor(lead.status)}>
-                        {getStatusText(lead.status)}
-                      </Badge>
-                    </td>
-                    <td className="p-4">
-                      <Badge className={getPriorityColor(lead.priority)}>
-                        {lead.priority === "high" ? "بالا" : lead.priority === "medium" ? "متوسط" : "پایین"}
-                      </Badge>
-                    </td>
-                    <td className="p-4">
-                      <p className="text-sm">{lead.nextFollowUp}</p>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="ghost">
-                          <Phone className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost">
-                          <Mail className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost">
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost">
-                          <Calendar className="h-4 w-4" />
-                        </Button>
-                      </div>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-gray-500">
+                      در حال بارگذاری اطلاعات لیدها...
                     </td>
                   </tr>
-                ))}
+                ) : filteredLeads.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-gray-500">
+                      لیدی یافت نشد
+                    </td>
+                  </tr>
+                ) : (
+                  filteredLeads.map((lead) => (
+                    <tr key={lead.id} className="border-b hover:bg-gray-50">
+                      <td className="p-4">
+                        <div>
+                          <p className="font-medium">{lead.firstName} {lead.lastName}</p>
+                          <p className="text-sm text-gray-500">{lead.email}</p>
+                          <p className="text-sm text-gray-500">{lead.phoneNumber}</p>
+                        </div>
+                      </td>
+                      <td className="p-4">{lead.source}</td>
+                      <td className="p-4">
+                        <div>
+                          <p>{lead.targetLanguage}</p>
+                          <p className="text-sm text-gray-500">{lead.level}</p>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        {lead.budget ? `${lead.budget.toLocaleString()} تومان` : 'تعیین نشده'}
+                      </td>
+                      <td className="p-4">
+                        <Badge className={getStatusColor(lead.status)}>
+                          {getStatusText(lead.status)}
+                        </Badge>
+                      </td>
+                      <td className="p-4">
+                        <Badge className={getPriorityColor(lead.priority)}>
+                          {lead.priority === "high" ? "بالا" : lead.priority === "medium" ? "متوسط" : "پایین"}
+                        </Badge>
+                      </td>
+                      <td className="p-4">
+                        <p className="text-sm">
+                          {lead.nextFollowUp 
+                            ? new Date(lead.nextFollowUp).toLocaleDateString('fa-IR') 
+                            : 'تعیین نشده'
+                          }
+                        </p>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="ghost" title="تماس تلفنی">
+                            <Phone className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" title="ارسال ایمیل">
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" title="پیام">
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" title="تنظیم پیگیری">
+                            <Calendar className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -577,6 +577,29 @@ export const studentReports = pgTable("student_reports", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// CRM Leads Management
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  source: text("source").notNull(), // website, referral, phone, social_media, etc.
+  status: text("status").notNull().default("new"), // new, contacted, qualified, converted, lost
+  priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
+  targetLanguage: text("target_language").notNull(),
+  level: text("level").notNull(), // beginner, intermediate, advanced
+  budget: integer("budget"), // in IRR
+  notes: text("notes"),
+  assignedTo: text("assigned_to"), // Staff member name
+  lastContact: timestamp("last_contact"),
+  nextFollowUp: timestamp("next_follow_up"),
+  convertedAt: timestamp("converted_at"),
+  convertedToUserId: integer("converted_to_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Insert schemas - simplified to remove TypeScript errors
 export const insertUserSchema = createInsertSchema(users);
 export const insertUserProfileSchema = createInsertSchema(userProfiles);
@@ -613,6 +636,12 @@ export const insertLevelAssessmentQuestionSchema = createInsertSchema(levelAsses
 export const insertLevelAssessmentResultSchema = createInsertSchema(levelAssessmentResults).omit({
   id: true,
   completedAt: true
+});
+
+export const insertLeadSchema = createInsertSchema(leads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
 });
 
 // CRM Insert Schemas
@@ -910,6 +939,8 @@ export type LevelAssessmentQuestion = typeof levelAssessmentQuestions.$inferSele
 export type InsertLevelAssessmentQuestion = z.infer<typeof insertLevelAssessmentQuestionSchema>;
 export type LevelAssessmentResult = typeof levelAssessmentResults.$inferSelect;
 export type InsertLevelAssessmentResult = z.infer<typeof insertLevelAssessmentResultSchema>;
+export type Lead = typeof leads.$inferSelect;
+export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type SystemConfig = typeof systemConfig.$inferSelect;
 export type InsertSystemConfig = z.infer<typeof insertSystemConfigSchema>;
 export type CustomRole = typeof customRoles.$inferSelect;
