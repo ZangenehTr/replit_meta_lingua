@@ -1,0 +1,26 @@
+[vite] connecting...
+DOMException {}
+
+leads.filter is not a function
+leads.filter is not a function
+The above error occurred in the <LeadManagement> component:
+
+    at LeadManagement (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/pages/lead-management.tsx:44:17)
+    at main
+    at div
+    at div
+    at AppLayout (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/components/layout/app-layout.tsx:32:29)
+    at ProtectedRoute (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/App.tsx?v=_H-EZAc3GOTos7Nyd8f36:52:27)
+    at Route (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=7d768d42:323:16)
+    at Switch (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=7d768d42:379:17)
+    at Router
+    at Provider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=7d768d42:38:15)
+    at TooltipProvider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=7d768d42:64:5)
+    at LanguageProvider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/hooks/use-language.ts:4:36)
+    at AppWithBranding (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/App.tsx?v=_H-EZAc3GOTos7Nyd8f36:484:35)
+    at QueryClientProvider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=7d768d42:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+leads.filter is not a function
