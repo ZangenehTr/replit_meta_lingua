@@ -161,6 +161,42 @@ export interface IStorage {
   getCallCenterStats(agentId: number): Promise<any>;
   getTeacherDashboardStats(teacherId: number): Promise<any>;
   getAccountantDashboardStats(): Promise<any>;
+
+  // Extended CRM Methods
+  getCRMStats(): Promise<any>;
+  getStudentsWithFilters(filters: any): Promise<any>;
+  getStudentDetails(id: number): Promise<any>;
+  createStudent(student: any): Promise<any>;
+  updateStudent(id: number, updates: any): Promise<any>;
+  getTeachersWithFilters(filters: any): Promise<any>;
+  getTeacherDetails(id: number): Promise<any>;
+  createTeacher(teacher: any): Promise<any>;
+  getStudentGroupsWithFilters(filters: any): Promise<any>;
+  getStudentGroupDetails(id: number): Promise<any>;
+  createStudentGroup(group: any): Promise<any>;
+  getAttendanceRecords(filters: any): Promise<any>;
+  createAttendanceRecord(record: any): Promise<any>;
+  getStudentNotes(studentId: number): Promise<any>;
+  createStudentNote(note: any): Promise<any>;
+  getStudentParents(studentId: number): Promise<any>;
+  createParentGuardian(parent: any): Promise<any>;
+  getCommunicationLogs(filters?: any): Promise<any>;
+  createCommunicationLog(log: any): Promise<any>;
+  getStudentReports(filters: any): Promise<any>;
+  createStudentReport(report: any): Promise<any>;
+  getInstitutes(): Promise<any>;
+  createInstitute(institute: any): Promise<any>;
+  getInvoices(): Promise<any>;
+  createInvoice(invoice: any): Promise<any>;
+  getPaymentTransactions(filters: any): Promise<any>;
+  getDailyRevenue(date: string): Promise<any>;
+  getFinancialStats(): Promise<any>;
+  getTeacherEvaluations(filters: any): Promise<any>;
+  createTeacherEvaluation(evaluation: any): Promise<any>;
+  getClassObservations(filters: any): Promise<any>;
+  createClassObservation(observation: any): Promise<any>;
+  getSystemMetrics(): Promise<any>;
+  createSystemMetric(metric: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
