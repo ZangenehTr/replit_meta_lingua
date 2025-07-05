@@ -211,7 +211,7 @@ export default function TutorsPage() {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <DollarSign className="h-4 w-4 text-gray-400" />
-                    <span>{tutor.hourlyRate.toLocaleString()} IRR/hour</span>
+                    <span>{tutor.hourlyRate ? tutor.hourlyRate.toLocaleString() : 'Contact for pricing'} IRR/hour</span>
                   </div>
                 </div>
 
