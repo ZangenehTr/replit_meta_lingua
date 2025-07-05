@@ -1,15 +1,15 @@
 import { 
   users, courses, enrollments, sessions, messages, homework, 
-  payments, notifications, instituteBranding, studentProfiles, leads, invoices,
-  teacherPerformance, attendance, communicationLogs, achievements, userAchievements,
+  payments, notifications, instituteBranding, leads, invoices,
+  communicationLogs, achievements, userAchievements,
   userStats, dailyGoals, skillAssessments, learningActivities, progressSnapshots,
+  moodEntries, moodRecommendations, learningAdaptations,
   type User, type InsertUser, type Course, type InsertCourse,
   type Enrollment, type InsertEnrollment, type Session, type InsertSession,
   type Message, type InsertMessage, type Homework, type InsertHomework,
   type Payment, type InsertPayment, type Notification, type InsertNotification,
-  type InstituteBranding, type InsertBranding, type StudentProfile, type InsertStudentProfile,
+  type InstituteBranding, type InsertBranding,
   type Lead, type InsertLead, type Invoice, type InsertInvoice,
-  type TeacherPerformance, type InsertTeacherPerformance, type Attendance, type InsertAttendance,
   type CommunicationLog, type InsertCommunicationLog,
   type Achievement, type InsertAchievement, type UserAchievement, type InsertUserAchievement,
   type UserStats, type InsertUserStats, type DailyGoal, type InsertDailyGoal,
@@ -18,7 +18,10 @@ import {
   type UserProfile, type InsertUserProfile, type UserSession, type InsertUserSession,
   type RolePermission, type InsertRolePermission,
   type MentorAssignment, type InsertMentorAssignment,
-  type MentoringSession, type InsertMentoringSession
+  type MentoringSession, type InsertMentoringSession,
+  type MoodEntry, type InsertMoodEntry,
+  type MoodRecommendation, type InsertMoodRecommendation,
+  type LearningAdaptation, type InsertLearningAdaptation
 } from "@shared/schema";
 
 export interface IStorage {
@@ -197,6 +200,18 @@ export interface IStorage {
   createClassObservation(observation: any): Promise<any>;
   getSystemMetrics(): Promise<any>;
   createSystemMetric(metric: any): Promise<any>;
+  
+  // Mood-Based Learning Recommendation System Methods
+  createMoodEntry(entry: InsertMoodEntry): Promise<MoodEntry>;
+  getMoodHistory(userId: number, days?: number): Promise<MoodEntry[]>;
+  getMoodEntryById(id: number): Promise<MoodEntry | undefined>;
+  createMoodRecommendation(recommendation: InsertMoodRecommendation): Promise<MoodRecommendation>;
+  getMoodRecommendations(userId: number, days?: number): Promise<MoodRecommendation[]>;
+  getMoodRecommendationById(id: number): Promise<MoodRecommendation | undefined>;
+  updateMoodRecommendation(id: number, updates: Partial<MoodRecommendation>): Promise<MoodRecommendation | undefined>;
+  createLearningAdaptation(adaptation: InsertLearningAdaptation): Promise<LearningAdaptation>;
+  getLearningAdaptations(userId: number): Promise<LearningAdaptation[]>;
+  updateLearningAdaptation(id: number, updates: Partial<LearningAdaptation>): Promise<LearningAdaptation | undefined>;
 }
 
 export class MemStorage implements IStorage {
