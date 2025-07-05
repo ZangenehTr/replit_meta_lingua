@@ -22,8 +22,6 @@ import StudentInformationSystem from "@/pages/student-information-system";
 import { AdminDashboard as EnhancedAdminDashboard } from "@/pages/admin/admin-dashboard";
 import { AdminStudents } from "@/pages/admin/students";
 import { AdminCourses } from "@/pages/admin/courses";
-import { AdminCourseManagement } from "@/pages/admin/course-management-simple";
-import { EnhancedCourseCreation } from "@/pages/admin/enhanced-course-creation";
 import { AdminTeacherManagement } from "@/pages/admin/teacher-management";
 import { AdminFinancial } from "@/pages/admin/financial";
 import { AdminSystem } from "@/pages/admin/system-simple";
@@ -165,16 +163,7 @@ function Router() {
           <AIServicesManagement />
         </ProtectedRoute>
       </Route>
-      <Route path="/admin/course-management">
-        <ProtectedRoute>
-          <AdminCourseManagement />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/admin/create-course">
-        <ProtectedRoute>
-          <EnhancedCourseCreation />
-        </ProtectedRoute>
-      </Route>
+
       <Route path="/admin/teachers">
         <ProtectedRoute>
           <AdminTeacherManagement />
