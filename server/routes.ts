@@ -410,18 +410,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   // Admin System Configuration Routes
-  app.get("/api/admin/system", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/system", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const systemData = {
         branding: await storage.getBranding(),
         roles: [
-          { id: 1, name: "Admin", description: "Full system access", permissions: ["*"], userCount: 2, color: "red" },
-          { id: 2, name: "Manager", description: "Institute management", permissions: ["manage_courses", "manage_users"], userCount: 5, color: "blue" },
-          { id: 3, name: "Teacher", description: "Course instruction and student management", permissions: ["teach", "grade", "communicate"], userCount: 18, color: "green" },
-          { id: 4, name: "Student", description: "Learning and course participation", permissions: ["learn", "submit", "communicate"], userCount: 150, color: "purple" },
-          { id: 5, name: "Support", description: "Customer support and assistance", permissions: ["support", "communicate"], userCount: 8, color: "yellow" },
-          { id: 6, name: "Accountant", description: "Financial management and reporting", permissions: ["financial", "reports", "payouts"], userCount: 4, color: "orange" },
-          { id: 7, name: "Mentor", description: "Student mentoring and guidance", permissions: ["mentees", "progress", "communication"], userCount: 25, color: "teal" }
+          { id: 1, name: "Admin", description: "Full system access", permissions: ["*"], userCount: 6, color: "red" },
+          { id: 2, name: "Supervisor", description: "Institute management and supervision", permissions: ["manage_courses", "manage_users", "supervise"], userCount: 0, color: "blue" },
+          { id: 3, name: "Teacher/Tutor", description: "Course instruction and student management", permissions: ["teach", "grade", "communicate"], userCount: 6, color: "green" },
+          { id: 4, name: "Student", description: "Learning and course participation", permissions: ["learn", "submit", "communicate"], userCount: 26, color: "purple" },
+          { id: 5, name: "Call Center Agent", description: "Lead management and customer support", permissions: ["leads", "calls", "support"], userCount: 0, color: "yellow" },
+          { id: 6, name: "Accountant", description: "Financial management and reporting", permissions: ["financial", "reports", "payouts"], userCount: 0, color: "orange" },
+          { id: 7, name: "Mentor", description: "Student mentoring and guidance", permissions: ["mentees", "progress", "communication"], userCount: 0, color: "teal" }
         ],
         integrations: [
           { name: "Anthropic API", description: "AI-powered learning assistance", status: "connected", type: "ai" },
@@ -445,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // System Export Configuration
-  app.get("/api/admin/system/export", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/system/export", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const configuration = {
         branding: await storage.getBranding(),
@@ -461,7 +461,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // System Backup
-  app.post("/api/admin/system/backup", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/system/backup", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       // Simulate backup creation with realistic data
       const backupSize = Math.floor(Math.random() * 500) + 100; // 100-600 MB
@@ -480,7 +480,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // System Maintenance Mode
-  app.post("/api/admin/system/maintenance", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/system/maintenance", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { enabled } = req.body;
       
@@ -505,7 +505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Role Management
-  app.post("/api/admin/roles", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/roles", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { name, description, permissions } = req.body;
       
@@ -527,7 +527,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/admin/roles/:id", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.patch("/api/admin/roles/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { id } = req.params;
       const updates = req.body;
@@ -547,7 +547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Integration Testing
-  app.post("/api/admin/integrations/:name/test", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/integrations/:name/test", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { name } = req.params;
       
@@ -590,7 +590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Branding Management
-  app.patch("/api/admin/branding", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.patch("/api/admin/branding", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const brandingData = req.body;
       const updatedBranding = await storage.updateBranding(brandingData);
@@ -602,7 +602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin Settings Routes
-  app.get("/api/admin/settings", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const settings = await storage.getAdminSettings();
       res.json(settings);
@@ -612,7 +612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/admin/settings", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.patch("/api/admin/settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const validatedData = insertAdminSettingsSchema.partial().parse(req.body);
       const updatedSettings = await storage.updateAdminSettings(validatedData);
@@ -624,7 +624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test connection endpoints
-  app.post("/api/admin/test/shetab", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/test/shetab", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const settings = await storage.getAdminSettings();
       if (!settings?.shetabEnabled || !settings?.shetabApiKey) {
@@ -637,7 +637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/test/kavehnegar", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/test/kavehnegar", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const settings = await storage.getAdminSettings();
       if (!settings?.kavehnegarEnabled || !settings?.kavehnegarApiKey) {
@@ -650,7 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/test/email", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/test/email", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const settings = await storage.getAdminSettings();
       if (!settings?.emailEnabled || !settings?.emailSmtpHost) {
@@ -690,7 +690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const updatedUser = await storage.updateUser(user.id, { role: 'admin' });
+      const updatedUser = await storage.updateUser(user.id, { role: 'Admin' });
       res.json({ message: "User promoted to admin", user: updatedUser });
     } catch (error) {
       res.status(500).json({ message: "Failed to promote user" });
@@ -698,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin user creation endpoint
-  app.post("/api/admin/users", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/users", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const userData = req.body;
       
@@ -762,7 +762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/teachers/list", async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
-      const teachers = users.filter(u => u.role === 'instructor').map(teacher => {
+      const teachers = users.filter(u => u.role === 'Teacher/Tutor').map(teacher => {
         // Parse preferences if they exist
         let preferences = {};
         if (teacher.preferences && typeof teacher.preferences === 'object') {
@@ -1360,7 +1360,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Role Management (Admin only)
-  app.get("/api/roles/:role/permissions", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/roles/:role/permissions", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const role = req.params.role;
       const permissions = await storage.getRolePermissions(role);
@@ -1370,7 +1370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/permissions", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/permissions", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const permissionData = req.body;
       const permission = await storage.createRolePermission(permissionData);
@@ -1547,7 +1547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ===== STUDENT INFORMATION SYSTEM (SIS) ENDPOINTS =====
   
   // GET /api/admin/students - Student Information System as per PRD
-  app.get("/api/admin/students", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+  app.get("/api/admin/students", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
       const students = users
@@ -1585,7 +1585,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ===== CRM MANAGEMENT ENDPOINTS =====
   
   // CRM Dashboard Stats
-  app.get("/api/crm/stats", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+  app.get("/api/crm/stats", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
     try {
       const stats = await storage.getCRMStats();
       res.json(stats);
@@ -1595,7 +1595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Student Management
-  app.get("/api/crm/students", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.get("/api/crm/students", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const { search, status, level, language, page = 1, limit = 50 } = req.query;
       const students = await storage.getStudentsWithFilters({
@@ -1612,7 +1612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/crm/students/:id", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.get("/api/crm/students/:id", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const studentId = parseInt(req.params.id);
       const student = await storage.getStudentDetails(studentId);
@@ -1625,7 +1625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/crm/students", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+  app.post("/api/crm/students", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
     try {
       const studentData = req.body;
       const student = await storage.createStudent(studentData);
@@ -1635,7 +1635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/crm/students/:id", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+  app.put("/api/crm/students/:id", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
     try {
       const studentId = parseInt(req.params.id);
       const student = await storage.updateStudent(studentId, req.body);
@@ -1649,7 +1649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Teacher Management
-  app.get("/api/crm/teachers", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+  app.get("/api/crm/teachers", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
     try {
       const { search, status, specialization } = req.query;
       const teachers = await storage.getTeachersWithFilters({
@@ -1663,7 +1663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/crm/teachers/:id", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+  app.get("/api/crm/teachers/:id", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
     try {
       const teacherId = parseInt(req.params.id);
       const teacher = await storage.getTeacherDetails(teacherId);
@@ -1676,7 +1676,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/crm/teachers", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+  app.post("/api/crm/teachers", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
     try {
       const teacherData = req.body;
       const teacher = await storage.createTeacher(teacherData);
@@ -1687,7 +1687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Student Groups Management
-  app.get("/api/crm/groups", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.get("/api/crm/groups", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const { language, level, status, teacherId } = req.query;
       const groups = await storage.getStudentGroupsWithFilters({
@@ -1702,7 +1702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/crm/groups/:id", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.get("/api/crm/groups/:id", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const groupId = parseInt(req.params.id);
       const group = await storage.getStudentGroupDetails(groupId);
@@ -1715,7 +1715,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/crm/groups", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+  app.post("/api/crm/groups", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
     try {
       const groupData = req.body;
       const group = await storage.createStudentGroup(groupData);
@@ -1726,7 +1726,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Attendance Management
-  app.get("/api/crm/attendance", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.get("/api/crm/attendance", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const { groupId, date, studentId } = req.query;
       const attendance = await storage.getAttendanceRecords({
@@ -1740,7 +1740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/crm/attendance", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.post("/api/crm/attendance", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const attendanceData = {
         ...req.body,
@@ -1754,7 +1754,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Student Notes Management
-  app.get("/api/crm/students/:id/notes", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.get("/api/crm/students/:id/notes", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const studentId = parseInt(req.params.id);
       const notes = await storage.getStudentNotes(studentId);
@@ -1764,7 +1764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/crm/students/:id/notes", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.post("/api/crm/students/:id/notes", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const studentId = parseInt(req.params.id);
       const noteData = {
@@ -1780,7 +1780,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Parent/Guardian Management
-  app.get("/api/crm/students/:id/parents", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.get("/api/crm/students/:id/parents", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const studentId = parseInt(req.params.id);
       const parents = await storage.getStudentParents(studentId);
@@ -1790,7 +1790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/crm/students/:id/parents", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+  app.post("/api/crm/students/:id/parents", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
     try {
       const studentId = parseInt(req.params.id);
       const parentData = {
@@ -1805,7 +1805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Communication Logs
-  app.get("/api/crm/communications", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.get("/api/crm/communications", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const { studentId, type, dateFrom, dateTo } = req.query;
       const communications = await storage.getCommunicationLogs({
@@ -1820,7 +1820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/crm/communications", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.post("/api/crm/communications", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const communicationData = {
         ...req.body,
@@ -1834,7 +1834,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Student Reports
-  app.get("/api/crm/reports", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.get("/api/crm/reports", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const { studentId, reportType, period } = req.query;
       const reports = await storage.getStudentReports({
@@ -1848,7 +1848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/crm/reports", authenticateToken, requireRole(['admin', 'manager', 'teacher']), async (req: any, res) => {
+  app.post("/api/crm/reports", authenticateToken, requireRole(['admin', 'Supervisor', 'teacher']), async (req: any, res) => {
     try {
       const reportData = {
         ...req.body,
@@ -1862,7 +1862,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Institute Management
-  app.get("/api/crm/institutes", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/crm/institutes", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const institutes = await storage.getInstitutes();
       res.json(institutes);
@@ -1871,7 +1871,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/crm/institutes", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/crm/institutes", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const institute = await storage.createInstitute(req.body);
       res.status(201).json(institute);
@@ -2106,7 +2106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/settings", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+  app.get("/api/admin/settings", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
     try {
       const settings = await storage.getAdminSettings();
       res.json(settings);
@@ -2115,7 +2115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/settings", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.put("/api/admin/settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const settings = await storage.updateAdminSettings(req.body);
       res.json(settings);
@@ -2352,7 +2352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new course
-  app.post("/api/admin/courses", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/courses", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const courseData = req.body;
       
@@ -2400,7 +2400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update course
-  app.put("/api/admin/courses/:id", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.put("/api/admin/courses/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
       const updateData = req.body;
@@ -2418,7 +2418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete course
-  app.delete("/api/admin/courses/:id", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.delete("/api/admin/courses/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
       
@@ -2457,7 +2457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get instructors for course assignment
-  app.get("/api/admin/instructors", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/instructors", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const instructors = await storage.getTutors();
       res.json(instructors);
@@ -2468,7 +2468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Duplicate course
-  app.post("/api/admin/courses/:id/duplicate", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/courses/:id/duplicate", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
       const originalCourse = await storage.getCourse(courseId);
@@ -2498,7 +2498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk course operations
-  app.post("/api/admin/courses/bulk", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/courses/bulk", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { action, courseIds } = req.body;
       
@@ -2982,7 +2982,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Leads Management API - accessible by admin and call center roles
   app.get("/api/leads", authenticateToken, async (req: any, res) => {
-    if (!['admin', 'callcenter', 'manager'].includes(req.user.role)) {
+    if (!['admin', 'callcenter', 'Supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -2996,7 +2996,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/leads", authenticateToken, async (req: any, res) => {
-    if (!['admin', 'callcenter', 'manager'].includes(req.user.role)) {
+    if (!['admin', 'callcenter', 'Supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -3010,7 +3010,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.put("/api/leads/:id", authenticateToken, async (req: any, res) => {
-    if (!['admin', 'callcenter', 'manager'].includes(req.user.role)) {
+    if (!['admin', 'callcenter', 'Supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -3180,7 +3180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Manager endpoints
   app.get("/api/manager/stats", authenticateToken, async (req: any, res) => {
-    if (!['admin', 'manager'].includes(req.user.role)) {
+    if (!['admin', 'Supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -3208,7 +3208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/manager/teachers", authenticateToken, async (req: any, res) => {
-    if (!['admin', 'manager'].includes(req.user.role)) {
+    if (!['admin', 'Supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -3232,7 +3232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/manager/courses", authenticateToken, async (req: any, res) => {
-    if (!['admin', 'manager'].includes(req.user.role)) {
+    if (!['admin', 'Supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -3564,7 +3564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Advanced Analytics Endpoints
   app.get("/api/analytics", authenticateToken, async (req: any, res) => {
-    if (!['admin', 'manager'].includes(req.user.role)) {
+    if (!['admin', 'Supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -3684,7 +3684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Available teachers for class management
   app.get("/api/manager/available-teachers", authenticateToken, async (req: any, res) => {
-    if (!['admin', 'manager'].includes(req.user.role)) {
+    if (!['admin', 'Supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -3717,7 +3717,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create class endpoint
   app.post("/api/manager/classes", authenticateToken, async (req: any, res) => {
-    if (!['admin', 'manager'].includes(req.user.role)) {
+    if (!['admin', 'Supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -4233,7 +4233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Create virtual classroom
   app.post("/api/classroom/create", authenticateToken, async (req: any, res) => {
-    if (!['teacher', 'admin', 'manager'].includes(req.user.role)) {
+    if (!['teacher', 'admin', 'Supervisor'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -4782,7 +4782,7 @@ Return JSON format:
     res.json(branding);
   });
 
-  app.put("/api/branding", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.put("/api/branding", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const branding = await storage.updateBranding(req.body);
       res.json({ message: "Branding updated", branding });
@@ -4805,7 +4805,7 @@ Return JSON format:
   app.put("/api/branding", authenticateToken, async (req: any, res) => {
     try {
       // Only managers can update branding
-      if (req.user.role !== 'manager') {
+      if (req.user.role !== 'Supervisor') {
         return res.status(403).json({ message: "Only managers can update branding" });
       }
 
@@ -5169,7 +5169,7 @@ Return JSON format:
   });
 
   // Ollama Management Routes
-  app.get("/api/admin/ollama/status", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/ollama/status", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { ollamaService } = await import('./ollama-service');
       const isAvailable = await ollamaService.isServiceAvailable();
@@ -5460,7 +5460,7 @@ Return JSON format:
   });
 
   // Get download progress for a specific model
-  app.get("/api/admin/ollama/download-progress/:modelName", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/ollama/download-progress/:modelName", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { modelName } = req.params;
       const { ollamaService } = await import('./ollama-service');
@@ -5577,7 +5577,7 @@ Return JSON format:
   });
 
   // Ollama Bootstrap and Installation Endpoints
-  app.get("/api/admin/ollama/installation-status", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/ollama/installation-status", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const status = await ollamaInstaller.checkInstallationStatus();
       res.json(status);
@@ -5591,7 +5591,7 @@ Return JSON format:
     }
   });
 
-  app.post("/api/admin/ollama/install", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/ollama/install", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const result = await ollamaInstaller.installOllama();
       res.json(result);
@@ -5605,7 +5605,7 @@ Return JSON format:
     }
   });
 
-  app.post("/api/admin/ollama/start-service", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/ollama/start-service", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const result = await ollamaInstaller.startOllamaService();
       res.json(result);
@@ -5619,7 +5619,7 @@ Return JSON format:
     }
   });
 
-  app.post("/api/admin/ollama/bootstrap", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/ollama/bootstrap", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const result = await ollamaInstaller.bootstrap();
       res.json(result);
@@ -5633,7 +5633,7 @@ Return JSON format:
     }
   });
 
-  app.post("/api/admin/ollama/verify", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/ollama/verify", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const result = await ollamaInstaller.verifyInstallation();
       res.json(result);
@@ -5694,7 +5694,7 @@ Return JSON format:
   });
 
   // Advanced Reporting & Analytics Routes
-  app.get("/api/reports/financial-summary", authenticateToken, requireRole(['admin', 'accountant']), async (req: any, res) => {
+  app.get("/api/reports/financial-summary", authenticateToken, requireRole(['admin', 'Accountant']), async (req: any, res) => {
     try {
       const { startDate, endDate } = req.query;
       
@@ -5788,7 +5788,7 @@ Return JSON format:
   });
 
   // Student enrollment analytics
-  app.get("/api/reports/enrollment-analytics", authenticateToken, requireRole(['admin', 'manager']), async (req: any, res) => {
+  app.get("/api/reports/enrollment-analytics", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
     try {
       const { period = '30d' } = req.query;
       
@@ -5815,7 +5815,7 @@ Return JSON format:
 
       // Get enrollment data
       const allUsers = await storage.getAllUsers();
-      const students = allUsers.filter(user => user.role === 'student');
+      const students = allUsers.filter(user => user.role === 'Student');
       
       const newStudents = students.filter(student => 
         new Date(student.createdAt) >= startDate && new Date(student.createdAt) <= endDate
@@ -5905,7 +5905,7 @@ Return JSON format:
   // ============================================
   
   // Get AI service status
-  app.get("/api/admin/ai/service-status", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/ai/service-status", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { ollamaService } = await import('./ollama-service');
       const isRunning = await ollamaService.isServiceAvailable();
@@ -5923,7 +5923,7 @@ Return JSON format:
   });
 
   // Get installed models (simplified version)
-  app.get("/api/admin/ai/installed-models", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/ai/installed-models", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { ollamaService } = await import('./ollama-service');
       const models = await ollamaService.listModels();
@@ -5944,7 +5944,7 @@ Return JSON format:
   });
 
   // Get active model
-  app.get("/api/admin/ai/active-model", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/ai/active-model", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { ollamaService } = await import('./ollama-service');
       const activeModel = await ollamaService.getActiveModel();
@@ -5960,7 +5960,7 @@ Return JSON format:
   });
 
   // Set active model
-  app.post("/api/admin/ai/set-active-model", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/ai/set-active-model", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { modelId } = req.body;
       const { ollamaService } = await import('./ollama-service');
@@ -5978,7 +5978,7 @@ Return JSON format:
   });
 
   // Start AI service
-  app.post("/api/admin/ai/start-service", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/ai/start-service", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { ollamaInstaller } = await import('./ollama-installer');
       const result = await ollamaInstaller.bootstrap();
@@ -5997,7 +5997,7 @@ Return JSON format:
   });
 
   // Install model
-  app.post("/api/admin/ai/install-model", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/ai/install-model", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { modelId } = req.body;
       const { ollamaService } = await import('./ollama-service');
@@ -6044,7 +6044,7 @@ Return JSON format:
   });
 
   // Toggle service (simplified - just return success)
-  app.post("/api/admin/ai/toggle-service", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/ai/toggle-service", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { enable } = req.body;
       // In this simplified version, service is always enabled
@@ -6148,7 +6148,7 @@ Return JSON format:
   });
 
   // AI Training File Upload Routes
-  app.post("/api/admin/ai-training/upload", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/ai-training/upload", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       // File upload processing for AI training
       const files = req.files || [];
@@ -6244,7 +6244,7 @@ Return JSON format:
     }
   });
 
-  app.post("/api/admin/ai-training/start", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/ai-training/start", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { 
         modelName, 
@@ -6290,7 +6290,7 @@ Return JSON format:
     }
   });
 
-  app.get("/api/admin/ai-training/status/:jobId", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/ai-training/status/:jobId", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { jobId } = req.params;
       

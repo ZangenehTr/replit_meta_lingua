@@ -600,7 +600,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(users)
       .where(and(
-        eq(users.role, "teacher"),
+        eq(users.role, "Teacher/Tutor"),
         eq(users.isActive, true)
       ));
   }
@@ -610,7 +610,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(users)
       .where(and(
-        eq(users.role, "teacher"),
+        eq(users.role, "Teacher/Tutor"),
         eq(users.isActive, true)
       ))
       .limit(4);
