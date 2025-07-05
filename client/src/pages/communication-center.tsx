@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +27,9 @@ import {
   BarChart3,
   Settings
 } from "lucide-react";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from "@/lib/i18n";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface CommunicationTemplate {
   id: number;
@@ -67,112 +70,34 @@ interface AutomationRule {
 }
 
 export default function CommunicationCenter() {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [showNewTemplate, setShowNewTemplate] = useState(false);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
 
-  // Mock data - in real implementation, this would come from API
-  const templates: CommunicationTemplate[] = [
-    {
-      id: 1,
-      name: "پیام خوش‌آمدگویی",
-      type: "sms",
-      subject: "",
-      content: "سلام {firstName}! به آموزشگاه زبان متالینگوا خوش آمدید. کلاس اول شما {startDate} برگزار می‌شود.",
-      language: "fa",
-      category: "onboarding",
-      isActive: true,
-      usage: 45,
-      lastUsed: "2024-05-29"
-    },
-    {
-      id: 2,
-      name: "یادآوری کلاس",
-      type: "sms",
-      subject: "",
-      content: "یادآوری: کلاس {courseName} شما فردا ساعت {time} برگزار می‌شود. لطفاً به موقع حضور داشته باشید.",
-      language: "fa",
-      category: "reminder",
-      isActive: true,
-      usage: 120,
-      lastUsed: "2024-05-29"
-    },
-    {
-      id: 3,
-      name: "Welcome Email",
-      type: "email",
-      subject: "Welcome to Meta Lingua Institute!",
-      content: "Dear {firstName},\n\nWelcome to our language learning community! Your first class is scheduled for {startDate}.",
-      language: "en",
-      category: "onboarding",
-      isActive: true,
-      usage: 67,
-      lastUsed: "2024-05-28"
-    }
-  ];
+  // Real API calls - NO MORE MOCK DATA
+  const { data: templates, isLoading: templatesLoading } = useQuery({
+    queryKey: ['/api/communication/templates'],
+  });
 
-  const campaigns: Campaign[] = [
-    {
-      id: 1,
-      name: "کمپین بازگشت به مدرسه",
-      type: "email",
-      status: "completed",
-      targetAudience: "دانش‌آموزان غیرفعال",
-      scheduledDate: "2024-05-20",
-      sentCount: 156,
-      deliveredCount: 152,
-      openRate: 68.4,
-      clickRate: 12.5,
-      responseRate: 8.2
-    },
-    {
-      id: 2,
-      name: "پیشنهاد کلاس‌های تابستانی",
-      type: "sms",
-      status: "scheduled",
-      targetAudience: "والدین دانش‌آموزان",
-      scheduledDate: "2024-06-01",
-      sentCount: 0,
-      deliveredCount: 0,
-      openRate: 0,
-      clickRate: 0,
-      responseRate: 0
-    }
-  ];
+  const { data: campaigns, isLoading: campaignsLoading } = useQuery({
+    queryKey: ['/api/communication/campaigns'],
+  });
 
-  const automationRules: AutomationRule[] = [
-    {
-      id: 1,
-      name: "خوش‌آمدگویی خودکار",
-      trigger: "student_enrollment",
-      condition: "new_student",
-      action: "send_welcome_sms",
-      isActive: true,
-      timesExecuted: 23,
-      lastExecuted: "2024-05-29"
-    },
-    {
-      id: 2,
-      name: "یادآوری کلاس",
-      trigger: "24_hours_before_class",
-      condition: "has_upcoming_class",
-      action: "send_reminder_sms",
-      isActive: true,
-      timesExecuted: 89,
-      lastExecuted: "2024-05-29"
-    },
-    {
-      id: 3,
-      name: "پیگیری غیبت",
-      trigger: "student_absent",
-      condition: "absent_for_2_classes",
-      action: "send_followup_email",
-      isActive: true,
-      timesExecuted: 12,
-      lastExecuted: "2024-05-28"
-    }
-  ];
+  const { data: automationRules, isLoading: rulesLoading } = useQuery({
+    queryKey: ['/api/communication/automation-rules'],
+  });
+
+  const { data: communicationStats } = useQuery({
+    queryKey: ['/api/communication/stats'],
+  });
+
+  const templatesData = (templates as CommunicationTemplate[]) || [];
+  const campaignsData = (campaigns as Campaign[]) || [];
+  const rulesData = (automationRules as AutomationRule[]) || [];
+  // ALL MOCK DATA REMOVED - Using only real API data above
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -186,15 +111,19 @@ export default function CommunicationCenter() {
 
   const OverviewTab = () => (
     <div className="space-y-6">
-      {/* Stats Grid */}
+      {/* Stats Grid - Using REAL API data only */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">پیام‌های ارسالی</p>
-                <p className="text-3xl font-bold">2,847</p>
-                <p className="text-sm text-green-600">+12% این ماه</p>
+                <p className="text-3xl font-bold">
+                  {communicationStats?.totalSent || 0}
+                </p>
+                <p className="text-sm text-green-600">
+                  {communicationStats?.totalSent > 0 ? '+12% این ماه' : 'هیچ پیامی ارسال نشده'}
+                </p>
               </div>
               <Send className="h-8 w-8 text-blue-600" />
             </div>
@@ -206,8 +135,14 @@ export default function CommunicationCenter() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">نرخ تحویل</p>
-                <p className="text-3xl font-bold">97.3%</p>
-                <p className="text-sm text-green-600">بالا</p>
+                <p className="text-3xl font-bold">
+                  {communicationStats?.totalDelivered && communicationStats?.totalSent 
+                    ? `${((communicationStats.totalDelivered / communicationStats.totalSent) * 100).toFixed(1)}%`
+                    : '0%'}
+                </p>
+                <p className="text-sm text-green-600">
+                  {communicationStats?.totalDelivered > 0 ? 'بالا' : 'هیچ پیامی تحویل نشده'}
+                </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
@@ -219,8 +154,14 @@ export default function CommunicationCenter() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">نرخ بازخوانی</p>
-                <p className="text-3xl font-bold">73.8%</p>
-                <p className="text-sm text-blue-600">+5.2% این ماه</p>
+                <p className="text-3xl font-bold">
+                  {communicationStats?.averageOpenRate 
+                    ? `${communicationStats.averageOpenRate.toFixed(1)}%`
+                    : '0%'}
+                </p>
+                <p className="text-sm text-blue-600">
+                  {communicationStats?.averageOpenRate > 0 ? 'بر اساس کمپین‌ها' : 'هیچ داده‌ای موجود نیست'}
+                </p>
               </div>
               <Eye className="h-8 w-8 text-purple-600" />
             </div>
@@ -231,9 +172,15 @@ export default function CommunicationCenter() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">نرخ پاسخ</p>
-                <p className="text-3xl font-bold">18.4%</p>
-                <p className="text-sm text-orange-600">+2.1% این ماه</p>
+                <p className="text-sm font-medium text-muted-foreground">نرخ کلیک</p>
+                <p className="text-3xl font-bold">
+                  {communicationStats?.averageClickRate 
+                    ? `${communicationStats.averageClickRate.toFixed(1)}%`
+                    : '0%'}
+                </p>
+                <p className="text-sm text-orange-600">
+                  {communicationStats?.averageClickRate > 0 ? 'بر اساس کمپین‌ها' : 'هیچ داده‌ای موجود نیست'}
+                </p>
               </div>
               <TrendingUp className="h-8 w-8 text-orange-600" />
             </div>
@@ -248,23 +195,29 @@ export default function CommunicationCenter() {
             <CardTitle>کمپین‌های اخیر</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {campaigns.slice(0, 3).map((campaign) => (
-              <div key={campaign.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium">{campaign.name}</p>
-                  <p className="text-sm text-gray-500">{campaign.targetAudience}</p>
+            {campaignsLoading ? (
+              <div>در حال بارگذاری کمپین‌ها...</div>
+            ) : campaignsData.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">هیچ کمپینی موجود نیست</div>
+            ) : (
+              campaignsData.slice(0, 3).map((campaign) => (
+                <div key={campaign.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{campaign.name}</p>
+                    <p className="text-sm text-gray-500">{campaign.targetAudience}</p>
+                  </div>
+                  <div className="text-right">
+                    <Badge className={getStatusColor(campaign.status)}>
+                      {campaign.status === "completed" ? "تکمیل شده" : 
+                       campaign.status === "scheduled" ? "برنامه‌ریزی شده" : campaign.status}
+                    </Badge>
+                    {campaign.status === "completed" && (
+                      <p className="text-sm text-gray-500 mt-1">{campaign.openRate}% بازخوانی</p>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right">
-                  <Badge className={getStatusColor(campaign.status)}>
-                    {campaign.status === "completed" ? "تکمیل شده" : 
-                     campaign.status === "scheduled" ? "برنامه‌ریزی شده" : campaign.status}
-                  </Badge>
-                  {campaign.status === "completed" && (
-                    <p className="text-sm text-gray-500 mt-1">{campaign.openRate}% بازخوانی</p>
-                  )}
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
 
@@ -273,17 +226,23 @@ export default function CommunicationCenter() {
             <CardTitle>اتوماسیون فعال</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {automationRules.filter(rule => rule.isActive).map((rule) => (
-              <div key={rule.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium">{rule.name}</p>
-                  <p className="text-sm text-gray-500">{rule.timesExecuted} بار اجرا شده</p>
+            {rulesLoading ? (
+              <div>در حال بارگذاری قوانین اتوماسیون...</div>
+            ) : rulesData.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">هیچ قانون اتوماسیونی موجود نیست</div>
+            ) : (
+              rulesData.filter(rule => rule.isActive).map((rule) => (
+                <div key={rule.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{rule.name}</p>
+                    <p className="text-sm text-gray-500">{rule.timesExecuted} بار اجرا شده</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-green-50 text-green-700">فعال</Badge>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-green-50 text-green-700">فعال</Badge>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
@@ -328,56 +287,64 @@ export default function CommunicationCenter() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {templates.map((template) => (
-          <Card key={template.id}>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold">{template.name}</h3>
-                    <div className="flex gap-2 mt-2">
-                      <Badge variant="outline">
-                        {template.type === "sms" ? "پیامک" : "ایمیل"}
-                      </Badge>
-                      <Badge variant="outline">{template.language}</Badge>
-                    </div>
-                  </div>
-                  <Switch checked={template.isActive} />
-                </div>
-                
-                <div className="space-y-2">
-                  {template.subject && (
+        {templatesLoading ? (
+          <div>در حال بارگذاری قالب‌ها...</div>
+        ) : templatesData.length === 0 ? (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            هیچ قالبی موجود نیست
+          </div>
+        ) : (
+          templatesData.map((template) => (
+            <Card key={template.id}>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm font-medium">موضوع:</p>
-                      <p className="text-sm text-gray-600">{template.subject}</p>
+                      <h3 className="font-semibold">{template.name}</h3>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant="outline">
+                          {template.type === "sms" ? "پیامک" : "ایمیل"}
+                        </Badge>
+                        <Badge variant="outline">{template.language}</Badge>
+                      </div>
                     </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-medium">محتوا:</p>
-                    <p className="text-sm text-gray-600 line-clamp-3">{template.content}</p>
+                    <Switch checked={template.isActive} />
                   </div>
-                  <div className="flex justify-between text-sm text-gray-500">
-                    <span>{template.usage} بار استفاده</span>
-                    <span>آخرین: {template.lastUsed}</span>
+                  
+                  <div className="space-y-2">
+                    {template.subject && (
+                      <div>
+                        <p className="text-sm font-medium">موضوع:</p>
+                        <p className="text-sm text-gray-600">{template.subject}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-medium">محتوا:</p>
+                      <p className="text-sm text-gray-600 line-clamp-3">{template.content}</p>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>{template.usage} بار استفاده</span>
+                      <span>آخرین: {template.lastUsed}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="flex-1">
+                      <Edit className="h-4 w-4 mr-1" />
+                      ویرایش
+                    </Button>
+                    <Button size="sm" variant="ghost">
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost">
+                      <Eye className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Edit className="h-4 w-4 mr-1" />
-                    ویرایش
-                  </Button>
-                  <Button size="sm" variant="ghost">
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="ghost">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );
@@ -410,46 +377,56 @@ export default function CommunicationCenter() {
                 </tr>
               </thead>
               <tbody>
-                {campaigns.map((campaign) => (
-                  <tr key={campaign.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4">
-                      <p className="font-medium">{campaign.name}</p>
-                    </td>
-                    <td className="p-4">
-                      <Badge variant="outline">
-                        {campaign.type === "sms" ? "پیامک" : "ایمیل"}
-                      </Badge>
-                    </td>
-                    <td className="p-4">{campaign.targetAudience}</td>
-                    <td className="p-4">{campaign.scheduledDate}</td>
-                    <td className="p-4">{campaign.sentCount}</td>
-                    <td className="p-4">
-                      {campaign.openRate > 0 ? `${campaign.openRate}%` : "-"}
-                    </td>
-                    <td className="p-4">
-                      {campaign.clickRate > 0 ? `${campaign.clickRate}%` : "-"}
-                    </td>
-                    <td className="p-4">
-                      <Badge className={getStatusColor(campaign.status)}>
-                        {campaign.status === "completed" ? "تکمیل شده" : 
-                         campaign.status === "scheduled" ? "برنامه‌ریزی شده" : campaign.status}
-                      </Badge>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="ghost">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost">
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
+                {campaignsLoading ? (
+                  <tr>
+                    <td colSpan={9} className="p-8 text-center">در حال بارگذاری کمپین‌ها...</td>
                   </tr>
-                ))}
+                ) : campaignsData.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="p-8 text-center text-gray-500">هیچ کمپینی موجود نیست</td>
+                  </tr>
+                ) : (
+                  campaignsData.map((campaign) => (
+                    <tr key={campaign.id} className="border-b hover:bg-gray-50">
+                      <td className="p-4">
+                        <p className="font-medium">{campaign.name}</p>
+                      </td>
+                      <td className="p-4">
+                        <Badge variant="outline">
+                          {campaign.type === "sms" ? "پیامک" : "ایمیل"}
+                        </Badge>
+                      </td>
+                      <td className="p-4">{campaign.targetAudience}</td>
+                      <td className="p-4">{campaign.scheduledDate}</td>
+                      <td className="p-4">{campaign.sentCount}</td>
+                      <td className="p-4">
+                        {campaign.openRate > 0 ? `${campaign.openRate}%` : "-"}
+                      </td>
+                      <td className="p-4">
+                        {campaign.clickRate > 0 ? `${campaign.clickRate}%` : "-"}
+                      </td>
+                      <td className="p-4">
+                        <Badge className={getStatusColor(campaign.status)}>
+                          {campaign.status === "completed" ? "تکمیل شده" : 
+                           campaign.status === "scheduled" ? "برنامه‌ریزی شده" : campaign.status}
+                        </Badge>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="ghost">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost">
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -469,18 +446,23 @@ export default function CommunicationCenter() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {automationRules.map((rule) => (
-          <Card key={rule.id}>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold">{rule.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {rule.timesExecuted} بار اجرا شده
-                    </p>
-                  </div>
-                  <Switch checked={rule.isActive} />
+        {rulesLoading ? (
+          <div className="col-span-full text-center py-8">در حال بارگذاری قوانین اتوماسیون...</div>
+        ) : rulesData.length === 0 ? (
+          <div className="col-span-full text-center py-8 text-gray-500">هیچ قانون اتوماسیونی موجود نیست</div>
+        ) : (
+          rulesData.map((rule) => (
+            <Card key={rule.id}>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold">{rule.name}</h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {rule.timesExecuted} بار اجرا شده
+                      </p>
+                    </div>
+                    <Switch checked={rule.isActive} />
                 </div>
                 
                 <div className="space-y-2 text-sm">
@@ -517,7 +499,8 @@ export default function CommunicationCenter() {
               </div>
             </CardContent>
           </Card>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
