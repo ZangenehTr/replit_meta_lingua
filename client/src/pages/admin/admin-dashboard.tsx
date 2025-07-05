@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Users, 
   GraduationCap, 
@@ -28,32 +29,37 @@ export function AdminDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
-  // Admin Overview Stats
+  // Fetch real admin dashboard stats from API
+  const { data: stats, isLoading, error } = useQuery({
+    queryKey: ['/api/admin/dashboard-stats']
+  });
+
+  // Admin Overview Stats - using real data
   const overviewStats = [
     {
       title: t('totalStudents'),
-      value: "1,247",
-      change: "+12%",
-      trend: "up",
+      value: isLoading ? "..." : (stats?.totalUsers || 0).toLocaleString(),
+      change: stats?.userGrowth ? `+${stats.userGrowth}%` : "+0%",
+      trend: stats?.userGrowth > 0 ? "up" : "down",
       icon: Users
     },
     {
       title: t('activeTeachers'),
-      value: "89",
-      change: "+5%",
-      trend: "up",
+      value: isLoading ? "..." : (stats?.totalCourses || 0).toLocaleString(),
+      change: stats?.enrollmentGrowth ? `+${stats.enrollmentGrowth}%` : "+0%",
+      trend: stats?.enrollmentGrowth > 0 ? "up" : "down",
       icon: GraduationCap
     },
     {
       title: t('monthlyRevenue'),
-      value: "₹4,52,000",
-      change: "+18%",
+      value: isLoading ? "..." : `₹${(stats?.totalRevenue || 0).toLocaleString()}`,
+      change: stats?.revenueGrowth ? `+${stats.revenueGrowth}%` : "+0%",
       trend: "up",
       icon: DollarSign
     },
     {
       title: t('completionRate'),
-      value: "87%",
+      value: isLoading ? "..." : `${Math.round(stats?.completionRate || 0)}%`,
       change: "+3%",
       trend: "up",
       icon: TrendingUp
@@ -115,13 +121,13 @@ export function AdminDashboard() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Total Students:</span>
-                <span className="font-bold">1,247</span>
+                <span className="font-bold">{isLoading ? "..." : stats?.totalUsers || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Active This Month:</span>
-                <span className="font-bold">1,189</span>
+                <span className="font-bold">{isLoading ? "..." : stats?.activeStudents || 0}</span>
               </div>
-              <Progress value={95} className="mt-2" />
+              <Progress value={stats?.activeStudents && stats?.totalUsers ? (stats.activeStudents / stats.totalUsers * 100) : 0} className="mt-2" />
             </div>
           </CardContent>
         </Card>
