@@ -67,6 +67,7 @@ import CampaignsPage from "@/pages/callcenter/campaigns";
 import AdminClassesPage from "@/pages/admin/classes";
 import AdminReportsPage from "@/pages/admin/reports";
 import AdminCommunicationsPage from "@/pages/admin/communications";
+import AdminSupervisionPage from "@/pages/admin/supervision";
 
 import { LanguageProvider } from "@/hooks/use-language";
 
@@ -362,6 +363,13 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <AdminCommunicationsPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/supervision">
+        <ProtectedRoute>
+          <AppLayout>
+            <AdminSupervisionPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>
