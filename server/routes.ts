@@ -6,7 +6,24 @@ import { ollamaInstaller } from "./ollama-installer";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { z } from "zod";
-import { insertUserSchema, insertUserProfileSchema, insertSessionSchema, insertMessageSchema, insertPaymentSchema, insertAdminSettingsSchema } from "@shared/schema";
+import { 
+  insertUserSchema, 
+  insertUserProfileSchema, 
+  insertSessionSchema, 
+  insertMessageSchema, 
+  insertPaymentSchema, 
+  insertAdminSettingsSchema,
+  insertMoodEntrySchema,
+  insertMoodRecommendationSchema,
+  insertLearningAdaptationSchema,
+  type InsertMoodEntry,
+  type InsertMoodRecommendation,
+  type InsertLearningAdaptation,
+  type AttendanceRecord,
+  type InsertAttendanceRecord,
+  type UserProfile,
+  type InsertUserProfile
+} from "@shared/schema";
 import multer from "multer";
 import mammoth from "mammoth";
 
@@ -1004,7 +1021,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: user.lastName,
           role: user.role,
           avatar: user.avatar,
-          credits: user.credits,
+          credits: user.totalCredits,
           streakDays: user.streakDays,
           preferences: user.preferences
         }
@@ -1024,7 +1041,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       lastName: user.lastName,
       role: user.role,
       avatar: user.avatar,
-      credits: user.credits,
+      credits: user.totalCredits,
       streakDays: user.streakDays,
       totalLessons: user.totalLessons,
       preferences: user.preferences
@@ -1075,7 +1092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: user.lastName,
           role: user.role,
           avatar: user.avatar,
-          credits: user.credits,
+          credits: user.totalCredits,
           streakDays: user.streakDays,
           preferences: user.preferences
         }
