@@ -37,32 +37,32 @@ export function AdminDashboard() {
   // Admin Overview Stats - using real data
   const overviewStats = [
     {
-      title: t('totalStudents'),
+      title: "Total Users",
       value: isLoading ? "..." : (stats?.totalUsers || 0).toLocaleString(),
       change: stats?.userGrowth ? `+${stats.userGrowth}%` : "+0%",
       trend: stats?.userGrowth > 0 ? "up" : "down",
       icon: Users
     },
     {
-      title: t('activeTeachers'),
+      title: "Total Courses",
       value: isLoading ? "..." : (stats?.totalCourses || 0).toLocaleString(),
       change: stats?.enrollmentGrowth ? `+${stats.enrollmentGrowth}%` : "+0%",
       trend: stats?.enrollmentGrowth > 0 ? "up" : "down",
-      icon: GraduationCap
+      icon: BookOpen
     },
     {
-      title: t('monthlyRevenue'),
-      value: isLoading ? "..." : `₹${(stats?.totalRevenue || 0).toLocaleString()}`,
+      title: "Monthly Revenue (IRR)",
+      value: isLoading ? "..." : `${(stats?.totalRevenue || 0).toLocaleString()} ریال`,
       change: stats?.revenueGrowth ? `+${stats.revenueGrowth}%` : "+0%",
-      trend: "up",
+      trend: stats?.revenueGrowth > 0 ? "up" : "down",
       icon: DollarSign
     },
     {
-      title: t('completionRate'),
-      value: isLoading ? "..." : `${Math.round(stats?.completionRate || 0)}%`,
-      change: "+3%",
+      title: "Active Students",
+      value: isLoading ? "..." : (stats?.activeStudents || 0).toLocaleString(),
+      change: stats?.completionRate ? `${Math.round(stats.completionRate)}%` : "0%",
       trend: "up",
-      icon: TrendingUp
+      icon: GraduationCap
     }
   ];
 
@@ -148,17 +148,17 @@ export function AdminDashboard() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Active Courses:</span>
-                <span className="font-bold">67</span>
+                <span className="font-bold">{isLoading ? "..." : stats?.totalCourses || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Total Enrollments:</span>
-                <span className="font-bold">3,842</span>
+                <span className="font-bold">{isLoading ? "..." : (stats?.enrollments || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Enhanced Features:</span>
                 <span className="font-bold">All Active</span>
               </div>
-              <Progress value={78} className="mt-2" />
+              <Progress value={stats?.totalCourses ? Math.min(100, (stats.totalCourses / 10) * 100) : 0} className="mt-2" />
             </div>
           </CardContent>
         </Card>
@@ -179,13 +179,13 @@ export function AdminDashboard() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Today's Classes:</span>
-                <span className="font-bold">23</span>
+                <span className="font-bold">{isLoading ? "..." : (stats?.todayClasses || 0)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Attendance Rate:</span>
-                <span className="font-bold">89%</span>
+                <span className="font-bold">{isLoading ? "..." : Math.round(stats?.attendanceRate || 0)}%</span>
               </div>
-              <Progress value={89} className="mt-2" />
+              <Progress value={stats?.attendanceRate || 0} className="mt-2" />
             </div>
           </CardContent>
         </Card>
@@ -206,13 +206,13 @@ export function AdminDashboard() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Active Teachers:</span>
-                <span className="font-bold">89</span>
+                <span className="font-bold">{isLoading ? "..." : stats?.activeTeachers || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Avg. Rating:</span>
-                <span className="font-bold">4.7/5</span>
+                <span className="font-bold">{isLoading ? "..." : stats?.avgTeacherRating || 0}/5</span>
               </div>
-              <Progress value={94} className="mt-2" />
+              <Progress value={stats?.avgTeacherRating ? (stats.avgTeacherRating / 5) * 100 : 0} className="mt-2" />
             </div>
           </CardContent>
         </Card>
@@ -232,14 +232,14 @@ export function AdminDashboard() {
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Monthly Revenue:</span>
-                <span className="font-bold">$452,000</span>
+                <span>Total Revenue:</span>
+                <span className="font-bold">{isLoading ? "..." : `${(stats?.totalRevenue || 0).toLocaleString()} ریال`}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Pending Payments:</span>
-                <span className="font-bold">$23,400</span>
+                <span>Growth Rate:</span>
+                <span className="font-bold">{isLoading ? "..." : `+${stats?.revenueGrowth || 0}%`}</span>
               </div>
-              <Progress value={82} className="mt-2" />
+              <Progress value={stats?.revenueGrowth || 0} className="mt-2" />
             </div>
           </CardContent>
         </Card>

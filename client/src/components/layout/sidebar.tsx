@@ -55,7 +55,8 @@ const iconMap = {
   UserPlus,
   Send,
   DollarSign,
-  Building2
+  Building2,
+  Settings
 };
 
 export function Sidebar() {
