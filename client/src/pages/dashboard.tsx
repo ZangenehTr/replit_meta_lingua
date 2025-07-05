@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/layout/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { WelcomeSection } from "@/components/dashboard/welcome-section";
@@ -24,10 +24,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrendingUp, Trophy, Star, Target, Users, Zap, Menu, Mic, BarChart3 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation, Redirect } from "wouter";
 import { useLanguage } from "@/hooks/use-language";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  
+  // Redirect admin users to proper admin dashboard
+  if (user?.role === 'admin') {
+    return <Redirect to="/admin" />;
+  }
   const [companionVisible, setCompanionVisible] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentLanguage, t, isRTL } = useLanguage();
