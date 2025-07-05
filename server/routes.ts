@@ -6348,6 +6348,342 @@ Return JSON format:
     }
   });
 
+  // ===== IRANIAN SELF-HOSTING REAL DATA ENDPOINTS =====
+  // Replace ALL mock data with real database calls
+
+  // 1. LEAD MANAGEMENT SYSTEM (Call Center Dashboard)
+  app.get("/api/leads", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { status, priority, assignedAgent, dateFrom, dateTo } = req.query;
+      const leads = await storage.getLeads({
+        status,
+        priority,
+        assignedAgentId: assignedAgent ? parseInt(assignedAgent) : undefined,
+        dateFrom,
+        dateTo
+      });
+      res.json(leads);
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+      res.status(500).json({ message: "Failed to fetch leads" });
+    }
+  });
+
+  app.post("/api/leads", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const leadData = {
+        ...req.body,
+        assignedAgentId: req.user.id
+      };
+      const lead = await storage.createLead(leadData);
+      res.status(201).json(lead);
+    } catch (error) {
+      console.error('Error creating lead:', error);
+      res.status(400).json({ message: "Failed to create lead" });
+    }
+  });
+
+  app.put("/api/leads/:id", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const leadId = parseInt(req.params.id);
+      const lead = await storage.updateLead(leadId, req.body);
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      res.json(lead);
+    } catch (error) {
+      console.error('Error updating lead:', error);
+      res.status(400).json({ message: "Failed to update lead" });
+    }
+  });
+
+  app.post("/api/leads/:id/communication", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const leadId = parseInt(req.params.id);
+      const communicationData = {
+        leadId,
+        agentId: req.user.id,
+        ...req.body
+      };
+      const communication = await storage.createCommunicationLog(communicationData);
+      res.status(201).json(communication);
+    } catch (error) {
+      console.error('Error logging communication:', error);
+      res.status(400).json({ message: "Failed to log communication" });
+    }
+  });
+
+  // 2. FINANCIAL SYSTEM (Accountant Dashboard) - Iranian IRR & Shetab
+  app.get("/api/invoices", authenticateToken, requireRole(['Admin', 'Accountant', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { status, dateFrom, dateTo, studentId } = req.query;
+      const invoices = await storage.getInvoices({
+        status,
+        dateFrom,
+        dateTo,
+        studentId: studentId ? parseInt(studentId) : undefined
+      });
+      res.json(invoices);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      res.status(500).json({ message: "Failed to fetch invoices" });
+    }
+  });
+
+  app.post("/api/invoices", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const invoiceData = {
+        ...req.body,
+        currency: 'IRR',
+        invoiceNumber: `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+      };
+      const invoice = await storage.createInvoice(invoiceData);
+      res.status(201).json(invoice);
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      res.status(400).json({ message: "Failed to create invoice" });
+    }
+  });
+
+  app.get("/api/payment-transactions", authenticateToken, requireRole(['Admin', 'Accountant', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { status, method, dateFrom, dateTo } = req.query;
+      const transactions = await storage.getPaymentTransactions({
+        status,
+        method,
+        dateFrom,
+        dateTo
+      });
+      res.json(transactions);
+    } catch (error) {
+      console.error('Error fetching payment transactions:', error);
+      res.status(500).json({ message: "Failed to fetch payment transactions" });
+    }
+  });
+
+  app.get("/api/financial/daily-revenue", authenticateToken, requireRole(['Admin', 'Accountant', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { days = 30 } = req.query;
+      const revenueData = await storage.getDailyRevenue(parseInt(days as string));
+      res.json(revenueData);
+    } catch (error) {
+      console.error('Error fetching daily revenue:', error);
+      res.status(500).json({ message: "Failed to fetch revenue data" });
+    }
+  });
+
+  app.get("/api/financial/stats", authenticateToken, requireRole(['Admin', 'Accountant', 'Supervisor']), async (req: any, res) => {
+    try {
+      const stats = await storage.getFinancialStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching financial stats:', error);
+      res.status(500).json({ message: "Failed to fetch financial statistics" });
+    }
+  });
+
+  // 3. TEACHER EVALUATION SYSTEM (Supervisor Dashboard)
+  app.get("/api/teacher-evaluations", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { teacherId, period, status } = req.query;
+      const evaluations = await storage.getTeacherEvaluations({
+        teacherId: teacherId ? parseInt(teacherId) : undefined,
+        period,
+        status
+      });
+      res.json(evaluations);
+    } catch (error) {
+      console.error('Error fetching teacher evaluations:', error);
+      res.status(500).json({ message: "Failed to fetch teacher evaluations" });
+    }
+  });
+
+  app.post("/api/teacher-evaluations", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const evaluationData = {
+        ...req.body,
+        supervisorId: req.user.id
+      };
+      const evaluation = await storage.createTeacherEvaluation(evaluationData);
+      res.status(201).json(evaluation);
+    } catch (error) {
+      console.error('Error creating teacher evaluation:', error);
+      res.status(400).json({ message: "Failed to create teacher evaluation" });
+    }
+  });
+
+  app.get("/api/class-observations", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { teacherId, courseId, dateFrom, dateTo } = req.query;
+      const observations = await storage.getClassObservations({
+        teacherId: teacherId ? parseInt(teacherId) : undefined,
+        courseId: courseId ? parseInt(courseId) : undefined,
+        dateFrom,
+        dateTo
+      });
+      res.json(observations);
+    } catch (error) {
+      console.error('Error fetching class observations:', error);
+      res.status(500).json({ message: "Failed to fetch class observations" });
+    }
+  });
+
+  app.post("/api/class-observations", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const observationData = {
+        ...req.body,
+        supervisorId: req.user.id
+      };
+      const observation = await storage.createClassObservation(observationData);
+      res.status(201).json(observation);
+    } catch (error) {
+      console.error('Error creating class observation:', error);
+      res.status(400).json({ message: "Failed to create class observation" });
+    }
+  });
+
+  // 4. SYSTEM METRICS (Admin Dashboard)
+  app.get("/api/system/metrics", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { type, hours = 24 } = req.query;
+      const metrics = await storage.getSystemMetrics({
+        type,
+        hoursBack: parseInt(hours as string)
+      });
+      res.json(metrics);
+    } catch (error) {
+      console.error('Error fetching system metrics:', error);
+      res.status(500).json({ message: "Failed to fetch system metrics" });
+    }
+  });
+
+  app.post("/api/system/metrics", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const metric = await storage.createSystemMetric(req.body);
+      res.status(201).json(metric);
+    } catch (error) {
+      console.error('Error creating system metric:', error);
+      res.status(400).json({ message: "Failed to create system metric" });
+    }
+  });
+
+  app.get("/api/admin/dashboard-stats", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const stats = await storage.getAdminDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching admin dashboard stats:', error);
+      res.status(500).json({ message: "Failed to fetch dashboard statistics" });
+    }
+  });
+
+  // 5. MENTOR ASSIGNMENTS (Mentor Dashboard)
+  app.get("/api/mentor/assignments", authenticateToken, requireRole(['Admin', 'Mentor', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { mentorId, status } = req.query;
+      const assignments = await storage.getMentorAssignments({
+        mentorId: mentorId ? parseInt(mentorId) : req.user.role === 'Mentor' ? req.user.id : undefined,
+        status
+      });
+      res.json(assignments);
+    } catch (error) {
+      console.error('Error fetching mentor assignments:', error);
+      res.status(500).json({ message: "Failed to fetch mentor assignments" });
+    }
+  });
+
+  app.post("/api/mentor/assignments", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const assignment = await storage.createMentorAssignment(req.body);
+      res.status(201).json(assignment);
+    } catch (error) {
+      console.error('Error creating mentor assignment:', error);
+      res.status(400).json({ message: "Failed to create mentor assignment" });
+    }
+  });
+
+  app.get("/api/mentor/sessions", authenticateToken, requireRole(['Admin', 'Mentor', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { assignmentId, status, dateFrom, dateTo } = req.query;
+      const sessions = await storage.getMentoringSessions({
+        assignmentId: assignmentId ? parseInt(assignmentId) : undefined,
+        status,
+        dateFrom,
+        dateTo
+      });
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching mentoring sessions:', error);
+      res.status(500).json({ message: "Failed to fetch mentoring sessions" });
+    }
+  });
+
+  app.post("/api/mentor/sessions", authenticateToken, requireRole(['Admin', 'Mentor']), async (req: any, res) => {
+    try {
+      const session = await storage.createMentoringSession(req.body);
+      res.status(201).json(session);
+    } catch (error) {
+      console.error('Error creating mentoring session:', error);
+      res.status(400).json({ message: "Failed to create mentoring session" });
+    }
+  });
+
+  // 6. REAL CALL CENTER STATS (Replace mock data)
+  app.get("/api/callcenter/real-stats", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { period = 'today' } = req.query;
+      const stats = await storage.getCallCenterStats(period as string);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching call center stats:', error);
+      res.status(500).json({ message: "Failed to fetch call center statistics" });
+    }
+  });
+
+  // 7. REAL TEACHER DASHBOARD DATA
+  app.get("/api/teacher/real-stats", authenticateToken, requireRole(['Admin', 'Teacher', 'Supervisor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.role === 'Teacher' ? req.user.id : parseInt(req.query.teacherId as string);
+      const stats = await storage.getTeacherDashboardStats(teacherId);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching teacher stats:', error);
+      res.status(500).json({ message: "Failed to fetch teacher statistics" });
+    }
+  });
+
+  // 8. REAL ACCOUNTANT DASHBOARD DATA  
+  app.get("/api/accountant/real-stats", authenticateToken, requireRole(['Admin', 'Accountant', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { period = 'month' } = req.query;
+      const stats = await storage.getAccountantDashboardStats(period as string);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching accountant stats:', error);
+      res.status(500).json({ message: "Failed to fetch financial statistics" });
+    }
+  });
+
+  // 9. SHETAB PAYMENT INTEGRATION STATUS
+  app.get("/api/shetab/status", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { createShetabService } = await import('./shetab-service');
+      const shetabService = createShetabService();
+      
+      const status = {
+        configured: !!shetabService,
+        currency: 'IRR',
+        supportedMethods: ['shetab', 'bank_transfer', 'cash'],
+        gatewayName: 'Iranian Shetab Network'
+      };
+      
+      res.json(status);
+    } catch (error) {
+      console.error('Error checking Shetab status:', error);
+      res.status(500).json({ message: "Failed to check payment gateway status" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

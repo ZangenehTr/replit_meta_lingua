@@ -546,22 +546,6 @@ export const parentGuardians = pgTable("parent_guardians", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-export const communicationLogs = pgTable("communication_logs", {
-  id: serial("id").primaryKey(),
-  fromUserId: integer("from_user_id").references(() => users.id).notNull(),
-  toUserId: integer("to_user_id").references(() => users.id),
-  toParentId: integer("to_parent_id").references(() => parentGuardians.id),
-  type: text("type").notNull(), // email, sms, phone_call, meeting, note
-  subject: text("subject"),
-  content: text("content").notNull(),
-  status: text("status").default("sent"), // sent, delivered, read, failed
-  scheduledFor: timestamp("scheduled_for"),
-  sentAt: timestamp("sent_at"),
-  readAt: timestamp("read_at"),
-  metadata: jsonb("metadata"), // Additional data like SMS provider response
-  createdAt: timestamp("created_at").defaultNow()
-});
-
 export const studentReports = pgTable("student_reports", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").references(() => users.id).notNull(),
@@ -575,29 +559,6 @@ export const studentReports = pgTable("student_reports", {
   isPublished: boolean("is_published").default(false),
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow()
-});
-
-// CRM Leads Management
-export const leads = pgTable("leads", {
-  id: serial("id").primaryKey(),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
-  email: text("email").notNull(),
-  phoneNumber: text("phone_number").notNull(),
-  source: text("source").notNull(), // website, referral, phone, social_media, etc.
-  status: text("status").notNull().default("new"), // new, contacted, qualified, converted, lost
-  priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
-  targetLanguage: text("target_language").notNull(),
-  level: text("level").notNull(), // beginner, intermediate, advanced
-  budget: integer("budget"), // in IRR
-  notes: text("notes"),
-  assignedTo: text("assigned_to"), // Staff member name
-  lastContact: timestamp("last_contact"),
-  nextFollowUp: timestamp("next_follow_up"),
-  convertedAt: timestamp("converted_at"),
-  convertedToUserId: integer("converted_to_user_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Insert schemas - simplified to remove TypeScript errors
@@ -638,11 +599,7 @@ export const insertLevelAssessmentResultSchema = createInsertSchema(levelAssessm
   completedAt: true
 });
 
-export const insertLeadSchema = createInsertSchema(leads).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+// Lead schema moved to after table definition to avoid forward reference
 
 // CRM Insert Schemas
 export const insertInstituteSchema = createInsertSchema(institutes).omit({
@@ -691,10 +648,7 @@ export const insertParentGuardianSchema = createInsertSchema(parentGuardians).om
   updatedAt: true
 });
 
-export const insertCommunicationLogSchema = createInsertSchema(communicationLogs).omit({
-  id: true,
-  createdAt: true
-});
+// Communication log schema moved to end of file
 
 export const insertStudentReportSchema = createInsertSchema(studentReports).omit({
   id: true,
@@ -898,6 +852,234 @@ export const insertAiKnowledgeBaseSchema = createInsertSchema(aiKnowledgeBase).o
   createdAt: true
 });
 
+// All insert schemas moved to end of file after table definitions
+
+// LEAD MANAGEMENT SYSTEM (Call Center)
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email"),
+  phoneNumber: text("phone_number").notNull(),
+  source: text("source").notNull(), // website, social_media, referral, advertisement, walk_in
+  status: text("status").notNull().default("new"), // new, contacted, interested, qualified, converted, lost
+  priority: text("priority").default("medium"), // low, medium, high, urgent
+  interestedLanguage: text("interested_language"), // persian, english, arabic, etc
+  interestedLevel: text("interested_level"), // beginner, intermediate, advanced
+  preferredFormat: text("preferred_format"), // group, individual, online, in_person
+  budget: integer("budget"), // IRR amount
+  notes: text("notes"),
+  assignedAgentId: integer("assigned_agent_id").references(() => users.id),
+  lastContactDate: timestamp("last_contact_date"),
+  nextFollowUpDate: timestamp("next_follow_up_date"),
+  conversionDate: timestamp("conversion_date"),
+  studentId: integer("student_id").references(() => users.id), // If converted
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for leads
+export const insertLeadSchema = createInsertSchema(leads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// COMMUNICATION LOGS (Call Center)
+export const communicationLogs = pgTable("communication_logs", {
+  id: serial("id").primaryKey(),
+  leadId: integer("lead_id").references(() => leads.id),
+  studentId: integer("student_id").references(() => users.id),
+  agentId: integer("agent_id").references(() => users.id).notNull(),
+  type: text("type").notNull(), // call, email, sms, meeting, note
+  direction: text("direction"), // inbound, outbound
+  duration: integer("duration_minutes"), // For calls
+  outcome: text("outcome"), // answered, no_answer, busy, voicemail, interested, not_interested
+  notes: text("notes"),
+  followUpRequired: boolean("follow_up_required").default(false),
+  followUpDate: timestamp("follow_up_date"),
+  recordingUrl: text("recording_url"), // For call recordings
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Insert schema for communication logs
+export const insertCommunicationLogSchema = createInsertSchema(communicationLogs).omit({
+  id: true,
+  createdAt: true
+});
+
+// FINANCIAL SYSTEM (Accountant)
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  invoiceNumber: text("invoice_number").notNull().unique(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id),
+  amount: integer("amount").notNull(), // IRR amount
+  taxAmount: integer("tax_amount").default(0), // Iranian VAT
+  totalAmount: integer("total_amount").notNull(), // amount + tax
+  currency: text("currency").default("IRR"),
+  status: text("status").default("pending"), // pending, paid, overdue, cancelled
+  dueDate: timestamp("due_date").notNull(),
+  paidDate: timestamp("paid_date"),
+  paymentMethod: text("payment_method"), // shetab, cash, bank_transfer, credit
+  shetabTransactionId: text("shetab_transaction_id"), // Shetab payment reference
+  description: text("description"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for invoices
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// PAYMENT TRANSACTIONS (Iranian Shetab Integration)
+export const paymentTransactions = pgTable("payment_transactions", {
+  id: serial("id").primaryKey(),
+  invoiceId: integer("invoice_id").references(() => invoices.id),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  amount: integer("amount").notNull(), // IRR amount
+  currency: text("currency").default("IRR"),
+  method: text("method").notNull(), // shetab, bank_transfer, cash, wallet
+  status: text("status").default("pending"), // pending, completed, failed, refunded
+  shetabRefNumber: text("shetab_ref_number"), // Shetab reference number
+  shetabCardNumber: text("shetab_card_number"), // Masked card number
+  bankCode: text("bank_code"), // Iranian bank identifier
+  terminalId: text("terminal_id"),
+  description: text("description"),
+  failureReason: text("failure_reason"),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Insert schema for payment transactions
+export const insertPaymentTransactionSchema = createInsertSchema(paymentTransactions).omit({
+  id: true,
+  createdAt: true
+});
+
+// TEACHER EVALUATIONS (Supervisor)
+export const teacherEvaluations = pgTable("teacher_evaluations", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  supervisorId: integer("supervisor_id").references(() => users.id).notNull(),
+  evaluationPeriod: text("evaluation_period").notNull(), // "2024-Q1", "2024-January", etc
+  teachingEffectiveness: integer("teaching_effectiveness"), // 1-10 scale
+  classroomManagement: integer("classroom_management"), // 1-10 scale
+  studentEngagement: integer("student_engagement"), // 1-10 scale
+  contentKnowledge: integer("content_knowledge"), // 1-10 scale
+  communication: integer("communication"), // 1-10 scale
+  professionalism: integer("professionalism"), // 1-10 scale
+  overallRating: decimal("overall_rating", { precision: 3, scale: 1 }), // Average rating
+  strengths: text("strengths").array().default([]),
+  improvementAreas: text("improvement_areas").array().default([]),
+  recommendations: text("recommendations"),
+  goals: text("goals").array().default([]),
+  observationNotes: text("observation_notes"),
+  studentFeedbackSummary: text("student_feedback_summary"),
+  status: text("status").default("draft"), // draft, completed, reviewed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Insert schema for teacher evaluations
+export const insertTeacherEvaluationSchema = createInsertSchema(teacherEvaluations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// CLASS OBSERVATIONS (Supervisor)
+export const classObservations = pgTable("class_observations", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  supervisorId: integer("supervisor_id").references(() => users.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id),
+  sessionId: integer("session_id").references(() => sessions.id),
+  observationDate: timestamp("observation_date").notNull(),
+  duration: integer("duration_minutes"),
+  lessonTopic: text("lesson_topic"),
+  preparedness: integer("preparedness"), // 1-5 scale
+  delivery: integer("delivery"), // 1-5 scale
+  studentParticipation: integer("student_participation"), // 1-5 scale
+  materialUsage: integer("material_usage"), // 1-5 scale
+  timeManagement: integer("time_management"), // 1-5 scale
+  observations: text("observations"),
+  positivePoints: text("positive_points").array().default([]),
+  improvementSuggestions: text("improvement_suggestions").array().default([]),
+  followUpRequired: boolean("follow_up_required").default(false),
+  followUpNotes: text("follow_up_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Insert schema for class observations
+export const insertClassObservationSchema = createInsertSchema(classObservations).omit({
+  id: true,
+  createdAt: true
+});
+
+// SYSTEM METRICS (Admin)
+export const systemMetrics = pgTable("system_metrics", {
+  id: serial("id").primaryKey(),
+  metricType: text("metric_type").notNull(), // database_response, storage_usage, user_activity, error_rate
+  value: decimal("value", { precision: 10, scale: 3 }).notNull(),
+  unit: text("unit"), // ms, GB, percentage, count
+  metadata: jsonb("metadata"), // Additional metric details
+  recordedAt: timestamp("recorded_at").defaultNow().notNull()
+});
+
+// Insert schema for system metrics
+export const insertSystemMetricSchema = createInsertSchema(systemMetrics).omit({
+  id: true,
+  recordedAt: true
+});
+
+// MENTOR ASSIGNMENTS (Mentor Dashboard)
+export const mentorAssignments = pgTable("mentor_assignments", {
+  id: serial("id").primaryKey(),
+  mentorId: integer("mentor_id").references(() => users.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  status: text("status").default("active"), // active, completed, paused, terminated
+  assignedDate: timestamp("assigned_date").defaultNow().notNull(),
+  completedDate: timestamp("completed_date"),
+  goals: text("goals").array().default([]),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// MENTORING SESSIONS 
+export const mentoringSessions = pgTable("mentoring_sessions", {
+  id: serial("id").primaryKey(),
+  assignmentId: integer("assignment_id").references(() => mentorAssignments.id).notNull(),
+  scheduledDate: timestamp("scheduled_date").notNull(),
+  duration: integer("duration_minutes").default(60),
+  status: text("status").default("scheduled"), // scheduled, completed, cancelled, no_show
+  sessionType: text("session_type"), // goal_setting, progress_review, motivation, problem_solving
+  topics: text("topics").array().default([]),
+  outcomes: text("outcomes"),
+  nextSteps: text("next_steps").array().default([]),
+  studentProgress: integer("student_progress"), // 1-10 scale
+  mentorNotes: text("mentor_notes"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Insert schemas for mentor assignments and mentoring sessions
+export const insertMentorAssignmentSchema = createInsertSchema(mentorAssignments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertMentoringSessionSchema = createInsertSchema(mentoringSessions).omit({
+  id: true,
+  createdAt: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -1058,3 +1240,21 @@ export type LearningActivity = typeof learningActivities.$inferSelect;
 export type InsertLearningActivity = z.infer<typeof insertLearningActivitySchema>;
 export type ProgressSnapshot = typeof progressSnapshots.$inferSelect;
 export type InsertProgressSnapshot = z.infer<typeof insertProgressSnapshotSchema>;
+
+// Additional Real Data System Types
+export type CommunicationLog = typeof communicationLogs.$inferSelect;
+export type InsertCommunicationLog = z.infer<typeof insertCommunicationLogSchema>;
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
+export type InsertPaymentTransaction = z.infer<typeof insertPaymentTransactionSchema>;
+export type TeacherEvaluation = typeof teacherEvaluations.$inferSelect;
+export type InsertTeacherEvaluation = z.infer<typeof insertTeacherEvaluationSchema>;
+export type ClassObservation = typeof classObservations.$inferSelect;
+export type InsertClassObservation = z.infer<typeof insertClassObservationSchema>;
+export type SystemMetric = typeof systemMetrics.$inferSelect;
+export type InsertSystemMetric = z.infer<typeof insertSystemMetricSchema>;
+export type MentorAssignment = typeof mentorAssignments.$inferSelect;
+export type InsertMentorAssignment = z.infer<typeof insertMentorAssignmentSchema>;
+export type MentoringSession = typeof mentoringSessions.$inferSelect;
+export type InsertMentoringSession = z.infer<typeof insertMentoringSessionSchema>;
