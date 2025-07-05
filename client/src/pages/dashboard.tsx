@@ -31,9 +31,21 @@ import { useAuth } from "@/hooks/use-auth";
 export default function Dashboard() {
   const { user } = useAuth();
   
-  // Redirect admin users to proper admin dashboard
-  if (user?.role === 'admin') {
+  // Redirect users to their role-specific dashboards
+  if (user?.role === 'Admin' || user?.role === 'Supervisor') {
     return <Redirect to="/admin" />;
+  }
+  if (user?.role === 'Teacher/Tutor') {
+    return <Redirect to="/teacher" />;
+  }
+  if (user?.role === 'Call Center Agent') {
+    return <Redirect to="/callcenter" />;
+  }
+  if (user?.role === 'Mentor') {
+    return <Redirect to="/mentor" />;
+  }
+  if (user?.role === 'Accountant') {
+    return <Redirect to="/accountant" />;
   }
   const [companionVisible, setCompanionVisible] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
