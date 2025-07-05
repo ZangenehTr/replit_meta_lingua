@@ -153,31 +153,29 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Enhanced Course Creation */}
+        {/* Course Management */}
         <Card 
           className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-primary/20"
-          onClick={() => setLocation('/admin/create-course')}
+          onClick={() => setLocation('/admin/courses')}
         >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CalendarDays className="h-5 w-5" />
-              Enhanced Course Creator
+              <BookOpen className="h-5 w-5" />
+              Course Management
             </CardTitle>
-            <CardDescription>Create courses with session scheduling & duration management</CardDescription>
+            <CardDescription>Create, edit and manage all language courses</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Features:</span>
-                <span className="font-bold">Duration-based</span>
+                <span>Active Courses:</span>
+                <span className="font-bold">67</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Scheduling:</span>
-                <span className="font-bold">Auto-calculation</span>
+                <span>Total Enrollments:</span>
+                <span className="font-bold">3,842</span>
               </div>
-              <div className="text-xs text-muted-foreground mt-2">
-                Set total hours, session duration, and weekly schedule - system calculates sessions automatically
-              </div>
+              <Progress value={78} className="mt-2" />
             </div>
           </CardContent>
         </Card>

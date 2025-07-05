@@ -50,6 +50,7 @@ export interface Translations {
   title: string;
   description: string;
   course: string;
+  courses: string;
   dueDate: string;
   startDate: string;
   endDate: string;
@@ -61,6 +62,7 @@ export interface Translations {
   save: string;
   cancel: string;
   create: string;
+  createCourse: string;
   update: string;
   delete: string;
   submit: string;
@@ -83,6 +85,8 @@ export interface Translations {
   submitted: string;
   graded: string;
   overdue: string;
+  rating: string;
+  averageRating: string;
 
   // Time
   minutes: string;
@@ -197,6 +201,14 @@ export interface Translations {
   start: string;
   noCoursesAvailableAtMoment: string;
   
+  // Course Management Keys
+  courseManagement: string;
+  advancedCourseBuilder: string;
+  enrolledStudents: string;
+  totalStudents: string;
+  completionRate: string;
+  adminDashboard: string;
+  
   // Role-based navigation keys (PRD specified roles)
   studentInformationSystem: string;
   courseManagement: string;
@@ -263,6 +275,7 @@ export const translations: Record<Language, Translations> = {
     title: "Title",
     description: "Description",
     course: "Course",
+    courses: "Courses",
     dueDate: "Due Date",
     startDate: "Start Date",
     endDate: "End Date",
@@ -274,6 +287,7 @@ export const translations: Record<Language, Translations> = {
     save: "Save",
     cancel: "Cancel",
     create: "Create",
+    createCourse: "Create Course",
     update: "Update",
     delete: "Delete",
     submit: "Submit",
@@ -296,6 +310,8 @@ export const translations: Record<Language, Translations> = {
     submitted: "Submitted",
     graded: "Graded",
     overdue: "Overdue",
+    rating: "Rating",
+    averageRating: "Average Rating",
 
     // Time
     minutes: "minutes",
@@ -420,6 +436,13 @@ export const translations: Record<Language, Translations> = {
     start: "Start",
     noCoursesAvailableAtMoment: "No courses available at the moment",
     
+    // Course Management Keys  
+    advancedCourseBuilder: "Advanced course builder with multimedia content and assessment tools",
+    enrolledStudents: "Enrolled Students",
+    totalStudents: "Total Students",
+    completionRate: "Completion Rate",
+    adminDashboard: "Admin Dashboard",
+    
     // Role-based navigation keys (PRD specified roles)
     studentInformationSystem: "Student Information System",
     courseManagement: "Course Management",
@@ -485,6 +508,7 @@ export const translations: Record<Language, Translations> = {
     title: "عنوان",
     description: "توضیحات",
     course: "دوره",
+    courses: "دوره‌ها",
     dueDate: "مهلت تحویل",
     startDate: "تاریخ شروع",
     endDate: "تاریخ پایان",
@@ -496,6 +520,7 @@ export const translations: Record<Language, Translations> = {
     save: "ذخیره",
     cancel: "انصراف",
     create: "ایجاد",
+    createCourse: "ایجاد دوره",
     update: "به‌روزرسانی",
     delete: "حذف",
     submit: "ارسال",
@@ -518,6 +543,8 @@ export const translations: Record<Language, Translations> = {
     submitted: "ارسال شده",
     graded: "نمره‌گذاری شده",
     overdue: "گذشته از موعد",
+    rating: "امتیاز",
+    averageRating: "میانگین امتیاز",
 
     // Time
     minutes: "دقیقه",
@@ -601,6 +628,13 @@ export const translations: Record<Language, Translations> = {
     start: "شروع",
     noCoursesAvailableAtMoment: "در حال حاضر هیچ دوره‌ای موجود نیست",
     
+    // Course Management Keys
+    advancedCourseBuilder: "سازنده دوره پیشرفته با محتوای چندرسانه‌ای و ابزارهای ارزیابی",
+    enrolledStudents: "دانش‌آموزان ثبت‌نام‌شده",
+    totalStudents: "کل دانش‌آموزان",
+    completionRate: "نرخ تکمیل",
+    adminDashboard: "داشبورد مدیریت",
+    
     // Role-based navigation keys (PRD specified roles)
     studentInformationSystem: "سیستم اطلاعات دانش‌آموزان",
     courseManagement: "مدیریت دوره‌ها",
@@ -667,6 +701,7 @@ export const translations: Record<Language, Translations> = {
     title: "العنوان",
     description: "الوصف",
     course: "الدورة",
+    courses: "الدورات",
     dueDate: "تاريخ الاستحقاق",
     startDate: "تاريخ البداية",
     endDate: "تاريخ النهاية",
@@ -678,6 +713,7 @@ export const translations: Record<Language, Translations> = {
     save: "حفظ",
     cancel: "إلغاء",
     create: "إنشاء",
+    createCourse: "إنشاء دورة",
     update: "تحديث",
     delete: "حذف",
     submit: "إرسال",
@@ -700,6 +736,8 @@ export const translations: Record<Language, Translations> = {
     submitted: "مرسل",
     graded: "مصحح",
     overdue: "متأخر",
+    rating: "التقييم",
+    averageRating: "متوسط التقييم",
 
     // Time
     minutes: "دقائق",
@@ -765,6 +803,13 @@ export const translations: Record<Language, Translations> = {
     whatIsMyLevel: "ما هو مستواي",
     start: "ابدأ",
     noCoursesAvailableAtMoment: "لا توجد دورات متاحة في الوقت الحالي",
+    
+    // Course Management Keys
+    advancedCourseBuilder: "منشئ الدورات المتقدم مع المحتوى متعدد الوسائط وأدوات التقييم",
+    enrolledStudents: "الطلاب المسجلون",
+    totalStudents: "إجمالي الطلاب",
+    completionRate: "معدل الإنجاز",
+    adminDashboard: "لوحة تحكم الإدارة",
   }
 };
 

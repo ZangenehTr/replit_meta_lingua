@@ -114,7 +114,7 @@ export function AdminCourses() {
     }
   ];
 
-  const filteredCourses = courseData.filter(course => {
+  const filteredCourses = (courseData || []).filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === "all" || course.category === filterCategory;
@@ -144,9 +144,9 @@ export function AdminCourses() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Course & Curriculum Management</h1>
+          <h1 className="text-3xl font-bold">{t('courseManagement')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Advanced course builder with multimedia content and assessment tools
+            {t('advancedCourseBuilder')}
           </p>
         </div>
         <div className="flex gap-3">
@@ -158,7 +158,7 @@ export function AdminCourses() {
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Create Course
+                {t('createCourse')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-3xl">
@@ -173,7 +173,7 @@ export function AdminCourses() {
                   <TabsTrigger value="basic">Basic Info</TabsTrigger>
                   <TabsTrigger value="content">Content</TabsTrigger>
                   <TabsTrigger value="pricing">Pricing</TabsTrigger>
-                  <TabsTrigger value="settings">Settings</TabsTrigger>
+                  <TabsTrigger value="settings">{t('settings')}</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="basic" className="space-y-4">
@@ -347,11 +347,11 @@ export function AdminCourses() {
                   <span className="ml-2 font-medium">{course.duration}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Students:</span>
+                  <span className="text-gray-600">{t('students')}:</span>
                   <span className="ml-2 font-bold">{course.enrolledStudents}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Rating:</span>
+                  <span className="text-gray-600">{t('rating')}:</span>
                   <span className="ml-2 font-bold flex items-center">
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
                     {course.rating}
@@ -429,15 +429,15 @@ export function AdminCourses() {
                               </CardHeader>
                               <CardContent className="space-y-3">
                                 <div className="flex justify-between">
-                                  <span>Enrolled Students:</span>
+                                  <span>{t('enrolledStudents')}:</span>
                                   <span className="font-bold">{course.enrolledStudents}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span>Completion Rate:</span>
+                                  <span>{t('completionRate')}:</span>
                                   <span className="font-bold">{course.completionRate}%</span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span>Average Rating:</span>
+                                  <span>{t('averageRating')}:</span>
                                   <span className="font-bold flex items-center">
                                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
                                     {course.rating}/5.0
@@ -459,7 +459,7 @@ export function AdminCourses() {
                             </CardHeader>
                             <CardContent>
                               <div className="space-y-3">
-                                {course.modules.map((module, idx) => (
+                                {(course.modules || []).map((module, idx) => (
                                   <div key={module.id} className="border rounded-lg p-4">
                                     <div className="flex items-center justify-between">
                                       <div>

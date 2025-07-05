@@ -415,11 +415,11 @@ export function AdminFinancial() {
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
                           <div>
-                            <span className="text-gray-600">Courses:</span>
+                            <span className="text-gray-600">{t('courses')}:</span>
                             <div className="font-medium">{payout.courses.length} active</div>
                           </div>
                           <div>
-                            <span className="text-gray-600">Students:</span>
+                            <span className="text-gray-600">{t('students')}:</span>
                             <div className="font-medium">{payout.studentsCount}</div>
                           </div>
                           <div>
