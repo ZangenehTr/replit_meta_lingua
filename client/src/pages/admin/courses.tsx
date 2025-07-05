@@ -10,7 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/hooks/use-language";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "@/hooks/use-toast";
 import { 
   BookOpen, 
   Search, 
@@ -31,11 +36,244 @@ import {
   Pause
 } from "lucide-react";
 
+// Schema for course editing
+const editCourseSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  category: z.string().min(1, "Category is required"),
+  level: z.string().min(1, "Level is required"),
+  duration: z.number().min(1, "Duration must be at least 1 week"),
+  price: z.number().min(0, "Price must be non-negative"),
+  isActive: z.boolean()
+});
+
+type EditCourseFormData = z.infer<typeof editCourseSchema>;
+
+interface EditCourseFormProps {
+  course: any;
+  onSuccess: () => void;
+}
+
+function EditCourseForm({ course, onSuccess }: EditCourseFormProps) {
+  const queryClient = useQueryClient();
+  
+  const form = useForm<EditCourseFormData>({
+    resolver: zodResolver(editCourseSchema),
+    defaultValues: {
+      title: course.title || "",
+      description: course.description || "",
+      category: course.category || "",
+      level: course.level || "",
+      duration: course.duration || 1,
+      price: course.price || 0,
+      isActive: course.isActive ?? true
+    }
+  });
+
+  const updateCourseMutation = useMutation({
+    mutationFn: async (data: EditCourseFormData) => {
+      const response = await fetch(`/api/admin/courses/${course.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update course');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Course updated successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
+      onSuccess();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update course",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const onSubmit = (data: EditCourseFormData) => {
+    updateCourseMutation.mutate(data);
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Course Title</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea {...field} rows={3} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Persian">Persian</SelectItem>
+                    <SelectItem value="English">English</SelectItem>
+                    <SelectItem value="Arabic">Arabic</SelectItem>
+                    <SelectItem value="French">French</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="level"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Level</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="duration"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Duration (weeks)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    {...field} 
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price (USD)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    {...field} 
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="isActive"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <div className="space-y-0.5">
+                <FormLabel>Active Status</FormLabel>
+                <div className="text-sm text-muted-foreground">
+                  Enable or disable this course
+                </div>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-3 pt-4">
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={() => onSuccess()}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            disabled={updateCourseMutation.isPending}
+          >
+            {updateCourseMutation.isPending ? "Updating..." : "Update Course"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
+
 export function AdminCourses() {
   const { t, isRTL } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [editingCourse, setEditingCourse] = useState(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch courses data
   const { data: courses, isLoading } = useQuery({
@@ -137,6 +375,16 @@ export function AdminCourses() {
       case 'Advanced': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleEditCourse = (course) => {
+    setEditingCourse(course);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    setIsEditDialogOpen(false);
+    setEditingCourse(null);
   };
 
   return (
@@ -1087,10 +1335,26 @@ export function AdminCourses() {
                     </DialogContent>
                   </Dialog>
 
-                  <Button variant="outline" size="sm">
-                    <Edit3 className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Edit3 className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl">
+                      <DialogHeader>
+                        <DialogTitle>Edit Course: {course.title}</DialogTitle>
+                        <DialogDescription>
+                          Update course information and settings
+                        </DialogDescription>
+                      </DialogHeader>
+                      <EditCourseForm course={course} onSuccess={() => {
+                        // Refresh courses list
+                        window.location.reload();
+                      }} />
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </CardContent>

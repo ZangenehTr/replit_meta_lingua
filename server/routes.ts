@@ -2576,6 +2576,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Course statistics endpoint
+  app.get("/api/admin/courses/stats", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const courses = await storage.getCourses();
+      const enrollments = await storage.getEnrollments();
+      
+      const activeCourses = courses.filter(c => c.isActive);
+      const totalEnrollments = enrollments.length;
+      const recentEnrollments = enrollments.filter(e => {
+        const enrollmentDate = new Date(e.createdAt);
+        const monthAgo = new Date();
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        return enrollmentDate > monthAgo;
+      });
+
+      const stats = {
+        totalCourses: courses.length,
+        activeCourses: activeCourses.length,
+        totalEnrollments,
+        newEnrollmentsThisMonth: recentEnrollments.length,
+        averageRating: courses.length > 0 ? 
+          (courses.reduce((sum, c) => sum + (c.rating || 0), 0) / courses.length).toFixed(1) : 0,
+        totalRevenue: enrollments.reduce((sum, e) => {
+          const course = courses.find(c => c.id === e.courseId);
+          return sum + (course?.price || 0);
+        }, 0)
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching course statistics:', error);
+      res.status(500).json({ error: 'Failed to fetch course statistics' });
+    }
+  });
+
+  // Placement Tests Management endpoints
+  app.get("/api/admin/placement-tests", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const { search, language } = req.query;
+      let tests = await storage.getPlacementTests();
+      
+      if (search) {
+        tests = tests.filter(test => 
+          test.title.toLowerCase().includes(search.toLowerCase()) ||
+          test.description.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      
+      if (language && language !== 'all') {
+        tests = tests.filter(test => test.language === language);
+      }
+      
+      res.json(tests);
+    } catch (error) {
+      console.error('Error fetching placement tests:', error);
+      res.status(500).json({ error: 'Failed to fetch placement tests' });
+    }
+  });
+
+  app.post("/api/admin/placement-tests", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const testData = {
+        ...req.body,
+        isActive: true,
+        attempts: 0,
+        averageScore: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      const test = await storage.createPlacementTest(testData);
+      res.status(201).json(test);
+    } catch (error) {
+      console.error('Error creating placement test:', error);
+      res.status(500).json({ error: 'Failed to create placement test' });
+    }
+  });
+
+  app.get("/api/admin/placement-tests/stats", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const tests = await storage.getPlacementTests();
+      const attempts = await storage.getPlacementTestAttempts();
+      
+      const thisMonth = new Date();
+      thisMonth.setMonth(thisMonth.getMonth() - 1);
+      
+      const newTestsThisMonth = tests.filter(test => 
+        new Date(test.createdAt) > thisMonth
+      ).length;
+      
+      const thisWeek = new Date();
+      thisWeek.setDate(thisWeek.getDate() - 7);
+      
+      const attemptsThisWeek = attempts.filter(attempt => 
+        new Date(attempt.createdAt) > thisWeek
+      ).length;
+      
+      const totalAttempts = attempts.length;
+      const passedAttempts = attempts.filter(attempt => attempt.passed).length;
+      const averageScore = totalAttempts > 0 ? 
+        Math.round(attempts.reduce((sum, attempt) => sum + attempt.score, 0) / totalAttempts) : 0;
+      
+      const stats = {
+        totalTests: tests.length,
+        totalAttempts,
+        newTestsThisMonth,
+        attemptsThisWeek,
+        averageScore,
+        successRate: totalAttempts > 0 ? Math.round((passedAttempts / totalAttempts) * 100) : 0
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching placement test statistics:', error);
+      res.status(500).json({ error: 'Failed to fetch placement test statistics' });
+    }
+  });
+
+  app.put("/api/admin/placement-tests/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const testId = parseInt(req.params.id);
+      const updatedTest = await storage.updatePlacementTest(testId, {
+        ...req.body,
+        updatedAt: new Date()
+      });
+      res.json(updatedTest);
+    } catch (error) {
+      console.error('Error updating placement test:', error);
+      res.status(500).json({ error: 'Failed to update placement test' });
+    }
+  });
+
+  app.delete("/api/admin/placement-tests/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const testId = parseInt(req.params.id);
+      await storage.deletePlacementTest(testId);
+      res.json({ message: 'Placement test deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting placement test:', error);
+      res.status(500).json({ error: 'Failed to delete placement test' });
+    }
+  });
+
   // Admin CRM endpoints
   app.get("/api/admin/stats", authenticateToken, async (req: any, res) => {
     if (req.user.role !== 'Admin') {
@@ -6073,17 +6216,28 @@ Return JSON format:
     }
   });
 
-  // Handle voice message from student
-  app.post("/api/student/ai/voice-message", authenticateToken, async (req: any, res) => {
+  // Handle voice message from student (with file upload)
+  app.post("/api/student/ai/voice-message", authenticateToken, upload.single('audio'), async (req: any, res) => {
     try {
       const userId = req.user.id;
       const language = req.body.language || 'english';
+      const audioFile = req.file;
       
-      // For now, we'll simulate the voice processing
-      // In production, you would integrate with speech-to-text and text-to-speech services
-      const mockTranscript = language === 'farsi' 
-        ? "سلام، من می‌خواهم انگلیسی یاد بگیرم"
-        : "Hello, I want to practice my conversation skills";
+      // Simulate processing the audio file
+      // In production, you would use speech-to-text services like OpenAI Whisper
+      let transcript = '';
+      
+      if (audioFile) {
+        // Simulate transcript based on language and file presence
+        transcript = language === 'farsi' 
+          ? "سلام، من می‌خواهم انگلیسی یاد بگیرم. این پیام صوتی من است."
+          : "Hello, I want to practice my conversation skills. This is my voice message.";
+      } else {
+        // Fallback if no audio file
+        transcript = language === 'farsi' 
+          ? "سلام، من می‌خواهم انگلیسی یاد بگیرم"
+          : "Hello, I want to practice my conversation skills";
+      }
       
       // Get AI response
       const { aiPersonalizationService } = await import('./ai-services');
@@ -6104,7 +6258,7 @@ Return JSON format:
       
       // Generate conversation response
       const aiResponse = await aiPersonalizationService.generateConversationResponse(
-        mockTranscript,
+        transcript,
         { 
           language,
           conversationHistory: []
@@ -6117,7 +6271,7 @@ Return JSON format:
         await storage.createMessage({
           senderId: userId,
           receiverId: 0, // AI assistant
-          content: mockTranscript,
+          content: transcript,
           type: 'ai_conversation',
           createdAt: new Date()
         });
@@ -6134,7 +6288,7 @@ Return JSON format:
       }
       
       res.json({
-        transcript: mockTranscript,
+        transcript: transcript,
         response: aiResponse.response,
         audioUrl: null // In production, this would be the URL to the generated audio
       });
