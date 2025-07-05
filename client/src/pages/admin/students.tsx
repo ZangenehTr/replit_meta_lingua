@@ -440,62 +440,7 @@ export function AdminStudents() {
     }
   };
 
-  const studentData = students || [
-    {
-      id: 1,
-      firstName: "Sarah",
-      lastName: "Johnson",
-      email: "sarah.j@email.com",
-      phone: "+1234567890",
-      level: "Intermediate",
-      status: "active",
-      enrollmentDate: "2024-01-15",
-      lastActivity: "2024-01-25",
-      courses: ["Persian Basics", "Grammar Mastery"],
-      attendance: 85,
-      progress: 67,
-      guardian: "Mark Johnson",
-      guardianPhone: "+1234567891",
-      notes: "Excellent progress in speaking skills",
-      avatar: "/api/placeholder/32/32"
-    },
-    {
-      id: 2,
-      firstName: "Ahmad",
-      lastName: "Rahman",
-      email: "ahmad.r@email.com",
-      phone: "+9876543210",
-      level: "Beginner",
-      status: "active",
-      enrollmentDate: "2024-02-01",
-      lastActivity: "2024-01-24",
-      courses: ["English Fundamentals"],
-      attendance: 92,
-      progress: 45,
-      guardian: "Fatima Rahman",
-      guardianPhone: "+9876543211",
-      notes: "Very dedicated student",
-      avatar: "/api/placeholder/32/32"
-    },
-    {
-      id: 3,
-      firstName: "Maria",
-      lastName: "Garcia",
-      email: "maria.g@email.com",
-      phone: "+5555555555",
-      level: "Advanced",
-      status: "inactive",
-      enrollmentDate: "2023-11-10",
-      lastActivity: "2024-01-10",
-      courses: ["Business English", "Academic Writing"],
-      attendance: 78,
-      progress: 89,
-      guardian: "Carlos Garcia",
-      guardianPhone: "+5555555556",
-      notes: "Taking a break for personal reasons",
-      avatar: "/api/placeholder/32/32"
-    }
-  ];
+  const studentData = students || [];
 
   const filteredAndSortedStudents = (Array.isArray(studentData) ? studentData : []).filter(student => {
     const searchLower = searchTerm.toLowerCase();

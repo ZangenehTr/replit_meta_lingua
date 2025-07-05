@@ -24,6 +24,7 @@ import {
   Search
 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
+import { useQuery } from "@tanstack/react-query";
 
 interface FinancialStats {
   totalRevenue: number;
@@ -81,76 +82,19 @@ export default function FinancialManagement() {
     cashFlow: 6610000
   };
 
-  const transactions: Transaction[] = [
-    {
-      id: 1,
-      date: "2024-05-29",
-      studentName: "احمد رضایی",
-      type: "payment",
-      description: "شهریه کلاس انگلیسی - ماه خرداد",
-      amount: 2500000,
-      status: "completed",
-      method: "بانک پاسارگاد",
-      referenceId: "PAY-789456123"
-    },
-    {
-      id: 2,
-      date: "2024-05-29",
-      studentName: "فاطمه احمدی",
-      type: "payment",
-      description: "شهریه کلاس آلمانی - ماه خرداد",
-      amount: 2200000,
-      status: "pending",
-      method: "کارت بانکی",
-      referenceId: "PAY-789456124",
-      dueDate: "2024-06-05"
-    },
-    {
-      id: 3,
-      date: "2024-05-28",
-      studentName: "علی محمدی",
-      type: "refund",
-      description: "برگشت وجه - لغو کلاس",
-      amount: -800000,
-      status: "completed",
-      method: "حواله بانکی",
-      referenceId: "REF-789456125"
-    }
-  ];
+  // Fetch transactions data
+  const { data: transactionsData, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['/api/admin/transactions', { search: searchTerm, status: statusFilter, date: dateFilter }],
+  });
 
-  const invoices: Invoice[] = [
-    {
-      id: 1,
-      invoiceNumber: "INV-2024-001",
-      studentName: "محمد کریمی",
-      courseName: "انگلیسی متوسطه",
-      amount: 2500000,
-      issueDate: "2024-05-01",
-      dueDate: "2024-06-01",
-      status: "paid",
-      paymentMethod: "بانک ملت"
-    },
-    {
-      id: 2,
-      invoiceNumber: "INV-2024-002",
-      studentName: "سارا رحیمی",
-      courseName: "آلمانی مقدماتی",
-      amount: 2200000,
-      issueDate: "2024-05-15",
-      dueDate: "2024-06-15",
-      status: "pending"
-    },
-    {
-      id: 3,
-      invoiceNumber: "INV-2024-003",
-      studentName: "حسین تقوی",
-      courseName: "فرانسوی پیشرفته",
-      amount: 2800000,
-      issueDate: "2024-05-20",
-      dueDate: "2024-05-30",
-      status: "overdue"
-    }
-  ];
+  const transactions: Transaction[] = transactionsData || [];
+
+  // Fetch invoices data
+  const { data: invoicesData, isLoading: invoicesLoading } = useQuery({
+    queryKey: ['/api/admin/invoices', { search: searchTerm, status: statusFilter }],
+  });
+
+  const invoices: Invoice[] = invoicesData || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {

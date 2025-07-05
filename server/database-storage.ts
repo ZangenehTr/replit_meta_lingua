@@ -1691,4 +1691,281 @@ export class DatabaseStorage implements IStorage {
   async createSystemMetric(metric: any): Promise<any> {
     return { id: Date.now(), ...metric, timestamp: new Date() };
   }
+
+  // Communication methods
+  async getCommunicationTemplates(): Promise<any[]> {
+    // Return mock communication templates until schema is defined
+    return [
+      {
+        id: 1,
+        name: 'ثبت نام موفق',
+        type: 'sms',
+        subject: null,
+        content: 'عزیز {name}، ثبت نام شما در موسسه با موفقیت انجام شد. کد کاربری: {userId}',
+        language: 'فارسی',
+        isActive: true,
+        usage: 156,
+        lastUsed: '2 روز پیش',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 2,
+        name: 'دعوت به کلاس',
+        type: 'email',
+        subject: 'دعوتنامه کلاس فارسی',
+        content: 'سلام {name}، کلاس فارسی شما فردا ساعت {time} برگزار خواهد شد.',
+        language: 'فارسی',
+        isActive: true,
+        usage: 89,
+        lastUsed: '1 روز پیش',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+  }
+
+  async createCommunicationTemplate(template: any): Promise<any> {
+    return { id: Date.now(), ...template, createdAt: new Date(), updatedAt: new Date() };
+  }
+
+  async getCampaigns(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        name: 'بازگشت دانشجویان',
+        type: 'sms',
+        targetAudience: 'دانشجویان غیرفعال',
+        scheduledDate: '1403/10/15',
+        sentCount: 245,
+        openRate: 78.5,
+        clickRate: 23.2,
+        status: 'completed',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 2,
+        name: 'کلاس های جدید',
+        type: 'email',
+        targetAudience: 'همه دانشجویان',
+        scheduledDate: '1403/10/20',
+        sentCount: 0,
+        openRate: 0,
+        clickRate: 0,
+        status: 'scheduled',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+  }
+
+  async createCampaign(campaign: any): Promise<any> {
+    return { id: Date.now(), ...campaign, createdAt: new Date(), updatedAt: new Date() };
+  }
+
+  async getAutomationRules(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        name: 'پیام خوش آمدگویی',
+        trigger: 'ثبت نام جدید',
+        condition: 'کاربر فعال باشد',
+        action: 'ارسال پیام خوش آمدگویی',
+        isActive: true,
+        timesExecuted: 67,
+        lastExecuted: '2 ساعت پیش',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 2,
+        name: 'یادآوری کلاس',
+        trigger: '2 ساعت قبل کلاس',
+        condition: 'دانشجو ثبت نام کرده باشد',
+        action: 'ارسال یادآوری پیامکی',
+        isActive: true,
+        timesExecuted: 234,
+        lastExecuted: '1 ساعت پیش',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+  }
+
+  async createAutomationRule(rule: any): Promise<any> {
+    return { id: Date.now(), ...rule, createdAt: new Date(), updatedAt: new Date() };
+  }
+
+  async getCommunicationLogs(): Promise<CommunicationLog[]> {
+    return await db.select().from(communicationLogs).orderBy(desc(communicationLogs.createdAt));
+  }
+
+  async createCommunicationLog(log: InsertCommunicationLog): Promise<CommunicationLog> {
+    const [newLog] = await db.insert(communicationLogs).values(log).returning();
+    return newLog;
+  }
+
+  // Placement test methods
+  async getPlacementTests(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        title: 'آزمون تعیین سطح فارسی مقدماتی',
+        description: 'آزمون تعیین سطح برای سنجش مهارت‌های پایه فارسی',
+        language: 'فارسی',
+        level: 'مقدماتی',
+        duration: 45,
+        questionCount: 30,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 2,
+        title: 'آزمون تعیین سطح فارسی پیشرفته',
+        description: 'آزمون تعیین سطح برای سنجش مهارت‌های پیشرفته فارسی',
+        language: 'فارسی',
+        level: 'پیشرفته',
+        duration: 60,
+        questionCount: 50,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+  }
+
+  async createPlacementTest(test: any): Promise<any> {
+    return { id: Date.now(), ...test, createdAt: new Date(), updatedAt: new Date() };
+  }
+
+  async updatePlacementTest(id: number, updates: any): Promise<any> {
+    return { id, ...updates, updatedAt: new Date() };
+  }
+
+  async deletePlacementTest(id: number): Promise<void> {
+    // Mock deletion
+  }
+
+  async getPlacementTestAttempts(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        testId: 1,
+        studentId: 1,
+        score: 78,
+        completedAt: new Date(),
+        answers: [],
+        result: 'مقدماتی-میانی'
+      }
+    ];
+  }
+
+  // Enrollment methods
+  async getEnrollments(): Promise<any[]> {
+    return await db.select().from(enrollments);
+  }
+
+  // Invoice methods  
+  async getInvoices(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        studentId: 1,
+        amount: 1500000,
+        currency: 'IRR',
+        status: 'paid',
+        dueDate: new Date(),
+        createdAt: new Date(),
+        items: [
+          { description: 'کلاس فارسی پایه', amount: 1500000 }
+        ]
+      }
+    ];
+  }
+
+  async createInvoice(invoice: any): Promise<any> {
+    return { id: Date.now(), ...invoice, createdAt: new Date() };
+  }
+
+  // Missing mood and learning adaptation methods
+  async createMoodEntry(entry: any): Promise<any> {
+    return { id: Date.now(), ...entry, createdAt: new Date() };
+  }
+
+  async getMoodHistory(userId: number): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        userId,
+        mood: 'motivated',
+        energy: 8,
+        focus: 7,
+        stress: 3,
+        createdAt: new Date()
+      }
+    ];
+  }
+
+  async getMoodRecommendations(userId: number): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        userId,
+        type: 'lesson',
+        title: 'درس مکالمه روزمره',
+        description: 'با توجه به انرژی بالای شما، درس مکالمه پیشنهاد می‌شود',
+        priority: 'high',
+        culturalContext: 'فرهنگ ایرانی',
+        createdAt: new Date()
+      }
+    ];
+  }
+
+  async createMoodRecommendation(recommendation: any): Promise<any> {
+    return { id: Date.now(), ...recommendation, createdAt: new Date() };
+  }
+
+  async updateMoodRecommendation(id: number, updates: any): Promise<any> {
+    return { id, ...updates, updatedAt: new Date() };
+  }
+
+  async getMoodRecommendationById(id: number): Promise<any> {
+    return {
+      id,
+      type: 'lesson',
+      title: 'درس مکالمه روزمره',
+      description: 'درس پیشنهادی بر اساس حالت کنونی',
+      culturalContext: 'فرهنگ ایرانی'
+    };
+  }
+
+  async getMoodEntryById(id: number): Promise<any> {
+    return {
+      id,
+      mood: 'motivated',
+      energy: 8,
+      focus: 7,
+      stress: 3,
+      createdAt: new Date()
+    };
+  }
+
+  async createLearningAdaptation(adaptation: any): Promise<any> {
+    return { id: Date.now(), ...adaptation, createdAt: new Date() };
+  }
+
+  async getLearningAdaptations(userId: number): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        userId,
+        adaptationType: 'pacing',
+        adaptationValue: 'slower',
+        effectivenessScore: 0.85,
+        createdAt: new Date()
+      }
+    ];
+  }
 }
