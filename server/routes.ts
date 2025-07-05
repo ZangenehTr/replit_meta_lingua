@@ -2980,42 +2980,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/leads", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'admin') {
+  // Leads Management API - accessible by admin and call center roles
+  app.get("/api/leads", authenticateToken, async (req: any, res) => {
+    if (!['admin', 'callcenter', 'manager'].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
     try {
-      const leads = [
-        {
-          id: 1,
-          name: "Sara Ahmadi",
-          email: "sara.ahmadi@email.com",
-          phone: "+98 912 345 6789",
-          source: "Website",
-          status: "new",
-          interestedCourses: ["Persian Literature", "Business English"],
-          assignedTo: "Ali Rezaei",
-          followUpDate: "2024-01-15",
-          createdAt: "2024-01-10"
-        },
-        {
-          id: 2,
-          name: "Mohammad Hosseini",
-          email: "m.hosseini@email.com",
-          phone: "+98 911 234 5678",
-          source: "Referral",
-          status: "contacted",
-          interestedCourses: ["Advanced Persian Grammar"],
-          assignedTo: "Zahra Karimi",
-          followUpDate: "2024-01-16",
-          createdAt: "2024-01-08"
-        }
-      ];
-
+      const leads = await storage.getLeads();
       res.json(leads);
     } catch (error) {
+      console.error("Failed to get leads:", error);
       res.status(500).json({ message: "Failed to get leads" });
+    }
+  });
+
+  app.post("/api/leads", authenticateToken, async (req: any, res) => {
+    if (!['admin', 'callcenter', 'manager'].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const lead = await storage.createLead(req.body);
+      res.status(201).json(lead);
+    } catch (error) {
+      console.error("Failed to create lead:", error);
+      res.status(500).json({ message: "Failed to create lead" });
+    }
+  });
+
+  app.put("/api/leads/:id", authenticateToken, async (req: any, res) => {
+    if (!['admin', 'callcenter', 'manager'].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const id = parseInt(req.params.id);
+      const lead = await storage.updateLead(id, req.body);
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      res.json(lead);
+    } catch (error) {
+      console.error("Failed to update lead:", error);
+      res.status(500).json({ message: "Failed to update lead" });
     }
   });
 

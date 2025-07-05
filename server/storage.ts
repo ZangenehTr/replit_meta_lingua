@@ -138,6 +138,15 @@ export interface IStorage {
   getLatestProgressSnapshot(userId: number): Promise<ProgressSnapshot | undefined>;
   getProgressSnapshots(userId: number, limit?: number): Promise<ProgressSnapshot[]>;
   createProgressSnapshot(snapshot: InsertProgressSnapshot): Promise<ProgressSnapshot>;
+
+  // Leads Management
+  getLeads(): Promise<Lead[]>;
+  getLead(id: number): Promise<Lead | undefined>;
+  createLead(lead: InsertLead): Promise<Lead>;
+  updateLead(id: number, updates: Partial<Lead>): Promise<Lead | undefined>;
+  deleteLead(id: number): Promise<boolean>;
+  getLeadsByStatus(status: string): Promise<Lead[]>;
+  getLeadsByAssignee(assignee: string): Promise<Lead[]>;
 }
 
 export class MemStorage implements IStorage {

@@ -5,7 +5,7 @@ import {
   sessions, messages, homework, payments, notifications, instituteBranding,
   achievements, userAchievements, userStats, dailyGoals, adminSettings,
   walletTransactions, coursePayments, aiTrainingData, aiKnowledgeBase,
-  skillAssessments, learningActivities, progressSnapshots,
+  skillAssessments, learningActivities, progressSnapshots, leads,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
@@ -17,7 +17,8 @@ import {
   type AdminSettings, type InsertAdminSettings, type WalletTransaction, type InsertWalletTransaction,
   type CoursePayment, type InsertCoursePayment, type AiTrainingData, type InsertAiTrainingData,
   type AiKnowledgeBase, type InsertAiKnowledgeBase, type SkillAssessment, type InsertSkillAssessment,
-  type LearningActivity, type InsertLearningActivity, type ProgressSnapshot, type InsertProgressSnapshot
+  type LearningActivity, type InsertLearningActivity, type ProgressSnapshot, type InsertProgressSnapshot,
+  type Lead, type InsertLead
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -766,6 +767,43 @@ export class DatabaseStorage implements IStorage {
     }
     
     return await query;
+  }
+
+  // Leads Management - Local database operations for Iranian call center staff
+  async getLeads(): Promise<Lead[]> {
+    return await db.select().from(leads).orderBy(desc(leads.createdAt));
+  }
+
+  async getLead(id: number): Promise<Lead | undefined> {
+    const [lead] = await db.select().from(leads).where(eq(leads.id, id));
+    return lead;
+  }
+
+  async createLead(lead: InsertLead): Promise<Lead> {
+    const [newLead] = await db.insert(leads).values(lead).returning();
+    return newLead;
+  }
+
+  async updateLead(id: number, updates: Partial<Lead>): Promise<Lead | undefined> {
+    const [updatedLead] = await db
+      .update(leads)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(leads.id, id))
+      .returning();
+    return updatedLead;
+  }
+
+  async deleteLead(id: number): Promise<boolean> {
+    const result = await db.delete(leads).where(eq(leads.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getLeadsByStatus(status: string): Promise<Lead[]> {
+    return await db.select().from(leads).where(eq(leads.status, status)).orderBy(desc(leads.createdAt));
+  }
+
+  async getLeadsByAssignee(assignee: string): Promise<Lead[]> {
+    return await db.select().from(leads).where(eq(leads.assignedTo, assignee)).orderBy(desc(leads.createdAt));
   }
 
   // Wallet-based Payment System Methods
