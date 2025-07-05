@@ -126,34 +126,7 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Course & Curriculum Management */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setLocation('/admin/courses')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Course Management
-            </CardTitle>
-            <CardDescription>Advanced course builder & curriculum</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Active Courses:</span>
-                <span className="font-bold">67</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Total Enrollments:</span>
-                <span className="font-bold">3,842</span>
-              </div>
-              <Progress value={78} className="mt-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Course Management */}
+        {/* Enhanced Course Management & Curriculum */}
         <Card 
           className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-primary/20"
           onClick={() => setLocation('/admin/courses')}
@@ -161,9 +134,9 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5" />
-              Course Management
+              Enhanced Course Management
             </CardTitle>
-            <CardDescription>Create, edit and manage all language courses</CardDescription>
+            <CardDescription>Advanced course builder, curriculum design & comprehensive management</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -174,6 +147,10 @@ export function AdminDashboard() {
               <div className="flex justify-between text-sm">
                 <span>Total Enrollments:</span>
                 <span className="font-bold">3,842</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Enhanced Features:</span>
+                <span className="font-bold">All Active</span>
               </div>
               <Progress value={78} className="mt-2" />
             </div>
