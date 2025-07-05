@@ -14,7 +14,11 @@ import {
   type Achievement, type InsertAchievement, type UserAchievement, type InsertUserAchievement,
   type UserStats, type InsertUserStats, type DailyGoal, type InsertDailyGoal,
   type SkillAssessment, type InsertSkillAssessment, type LearningActivity, type InsertLearningActivity,
-  type ProgressSnapshot, type InsertProgressSnapshot
+  type ProgressSnapshot, type InsertProgressSnapshot,
+  type UserProfile, type InsertUserProfile, type UserSession, type InsertUserSession,
+  type RolePermission, type InsertRolePermission,
+  type MentorAssignment, type InsertMentorAssignment,
+  type MentoringSession, type InsertMentoringSession
 } from "@shared/schema";
 
 export interface IStorage {
@@ -147,6 +151,16 @@ export interface IStorage {
   deleteLead(id: number): Promise<boolean>;
   getLeadsByStatus(status: string): Promise<Lead[]>;
   getLeadsByAssignee(assignee: string): Promise<Lead[]>;
+  
+  // Dashboard Stats
+  getAdminDashboardStats(): Promise<any>;
+  getMentorAssignments(mentorId: number): Promise<any[]>;
+  createMentorAssignment(assignment: InsertMentorAssignment): Promise<MentorAssignment>;
+  getMentoringSessions(assignmentId: number): Promise<MentoringSession[]>;
+  createMentoringSession(session: InsertMentoringSession): Promise<MentoringSession>;
+  getCallCenterStats(agentId: number): Promise<any>;
+  getTeacherDashboardStats(teacherId: number): Promise<any>;
+  getAccountantDashboardStats(): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
