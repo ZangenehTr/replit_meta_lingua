@@ -54,6 +54,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   // Advanced Reporting & Analytics
   { path: "/admin/reports", icon: "BarChart", label: t('reportsAnalytics'), roles: ["Admin", "Supervisor"] },
   
+  // Iranian Market Compliance Settings
+  { path: "/admin/iranian-compliance", icon: "Settings", label: "Iranian Compliance", roles: ["Admin"] },
+  
   // Communication & Collaboration Tools
   { path: "/admin/communications", icon: "MessageCircle", label: t('communicationCenter'), roles: ["Admin", "Supervisor"] },
   

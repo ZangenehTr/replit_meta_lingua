@@ -26,6 +26,7 @@ import { AdminTeacherManagement } from "@/pages/admin/teacher-management";
 import { AdminFinancial } from "@/pages/admin/financial";
 import { AdminSystem } from "@/pages/admin/system-simple";
 import AdminSettings from "@/pages/admin/settings";
+import { IranianComplianceSettings } from "@/pages/admin/iranian-compliance-settings";
 import { FinancialReportsPage } from "@/pages/admin/FinancialReportsPage";
 import AIServicesManagement from "@/pages/admin/AIServicesManagement";
 import WalletPage from "@/pages/wallet";
@@ -155,6 +156,13 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <AdminSystem />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/iranian-compliance">
+        <ProtectedRoute>
+          <AppLayout>
+            <IranianComplianceSettings />
           </AppLayout>
         </ProtectedRoute>
       </Route>
