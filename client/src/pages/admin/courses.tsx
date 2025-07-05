@@ -280,77 +280,7 @@ export function AdminCourses() {
     queryKey: ['/api/admin/courses', { search: searchTerm, category: filterCategory }],
   });
 
-  const courseData = courses || [
-    {
-      id: 1,
-      title: "Persian Language Fundamentals",
-      description: "Complete introduction to Persian language with cultural context",
-      category: "Persian",
-      level: "Beginner",
-      duration: "12 weeks",
-      lessonsCount: 48,
-      enrolledStudents: 156,
-      completionRate: 87,
-      rating: 4.8,
-      status: "active",
-      instructor: "Dr. Maryam Hosseini",
-      price: 299,
-      currency: "USD",
-      lastUpdated: "2024-01-20",
-      modules: [
-        { id: 1, title: "Introduction to Persian Script", lessons: 8, duration: "2 weeks" },
-        { id: 2, title: "Basic Grammar Structure", lessons: 12, duration: "3 weeks" },
-        { id: 3, title: "Everyday Conversations", lessons: 16, duration: "4 weeks" },
-        { id: 4, title: "Cultural Context & Expressions", lessons: 12, duration: "3 weeks" }
-      ]
-    },
-    {
-      id: 2,
-      title: "English Business Communication",
-      description: "Professional English for business environments and corporate communications",
-      category: "English",
-      level: "Intermediate",
-      duration: "8 weeks",
-      lessonsCount: 32,
-      enrolledStudents: 89,
-      completionRate: 92,
-      rating: 4.9,
-      status: "active",
-      instructor: "Prof. James Richardson",
-      price: 399,
-      currency: "USD",
-      lastUpdated: "2024-01-18",
-      modules: [
-        { id: 1, title: "Professional Email Writing", lessons: 8, duration: "2 weeks" },
-        { id: 2, title: "Presentation Skills", lessons: 8, duration: "2 weeks" },
-        { id: 3, title: "Meeting Management", lessons: 8, duration: "2 weeks" },
-        { id: 4, title: "Negotiation Techniques", lessons: 8, duration: "2 weeks" }
-      ]
-    },
-    {
-      id: 3,
-      title: "Arabic Grammar Mastery",
-      description: "Advanced Arabic grammar with classical and modern applications",
-      category: "Arabic",
-      level: "Advanced",
-      duration: "16 weeks",
-      lessonsCount: 64,
-      enrolledStudents: 42,
-      completionRate: 78,
-      rating: 4.7,
-      status: "draft",
-      instructor: "Dr. Ahmed Al-Mansouri",
-      price: 499,
-      currency: "USD",
-      lastUpdated: "2024-01-15",
-      modules: [
-        { id: 1, title: "Classical Grammar Foundations", lessons: 16, duration: "4 weeks" },
-        { id: 2, title: "Modern Standard Arabic", lessons: 16, duration: "4 weeks" },
-        { id: 3, title: "Advanced Syntax", lessons: 16, duration: "4 weeks" },
-        { id: 4, title: "Literary Analysis", lessons: 16, duration: "4 weeks" }
-      ]
-    }
-  ];
+  const courseData = courses || [];
 
   const filteredCourses = (courseData || []).filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

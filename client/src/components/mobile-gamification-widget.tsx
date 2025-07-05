@@ -5,19 +5,37 @@ import { Badge } from '@/components/ui/badge';
 import { Trophy, Zap, Target, Star, ChevronRight } from 'lucide-react';
 import { Link } from 'wouter';
 import { useLanguage } from '@/hooks/use-language';
+import { useQuery } from '@tanstack/react-query';
 
 export function MobileGamificationWidget() {
   const { currentLanguage, isRTL } = useLanguage();
 
-  const userStats = {
-    level: 12,
-    xp: 2450,
-    nextLevelXp: 3000,
-    streakDays: 7,
-    completedChallenges: 3,
-    totalChallenges: 5,
-    rank: 4
+  // Fetch real user statistics  
+  const { data: userStatsData, isLoading } = useQuery({
+    queryKey: ['/api/student/stats'],
+  });
+
+  const userStats = userStatsData ? {
+    level: userStatsData.level || 1,
+    xp: userStatsData.totalXp || 0,
+    nextLevelXp: (userStatsData.level || 1) * 500, // Calculate next level XP
+    streakDays: userStatsData.currentStreak || 0,
+    completedChallenges: 3, // This could be from achievements data
+    totalChallenges: 5, // This could be from achievements data
+    rank: 4 // This could be from leaderboard data
+  } : {
+    level: 1,
+    xp: 0,
+    nextLevelXp: 500,
+    streakDays: 0,
+    completedChallenges: 0,
+    totalChallenges: 0,
+    rank: 0
   };
+
+  if (isLoading) {
+    return <div className="mb-4 p-4 bg-gray-100 rounded-lg animate-pulse">Loading stats...</div>;
+  }
 
   const progressToNextLevel = (userStats.xp / userStats.nextLevelXp) * 100;
 

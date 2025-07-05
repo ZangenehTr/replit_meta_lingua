@@ -54,16 +54,20 @@ export default function GamificationProgress() {
   const { t, currentLanguage, isRTL } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  // Mock data for demonstration - replace with real API calls
-  const userStats: UserStats = {
-    totalXp: 2850,
-    level: 12,
-    currentStreak: 7,
-    longestStreak: 15,
-    lessonsCompleted: 45,
-    coursesCompleted: 3,
-    minutesStudied: 1260,
-    perfectQuizzes: 12
+  // Fetch real user statistics
+  const { data: userStatsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/student/stats'],
+  });
+
+  const userStats: UserStats = userStatsData || {
+    totalXp: 0,
+    level: 1,
+    currentStreak: 0,
+    longestStreak: 0,
+    lessonsCompleted: 0,
+    coursesCompleted: 0,
+    minutesStudied: 0,
+    perfectQuizzes: 0
   };
 
   const achievements: Achievement[] = [

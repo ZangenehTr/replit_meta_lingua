@@ -15,24 +15,20 @@ import AICompanion from "@/components/ai-companion";
 import { Button } from "@/components/ui/button";
 import { Trophy } from "lucide-react";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 
 export default function DemoDashboard() {
   const { theme } = useTheme();
   const [companionVisible, setCompanionVisible] = useState(false);
 
-  // Mock user data for demo
-  const mockUser = {
-    id: 1,
-    email: "ahmad.rezaei@example.com",
-    firstName: "Ahmad",
-    lastName: "Rezaei",
-    role: "student",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-    credits: 12,
-    streakDays: 15,
-    totalLessons: 45,
-    preferences: { theme: "light", language: "en", notifications: true }
-  };
+  // Fetch authenticated user data
+  const { data: user, isLoading: userLoading } = useQuery({
+    queryKey: ['/api/users/me'],
+  });
+
+  if (userLoading || !user) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
@@ -47,14 +43,14 @@ export default function DemoDashboard() {
       </div>
       
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Sidebar user={mockUser} />
+        <Sidebar user={user} />
         
         <div className="flex-1 flex flex-col">
-          <Navigation user={mockUser} />
+          <Navigation user={user} />
           
           <main className="flex-1 p-6 overflow-auto">
             <div className="max-w-7xl mx-auto space-y-6">
-              <WelcomeSection user={mockUser} />
+              <WelcomeSection user={user} />
               <StatsCards />
               
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
