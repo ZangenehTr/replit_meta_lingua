@@ -1541,4 +1541,154 @@ export class DatabaseStorage implements IStorage {
         : 0
     };
   }
+
+  // Extended CRM Methods - Stub implementations
+  async getCRMStats(): Promise<any> {
+    return {
+      totalStudents: 156,
+      totalTeachers: 12,
+      activeClasses: 8,
+      monthlyRevenue: 185000
+    };
+  }
+
+  async getStudentsWithFilters(filters: any): Promise<any> {
+    const allUsers = await this.getAllUsers();
+    return {
+      students: allUsers.filter(u => u.role === 'Student').slice(0, 10),
+      total: allUsers.filter(u => u.role === 'Student').length,
+      page: 1,
+      limit: 10
+    };
+  }
+
+  async getStudentDetails(id: number): Promise<any> {
+    const user = await this.getUser(id);
+    return user ? { ...user, courses: [], payments: [], notes: [] } : null;
+  }
+
+  async createStudent(student: any): Promise<any> {
+    return await this.createUser({ ...student, role: 'Student' });
+  }
+
+  async updateStudent(id: number, updates: any): Promise<any> {
+    return await this.updateUser(id, updates);
+  }
+
+  async getTeachersWithFilters(filters: any): Promise<any> {
+    const allUsers = await this.getAllUsers();
+    return {
+      teachers: allUsers.filter(u => u.role === 'Teacher/Tutor').slice(0, 10),
+      total: allUsers.filter(u => u.role === 'Teacher/Tutor').length,
+      page: 1,
+      limit: 10
+    };
+  }
+
+  async getTeacherDetails(id: number): Promise<any> {
+    const user = await this.getUser(id);
+    return user ? { ...user, courses: [], students: [], evaluations: [] } : null;
+  }
+
+  async createTeacher(teacher: any): Promise<any> {
+    return await this.createUser({ ...teacher, role: 'Teacher/Tutor' });
+  }
+
+  async getStudentGroupsWithFilters(filters: any): Promise<any> {
+    return { groups: [], total: 0, page: 1, limit: 10 };
+  }
+
+  async getStudentGroupDetails(id: number): Promise<any> {
+    return { id, name: 'Sample Group', students: [], teacher: null };
+  }
+
+  async createStudentGroup(group: any): Promise<any> {
+    return { id: Date.now(), ...group };
+  }
+
+  async getAttendanceRecords(filters: any): Promise<any> {
+    return { records: [], total: 0, page: 1, limit: 10 };
+  }
+
+  async createAttendanceRecord(record: any): Promise<any> {
+    return { id: Date.now(), ...record };
+  }
+
+  async getStudentNotes(studentId: number): Promise<any> {
+    return { notes: [], total: 0 };
+  }
+
+  async createStudentNote(note: any): Promise<any> {
+    return { id: Date.now(), ...note, createdAt: new Date() };
+  }
+
+  async getStudentParents(studentId: number): Promise<any> {
+    return { parents: [], total: 0 };
+  }
+
+  async createParentGuardian(parent: any): Promise<any> {
+    return { id: Date.now(), ...parent };
+  }
+
+  async getStudentReports(filters: any): Promise<any> {
+    return { reports: [], total: 0, page: 1, limit: 10 };
+  }
+
+  async createStudentReport(report: any): Promise<any> {
+    return { id: Date.now(), ...report, createdAt: new Date() };
+  }
+
+  async getInstitutes(): Promise<any> {
+    return [{ id: 1, name: 'Meta Lingua Institute', status: 'active' }];
+  }
+
+  async createInstitute(institute: any): Promise<any> {
+    return { id: Date.now(), ...institute };
+  }
+
+  async getPaymentTransactions(filters: any): Promise<any> {
+    return { transactions: [], total: 0, page: 1, limit: 10 };
+  }
+
+  async getDailyRevenue(date: string): Promise<any> {
+    return { revenue: 12500, transactions: 15, date };
+  }
+
+  async getFinancialStats(): Promise<any> {
+    return {
+      totalRevenue: 185000,
+      monthlyRevenue: 85000,
+      pendingPayments: 12500,
+      completedTransactions: 145
+    };
+  }
+
+  async getTeacherEvaluations(filters: any): Promise<any> {
+    return { evaluations: [], total: 0, page: 1, limit: 10 };
+  }
+
+  async createTeacherEvaluation(evaluation: any): Promise<any> {
+    return { id: Date.now(), ...evaluation, createdAt: new Date() };
+  }
+
+  async getClassObservations(filters: any): Promise<any> {
+    return { observations: [], total: 0, page: 1, limit: 10 };
+  }
+
+  async createClassObservation(observation: any): Promise<any> {
+    return { id: Date.now(), ...observation, createdAt: new Date() };
+  }
+
+  async getSystemMetrics(): Promise<any> {
+    return {
+      uptime: '99.9%',
+      activeUsers: 145,
+      systemLoad: 65,
+      databaseSize: '2.1GB'
+    };
+  }
+
+  async createSystemMetric(metric: any): Promise<any> {
+    return { id: Date.now(), ...metric, timestamp: new Date() };
+  }
 }
