@@ -1329,7 +1329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User Management (Admin/Manager only)
-  app.get("/api/users", authenticateToken, requireRole(['admin', 'supervisor']), async (req: any, res) => {
+  app.get("/api/users", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users);
@@ -1547,7 +1547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ===== STUDENT INFORMATION SYSTEM (SIS) ENDPOINTS =====
   
   // GET /api/admin/students - Student Information System as per PRD
-  app.get("/api/admin/students", authenticateToken, requireRole(['admin', 'Supervisor']), async (req: any, res) => {
+  app.get("/api/admin/students", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
       const students = users
