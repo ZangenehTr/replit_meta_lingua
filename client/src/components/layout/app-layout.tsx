@@ -42,10 +42,13 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'admin': return 'bg-red-100 text-red-800';
-      case 'teacher': return 'bg-blue-100 text-blue-800';
-      case 'student': return 'bg-green-100 text-green-800';
-      case 'manager': return 'bg-purple-100 text-purple-800';
+      case 'Admin': return 'bg-red-100 text-red-800';
+      case 'Teacher/Tutor': return 'bg-blue-100 text-blue-800';
+      case 'Student': return 'bg-green-100 text-green-800';
+      case 'Supervisor': return 'bg-purple-100 text-purple-800';
+      case 'Call Center Agent': return 'bg-orange-100 text-orange-800';
+      case 'Mentor': return 'bg-indigo-100 text-indigo-800';
+      case 'Accountant': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -65,10 +68,14 @@ export function AppLayout({ children }: AppLayoutProps) {
               variant="ghost" 
               size="sm"
               onClick={() => {
-                if (user.role === 'admin') {
+                if (user.role === 'Admin' || user.role === 'Supervisor') {
                   setLocation("/admin");
-                } else if (user.role === 'teacher') {
+                } else if (user.role === 'Teacher/Tutor') {
                   setLocation("/teacher");
+                } else if (user.role === 'Call Center Agent') {
+                  setLocation("/callcenter");
+                } else if (user.role === 'Mentor') {
+                  setLocation("/mentor");
                 } else {
                   setLocation("/dashboard");
                 }
