@@ -42,36 +42,36 @@ export function AdminFinancial() {
   // Financial Overview Stats
   const overviewStats = [
     {
-      title: "Total Revenue",
+      title: t('totalRevenue'),
       value: "$452,890",
       change: "+18.2%",
       trend: "up",
       icon: DollarSign,
-      description: "This month"
+      description: t('thisMonth')
     },
     {
-      title: "Pending Payments",
+      title: t('pendingPayments'),
       value: "$23,450",
       change: "-5.3%",
       trend: "down",
       icon: Clock,
-      description: "Outstanding"
+      description: t('outstanding')
     },
     {
-      title: "Teacher Payouts",
+      title: t('teacherPayouts'),
       value: "$156,780",
       change: "+12.1%",
       trend: "up",
       icon: Users,
-      description: "This month"
+      description: t('thisMonth')
     },
     {
-      title: "Platform Commission",
+      title: t('platformCommission'),
       value: "$89,340",
       change: "+15.7%",
       trend: "up",
       icon: Building,
-      description: "Net earnings"
+      description: t('netEarnings')
     }
   ];
 
@@ -197,43 +197,43 @@ export function AdminFinancial() {
         <div className="flex gap-3">
           <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
-            Export Report
+            {t('exportReport')}
           </Button>
           <Dialog>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Manual Transaction
+                {t('manualTransaction')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Create Manual Transaction</DialogTitle>
+                <DialogTitle>{t('createManualTransaction')}</DialogTitle>
                 <DialogDescription>
-                  Process manual payments, refunds, or adjustments
+                  {t('processManualPayments')}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="transactionType">Transaction Type</Label>
+                  <Label htmlFor="transactionType">{t('transactionType')}</Label>
                   <Select>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder={t('selectType')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="payment">Course Payment</SelectItem>
-                      <SelectItem value="refund">Refund</SelectItem>
-                      <SelectItem value="payout">Teacher Payout</SelectItem>
-                      <SelectItem value="adjustment">Manual Adjustment</SelectItem>
+                      <SelectItem value="payment">{t('coursePayment')}</SelectItem>
+                      <SelectItem value="refund">{t('refund')}</SelectItem>
+                      <SelectItem value="payout">{t('teacherPayout')}</SelectItem>
+                      <SelectItem value="adjustment">{t('manualAdjustment')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount</Label>
+                  <Label htmlFor="amount">{t('amount')}</Label>
                   <Input id="amount" type="number" placeholder="0.00" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
+                  <Label htmlFor="currency">{t('currency')}</Label>
                   <Select>
                     <SelectTrigger>
                       <SelectValue placeholder="USD" />
@@ -246,7 +246,7 @@ export function AdminFinancial() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="paymentMethod">Payment Method</Label>
+                  <Label htmlFor="paymentMethod">{t('paymentMethod')}</Label>
                   <Select>
                     <SelectTrigger>
                       <SelectValue placeholder="Select method" />
@@ -423,11 +423,11 @@ export function AdminFinancial() {
                             <div className="font-medium">{payout.studentsCount}</div>
                           </div>
                           <div>
-                            <span className="text-gray-600">Total Earnings:</span>
+                            <span className="text-gray-600">{t('totalEarnings')}:</span>
                             <div className="font-medium">${payout.totalEarnings.toLocaleString()}</div>
                           </div>
                           <div>
-                            <span className="text-gray-600">Commission ({payout.commission}%):</span>
+                            <span className="text-gray-600">{t('commission')} ({payout.commission}%):</span>
                             <div className="font-medium">${(payout.totalEarnings - payout.netPayout).toLocaleString()}</div>
                           </div>
                         </div>
@@ -467,7 +467,7 @@ export function AdminFinancial() {
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span>Platform Commission</span>
+                    <span>Platform {t('commission')}</span>
                     <span className="font-bold">$63,440 (14%)</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -569,24 +569,24 @@ export function AdminFinancial() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Commission Structure</CardTitle>
-                <CardDescription>Platform commission rates by teacher tier</CardDescription>
+                <CardTitle>{t('commission')} Structure</CardTitle>
+                <CardDescription>{t('platformCommissionRates')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span>New Teachers (0-100 students)</span>
+                  <span>{t('newTeachers')}</span>
                   <span className="font-bold">25%</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Experienced (100-500 students)</span>
+                  <span>{t('experiencedTeachers')}</span>
                   <span className="font-bold">20%</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Premium (500+ students)</span>
+                  <span>{t('premiumTeachers')}</span>
                   <span className="font-bold">15%</span>
                 </div>
                 <Button variant="outline" size="sm" className="w-full">
-                  Update Commission Rates
+                  {t('updateCommissionRates')}
                 </Button>
               </CardContent>
             </Card>
