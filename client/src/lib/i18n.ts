@@ -9,6 +9,34 @@ export interface Translations {
   admin: string;
   logout: string;
 
+  // Financial
+  commission: string;
+  updateCommissionRates: string;
+  platformCommissionRates: string;
+  newTeachers: string;
+  experiencedTeachers: string;
+  premiumTeachers: string;
+  totalRevenue: string;
+  pendingPayments: string;
+  teacherPayouts: string;
+  platformCommission: string;
+  thisMonth: string;
+  outstanding: string;
+  netEarnings: string;
+  exportReport: string;
+  manualTransaction: string;
+  createManualTransaction: string;
+  processManualPayments: string;
+  transactionType: string;
+  selectType: string;
+  coursePayment: string;
+  refund: string;
+  teacherPayout: string;
+  manualAdjustment: string;
+  amount: string;
+  currency: string;
+  paymentMethod: string;
+
   // Dashboard Common
   overview: string;
   students: string;
@@ -37,6 +65,7 @@ export interface Translations {
   // Manager Dashboard
   managerDashboard: string;
   performanceOverview: string;
+  totalEarnings: string;
   teacherManagement: string;
   courseAnalytics: string;
   createClass: string;
@@ -236,6 +265,34 @@ export const translations: Record<Language, Translations> = {
     admin: "Admin",
     logout: "Logout",
 
+    // Financial
+    commission: "Commission",
+    updateCommissionRates: "Update Commission Rates",
+    platformCommissionRates: "Platform commission rates by teacher tier",
+    newTeachers: "New Teachers (0-100 students)",
+    experiencedTeachers: "Experienced (100-500 students)",
+    premiumTeachers: "Premium (500+ students)",
+    totalRevenue: "Total Revenue",
+    pendingPayments: "Pending Payments",
+    teacherPayouts: "Teacher Payouts",
+    platformCommission: "Platform Commission",
+    thisMonth: "This month",
+    outstanding: "Outstanding",
+    netEarnings: "Net earnings",
+    exportReport: "Export Report",
+    manualTransaction: "Manual Transaction",
+    createManualTransaction: "Create Manual Transaction",
+    processManualPayments: "Process manual payments, refunds, or adjustments",
+    transactionType: "Transaction Type",
+    selectType: "Select type",
+    coursePayment: "Course Payment",
+    refund: "Refund",
+    teacherPayout: "Teacher Payout",
+    manualAdjustment: "Manual Adjustment",
+    amount: "Amount",
+    currency: "Currency",
+    paymentMethod: "Payment Method",
+
     // Dashboard Common
     students: "Students",
     classes: "Classes",
@@ -263,6 +320,7 @@ export const translations: Record<Language, Translations> = {
     // Manager Dashboard
     managerDashboard: "Manager Dashboard",
     performanceOverview: "Performance Overview",
+    totalEarnings: "Total Earnings",
     courseAnalytics: "Course Analytics",
     createClass: "Create Class",
     assignTeacher: "Assign Teacher",
@@ -469,6 +527,34 @@ export const translations: Record<Language, Translations> = {
     admin: "ادمین",
     logout: "خروج",
 
+    // Financial
+    commission: "کمیسیون",
+    updateCommissionRates: "بروزرسانی نرخ کمیسیون",
+    platformCommissionRates: "نرخ کمیسیون پلتفرم بر اساس درجه معلم",
+    newTeachers: "معلمان جدید (۰-۱۰۰ دانش‌آموز)",
+    experiencedTeachers: "با تجربه (۱۰۰-۵۰۰ دانش‌آموز)",
+    premiumTeachers: "ممتاز (۵۰۰+ دانش‌آموز)",
+    totalRevenue: "مجموع درآمد",
+    pendingPayments: "پرداخت‌های در انتظار",
+    teacherPayouts: "پرداخت‌های معلمان",
+    platformCommission: "کمیسیون پلتفرم",
+    thisMonth: "این ماه",
+    outstanding: "در انتظار",
+    netEarnings: "درآمد خالص",
+    exportReport: "صدور گزارش",
+    manualTransaction: "تراکنش دستی",
+    createManualTransaction: "ایجاد تراکنش دستی",
+    processManualPayments: "پردازش پرداخت‌ها، بازپرداخت‌ها یا تعدیلات دستی",
+    transactionType: "نوع تراکنش",
+    selectType: "انتخاب نوع",
+    coursePayment: "پرداخت دوره",
+    refund: "بازپرداخت",
+    teacherPayout: "پرداخت به مدرس",
+    manualAdjustment: "تعدیل دستی",
+    amount: "مبلغ",
+    currency: "ارز",
+    paymentMethod: "روش پرداخت",
+
     // Dashboard Common
     students: "دانش‌آموزان",
     classes: "کلاس‌ها",
@@ -496,6 +582,7 @@ export const translations: Record<Language, Translations> = {
     // Manager Dashboard
     managerDashboard: "داشبورد مدیر",
     performanceOverview: "نمای کلی عملکرد",
+    totalEarnings: "کل درآمد",
     courseAnalytics: "تحلیل دوره‌ها",
     createClass: "ایجاد کلاس",
     assignTeacher: "تخصیص معلم",
@@ -661,6 +748,34 @@ export const translations: Record<Language, Translations> = {
     admin: "المشرف",
     logout: "تسجيل الخروج",
 
+    // Financial
+    commission: "عمولة",
+    updateCommissionRates: "تحديث معدلات العمولة",
+    platformCommissionRates: "معدلات عمولة المنصة حسب درجة المعلم",
+    newTeachers: "معلمون جدد (٠-١٠٠ طالب)",
+    experiencedTeachers: "ذوو خبرة (١٠٠-٥٠٠ طالب)",
+    premiumTeachers: "ممتاز (٥٠٠+ طالب)",
+    totalRevenue: "إجمالي الإيرادات",
+    pendingPayments: "المدفوعات المعلقة",
+    teacherPayouts: "مدفوعات المعلمين",
+    platformCommission: "عمولة المنصة",
+    thisMonth: "هذا الشهر",
+    outstanding: "معلقة",
+    netEarnings: "صافي الأرباح",
+    exportReport: "تصدير التقرير",
+    manualTransaction: "معاملة يدوية",
+    createManualTransaction: "إنشاء معاملة يدوية",
+    processManualPayments: "معالجة المدفوعات والمبالغ المستردة أو التعديلات اليدوية",
+    transactionType: "نوع المعاملة",
+    selectType: "اختر النوع",
+    coursePayment: "دفع الدورة",
+    refund: "استرداد",
+    teacherPayout: "دفع للمعلم",
+    manualAdjustment: "تعديل يدوي",
+    amount: "المبلغ",
+    currency: "العملة",
+    paymentMethod: "طريقة الدفع",
+
     // Dashboard Common
     students: "الطلاب",
     classes: "الفصول",
@@ -688,6 +803,7 @@ export const translations: Record<Language, Translations> = {
     // Manager Dashboard
     managerDashboard: "لوحة تحكم المدير",
     performanceOverview: "نظرة عامة على الأداء",
+    totalEarnings: "إجمالي الأرباح",
     teacherManagement: "إدارة المعلمين",
     courseAnalytics: "تحليلات الدورة",
     createClass: "إنشاء فصل",
