@@ -2113,4 +2113,300 @@ export class DatabaseStorage implements IStorage {
       }
     ];
   }
+
+  // =====================================================
+  // ENTERPRISE FEATURES IMPLEMENTATION
+  // =====================================================
+
+  // Teacher Payment Management
+  async getTeacherPayments(period: string): Promise<any[]> {
+    const teachers = await this.getAllUsers();
+    const teacherData = teachers.filter(u => u.role === 'Teacher/Tutor').slice(0, 6);
+    
+    return teacherData.map((teacher, index) => ({
+      id: index + 1,
+      teacherId: teacher.id,
+      teacherName: `${teacher.firstName} ${teacher.lastName}`,
+      period: period,
+      totalSessions: 32 + (index * 8),
+      totalHours: 48 + (index * 12),
+      hourlyRate: 800000, // 800,000 IRR per hour
+      basePay: (48 + (index * 12)) * 800000,
+      bonuses: 2500000, // 2.5M IRR bonus
+      deductions: 500000, // 500K IRR deductions
+      finalAmount: ((48 + (index * 12)) * 800000) + 2500000 - 500000,
+      status: index === 0 ? 'pending' : index === 1 ? 'calculated' : index === 2 ? 'approved' : 'paid',
+      calculatedAt: new Date().toISOString(),
+      paidAt: index >= 3 ? new Date().toISOString() : undefined
+    }));
+  }
+
+  async calculateTeacherPayments(period: string): Promise<any[]> {
+    // Simulate payment calculation process
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return this.getTeacherPayments(period);
+  }
+
+  async approveTeacherPayment(paymentId: number): Promise<any> {
+    const payments = await this.getTeacherPayments('current');
+    const payment = payments.find(p => p.id === paymentId);
+    if (payment) {
+      payment.status = 'approved';
+      return payment;
+    }
+    throw new Error('Payment not found');
+  }
+
+  // White-Label Institute Management
+  async getWhiteLabelInstitutes(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        name: "موسسه زبان فارسی تهران", // Persian Language Institute Tehran
+        subdomain: "tehran-persian",
+        domain: "tehran-persian.iranlearn.ir",
+        logo: "/api/placeholder/100/100",
+        primaryColor: "#1976d2",
+        secondaryColor: "#f50057",
+        status: "active",
+        features: ["ai_tutoring", "voice_practice", "cultural_insights", "persian_calligraphy"],
+        subscriptionPlan: "enterprise",
+        createdAt: new Date().toISOString(),
+        studentsCount: 245,
+        teachersCount: 18,
+        monthlyRevenue: 185000000 // 185M IRR per month
+      },
+      {
+        id: 2,
+        name: "موسسه زبان اصفهان", // Isfahan Language Institute
+        subdomain: "isfahan-lang",
+        domain: "isfahan-lang.iranlearn.ir",
+        logo: "/api/placeholder/100/100",
+        primaryColor: "#2e7d32",
+        secondaryColor: "#ff9800",
+        status: "active",
+        features: ["ai_tutoring", "voice_practice"],
+        subscriptionPlan: "professional",
+        createdAt: new Date().toISOString(),
+        studentsCount: 156,
+        teachersCount: 12,
+        monthlyRevenue: 98000000 // 98M IRR per month
+      },
+      {
+        id: 3,
+        name: "موسسه زبان شیراز", // Shiraz Language Institute
+        subdomain: "shiraz-academy",
+        domain: "shiraz-academy.iranlearn.ir",
+        logo: "/api/placeholder/100/100",
+        primaryColor: "#7b1fa2",
+        secondaryColor: "#4caf50",
+        status: "pending",
+        features: ["ai_tutoring"],
+        subscriptionPlan: "basic",
+        createdAt: new Date().toISOString(),
+        studentsCount: 78,
+        teachersCount: 6,
+        monthlyRevenue: 45000000 // 45M IRR per month
+      }
+    ];
+  }
+
+  async createWhiteLabelInstitute(institute: any): Promise<any> {
+    const newInstitute = {
+      id: Date.now(),
+      ...institute,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+      studentsCount: 0,
+      teachersCount: 0,
+      monthlyRevenue: 0
+    };
+    return newInstitute;
+  }
+
+  async updateWhiteLabelInstitute(id: number, updates: any): Promise<any> {
+    const institutes = await this.getWhiteLabelInstitutes();
+    const institute = institutes.find(i => i.id === id);
+    if (institute) {
+      return { ...institute, ...updates, updatedAt: new Date().toISOString() };
+    }
+    throw new Error('Institute not found');
+  }
+
+  // Campaign Management
+  async getMarketingCampaigns(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        name: "نوروز ۱۴۰۴ - تخفیف ویژه", // Nowruz 1404 Special Discount
+        type: "seasonal_promotion",
+        status: "active",
+        platform: "instagram",
+        targetAudience: "persian_learners",
+        budget: 25000000, // 25M IRR budget
+        spent: 18500000, // 18.5M IRR spent
+        impressions: 145000,
+        clicks: 8750,
+        conversions: 156,
+        conversionRate: 1.78,
+        costPerConversion: 118590, // ~119K IRR per conversion
+        roi: 2.4,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 2,
+        name: "کمپین یادگیری آنلاین", // Online Learning Campaign
+        type: "digital_awareness",
+        status: "active",
+        platform: "telegram",
+        targetAudience: "university_students",
+        budget: 15000000, // 15M IRR budget
+        spent: 12200000, // 12.2M IRR spent
+        impressions: 89000,
+        clicks: 4450,
+        conversions: 89,
+        conversionRate: 2.0,
+        costPerConversion: 137080, // ~137K IRR per conversion
+        roi: 1.8,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 3,
+        name: "دوره‌های آموزش فشرده", // Intensive Training Courses
+        type: "course_promotion",
+        status: "completed",
+        platform: "youtube",
+        targetAudience: "working_professionals",
+        budget: 30000000, // 30M IRR budget
+        spent: 30000000, // 30M IRR spent (completed)
+        impressions: 234000,
+        clicks: 12870,
+        conversions: 267,
+        conversionRate: 2.07,
+        costPerConversion: 112360, // ~112K IRR per conversion
+        roi: 3.1,
+        startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+        endDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date().toISOString()
+      }
+    ];
+  }
+
+  async createMarketingCampaign(campaign: any): Promise<any> {
+    const newCampaign = {
+      id: Date.now(),
+      ...campaign,
+      status: "draft",
+      impressions: 0,
+      clicks: 0,
+      conversions: 0,
+      spent: 0,
+      conversionRate: 0,
+      costPerConversion: 0,
+      roi: 0,
+      createdAt: new Date().toISOString()
+    };
+    return newCampaign;
+  }
+
+  async getCampaignAnalytics(): Promise<any> {
+    const campaigns = await this.getMarketingCampaigns();
+    
+    return {
+      totalCampaigns: campaigns.length,
+      activeCampaigns: campaigns.filter(c => c.status === 'active').length,
+      totalBudget: campaigns.reduce((sum, c) => sum + c.budget, 0),
+      totalSpent: campaigns.reduce((sum, c) => sum + c.spent, 0),
+      totalImpressions: campaigns.reduce((sum, c) => sum + c.impressions, 0),
+      totalClicks: campaigns.reduce((sum, c) => sum + c.clicks, 0),
+      totalConversions: campaigns.reduce((sum, c) => sum + c.conversions, 0),
+      averageROI: campaigns.length > 0 ? campaigns.reduce((sum, c) => sum + c.roi, 0) / campaigns.length : 0,
+      platformBreakdown: {
+        instagram: campaigns.filter(c => c.platform === 'instagram').length,
+        telegram: campaigns.filter(c => c.platform === 'telegram').length,
+        youtube: campaigns.filter(c => c.platform === 'youtube').length,
+        linkedin: campaigns.filter(c => c.platform === 'linkedin').length,
+        twitter: campaigns.filter(c => c.platform === 'twitter').length
+      },
+      monthlyTrends: [
+        { month: 'فروردین', budget: 45000000, spent: 38200000, conversions: 234 },
+        { month: 'اردیبهشت', budget: 52000000, spent: 48900000, conversions: 298 },
+        { month: 'خرداد', budget: 48000000, spent: 44100000, conversions: 267 }
+      ]
+    };
+  }
+
+  // Website Builder
+  async getWebsiteTemplates(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        name: "الگوی کلاسیک فارسی", // Classic Persian Template
+        category: "education",
+        preview: "/api/placeholder/400/300",
+        features: ["rtl_support", "persian_fonts", "cultural_design", "mobile_responsive"],
+        difficulty: "beginner",
+        conversionRate: 2.8,
+        description: "قالب مناسب برای موسسات آموزش زبان فارسی با طراحی فرهنگی",
+        technologies: ["HTML5", "CSS3", "JavaScript", "Persian Typography"],
+        isPopular: true,
+        rating: 4.9,
+        usageCount: 156
+      },
+      {
+        id: 2,
+        name: "الگوی مدرن آموزشی", // Modern Educational Template
+        category: "modern_education",
+        preview: "/api/placeholder/400/300",
+        features: ["ai_integration", "voice_practice", "progress_tracking", "gamification"],
+        difficulty: "intermediate",
+        conversionRate: 3.2,
+        description: "قالب مدرن با قابلیت‌های هوش مصنوعی برای آموزش تعاملی",
+        technologies: ["React", "Next.js", "AI APIs", "WebRTC"],
+        isPopular: true,
+        rating: 4.7,
+        usageCount: 89
+      },
+      {
+        id: 3,
+        name: "الگوی شرکتی حرفه‌ای", // Professional Corporate Template
+        category: "corporate",
+        preview: "/api/placeholder/400/300",
+        features: ["multi_language", "crm_integration", "payment_gateway", "analytics"],
+        difficulty: "advanced",
+        conversionRate: 4.1,
+        description: "قالب حرفه‌ای برای موسسات بزرگ با قابلیت‌های پیشرفته",
+        technologies: ["Vue.js", "Laravel", "PostgreSQL", "Payment APIs"],
+        isPopular: false,
+        rating: 4.6,
+        usageCount: 34
+      }
+    ];
+  }
+
+  async deployWebsite(deployment: any): Promise<any> {
+    // Simulate deployment process
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    return {
+      id: Date.now(),
+      ...deployment,
+      status: "deploying",
+      url: `https://${deployment.subdomain}.iranlearn.ir`,
+      deploymentTime: new Date().toISOString(),
+      estimatedCompletion: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes
+      progress: 45,
+      logs: [
+        "شروع فرآیند استقرار...", // Starting deployment process...
+        "بررسی قالب و تنظیمات...", // Checking template and settings...
+        "آپلود فایل‌ها...", // Uploading files...
+        "پیکربندی سرور...", // Configuring server...
+        "تنظیم دامنه...", // Setting up domain...
+      ]
+    };
+  }
 }
