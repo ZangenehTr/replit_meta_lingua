@@ -2313,6 +2313,25 @@ export class DatabaseStorage implements IStorage {
     return newCampaign;
   }
 
+  async updateMarketingCampaign(campaignId: number, updates: any): Promise<any> {
+    // Get existing campaigns
+    const existingCampaigns = await this.getMarketingCampaigns();
+    const campaign = existingCampaigns.find((c: any) => c.id === campaignId);
+    
+    if (!campaign) {
+      throw new Error('Campaign not found');
+    }
+
+    // Apply updates with Iranian compliance
+    const updatedCampaign = {
+      ...campaign,
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+
+    return updatedCampaign;
+  }
+
   async getCampaignAnalytics(): Promise<any> {
     const campaigns = await this.getMarketingCampaigns();
     

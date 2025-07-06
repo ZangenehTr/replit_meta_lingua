@@ -1823,6 +1823,25 @@ export class MemStorage implements IStorage {
     return { id: Date.now(), ...campaign, status: "draft" };
   }
 
+  async updateMarketingCampaign(campaignId: number, updates: any): Promise<any> {
+    // Simulate campaign update with Iranian data
+    const existingCampaigns = await this.getMarketingCampaigns();
+    const campaign = existingCampaigns.find((c: any) => c.id === campaignId);
+    
+    if (!campaign) {
+      throw new Error('Campaign not found');
+    }
+
+    // Apply updates
+    const updatedCampaign = {
+      ...campaign,
+      ...updates,
+      updatedAt: new Date()
+    };
+
+    return updatedCampaign;
+  }
+
   async getCampaignAnalytics(): Promise<any> {
     return {
       totalCampaigns: 3,
