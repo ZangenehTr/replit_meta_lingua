@@ -141,9 +141,11 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Sidebar */}
         <Sidebar />
         
-        {/* Main Content - with proper spacing to avoid sidebar overlap */}
-        <main className="flex-1 md:ml-64 p-6 overflow-y-auto min-h-screen">
-          {children}
+        {/* Main Content - proper spacing to prevent sidebar overlap */}
+        <main className="flex-1 ml-0 md:ml-64 p-4 md:p-6 overflow-y-auto">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>
