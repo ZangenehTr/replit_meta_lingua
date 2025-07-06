@@ -7601,6 +7601,128 @@ Return JSON format:
     }
   });
 
+  // =====================================================
+  // ENTERPRISE FEATURES API ROUTES
+  // =====================================================
+
+  // Teacher Payment Management
+  app.get("/api/admin/teacher-payments", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { period = 'current' } = req.query;
+      const payments = await storage.getTeacherPayments(period);
+      res.json(payments);
+    } catch (error) {
+      console.error('Error fetching teacher payments:', error);
+      res.status(500).json({ error: 'Failed to fetch teacher payments' });
+    }
+  });
+
+  app.post("/api/admin/teacher-payments/calculate", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const { period } = req.body;
+      const payments = await storage.calculateTeacherPayments(period);
+      res.json(payments);
+    } catch (error) {
+      console.error('Error calculating teacher payments:', error);
+      res.status(500).json({ error: 'Failed to calculate teacher payments' });
+    }
+  });
+
+  app.post("/api/admin/teacher-payments/:id/approve", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const paymentId = parseInt(req.params.id);
+      const payment = await storage.approveTeacherPayment(paymentId);
+      res.json(payment);
+    } catch (error) {
+      console.error('Error approving teacher payment:', error);
+      res.status(500).json({ error: 'Failed to approve teacher payment' });
+    }
+  });
+
+  // White-Label Institute Management
+  app.get("/api/admin/white-label/institutes", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const institutes = await storage.getWhiteLabelInstitutes();
+      res.json(institutes);
+    } catch (error) {
+      console.error('Error fetching white-label institutes:', error);
+      res.status(500).json({ error: 'Failed to fetch white-label institutes' });
+    }
+  });
+
+  app.post("/api/admin/white-label/institutes", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const institute = await storage.createWhiteLabelInstitute(req.body);
+      res.status(201).json(institute);
+    } catch (error) {
+      console.error('Error creating white-label institute:', error);
+      res.status(500).json({ error: 'Failed to create white-label institute' });
+    }
+  });
+
+  app.put("/api/admin/white-label/institutes/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const instituteId = parseInt(req.params.id);
+      const institute = await storage.updateWhiteLabelInstitute(instituteId, req.body);
+      res.json(institute);
+    } catch (error) {
+      console.error('Error updating white-label institute:', error);
+      res.status(500).json({ error: 'Failed to update white-label institute' });
+    }
+  });
+
+  // Campaign Management
+  app.get("/api/admin/campaign-management", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const campaigns = await storage.getMarketingCampaigns();
+      res.json(campaigns);
+    } catch (error) {
+      console.error('Error fetching marketing campaigns:', error);
+      res.status(500).json({ error: 'Failed to fetch marketing campaigns' });
+    }
+  });
+
+  app.post("/api/admin/campaign-management", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const campaign = await storage.createMarketingCampaign(req.body);
+      res.status(201).json(campaign);
+    } catch (error) {
+      console.error('Error creating marketing campaign:', error);
+      res.status(500).json({ error: 'Failed to create marketing campaign' });
+    }
+  });
+
+  app.get("/api/admin/campaign-management/analytics", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const analytics = await storage.getCampaignAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching campaign analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch campaign analytics' });
+    }
+  });
+
+  // Website Builder
+  app.get("/api/admin/website-builder/templates", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const templates = await storage.getWebsiteTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching website templates:', error);
+      res.status(500).json({ error: 'Failed to fetch website templates' });
+    }
+  });
+
+  app.post("/api/admin/website-builder/deploy", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const deployment = await storage.deployWebsite(req.body);
+      res.json(deployment);
+    } catch (error) {
+      console.error('Error deploying website:', error);
+      res.status(500).json({ error: 'Failed to deploy website' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

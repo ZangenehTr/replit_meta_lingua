@@ -215,6 +215,26 @@ export interface IStorage {
   createLearningAdaptation(adaptation: InsertLearningAdaptation): Promise<LearningAdaptation>;
   getLearningAdaptations(userId: number): Promise<LearningAdaptation[]>;
   updateLearningAdaptation(id: number, updates: Partial<LearningAdaptation>): Promise<LearningAdaptation | undefined>;
+  
+  // Enterprise Features
+  // Teacher Payment Management
+  getTeacherPayments(period: string): Promise<any[]>;
+  calculateTeacherPayments(period: string): Promise<any[]>;
+  approveTeacherPayment(paymentId: number): Promise<any>;
+  
+  // White-Label Institute Management
+  getWhiteLabelInstitutes(): Promise<any[]>;
+  createWhiteLabelInstitute(institute: any): Promise<any>;
+  updateWhiteLabelInstitute(id: number, updates: any): Promise<any>;
+  
+  // Campaign Management
+  getMarketingCampaigns(): Promise<any[]>;
+  createMarketingCampaign(campaign: any): Promise<any>;
+  getCampaignAnalytics(): Promise<any>;
+  
+  // Website Builder
+  getWebsiteTemplates(): Promise<any[]>;
+  deployWebsite(deployment: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -1734,6 +1754,104 @@ export class MemStorage implements IStorage {
 
   async updateLearningAdaptation(id: number, updates: any): Promise<any> {
     return null;
+  }
+
+  // Enterprise Features - Mock implementations for MemStorage
+  async getTeacherPayments(period: string): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        teacherId: 1,
+        teacherName: "محمد احمدی",
+        period: period,
+        totalSessions: 32,
+        totalHours: 48,
+        hourlyRate: 800000,
+        basePay: 38400000,
+        bonuses: 2500000,
+        deductions: 500000,
+        finalAmount: 40400000,
+        status: 'pending',
+        calculatedAt: new Date().toISOString()
+      }
+    ];
+  }
+
+  async calculateTeacherPayments(period: string): Promise<any[]> {
+    return this.getTeacherPayments(period);
+  }
+
+  async approveTeacherPayment(paymentId: number): Promise<any> {
+    return { id: paymentId, status: 'approved' };
+  }
+
+  async getWhiteLabelInstitutes(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        name: "موسسه زبان فارسی تهران",
+        subdomain: "tehran-persian",
+        status: "active",
+        subscriptionPlan: "enterprise"
+      }
+    ];
+  }
+
+  async createWhiteLabelInstitute(institute: any): Promise<any> {
+    return { id: Date.now(), ...institute, status: "pending" };
+  }
+
+  async updateWhiteLabelInstitute(id: number, updates: any): Promise<any> {
+    return { id, ...updates };
+  }
+
+  async getMarketingCampaigns(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        name: "نوروز ۱۴۰۴ - تخفیف ویژه",
+        status: "active",
+        platform: "instagram",
+        budget: 25000000,
+        spent: 18500000,
+        roi: 2.4
+      }
+    ];
+  }
+
+  async createMarketingCampaign(campaign: any): Promise<any> {
+    return { id: Date.now(), ...campaign, status: "draft" };
+  }
+
+  async getCampaignAnalytics(): Promise<any> {
+    return {
+      totalCampaigns: 3,
+      activeCampaigns: 2,
+      totalBudget: 70000000,
+      totalSpent: 61700000,
+      averageROI: 2.1
+    };
+  }
+
+  async getWebsiteTemplates(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        name: "الگوی کلاسیک فارسی",
+        category: "education",
+        conversionRate: 2.8,
+        isPopular: true
+      }
+    ];
+  }
+
+  async deployWebsite(deployment: any): Promise<any> {
+    return {
+      id: Date.now(),
+      ...deployment,
+      status: "deploying",
+      progress: 45
+    };
   }
 }
 
