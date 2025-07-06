@@ -29,6 +29,12 @@ import AdminSettings from "@/pages/admin/settings";
 import { IranianComplianceSettings } from "@/pages/admin/iranian-compliance-settings";
 import { FinancialReportsPage } from "@/pages/admin/FinancialReportsPage";
 import AIServicesManagement from "@/pages/admin/AIServicesManagement";
+import TeacherPaymentsPage from "@/pages/admin/teacher-payments";
+import WhiteLabelPage from "@/pages/admin/white-label";
+import SupervisionPage from "@/pages/admin/supervision";
+import SMSSettingsPage from "@/pages/admin/sms-settings";
+import CampaignManagementPage from "@/pages/admin/campaign-management";
+import WebsiteBuilderPage from "@/pages/admin/website-builder";
 import WalletPage from "@/pages/wallet";
 import ReferralsPage from "@/pages/referrals";
 import Courses from "@/pages/courses";
@@ -191,6 +197,43 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <AIServicesManagement />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      {/* Enterprise Features */}
+      <Route path="/admin/teacher-payments">
+        <ProtectedRoute>
+          <AppLayout>
+            <TeacherPaymentsPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/white-label">
+        <ProtectedRoute>
+          <AppLayout>
+            <WhiteLabelPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/sms-settings">
+        <ProtectedRoute>
+          <AppLayout>
+            <SMSSettingsPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/campaign-management">
+        <ProtectedRoute>
+          <AppLayout>
+            <CampaignManagementPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/website-builder">
+        <ProtectedRoute>
+          <AppLayout>
+            <WebsiteBuilderPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>

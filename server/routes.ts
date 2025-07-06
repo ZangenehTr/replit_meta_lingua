@@ -781,7 +781,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const users = await storage.getAllUsers();
       const teachers = users.filter(u => u.role === 'Teacher/Tutor' || u.role === 'instructor').map(teacher => {
         // Parse preferences if they exist
-        let preferences = {};
+        let preferences: any = {};
         if (teacher.preferences && typeof teacher.preferences === 'object') {
           preferences = teacher.preferences;
         } else if (teacher.preferences && typeof teacher.preferences === 'string') {
@@ -801,12 +801,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           role: teacher.role,
           isActive: teacher.isActive,
           createdAt: teacher.createdAt,
-          specialization: preferences.specialization || null,
-          qualifications: preferences.qualifications || null,
-          experience: preferences.experience || null,
-          languages: preferences.languages || null,
-          hourlyRate: preferences.hourlyRate || 500000,
-          bio: preferences.bio || null
+          specialization: (preferences as any)?.specialization || null,
+          qualifications: (preferences as any)?.qualifications || null,
+          experience: (preferences as any)?.experience || null,
+          languages: (preferences as any)?.languages || null,
+          hourlyRate: (preferences as any)?.hourlyRate || 500000,
+          bio: (preferences as any)?.bio || null
         };
       });
       res.json(teachers);

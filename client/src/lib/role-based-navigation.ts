@@ -61,6 +61,13 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   
   // Quality Assurance & Supervision
   { path: "/admin/supervision", icon: "Eye", label: t('qualityAssurance'), roles: ["Supervisor", "Admin"] },
+  
+  // Enterprise Features
+  { path: "/admin/teacher-payments", icon: "DollarSign", label: "Teacher Payments", roles: ["Admin", "Accountant"] },
+  { path: "/admin/white-label", icon: "Building2", label: "White-Label Management", roles: ["Admin"] },
+  { path: "/admin/sms-settings", icon: "Send", label: "SMS Management", roles: ["Admin", "Supervisor"] },
+  { path: "/admin/campaign-management", icon: "Megaphone", label: "Campaign Management", roles: ["Admin", "Call Center Agent"] },
+  { path: "/admin/website-builder", icon: "Globe", label: "Website Builder", roles: ["Admin"] },
 ];
 
 // Lead Management & Call Center CRM

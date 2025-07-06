@@ -49,7 +49,11 @@ export default function TeacherPaymentsPage() {
   // Calculate payments mutation
   const calculatePaymentsMutation = useMutation({
     mutationFn: (period: string) => 
-      apiRequest('/api/admin/teacher-payments/calculate', 'POST', { period }),
+      apiRequest('/api/admin/teacher-payments/calculate', { 
+        method: 'POST', 
+        body: JSON.stringify({ period }),
+        headers: { 'Content-Type': 'application/json' }
+      }),
     onSuccess: () => {
       toast({
         title: "Payments Calculated",
@@ -62,7 +66,10 @@ export default function TeacherPaymentsPage() {
   // Approve payment mutation
   const approvePaymentMutation = useMutation({
     mutationFn: (paymentId: number) => 
-      apiRequest(`/api/admin/teacher-payments/${paymentId}/approve`, 'POST'),
+      apiRequest(`/api/admin/teacher-payments/${paymentId}/approve`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      }),
     onSuccess: () => {
       toast({
         title: "Payment Approved",
