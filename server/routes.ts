@@ -7702,6 +7702,18 @@ Return JSON format:
     }
   });
 
+  app.patch("/api/admin/campaigns/:id", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const campaignId = parseInt(req.params.id);
+      const updates = req.body;
+      const updatedCampaign = await storage.updateMarketingCampaign(campaignId, updates);
+      res.json(updatedCampaign);
+    } catch (error) {
+      console.error('Error updating marketing campaign:', error);
+      res.status(500).json({ error: 'Failed to update marketing campaign' });
+    }
+  });
+
   app.get("/api/admin/campaign-management/analytics", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
     try {
       const analytics = await storage.getCampaignAnalytics();

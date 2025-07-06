@@ -31,6 +31,7 @@ import {
   Twitter
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Campaign {
   id: number;
@@ -59,9 +60,34 @@ export default function CampaignManagementPage() {
   const [activeTab, setActiveTab] = useState('overview');
 
   // Fetch campaigns data
-  const { data: campaigns = [], isLoading } = useQuery({
+  const { data: campaigns = [], isLoading } = useQuery<Campaign[]>({
     queryKey: ['/api/admin/campaigns'],
   });
+
+  // Campaign mutation hooks for real API operations
+  const updateCampaignMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: Partial<Campaign> }) => {
+      return apiRequest(`/api/admin/campaigns/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates)
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/campaigns'] });
+      toast({ title: "Campaign updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update campaign", variant: "destructive" });
+    }
+  });
+
+  const pauseCampaign = (campaignId: number) => {
+    updateCampaignMutation.mutate({ id: campaignId, updates: { status: 'paused' } });
+  };
+
+  const resumeCampaign = (campaignId: number) => {
+    updateCampaignMutation.mutate({ id: campaignId, updates: { status: 'active' } });
+  };
 
   const marketingTools = [
     {
@@ -237,57 +263,15 @@ export default function CampaignManagementPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[
-                  {
-                    id: 1,
-                    name: "Persian Language Spring Enrollment",
-                    type: "enrollment",
-                    status: "active",
-                    budget: 15000000,
-                    spent: 8750000,
-                    channels: ["Instagram", "Google Ads", "Telegram"],
-                    metrics: {
-                      impressions: 125000,
-                      clicks: 3400,
-                      conversions: 89,
-                      cost_per_lead: 98314,
-                      roi: 420
-                    }
-                  },
-                  {
-                    id: 2,
-                    name: "Student Referral Program",
-                    type: "referral",
-                    status: "active",
-                    budget: 8000000,
-                    spent: 2100000,
-                    channels: ["SMS", "Email", "Social"],
-                    metrics: {
-                      impressions: 45000,
-                      clicks: 1200,
-                      conversions: 34,
-                      cost_per_lead: 61764,
-                      roi: 280
-                    }
-                  },
-                  {
-                    id: 3,
-                    name: "Corporate Persian Training",
-                    type: "awareness",
-                    status: "paused",
-                    budget: 12000000,
-                    spent: 4500000,
-                    channels: ["LinkedIn", "Email", "Events"],
-                    metrics: {
-                      impressions: 67000,
-                      clicks: 890,
-                      conversions: 12,
-                      cost_per_lead: 375000,
-                      roi: 150
-                    }
-                  }
-                ].map((campaign) => (
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {campaigns.map((campaign) => (
                   <Card key={campaign.id} className="border-l-4 border-l-blue-500">
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start">
@@ -342,15 +326,15 @@ export default function CampaignManagementPage() {
                         
                         <div className="flex space-x-2">
                           {campaign.status === 'active' ? (
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => pauseCampaign(campaign.id)} disabled={updateCampaignMutation.isPending}>
                               <Pause className="h-4 w-4" />
                             </Button>
                           ) : (
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => resumeCampaign(campaign.id)} disabled={updateCampaignMutation.isPending}>
                               <Play className="h-4 w-4" />
                             </Button>
                           )}
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => setSelectedCampaign(campaign)}>
                             <Settings className="h-4 w-4" />
                           </Button>
                         </div>
@@ -358,7 +342,8 @@ export default function CampaignManagementPage() {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
