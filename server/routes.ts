@@ -754,7 +754,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const userToCreate = {
         ...userData,
-        role: "instructor",
+        role: "Teacher/Tutor",
         password: hashedPassword,
         isActive: userData.status === "active",
         credits: 0,
@@ -779,7 +779,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/teachers/list", async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
-      const teachers = users.filter(u => u.role === 'Teacher/Tutor').map(teacher => {
+      const teachers = users.filter(u => u.role === 'Teacher/Tutor' || u.role === 'instructor').map(teacher => {
         // Parse preferences if they exist
         let preferences = {};
         if (teacher.preferences && typeof teacher.preferences === 'object') {

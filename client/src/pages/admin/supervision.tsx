@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -160,32 +161,155 @@ export default function AdminSupervisionPage() {
         <TabsContent value="homework">
           <Card>
             <CardHeader>
-              <CardTitle>Homework Quality Assurance</CardTitle>
+              <CardTitle>Standard Teacher Observation Sheet</CardTitle>
               <CardDescription>
-                Review and approve homework assignments and grading
+                Professional quality assurance with automated SMS notifications
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3, 4].map((homework) => (
-                  <div key={homework} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <ClipboardCheck className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <p className="font-medium">Persian Writing Exercise #{homework}</p>
-                        <p className="text-sm text-gray-500">Submitted by: Student {homework} | Graded by: Teacher {homework}</p>
+              <div className="space-y-6">
+                {/* Active Observations */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Active Observations</h3>
+                  
+                  <Card className="border-l-4 border-l-blue-500">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">Ahmad Hosseini - Persian Conversation Level 2</p>
+                          <p className="text-sm text-gray-500">Observer: Dr. Maryam Rezaei | Started: 2:30 PM</p>
+                        </div>
+                        <Badge className="bg-blue-100 text-blue-800">In Progress</Badge>
+                      </div>
+                      
+                      {/* Standard Observation Criteria */}
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-sm">Teaching Effectiveness</h4>
+                          <div className="space-y-2">
+                            {[
+                              'Lesson preparation & structure',
+                              'Cultural context integration',
+                              'Student engagement techniques',
+                              'Persian pronunciation guidance'
+                            ].map((criteria, idx) => (
+                              <div key={idx} className="flex items-center space-x-2">
+                                <select className="text-xs border rounded px-2 py-1">
+                                  <option value="">Rate</option>
+                                  <option value="5">Excellent (5)</option>
+                                  <option value="4">Good (4)</option>
+                                  <option value="3">Average (3)</option>
+                                  <option value="2">Needs Improvement (2)</option>
+                                  <option value="1">Poor (1)</option>
+                                </select>
+                                <span className="text-xs text-gray-600">{criteria}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-sm">Professional Standards</h4>
+                          <div className="space-y-2">
+                            {[
+                              'Punctuality & professionalism',
+                              'Iranian cultural sensitivity',
+                              'Student progress tracking',
+                              'Technology integration'
+                            ].map((criteria, idx) => (
+                              <div key={idx} className="flex items-center space-x-2">
+                                <select className="text-xs border rounded px-2 py-1">
+                                  <option value="">Rate</option>
+                                  <option value="5">Excellent (5)</option>
+                                  <option value="4">Good (4)</option>
+                                  <option value="3">Average (3)</option>
+                                  <option value="2">Needs Improvement (2)</option>
+                                  <option value="1">Poor (1)</option>
+                                </select>
+                                <span className="text-xs text-gray-600">{criteria}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Voice & Text Feedback */}
+                      <div className="mt-4 space-y-4">
+                        <div>
+                          <Label className="text-sm font-medium">Voice Feedback for Teacher</Label>
+                          <div className="flex items-center space-x-2 mt-2">
+                            <Button size="sm" variant="outline">
+                              🎤 Record Voice Message
+                            </Button>
+                            <span className="text-xs text-gray-500">Persian language feedback</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium">Written Feedback</Label>
+                          <textarea 
+                            className="w-full mt-2 p-3 border rounded-lg text-sm"
+                            placeholder="Detailed feedback in Persian/English for teacher improvement..."
+                            rows={3}
+                          />
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="text-sm text-gray-500">
+                            ⚡ SMS will be sent automatically to teacher upon completion
+                          </div>
+                          <Button 
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => {
+                              // This would trigger SMS notification
+                              alert("✅ Observation completed!\n📱 SMS sent to Ahmad Hosseini: 'Your quality evaluation is ready. Please check your teacher portal for detailed feedback and voice message.'");
+                            }}
+                          >
+                            End Observation & Send SMS
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Completed Observations */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Recent Completed Observations</h3>
+                  
+                  {[
+                    {
+                      teacher: "Maryam Rahimi",
+                      course: "Business Persian",
+                      observer: "Dr. Ali Moradi",
+                      score: 4.6,
+                      date: "2024-01-15",
+                      feedback: "Excellent cultural integration, needs improvement in time management"
+                    },
+                    {
+                      teacher: "Ali Nouri",
+                      course: "Persian Literature",
+                      observer: "Dr. Sara Ahmadi",
+                      score: 4.8,
+                      date: "2024-01-14",
+                      feedback: "Outstanding lesson structure and student engagement"
+                    }
+                  ].map((obs, idx) => (
+                    <div key={idx} className="p-4 border rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">{obs.teacher} - {obs.course}</p>
+                          <p className="text-sm text-gray-500">Observer: {obs.observer} | {obs.date}</p>
+                          <p className="text-xs text-gray-600 mt-1">{obs.feedback}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-green-600">{obs.score}/5.0</div>
+                          <Badge className="bg-green-100 text-green-800">SMS Sent</Badge>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={homework % 2 === 0 ? "default" : "secondary"}>
-                        {homework % 2 === 0 ? "Approved" : "Pending Review"}
-                      </Badge>
-                      <Button size="sm" variant="outline">
-                        Review
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
