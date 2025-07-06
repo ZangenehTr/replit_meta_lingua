@@ -43,6 +43,7 @@ import CallCenterDashboard from "@/pages/callcenter/dashboard";
 import TeacherDashboardNew from "@/pages/teacher/dashboard";
 import AccountantDashboard from "@/pages/accountant/dashboard";
 import MentorDashboard from "@/pages/mentor/dashboard";
+import StudentDashboard from "@/pages/student/dashboard";
 
 // Student pages
 import TutorsPage from "@/pages/student/tutors";
@@ -266,6 +267,11 @@ function Router() {
       <Route path="/mentor">
         <ProtectedRoute>
           <MentorDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student">
+        <ProtectedRoute>
+          <StudentDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/courses">

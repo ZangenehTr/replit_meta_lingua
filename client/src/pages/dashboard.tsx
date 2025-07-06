@@ -47,6 +47,9 @@ export default function Dashboard() {
   if (user?.role === 'Accountant') {
     return <Redirect to="/accountant" />;
   }
+  if (user?.role === 'Student') {
+    return <Redirect to="/student" />;
+  }
   const [companionVisible, setCompanionVisible] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentLanguage, t, isRTL } = useLanguage();
