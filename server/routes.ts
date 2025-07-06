@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { DatabaseStorage } from "./database-storage";
 import { ollamaService } from "./ollama-service";
 import { ollamaInstaller } from "./ollama-installer";
 import jwt from "jsonwebtoken";
@@ -28,6 +29,9 @@ import multer from "multer";
 import mammoth from "mammoth";
 
 const JWT_SECRET = process.env.JWT_SECRET || "meta-lingua-secret-key";
+
+// Create database storage instance for real data
+const dbStorage = new DatabaseStorage();
 
 // Middleware to verify JWT token
 const authenticateToken = async (req: any, res: any, next: any) => {
@@ -6844,7 +6848,7 @@ Return JSON format:
 
   app.get("/api/admin/dashboard-stats", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      const stats = await storage.getAdminDashboardStats();
+      const stats = await dbStorage.getAdminDashboardStats();
       res.json(stats);
     } catch (error) {
       console.error('Error fetching admin dashboard stats:', error);
@@ -6856,7 +6860,7 @@ Return JSON format:
   app.get("/api/teacher/dashboard-stats", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
     try {
       const teacherId = req.user.role === 'Teacher/Tutor' ? req.user.id : req.query.teacherId;
-      const stats = await storage.getTeacherDashboardStats(teacherId);
+      const stats = await dbStorage.getTeacherDashboardStats(teacherId);
       res.json(stats);
     } catch (error) {
       console.error('Error fetching teacher dashboard stats:', error);
@@ -6868,16 +6872,7 @@ Return JSON format:
   app.get("/api/student/dashboard-stats", authenticateToken, requireRole(['Student', 'Admin', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const studentId = req.user.role === 'Student' ? req.user.id : req.query.studentId;
-      const stats = {
-        totalCourses: 0,
-        completedLessons: 0,
-        streakDays: req.user.streakDays || 0,
-        totalXP: req.user.totalXP || 0,
-        currentLevel: req.user.currentLevel || 1,
-        achievements: [],
-        upcomingSessions: [],
-        recentActivities: []
-      };
+      const stats = await dbStorage.getStudentDashboardStats(studentId);
       res.json(stats);
     } catch (error) {
       console.error('Error fetching student dashboard stats:', error);
@@ -6949,26 +6944,7 @@ Return JSON format:
   app.get("/api/call-center/dashboard-stats", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
     try {
       const agentId = req.user.role === 'Call Center Agent' ? req.user.id : req.query.agentId;
-      
-      // Get basic data for call center statistics
-      const allUsers = await storage.getAllUsers();
-      const courses = await storage.getCourses();
-      
-      // Iranian call center statistics for Persian language institute
-      const stats = {
-        todaysCalls: 18, // Daily call volume for Iranian market
-        totalLeads: allUsers.filter(u => u.role === 'Student').length,
-        conversions: Math.floor(allUsers.length * 0.15), // 15% conversion rate
-        activeLeads: Math.floor(allUsers.length * 0.25), // 25% active leads
-        avgCallDuration: '7:45', // Typical Iranian consultation call duration
-        followUpScheduled: Math.floor(allUsers.length * 0.10), // 10% need follow-up
-        monthlyTarget: 120, // Monthly target for Iranian language institute
-        performance: 89.2, // Strong performance rating
-        totalStudents: allUsers.filter(u => u.role === 'Student').length,
-        availableCourses: courses.length,
-        responseRate: 94.5, // High response rate for Iranian market
-        satisfactionScore: 4.6 // Customer satisfaction for Persian instruction
-      };
+      const stats = await dbStorage.getCallCenterDashboardStats(agentId);
       res.json(stats);
     } catch (error) {
       console.error('Error fetching call center dashboard stats:', error);
