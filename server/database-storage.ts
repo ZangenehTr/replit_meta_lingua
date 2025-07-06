@@ -1572,6 +1572,121 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  // Student Dashboard Stats
+  async getStudentDashboardStats(studentId: number) {
+    const student = await this.getUser(studentId);
+    
+    // Get student's enrollments
+    const studentEnrollments = await db
+      .select()
+      .from(enrollments)
+      .where(eq(enrollments.studentId, studentId));
+    
+    // Get completed sessions for this student
+    const completedSessions = await db
+      .select()
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.studentId, studentId),
+          eq(sessions.status, 'completed')
+        )
+      );
+    
+    // Get student achievements
+    const studentAchievements = await db
+      .select({
+        achievement: achievements,
+        earnedAt: userAchievements.earnedAt
+      })
+      .from(userAchievements)
+      .innerJoin(achievements, eq(userAchievements.achievementId, achievements.id))
+      .where(eq(userAchievements.userId, studentId));
+    
+    // Get upcoming sessions
+    const upcomingSessions = await db
+      .select()
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.studentId, studentId),
+          eq(sessions.status, 'scheduled'),
+          gte(sessions.scheduledAt, new Date())
+        )
+      )
+      .limit(5);
+
+    return {
+      totalCourses: studentEnrollments.length,
+      completedLessons: completedSessions.length,
+      streakDays: student?.streakDays || 0,
+      totalXP: student?.totalXP || 0,
+      currentLevel: student?.currentLevel || 1,
+      achievements: studentAchievements.map(sa => ({
+        ...sa.achievement,
+        earned: true,
+        earnedAt: sa.earnedAt
+      })),
+      upcomingSessions: upcomingSessions.map(session => ({
+        id: session.id,
+        title: session.title,
+        scheduledAt: session.scheduledAt,
+        duration: session.duration
+      })),
+      recentActivities: completedSessions.slice(0, 5).map(session => ({
+        id: session.id,
+        type: 'lesson',
+        title: session.title,
+        completedAt: session.createdAt
+      }))
+    };
+  }
+
+  // Call Center Dashboard Stats
+  async getCallCenterDashboardStats(agentId: number) {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // Get all leads (students)
+    const [totalLeadsData] = await db
+      .select({ count: sql`count(*)::int` })
+      .from(users)
+      .where(eq(users.role, 'Student'));
+    
+    // Get active leads (students with recent activity)
+    const [activeLeadsData] = await db
+      .select({ count: sql`count(*)::int` })
+      .from(users)
+      .where(
+        and(
+          eq(users.role, 'Student'),
+          gte(users.updatedAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) // Active in last 30 days
+        )
+      );
+    
+    // Get total courses for reference
+    const [totalCoursesData] = await db
+      .select({ count: sql`count(*)::int` })
+      .from(courses)
+      .where(eq(courses.isActive, true));
+
+    return {
+      todaysCalls: 18, // This would need a calls table to track properly
+      totalLeads: totalLeadsData.count,
+      conversions: Math.floor(totalLeadsData.count * 0.15), // 15% conversion estimate
+      activeLeads: activeLeadsData.count,
+      avgCallDuration: '7:45', // This would need call duration tracking
+      followUpScheduled: Math.floor(totalLeadsData.count * 0.10), // 10% follow-up estimate
+      monthlyTarget: 120,
+      performance: 89.2, // This would need performance tracking
+      totalStudents: totalLeadsData.count,
+      availableCourses: totalCoursesData.count,
+      responseRate: 94.5, // This would need response tracking
+      satisfactionScore: 4.6 // This would need satisfaction surveys
+    };
+  }
+
   // Extended CRM Methods - Stub implementations
   async getCRMStats(): Promise<any> {
     return {

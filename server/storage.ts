@@ -158,13 +158,15 @@ export interface IStorage {
   
   // Dashboard Stats
   getAdminDashboardStats(): Promise<any>;
+  getTeacherDashboardStats(teacherId: number): Promise<any>;
+  getStudentDashboardStats(studentId: number): Promise<any>;
+  getCallCenterDashboardStats(agentId: number): Promise<any>;
+  getAccountantDashboardStats(): Promise<any>;
   getMentorAssignments(mentorId: number): Promise<any[]>;
   createMentorAssignment(assignment: InsertMentorAssignment): Promise<MentorAssignment>;
   getMentoringSessions(assignmentId: number): Promise<MentoringSession[]>;
   createMentoringSession(session: InsertMentoringSession): Promise<MentoringSession>;
   getCallCenterStats(agentId: number): Promise<any>;
-  getTeacherDashboardStats(teacherId: number): Promise<any>;
-  getAccountantDashboardStats(): Promise<any>;
 
   // Extended CRM Methods
   getCRMStats(): Promise<any>;
@@ -1222,6 +1224,43 @@ export class MemStorage implements IStorage {
       monthlyRevenue: 45000000,
       pendingInvoices: 8,
       revenueGrowth: 12.5
+    };
+  }
+
+  async getStudentDashboardStats(studentId: number): Promise<any> {
+    return {
+      totalCourses: 3,
+      completedLessons: 24,
+      streakDays: 7,
+      totalXP: 1250,
+      currentLevel: 5,
+      achievements: [
+        { id: 1, name: 'First Lesson', description: 'Complete your first lesson', earned: true },
+        { id: 2, name: 'Week Warrior', description: 'Complete 7 days in a row', earned: true }
+      ],
+      upcomingSessions: [
+        { id: 1, title: 'Persian Grammar', scheduledAt: new Date(), duration: 60 }
+      ],
+      recentActivities: [
+        { id: 1, type: 'lesson', title: 'Persian Verbs', completedAt: new Date() }
+      ]
+    };
+  }
+
+  async getCallCenterDashboardStats(agentId: number): Promise<any> {
+    return {
+      todaysCalls: 18,
+      totalLeads: 26,
+      conversions: 4,
+      activeLeads: 7,
+      avgCallDuration: '7:45',
+      followUpScheduled: 3,
+      monthlyTarget: 120,
+      performance: 89.2,
+      totalStudents: 26,
+      availableCourses: 12,
+      responseRate: 94.5,
+      satisfactionScore: 4.6
     };
   }
 
