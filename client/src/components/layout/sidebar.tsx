@@ -23,7 +23,8 @@ import {
   Phone,
   Target,
   Megaphone,
-  MessageCircle
+  MessageCircle,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +57,8 @@ const iconMap = {
   Send,
   DollarSign,
   Building2,
-  Settings
+  Settings,
+  Globe
 };
 
 export function Sidebar() {

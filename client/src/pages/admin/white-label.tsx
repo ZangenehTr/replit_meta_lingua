@@ -53,7 +53,11 @@ export default function WhiteLabelPage() {
   // Create institute mutation
   const createInstituteMutation = useMutation({
     mutationFn: (instituteData: Partial<Institute>) => 
-      apiRequest('/api/admin/white-label/institutes', 'POST', instituteData),
+      apiRequest('/api/admin/white-label/institutes', {
+        method: 'POST',
+        body: JSON.stringify(instituteData),
+        headers: { 'Content-Type': 'application/json' }
+      }),
     onSuccess: () => {
       toast({
         title: "Institute Created",
@@ -67,7 +71,11 @@ export default function WhiteLabelPage() {
   // Update institute mutation
   const updateInstituteMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<Institute> }) => 
-      apiRequest(`/api/admin/white-label/institutes/${id}`, 'PUT', data),
+      apiRequest(`/api/admin/white-label/institutes/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      }),
     onSuccess: () => {
       toast({
         title: "Institute Updated",
@@ -468,12 +476,12 @@ export default function WhiteLabelPage() {
                 <div>
                   <h3 className="text-lg font-medium mb-4">API Integration</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <code className="text-sm">
-                      curl -X POST https://api.metalingua.com/v1/institutes \<br/>
-                      -H "Authorization: Bearer YOUR_API_KEY" \<br/>
-                      -H "Content-Type: application/json" \<br/>
-                      -d '{"name": "Institute Name", "subdomain": "institute-name"}'
-                    </code>
+                    <pre className="text-sm whitespace-pre-wrap">
+{`curl -X POST https://api.metalingua.com/v1/institutes \\
+-H "Authorization: Bearer YOUR_API_KEY" \\
+-H "Content-Type: application/json" \\
+-d '{"name": "Institute Name", "subdomain": "institute-name"}'`}
+                    </pre>
                   </div>
                 </div>
               </div>
