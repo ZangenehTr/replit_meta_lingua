@@ -2597,6 +2597,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Class scheduling endpoints
+  app.get("/api/admin/class-sessions", authenticateToken, requireRole(['Admin', 'Teacher/Tutor', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { date, startDate, endDate } = req.query;
+      
+      // Mock data for now - in production this would query from database
+      const sessions = [
+        {
+          id: 1,
+          title: "Persian Grammar Fundamentals",
+          courseId: 1,
+          teacherId: 3,
+          teacherName: "Dr. Sara Hosseini",
+          roomId: "room-1",
+          roomName: "Room 101",
+          startTime: new Date().toISOString(),
+          endTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          duration: 60,
+          maxStudents: 20,
+          enrolledStudents: 15,
+          status: 'scheduled',
+          isRecurring: false,
+          level: 'beginner',
+          language: 'Persian',
+          type: 'online',
+          description: 'Introduction to Persian grammar basics'
+        },
+        {
+          id: 2,
+          title: "Business English Conversation",
+          courseId: 2,
+          teacherId: 5,
+          teacherName: "James Richardson",
+          roomId: "room-2",
+          roomName: "Room 201",
+          startTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+          endTime: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
+          duration: 60,
+          maxStudents: 15,
+          enrolledStudents: 12,
+          status: 'scheduled',
+          isRecurring: true,
+          recurringPattern: 'weekly',
+          level: 'intermediate',
+          language: 'English',
+          type: 'hybrid',
+          description: 'Practice business English in real-world scenarios'
+        }
+      ];
+
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching class sessions:', error);
+      res.status(500).json({ message: "Failed to fetch class sessions" });
+    }
+  });
+
+  app.post("/api/admin/class-sessions", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const sessionData = req.body;
+      
+      // Validate required fields
+      if (!sessionData.title || !sessionData.teacherId || !sessionData.roomId || !sessionData.startDate || !sessionData.startTime) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Create session (mock implementation)
+      const newSession = {
+        id: Date.now(),
+        ...sessionData,
+        startTime: new Date(`${sessionData.startDate}T${sessionData.startTime}`).toISOString(),
+        endTime: new Date(new Date(`${sessionData.startDate}T${sessionData.startTime}`).getTime() + parseInt(sessionData.duration) * 60 * 1000).toISOString(),
+        enrolledStudents: 0,
+        status: 'scheduled',
+        createdAt: new Date().toISOString()
+      };
+
+      res.status(201).json({ message: "Class scheduled successfully", session: newSession });
+    } catch (error) {
+      console.error('Error creating class session:', error);
+      res.status(500).json({ message: "Failed to schedule class" });
+    }
+  });
+
+  app.patch("/api/admin/class-sessions/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const updates = req.body;
+
+      // In production, this would update the database
+      res.json({ message: "Class updated successfully", sessionId, updates });
+    } catch (error) {
+      console.error('Error updating class session:', error);
+      res.status(500).json({ message: "Failed to update class" });
+    }
+  });
+
+  app.delete("/api/admin/class-sessions/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+
+      // In production, this would delete from database
+      res.json({ message: "Class deleted successfully", sessionId });
+    } catch (error) {
+      console.error('Error deleting class session:', error);
+      res.status(500).json({ message: "Failed to delete class" });
+    }
+  });
+
+  // Get available teachers
+  app.get("/api/admin/teachers", authenticateToken, async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const teachers = users
+        .filter(u => u.role === 'Teacher/Tutor')
+        .map(teacher => ({
+          id: teacher.id,
+          name: `${teacher.firstName} ${teacher.lastName}`,
+          specializations: ['Persian', 'English', 'Arabic'], // Mock data
+          availability: [],
+          rating: 4.5 + Math.random() * 0.5 // Mock rating
+        }));
+
+      res.json(teachers);
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+      res.status(500).json({ message: "Failed to fetch teachers" });
+    }
+  });
+
+  // Get available rooms
+  app.get("/api/admin/rooms", authenticateToken, async (req: any, res) => {
+    try {
+      // Mock room data - in production this would come from database
+      const rooms = [
+        {
+          id: "room-1",
+          name: "Room 101",
+          capacity: 20,
+          equipment: ['Whiteboard', 'Projector', 'Audio System'],
+          type: 'physical',
+          isAvailable: true
+        },
+        {
+          id: "room-2", 
+          name: "Room 201",
+          capacity: 15,
+          equipment: ['Smart Board', 'Video Conference'],
+          type: 'physical',
+          isAvailable: true
+        },
+        {
+          id: "virtual-1",
+          name: "Virtual Room A",
+          capacity: 50,
+          equipment: ['Screen Share', 'Recording', 'Breakout Rooms'],
+          type: 'virtual',
+          isAvailable: true
+        },
+        {
+          id: "virtual-2",
+          name: "Virtual Room B", 
+          capacity: 30,
+          equipment: ['Screen Share', 'Whiteboard', 'Polls'],
+          type: 'virtual',
+          isAvailable: true
+        }
+      ];
+
+      res.json(rooms);
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+      res.status(500).json({ message: "Failed to fetch rooms" });
+    }
+  });
+
   // Course statistics endpoint
   app.get("/api/admin/courses/stats", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
     try {
