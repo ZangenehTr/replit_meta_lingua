@@ -198,7 +198,7 @@ export default function AdminClassesPage() {
             Class Scheduling
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Manage institute-wide class schedules and resources
+            Schedule when and where courses are delivered with teacher and room assignments
           </p>
         </div>
 
@@ -643,8 +643,12 @@ function ClassScheduleForm({
   isPending,
   initialData = null
 }: any) {
+  // Fetch available courses
+  const { data: courses = [] } = useQuery({
+    queryKey: ['/api/admin/courses'],
+  });
+
   const [formData, setFormData] = useState({
-    title: initialData?.title || '',
     courseId: initialData?.courseId || '',
     teacherId: initialData?.teacherId || '',
     roomId: initialData?.roomId || '',
@@ -653,31 +657,52 @@ function ClassScheduleForm({
     duration: initialData?.duration || '60',
     maxStudents: initialData?.maxStudents || '20',
     type: initialData?.type || 'online',
-    level: initialData?.level || 'beginner',
-    language: initialData?.language || 'Persian',
-    description: initialData?.description || '',
+    sessionNote: initialData?.sessionNote || '', // Note specific to this session
     isRecurring: initialData?.isRecurring || false,
     recurringPattern: initialData?.recurringPattern || 'weekly',
     recurringEnd: initialData?.recurringEnd || ''
   });
 
+  // Get selected course details
+  const selectedCourse = courses.find((c: any) => c.id === parseInt(formData.courseId));
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Include course details in submission
+    const submitData = {
+      ...formData,
+      title: selectedCourse?.title || '',
+      level: selectedCourse?.level || '',
+      language: selectedCourse?.language || ''
+    };
+    onSubmit(submitData);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="title">Class Title</Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            placeholder="e.g., Persian Grammar Fundamentals"
-            required
-          />
+        <div className="space-y-2 col-span-2">
+          <Label htmlFor="course">Course*</Label>
+          <Select 
+            value={formData.courseId} 
+            onValueChange={(v) => setFormData({ ...formData, courseId: v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select course to schedule" />
+            </SelectTrigger>
+            <SelectContent>
+              {courses.map((course: any) => (
+                <SelectItem key={course.id} value={course.id.toString()}>
+                  {course.title} - {course.level} ({course.language})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedCourse && (
+            <p className="text-sm text-muted-foreground">
+              Duration: {selectedCourse.duration} weeks • Price: {selectedCourse.price?.toLocaleString()} IRR
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -789,49 +814,16 @@ function ClassScheduleForm({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="level">Level</Label>
-          <Select 
-            value={formData.level} 
-            onValueChange={(v) => setFormData({ ...formData, level: v })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="beginner">Beginner</SelectItem>
-              <SelectItem value="intermediate">Intermediate</SelectItem>
-              <SelectItem value="advanced">Advanced</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="language">Language</Label>
-          <Select 
-            value={formData.language} 
-            onValueChange={(v) => setFormData({ ...formData, language: v })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Persian">Persian</SelectItem>
-              <SelectItem value="English">English</SelectItem>
-              <SelectItem value="Arabic">Arabic</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="sessionNote">Session Note (Optional)</Label>
         <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Class description and objectives..."
-          rows={3}
+          id="sessionNote"
+          value={formData.sessionNote}
+          onChange={(e) => setFormData({ ...formData, sessionNote: e.target.value })}
+          placeholder="Any specific notes for this session (e.g., guest speaker, special topic)..."
+          rows={2}
         />
       </div>
 
