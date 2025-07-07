@@ -339,22 +339,23 @@ export function AdminCourses() {
                 {t('createCourse')}
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
               <DialogHeader>
                 <DialogTitle>Create New Course</DialogTitle>
                 <DialogDescription>
                   Build a comprehensive course with modules, lessons, and assessments
                 </DialogDescription>
               </DialogHeader>
-              <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-6">
-                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                  <TabsTrigger value="content">Content Structure</TabsTrigger>
-                  <TabsTrigger value="modules">Modules & Lessons</TabsTrigger>
-                  <TabsTrigger value="assessments">Assessments</TabsTrigger>
-                  <TabsTrigger value="pricing">Pricing & Access</TabsTrigger>
-                  <TabsTrigger value="settings">Advanced Settings</TabsTrigger>
-                </TabsList>
+              <div className="flex-1 overflow-y-auto pr-2">
+                <Tabs defaultValue="basic" className="w-full">
+                  <TabsList className="grid w-full grid-cols-6 sticky top-0 bg-background z-10">
+                    <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                    <TabsTrigger value="content">Content Structure</TabsTrigger>
+                    <TabsTrigger value="modules">Modules & Lessons</TabsTrigger>
+                    <TabsTrigger value="assessments">Assessments</TabsTrigger>
+                    <TabsTrigger value="pricing">Pricing & Access</TabsTrigger>
+                    <TabsTrigger value="settings">Advanced Settings</TabsTrigger>
+                  </TabsList>
                 
                 <TabsContent value="basic" className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -1010,8 +1011,9 @@ export function AdminCourses() {
                     </div>
                   </div>
                 </TabsContent>
-              </Tabs>
-              <div className="flex justify-end gap-3 mt-6">
+                </Tabs>
+              </div>
+              <div className="flex justify-end gap-3 mt-4 pt-4 border-t">
                 <Button variant="outline">Save as Draft</Button>
                 <Button>Publish Course</Button>
               </div>
