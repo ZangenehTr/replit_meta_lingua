@@ -324,7 +324,7 @@ export function AdminCourses() {
         <div>
           <h1 className="text-3xl font-bold">{t('courseManagement')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {t('advancedCourseBuilder')}
+            Define curriculum, content, and learning objectives
           </p>
         </div>
         <div className="flex gap-3">
