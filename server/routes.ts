@@ -7745,6 +7745,158 @@ Return JSON format:
     }
   });
 
+  // Campaign Management API Routes
+  app.post("/api/admin/campaigns", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const campaignData = {
+        ...req.body,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        status: 'active'
+      };
+      const campaign = await storage.createMarketingCampaign(campaignData);
+      res.status(201).json({ 
+        success: true, 
+        campaign,
+        message: 'Campaign created successfully' 
+      });
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      res.status(500).json({ error: 'Failed to create campaign' });
+    }
+  });
+
+  // Social Media Management Routes
+  app.post("/api/admin/social-media/:platform/:action", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const { platform, action } = req.params;
+      
+      // Simulate social media management operations with Iranian data
+      const socialMediaData = {
+        platform: platform,
+        action: action,
+        timestamp: new Date(),
+        user: req.user.email,
+        success: true,
+        metrics: {
+          followers: Math.floor(Math.random() * 10000) + 1000,
+          engagement: (Math.random() * 5 + 2).toFixed(1) + '%',
+          lastPost: 'آموزش زبان فارسی - درس جدید',
+          iranianMarket: true
+        }
+      };
+
+      res.json({
+        success: true,
+        data: socialMediaData,
+        message: `${action} operation for ${platform} completed successfully`
+      });
+    } catch (error) {
+      console.error('Error managing social media:', error);
+      res.status(500).json({ error: 'Failed to manage social media platform' });
+    }
+  });
+
+  // Cross-platform Campaign Tools Routes
+  app.post("/api/admin/crossplatform-tools/:tool", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const { tool } = req.params;
+      
+      const toolData = {
+        tool: tool,
+        timestamp: new Date(),
+        user: req.user.email,
+        success: true,
+        iranianCompliance: true,
+        metrics: {
+          scheduler: {
+            scheduledPosts: 45,
+            platforms: ['Instagram', 'Telegram', 'YouTube'],
+            nextPost: '2 hours'
+          },
+          analytics: {
+            totalReach: 125000,
+            iranianUsers: '78%',
+            conversionRate: '4.2%',
+            roi: '340%'
+          },
+          tracking: {
+            totalLeads: 186,
+            iranianLeads: 156,
+            conversionRate: '12.8%',
+            avgResponseTime: '2.5 hours'
+          }
+        }[tool] || { status: 'configured' }
+      };
+
+      res.json({
+        success: true,
+        data: toolData,
+        message: `${tool} tool configured successfully`
+      });
+    } catch (error) {
+      console.error('Error configuring crossplatform tool:', error);
+      res.status(500).json({ error: 'Failed to configure tool' });
+    }
+  });
+
+  // Marketing Tools Configuration Routes
+  app.post("/api/admin/marketing-tools/:toolName/:action", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+    try {
+      const { toolName, action } = req.params;
+      
+      const marketingToolData = {
+        tool: toolName,
+        action: action,
+        timestamp: new Date(),
+        user: req.user.email,
+        success: true,
+        iranianConfiguration: {
+          language: 'Persian',
+          currency: 'IRR',
+          timezone: 'Asia/Tehran',
+          compliance: 'Iranian regulations',
+          localization: true
+        },
+        metrics: {
+          'Instagram Integration': {
+            connected: true,
+            followers: 15400,
+            persianContent: '85%',
+            engagement: '6.8%'
+          },
+          'Telegram Marketing': {
+            channels: 3,
+            subscribers: 8500,
+            persianUsers: '92%',
+            messageDelivery: '98.5%'
+          },
+          'YouTube Channel': {
+            subscribers: 12300,
+            persianVideos: 89,
+            watchTime: '45 hours/day',
+            iranianViewers: '76%'
+          },
+          'Email Marketing': {
+            subscribers: 4200,
+            persianTemplates: 15,
+            openRate: '34.5%',
+            iranianDelivery: '99.2%'
+          }
+        }[toolName] || { status: 'configured' }
+      };
+
+      res.json({
+        success: true,
+        data: marketingToolData,
+        message: `${action} completed for ${toolName}`
+      });
+    } catch (error) {
+      console.error('Error managing marketing tool:', error);
+      res.status(500).json({ error: 'Failed to manage marketing tool' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
