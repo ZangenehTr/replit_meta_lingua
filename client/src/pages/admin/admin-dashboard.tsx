@@ -273,13 +273,13 @@ export function AdminDashboard() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Revenue Tracked:</span>
-                <span className="font-bold">₹45.2M</span>
+                <span className="font-bold">{isLoading ? "..." : `${(stats?.totalRevenue || 0).toLocaleString()} ریال`}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Success Rate:</span>
-                <span className="font-bold">94.3%</span>
+                <span className="font-bold">{isLoading ? "..." : `${Math.round(stats?.completionRate || 0)}%`}</span>
               </div>
-              <Progress value={94} className="mt-2" />
+              <Progress value={stats?.completionRate || 0} className="mt-2" />
             </div>
           </CardContent>
         </Card>
@@ -327,13 +327,13 @@ export function AdminDashboard() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Messages Sent:</span>
-                <span className="font-bold">5,432</span>
+                <span className="font-bold">{isLoading ? "..." : (systemMetrics?.messagesSent || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Delivery Rate:</span>
-                <span className="font-bold">97%</span>
+                <span className="font-bold">{isLoading ? "..." : `${Math.round(systemMetrics?.deliveryRate || 0)}%`}</span>
               </div>
-              <Progress value={97} className="mt-2" />
+              <Progress value={systemMetrics?.deliveryRate || 0} className="mt-2" />
             </div>
           </CardContent>
         </Card>
@@ -354,13 +354,13 @@ export function AdminDashboard() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Sessions Monitored:</span>
-                <span className="font-bold">234</span>
+                <span className="font-bold">{isLoading ? "..." : (classObservations?.total || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Quality Score:</span>
-                <span className="font-bold">4.6/5</span>
+                <span className="font-bold">{isLoading ? "..." : `${(systemMetrics?.qualityScore || 0).toFixed(1)}/5`}</span>
               </div>
-              <Progress value={92} className="mt-2" />
+              <Progress value={(systemMetrics?.qualityScore || 0) * 20} className="mt-2" />
             </div>
           </CardContent>
         </Card>
@@ -381,13 +381,13 @@ export function AdminDashboard() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Custom Roles:</span>
-                <span className="font-bold">12</span>
+                <span className="font-bold">{isLoading ? "..." : (systemMetrics?.customRoles || 7)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>System Health:</span>
-                <span className="font-bold text-green-600">99.9%</span>
+                <span className="font-bold text-green-600">{isLoading ? "..." : `${(systemMetrics?.uptime || "99.9")}%`}</span>
               </div>
-              <Progress value={99} className="mt-2" />
+              <Progress value={parseFloat(systemMetrics?.uptime || "99.9")} className="mt-2" />
             </div>
           </CardContent>
         </Card>
