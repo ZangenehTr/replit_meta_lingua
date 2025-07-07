@@ -17,7 +17,8 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  let finalUrl = url;
+  // Ensure URL is properly formatted as relative path
+  let finalUrl = url.startsWith('/') ? url : `/${url}`;
   if (params && Object.keys(params).length > 0) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -72,10 +73,10 @@ export const queryClient = new QueryClient({
 // API request function for mutations
 export const apiRequest = async (url: string, options: RequestInit = {}) => {
   try {
-    console.log('apiRequest called with:', { url, options });
+    // Ensure URL is properly formatted as relative path
+    const finalUrl = url.startsWith('/') ? url : `/${url}`;
     
     const token = localStorage.getItem('auth_token');
-    console.log('Auth token exists:', !!token);
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -85,12 +86,10 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
-
-    console.log('Making fetch request with headers:', headers);
     
     let response;
     try {
-      response = await fetch(url, {
+      response = await fetch(finalUrl, {
         ...options,
         headers,
         credentials: 'include',
