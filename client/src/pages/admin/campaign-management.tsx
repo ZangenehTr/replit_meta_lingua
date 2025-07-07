@@ -159,17 +159,7 @@ export default function CampaignManagementPage() {
   };
 
   const handleCrossplatformTool = (toolType: string) => {
-    switch(toolType) {
-      case 'scheduler':
-        toast({ title: "Opening Content Scheduler...", description: "Setting up cross-platform posting" });
-        break;
-      case 'analytics':
-        toast({ title: "Loading Analytics Hub...", description: "Unified social media analytics" });
-        break;
-      case 'tracking':
-        toast({ title: "Initializing Lead Tracking...", description: "Cross-platform lead monitoring" });
-        break;
-    }
+    crossplatformMutation.mutate(toolType);
   };
 
   const marketingTools = [
