@@ -26,13 +26,10 @@ export function IranianComplianceSettings() {
   // Update settings mutation
   const updateSettings = useMutation({
     mutationFn: async (updates: any) => {
-      const response = await fetch('/api/admin/settings', {
+      return apiRequest('/api/admin/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
-      if (!response.ok) throw new Error('Failed to update settings');
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
@@ -46,9 +43,7 @@ export function IranianComplianceSettings() {
   // Test connection mutations
   const testVoipConnection = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/admin/test-voip', { method: 'POST' });
-      if (!response.ok) throw new Error('VoIP connection test failed');
-      return response.json();
+      return apiRequest('/api/admin/test-voip', { method: 'POST' });
     },
     onSuccess: () => {
       toast({ title: "VoIP Test", description: "Isabel VoIP connection successful" });
@@ -60,9 +55,7 @@ export function IranianComplianceSettings() {
 
   const testShetabConnection = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/admin/test-shetab', { method: 'POST' });
-      if (!response.ok) throw new Error('Shetab connection test failed');
-      return response.json();
+      return apiRequest('/api/admin/test-shetab', { method: 'POST' });
     },
     onSuccess: () => {
       toast({ title: "Shetab Test", description: "Payment gateway connection successful" });
@@ -74,9 +67,7 @@ export function IranianComplianceSettings() {
 
   const testSmsConnection = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/admin/test-sms', { method: 'POST' });
-      if (!response.ok) throw new Error('SMS connection test failed');
-      return response.json();
+      return apiRequest('/api/admin/test-sms', { method: 'POST' });
     },
     onSuccess: () => {
       toast({ title: "SMS Test", description: "Kavenegar SMS service connection successful" });

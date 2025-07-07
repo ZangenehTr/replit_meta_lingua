@@ -275,7 +275,7 @@ export default function UserProfile() {
                'Manage your account and learning preferences'}
             </p>
             <Badge variant="secondary" className="mt-2">
-              {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}
+              {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'}
             </Badge>
           </div>
         </div>
@@ -662,7 +662,7 @@ export default function UserProfile() {
                         variant={profile?.interests?.includes(interest) ? "default" : "outline"}
                         className="cursor-pointer"
                       >
-                        {interest.charAt(0).toUpperCase() + interest.slice(1)}
+                        {typeof interest === 'string' ? interest.charAt(0).toUpperCase() + interest.slice(1) : String(interest)}
                       </Badge>
                     ))}
                   </div>
