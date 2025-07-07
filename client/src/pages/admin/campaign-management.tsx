@@ -115,6 +115,21 @@ export default function CampaignManagementPage() {
     }
   });
 
+  // Cross-platform campaign tools mutation
+  const crossplatformMutation = useMutation({
+    mutationFn: async (tool: string) => {
+      return apiRequest(`/api/admin/crossplatform-tools/${tool}`, {
+        method: 'POST'
+      });
+    },
+    onSuccess: (data, variables) => {
+      toast({ title: `${variables} tool configured successfully` });
+    },
+    onError: (error, variables) => {
+      toast({ title: `Failed to configure ${variables} tool`, variant: "destructive" });
+    }
+  });
+
   // Marketing tools operation mutation
   const marketingToolMutation = useMutation({
     mutationFn: async ({ toolName, action }: { toolName: string; action: string }) => {
