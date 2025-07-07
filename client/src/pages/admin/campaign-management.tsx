@@ -58,6 +58,7 @@ export default function CampaignManagementPage() {
   const queryClient = useQueryClient();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showNewCampaignDialog, setShowNewCampaignDialog] = useState(false);
 
   // Fetch campaigns data
   const { data: campaigns = [], isLoading } = useQuery<Campaign[]>({
@@ -81,12 +82,94 @@ export default function CampaignManagementPage() {
     }
   });
 
+  // Create new campaign mutation
+  const createCampaignMutation = useMutation({
+    mutationFn: async (campaignData: any) => {
+      return apiRequest('/api/admin/campaigns', {
+        method: 'POST',
+        body: JSON.stringify(campaignData)
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/campaigns'] });
+      toast({ title: "New campaign created successfully" });
+      setShowNewCampaignDialog(false);
+    },
+    onError: () => {
+      toast({ title: "Failed to create campaign", variant: "destructive" });
+    }
+  });
+
+  // Social media operations mutation
+  const socialMediaMutation = useMutation({
+    mutationFn: async ({ platform, action }: { platform: string; action: string }) => {
+      return apiRequest(`/api/admin/social-media/${platform}/${action}`, {
+        method: 'POST'
+      });
+    },
+    onSuccess: (data, variables) => {
+      toast({ title: `${variables.action} ${variables.platform} successfully` });
+    },
+    onError: (error, variables) => {
+      toast({ title: `Failed to ${variables.action} ${variables.platform}`, variant: "destructive" });
+    }
+  });
+
+  // Marketing tools operation mutation
+  const marketingToolMutation = useMutation({
+    mutationFn: async ({ toolName, action }: { toolName: string; action: string }) => {
+      return apiRequest(`/api/admin/marketing-tools/${encodeURIComponent(toolName)}/${action}`, {
+        method: 'POST'
+      });
+    },
+    onSuccess: (data, variables) => {
+      toast({ title: `${variables.action} ${variables.toolName} successfully` });
+    },
+    onError: (error, variables) => {
+      toast({ title: `Failed to ${variables.action} ${variables.toolName}`, variant: "destructive" });
+    }
+  });
+
   const pauseCampaign = (campaignId: number) => {
     updateCampaignMutation.mutate({ id: campaignId, updates: { status: 'paused' } });
   };
 
   const resumeCampaign = (campaignId: number) => {
     updateCampaignMutation.mutate({ id: campaignId, updates: { status: 'active' } });
+  };
+
+  // Button event handlers for campaign management operations
+  const handleNewCampaign = () => {
+    const newCampaignData = {
+      name: `کمپین جدید ${Date.now()}`, // New Campaign with timestamp
+      type: 'enrollment',
+      targetAudience: 'persian_learners',
+      budget: 10000000, // 10M IRR default budget
+      channels: ['Instagram', 'Telegram']
+    };
+    createCampaignMutation.mutate(newCampaignData);
+  };
+
+  const handleSocialMediaAction = (platform: string, action: string) => {
+    socialMediaMutation.mutate({ platform: platform.toLowerCase(), action });
+  };
+
+  const handleMarketingTool = (toolName: string, action: string = 'configure') => {
+    marketingToolMutation.mutate({ toolName, action });
+  };
+
+  const handleCrossplatformTool = (toolType: string) => {
+    switch(toolType) {
+      case 'scheduler':
+        toast({ title: "Opening Content Scheduler...", description: "Setting up cross-platform posting" });
+        break;
+      case 'analytics':
+        toast({ title: "Loading Analytics Hub...", description: "Unified social media analytics" });
+        break;
+      case 'tracking':
+        toast({ title: "Initializing Lead Tracking...", description: "Cross-platform lead monitoring" });
+        break;
+    }
   };
 
   const marketingTools = [
@@ -175,7 +258,7 @@ export default function CampaignManagementPage() {
             <BarChart3 className="h-4 w-4 mr-2" />
             Analytics
           </Button>
-          <Button>
+          <Button onClick={handleNewCampaign} disabled={createCampaignMutation.isPending}>
             <Plus className="h-4 w-4 mr-2" />
             New Campaign
           </Button>
@@ -392,11 +475,23 @@ export default function CampaignManagementPage() {
                         </div>
                         
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" className="flex-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => handleSocialMediaAction(platform.platform, 'view')}
+                            disabled={socialMediaMutation.isPending}
+                          >
                             <ExternalLink className="h-4 w-4 mr-2" />
                             View
                           </Button>
-                          <Button size="sm" variant="outline" className="flex-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => handleSocialMediaAction(platform.platform, 'manage')}
+                            disabled={socialMediaMutation.isPending}
+                          >
                             <Settings className="h-4 w-4 mr-2" />
                             Manage
                           </Button>
@@ -415,7 +510,13 @@ export default function CampaignManagementPage() {
                       <Calendar className="h-8 w-8 mx-auto mb-2 text-blue-600" />
                       <h4 className="font-medium">Content Scheduler</h4>
                       <p className="text-sm text-gray-500 mb-3">Schedule posts across all platforms</p>
-                      <Button size="sm" className="w-full">Setup Scheduler</Button>
+                      <Button 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => handleCrossplatformTool('scheduler')}
+                      >
+                        Setup Scheduler
+                      </Button>
                     </CardContent>
                   </Card>
                   
@@ -424,7 +525,13 @@ export default function CampaignManagementPage() {
                       <BarChart3 className="h-8 w-8 mx-auto mb-2 text-green-600" />
                       <h4 className="font-medium">Analytics Hub</h4>
                       <p className="text-sm text-gray-500 mb-3">Unified social media analytics</p>
-                      <Button size="sm" className="w-full">View Analytics</Button>
+                      <Button 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => handleCrossplatformTool('analytics')}
+                      >
+                        View Analytics
+                      </Button>
                     </CardContent>
                   </Card>
                   
@@ -433,7 +540,13 @@ export default function CampaignManagementPage() {
                       <Target className="h-8 w-8 mx-auto mb-2 text-purple-600" />
                       <h4 className="font-medium">Lead Tracking</h4>
                       <p className="text-sm text-gray-500 mb-3">Track leads from each platform</p>
-                      <Button size="sm" className="w-full">Track Leads</Button>
+                      <Button 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => handleCrossplatformTool('tracking')}
+                      >
+                        Track Leads
+                      </Button>
                     </CardContent>
                   </Card>
                 </div>
@@ -477,7 +590,12 @@ export default function CampaignManagementPage() {
                                   }>
                                     {tool.status}
                                   </Badge>
-                                  <Button size="sm" variant="outline">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleMarketingTool(tool.name, 'configure')}
+                                    disabled={marketingToolMutation.isPending}
+                                  >
                                     <Settings className="h-4 w-4" />
                                   </Button>
                                 </div>
