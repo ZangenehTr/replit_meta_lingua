@@ -2245,14 +2245,16 @@ export class DatabaseStorage implements IStorage {
         targetAudience: "persian_learners",
         budget: 25000000, // 25M IRR budget
         spent: 18500000, // 18.5M IRR spent
-        impressions: 145000,
-        clicks: 8750,
-        conversions: 156,
-        conversionRate: 1.78,
-        costPerConversion: 118590, // ~119K IRR per conversion
-        roi: 2.4,
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        channels: ["Instagram", "Telegram"],
+        metrics: {
+          impressions: 145000,
+          clicks: 8750,
+          conversions: 156,
+          cost_per_lead: 118590, // ~119K IRR per conversion
+          roi: 2.4
+        },
         createdAt: new Date().toISOString()
       },
       {
@@ -2264,14 +2266,16 @@ export class DatabaseStorage implements IStorage {
         targetAudience: "university_students",
         budget: 15000000, // 15M IRR budget
         spent: 12200000, // 12.2M IRR spent
-        impressions: 89000,
-        clicks: 4450,
-        conversions: 89,
-        conversionRate: 2.0,
-        costPerConversion: 137080, // ~137K IRR per conversion
-        roi: 1.8,
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+        channels: ["Telegram", "YouTube"],
+        metrics: {
+          impressions: 89000,
+          clicks: 4450,
+          conversions: 89,
+          cost_per_lead: 137080, // ~137K IRR per conversion
+          roi: 1.8
+        },
         createdAt: new Date().toISOString()
       },
       {
@@ -2283,14 +2287,16 @@ export class DatabaseStorage implements IStorage {
         targetAudience: "working_professionals",
         budget: 30000000, // 30M IRR budget
         spent: 30000000, // 30M IRR spent (completed)
-        impressions: 234000,
-        clicks: 12870,
-        conversions: 267,
-        conversionRate: 2.07,
-        costPerConversion: 112360, // ~112K IRR per conversion
-        roi: 3.1,
         startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        channels: ["YouTube", "LinkedIn"],
+        metrics: {
+          impressions: 234000,
+          clicks: 12870,
+          conversions: 267,
+          cost_per_lead: 112360, // ~112K IRR per conversion
+          roi: 3.1
+        },
         createdAt: new Date().toISOString()
       }
     ];
