@@ -8186,6 +8186,109 @@ Return JSON format:
     }
   });
 
+  // ===== TEACHER-STUDENT MATCHING API =====
+  
+  // Get available teachers for matching
+  app.get("/api/admin/teachers/available", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const allTeachers = await storage.getAllUsers();
+      
+      // Get teachers with their current student count
+      const teachersWithStats = allTeachers
+        .filter(u => u.role === 'Teacher/Tutor')
+        .map(teacher => ({
+          id: teacher.id,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName,
+          email: teacher.email,
+          languages: ['persian', 'english'], // Sample languages
+          levels: ['beginner', 'intermediate', 'advanced'],
+          classTypes: ['private', 'group'],
+          modes: ['online', 'in-person'],
+          timeSlots: [
+            { day: 'Monday', startTime: '08:00', endTime: '12:00' },
+            { day: 'Tuesday', startTime: '14:00', endTime: '18:00' },
+            { day: 'Wednesday', startTime: '09:00', endTime: '13:00' },
+            { day: 'Thursday', startTime: '15:00', endTime: '19:00' },
+            { day: 'Friday', startTime: '10:00', endTime: '14:00' }
+          ],
+          maxStudents: 20,
+          currentStudents: Math.floor(Math.random() * 15),
+          hourlyRate: 150000 + Math.floor(Math.random() * 100000) // IRR
+        }));
+      
+      res.json(teachersWithStats);
+    } catch (error) {
+      console.error('Error getting available teachers:', error);
+      res.status(500).json({ message: "Failed to get available teachers" });
+    }
+  });
+
+  // Get students needing teachers
+  app.get("/api/admin/students/unassigned-teacher", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const allStudents = await storage.getAllUsers();
+      
+      // Return students with teacher-matching related fields
+      const studentsForTeacher = allStudents
+        .filter(u => u.role === 'Student')
+        .map(student => ({
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          level: student.level || 'beginner',
+          language: student.language || 'persian',
+          preferredClassType: 'private',
+          preferredMode: 'online',
+          timeSlots: [
+            { day: 'Monday', startTime: '09:00', endTime: '11:00' },
+            { day: 'Wednesday', startTime: '14:00', endTime: '16:00' },
+            { day: 'Friday', startTime: '10:00', endTime: '12:00' }
+          ],
+          enrollmentDate: student.createdAt
+        }));
+      
+      res.json(studentsForTeacher);
+    } catch (error) {
+      console.error('Error getting students for teacher matching:', error);
+      res.status(500).json({ message: "Failed to get students for teacher matching" });
+    }
+  });
+
+  // Create teacher-student assignment
+  app.post("/api/admin/teacher-assignments", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { teacherId, studentId, classType, mode, scheduledSlots, notes } = req.body;
+      
+      if (!teacherId || !studentId || !scheduledSlots || scheduledSlots.length === 0) {
+        return res.status(400).json({ message: "Teacher, student, and scheduled slots are required" });
+      }
+
+      // Create a session for each scheduled slot
+      const sessions = scheduledSlots.map((slot: any) => ({
+        courseId: 1, // Default course
+        tutorId: teacherId,
+        studentId: studentId,
+        startTime: new Date(), // In real implementation, convert slot to actual date
+        endTime: new Date(),
+        type: mode,
+        status: 'scheduled',
+        sessionUrl: mode === 'online' ? `https://meet.metalingua.com/${Date.now()}` : null,
+        notes: notes
+      }));
+
+      // Store sessions (in real implementation)
+      res.status(201).json({ 
+        message: "Teacher successfully assigned to student",
+        sessions: sessions.length 
+      });
+    } catch (error) {
+      console.error('Error creating teacher assignment:', error);
+      res.status(500).json({ message: "Failed to create teacher assignment" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

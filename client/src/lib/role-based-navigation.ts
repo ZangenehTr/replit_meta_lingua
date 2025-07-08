@@ -50,6 +50,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   // Mentor Matching System
   { path: "/admin/mentor-matching", icon: "Users", label: t('mentorMatching'), roles: ["Admin"] },
   
+  // Teacher-Student Matching
+  { path: "/admin/teacher-student-matching", icon: "GraduationCap", label: "Teacher Matching", roles: ["Admin"] },
+  
   // Teacher & Staff Management
   { path: "/admin/teachers", icon: "GraduationCap", label: t('teacherManagement'), roles: ["Admin", "Supervisor"] },
   

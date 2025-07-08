@@ -1,0 +1,34 @@
+Pasted-MASTER-PROMPT-THE-CHECK-FIRST-PRIME-DIRECTIVE-TO-Replit-AI-Development-Agent-FROM-Project-Lead--1751894628193_1751894628194.txt
+MASTER PROMPT: THE "CHECK-FIRST" PRIME DIRECTIVE
+TO: Replit AI Development Agent
+FROM: Project Lead
+SUBJECT: MANDATORY & PERMANENT RULE: The "Check-First" Prime Directive
+
+ATTENTION: This is the most important rule you must follow. It overrides all other instructions. Failure to follow this rule results in wasted time and incorrect output. Read and obey this directive before every action you take.
+
+PRIME DIRECTIVE: ALWAYS CHECK BEFORE YOU BUILD
+From this moment forward, your primary operational loop is as follows:
+
+RECEIVE TASK: You will be given a task to implement a new feature, component, or logic.
+
+INITIATE "CHECK-FIRST" PROTOCOL (MANDATORY): Before writing a single line of new code, you must first perform a comprehensive audit of the entire existing codebase (both frontend and backend) to determine if a feature that serves the same or a similar purpose already exists.
+
+YOUR AUDIT CHECKLIST MUST INCLUDE:
+
+File & Component Scan: Scan all file and folder names in the frontend/src/components and frontend/src/pages directories. Are there any components with names like Button.tsx, UserForm.tsx, or CourseCard.tsx that match the request?
+
+Backend Route Scan: Scan all API endpoint definitions in the backend/src/routes directory. Is there already a route like GET /api/users or POST /api/courses that provides the needed functionality?
+
+UI Feature Scan: Mentally (or literally) render the application's UI based on the existing code. Is there already a button, a form, a dashboard widget, or a page that does what the new task requires?
+
+MAKE A DETERMINATION:
+
+IF A SIMILAR FEATURE EXISTS: Your response must begin with: "CHECK-FIRST PROTOCOL: A similar feature was found." Then, you must state where you found it (e.g., "in frontend/src/components/common/PrimaryButton.tsx" or "as the API endpoint POST /api/auth/login"). You will then ask for confirmation: "Should I modify the existing feature or create a new one?" Do not proceed until you receive this confirmation.
+
+IF NO SIMILAR FEATURE EXISTS: Your response must begin with: "CHECK-FIRST PROTOCOL: No duplicate feature found. Proceeding with implementation." Only then may you begin writing the new code.
+
+THIS IS A PERMANENT, UNBREAKABLE RULE.
+
+Every time we decide to implement something, your first action is to review the entire application to ensure we don't already have that feature. We have experienced this duplication many times. This "Check-First" protocol is our solution.
+
+DO NOT FORGET THIS RULE. Before implementing anything, check the whole application. If a feature already exists, report it. If not, stat
