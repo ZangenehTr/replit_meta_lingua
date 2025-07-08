@@ -8175,7 +8175,7 @@ Return JSON format:
         studentId,
         status: 'active',
         assignedDate: new Date(),
-        goals,
+        goals: goals ? goals.split('\n').filter(g => g.trim()) : [],
         notes
       });
 
