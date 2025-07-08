@@ -135,7 +135,7 @@ export default function MentorMatchingPage() {
   const getCompatibleMentors = (student: Student) => {
     return mentors.filter((mentor: Mentor) => {
       const hasCapacity = mentor.activeStudents < mentor.maxStudents;
-      const speaksLanguage = mentor.languages.includes(student.language);
+      const speaksLanguage = mentor.languages && student.language && mentor.languages.includes(student.language);
       return hasCapacity && speaksLanguage;
     });
   };
@@ -235,8 +235,12 @@ export default function MentorMatchingPage() {
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">85%</div>
-              <p className="text-xs text-muted-foreground">Compatibility rate</p>
+              <div className="text-2xl font-bold">
+                {assignments.length > 0 
+                  ? `${Math.round((assignments.filter((a: any) => a.status === 'active').length / assignments.length) * 100)}%`
+                  : 'N/A'}
+              </div>
+              <p className="text-xs text-muted-foreground">Success rate</p>
             </CardContent>
           </Card>
         </div>
@@ -328,14 +332,18 @@ export default function MentorMatchingPage() {
                             </h3>
                             <p className="text-sm text-gray-600">{student.email}</p>
                             <div className="flex items-center gap-4 mt-2">
-                              <Badge variant="secondary">
-                                <BookOpen className="h-3 w-3 mr-1" />
-                                {student.level}
-                              </Badge>
-                              <Badge variant="outline">
-                                <Languages className="h-3 w-3 mr-1" />
-                                {student.language}
-                              </Badge>
+                              {student.level && (
+                                <Badge variant="secondary">
+                                  <BookOpen className="h-3 w-3 mr-1" />
+                                  {student.level}
+                                </Badge>
+                              )}
+                              {student.language && (
+                                <Badge variant="outline">
+                                  <Languages className="h-3 w-3 mr-1" />
+                                  {student.language}
+                                </Badge>
+                              )}
                               <span className="text-xs text-gray-500">
                                 <Clock className="h-3 w-3 inline mr-1" />
                                 Enrolled {new Date(student.enrollmentDate).toLocaleDateString()}
