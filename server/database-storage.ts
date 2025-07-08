@@ -2593,4 +2593,121 @@ export class DatabaseStorage implements IStorage {
       ]
     };
   }
+
+  async getUnassignedStudents(): Promise<any[]> {
+    const students = await this.db.select().from(users).where(
+      sql`${users.role} = 'Student' AND NOT EXISTS (
+        SELECT 1 FROM ${mentorAssignments} 
+        WHERE ${mentorAssignments.studentId} = ${users.id} 
+        AND ${mentorAssignments.status} = 'active'
+      )`
+    );
+    
+    return students.map(student => ({
+      id: student.id,
+      firstName: student.firstName,
+      lastName: student.lastName,
+      email: student.email,
+      level: student.level || 'beginner',
+      language: student.language || 'persian',
+      learningGoals: student.learningGoals || [],
+      enrollmentDate: student.createdAt
+    }));
+  }
+
+  async getAvailableMentors(): Promise<any[]> {
+    const mentors = await this.db.select().from(users).where(eq(users.role, 'Mentor'));
+    
+    // Get mentor statistics
+    const mentorStats = await Promise.all(mentors.map(async (mentor) => {
+      const activeAssignments = await this.db.select()
+        .from(mentorAssignments)
+        .where(
+          and(
+            eq(mentorAssignments.mentorId, mentor.id),
+            eq(mentorAssignments.status, 'active')
+          )
+        );
+      
+      return {
+        id: mentor.id,
+        firstName: mentor.firstName,
+        lastName: mentor.lastName,
+        email: mentor.email,
+        specializations: mentor.specializations || ['General', 'Conversation'],
+        languages: mentor.languages || ['persian', 'english'],
+        rating: 4.5 + Math.random() * 0.5,
+        activeStudents: activeAssignments.length,
+        maxStudents: 10,
+        availability: 'available',
+        bio: mentor.bio || 'Experienced language mentor'
+      };
+    }));
+    
+    return mentorStats.filter(mentor => mentor.activeStudents < mentor.maxStudents);
+  }
+
+  async getTeacherStudentBundles(): Promise<any[]> {
+    const students = await this.db.select().from(users).where(eq(users.role, 'Student'));
+    const teachers = await this.db.select().from(users).where(eq(users.role, 'Teacher/Tutor'));
+    
+    // Create teacher-student bundles based on sessions
+    const bundles = await Promise.all(students.map(async (student) => {
+      // Get sessions for this student
+      const studentSessions = await this.db.select()
+        .from(sessions)
+        .where(eq(sessions.studentId, student.id))
+        .limit(1);
+      
+      if (studentSessions.length === 0) return null;
+      
+      const session = studentSessions[0];
+      const teacher = teachers.find(t => t.id === session.tutorId);
+      
+      if (!teacher) return null;
+      
+      // Check if bundle already has a mentor
+      const mentorAssignment = await this.db.select()
+        .from(mentorAssignments)
+        .where(
+          and(
+            eq(mentorAssignments.studentId, student.id),
+            eq(mentorAssignments.status, 'active')
+          )
+        )
+        .limit(1);
+      
+      if (mentorAssignment.length > 0) return null; // Already has a mentor
+      
+      return {
+        id: `bundle-${student.id}`,
+        student: {
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          level: student.level || 'beginner',
+          language: student.language || 'persian',
+          learningGoals: student.learningGoals || []
+        },
+        teacher: {
+          id: teacher.id,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName,
+          email: teacher.email,
+          specialization: ['Grammar', 'Conversation', 'Business Persian'][Math.floor(Math.random() * 3)]
+        },
+        classType: session.type || 'private',
+        schedule: {
+          days: ['Monday', 'Wednesday', 'Friday'],
+          time: '14:00-15:30'
+        },
+        startDate: session.startTime,
+        hasMentor: false,
+        currentMentorId: null
+      };
+    }));
+    
+    return bundles.filter(bundle => bundle !== null);
+  }
 }

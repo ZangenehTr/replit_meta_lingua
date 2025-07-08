@@ -28,16 +28,32 @@ import {
   UserPlus
 } from "lucide-react";
 
-interface Student {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  level: string;
-  language: string;
-  learningGoals?: string[];
+interface TeacherStudentBundle {
+  id: string;
+  student: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    level: string;
+    language: string;
+    learningGoals?: string[];
+  };
+  teacher: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    specialization: string;
+  };
+  classType: string;
+  schedule: {
+    days: string[];
+    time: string;
+  };
+  startDate: string;
+  hasMentor: boolean;
   currentMentorId?: number;
-  enrollmentDate: string;
 }
 
 interface Mentor {
@@ -68,7 +84,7 @@ export default function MentorMatchingPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterLanguage, setFilterLanguage] = useState("all");
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [selectedBundle, setSelectedBundle] = useState<TeacherStudentBundle | null>(null);
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const [matchFormData, setMatchFormData] = useState({
@@ -76,9 +92,9 @@ export default function MentorMatchingPage() {
     notes: ""
   });
 
-  // Fetch students without mentors
-  const { data: students = [], isLoading: studentsLoading } = useQuery({
-    queryKey: ['/api/admin/students/unassigned'],
+  // Fetch teacher-student bundles without mentors
+  const { data: bundles = [], isLoading: bundlesLoading } = useQuery({
+    queryKey: ['/api/admin/teacher-student-bundles'],
   });
 
   // Fetch available mentors
@@ -102,13 +118,13 @@ export default function MentorMatchingPage() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Mentor successfully matched with student"
+        description: "Mentor successfully matched with teacher-student bundle"
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/students/unassigned'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/teacher-student-bundles'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/mentors/available'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/mentor-assignments'] });
       setMatchDialogOpen(false);
-      setSelectedStudent(null);
+      setSelectedBundle(null);
       setSelectedMentor(null);
       setMatchFormData({ goals: "", notes: "" });
     },
@@ -121,18 +137,20 @@ export default function MentorMatchingPage() {
     }
   });
 
-  // Filter students
-  const filteredStudents = students.filter((student: Student) => {
-    const matchesSearch = student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLevel = filterLevel === "all" || student.level === filterLevel;
-    const matchesLanguage = filterLanguage === "all" || student.language === filterLanguage;
+  // Filter bundles
+  const filteredBundles = bundles.filter((bundle: TeacherStudentBundle) => {
+    const matchesSearch = bundle.student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         bundle.student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         bundle.student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         bundle.teacher.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         bundle.teacher.lastName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLevel = filterLevel === "all" || bundle.student.level === filterLevel;
+    const matchesLanguage = filterLanguage === "all" || bundle.student.language === filterLanguage;
     return matchesSearch && matchesLevel && matchesLanguage;
   });
 
-  // Get compatible mentors for selected student
-  const getCompatibleMentors = (student: Student) => {
+  // Get compatible mentors for selected bundle
+  const getCompatibleMentors = (bundle: TeacherStudentBundle) => {
     return mentors.filter((mentor: Mentor) => {
       const hasCapacity = mentor.activeStudents < mentor.maxStudents;
       // Show mentors with capacity even if language data is missing
@@ -141,11 +159,11 @@ export default function MentorMatchingPage() {
   };
 
   const handleMatchSubmit = () => {
-    if (!selectedStudent || !selectedMentor) return;
+    if (!selectedBundle || !selectedMentor) return;
 
     const assignment: MentorAssignment = {
       mentorId: selectedMentor.id,
-      studentId: selectedStudent.id,
+      studentId: selectedBundle.student.id,
       status: 'active',
       goals: matchFormData.goals,
       notes: matchFormData.notes
@@ -154,11 +172,11 @@ export default function MentorMatchingPage() {
     createAssignmentMutation.mutate(assignment);
   };
 
-  const getMatchScore = (student: Student, mentor: Mentor) => {
+  const getMatchScore = (bundle: TeacherStudentBundle, mentor: Mentor) => {
     let score = 0;
     
     // Language match
-    if (mentor.languages && mentor.languages.includes(student.language)) score += 40;
+    if (mentor.languages && mentor.languages.includes(bundle.student.language)) score += 40;
     
     // Capacity available
     const capacityRatio = (mentor.maxStudents - mentor.activeStudents) / mentor.maxStudents;
@@ -168,14 +186,14 @@ export default function MentorMatchingPage() {
     score += (mentor.rating / 5) * 20;
     
     // Specialization match (if student has learning goals)
-    if (student.learningGoals && student.learningGoals.length > 0 && mentor.specializations) {
-      const matchingGoals = student.learningGoals.filter(goal => 
+    if (bundle.student.learningGoals && bundle.student.learningGoals.length > 0 && mentor.specializations) {
+      const matchingGoals = bundle.student.learningGoals.filter(goal => 
         mentor.specializations.some(spec => 
           spec.toLowerCase().includes(goal.toLowerCase()) || 
           goal.toLowerCase().includes(spec.toLowerCase())
         )
       );
-      score += (matchingGoals.length / student.learningGoals.length) * 20;
+      score += (matchingGoals.length / bundle.student.learningGoals.length) * 20;
     }
     
     return Math.round(score);
@@ -198,11 +216,11 @@ export default function MentorMatchingPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Unassigned Students</CardTitle>
+              <CardTitle className="text-sm font-medium">Teacher-Student Bundles</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{students.length}</div>
+              <div className="text-2xl font-bold">{bundles.length}</div>
               <p className="text-xs text-muted-foreground">Need mentors</p>
             </CardContent>
           </Card>
@@ -248,8 +266,8 @@ export default function MentorMatchingPage() {
         {/* Search and Filters */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Find Students</CardTitle>
-            <CardDescription>Search and filter students who need mentors</CardDescription>
+            <CardTitle>Find Teacher-Student Bundles</CardTitle>
+            <CardDescription>Search and filter teacher-student pairs that need mentors</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -298,72 +316,97 @@ export default function MentorMatchingPage() {
         {/* Students List */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <h2 className="text-xl font-semibold mb-4">Students Needing Mentors</h2>
-            {studentsLoading ? (
-              <div className="text-center py-8">Loading students...</div>
-            ) : filteredStudents.length === 0 ? (
+            <h2 className="text-xl font-semibold mb-4">Teacher-Student Bundles Needing Mentors</h2>
+            {bundlesLoading ? (
+              <div className="text-center py-8">Loading bundles...</div>
+            ) : filteredBundles.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-8">
                   <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No unassigned students found</p>
+                  <p className="text-gray-600">No teacher-student bundles found needing mentors</p>
                 </CardContent>
               </Card>
             ) : (
               <div className="space-y-4">
-                {filteredStudents.map((student: Student) => (
+                {filteredBundles.map((bundle: TeacherStudentBundle) => (
                   <Card 
-                    key={student.id}
+                    key={bundle.id}
                     className={`cursor-pointer transition-all ${
-                      selectedStudent?.id === student.id ? 'ring-2 ring-primary' : 'hover:shadow-md'
+                      selectedBundle?.id === bundle.id ? 'ring-2 ring-primary' : 'hover:shadow-md'
                     }`}
-                    onClick={() => setSelectedStudent(student)}
+                    onClick={() => setSelectedBundle(bundle)}
                   >
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <Avatar>
-                            <AvatarFallback>
-                              {student.firstName[0]}{student.lastName[0]}
+                      <div className="mb-3 pb-3 border-b">
+                        <p className="text-xs text-gray-500 mb-1">Teacher</p>
+                        <div className="flex items-center space-x-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="text-xs">
+                              {bundle.teacher.firstName[0]}{bundle.teacher.lastName[0]}
                             </AvatarFallback>
                           </Avatar>
                           <div>
+                            <h4 className="font-medium text-sm">
+                              {bundle.teacher.firstName} {bundle.teacher.lastName}
+                            </h4>
+                            <p className="text-xs text-gray-600">{bundle.teacher.specialization}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Student</p>
+                        <div className="flex items-center space-x-3">
+                          <Avatar>
+                            <AvatarFallback>
+                              {bundle.student.firstName[0]}{bundle.student.lastName[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
                             <h3 className="font-medium">
-                              {student.firstName} {student.lastName}
+                              {bundle.student.firstName} {bundle.student.lastName}
                             </h3>
-                            <p className="text-sm text-gray-600">{student.email}</p>
-                            <div className="flex items-center gap-4 mt-2">
-                              {student.level && (
-                                <Badge variant="secondary">
-                                  <BookOpen className="h-3 w-3 mr-1" />
-                                  {student.level}
-                                </Badge>
-                              )}
-                              {student.language && (
-                                <Badge variant="outline">
-                                  <Languages className="h-3 w-3 mr-1" />
-                                  {student.language}
-                                </Badge>
-                              )}
-                              <span className="text-xs text-gray-500">
-                                <Clock className="h-3 w-3 inline mr-1" />
-                                Enrolled {new Date(student.enrollmentDate).toLocaleDateString()}
-                              </span>
+                            <p className="text-sm text-gray-600">{bundle.student.email}</p>
+                            <div className="flex items-center gap-3 mt-2">
+                              <Badge variant="secondary" className="text-xs">
+                                <BookOpen className="h-3 w-3 mr-1" />
+                                {bundle.student.level}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                <Languages className="h-3 w-3 mr-1" />
+                                {bundle.student.language}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {bundle.classType}
+                              </Badge>
                             </div>
                           </div>
                         </div>
                       </div>
-                      {student.learningGoals && student.learningGoals.length > 0 && (
-                        <div className="mt-3">
-                          <p className="text-sm font-medium mb-1">Learning Goals:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {student.learningGoals.map((goal, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-xs">
-                                {goal}
-                              </Badge>
-                            ))}
+                      
+                      <div className="mt-3 pt-3 border-t">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <Clock className="h-3 w-3" />
+                            <span>{bundle.schedule.days.join(', ')} • {bundle.schedule.time}</span>
                           </div>
+                          <span className="text-xs text-gray-500">
+                            Started {new Date(bundle.startDate).toLocaleDateString()}
+                          </span>
                         </div>
-                      )}
+                        {bundle.student.learningGoals && bundle.student.learningGoals.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs font-medium mb-1">Learning Goals:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {bundle.student.learningGoals.map((goal, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">
+                                  {goal}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -374,23 +417,23 @@ export default function MentorMatchingPage() {
           {/* Compatible Mentors */}
           <div>
             <h2 className="text-xl font-semibold mb-4">
-              {selectedStudent ? 'Compatible Mentors' : 'Select a Student'}
+              {selectedBundle ? 'Compatible Mentors' : 'Select a Teacher-Student Bundle'}
             </h2>
-            {!selectedStudent ? (
+            {!selectedBundle ? (
               <Card>
                 <CardContent className="text-center py-16">
                   <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">Select a student to see compatible mentors</p>
+                  <p className="text-gray-600">Select a teacher-student bundle to see compatible mentors</p>
                 </CardContent>
               </Card>
             ) : mentorsLoading ? (
               <div className="text-center py-8">Loading mentors...</div>
             ) : (
               <div className="space-y-4">
-                {getCompatibleMentors(selectedStudent)
-                  .sort((a, b) => getMatchScore(selectedStudent, b) - getMatchScore(selectedStudent, a))
+                {getCompatibleMentors(selectedBundle)
+                  .sort((a, b) => getMatchScore(selectedBundle, b) - getMatchScore(selectedBundle, a))
                   .map((mentor: Mentor) => {
-                    const matchScore = getMatchScore(selectedStudent, mentor);
+                    const matchScore = getMatchScore(selectedBundle, mentor);
                     return (
                       <Card 
                         key={mentor.id}
@@ -452,7 +495,7 @@ export default function MentorMatchingPage() {
                                 {mentor.languages.map((lang, idx) => (
                                   <Badge 
                                   key={idx} 
-                                  variant={lang === selectedStudent.language ? "default" : "outline"} 
+                                  variant={lang === selectedBundle.student.language ? "default" : "outline"} 
                                   className="text-xs"
                                 >
                                   {lang}
@@ -474,52 +517,69 @@ export default function MentorMatchingPage() {
         </div>
 
         {/* Match Button */}
-        {selectedStudent && selectedMentor && (
+        {selectedBundle && selectedMentor && (
           <div className="fixed bottom-8 right-8 z-50">
             <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="lg" className="shadow-lg">
                   <UserPlus className="h-5 w-5 mr-2" />
-                  Match {selectedStudent.firstName} with {selectedMentor.firstName}
+                  Add {selectedMentor.firstName} as Mentor
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Confirm Mentor-Student Match</DialogTitle>
+                  <DialogTitle>Add Mentor to Teacher-Student Bundle</DialogTitle>
                   <DialogDescription>
-                    Create a mentorship relationship between the selected student and mentor
+                    Assign a mentor to support the teacher-student pair
                   </DialogDescription>
                 </DialogHeader>
                 
                 <div className="space-y-6">
                   {/* Match Summary */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    {/* Teacher-Student Bundle */}
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">Student</CardTitle>
+                        <CardTitle className="text-base">Teacher-Student Bundle</CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center space-x-3">
-                          <Avatar>
-                            <AvatarFallback>
-                              {selectedStudent.firstName[0]}{selectedStudent.lastName[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">
-                              {selectedStudent.firstName} {selectedStudent.lastName}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {selectedStudent.level} • {selectedStudent.language}
-                            </p>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="text-xs">
+                                {selectedBundle.teacher.firstName[0]}{selectedBundle.teacher.lastName[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-sm">Teacher: {selectedBundle.teacher.firstName} {selectedBundle.teacher.lastName}</p>
+                              <p className="text-xs text-gray-600">{selectedBundle.teacher.specialization}</p>
+                            </div>
                           </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="text-xs">
+                                {selectedBundle.student.firstName[0]}{selectedBundle.student.lastName[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-sm">Student: {selectedBundle.student.firstName} {selectedBundle.student.lastName}</p>
+                              <p className="text-xs text-gray-600">{selectedBundle.student.level} • {selectedBundle.student.language}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600 pt-2 border-t">
+                          <p>Class Type: {selectedBundle.classType}</p>
+                          <p>Schedule: {selectedBundle.schedule.days.join(', ')} • {selectedBundle.schedule.time}</p>
                         </div>
                       </CardContent>
                     </Card>
 
+                    {/* Selected Mentor */}
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-base">Mentor</CardTitle>
+                        <CardTitle className="text-base">Selected Mentor</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center space-x-3">
@@ -539,13 +599,13 @@ export default function MentorMatchingPage() {
                         </div>
                       </CardContent>
                     </Card>
-                  </div>
 
-                  {/* Match Score */}
-                  <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-2">Compatibility Score</p>
-                    <div className="text-3xl font-bold text-primary">
-                      {getMatchScore(selectedStudent, selectedMentor)}%
+                    {/* Match Score */}
+                    <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <p className="text-sm text-gray-600 mb-2">Compatibility Score</p>
+                      <div className="text-3xl font-bold text-primary">
+                        {getMatchScore(selectedBundle, selectedMentor)}%
+                      </div>
                     </div>
                   </div>
 
