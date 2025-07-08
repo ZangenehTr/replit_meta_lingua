@@ -3818,48 +3818,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const sessions = [
-        {
-          id: 1,
-          title: "Persian Grammar - Conditional Sentences",
-          course: "Persian Grammar Fundamentals",
-          students: 8,
-          scheduledAt: "Today 2:00 PM",
-          duration: 90,
-          status: "scheduled",
-          roomId: "room-123",
-          materials: ["Grammar workbook", "Audio exercises"],
-          objectives: ["Learn conditional forms", "Practice with examples"]
-        },
-        {
-          id: 2,
-          title: "Literature Discussion",
-          course: "Advanced Persian Literature",
-          students: 6,
-          scheduledAt: "Today 4:30 PM",
-          duration: 60,
-          status: "scheduled",
-          roomId: "room-456",
-          materials: ["Poetry collection", "Analysis notes"],
-          objectives: ["Analyze modern poetry", "Discuss themes"]
-        },
-        {
-          id: 3,
-          title: "Business Communication",
-          course: "Business English",
-          students: 12,
-          scheduledAt: "Yesterday 10:00 AM",
-          duration: 75,
-          status: "completed",
-          roomId: "room-789",
-          materials: ["Business scenarios", "Email templates"],
-          objectives: ["Email writing skills", "Professional vocabulary"]
-        }
-      ];
-
-      res.json(sessions);
+      // Get real sessions for the teacher from database
+      const teacherSessions = await dbStorage.getTeacherSessions(req.user.userId);
+      
+      res.json(teacherSessions);
     } catch (error) {
+      console.error('Error fetching teacher sessions:', error);
       res.status(500).json({ message: "Failed to get sessions" });
+    }
+  });
+
+  // Session Packages endpoints for private students
+  app.get("/api/student/session-packages", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'Student') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const packages = await dbStorage.getStudentSessionPackages(req.user.id);
+      res.json(packages);
+    } catch (error) {
+      console.error('Error fetching session packages:', error);
+      res.status(500).json({ message: "Failed to get session packages" });
+    }
+  });
+
+  app.post("/api/student/session-packages/purchase", authenticateToken, async (req: any, res) => {
+    console.log('User object in session package purchase:', req.user);
+    
+    if (req.user.role !== 'Student') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const { packageName, totalSessions, sessionDuration, price } = req.body;
+      
+      console.log('Creating session package for user ID:', req.user.id, 'Email:', req.user.email);
+
+      const newPackage = await dbStorage.createSessionPackage({
+        studentId: req.user.id,
+        packageName,
+        totalSessions,
+        sessionDuration,
+        usedSessions: 0,
+        remainingSessions: totalSessions,
+        price,
+        status: 'active',
+        notes: `Purchased ${totalSessions} sessions of ${sessionDuration} minutes each`
+      });
+
+      res.status(201).json({
+        message: "Session package purchased successfully",
+        package: newPackage
+      });
+    } catch (error) {
+      console.error('Error purchasing session package:', error);
+      res.status(500).json({ message: "Failed to purchase session package" });
     }
   });
 

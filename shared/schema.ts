@@ -231,6 +231,24 @@ export const payments = pgTable("payments", {
 
 // Legacy admin settings removed - using comprehensive version below
 
+// Session Packages for Private Students
+export const sessionPackages = pgTable("session_packages", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  packageName: varchar("package_name", { length: 255 }).notNull(),
+  totalSessions: integer("total_sessions").notNull(),
+  sessionDuration: integer("session_duration").notNull(), // in minutes
+  usedSessions: integer("used_sessions").default(0).notNull(),
+  remainingSessions: integer("remaining_sessions").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  status: varchar("status", { length: 50 }).default('active'), // active, completed, expired
+  purchasedAt: timestamp("purchased_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Wallet Transactions for incremental top-ups
 export const walletTransactions = pgTable("wallet_transactions", {
   id: serial("id").primaryKey(),
@@ -572,6 +590,7 @@ export const insertSessionSchema = createInsertSchema(sessions);
 export const insertMessageSchema = createInsertSchema(messages);
 export const insertHomeworkSchema = createInsertSchema(homework);
 export const insertPaymentSchema = createInsertSchema(payments);
+export const insertSessionPackageSchema = createInsertSchema(sessionPackages);
 // Admin settings schema defined below with comprehensive version
 export const insertWalletTransactionSchema = createInsertSchema(walletTransactions);
 export const insertCoursePaymentSchema = createInsertSchema(coursePayments);
@@ -1101,6 +1120,8 @@ export type Homework = typeof homework.$inferSelect;
 export type InsertHomework = z.infer<typeof insertHomeworkSchema>;
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type SessionPackage = typeof sessionPackages.$inferSelect;
+export type InsertSessionPackage = z.infer<typeof insertSessionPackageSchema>;
 export type WalletTransaction = typeof walletTransactions.$inferSelect;
 export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;
 export type CoursePayment = typeof coursePayments.$inferSelect;
