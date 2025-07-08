@@ -38,6 +38,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   // Student Information System (SIS)
   { path: "/admin/students", icon: "Users", label: t('studentInformationSystem'), roles: ["Admin", "Supervisor"] },
   
+  // User Management
+  { path: "/admin/user-management", icon: "UserCog", label: "User Management", roles: ["Admin"] },
+  
   // Course & Curriculum Management
   { path: "/admin/courses", icon: "BookOpen", label: t('courseManagement'), roles: ["Admin", "Supervisor", "Teacher/Tutor"] },
   

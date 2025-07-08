@@ -8073,6 +8073,60 @@ Return JSON format:
     }
   });
 
+  // ===== USER MANAGEMENT API =====
+  
+  // Get all users
+  app.get("/api/admin/users", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const storage = getStorage();
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('Error getting users:', error);
+      res.status(500).json({ message: "Failed to get users" });
+    }
+  });
+
+  // Create new user
+  app.post("/api/admin/users", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { email, firstName, lastName, role, phoneNumber, password } = req.body;
+      
+      // Hash password
+      const hashedPassword = await hashPassword(password);
+      
+      const storage = getStorage();
+      const newUser = await storage.createUser({
+        email,
+        firstName,
+        lastName,
+        role,
+        phoneNumber,
+        password: hashedPassword,
+        isActive: true,
+        walletBalance: 0,
+        memberTier: 'bronze',
+        totalCredits: 0,
+        streakDays: 0,
+        totalLessons: 0
+      });
+      
+      res.status(201).json({
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        role: newUser.role,
+        phoneNumber: newUser.phoneNumber,
+        isActive: newUser.isActive,
+        createdAt: newUser.createdAt
+      });
+    } catch (error) {
+      console.error('Error creating user:', error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
   // ===== MENTOR MATCHING API =====
   
   // Get unassigned students
