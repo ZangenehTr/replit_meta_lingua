@@ -135,8 +135,8 @@ export default function MentorMatchingPage() {
   const getCompatibleMentors = (student: Student) => {
     return mentors.filter((mentor: Mentor) => {
       const hasCapacity = mentor.activeStudents < mentor.maxStudents;
-      const speaksLanguage = mentor.languages && student.language && mentor.languages.includes(student.language);
-      return hasCapacity && speaksLanguage;
+      // Show mentors with capacity even if language data is missing
+      return hasCapacity;
     });
   };
 
@@ -158,7 +158,7 @@ export default function MentorMatchingPage() {
     let score = 0;
     
     // Language match
-    if (mentor.languages.includes(student.language)) score += 40;
+    if (mentor.languages && mentor.languages.includes(student.language)) score += 40;
     
     // Capacity available
     const capacityRatio = (mentor.maxStudents - mentor.activeStudents) / mentor.maxStudents;
@@ -168,7 +168,7 @@ export default function MentorMatchingPage() {
     score += (mentor.rating / 5) * 20;
     
     // Specialization match (if student has learning goals)
-    if (student.learningGoals && student.learningGoals.length > 0) {
+    if (student.learningGoals && student.learningGoals.length > 0 && mentor.specializations) {
       const matchingGoals = student.learningGoals.filter(goal => 
         mentor.specializations.some(spec => 
           spec.toLowerCase().includes(goal.toLowerCase()) || 
@@ -433,30 +433,34 @@ export default function MentorMatchingPage() {
                               </div>
                             </div>
                           </div>
-                          <div className="mt-3">
-                            <p className="text-sm font-medium mb-1">Specializations:</p>
-                            <div className="flex flex-wrap gap-1">
-                              {mentor.specializations.map((spec, idx) => (
-                                <Badge key={idx} variant="secondary" className="text-xs">
-                                  {spec}
-                                </Badge>
-                              ))}
+                          {mentor.specializations && mentor.specializations.length > 0 && (
+                            <div className="mt-3">
+                              <p className="text-sm font-medium mb-1">Specializations:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {mentor.specializations.map((spec, idx) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {spec}
+                                  </Badge>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                          <div className="mt-2">
-                            <p className="text-sm font-medium mb-1">Languages:</p>
-                            <div className="flex flex-wrap gap-1">
-                              {mentor.languages.map((lang, idx) => (
-                                <Badge 
+                          )}
+                          {mentor.languages && mentor.languages.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-sm font-medium mb-1">Languages:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {mentor.languages.map((lang, idx) => (
+                                  <Badge 
                                   key={idx} 
                                   variant={lang === selectedStudent.language ? "default" : "outline"} 
                                   className="text-xs"
                                 >
                                   {lang}
                                 </Badge>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                          </div>
+                          )}
                           {mentor.bio && (
                             <p className="text-sm text-gray-600 mt-2">{mentor.bio}</p>
                           )}
