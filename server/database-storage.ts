@@ -2616,11 +2616,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableMentors(): Promise<any[]> {
-    const mentors = await this.db.select().from(users).where(eq(users.role, 'Mentor'));
+    const mentors = await db.select().from(users).where(eq(users.role, 'Mentor'));
     
     // Get mentor statistics
     const mentorStats = await Promise.all(mentors.map(async (mentor) => {
-      const activeAssignments = await this.db.select()
+      const activeAssignments = await db.select()
         .from(mentorAssignments)
         .where(
           and(
@@ -2648,13 +2648,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTeacherStudentBundles(): Promise<any[]> {
-    const students = await this.db.select().from(users).where(eq(users.role, 'Student'));
-    const teachers = await this.db.select().from(users).where(eq(users.role, 'Teacher/Tutor'));
+    const students = await db.select().from(users).where(eq(users.role, 'Student'));
+    const teachers = await db.select().from(users).where(eq(users.role, 'Teacher/Tutor'));
     
     // Create teacher-student bundles based on sessions
     const bundles = await Promise.all(students.map(async (student) => {
       // Get sessions for this student
-      const studentSessions = await this.db.select()
+      const studentSessions = await db.select()
         .from(sessions)
         .where(eq(sessions.studentId, student.id))
         .limit(1);
@@ -2667,7 +2667,7 @@ export class DatabaseStorage implements IStorage {
       if (!teacher) return null;
       
       // Check if bundle already has a mentor
-      const mentorAssignment = await this.db.select()
+      const mentorAssignment = await db.select()
         .from(mentorAssignments)
         .where(
           and(
@@ -2709,5 +2709,59 @@ export class DatabaseStorage implements IStorage {
     }));
     
     return bundles.filter(bundle => bundle !== null);
+  }
+
+  async createTeacherStudentAssignment(data: {
+    teacherId: number;
+    studentId: number;
+    classType: 'private' | 'group';
+    mode: 'online' | 'in-person';
+    scheduledSlots: any[];
+    notes?: string;
+  }): Promise<any> {
+    
+    // Create sessions for each scheduled slot
+    const sessionData = data.scheduledSlots.map(slot => ({
+      courseId: 1, // Default course ID
+      tutorId: data.teacherId,
+      studentId: data.studentId,
+      startTime: new Date(slot.startTime),
+      endTime: new Date(slot.endTime),
+      type: data.mode,
+      status: 'scheduled' as const,
+      sessionUrl: data.mode === 'online' ? `https://meet.metalingua.com/session-${Date.now()}` : null,
+      notes: data.notes
+    }));
+
+    // Insert sessions
+    const createdSessions = await db.insert(sessions).values(sessionData).returning();
+
+    // Update student to mark as assigned
+    await db.update(users)
+      .set({ 
+        hasTeacher: true,
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, data.studentId));
+
+    // Update teacher's current students count
+    const teacherSessions = await db.select()
+      .from(sessions)
+      .where(eq(sessions.tutorId, data.teacherId));
+    
+    const uniqueStudents = new Set(teacherSessions.map(s => s.studentId)).size;
+    
+    await db.update(users)
+      .set({ 
+        currentStudents: uniqueStudents,
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, data.teacherId));
+
+    return {
+      sessions: createdSessions,
+      teacherId: data.teacherId,
+      studentId: data.studentId
+    };
   }
 }

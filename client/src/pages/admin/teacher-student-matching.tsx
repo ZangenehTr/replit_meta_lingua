@@ -578,29 +578,79 @@ export default function TeacherStudentMatchingPage() {
                 </div>
 
                 <div>
-                  <Label>Select Time Slots</Label>
-                  <div className="space-y-2 max-h-40 overflow-y-auto border rounded p-2">
-                    {getMatchingSlots(selectedStudent, selectedTeacher).map((slot, idx) => (
-                      <div key={idx} className="flex items-center space-x-2">
-                        <Checkbox 
-                          checked={selectedSlots.some(s => 
-                            s.day === slot.day && s.startTime === slot.startTime
-                          )}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedSlots([...selectedSlots, slot]);
-                            } else {
-                              setSelectedSlots(selectedSlots.filter(s => 
-                                !(s.day === slot.day && s.startTime === slot.startTime)
-                              ));
-                            }
-                          }}
-                        />
-                        <span className="text-sm">
-                          {slot.day} {slot.startTime} - {slot.endTime}
-                        </span>
+                  <Label className="mb-2">Schedule & Availability</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Student Availability - Left Column */}
+                    <div>
+                      <h4 className="text-sm font-medium mb-2 text-gray-700">Student's Available Times</h4>
+                      <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-800 max-h-48 overflow-y-auto">
+                        {selectedStudent.timeSlots && selectedStudent.timeSlots.length > 0 ? (
+                          <div className="space-y-1">
+                            {selectedStudent.timeSlots.map((slot, idx) => (
+                              <div key={idx} className="text-sm py-1">
+                                <span className="font-medium">{slot.day}:</span>{' '}
+                                {slot.startTime} - {slot.endTime}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">No availability set</p>
+                        )}
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Teacher Availability - Right Column */}
+                    <div>
+                      <h4 className="text-sm font-medium mb-2 text-gray-700">Teacher's Available Times</h4>
+                      <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-800 max-h-48 overflow-y-auto">
+                        {selectedTeacher.timeSlots && selectedTeacher.timeSlots.length > 0 ? (
+                          <div className="space-y-1">
+                            {selectedTeacher.timeSlots.map((slot, idx) => (
+                              <div key={idx} className="text-sm py-1">
+                                <span className="font-medium">{slot.day}:</span>{' '}
+                                {slot.startTime} - {slot.endTime}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">No availability set</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Matching Slots Selection */}
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium mb-2">Select Matching Time Slots</h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto border rounded p-2">
+                      {getMatchingSlots(selectedStudent, selectedTeacher).length > 0 ? (
+                        getMatchingSlots(selectedStudent, selectedTeacher).map((slot, idx) => (
+                          <div key={idx} className="flex items-center space-x-2">
+                            <Checkbox 
+                              checked={selectedSlots.some(s => 
+                                s.day === slot.day && s.startTime === slot.startTime
+                              )}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedSlots([...selectedSlots, slot]);
+                                } else {
+                                  setSelectedSlots(selectedSlots.filter(s => 
+                                    !(s.day === slot.day && s.startTime === slot.startTime)
+                                  ));
+                                }
+                              }}
+                            />
+                            <span className="text-sm">
+                              {slot.day} {slot.startTime} - {slot.endTime}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-500 text-center py-4">
+                          No overlapping time slots found between student and teacher
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 

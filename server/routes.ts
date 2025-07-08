@@ -8162,7 +8162,7 @@ Return JSON format:
   });
 
   // Get mentor assignments
-  app.get("/api/admin/mentor-assignments", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.get("/api/admin/mentor-assignments", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const assignments = await storage.getAllMentorAssignments();
       res.json(assignments);
@@ -8173,7 +8173,7 @@ Return JSON format:
   });
 
   // Create mentor assignment
-  app.post("/api/admin/mentor-assignments", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/mentor-assignments", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const { mentorId, studentId, goals, notes } = req.body;
       
@@ -8190,6 +8190,20 @@ Return JSON format:
         notes
       });
 
+      // Get user details for SMS notifications
+      const mentor = await dbStorage.getUserById(mentorId);
+      const student = await dbStorage.getUserById(studentId);
+      
+      // Get teacher-student bundle info
+      const bundles = await dbStorage.getTeacherStudentBundles();
+      const bundle = bundles.find(b => b.student.id === studentId);
+      
+      // Send SMS notification to mentor
+      if (mentor?.phone && bundle) {
+        const mentorMessage = `New mentorship assignment: You've been assigned to support ${student?.firstName} ${student?.lastName}. Teacher: ${bundle.teacher.firstName} ${bundle.teacher.lastName}. ${notes ? `Notes: ${notes}` : ''}`;
+        console.log(`SMS to mentor ${mentor.phone}: ${mentorMessage}`);
+      }
+
       res.status(201).json(assignment);
     } catch (error) {
       console.error('Error creating mentor assignment:', error);
@@ -8200,33 +8214,48 @@ Return JSON format:
   // ===== TEACHER-STUDENT MATCHING API =====
   
   // Get available teachers for matching
-  app.get("/api/admin/teachers/available", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.get("/api/admin/teachers/available", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const allTeachers = await storage.getAllUsers();
+      const sessions = await storage.getAllSessions();
       
-      // Get teachers with their current student count
+      // Count current students for each teacher
+      const studentCountByTeacher = sessions.reduce((acc, session) => {
+        const teacherId = session.tutorId;
+        if (!acc[teacherId]) acc[teacherId] = new Set();
+        acc[teacherId].add(session.studentId);
+        return acc;
+      }, {} as Record<number, Set<number>>);
+      
+      // Get teachers with availability
       const teachersWithStats = allTeachers
         .filter(u => u.role === 'Teacher/Tutor')
-        .map(teacher => ({
-          id: teacher.id,
-          firstName: teacher.firstName,
-          lastName: teacher.lastName,
-          email: teacher.email,
-          languages: ['persian', 'english'], // Sample languages
-          levels: ['beginner', 'intermediate', 'advanced'],
-          classTypes: ['private', 'group'],
-          modes: ['online', 'in-person'],
-          timeSlots: [
-            { day: 'Monday', startTime: '08:00', endTime: '12:00' },
-            { day: 'Tuesday', startTime: '14:00', endTime: '18:00' },
-            { day: 'Wednesday', startTime: '09:00', endTime: '13:00' },
-            { day: 'Thursday', startTime: '15:00', endTime: '19:00' },
-            { day: 'Friday', startTime: '10:00', endTime: '14:00' }
-          ],
-          maxStudents: 20,
-          currentStudents: Math.floor(Math.random() * 15),
-          hourlyRate: 150000 + Math.floor(Math.random() * 100000) // IRR
-        }));
+        .map(teacher => {
+          const currentStudents = studentCountByTeacher[teacher.id]?.size || 0;
+          const maxStudents = teacher.maxStudents || 20;
+          
+          return {
+            id: teacher.id,
+            firstName: teacher.firstName,
+            lastName: teacher.lastName,
+            email: teacher.email,
+            languages: teacher.languages || ['persian', 'english'],
+            levels: teacher.levels || ['beginner', 'intermediate', 'advanced'],
+            classTypes: teacher.classTypes || ['private', 'group'],
+            modes: teacher.modes || ['online', 'in-person'],
+            timeSlots: teacher.timeSlots || [
+              { day: 'Monday', startTime: '08:00', endTime: '12:00' },
+              { day: 'Tuesday', startTime: '14:00', endTime: '18:00' },
+              { day: 'Wednesday', startTime: '09:00', endTime: '13:00' },
+              { day: 'Thursday', startTime: '15:00', endTime: '19:00' },
+              { day: 'Friday', startTime: '10:00', endTime: '14:00' }
+            ],
+            maxStudents,
+            currentStudents,
+            hourlyRate: teacher.hourlyRate || 150000
+          };
+        })
+        .filter(teacher => teacher.currentStudents < teacher.maxStudents);
       
       res.json(teachersWithStats);
     } catch (error) {
@@ -8236,13 +8265,17 @@ Return JSON format:
   });
 
   // Get students needing teachers
-  app.get("/api/admin/students/unassigned-teacher", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.get("/api/admin/students/unassigned-teacher", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const allStudents = await storage.getAllUsers();
+      const sessions = await storage.getAllSessions();
       
-      // Return students with teacher-matching related fields
+      // Get IDs of students who already have teachers
+      const studentsWithTeachers = new Set(sessions.map(s => s.studentId));
+      
+      // Return only students without teachers
       const studentsForTeacher = allStudents
-        .filter(u => u.role === 'Student')
+        .filter(u => u.role === 'Student' && !studentsWithTeachers.has(u.id))
         .map(student => ({
           id: student.id,
           firstName: student.firstName,
@@ -8250,9 +8283,9 @@ Return JSON format:
           email: student.email,
           level: student.level || 'beginner',
           language: student.language || 'persian',
-          preferredClassType: 'private',
-          preferredMode: 'online',
-          timeSlots: [
+          preferredClassType: student.preferredClassType || 'private',
+          preferredMode: student.preferredMode || 'online',
+          timeSlots: student.timeSlots || [
             { day: 'Monday', startTime: '09:00', endTime: '11:00' },
             { day: 'Wednesday', startTime: '14:00', endTime: '16:00' },
             { day: 'Friday', startTime: '10:00', endTime: '12:00' }
@@ -8268,7 +8301,7 @@ Return JSON format:
   });
 
   // Create teacher-student assignment
-  app.post("/api/admin/teacher-assignments", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/teacher-assignments", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const { teacherId, studentId, classType, mode, scheduledSlots, notes } = req.body;
       
@@ -8276,23 +8309,62 @@ Return JSON format:
         return res.status(400).json({ message: "Teacher, student, and scheduled slots are required" });
       }
 
-      // Create a session for each scheduled slot
-      const sessions = scheduledSlots.map((slot: any) => ({
-        courseId: 1, // Default course
-        tutorId: teacherId,
-        studentId: studentId,
-        startTime: new Date(), // In real implementation, convert slot to actual date
-        endTime: new Date(),
-        type: mode,
-        status: 'scheduled',
-        sessionUrl: mode === 'online' ? `https://meet.metalingua.com/${Date.now()}` : null,
-        notes: notes
-      }));
+      // Convert time slots to proper dates with times
+      const processedSlots = scheduledSlots.map((slot: any) => {
+        const today = new Date();
+        const dayOffset = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(slot.day);
+        const currentDay = today.getDay();
+        let daysUntilSlot = dayOffset - currentDay;
+        if (daysUntilSlot < 0) daysUntilSlot += 7; // Next week
+        
+        const slotDate = new Date(today);
+        slotDate.setDate(today.getDate() + daysUntilSlot);
+        
+        const [startHour, startMinute] = slot.startTime.split(':').map(Number);
+        const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+        
+        const startTime = new Date(slotDate);
+        startTime.setHours(startHour, startMinute, 0, 0);
+        
+        const endTime = new Date(slotDate);
+        endTime.setHours(endHour, endMinute, 0, 0);
+        
+        return { startTime, endTime };
+      });
 
-      // Store sessions (in real implementation)
+      // Create assignment in database
+      const result = await dbStorage.createTeacherStudentAssignment({
+        teacherId,
+        studentId,
+        classType,
+        mode,
+        scheduledSlots: processedSlots,
+        notes
+      });
+
+      // Get teacher and student details for SMS
+      const teacher = await dbStorage.getUserById(teacherId);
+      const student = await dbStorage.getUserById(studentId);
+
+      // Send SMS notifications
+      if (teacher?.phone) {
+        const teacherMessage = `New class assignment: ${student?.firstName} ${student?.lastName} - ${classType} class - ${mode}. Schedule: ${scheduledSlots.map((s: any) => `${s.day} ${s.startTime}-${s.endTime}`).join(', ')}${classType === 'private' ? ` Target: ${student?.learningGoals?.join(', ') || 'General improvement'}` : ''}`;
+        
+        // In production, integrate with Kavenegar SMS service
+        console.log(`SMS to teacher ${teacher.phone}: ${teacherMessage}`);
+      }
+
+      if (student?.phone) {
+        const studentMessage = `You've been matched with ${teacher?.firstName} ${teacher?.lastName} for ${classType} ${mode} classes. Schedule: ${scheduledSlots.map((s: any) => `${s.day} ${s.startTime}-${s.endTime}`).join(', ')}`;
+        
+        // In production, integrate with Kavenegar SMS service
+        console.log(`SMS to student ${student.phone}: ${studentMessage}`);
+      }
+
       res.status(201).json({ 
         message: "Teacher successfully assigned to student",
-        sessions: sessions.length 
+        sessions: result.sessions.length,
+        assignmentId: result.sessions[0]?.id
       });
     } catch (error) {
       console.error('Error creating teacher assignment:', error);
