@@ -166,6 +166,9 @@ export interface IStorage {
   createMentorAssignment(assignment: InsertMentorAssignment): Promise<MentorAssignment>;
   getMentoringSessions(assignmentId: number): Promise<MentoringSession[]>;
   createMentoringSession(session: InsertMentoringSession): Promise<MentoringSession>;
+  getUnassignedStudents(): Promise<any[]>;
+  getAvailableMentors(): Promise<any[]>;
+  getTeacherStudentBundles(): Promise<any[]>;
   getCallCenterStats(agentId: number): Promise<any>;
 
   // Extended CRM Methods

@@ -8128,6 +8128,17 @@ Return JSON format:
 
   // ===== MENTOR MATCHING API =====
   
+  // Get teacher-student bundles without mentors
+  app.get("/api/admin/teacher-student-bundles", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const bundles = await storage.getTeacherStudentBundles();
+      res.json(bundles);
+    } catch (error) {
+      console.error('Error getting teacher-student bundles:', error);
+      res.status(500).json({ message: "Failed to get teacher-student bundles" });
+    }
+  });
+
   // Get unassigned students
   app.get("/api/admin/students/unassigned", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
