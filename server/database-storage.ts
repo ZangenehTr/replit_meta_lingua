@@ -1454,6 +1454,97 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
+  // Get unassigned students
+  async getUnassignedStudents(): Promise<any[]> {
+    return await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        level: users.proficiencyLevel,
+        language: users.targetLanguage,
+        learningGoals: users.learningGoals,
+        enrollmentDate: users.createdAt
+      })
+      .from(users)
+      .leftJoin(mentorAssignments, eq(users.id, mentorAssignments.studentId))
+      .where(and(
+        eq(users.role, 'Student'),
+        or(
+          isNull(mentorAssignments.studentId),
+          eq(mentorAssignments.status, 'completed')
+        )
+      ));
+  }
+
+  // Get available mentors with capacity
+  async getAvailableMentors(): Promise<any[]> {
+    const mentors = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        bio: users.bio,
+        specializations: users.specializations,
+        languages: users.languages,
+        maxStudents: users.maxStudents
+      })
+      .from(users)
+      .where(eq(users.role, 'Mentor'));
+
+    // Count active students for each mentor
+    const mentorStats = await db
+      .select({
+        mentorId: mentorAssignments.mentorId,
+        activeStudents: sql<number>`count(*)`.as('activeStudents')
+      })
+      .from(mentorAssignments)
+      .where(eq(mentorAssignments.status, 'active'))
+      .groupBy(mentorAssignments.mentorId);
+
+    // Combine mentor data with stats
+    return mentors.map(mentor => {
+      const stats = mentorStats.find(s => s.mentorId === mentor.id);
+      const activeStudents = stats?.activeStudents || 0;
+      return {
+        ...mentor,
+        activeStudents,
+        rating: 4.5 + Math.random() * 0.5, // Placeholder rating
+        availability: activeStudents < (mentor.maxStudents || 10) ? 'Available' : 'Full'
+      };
+    });
+  }
+
+  // Get all mentor assignments
+  async getAllMentorAssignments(): Promise<any[]> {
+    return await db
+      .select({
+        id: mentorAssignments.id,
+        mentorId: mentorAssignments.mentorId,
+        studentId: mentorAssignments.studentId,
+        status: mentorAssignments.status,
+        assignedDate: mentorAssignments.assignedDate,
+        completedDate: mentorAssignments.completedDate,
+        goals: mentorAssignments.goals,
+        notes: mentorAssignments.notes,
+        mentor: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName
+        },
+        student: {
+          id: sql`${users}.id`,
+          firstName: sql`${users}.first_name`,
+          lastName: sql`${users}.last_name`
+        }
+      })
+      .from(mentorAssignments)
+      .leftJoin(users, eq(mentorAssignments.mentorId, users.id))
+      .orderBy(desc(mentorAssignments.assignedDate));
+  }
+
   async getMentoringSessions(assignmentId: number): Promise<MentoringSession[]> {
     return await db
       .select()

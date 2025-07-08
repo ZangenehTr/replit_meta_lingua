@@ -8073,6 +8073,66 @@ Return JSON format:
     }
   });
 
+  // ===== MENTOR MATCHING API =====
+  
+  // Get unassigned students
+  app.get("/api/admin/students/unassigned", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const unassignedStudents = await storage.getUnassignedStudents();
+      res.json(unassignedStudents);
+    } catch (error) {
+      console.error('Error getting unassigned students:', error);
+      res.status(500).json({ message: "Failed to get unassigned students" });
+    }
+  });
+
+  // Get available mentors
+  app.get("/api/admin/mentors/available", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const availableMentors = await storage.getAvailableMentors();
+      res.json(availableMentors);
+    } catch (error) {
+      console.error('Error getting available mentors:', error);
+      res.status(500).json({ message: "Failed to get available mentors" });
+    }
+  });
+
+  // Get mentor assignments
+  app.get("/api/admin/mentor-assignments", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const assignments = await storage.getAllMentorAssignments();
+      res.json(assignments);
+    } catch (error) {
+      console.error('Error getting mentor assignments:', error);
+      res.status(500).json({ message: "Failed to get mentor assignments" });
+    }
+  });
+
+  // Create mentor assignment
+  app.post("/api/admin/mentor-assignments", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { mentorId, studentId, goals, notes } = req.body;
+      
+      if (!mentorId || !studentId) {
+        return res.status(400).json({ message: "Mentor and student IDs are required" });
+      }
+
+      const assignment = await storage.createMentorAssignment({
+        mentorId,
+        studentId,
+        status: 'active',
+        assignedDate: new Date(),
+        goals,
+        notes
+      });
+
+      res.status(201).json(assignment);
+    } catch (error) {
+      console.error('Error creating mentor assignment:', error);
+      res.status(500).json({ message: "Failed to create mentor assignment" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
