@@ -8078,7 +8078,6 @@ Return JSON format:
   // Get all users
   app.get("/api/admin/users", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
-      const storage = getStorage();
       const users = await storage.getAllUsers();
       res.json(users);
     } catch (error) {
