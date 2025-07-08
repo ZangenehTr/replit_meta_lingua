@@ -354,6 +354,11 @@ export class DatabaseStorage implements IStorage {
     return updatedSession;
   }
 
+  async getAllSessions(): Promise<Session[]> {
+    const allSessions = await db.select().from(sessions);
+    return allSessions;
+  }
+
   // Messages
   async getUserMessages(userId: number): Promise<(Message & { senderName: string, senderAvatar: string })[]> {
     const userMessages = await db

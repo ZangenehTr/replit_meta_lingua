@@ -63,6 +63,7 @@ export interface IStorage {
   // Sessions
   getUserSessions(userId: number): Promise<(Session & { tutorName: string })[]>;
   getUpcomingSessions(userId: number): Promise<(Session & { tutorName: string, tutorAvatar: string })[]>;
+  getAllSessions(): Promise<Session[]>;
   createSession(session: InsertSession): Promise<Session>;
   updateSessionStatus(id: number, status: string): Promise<Session | undefined>;
 
@@ -664,6 +665,10 @@ export class MemStorage implements IStorage {
     const updatedSession = { ...session, status };
     this.sessions.set(id, updatedSession);
     return updatedSession;
+  }
+
+  async getAllSessions(): Promise<Session[]> {
+    return Array.from(this.sessions.values());
   }
 
   async getUserMessages(userId: number): Promise<(Message & { senderName: string, senderAvatar: string })[]> {
