@@ -44,6 +44,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   // Class Scheduling & Management
   { path: "/admin/classes", icon: "Calendar", label: t('classScheduling'), roles: ["Admin", "Supervisor"] },
   
+  // Mentor Matching System
+  { path: "/admin/mentor-matching", icon: "Users", label: t('mentorMatching'), roles: ["Admin"] },
+  
   // Teacher & Staff Management
   { path: "/admin/teachers", icon: "GraduationCap", label: t('teacherManagement'), roles: ["Admin", "Supervisor"] },
   

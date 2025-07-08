@@ -505,6 +505,7 @@ export const translations: Record<Language, Translations> = {
     studentInformationSystem: "Student Information System",
     courseManagement: "Course Management",
     classScheduling: "Class Scheduling",
+    mentorMatching: "Mentor Matching",
     teacherManagement: "Teacher Management",
     financialManagement: "Financial Management",
     reportsAnalytics: "Reports & Analytics",

@@ -75,6 +75,7 @@ import AdminClassesPage from "@/pages/admin/classes";
 import AdminReportsPage from "@/pages/admin/reports";
 import AdminCommunicationsPage from "@/pages/admin/communications";
 import AdminSupervisionPage from "@/pages/admin/supervision";
+import MentorMatchingPage from "@/pages/admin/mentor-matching";
 
 import { LanguageProvider } from "@/hooks/use-language";
 
@@ -370,6 +371,13 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <AdminClassesPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/mentor-matching">
+        <ProtectedRoute>
+          <AppLayout>
+            <MentorMatchingPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>
