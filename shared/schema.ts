@@ -249,6 +249,86 @@ export const sessionPackages = pgTable("session_packages", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Callern Video Call Packages
+export const callernPackages = pgTable("callern_packages", {
+  id: serial("id").primaryKey(),
+  packageName: varchar("package_name", { length: 100 }).notNull(),
+  totalHours: integer("total_hours").notNull(), // Total hours in the package
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(), // IRR
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Student Callern Packages (purchased packages)
+export const studentCallernPackages = pgTable("student_callern_packages", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => users.id),
+  packageId: integer("package_id").notNull().references(() => callernPackages.id),
+  totalHours: integer("total_hours").notNull(),
+  usedMinutes: integer("used_minutes").default(0).notNull(), // Track in minutes for precision
+  remainingMinutes: integer("remaining_minutes").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  status: varchar("status", { length: 20 }).default('active').notNull(), // active, completed, expired
+  purchasedAt: timestamp("purchased_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Teacher Callern Availability
+export const teacherCallernAvailability = pgTable("teacher_callern_availability", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").notNull().references(() => users.id),
+  isOnline: boolean("is_online").default(false).notNull(),
+  lastActiveAt: timestamp("last_active_at"),
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }), // Optional teacher-specific rate
+  availableHours: text("available_hours").array(), // JSON array of available time slots
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Callern Call History
+export const callernCallHistory = pgTable("callern_call_history", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => users.id),
+  teacherId: integer("teacher_id").notNull().references(() => users.id),
+  packageId: integer("package_id").notNull().references(() => studentCallernPackages.id),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  durationMinutes: integer("duration_minutes"),
+  status: varchar("status", { length: 20 }).notNull(), // scheduled, in-progress, completed, cancelled
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Callern Syllabus Topics
+export const callernSyllabusTopics = pgTable("callern_syllabus_topics", {
+  id: serial("id").primaryKey(),
+  category: varchar("category", { length: 50 }).notNull(), // grammar, vocabulary
+  level: varchar("level", { length: 20 }).notNull(), // beginner, intermediate, advanced
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  order: integer("order").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Student Callern Progress
+export const studentCallernProgress = pgTable("student_callern_progress", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => users.id),
+  topicId: integer("topic_id").notNull().references(() => callernSyllabusTopics.id),
+  teacherId: integer("teacher_id").notNull().references(() => users.id),
+  callId: integer("call_id").references(() => callernCallHistory.id),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
 // Wallet Transactions for incremental top-ups
 export const walletTransactions = pgTable("wallet_transactions", {
   id: serial("id").primaryKey(),
@@ -1363,3 +1443,53 @@ export const RECOMMENDATION_TYPES = [
 
 export type MoodCategory = typeof MOOD_CATEGORIES[number];
 export type RecommendationType = typeof RECOMMENDATION_TYPES[number];
+
+// Callern system insert schemas
+export const insertCallernPackageSchema = createInsertSchema(callernPackages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertStudentCallernPackageSchema = createInsertSchema(studentCallernPackages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertTeacherCallernAvailabilitySchema = createInsertSchema(teacherCallernAvailability).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCallernCallHistorySchema = createInsertSchema(callernCallHistory).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCallernSyllabusTopicSchema = createInsertSchema(callernSyllabusTopics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertStudentCallernProgressSchema = createInsertSchema(studentCallernProgress).omit({
+  id: true,
+  createdAt: true
+});
+
+// Callern system types
+export type CallernPackage = typeof callernPackages.$inferSelect;
+export type InsertCallernPackage = z.infer<typeof insertCallernPackageSchema>;
+export type StudentCallernPackage = typeof studentCallernPackages.$inferSelect;
+export type InsertStudentCallernPackage = z.infer<typeof insertStudentCallernPackageSchema>;
+export type TeacherCallernAvailability = typeof teacherCallernAvailability.$inferSelect;
+export type InsertTeacherCallernAvailability = z.infer<typeof insertTeacherCallernAvailabilitySchema>;
+export type CallernCallHistory = typeof callernCallHistory.$inferSelect;
+export type InsertCallernCallHistory = z.infer<typeof insertCallernCallHistorySchema>;
+export type CallernSyllabusTopics = typeof callernSyllabusTopics.$inferSelect;
+export type InsertCallernSyllabusTopics = z.infer<typeof insertCallernSyllabusTopicSchema>;
+export type StudentCallernProgress = typeof studentCallernProgress.$inferSelect;
+export type InsertStudentCallernProgress = z.infer<typeof insertStudentCallernProgressSchema>;
