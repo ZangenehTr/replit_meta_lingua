@@ -4534,12 +4534,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ===== ON-DEMAND MENTORING API =====
+  // ===== CALLERN LEARNING SYSTEM API =====
   
-  // Get available mentors
-  app.get("/api/mentoring/available-mentors", async (req, res) => {
+  // Get online teachers
+  app.get("/api/callern/online-teachers", async (req, res) => {
     try {
-      const mentors = [
+      const teachers = [
         {
           id: 1,
           name: "دکتر امیر حسینی / Dr. Amir Hosseini",
@@ -4551,7 +4551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalMinutes: 15420,
           isOnline: true,
           responseTime: "Usually responds within 2 minutes",
-          pricePerMinute: 120, // Toman per minute
+          hourlyRate: 7200, // 7,200 Toman per hour
           successRate: 96,
           description: "متخصص ادبیات فارسی و دستور زبان با ۱۰ سال تجربه تدریس"
         },
@@ -4566,7 +4566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalMinutes: 12350,
           isOnline: true,
           responseTime: "Usually responds within 1 minute",
-          pricePerMinute: 100,
+          hourlyRate: 6000, // 6,000 Toman per hour
           successRate: 94,
           description: "مربی فارسی تجاری و تلفظ صحیح با تخصص در آموزش به بازرگانان"
         },
@@ -4581,7 +4581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalMinutes: 8900,
           isOnline: false,
           responseTime: "Usually responds within 5 minutes",
-          pricePerMinute: 150,
+          hourlyRate: 9000, // 9,000 Toman per hour
           successRate: 98,
           description: "استاد شعر و ادبیات کلاسیک فارسی با تخصص در حافظ و سعدی"
         }
