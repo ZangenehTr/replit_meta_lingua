@@ -7,6 +7,8 @@ import {
   walletTransactions, coursePayments, aiTrainingData, aiKnowledgeBase,
   skillAssessments, learningActivities, progressSnapshots, leads,
   communicationLogs, mentorAssignments, mentoringSessions, sessionPackages,
+  callernPackages, studentCallernPackages, teacherCallernAvailability,
+  callernCallHistory, callernSyllabusTopics, studentCallernProgress,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
@@ -21,7 +23,10 @@ import {
   type LearningActivity, type InsertLearningActivity, type ProgressSnapshot, type InsertProgressSnapshot,
   type Lead, type InsertLead, type Transaction, type InsertTransaction,
   type CommunicationLog, type InsertCommunicationLog, type MentorAssignment, type InsertMentorAssignment,
-  type MentoringSession, type InsertMentoringSession
+  type MentoringSession, type InsertMentoringSession,
+  type CallernPackage, type InsertCallernPackage, type StudentCallernPackage, type InsertStudentCallernPackage,
+  type TeacherCallernAvailability, type InsertTeacherCallernAvailability, type CallernCallHistory, type InsertCallernCallHistory,
+  type CallernSyllabusTopics, type InsertCallernSyllabusTopics, type StudentCallernProgress, type InsertStudentCallernProgress
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -2844,5 +2849,264 @@ export class DatabaseStorage implements IStorage {
       teacherId: data.teacherId,
       studentId: data.studentId
     };
+  }
+
+  // Callern Video Call System Methods
+  async getCallernPackages() {
+    const packages = await db.select().from(callernPackages)
+      .where(eq(callernPackages.isActive, true))
+      .orderBy(callernPackages.totalHours);
+    return packages;
+  }
+
+  async getStudentCallernPackages(studentId: number) {
+    const packages = await db.select({
+      id: studentCallernPackages.id,
+      packageId: studentCallernPackages.packageId,
+      packageName: callernPackages.packageName,
+      totalHours: studentCallernPackages.totalHours,
+      usedMinutes: studentCallernPackages.usedMinutes,
+      remainingMinutes: studentCallernPackages.remainingMinutes,
+      price: studentCallernPackages.price,
+      status: studentCallernPackages.status,
+      purchasedAt: studentCallernPackages.purchasedAt,
+      expiresAt: studentCallernPackages.expiresAt
+    })
+    .from(studentCallernPackages)
+    .leftJoin(callernPackages, eq(studentCallernPackages.packageId, callernPackages.id))
+    .where(eq(studentCallernPackages.studentId, studentId))
+    .orderBy(desc(studentCallernPackages.purchasedAt));
+    
+    return packages;
+  }
+
+  async purchaseCallernPackage(data: {
+    studentId: number;
+    packageId: number;
+    price: number;
+  }) {
+    const pkg = await db.select().from(callernPackages)
+      .where(eq(callernPackages.id, data.packageId))
+      .limit(1);
+    
+    if (pkg.length === 0) throw new Error('Package not found');
+    
+    const totalMinutes = pkg[0].totalHours * 60;
+    
+    const [newPackage] = await db.insert(studentCallernPackages)
+      .values({
+        studentId: data.studentId,
+        packageId: data.packageId,
+        totalHours: pkg[0].totalHours,
+        usedMinutes: 0,
+        remainingMinutes: totalMinutes,
+        price: data.price.toString(),
+        status: 'active'
+      })
+      .returning();
+    
+    return newPackage;
+  }
+
+  async getOnlineCallernTeachers() {
+    const teachers = await db.select({
+      id: users.id,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      email: users.email,
+      avatar: users.avatar,
+      isOnline: teacherCallernAvailability.isOnline,
+      lastActiveAt: teacherCallernAvailability.lastActiveAt,
+      hourlyRate: teacherCallernAvailability.hourlyRate
+    })
+    .from(users)
+    .leftJoin(teacherCallernAvailability, eq(users.id, teacherCallernAvailability.teacherId))
+    .where(and(
+      eq(users.role, 'Teacher/Tutor'),
+      eq(teacherCallernAvailability.isOnline, true)
+    ));
+    
+    return teachers;
+  }
+
+  async updateTeacherCallernAvailability(teacherId: number, isOnline: boolean) {
+    const existing = await db.select().from(teacherCallernAvailability)
+      .where(eq(teacherCallernAvailability.teacherId, teacherId))
+      .limit(1);
+    
+    if (existing.length === 0) {
+      const [newAvailability] = await db.insert(teacherCallernAvailability)
+        .values({
+          teacherId,
+          isOnline,
+          lastActiveAt: new Date()
+        })
+        .returning();
+      return newAvailability;
+    } else {
+      const [updated] = await db.update(teacherCallernAvailability)
+        .set({
+          isOnline,
+          lastActiveAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(teacherCallernAvailability.teacherId, teacherId))
+        .returning();
+      return updated;
+    }
+  }
+
+  async getStudentCallernHistory(studentId: number) {
+    const history = await db.select({
+      id: callernCallHistory.id,
+      teacherId: callernCallHistory.teacherId,
+      teacherName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+      startTime: callernCallHistory.startTime,
+      endTime: callernCallHistory.endTime,
+      durationMinutes: callernCallHistory.durationMinutes,
+      status: callernCallHistory.status,
+      notes: callernCallHistory.notes
+    })
+    .from(callernCallHistory)
+    .leftJoin(users, eq(callernCallHistory.teacherId, users.id))
+    .where(eq(callernCallHistory.studentId, studentId))
+    .orderBy(desc(callernCallHistory.startTime));
+    
+    return history;
+  }
+
+  async getStudentCallernProgress(studentId: number) {
+    const progress = await db.select({
+      id: studentCallernProgress.id,
+      topicId: studentCallernProgress.topicId,
+      topicTitle: callernSyllabusTopics.title,
+      topicCategory: callernSyllabusTopics.category,
+      topicLevel: callernSyllabusTopics.level,
+      teacherId: studentCallernProgress.teacherId,
+      teacherName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+      completedAt: studentCallernProgress.completedAt,
+      notes: studentCallernProgress.notes
+    })
+    .from(studentCallernProgress)
+    .leftJoin(callernSyllabusTopics, eq(studentCallernProgress.topicId, callernSyllabusTopics.id))
+    .leftJoin(users, eq(studentCallernProgress.teacherId, users.id))
+    .where(eq(studentCallernProgress.studentId, studentId))
+    .orderBy(desc(studentCallernProgress.completedAt));
+    
+    return progress;
+  }
+
+  async getCallernSyllabusTopics(level?: string, category?: string) {
+    let query = db.select().from(callernSyllabusTopics)
+      .where(eq(callernSyllabusTopics.isActive, true));
+    
+    if (level) {
+      query = query.where(eq(callernSyllabusTopics.level, level));
+    }
+    
+    if (category) {
+      query = query.where(eq(callernSyllabusTopics.category, category));
+    }
+    
+    const topics = await query.orderBy(callernSyllabusTopics.order);
+    return topics;
+  }
+
+  async startCallernCall(data: {
+    studentId: number;
+    teacherId: number;
+    packageId: number;
+  }) {
+    // Check if student has available minutes
+    const [studentPackage] = await db.select().from(studentCallernPackages)
+      .where(and(
+        eq(studentCallernPackages.id, data.packageId),
+        eq(studentCallernPackages.studentId, data.studentId),
+        eq(studentCallernPackages.status, 'active')
+      ))
+      .limit(1);
+    
+    if (!studentPackage || studentPackage.remainingMinutes <= 0) {
+      throw new Error('No available minutes in package');
+    }
+    
+    const [call] = await db.insert(callernCallHistory)
+      .values({
+        studentId: data.studentId,
+        teacherId: data.teacherId,
+        packageId: data.packageId,
+        startTime: new Date(),
+        status: 'in-progress'
+      })
+      .returning();
+    
+    return call;
+  }
+
+  async endCallernCall(callId: number, notes?: string) {
+    const [call] = await db.select().from(callernCallHistory)
+      .where(eq(callernCallHistory.id, callId))
+      .limit(1);
+    
+    if (!call) throw new Error('Call not found');
+    
+    const endTime = new Date();
+    const durationMinutes = Math.round((endTime.getTime() - call.startTime.getTime()) / (1000 * 60));
+    
+    // Update call history
+    const [updatedCall] = await db.update(callernCallHistory)
+      .set({
+        endTime,
+        durationMinutes,
+        status: 'completed',
+        notes,
+        updatedAt: new Date()
+      })
+      .where(eq(callernCallHistory.id, callId))
+      .returning();
+    
+    // Update package usage
+    const [studentPackage] = await db.select().from(studentCallernPackages)
+      .where(eq(studentCallernPackages.id, call.packageId))
+      .limit(1);
+    
+    if (studentPackage) {
+      const newUsedMinutes = studentPackage.usedMinutes + durationMinutes;
+      const newRemainingMinutes = Math.max(0, studentPackage.remainingMinutes - durationMinutes);
+      const newStatus = newRemainingMinutes <= 0 ? 'completed' : 'active';
+      
+      await db.update(studentCallernPackages)
+        .set({
+          usedMinutes: newUsedMinutes,
+          remainingMinutes: newRemainingMinutes,
+          status: newStatus,
+          updatedAt: new Date()
+        })
+        .where(eq(studentCallernPackages.id, call.packageId));
+    }
+    
+    return updatedCall;
+  }
+
+  async markCallernTopicsCompleted(data: {
+    studentId: number;
+    teacherId: number;
+    callId: number;
+    topicIds: number[];
+    notes?: string;
+  }) {
+    const progressData = data.topicIds.map(topicId => ({
+      studentId: data.studentId,
+      topicId,
+      teacherId: data.teacherId,
+      callId: data.callId,
+      notes: data.notes
+    }));
+    
+    const progress = await db.insert(studentCallernProgress)
+      .values(progressData)
+      .returning();
+    
+    return progress;
   }
 }
