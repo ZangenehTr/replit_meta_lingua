@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, gte, lte, lt, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, lt, inArray, or, isNull } from "drizzle-orm";
 import { db } from "./db";
 import { 
   users, userProfiles, userSessions, rolePermissions, courses, enrollments,
@@ -1462,12 +1462,13 @@ export class DatabaseStorage implements IStorage {
         firstName: users.firstName,
         lastName: users.lastName,
         email: users.email,
-        level: users.proficiencyLevel,
-        language: users.targetLanguage,
-        learningGoals: users.learningGoals,
+        level: userProfiles.proficiencyLevel,
+        language: userProfiles.targetLanguage,
+        learningGoals: userProfiles.learningGoals,
         enrollmentDate: users.createdAt
       })
       .from(users)
+      .leftJoin(userProfiles, eq(users.id, userProfiles.userId))
       .leftJoin(mentorAssignments, eq(users.id, mentorAssignments.studentId))
       .where(and(
         eq(users.role, 'Student'),
@@ -1486,12 +1487,13 @@ export class DatabaseStorage implements IStorage {
         firstName: users.firstName,
         lastName: users.lastName,
         email: users.email,
-        bio: users.bio,
-        specializations: users.specializations,
-        languages: users.languages,
-        maxStudents: users.maxStudents
+        bio: userProfiles.bio,
+        specializations: userProfiles.interests, // Using interests as specializations
+        languages: userProfiles.targetLanguages,
+        maxStudents: sql<number>`10`.as('maxStudents') // Default max students
       })
       .from(users)
+      .leftJoin(userProfiles, eq(users.id, userProfiles.userId))
       .where(eq(users.role, 'Mentor'));
 
     // Count active students for each mentor
@@ -1512,14 +1514,17 @@ export class DatabaseStorage implements IStorage {
         ...mentor,
         activeStudents,
         rating: 4.5 + Math.random() * 0.5, // Placeholder rating
-        availability: activeStudents < (mentor.maxStudents || 10) ? 'Available' : 'Full'
+        availability: activeStudents < 10 ? 'Available' : 'Full' // Default max 10 students
       };
     });
   }
 
   // Get all mentor assignments
   async getAllMentorAssignments(): Promise<any[]> {
-    return await db
+    const mentorUsers = users;
+    const studentUsers = users;
+    
+    const assignments = await db
       .select({
         id: mentorAssignments.id,
         mentorId: mentorAssignments.mentorId,
@@ -1528,21 +1533,41 @@ export class DatabaseStorage implements IStorage {
         assignedDate: mentorAssignments.assignedDate,
         completedDate: mentorAssignments.completedDate,
         goals: mentorAssignments.goals,
-        notes: mentorAssignments.notes,
-        mentor: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName
-        },
-        student: {
-          id: sql`${users}.id`,
-          firstName: sql`${users}.first_name`,
-          lastName: sql`${users}.last_name`
-        }
+        notes: mentorAssignments.notes
       })
       .from(mentorAssignments)
-      .leftJoin(users, eq(mentorAssignments.mentorId, users.id))
       .orderBy(desc(mentorAssignments.assignedDate));
+
+    // Get mentor and student details separately
+    const assignmentsWithDetails = await Promise.all(
+      assignments.map(async (assignment) => {
+        const [mentor] = await db
+          .select({
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName
+          })
+          .from(users)
+          .where(eq(users.id, assignment.mentorId));
+          
+        const [student] = await db
+          .select({
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName
+          })
+          .from(users)
+          .where(eq(users.id, assignment.studentId));
+          
+        return {
+          ...assignment,
+          mentor,
+          student
+        };
+      })
+    );
+    
+    return assignmentsWithDetails;
   }
 
   async getMentoringSessions(assignmentId: number): Promise<MentoringSession[]> {
