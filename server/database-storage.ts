@@ -6,7 +6,7 @@ import {
   achievements, userAchievements, userStats, dailyGoals, adminSettings,
   walletTransactions, coursePayments, aiTrainingData, aiKnowledgeBase,
   skillAssessments, learningActivities, progressSnapshots, leads,
-  communicationLogs, mentorAssignments, mentoringSessions,
+  communicationLogs, mentorAssignments, mentoringSessions, sessionPackages,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
@@ -357,6 +357,84 @@ export class DatabaseStorage implements IStorage {
   async getAllSessions(): Promise<Session[]> {
     const allSessions = await db.select().from(sessions);
     return allSessions;
+  }
+
+  async getStudentSessionPackages(studentId: number) {
+    const packages = await db.select().from(sessionPackages)
+      .where(eq(sessionPackages.studentId, studentId))
+      .orderBy(desc(sessionPackages.purchasedAt));
+    
+    return packages;
+  }
+
+  async createSessionPackage(data: InsertSessionPackage) {
+    const [newPackage] = await db.insert(sessionPackages)
+      .values(data)
+      .returning();
+    
+    return newPackage;
+  }
+
+  async updateSessionPackageUsage(packageId: number, usedSessions: number) {
+    const pkg = await db.select().from(sessionPackages)
+      .where(eq(sessionPackages.id, packageId))
+      .limit(1);
+    
+    if (pkg.length === 0) return null;
+    
+    const remainingSessions = pkg[0].totalSessions - usedSessions;
+    const status = remainingSessions <= 0 ? 'completed' : 'active';
+    
+    const [updated] = await db.update(sessionPackages)
+      .set({ 
+        usedSessions, 
+        remainingSessions,
+        status,
+        updatedAt: new Date()
+      })
+      .where(eq(sessionPackages.id, packageId))
+      .returning();
+    
+    return updated;
+  }
+
+  async getTeacherSessions(teacherId: number) {
+    const teacherSessions = await db.select({
+      id: sessions.id,
+      title: sessions.title,
+      course: courses.title,
+      studentId: sessions.studentId,
+      studentName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+      scheduledAt: sessions.scheduledAt,
+      duration: sessions.duration,
+      status: sessions.status,
+      roomId: sql`'room-' || ${sessions.id}`,
+      sessionUrl: sessions.sessionUrl,
+      description: sessions.description,
+      notes: sessions.notes
+    })
+    .from(sessions)
+    .leftJoin(courses, eq(sessions.courseId, courses.id))
+    .leftJoin(users, eq(sessions.studentId, users.id))
+    .where(eq(sessions.tutorId, teacherId))
+    .orderBy(desc(sessions.scheduledAt));
+
+    // Format the sessions for teacher dashboard
+    return teacherSessions.map(session => ({
+      id: session.id,
+      title: session.title || 'Language Session',
+      course: session.course || 'General Language Course',
+      students: 1, // For private sessions
+      scheduledAt: session.scheduledAt,
+      duration: session.duration || 60,
+      status: session.status || 'scheduled',
+      roomId: session.roomId || 'online',
+      materials: [],
+      objectives: [],
+      studentName: session.studentName,
+      sessionUrl: session.sessionUrl,
+      notes: session.notes
+    }));
   }
 
   // Messages
