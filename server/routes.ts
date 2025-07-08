@@ -8191,8 +8191,8 @@ Return JSON format:
       });
 
       // Get user details for SMS notifications
-      const mentor = await dbStorage.getUserById(mentorId);
-      const student = await dbStorage.getUserById(studentId);
+      const mentor = await dbStorage.getUser(mentorId);
+      const student = await dbStorage.getUser(studentId);
       
       // Get teacher-student bundle info
       const bundles = await dbStorage.getTeacherStudentBundles();
@@ -8343,8 +8343,8 @@ Return JSON format:
       });
 
       // Get teacher and student details for SMS
-      const teacher = await dbStorage.getUserById(teacherId);
-      const student = await dbStorage.getUserById(studentId);
+      const teacher = await dbStorage.getUser(teacherId);
+      const student = await dbStorage.getUser(studentId);
 
       // Send SMS notifications
       if (teacher?.phone) {

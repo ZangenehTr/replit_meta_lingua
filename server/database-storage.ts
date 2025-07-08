@@ -2726,39 +2726,37 @@ export class DatabaseStorage implements IStorage {
   }): Promise<any> {
     
     // Create sessions for each scheduled slot
-    const sessionData = data.scheduledSlots.map(slot => ({
-      courseId: 1, // Default course ID
-      tutorId: data.teacherId,
-      studentId: data.studentId,
-      startTime: new Date(slot.startTime),
-      endTime: new Date(slot.endTime),
-      type: data.mode,
-      status: 'scheduled' as const,
-      sessionUrl: data.mode === 'online' ? `https://meet.metalingua.com/session-${Date.now()}` : null,
-      notes: data.notes
-    }));
-
+    const sessionData = data.scheduledSlots.map(slot => {
+      const startTime = new Date(slot.startTime);
+      const endTime = new Date(slot.endTime);
+      const duration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60)); // Duration in minutes
+      
+      return {
+        courseId: 1, // Default course ID
+        tutorId: data.teacherId,
+        studentId: data.studentId,
+        title: `${data.classType} Language Session`,
+        description: `${data.mode} language learning session`,
+        scheduledAt: startTime,
+        duration: duration || 60, // Default to 60 minutes if calculation fails
+        status: 'scheduled',
+        sessionUrl: data.mode === 'online' ? `https://meet.metalingua.com/session-${Date.now()}` : null,
+        notes: data.notes || ''
+      };
+    });
+    
     // Insert sessions
     const createdSessions = await db.insert(sessions).values(sessionData).returning();
 
-    // Update student to mark as assigned
+    // Update student and teacher's updatedAt timestamp
     await db.update(users)
       .set({ 
-        hasTeacher: true,
         updatedAt: new Date() 
       })
       .where(eq(users.id, data.studentId));
 
-    // Update teacher's current students count
-    const teacherSessions = await db.select()
-      .from(sessions)
-      .where(eq(sessions.tutorId, data.teacherId));
-    
-    const uniqueStudents = new Set(teacherSessions.map(s => s.studentId)).size;
-    
     await db.update(users)
       .set({ 
-        currentStudents: uniqueStudents,
         updatedAt: new Date() 
       })
       .where(eq(users.id, data.teacherId));
