@@ -63,6 +63,20 @@ Meta Lingua is an AI-enhanced multilingual language learning and institute manag
 - Contact management with click-to-call functionality
 - Call history and recording storage
 
+### Teacher vs Mentor System
+**Teachers**:
+- Conduct actual classes (group or private)
+- Can teach in-person or online
+- Matched with students based on schedule availability (0-100%)
+- Focus on direct instruction and curriculum delivery
+
+**Mentors**:
+- Monitor student progress alongside teachers
+- Assign homework and supplementary materials
+- Conduct progress assessments and tests
+- Communicate via VoIP and in-app chat
+- Not responsible for direct teaching
+
 ## Data Flow
 
 1. **User Authentication**: Client authenticates via `/api/auth/login`, receives JWT tokens
