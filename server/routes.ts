@@ -17,13 +17,16 @@ import {
   insertMoodEntrySchema,
   insertMoodRecommendationSchema,
   insertLearningAdaptationSchema,
+  insertRoomSchema,
   type InsertMoodEntry,
   type InsertMoodRecommendation,
   type InsertLearningAdaptation,
   type AttendanceRecord,
   type InsertAttendanceRecord,
   type UserProfile,
-  type InsertUserProfile
+  type InsertUserProfile,
+  type Room,
+  type InsertRoom
 } from "@shared/schema";
 import multer from "multer";
 import mammoth from "mammoth";
@@ -9127,6 +9130,119 @@ Return JSON format:
     } catch (error) {
       console.error('Error fetching video bookmarks:', error);
       res.status(500).json({ message: "Failed to fetch bookmarks" });
+    }
+  });
+
+  // ===== ROOM MANAGEMENT API ENDPOINTS =====
+  
+  // Get all rooms
+  app.get("/api/rooms", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const rooms = await dbStorage.getRooms();
+      res.json(rooms);
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+      res.status(500).json({ message: "Failed to fetch rooms" });
+    }
+  });
+
+  // Get room by ID
+  app.get("/api/rooms/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const room = await dbStorage.getRoomById(id);
+      
+      if (!room) {
+        return res.status(404).json({ message: "Room not found" });
+      }
+      
+      res.json(room);
+    } catch (error) {
+      console.error('Error fetching room:', error);
+      res.status(500).json({ message: "Failed to fetch room" });
+    }
+  });
+
+  // Create room
+  app.post("/api/rooms", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const roomData = insertRoomSchema.parse(req.body);
+      const room = await dbStorage.createRoom(roomData);
+      res.status(201).json(room);
+    } catch (error) {
+      console.error('Error creating room:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Invalid room data", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Failed to create room" });
+    }
+  });
+
+  // Update room
+  app.put("/api/rooms/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = insertRoomSchema.partial().parse(req.body);
+      
+      const room = await dbStorage.updateRoom(id, updates);
+      
+      if (!room) {
+        return res.status(404).json({ message: "Room not found" });
+      }
+      
+      res.json(room);
+    } catch (error) {
+      console.error('Error updating room:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Invalid room data", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Failed to update room" });
+    }
+  });
+
+  // Delete room
+  app.delete("/api/rooms/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await dbStorage.deleteRoom(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Room not found" });
+      }
+      
+      res.json({ message: "Room deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting room:', error);
+      res.status(500).json({ message: "Failed to delete room" });
+    }
+  });
+
+  // Get active rooms
+  app.get("/api/rooms/active", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const rooms = await dbStorage.getActiveRooms();
+      res.json(rooms);
+    } catch (error) {
+      console.error('Error fetching active rooms:', error);
+      res.status(500).json({ message: "Failed to fetch active rooms" });
+    }
+  });
+
+  // Get rooms by type
+  app.get("/api/rooms/type/:type", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const type = req.params.type;
+      const rooms = await dbStorage.getRoomsByType(type);
+      res.json(rooms);
+    } catch (error) {
+      console.error('Error fetching rooms by type:', error);
+      res.status(500).json({ message: "Failed to fetch rooms by type" });
     }
   });
 
