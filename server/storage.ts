@@ -348,6 +348,7 @@ export interface IStorage {
   // Leaderboards
   updateGameLeaderboard(entry: InsertGameLeaderboard): Promise<GameLeaderboard>;
   getGameLeaderboard(gameId?: number, type?: string, period?: string): Promise<GameLeaderboard[]>;
+  getGlobalLeaderboard(): Promise<any[]>;
   
   // User achievements and stats
   getUserAchievements(userId: number): Promise<any[]>;

@@ -9466,6 +9466,36 @@ Return JSON format:
     }
   });
 
+  // Start a specific game (alternative endpoint)
+  app.post("/api/student/games/:gameId/start", authenticateToken, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      
+      if (!gameId) {
+        return res.status(400).json({ message: "Game ID is required" });
+      }
+
+      // Create or get user game progress
+      const progress = await storage.getOrCreateUserGameProgress(req.user.id, gameId);
+      
+      // Create new game session
+      const session = await storage.createGameSession({
+        userId: req.user.id,
+        gameId,
+        currentLevel: progress.currentLevel,
+        score: 0,
+        xpEarned: 0,
+        duration: 0,
+        status: 'active'
+      });
+
+      res.status(201).json({ sessionId: session.id, session });
+    } catch (error) {
+      console.error('Error starting game:', error);
+      res.status(500).json({ message: "Failed to start game" });
+    }
+  });
+
   // ===== CALLERN MANAGEMENT ENDPOINTS =====
   
   // Create Callern course with package configuration
@@ -9627,7 +9657,7 @@ Return JSON format:
   // ===== GAMIFICATION AND GAMES API ENDPOINTS =====
 
   // Get available games with filtering
-  app.get("/api/student/games", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+  app.get("/api/student/games", authenticateToken, async (req: any, res) => {
     try {
       const { ageGroup, skillFocus, level } = req.query;
       const games = await storage.getGamesByFilters({
@@ -9644,7 +9674,7 @@ Return JSON format:
   });
 
   // Get user game progress
-  app.get("/api/student/game-progress", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+  app.get("/api/student/game-progress", authenticateToken, async (req: any, res) => {
     try {
       const progress = await storage.getUserGameProgressByUser(req.user.id);
       res.json(progress);
