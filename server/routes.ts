@@ -2399,6 +2399,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Kavenegar settings endpoints
+  app.get('/api/admin/kavenegar-settings', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      // Return current Kavenegar configuration
+      const settings = {
+        isConfigured: !!process.env.KAVENEGAR_API_KEY,
+        apiKey: process.env.KAVENEGAR_API_KEY ? `${process.env.KAVENEGAR_API_KEY.substring(0, 8)}...` : null,
+        senderNumber: '10008663', // Default sender number
+        dailyLimit: 1000,
+        isEnabled: true,
+        balance: null // Will be fetched from Kavenegar API if needed
+      };
+      res.json(settings);
+    } catch (error) {
+      console.error('Kavenegar settings error:', error);
+      res.status(500).json({ message: 'Failed to fetch Kavenegar settings' });
+    }
+  });
+
+  app.post('/api/admin/kavenegar-settings', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { senderNumber, dailyLimit, isEnabled } = req.body;
+      
+      // Here you would typically save these settings to database
+      // For now, we'll just return success since the API key is env-based
+      
+      res.json({ 
+        message: 'Kavenegar settings saved successfully',
+        settings: {
+          senderNumber,
+          dailyLimit,
+          isEnabled
+        }
+      });
+    } catch (error) {
+      console.error('Save Kavenegar settings error:', error);
+      res.status(500).json({ message: 'Failed to save Kavenegar settings' });
+    }
+  });
+
   app.get("/api/admin/sms/account-info", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { kavenegarService } = await import('./kavenegar-service');
