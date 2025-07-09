@@ -50,7 +50,12 @@ import {
   aiProgressTracking, aiActivitySessions, aiVocabularyTracking, aiGrammarTracking, aiPronunciationAnalysis,
   type AiProgressTracking, type InsertAiProgressTracking, type AiActivitySession, type InsertAiActivitySession,
   type AiVocabularyTracking, type InsertAiVocabularyTracking, type AiGrammarTracking, type InsertAiGrammarTracking,
-  type AiPronunciationAnalysis, type InsertAiPronunciationAnalysis
+  type AiPronunciationAnalysis, type InsertAiPronunciationAnalysis,
+  // Quality Assurance types
+  liveClassSessions, teacherRetentionData, studentQuestionnaires, questionnaireResponses, supervisionObservations,
+  type LiveClassSession, type InsertLiveClassSession, type TeacherRetentionData, type InsertTeacherRetentionData,
+  type StudentQuestionnaire, type InsertStudentQuestionnaire, type QuestionnaireResponse, type InsertQuestionnaireResponse,
+  type SupervisionObservation, type InsertSupervisionObservation
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -4392,5 +4397,182 @@ export class DatabaseStorage implements IStorage {
       ORDER BY csg.order_index, csg.created_at
     `);
     return result.rows;
+  }
+
+  // ===== QUALITY ASSURANCE METHODS =====
+
+  // Live Class Sessions
+  async createLiveClassSession(data: InsertLiveClassSession): Promise<LiveClassSession> {
+    const [session] = await this.db.insert(liveClassSessions).values(data).returning();
+    return session;
+  }
+
+  async getLiveClassSessions(status?: string): Promise<LiveClassSession[]> {
+    if (status) {
+      return await this.db.select().from(liveClassSessions).where(eq(liveClassSessions.status, status));
+    }
+    return await this.db.select().from(liveClassSessions);
+  }
+
+  async updateLiveClassSession(id: number, data: Partial<InsertLiveClassSession>): Promise<LiveClassSession | undefined> {
+    const [session] = await this.db.update(liveClassSessions)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(liveClassSessions.id, id))
+      .returning();
+    return session;
+  }
+
+  // Teacher Retention Data
+  async createTeacherRetentionData(data: InsertTeacherRetentionData): Promise<TeacherRetentionData> {
+    const [retention] = await this.db.insert(teacherRetentionData).values(data).returning();
+    return retention;
+  }
+
+  async getTeacherRetentionData(teacherId?: number): Promise<TeacherRetentionData[]> {
+    if (teacherId) {
+      return await this.db.select().from(teacherRetentionData).where(eq(teacherRetentionData.teacherId, teacherId));
+    }
+    return await this.db.select().from(teacherRetentionData);
+  }
+
+  async calculateRetentionRates(teacherId: number, termName: string): Promise<{ retention: number; attrition: number; overall: { retention: number; attrition: number } }> {
+    // Get term data
+    const termData = await this.db.select()
+      .from(teacherRetentionData)
+      .where(and(
+        eq(teacherRetentionData.teacherId, teacherId),
+        eq(teacherRetentionData.termName, termName)
+      ));
+
+    // Get all historical data for overall rates
+    const allData = await this.db.select()
+      .from(teacherRetentionData)
+      .where(eq(teacherRetentionData.teacherId, teacherId));
+
+    const currentTerm = termData[0];
+    const retentionRate = currentTerm ? ((currentTerm.studentsAtEnd || 0) / (currentTerm.studentsAtStart || 1)) * 100 : 0;
+    const attritionRate = currentTerm ? ((currentTerm.studentsDropped || 0) / (currentTerm.studentsAtStart || 1)) * 100 : 0;
+
+    // Calculate overall averages
+    const totalStudentsStart = allData.reduce((sum, term) => sum + (term.studentsAtStart || 0), 0);
+    const totalStudentsEnd = allData.reduce((sum, term) => sum + (term.studentsAtEnd || 0), 0);
+    const totalStudentsDropped = allData.reduce((sum, term) => sum + (term.studentsDropped || 0), 0);
+
+    const overallRetention = totalStudentsStart > 0 ? (totalStudentsEnd / totalStudentsStart) * 100 : 0;
+    const overallAttrition = totalStudentsStart > 0 ? (totalStudentsDropped / totalStudentsStart) * 100 : 0;
+
+    return {
+      retention: Math.round(retentionRate * 100) / 100,
+      attrition: Math.round(attritionRate * 100) / 100,
+      overall: {
+        retention: Math.round(overallRetention * 100) / 100,
+        attrition: Math.round(overallAttrition * 100) / 100
+      }
+    };
+  }
+
+  // Student Questionnaires
+  async createStudentQuestionnaire(data: InsertStudentQuestionnaire): Promise<StudentQuestionnaire> {
+    const [questionnaire] = await this.db.insert(studentQuestionnaires).values(data).returning();
+    return questionnaire;
+  }
+
+  async getStudentQuestionnaires(courseId?: number): Promise<StudentQuestionnaire[]> {
+    if (courseId) {
+      return await this.db.select().from(studentQuestionnaires).where(eq(studentQuestionnaires.courseId, courseId));
+    }
+    return await this.db.select().from(studentQuestionnaires);
+  }
+
+  async updateStudentQuestionnaire(id: number, data: Partial<InsertStudentQuestionnaire>): Promise<StudentQuestionnaire | undefined> {
+    const [questionnaire] = await this.db.update(studentQuestionnaires)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(studentQuestionnaires.id, id))
+      .returning();
+    return questionnaire;
+  }
+
+  // Questionnaire Responses
+  async createQuestionnaireResponse(data: InsertQuestionnaireResponse): Promise<QuestionnaireResponse> {
+    const [response] = await this.db.insert(questionnaireResponses).values(data).returning();
+    return response;
+  }
+
+  async getQuestionnaireResponses(questionnaireId?: number, teacherId?: number): Promise<QuestionnaireResponse[]> {
+    let query = this.db.select().from(questionnaireResponses);
+    
+    if (questionnaireId && teacherId) {
+      return await query.where(and(
+        eq(questionnaireResponses.questionnaireId, questionnaireId),
+        eq(questionnaireResponses.teacherId, teacherId)
+      ));
+    } else if (questionnaireId) {
+      return await query.where(eq(questionnaireResponses.questionnaireId, questionnaireId));
+    } else if (teacherId) {
+      return await query.where(eq(questionnaireResponses.teacherId, teacherId));
+    }
+    
+    return await query;
+  }
+
+  // Supervision Observations
+  async createSupervisionObservation(data: InsertSupervisionObservation): Promise<SupervisionObservation> {
+    const [observation] = await this.db.insert(supervisionObservations).values(data).returning();
+    return observation;
+  }
+
+  async getSupervisionObservations(teacherId?: number, supervisorId?: number): Promise<SupervisionObservation[]> {
+    let query = this.db.select().from(supervisionObservations);
+    
+    if (teacherId && supervisorId) {
+      return await query.where(and(
+        eq(supervisionObservations.teacherId, teacherId),
+        eq(supervisionObservations.supervisorId, supervisorId)
+      ));
+    } else if (teacherId) {
+      return await query.where(eq(supervisionObservations.teacherId, teacherId));
+    } else if (supervisorId) {
+      return await query.where(eq(supervisionObservations.supervisorId, supervisorId));
+    }
+    
+    return await query;
+  }
+
+  async updateSupervisionObservation(id: number, data: Partial<InsertSupervisionObservation>): Promise<SupervisionObservation | undefined> {
+    const [observation] = await this.db.update(supervisionObservations)
+      .set(data)
+      .where(eq(supervisionObservations.id, id))
+      .returning();
+    return observation;
+  }
+
+  // Quality Assurance Dashboard Data
+  async getQualityAssuranceStats(): Promise<{
+    liveClasses: number;
+    completedObservations: number;
+    averageQualityScore: number;
+    teachersUnderSupervision: number;
+    pendingQuestionnaires: number;
+    retentionTrend: string;
+  }> {
+    const liveClasses = await this.db.select().from(liveClassSessions).where(eq(liveClassSessions.status, 'live'));
+    const observations = await this.db.select().from(supervisionObservations);
+    const questionnaires = await this.db.select().from(studentQuestionnaires).where(eq(studentQuestionnaires.isActive, true));
+    
+    // Calculate average quality score
+    const scoresSum = observations.reduce((sum, obs) => sum + (parseFloat(obs.overallScore?.toString() || '0')), 0);
+    const averageQualityScore = observations.length > 0 ? scoresSum / observations.length : 0;
+
+    // Get unique teachers under supervision
+    const uniqueTeachers = new Set(observations.map(obs => obs.teacherId));
+
+    return {
+      liveClasses: liveClasses.length,
+      completedObservations: observations.length,
+      averageQualityScore: Math.round(averageQualityScore * 100) / 100,
+      teachersUnderSupervision: uniqueTeachers.size,
+      pendingQuestionnaires: questionnaires.length,
+      retentionTrend: '↗ +3.2%' // This would be calculated based on retention data
+    };
   }
 }

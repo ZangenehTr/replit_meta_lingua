@@ -10284,6 +10284,199 @@ Return JSON format:
     }
   });
 
+  // ===== QUALITY ASSURANCE API ENDPOINTS =====
+
+  // Live Class Sessions
+  app.get("/api/supervision/live-sessions", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const status = req.query.status as string;
+      const sessions = await storage.getLiveClassSessions(status);
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching live sessions:', error);
+      res.status(500).json({ message: "Failed to fetch live sessions" });
+    }
+  });
+
+  app.post("/api/supervision/live-sessions", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const sessionData = req.body;
+      const session = await storage.createLiveClassSession(sessionData);
+      res.status(201).json(session);
+    } catch (error) {
+      console.error('Error creating live session:', error);
+      res.status(400).json({ message: "Failed to create live session" });
+    }
+  });
+
+  app.put("/api/supervision/live-sessions/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const updateData = req.body;
+      const session = await storage.updateLiveClassSession(sessionId, updateData);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      res.json(session);
+    } catch (error) {
+      console.error('Error updating live session:', error);
+      res.status(400).json({ message: "Failed to update live session" });
+    }
+  });
+
+  // Teacher Retention Analytics
+  app.get("/api/supervision/retention", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const teacherId = req.query.teacherId ? parseInt(req.query.teacherId as string) : undefined;
+      const retentionData = await storage.getTeacherRetentionData(teacherId);
+      res.json(retentionData);
+    } catch (error) {
+      console.error('Error fetching retention data:', error);
+      res.status(500).json({ message: "Failed to fetch retention data" });
+    }
+  });
+
+  app.post("/api/supervision/retention", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const retentionData = req.body;
+      const retention = await storage.createTeacherRetentionData(retentionData);
+      res.status(201).json(retention);
+    } catch (error) {
+      console.error('Error creating retention data:', error);
+      res.status(400).json({ message: "Failed to create retention data" });
+    }
+  });
+
+  app.get("/api/supervision/retention/:teacherId/:termName/rates", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      const termName = req.params.termName;
+      const rates = await storage.calculateRetentionRates(teacherId, termName);
+      res.json(rates);
+    } catch (error) {
+      console.error('Error calculating retention rates:', error);
+      res.status(500).json({ message: "Failed to calculate retention rates" });
+    }
+  });
+
+  // Student Questionnaires
+  app.get("/api/supervision/questionnaires", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const courseId = req.query.courseId ? parseInt(req.query.courseId as string) : undefined;
+      const questionnaires = await storage.getStudentQuestionnaires(courseId);
+      res.json(questionnaires);
+    } catch (error) {
+      console.error('Error fetching questionnaires:', error);
+      res.status(500).json({ message: "Failed to fetch questionnaires" });
+    }
+  });
+
+  app.post("/api/supervision/questionnaires", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const questionnaireData = req.body;
+      const questionnaire = await storage.createStudentQuestionnaire(questionnaireData);
+      res.status(201).json(questionnaire);
+    } catch (error) {
+      console.error('Error creating questionnaire:', error);
+      res.status(400).json({ message: "Failed to create questionnaire" });
+    }
+  });
+
+  app.put("/api/supervision/questionnaires/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const questionnaireId = parseInt(req.params.id);
+      const updateData = req.body;
+      const questionnaire = await storage.updateStudentQuestionnaire(questionnaireId, updateData);
+      if (!questionnaire) {
+        return res.status(404).json({ message: "Questionnaire not found" });
+      }
+      res.json(questionnaire);
+    } catch (error) {
+      console.error('Error updating questionnaire:', error);
+      res.status(400).json({ message: "Failed to update questionnaire" });
+    }
+  });
+
+  // Questionnaire Responses
+  app.get("/api/supervision/questionnaire-responses", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher']), async (req: any, res) => {
+    try {
+      const questionnaireId = req.query.questionnaireId ? parseInt(req.query.questionnaireId as string) : undefined;
+      const teacherId = req.query.teacherId ? parseInt(req.query.teacherId as string) : undefined;
+      const responses = await storage.getQuestionnaireResponses(questionnaireId, teacherId);
+      res.json(responses);
+    } catch (error) {
+      console.error('Error fetching questionnaire responses:', error);
+      res.status(500).json({ message: "Failed to fetch questionnaire responses" });
+    }
+  });
+
+  app.post("/api/supervision/questionnaire-responses", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const responseData = {
+        ...req.body,
+        studentId: req.user.id
+      };
+      const response = await storage.createQuestionnaireResponse(responseData);
+      res.status(201).json(response);
+    } catch (error) {
+      console.error('Error creating questionnaire response:', error);
+      res.status(400).json({ message: "Failed to create questionnaire response" });
+    }
+  });
+
+  // Supervision Observations
+  app.get("/api/supervision/observations", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const teacherId = req.query.teacherId ? parseInt(req.query.teacherId as string) : undefined;
+      const supervisorId = req.query.supervisorId ? parseInt(req.query.supervisorId as string) : undefined;
+      const observations = await storage.getSupervisionObservations(teacherId, supervisorId);
+      res.json(observations);
+    } catch (error) {
+      console.error('Error fetching supervision observations:', error);
+      res.status(500).json({ message: "Failed to fetch supervision observations" });
+    }
+  });
+
+  app.post("/api/supervision/observations", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const observationData = {
+        ...req.body,
+        supervisorId: req.user.id
+      };
+      const observation = await storage.createSupervisionObservation(observationData);
+      res.status(201).json(observation);
+    } catch (error) {
+      console.error('Error creating supervision observation:', error);
+      res.status(400).json({ message: "Failed to create supervision observation" });
+    }
+  });
+
+  app.put("/api/supervision/observations/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const observationId = parseInt(req.params.id);
+      const updateData = req.body;
+      const observation = await storage.updateSupervisionObservation(observationId, updateData);
+      if (!observation) {
+        return res.status(404).json({ message: "Observation not found" });
+      }
+      res.json(observation);
+    } catch (error) {
+      console.error('Error updating supervision observation:', error);
+      res.status(400).json({ message: "Failed to update supervision observation" });
+    }
+  });
+
+  // Quality Assurance Stats Dashboard
+  app.get("/api/supervision/stats", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const stats = await storage.getQualityAssuranceStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching QA stats:', error);
+      res.status(500).json({ message: "Failed to fetch quality assurance stats" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
