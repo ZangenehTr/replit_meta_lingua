@@ -92,13 +92,29 @@ export function CallernManagement() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         },
         body: JSON.stringify(teacherData)
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add teacher to Callern');
+        const errorText = await response.text();
+        
+        // Try to parse JSON error response
+        try {
+          const errorData = JSON.parse(errorText);
+          if (response.status === 409) {
+            // Schedule conflict
+            throw new Error(`Schedule conflict: ${errorData.conflictDetails || 'Teacher has existing commitments during selected hours'}`);
+          }
+          throw new Error(errorData.message || 'Failed to add teacher to Callern');
+        } catch (parseError) {
+          // If not JSON, handle HTML response (authentication issue)
+          if (errorText.includes('<!DOCTYPE html>')) {
+            throw new Error('Authentication failed. Please log in again.');
+          }
+          throw new Error('Failed to add teacher to Callern');
+        }
       }
 
       return response.json();
@@ -117,11 +133,27 @@ export function CallernManagement() {
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
+      if (error.message.includes('Schedule conflict:')) {
+        toast({
+          title: "Schedule Conflict Detected",
+          description: error.message.replace('Schedule conflict: ', ''),
+          variant: "destructive"
+        });
+      } else if (error.message.includes('Authentication failed')) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again",
+          variant: "destructive"
+        });
+        // Redirect to login
+        window.location.href = '/api/login';
+      } else {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
     }
   });
 

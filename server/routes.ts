@@ -9471,10 +9471,24 @@ Return JSON format:
     }
   });
 
-  // Add teacher to Callern availability
+  // Add teacher to Callern availability with schedule conflict checking
   app.post("/api/admin/callern/teacher-availability", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { teacherId, hourlyRate, availableHours } = req.body;
+
+      // CRITICAL: Check for schedule conflicts across all delivery modes
+      const teacherScheduleConflicts = await storage.checkTeacherScheduleConflicts(
+        parseInt(teacherId), 
+        availableHours
+      );
+
+      if (teacherScheduleConflicts.hasConflicts) {
+        return res.status(409).json({
+          message: "Schedule conflict detected",
+          conflicts: teacherScheduleConflicts.conflicts,
+          conflictDetails: `Teacher has existing ${teacherScheduleConflicts.conflictType} classes during these hours: ${teacherScheduleConflicts.conflictingHours.join(', ')}`
+        });
+      }
 
       const availability = await storage.setTeacherCallernAvailability({
         teacherId: parseInt(teacherId),
@@ -9485,7 +9499,8 @@ Return JSON format:
 
       res.status(201).json({
         message: "Teacher added to Callern successfully",
-        availability
+        availability,
+        scheduleValidated: true
       });
     } catch (error) {
       console.error('Error adding teacher to Callern:', error);

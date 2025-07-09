@@ -101,6 +101,14 @@ export interface IStorage {
   getTeachersForCallern(): Promise<any[]>;
   getStudentCallernPackages(studentId: number): Promise<any[]>;
   createStudentCallernPackage(packageData: any): Promise<any>;
+  
+  // Schedule Conflict Checking (Check-First Protocol)
+  checkTeacherScheduleConflicts(teacherId: number, proposedHours: string[]): Promise<{
+    hasConflicts: boolean;
+    conflicts: any[];
+    conflictType: string;
+    conflictingHours: string[];
+  }>;
 
   // Sessions
   getUserSessions(userId: number): Promise<(Session & { tutorName: string })[]>;
