@@ -157,7 +157,7 @@ export default function RoomManagement() {
         type: room.type,
         capacity: room.capacity,
         location: room.location || "",
-        equipment: room.equipment || "",
+        equipment: Array.isArray(room.equipment) ? room.equipment.join(', ') : (room.equipment || ""),
         description: room.description || "",
         isActive: room.isActive,
         features: room.features || []
@@ -170,10 +170,21 @@ export default function RoomManagement() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Transform equipment string to array
+    const equipmentArray = formData.equipment
+      ? formData.equipment.split(',').map(item => item.trim()).filter(item => item)
+      : [];
+    
+    const submitData = {
+      ...formData,
+      equipment: equipmentArray
+    };
+    
     if (editingRoom) {
-      updateMutation.mutate({ id: editingRoom.id, ...formData });
+      updateMutation.mutate({ id: editingRoom.id, ...submitData });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(submitData);
     }
   };
 
@@ -478,7 +489,7 @@ export default function RoomManagement() {
                     id="equipment"
                     value={formData.equipment}
                     onChange={(e) => setFormData({ ...formData, equipment: e.target.value })}
-                    placeholder="List any special equipment in this room"
+                    placeholder="Enter equipment separated by commas (e.g., Projector, Whiteboard, Smart Board)"
                     rows={3}
                   />
                 </div>
