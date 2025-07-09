@@ -9412,6 +9412,151 @@ Return JSON format:
     }
   });
 
+  // ===== CALLERN MANAGEMENT ENDPOINTS =====
+  
+  // Create Callern course with package configuration
+  app.post("/api/admin/callern/courses", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { courseData, callernConfig } = req.body;
+      
+      // Create Callern course
+      const callernCourse = await storage.createCourse({
+        ...courseData,
+        deliveryMode: 'callern',
+        classFormat: 'callern_package',
+        totalSessions: 1, // Callern is on-demand
+        sessionDuration: callernConfig.minCallDuration || 15
+      });
+
+      // Create Callern package
+      const callernPackage = await storage.createCallernPackage({
+        packageName: callernConfig.packageName,
+        totalHours: callernConfig.totalHours,
+        price: callernConfig.price,
+        description: callernConfig.description,
+        isActive: true
+      });
+
+      // Assign standby teachers
+      if (callernConfig.standbyTeachers && callernConfig.standbyTeachers.length > 0) {
+        for (const teacherId of callernConfig.standbyTeachers) {
+          await storage.setTeacherCallernAvailability({
+            teacherId,
+            isOnline: false, // Initial state
+            availableHours: ["00:00-23:59"], // 24/7 if overnight coverage
+            hourlyRate: null
+          });
+        }
+      }
+
+      res.status(201).json({
+        message: "Callern course created successfully",
+        course: callernCourse,
+        package: callernPackage
+      });
+    } catch (error) {
+      console.error('Error creating Callern course:', error);
+      res.status(500).json({ message: "Failed to create Callern course" });
+    }
+  });
+
+  // Get teacher availability for Callern
+  app.get("/api/admin/callern/teacher-availability", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const availability = await storage.getTeacherCallernAvailability();
+      res.json(availability);
+    } catch (error) {
+      console.error('Error fetching teacher availability:', error);
+      res.status(500).json({ message: "Failed to fetch teacher availability" });
+    }
+  });
+
+  // Update teacher standby status
+  app.put("/api/admin/callern/teacher-availability/:teacherId", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      const { isOnline, availableHours, hourlyRate } = req.body;
+
+      const updated = await storage.updateTeacherCallernAvailability(teacherId, {
+        isOnline,
+        availableHours,
+        hourlyRate,
+        lastActiveAt: new Date()
+      });
+
+      res.json({ message: "Teacher availability updated", availability: updated });
+    } catch (error) {
+      console.error('Error updating teacher availability:', error);
+      res.status(500).json({ message: "Failed to update teacher availability" });
+    }
+  });
+
+  // Get available teachers for Callern assignment
+  app.get("/api/admin/callern/available-teachers", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const teachers = await storage.getTeachersForCallern();
+      res.json(teachers);
+    } catch (error) {
+      console.error('Error fetching available teachers:', error);
+      res.status(500).json({ message: "Failed to fetch available teachers" });
+    }
+  });
+
+  // Get Callern packages
+  app.get("/api/admin/callern/packages", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const packages = await storage.getCallernPackages();
+      res.json(packages);
+    } catch (error) {
+      console.error('Error fetching Callern packages:', error);
+      res.status(500).json({ message: "Failed to fetch Callern packages" });
+    }
+  });
+
+  // Student endpoints for Callern
+  app.get("/api/student/callern/packages", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const packages = await storage.getCallernPackages();
+      const userPackages = await storage.getStudentCallernPackages(req.user.id);
+      res.json({ availablePackages: packages, userPackages });
+    } catch (error) {
+      console.error('Error fetching student Callern data:', error);
+      res.status(500).json({ message: "Failed to fetch Callern data" });
+    }
+  });
+
+  // Purchase Callern package
+  app.post("/api/student/callern/purchase", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const { packageId } = req.body;
+      const studentId = req.user.id;
+
+      const callernPackage = await storage.getCallernPackage(packageId);
+      if (!callernPackage) {
+        return res.status(404).json({ message: "Package not found" });
+      }
+
+      // Create student package purchase
+      const studentPackage = await storage.createStudentCallernPackage({
+        studentId,
+        packageId,
+        totalHours: callernPackage.totalHours,
+        usedMinutes: 0,
+        remainingMinutes: callernPackage.totalHours * 60,
+        price: callernPackage.price,
+        status: 'active'
+      });
+
+      res.status(201).json({
+        message: "Callern package purchased successfully",
+        package: studentPackage
+      });
+    } catch (error) {
+      console.error('Error purchasing Callern package:', error);
+      res.status(500).json({ message: "Failed to purchase package" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

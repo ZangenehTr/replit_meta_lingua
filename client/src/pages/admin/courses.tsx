@@ -44,7 +44,17 @@ const editCourseSchema = z.object({
   level: z.string().min(1, "Level is required"),
   duration: z.number().min(1, "Duration must be at least 1 week"),
   price: z.number().min(0, "Price must be non-negative"),
-  isActive: z.boolean()
+  isActive: z.boolean(),
+  deliveryMode: z.string().optional(),
+  callernConfig: z.object({
+    packageName: z.string(),
+    totalHours: z.number(),
+    price: z.number(),
+    minCallDuration: z.number(),
+    description: z.string(),
+    standbyTeachers: z.array(z.number()),
+    overnightCoverage: z.boolean()
+  }).optional()
 });
 
 type EditCourseFormData = z.infer<typeof editCourseSchema>;
@@ -414,8 +424,65 @@ export function AdminCourses() {
                           <SelectItem value="sequential">Sequential Course (Lesson by Lesson)</SelectItem>
                           <SelectItem value="self_paced">Self-Paced Learning Path</SelectItem>
                           <SelectItem value="live_sessions">Live Session Based</SelectItem>
+                          <SelectItem value="callern">Callern On-Demand Video Calls</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    
+                    {/* Callern-specific configuration */}
+                    <div className="space-y-4 p-4 border border-orange-200 bg-orange-50/50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <Label className="text-lg font-semibold text-orange-800">Callern Configuration</Label>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Package Name</Label>
+                          <Input placeholder="Basic Conversation Package" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Total Hours</Label>
+                          <Input type="number" placeholder="10" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Package Price (IRR)</Label>
+                          <Input type="number" placeholder="500000" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Minimum Call Duration (min)</Label>
+                          <Input type="number" defaultValue="15" />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Package Description</Label>
+                        <Textarea placeholder="On-demand video calls with native Persian speakers. Practice conversation skills anytime teachers are available." rows={2} />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Standby Teachers</Label>
+                        <div className="text-sm text-gray-600 mb-2">Select teachers who will be available for on-demand Callern calls</div>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline" className="cursor-pointer hover:bg-orange-100">
+                            Ahmad Rahimi
+                          </Badge>
+                          <Badge variant="outline" className="cursor-pointer hover:bg-orange-100">
+                            Sara Hosseini
+                          </Badge>
+                          <Badge variant="outline" className="cursor-pointer hover:bg-orange-100">
+                            + Add Teacher
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Overnight Coverage</Label>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="overnight_coverage" />
+                          <Label htmlFor="overnight_coverage" className="text-sm">Enable 24/7 teacher availability for this package</Label>
+                        </div>
+                      </div>
                     </div>
                     
                     <div className="space-y-2">

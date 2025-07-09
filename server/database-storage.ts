@@ -316,6 +316,103 @@ export class DatabaseStorage implements IStorage {
       ));
   }
 
+  // Callern Management
+  async createCallernPackage(packageData: any): Promise<CallernPackage> {
+    const [newPackage] = await db.insert(callernPackages).values({
+      packageName: packageData.packageName,
+      totalHours: packageData.totalHours,
+      price: packageData.price,
+      description: packageData.description,
+      isActive: packageData.isActive || true
+    }).returning();
+    return newPackage;
+  }
+
+  async getCallernPackages(): Promise<CallernPackage[]> {
+    return await db.select().from(callernPackages).where(eq(callernPackages.isActive, true));
+  }
+
+  async getCallernPackage(id: number): Promise<CallernPackage | undefined> {
+    const [callernPackage] = await db.select().from(callernPackages).where(eq(callernPackages.id, id));
+    return callernPackage;
+  }
+
+  async setTeacherCallernAvailability(availabilityData: any): Promise<TeacherCallernAvailability> {
+    const [availability] = await db.insert(teacherCallernAvailability).values({
+      teacherId: availabilityData.teacherId,
+      isOnline: availabilityData.isOnline || false,
+      availableHours: availabilityData.availableHours || [],
+      hourlyRate: availabilityData.hourlyRate
+    }).returning();
+    return availability;
+  }
+
+  async getTeacherCallernAvailability(): Promise<any[]> {
+    const availability = await db
+      .select({
+        id: teacherCallernAvailability.id,
+        teacherId: teacherCallernAvailability.teacherId,
+        isOnline: teacherCallernAvailability.isOnline,
+        lastActiveAt: teacherCallernAvailability.lastActiveAt,
+        hourlyRate: teacherCallernAvailability.hourlyRate,
+        availableHours: teacherCallernAvailability.availableHours,
+        teacherName: users.firstName,
+        teacherLastName: users.lastName,
+        teacherEmail: users.email
+      })
+      .from(teacherCallernAvailability)
+      .innerJoin(users, eq(teacherCallernAvailability.teacherId, users.id));
+    
+    return availability;
+  }
+
+  async updateTeacherCallernAvailability(teacherId: number, updates: any): Promise<TeacherCallernAvailability | undefined> {
+    const [updated] = await db
+      .update(teacherCallernAvailability)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(teacherCallernAvailability.teacherId, teacherId))
+      .returning();
+    return updated;
+  }
+
+  async getTeachersForCallern(): Promise<any[]> {
+    const teachers = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        avatar: users.avatar
+      })
+      .from(users)
+      .where(eq(users.role, 'Teacher/Tutor'));
+    
+    return teachers;
+  }
+
+  async getStudentCallernPackages(studentId: number): Promise<StudentCallernPackage[]> {
+    return await db
+      .select()
+      .from(studentCallernPackages)
+      .where(eq(studentCallernPackages.studentId, studentId));
+  }
+
+  async createStudentCallernPackage(packageData: any): Promise<StudentCallernPackage> {
+    const [studentPackage] = await db.insert(studentCallernPackages).values({
+      studentId: packageData.studentId,
+      packageId: packageData.packageId,
+      totalHours: packageData.totalHours,
+      usedMinutes: packageData.usedMinutes || 0,
+      remainingMinutes: packageData.remainingMinutes,
+      price: packageData.price,
+      status: packageData.status || 'active'
+    }).returning();
+    return studentPackage;
+  }
+
   // Sessions
   async getUserSessions(userId: number): Promise<(Session & { tutorName: string })[]> {
     const userSessions = await db
