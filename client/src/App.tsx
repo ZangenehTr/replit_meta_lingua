@@ -85,6 +85,8 @@ import MentorMatchingPage from "@/pages/admin/mentor-matching";
 import UserManagement from "@/pages/admin/user-management";
 import TeacherStudentMatchingPage from "@/pages/admin/teacher-student-matching";
 import RoomManagement from "@/pages/admin/room-management";
+import CallernSystem from "@/pages/callern";
+import GamificationSystem from "@/pages/games";
 
 import { LanguageProvider } from "@/hooks/use-language";
 
@@ -259,6 +261,16 @@ function Router() {
       <Route path="/courses">
         <ProtectedRoute>
           <Courses />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/callern">
+        <ProtectedRoute>
+          <CallernSystem />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/games">
+        <ProtectedRoute>
+          <GamificationSystem />
         </ProtectedRoute>
       </Route>
       <Route path="/wallet">

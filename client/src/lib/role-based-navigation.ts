@@ -13,8 +13,12 @@ export interface NavigationItem {
 export const getStudentNavigation = (t: any): NavigationItem[] => [
   { path: "/dashboard", icon: "Home", label: t('dashboard'), roles: ["Student"] },
   { path: "/courses", icon: "BookOpen", label: t('courses'), roles: ["Student"] },
+  { path: "/video-courses", icon: "Play", label: "Video Courses", roles: ["Student"] },
+  { path: "/callern", icon: "Video", label: "Callern Video Calls", roles: ["Student"] },
+  { path: "/games", icon: "Gamepad2", label: "Gamification & Games", roles: ["Student"] },
   { path: "/tutors", icon: "Users", label: t('findTutors'), roles: ["Student"] },
-  { path: "/sessions", icon: "Video", label: t('liveSessions'), roles: ["Student"] },
+  { path: "/sessions", icon: "Calendar", label: t('liveSessions'), roles: ["Student"] },
+  { path: "/tests", icon: "FileText", label: "Tests & Assessments", roles: ["Student"] },
   { path: "/homework", icon: "ClipboardList", label: t('homework'), roles: ["Student"] },
   { path: "/messages", icon: "MessageSquare", label: t('messages'), roles: ["Student"] },
   { path: "/progress", icon: "TrendingUp", label: t('progress'), roles: ["Student"] },

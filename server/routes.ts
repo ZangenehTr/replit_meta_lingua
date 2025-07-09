@@ -9244,6 +9244,174 @@ Return JSON format:
     }
   });
 
+  // ===== CALLERN VIDEO CALL SYSTEM API ENDPOINTS =====
+  
+  // Get available Callern packages
+  app.get("/api/student/callern-packages", authenticateToken, async (req: any, res) => {
+    try {
+      const packages = await storage.getCallernPackages();
+      res.json(packages);
+    } catch (error) {
+      console.error('Error fetching Callern packages:', error);
+      res.status(500).json({ message: "Failed to fetch Callern packages" });
+    }
+  });
+
+  // Get student's purchased Callern packages
+  app.get("/api/student/my-callern-packages", authenticateToken, async (req: any, res) => {
+    try {
+      const packages = await storage.getStudentCallernPackages(req.user.id);
+      res.json(packages);
+    } catch (error) {
+      console.error('Error fetching student Callern packages:', error);
+      res.status(500).json({ message: "Failed to fetch your Callern packages" });
+    }
+  });
+
+  // Get student's Callern call history
+  app.get("/api/student/callern-history", authenticateToken, async (req: any, res) => {
+    try {
+      const history = await storage.getStudentCallernHistory(req.user.id);
+      res.json(history);
+    } catch (error) {
+      console.error('Error fetching Callern history:', error);
+      res.status(500).json({ message: "Failed to fetch call history" });
+    }
+  });
+
+  // Purchase Callern package
+  app.post("/api/student/purchase-callern-package", authenticateToken, async (req: any, res) => {
+    try {
+      const { packageId } = req.body;
+      
+      if (!packageId) {
+        return res.status(400).json({ message: "Package ID is required" });
+      }
+
+      const purchasedPackage = await storage.purchaseCallernPackage(req.user.id, packageId);
+      
+      if (!purchasedPackage) {
+        return res.status(400).json({ message: "Failed to purchase package" });
+      }
+
+      res.status(201).json(purchasedPackage);
+    } catch (error) {
+      console.error('Error purchasing Callern package:', error);
+      res.status(500).json({ message: "Failed to purchase package" });
+    }
+  });
+
+  // ===== GAMIFICATION SYSTEM API ENDPOINTS =====
+  
+  // Get available games
+  app.get("/api/student/games", authenticateToken, async (req: any, res) => {
+    try {
+      const { ageGroup, skillFocus } = req.query;
+      let games;
+      
+      if (ageGroup && ageGroup !== 'all') {
+        games = await storage.getGamesByAgeGroup(ageGroup as string);
+      } else {
+        games = await storage.getAllGames();
+      }
+      
+      // Filter by skill focus if specified
+      if (skillFocus && skillFocus !== 'all') {
+        games = games.filter(game => game.skillFocus === skillFocus);
+      }
+      
+      res.json(games);
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      res.status(500).json({ message: "Failed to fetch games" });
+    }
+  });
+
+  // Get user's game progress
+  app.get("/api/student/game-progress", authenticateToken, async (req: any, res) => {
+    try {
+      const progress = await storage.getUserGameProgressByUser(req.user.id);
+      res.json(progress);
+    } catch (error) {
+      console.error('Error fetching game progress:', error);
+      res.status(500).json({ message: "Failed to fetch game progress" });
+    }
+  });
+
+  // Get user's achievements
+  app.get("/api/student/achievements", authenticateToken, async (req: any, res) => {
+    try {
+      const achievements = await storage.getUserAchievements(req.user.id);
+      res.json(achievements);
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+      res.status(500).json({ message: "Failed to fetch achievements" });
+    }
+  });
+
+  // Get user's game sessions
+  app.get("/api/student/game-sessions", authenticateToken, async (req: any, res) => {
+    try {
+      const sessions = await storage.getUserGameSessions(req.user.id);
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching game sessions:', error);
+      res.status(500).json({ message: "Failed to fetch game sessions" });
+    }
+  });
+
+  // Get leaderboard
+  app.get("/api/student/leaderboard", authenticateToken, async (req: any, res) => {
+    try {
+      const leaderboard = await storage.getGlobalLeaderboard();
+      res.json(leaderboard);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
+  // Get user stats
+  app.get("/api/student/stats", authenticateToken, async (req: any, res) => {
+    try {
+      const stats = await storage.getUserStats(req.user.id);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      res.status(500).json({ message: "Failed to fetch user stats" });
+    }
+  });
+
+  // Start a game session
+  app.post("/api/student/start-game", authenticateToken, async (req: any, res) => {
+    try {
+      const { gameId } = req.body;
+      
+      if (!gameId) {
+        return res.status(400).json({ message: "Game ID is required" });
+      }
+
+      // Create or get user game progress
+      const progress = await storage.getOrCreateUserGameProgress(req.user.id, gameId);
+      
+      // Create new game session
+      const session = await storage.createGameSession({
+        userId: req.user.id,
+        gameId,
+        currentLevel: progress.currentLevel,
+        score: 0,
+        xpEarned: 0,
+        duration: 0,
+        status: 'active'
+      });
+
+      res.status(201).json({ sessionId: session.id, session });
+    } catch (error) {
+      console.error('Error starting game:', error);
+      res.status(500).json({ message: "Failed to start game" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
