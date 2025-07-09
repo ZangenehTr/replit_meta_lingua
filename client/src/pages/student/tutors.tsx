@@ -187,9 +187,9 @@ export default function TutorsPage() {
                     </p>
                     <div className="flex items-center gap-1 mt-2">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{tutor.rating.toFixed(1)}</span>
+                      <span className="font-medium">{tutor.rating ? tutor.rating.toFixed(1) : '0.0'}</span>
                       <span className="text-gray-500 text-sm">
-                        ({tutor.totalSessions} sessions)
+                        ({tutor.totalSessions || 0} sessions)
                       </span>
                     </div>
                   </div>

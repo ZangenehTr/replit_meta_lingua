@@ -3917,9 +3917,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Session Packages endpoints for private students
+  // Session Packages endpoints for private students  
   app.get("/api/student/session-packages", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'Student') {
+    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -3935,7 +3935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/student/session-packages/purchase", authenticateToken, async (req: any, res) => {
     console.log('User object in session package purchase:', req.user);
     
-    if (req.user.role !== 'Student') {
+    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
       return res.status(403).json({ message: "Access denied" });
     }
 
