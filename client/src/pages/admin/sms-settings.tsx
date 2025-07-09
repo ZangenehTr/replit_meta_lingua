@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,8 @@ import {
   Phone,
   Plus,
   Edit,
-  TestTube
+  TestTube,
+  Save
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,33 +35,68 @@ interface SMSTemplate {
   language: 'persian' | 'english' | 'both';
 }
 
-interface PlacementTest {
-  id: number;
-  question: string;
-  type: 'multiple_choice' | 'open_ended' | 'audio' | 'writing';
-  options?: string[];
-  correctAnswer?: string;
-  points: number;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  skill: 'reading' | 'writing' | 'listening' | 'speaking' | 'grammar' | 'vocabulary';
+interface KavenegarSettings {
+  apiKey: string;
+  isConfigured: boolean;
+  senderNumber: string;
+  dailyLimit: number;
+  isEnabled: boolean;
 }
 
 export default function SMSSettingsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTemplate, setSelectedTemplate] = useState<SMSTemplate | null>(null);
-  const [selectedTest, setSelectedTest] = useState<PlacementTest | null>(null);
   const [isEditingTemplate, setIsEditingTemplate] = useState(false);
-  const [isEditingTest, setIsEditingTest] = useState(false);
+  const [kavenegarData, setKavenegarData] = useState({
+    senderNumber: '',
+    dailyLimit: 1000,
+    isEnabled: false
+  });
 
   // Fetch SMS templates
   const { data: smsTemplates = [], isLoading: templatesLoading } = useQuery({
     queryKey: ['/api/admin/sms-templates'],
   });
 
-  // Fetch placement test questions
-  const { data: placementTests = [], isLoading: testsLoading } = useQuery({
-    queryKey: ['/api/admin/placement-tests'],
+  // Fetch Kavenegar settings
+  const { data: kavenegarSettings, isLoading: settingsLoading } = useQuery({
+    queryKey: ['/api/admin/kavenegar-settings'],
+  });
+
+  // Update form data when settings are loaded
+  useEffect(() => {
+    if (kavenegarSettings) {
+      setKavenegarData({
+        senderNumber: kavenegarSettings.senderNumber || '',
+        dailyLimit: kavenegarSettings.dailyLimit || 1000,
+        isEnabled: kavenegarSettings.isEnabled || false
+      });
+    }
+  }, [kavenegarSettings]);
+
+  // Save Kavenegar settings mutation
+  const saveKavenegarMutation = useMutation({
+    mutationFn: async (data: typeof kavenegarData) => {
+      return await apiRequest('/api/admin/kavenegar-settings', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: (result: any) => {
+      toast({
+        title: "Settings Saved",
+        description: result.message || "Kavenegar settings updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/kavenegar-settings'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Save Failed",
+        description: error.message || "Failed to save Kavenegar settings",
+        variant: "destructive",
+      });
+    },
   });
 
   const eventTypes = [
@@ -81,23 +118,92 @@ export default function SMSSettingsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            SMS & Placement Test Management
+            SMS Service Configuration
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Configure SMS notifications and placement test questions
+            Configure Kavenegar SMS service and message templates
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => window.location.href = '/admin/sms-test'}>
             <TestTube className="h-4 w-4 mr-2" />
             Test SMS
           </Button>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Template
+          <Button 
+            onClick={() => saveKavenegarMutation.mutate(kavenegarData)}
+            disabled={saveKavenegarMutation.isPending}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {saveKavenegarMutation.isPending ? 'Saving...' : 'Save Settings'}
           </Button>
         </div>
       </div>
+
+      {/* Kavenegar Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Kavenegar SMS Service Configuration
+          </CardTitle>
+          <CardDescription>
+            Configure your Iranian SMS service settings
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>API Key Status</Label>
+              <div className="flex items-center gap-2 mt-1">
+                {kavenegarSettings?.isConfigured ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-sm text-green-600">Configured</span>
+                    <Badge variant="outline">{kavenegarSettings?.apiKey}</Badge>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <span className="text-sm text-red-600">Not Configured</span>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                API key is set via environment variable for security
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="senderNumber">Sender Number</Label>
+              <Input
+                id="senderNumber"
+                placeholder="10008663"
+                value={kavenegarData.senderNumber}
+                onChange={(e) => setKavenegarData({ ...kavenegarData, senderNumber: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="dailyLimit">Daily SMS Limit</Label>
+              <Input
+                id="dailyLimit"
+                type="number"
+                value={kavenegarData.dailyLimit}
+                onChange={(e) => setKavenegarData({ ...kavenegarData, dailyLimit: parseInt(e.target.value) || 1000 })}
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="smsEnabled"
+                checked={kavenegarData.isEnabled}
+                onCheckedChange={(checked) => setKavenegarData({ ...kavenegarData, isEnabled: checked })}
+              />
+              <Label htmlFor="smsEnabled">Enable SMS Service</Label>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* SMS Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -149,14 +255,16 @@ export default function SMSSettingsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Test Questions
+              Account Balance
             </CardTitle>
-            <TestTube className="h-4 w-4 text-muted-foreground" />
+            <Phone className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">156</div>
+            <div className="text-2xl font-bold">
+              {kavenegarSettings?.balance || '---'}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Placement test bank
+              SMS credits remaining
             </p>
           </CardContent>
         </Card>
@@ -165,9 +273,7 @@ export default function SMSSettingsPage() {
       <Tabs defaultValue="sms-templates" className="space-y-4">
         <TabsList>
           <TabsTrigger value="sms-templates">SMS Templates</TabsTrigger>
-          <TabsTrigger value="placement-tests">Placement Tests</TabsTrigger>
           <TabsTrigger value="automation">Automation Rules</TabsTrigger>
-          <TabsTrigger value="kavenegar">Kavenegar Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sms-templates">
@@ -245,124 +351,7 @@ export default function SMSSettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="placement-tests">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Placement Test Question Bank</CardTitle>
-                  <CardDescription>
-                    Manage questions and answers for student placement testing
-                  </CardDescription>
-                </div>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Question
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Question Categories */}
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                  {['reading', 'writing', 'listening', 'speaking', 'grammar', 'vocabulary'].map((skill) => (
-                    <Card key={skill} className="text-center">
-                      <CardContent className="p-4">
-                        <div className="text-2xl font-bold">
-                          {skill === 'reading' ? '24' : skill === 'writing' ? '18' : skill === 'listening' ? '22' : 
-                           skill === 'speaking' ? '16' : skill === 'grammar' ? '28' : '24'}
-                        </div>
-                        <p className="text-xs text-gray-600 capitalize">{skill}</p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
 
-                {/* Sample Questions */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Recent Questions</h3>
-                  
-                  {[
-                    {
-                      id: 1,
-                      question: "مترادف کلمه 'زیبا' کدام است؟ (What is the synonym of 'beautiful'?)",
-                      type: "multiple_choice",
-                      skill: "vocabulary",
-                      difficulty: "beginner",
-                      options: ["قشنگ", "زشت", "بزرگ", "کوچک"],
-                      correctAnswer: "قشنگ",
-                      points: 2
-                    },
-                    {
-                      id: 2,
-                      question: "Listen to the audio and answer: What did Ahmad do yesterday?",
-                      type: "audio",
-                      skill: "listening",
-                      difficulty: "intermediate", 
-                      points: 3
-                    },
-                    {
-                      id: 3,
-                      question: "Write a paragraph about your family in Persian (minimum 50 words)",
-                      type: "writing",
-                      skill: "writing",
-                      difficulty: "advanced",
-                      points: 5
-                    }
-                  ].map((question) => (
-                    <Card key={question.id} className="border-l-4 border-l-purple-500">
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <Badge className={`text-xs ${
-                                question.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
-                                question.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                {question.difficulty}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {question.skill}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {question.type.replace('_', ' ')}
-                              </Badge>
-                              <span className="text-xs text-gray-500">{question.points} points</span>
-                            </div>
-                            
-                            <p className="font-medium mb-2">{question.question}</p>
-                            
-                            {question.options && (
-                              <div className="grid grid-cols-2 gap-2 mt-2">
-                                {question.options.map((option, idx) => (
-                                  <div key={idx} className={`text-sm p-2 border rounded ${
-                                    option === question.correctAnswer ? 'bg-green-50 border-green-200' : 'bg-gray-50'
-                                  }`}>
-                                    {option} {option === question.correctAnswer && '✓'}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="flex space-x-2">
-                            <Button size="sm" variant="outline">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <TestTube className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="automation">
           <Card>
