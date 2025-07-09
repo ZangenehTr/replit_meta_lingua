@@ -8766,6 +8766,282 @@ Return JSON format:
     }
   });
 
+  // =====================================================
+  // VIDEO COURSES SUBSYSTEM
+  // =====================================================
+
+  // Get all video lessons for a teacher
+  app.get("/api/teacher/video-lessons", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const lessons = await dbStorage.getTeacherVideoLessons(teacherId);
+      res.json(lessons);
+    } catch (error) {
+      console.error('Error fetching video lessons:', error);
+      res.status(500).json({ message: "Failed to fetch video lessons" });
+    }
+  });
+
+  // Get video lessons by course
+  app.get("/api/teacher/courses/:courseId/video-lessons", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const lessons = await dbStorage.getCourseVideoLessons(courseId);
+      res.json(lessons);
+    } catch (error) {
+      console.error('Error fetching course video lessons:', error);
+      res.status(500).json({ message: "Failed to fetch course video lessons" });
+    }
+  });
+
+  // Create a new video lesson
+  app.post("/api/teacher/video-lessons", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const lessonData = {
+        ...req.body,
+        teacherId: req.user.id,
+        isPublished: false,
+        viewCount: 0,
+        completionRate: 0
+      };
+      
+      const lesson = await dbStorage.createVideoLesson(lessonData);
+      res.status(201).json(lesson);
+    } catch (error) {
+      console.error('Error creating video lesson:', error);
+      res.status(500).json({ message: "Failed to create video lesson" });
+    }
+  });
+
+  // Update a video lesson
+  app.put("/api/teacher/video-lessons/:lessonId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const lesson = await dbStorage.getVideoLessonById(lessonId);
+      
+      if (!lesson) {
+        return res.status(404).json({ message: "Video lesson not found" });
+      }
+      
+      // Ensure teacher owns this lesson
+      if (lesson.teacherId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updatedLesson = await dbStorage.updateVideoLesson(lessonId, req.body);
+      res.json(updatedLesson);
+    } catch (error) {
+      console.error('Error updating video lesson:', error);
+      res.status(500).json({ message: "Failed to update video lesson" });
+    }
+  });
+
+  // Delete a video lesson
+  app.delete("/api/teacher/video-lessons/:lessonId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const lesson = await dbStorage.getVideoLessonById(lessonId);
+      
+      if (!lesson) {
+        return res.status(404).json({ message: "Video lesson not found" });
+      }
+      
+      // Ensure teacher owns this lesson
+      if (lesson.teacherId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      await dbStorage.deleteVideoLesson(lessonId);
+      res.json({ message: "Video lesson deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting video lesson:', error);
+      res.status(500).json({ message: "Failed to delete video lesson" });
+    }
+  });
+
+  // Toggle publish status
+  app.patch("/api/teacher/video-lessons/:lessonId/publish", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const { isPublished } = req.body;
+      
+      const lesson = await dbStorage.getVideoLessonById(lessonId);
+      
+      if (!lesson) {
+        return res.status(404).json({ message: "Video lesson not found" });
+      }
+      
+      // Ensure teacher owns this lesson
+      if (lesson.teacherId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updatedLesson = await dbStorage.updateVideoLesson(lessonId, { isPublished });
+      res.json(updatedLesson);
+    } catch (error) {
+      console.error('Error toggling video lesson publish status:', error);
+      res.status(500).json({ message: "Failed to update publish status" });
+    }
+  });
+
+  // Get video lesson analytics
+  app.get("/api/teacher/video-lessons/:lessonId/analytics", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const lesson = await dbStorage.getVideoLessonById(lessonId);
+      
+      if (!lesson) {
+        return res.status(404).json({ message: "Video lesson not found" });
+      }
+      
+      // Ensure teacher owns this lesson
+      if (lesson.teacherId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const analytics = await dbStorage.getVideoLessonAnalytics(lessonId);
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching video lesson analytics:', error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // Student endpoints for video courses
+  
+  // Get available video courses for students
+  app.get("/api/student/video-courses", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const { language, level, skillFocus, search } = req.query;
+      const filters = {
+        language,
+        level, 
+        skillFocus,
+        search,
+        isPublished: true
+      };
+      
+      const courses = await dbStorage.getAvailableVideoCourses(filters);
+      res.json(courses);
+    } catch (error) {
+      console.error('Error fetching video courses:', error);
+      res.status(500).json({ message: "Failed to fetch video courses" });
+    }
+  });
+
+  // Get video lessons for a course (student view)
+  app.get("/api/student/courses/:courseId/video-lessons", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const studentId = req.user.id;
+      
+      // Check if student has access to this course
+      const hasAccess = await dbStorage.studentHasCourseAccess(studentId, courseId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Access denied. Please enroll in this course." });
+      }
+      
+      const lessons = await dbStorage.getCourseVideoLessonsForStudent(courseId, studentId);
+      res.json(lessons);
+    } catch (error) {
+      console.error('Error fetching student video lessons:', error);
+      res.status(500).json({ message: "Failed to fetch video lessons" });
+    }
+  });
+
+  // Track video progress
+  app.post("/api/student/video-lessons/:lessonId/progress", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const studentId = req.user.id;
+      const { watchTime, totalDuration, completed } = req.body;
+      
+      const progress = await dbStorage.updateVideoProgress({
+        studentId,
+        videoLessonId: lessonId,
+        watchTime,
+        totalDuration,
+        completed,
+        lastWatchedAt: new Date()
+      });
+      
+      res.json(progress);
+    } catch (error) {
+      console.error('Error updating video progress:', error);
+      res.status(500).json({ message: "Failed to update progress" });
+    }
+  });
+
+  // Add video note
+  app.post("/api/student/video-lessons/:lessonId/notes", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const studentId = req.user.id;
+      const { timestamp, content } = req.body;
+      
+      const note = await dbStorage.createVideoNote({
+        studentId,
+        videoLessonId: lessonId,
+        timestamp,
+        content
+      });
+      
+      res.status(201).json(note);
+    } catch (error) {
+      console.error('Error creating video note:', error);
+      res.status(500).json({ message: "Failed to create note" });
+    }
+  });
+
+  // Get video notes
+  app.get("/api/student/video-lessons/:lessonId/notes", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const studentId = req.user.id;
+      
+      const notes = await dbStorage.getVideoNotes(studentId, lessonId);
+      res.json(notes);
+    } catch (error) {
+      console.error('Error fetching video notes:', error);
+      res.status(500).json({ message: "Failed to fetch notes" });
+    }
+  });
+
+  // Add video bookmark
+  app.post("/api/student/video-lessons/:lessonId/bookmarks", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const studentId = req.user.id;
+      const { timestamp, title } = req.body;
+      
+      const bookmark = await dbStorage.createVideoBookmark({
+        studentId,
+        videoLessonId: lessonId,
+        timestamp,
+        title
+      });
+      
+      res.status(201).json(bookmark);
+    } catch (error) {
+      console.error('Error creating video bookmark:', error);
+      res.status(500).json({ message: "Failed to create bookmark" });
+    }
+  });
+
+  // Get video bookmarks
+  app.get("/api/student/video-lessons/:lessonId/bookmarks", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const studentId = req.user.id;
+      
+      const bookmarks = await dbStorage.getVideoBookmarks(studentId, lessonId);
+      res.json(bookmarks);
+    } catch (error) {
+      console.error('Error fetching video bookmarks:', error);
+      res.status(500).json({ message: "Failed to fetch bookmarks" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -61,6 +61,7 @@ import TeacherStudentsPage from "@/pages/teacher/students";
 import TeacherResourcesPage from "@/pages/teacher/resources";
 import TeacherReportsPage from "@/pages/teacher/reports";
 import TeacherTestsPage from "@/pages/teacher/tests";
+import TeacherVideoCourses from "@/pages/teacher/video-courses";
 
 // Mentor pages
 import MentorStudentsPage from "@/pages/mentor/students";
@@ -338,6 +339,11 @@ function Router() {
       <Route path="/teacher/tests">
         <ProtectedRoute>
           <TeacherTestsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/video-courses">
+        <ProtectedRoute>
+          <TeacherVideoCourses />
         </ProtectedRoute>
       </Route>
 

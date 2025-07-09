@@ -3494,6 +3494,223 @@ export class DatabaseStorage implements IStorage {
       .orderBy(videoBookmarks.timestamp);
   }
 
+  // Additional video methods for teacher/student interfaces
+  async getTeacherVideoLessons(teacherId: number): Promise<VideoLesson[]> {
+    return await db.select().from(videoLessons)
+      .where(eq(videoLessons.teacherId, teacherId))
+      .orderBy(desc(videoLessons.createdAt));
+  }
+
+  async getCourseVideoLessons(courseId: number): Promise<VideoLesson[]> {
+    return await db.select().from(videoLessons)
+      .where(eq(videoLessons.courseId, courseId))
+      .orderBy(videoLessons.moduleId, videoLessons.orderIndex);
+  }
+
+  async getVideoLessonAnalytics(lessonId: number): Promise<any> {
+    const [lesson] = await db.select().from(videoLessons)
+      .where(eq(videoLessons.id, lessonId));
+    
+    if (!lesson) return null;
+
+    // Get all progress records for this lesson
+    const progressRecords = await db.select().from(videoProgress)
+      .where(eq(videoProgress.videoLessonId, lessonId));
+
+    const completedCount = progressRecords.filter(p => p.completed).length;
+    const totalWatchTime = progressRecords.reduce((sum, p) => sum + (p.watchTime || 0), 0);
+    const avgWatchTime = progressRecords.length > 0 ? totalWatchTime / progressRecords.length : 0;
+    const avgCompletionRate = progressRecords.length > 0 
+      ? progressRecords.reduce((sum, p) => {
+          const rate = p.totalDuration > 0 ? (p.watchTime / p.totalDuration) * 100 : 0;
+          return sum + rate;
+        }, 0) / progressRecords.length 
+      : 0;
+
+    return {
+      lessonId,
+      title: lesson.title,
+      viewCount: lesson.viewCount || 0,
+      uniqueViewers: progressRecords.length,
+      completedCount,
+      totalWatchTime,
+      avgWatchTime,
+      avgCompletionRate,
+      completionRate: lesson.completionRate || 0,
+      engagementMetrics: {
+        notesCreated: await db.select().from(videoNotes)
+          .where(eq(videoNotes.videoLessonId, lessonId))
+          .then(notes => notes.length),
+        bookmarksCreated: await db.select().from(videoBookmarks)
+          .where(eq(videoBookmarks.videoLessonId, lessonId))
+          .then(bookmarks => bookmarks.length)
+      }
+    };
+  }
+
+  async getAvailableVideoCourses(filters: any): Promise<Course[]> {
+    let query = db.select().from(courses).innerJoin(
+      videoLessons,
+      eq(courses.id, videoLessons.courseId)
+    );
+
+    if (filters.language) {
+      query = query.where(eq(courses.language, filters.language));
+    }
+    if (filters.level) {
+      query = query.where(eq(courses.level, filters.level));
+    }
+    if (filters.skillFocus) {
+      query = query.where(eq(videoLessons.skillFocus, filters.skillFocus));
+    }
+    if (filters.isPublished) {
+      query = query.where(eq(videoLessons.isPublished, true));
+    }
+
+    const results = await query;
+    
+    // Get unique courses
+    const uniqueCourses = new Map<number, Course>();
+    results.forEach(row => {
+      if (!uniqueCourses.has(row.courses.id)) {
+        uniqueCourses.set(row.courses.id, row.courses);
+      }
+    });
+
+    return Array.from(uniqueCourses.values());
+  }
+
+  async studentHasCourseAccess(studentId: number, courseId: number): Promise<boolean> {
+    const [enrollment] = await db.select().from(enrollments)
+      .where(and(
+        eq(enrollments.userId, studentId),
+        eq(enrollments.courseId, courseId),
+        eq(enrollments.status, 'active')
+      ));
+    
+    return !!enrollment;
+  }
+
+  async getCourseVideoLessonsForStudent(courseId: number, studentId: number): Promise<any[]> {
+    const lessons = await db.select().from(videoLessons)
+      .where(and(
+        eq(videoLessons.courseId, courseId),
+        eq(videoLessons.isPublished, true)
+      ))
+      .orderBy(videoLessons.moduleId, videoLessons.orderIndex);
+
+    // Get progress for each lesson
+    const lessonsWithProgress = await Promise.all(lessons.map(async (lesson) => {
+      const [progress] = await db.select().from(videoProgress)
+        .where(and(
+          eq(videoProgress.studentId, studentId),
+          eq(videoProgress.videoLessonId, lesson.id)
+        ));
+
+      return {
+        ...lesson,
+        progress: progress || { watchTime: 0, completed: false }
+      };
+    }));
+
+    return lessonsWithProgress;
+  }
+
+  async updateVideoProgress(progressData: any): Promise<VideoProgress> {
+    const { studentId, videoLessonId, watchTime, totalDuration, completed, lastWatchedAt } = progressData;
+
+    // Check if progress exists
+    const [existing] = await db.select().from(videoProgress)
+      .where(and(
+        eq(videoProgress.studentId, studentId),
+        eq(videoProgress.videoLessonId, videoLessonId)
+      ));
+
+    if (existing) {
+      // Update existing progress
+      const [updated] = await db.update(videoProgress)
+        .set({
+          watchTime,
+          totalDuration,
+          completed,
+          lastWatchedAt,
+          updatedAt: new Date()
+        })
+        .where(eq(videoProgress.id, existing.id))
+        .returning();
+      
+      // Update video lesson view count if this is first time watching
+      if (!existing.watchTime || existing.watchTime === 0) {
+        await db.update(videoLessons)
+          .set({ viewCount: sql`${videoLessons.viewCount} + 1` })
+          .where(eq(videoLessons.id, videoLessonId));
+      }
+      
+      return updated;
+    } else {
+      // Create new progress
+      const [newProgress] = await db.insert(videoProgress)
+        .values({
+          studentId,
+          videoLessonId,
+          watchTime,
+          totalDuration,
+          completed,
+          lastWatchedAt
+        })
+        .returning();
+      
+      // Update video lesson view count
+      await db.update(videoLessons)
+        .set({ viewCount: sql`${videoLessons.viewCount} + 1` })
+        .where(eq(videoLessons.id, videoLessonId));
+      
+      return newProgress;
+    }
+  }
+
+  async createVideoNote(noteData: any): Promise<VideoNote> {
+    const { studentId, videoLessonId, timestamp, content } = noteData;
+    const [newNote] = await db.insert(videoNotes).values({
+      studentId,
+      videoLessonId,
+      timestamp,
+      content,
+      createdAt: new Date()
+    }).returning();
+    return newNote;
+  }
+
+  async getVideoNotes(studentId: number, lessonId: number): Promise<VideoNote[]> {
+    return await db.select().from(videoNotes)
+      .where(and(
+        eq(videoNotes.studentId, studentId),
+        eq(videoNotes.videoLessonId, lessonId)
+      ))
+      .orderBy(videoNotes.timestamp);
+  }
+
+  async createVideoBookmark(bookmarkData: any): Promise<VideoBookmark> {
+    const { studentId, videoLessonId, timestamp, title } = bookmarkData;
+    const [newBookmark] = await db.insert(videoBookmarks).values({
+      studentId,
+      videoLessonId,
+      timestamp,
+      title,
+      createdAt: new Date()
+    }).returning();
+    return newBookmark;
+  }
+
+  async getVideoBookmarks(studentId: number, lessonId: number): Promise<VideoBookmark[]> {
+    return await db.select().from(videoBookmarks)
+      .where(and(
+        eq(videoBookmarks.studentId, studentId),
+        eq(videoBookmarks.videoLessonId, lessonId)
+      ))
+      .orderBy(videoBookmarks.timestamp);
+  }
+
   // ===== LMS FEATURES =====
   // Forums
   async createForumCategory(category: InsertForumCategory): Promise<ForumCategory> {
