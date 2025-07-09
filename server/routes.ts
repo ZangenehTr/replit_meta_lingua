@@ -1,7 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { DatabaseStorage } from "./database-storage";
 import { ollamaService } from "./ollama-service";
 import { ollamaInstaller } from "./ollama-installer";
 import jwt from "jsonwebtoken";
@@ -33,8 +32,7 @@ import mammoth from "mammoth";
 
 const JWT_SECRET = process.env.JWT_SECRET || "meta-lingua-secret-key";
 
-// Create database storage instance for real data
-const dbStorage = new DatabaseStorage();
+
 
 // Middleware to verify JWT token
 const authenticateToken = async (req: any, res: any, next: any) => {
@@ -3910,7 +3908,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       // Get real sessions for the teacher from database
-      const teacherSessions = await dbStorage.getTeacherSessions(req.user.userId);
+      const teacherSessions = await storage.getTeacherSessions(req.user.userId);
       
       res.json(teacherSessions);
     } catch (error) {
@@ -3926,7 +3924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const packages = await dbStorage.getStudentSessionPackages(req.user.id);
+      const packages = await storage.getStudentSessionPackages(req.user.id);
       res.json(packages);
     } catch (error) {
       console.error('Error fetching session packages:', error);
@@ -3946,7 +3944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Creating session package for user ID:', req.user.id, 'Email:', req.user.email);
 
-      const newPackage = await dbStorage.createSessionPackage({
+      const newPackage = await storage.createSessionPackage({
         studentId: req.user.id,
         packageName,
         totalSessions,
@@ -7129,7 +7127,7 @@ Return JSON format:
 
   app.get("/api/admin/dashboard-stats", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      const stats = await dbStorage.getAdminDashboardStats();
+      const stats = await storage.getAdminDashboardStats();
       res.json(stats);
     } catch (error) {
       console.error('Error fetching admin dashboard stats:', error);
@@ -7141,7 +7139,7 @@ Return JSON format:
   app.get("/api/teacher/dashboard-stats", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
     try {
       const teacherId = req.user.role === 'Teacher/Tutor' ? req.user.id : req.query.teacherId;
-      const stats = await dbStorage.getTeacherDashboardStats(teacherId);
+      const stats = await storage.getTeacherDashboardStats(teacherId);
       res.json(stats);
     } catch (error) {
       console.error('Error fetching teacher dashboard stats:', error);
@@ -7153,7 +7151,7 @@ Return JSON format:
   app.get("/api/student/dashboard-stats", authenticateToken, requireRole(['Student', 'Admin', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const studentId = req.user.role === 'Student' ? req.user.id : req.query.studentId;
-      const stats = await dbStorage.getStudentDashboardStats(studentId);
+      const stats = await storage.getStudentDashboardStats(studentId);
       res.json(stats);
     } catch (error) {
       console.error('Error fetching student dashboard stats:', error);
@@ -7225,7 +7223,7 @@ Return JSON format:
   app.get("/api/call-center/dashboard-stats", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
     try {
       const agentId = req.user.role === 'Call Center Agent' ? req.user.id : req.query.agentId;
-      const stats = await dbStorage.getCallCenterDashboardStats(agentId);
+      const stats = await storage.getCallCenterDashboardStats(agentId);
       res.json(stats);
     } catch (error) {
       console.error('Error fetching call center dashboard stats:', error);
@@ -8296,11 +8294,11 @@ Return JSON format:
       });
 
       // Get user details for SMS notifications
-      const mentor = await dbStorage.getUser(mentorId);
-      const student = await dbStorage.getUser(studentId);
+      const mentor = await storage.getUser(mentorId);
+      const student = await storage.getUser(studentId);
       
       // Get teacher-student bundle info
-      const bundles = await dbStorage.getTeacherStudentBundles();
+      const bundles = await storage.getTeacherStudentBundles();
       const bundle = bundles.find(b => b.student.id === studentId);
       
       // Send SMS notification to mentor
@@ -8438,7 +8436,7 @@ Return JSON format:
       });
 
       // Create assignment in database
-      const result = await dbStorage.createTeacherStudentAssignment({
+      const result = await storage.createTeacherStudentAssignment({
         teacherId,
         studentId,
         classType,
@@ -8448,8 +8446,8 @@ Return JSON format:
       });
 
       // Get teacher and student details for SMS
-      const teacher = await dbStorage.getUser(teacherId);
-      const student = await dbStorage.getUser(studentId);
+      const teacher = await storage.getUser(teacherId);
+      const student = await storage.getUser(studentId);
 
       // Send SMS notifications
       if (teacher?.phone) {
@@ -8482,7 +8480,7 @@ Return JSON format:
   // Teacher test routes
   app.get("/api/teacher/tests", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
-      const tests = await dbStorage.getTestsByTeacher(req.user.id);
+      const tests = await storage.getTestsByTeacher(req.user.id);
       res.json(tests);
     } catch (error) {
       console.error('Error fetching teacher tests:', error);
@@ -8493,7 +8491,7 @@ Return JSON format:
   app.get("/api/teacher/courses", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       // Get courses where user is the instructor
-      const courses = await dbStorage.getTeacherCourses(req.user.id);
+      const courses = await storage.getTeacherCourses(req.user.id);
       res.json(courses);
     } catch (error) {
       console.error('Error fetching teacher courses:', error);
@@ -8509,7 +8507,7 @@ Return JSON format:
         totalQuestions: 0 // Will be updated when questions are added
       };
       
-      const test = await dbStorage.createTest(testData);
+      const test = await storage.createTest(testData);
       res.status(201).json(test);
     } catch (error) {
       console.error('Error creating test:', error);
@@ -8519,7 +8517,7 @@ Return JSON format:
 
   app.get("/api/teacher/tests/:testId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
-      const test = await dbStorage.getTestById(parseInt(req.params.testId));
+      const test = await storage.getTestById(parseInt(req.params.testId));
       
       if (!test) {
         return res.status(404).json({ message: "Test not found" });
@@ -8531,7 +8529,7 @@ Return JSON format:
       }
       
       // Get questions for the test
-      const questions = await dbStorage.getTestQuestions(test.id);
+      const questions = await storage.getTestQuestions(test.id);
       
       res.json({ ...test, questions });
     } catch (error) {
@@ -8543,7 +8541,7 @@ Return JSON format:
   app.put("/api/teacher/tests/:testId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const testId = parseInt(req.params.testId);
-      const test = await dbStorage.getTestById(testId);
+      const test = await storage.getTestById(testId);
       
       if (!test) {
         return res.status(404).json({ message: "Test not found" });
@@ -8554,7 +8552,7 @@ Return JSON format:
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const updatedTest = await dbStorage.updateTest(testId, req.body);
+      const updatedTest = await storage.updateTest(testId, req.body);
       res.json(updatedTest);
     } catch (error) {
       console.error('Error updating test:', error);
@@ -8565,7 +8563,7 @@ Return JSON format:
   app.delete("/api/teacher/tests/:testId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const testId = parseInt(req.params.testId);
-      const test = await dbStorage.getTestById(testId);
+      const test = await storage.getTestById(testId);
       
       if (!test) {
         return res.status(404).json({ message: "Test not found" });
@@ -8576,7 +8574,7 @@ Return JSON format:
         return res.status(403).json({ message: "Access denied" });
       }
       
-      await dbStorage.deleteTest(testId);
+      await storage.deleteTest(testId);
       res.json({ message: "Test deleted successfully" });
     } catch (error) {
       console.error('Error deleting test:', error);
@@ -8588,7 +8586,7 @@ Return JSON format:
   app.post("/api/teacher/tests/:testId/questions", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const testId = parseInt(req.params.testId);
-      const test = await dbStorage.getTestById(testId);
+      const test = await storage.getTestById(testId);
       
       if (!test) {
         return res.status(404).json({ message: "Test not found" });
@@ -8604,11 +8602,11 @@ Return JSON format:
         testId
       };
       
-      const question = await dbStorage.createTestQuestion(questionData);
+      const question = await storage.createTestQuestion(questionData);
       
       // Update test's totalQuestions count
-      const questions = await dbStorage.getTestQuestions(testId);
-      await dbStorage.updateTest(testId, { totalQuestions: questions.length });
+      const questions = await storage.getTestQuestions(testId);
+      await storage.updateTest(testId, { totalQuestions: questions.length });
       
       res.status(201).json(question);
     } catch (error) {
@@ -8622,7 +8620,7 @@ Return JSON format:
       const testId = parseInt(req.params.testId);
       const questionId = parseInt(req.params.questionId);
       
-      const test = await dbStorage.getTestById(testId);
+      const test = await storage.getTestById(testId);
       
       if (!test) {
         return res.status(404).json({ message: "Test not found" });
@@ -8633,7 +8631,7 @@ Return JSON format:
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const updatedQuestion = await dbStorage.updateTestQuestion(questionId, req.body);
+      const updatedQuestion = await storage.updateTestQuestion(questionId, req.body);
       res.json(updatedQuestion);
     } catch (error) {
       console.error('Error updating test question:', error);
@@ -8646,7 +8644,7 @@ Return JSON format:
       const testId = parseInt(req.params.testId);
       const questionId = parseInt(req.params.questionId);
       
-      const test = await dbStorage.getTestById(testId);
+      const test = await storage.getTestById(testId);
       
       if (!test) {
         return res.status(404).json({ message: "Test not found" });
@@ -8657,11 +8655,11 @@ Return JSON format:
         return res.status(403).json({ message: "Access denied" });
       }
       
-      await dbStorage.deleteTestQuestion(questionId);
+      await storage.deleteTestQuestion(questionId);
       
       // Update test's totalQuestions count
-      const questions = await dbStorage.getTestQuestions(testId);
-      await dbStorage.updateTest(testId, { totalQuestions: questions.length });
+      const questions = await storage.getTestQuestions(testId);
+      await storage.updateTest(testId, { totalQuestions: questions.length });
       
       res.json({ message: "Question deleted successfully" });
     } catch (error) {
@@ -8674,13 +8672,13 @@ Return JSON format:
   app.get("/api/student/tests/available", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
       // Get student's enrolled courses
-      const enrollments = await dbStorage.getUserEnrollments(req.user.id);
+      const enrollments = await storage.getUserEnrollments(req.user.id);
       const courseIds = enrollments.map(e => e.courseId);
       
       // Get all tests for enrolled courses
       const allTests = [];
       for (const courseId of courseIds) {
-        const tests = await dbStorage.getTestsByCourse(courseId);
+        const tests = await storage.getTestsByCourse(courseId);
         allTests.push(...tests.filter(t => t.isActive));
       }
       
@@ -8694,14 +8692,14 @@ Return JSON format:
   app.post("/api/student/tests/:testId/attempt", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
       const testId = parseInt(req.params.testId);
-      const test = await dbStorage.getTestById(testId);
+      const test = await storage.getTestById(testId);
       
       if (!test || !test.isActive) {
         return res.status(404).json({ message: "Test not found or not available" });
       }
       
       // Check if student has access to this test
-      const enrollments = await dbStorage.getUserEnrollments(req.user.id);
+      const enrollments = await storage.getUserEnrollments(req.user.id);
       const hasAccess = enrollments.some(e => e.courseId === test.courseId);
       
       if (!hasAccess) {
@@ -8709,7 +8707,7 @@ Return JSON format:
       }
       
       // Check max attempts
-      const previousAttempts = await dbStorage.getStudentTestAttempts(req.user.id, testId);
+      const previousAttempts = await storage.getStudentTestAttempts(req.user.id, testId);
       if (previousAttempts.length >= test.maxAttempts) {
         return res.status(400).json({ 
           message: `Maximum attempts (${test.maxAttempts}) reached for this test` 
@@ -8717,7 +8715,7 @@ Return JSON format:
       }
       
       // Create new attempt
-      const attempt = await dbStorage.createTestAttempt({
+      const attempt = await storage.createTestAttempt({
         testId,
         studentId: req.user.id,
         startedAt: new Date(),
@@ -8725,7 +8723,7 @@ Return JSON format:
       });
       
       // Get questions for the test
-      const questions = await dbStorage.getTestQuestions(testId);
+      const questions = await storage.getTestQuestions(testId);
       
       res.json({ 
         attempt,
@@ -8751,7 +8749,7 @@ Return JSON format:
       const attemptId = parseInt(req.params.attemptId);
       const { answers } = req.body;
       
-      const attempt = await dbStorage.getTestAttemptById(attemptId);
+      const attempt = await storage.getTestAttemptById(attemptId);
       
       if (!attempt) {
         return res.status(404).json({ message: "Test attempt not found" });
@@ -8764,7 +8762,7 @@ Return JSON format:
       
       // Save all answers
       for (const answer of answers) {
-        await dbStorage.saveTestAnswer({
+        await storage.saveTestAnswer({
           attemptId,
           questionId: answer.questionId,
           answerValue: answer.answerValue
@@ -8772,8 +8770,8 @@ Return JSON format:
       }
       
       // Auto-grade the test
-      const test = await dbStorage.getTestById(attempt.testId);
-      const questions = await dbStorage.getTestQuestions(attempt.testId);
+      const test = await storage.getTestById(attempt.testId);
+      const questions = await storage.getTestQuestions(attempt.testId);
       let totalScore = 0;
       let maxScore = 0;
       
@@ -8806,7 +8804,7 @@ Return JSON format:
           }
           
           if (question.questionType !== 'essay' && question.questionType !== 'short_answer') {
-            await dbStorage.gradeTestAnswer(studentAnswer.id, {
+            await storage.gradeTestAnswer(studentAnswer.id, {
               isCorrect,
               pointsEarned
             });
@@ -8820,7 +8818,7 @@ Return JSON format:
       const passed = scorePercentage >= test.passingScore;
       
       // Update attempt
-      const completedAttempt = await dbStorage.updateTestAttempt(attemptId, {
+      const completedAttempt = await storage.updateTestAttempt(attemptId, {
         completedAt: new Date(),
         score: totalScore,
         maxScore,
@@ -8848,7 +8846,7 @@ Return JSON format:
   app.get("/api/student/tests/:testId/attempts", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
       const testId = parseInt(req.params.testId);
-      const attempts = await dbStorage.getStudentTestAttempts(req.user.id, testId);
+      const attempts = await storage.getStudentTestAttempts(req.user.id, testId);
       
       res.json(attempts);
     } catch (error) {
@@ -8865,7 +8863,7 @@ Return JSON format:
   app.get("/api/teacher/video-lessons", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
-      const lessons = await dbStorage.getTeacherVideoLessons(teacherId);
+      const lessons = await storage.getTeacherVideoLessons(teacherId);
       res.json(lessons);
     } catch (error) {
       console.error('Error fetching video lessons:', error);
@@ -8877,7 +8875,7 @@ Return JSON format:
   app.get("/api/teacher/courses/:courseId/video-lessons", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.courseId);
-      const lessons = await dbStorage.getCourseVideoLessons(courseId);
+      const lessons = await storage.getCourseVideoLessons(courseId);
       res.json(lessons);
     } catch (error) {
       console.error('Error fetching course video lessons:', error);
@@ -8896,7 +8894,7 @@ Return JSON format:
         completionRate: 0
       };
       
-      const lesson = await dbStorage.createVideoLesson(lessonData);
+      const lesson = await storage.createVideoLesson(lessonData);
       res.status(201).json(lesson);
     } catch (error) {
       console.error('Error creating video lesson:', error);
@@ -8908,7 +8906,7 @@ Return JSON format:
   app.put("/api/teacher/video-lessons/:lessonId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const lessonId = parseInt(req.params.lessonId);
-      const lesson = await dbStorage.getVideoLessonById(lessonId);
+      const lesson = await storage.getVideoLessonById(lessonId);
       
       if (!lesson) {
         return res.status(404).json({ message: "Video lesson not found" });
@@ -8919,7 +8917,7 @@ Return JSON format:
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const updatedLesson = await dbStorage.updateVideoLesson(lessonId, req.body);
+      const updatedLesson = await storage.updateVideoLesson(lessonId, req.body);
       res.json(updatedLesson);
     } catch (error) {
       console.error('Error updating video lesson:', error);
@@ -8931,7 +8929,7 @@ Return JSON format:
   app.delete("/api/teacher/video-lessons/:lessonId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const lessonId = parseInt(req.params.lessonId);
-      const lesson = await dbStorage.getVideoLessonById(lessonId);
+      const lesson = await storage.getVideoLessonById(lessonId);
       
       if (!lesson) {
         return res.status(404).json({ message: "Video lesson not found" });
@@ -8942,7 +8940,7 @@ Return JSON format:
         return res.status(403).json({ message: "Access denied" });
       }
       
-      await dbStorage.deleteVideoLesson(lessonId);
+      await storage.deleteVideoLesson(lessonId);
       res.json({ message: "Video lesson deleted successfully" });
     } catch (error) {
       console.error('Error deleting video lesson:', error);
@@ -8956,7 +8954,7 @@ Return JSON format:
       const lessonId = parseInt(req.params.lessonId);
       const { isPublished } = req.body;
       
-      const lesson = await dbStorage.getVideoLessonById(lessonId);
+      const lesson = await storage.getVideoLessonById(lessonId);
       
       if (!lesson) {
         return res.status(404).json({ message: "Video lesson not found" });
@@ -8967,7 +8965,7 @@ Return JSON format:
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const updatedLesson = await dbStorage.updateVideoLesson(lessonId, { isPublished });
+      const updatedLesson = await storage.updateVideoLesson(lessonId, { isPublished });
       res.json(updatedLesson);
     } catch (error) {
       console.error('Error toggling video lesson publish status:', error);
@@ -8979,7 +8977,7 @@ Return JSON format:
   app.get("/api/teacher/video-lessons/:lessonId/analytics", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const lessonId = parseInt(req.params.lessonId);
-      const lesson = await dbStorage.getVideoLessonById(lessonId);
+      const lesson = await storage.getVideoLessonById(lessonId);
       
       if (!lesson) {
         return res.status(404).json({ message: "Video lesson not found" });
@@ -8990,7 +8988,7 @@ Return JSON format:
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const analytics = await dbStorage.getVideoLessonAnalytics(lessonId);
+      const analytics = await storage.getVideoLessonAnalytics(lessonId);
       res.json(analytics);
     } catch (error) {
       console.error('Error fetching video lesson analytics:', error);
@@ -9012,7 +9010,7 @@ Return JSON format:
         isPublished: true
       };
       
-      const courses = await dbStorage.getAvailableVideoCourses(filters);
+      const courses = await storage.getAvailableVideoCourses(filters);
       res.json(courses);
     } catch (error) {
       console.error('Error fetching video courses:', error);
@@ -9027,12 +9025,12 @@ Return JSON format:
       const studentId = req.user.id;
       
       // Check if student has access to this course
-      const hasAccess = await dbStorage.studentHasCourseAccess(studentId, courseId);
+      const hasAccess = await storage.studentHasCourseAccess(studentId, courseId);
       if (!hasAccess) {
         return res.status(403).json({ message: "Access denied. Please enroll in this course." });
       }
       
-      const lessons = await dbStorage.getCourseVideoLessonsForStudent(courseId, studentId);
+      const lessons = await storage.getCourseVideoLessonsForStudent(courseId, studentId);
       res.json(lessons);
     } catch (error) {
       console.error('Error fetching student video lessons:', error);
@@ -9047,7 +9045,7 @@ Return JSON format:
       const studentId = req.user.id;
       const { watchTime, totalDuration, completed } = req.body;
       
-      const progress = await dbStorage.updateVideoProgress({
+      const progress = await storage.updateVideoProgress({
         studentId,
         videoLessonId: lessonId,
         watchTime,
@@ -9070,7 +9068,7 @@ Return JSON format:
       const studentId = req.user.id;
       const { timestamp, content } = req.body;
       
-      const note = await dbStorage.createVideoNote({
+      const note = await storage.createVideoNote({
         studentId,
         videoLessonId: lessonId,
         timestamp,
@@ -9090,7 +9088,7 @@ Return JSON format:
       const lessonId = parseInt(req.params.lessonId);
       const studentId = req.user.id;
       
-      const notes = await dbStorage.getVideoNotes(studentId, lessonId);
+      const notes = await storage.getVideoNotes(studentId, lessonId);
       res.json(notes);
     } catch (error) {
       console.error('Error fetching video notes:', error);
@@ -9105,7 +9103,7 @@ Return JSON format:
       const studentId = req.user.id;
       const { timestamp, title } = req.body;
       
-      const bookmark = await dbStorage.createVideoBookmark({
+      const bookmark = await storage.createVideoBookmark({
         studentId,
         videoLessonId: lessonId,
         timestamp,
@@ -9125,7 +9123,7 @@ Return JSON format:
       const lessonId = parseInt(req.params.lessonId);
       const studentId = req.user.id;
       
-      const bookmarks = await dbStorage.getVideoBookmarks(studentId, lessonId);
+      const bookmarks = await storage.getVideoBookmarks(studentId, lessonId);
       res.json(bookmarks);
     } catch (error) {
       console.error('Error fetching video bookmarks:', error);
@@ -9138,7 +9136,7 @@ Return JSON format:
   // Get all rooms
   app.get("/api/rooms", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      const rooms = await dbStorage.getRooms();
+      const rooms = await storage.getRooms();
       res.json(rooms);
     } catch (error) {
       console.error('Error fetching rooms:', error);
@@ -9150,7 +9148,7 @@ Return JSON format:
   app.get("/api/rooms/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
-      const room = await dbStorage.getRoomById(id);
+      const room = await storage.getRoomById(id);
       
       if (!room) {
         return res.status(404).json({ message: "Room not found" });
@@ -9167,7 +9165,7 @@ Return JSON format:
   app.post("/api/rooms", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const roomData = insertRoomSchema.parse(req.body);
-      const room = await dbStorage.createRoom(roomData);
+      const room = await storage.createRoom(roomData);
       res.status(201).json(room);
     } catch (error) {
       console.error('Error creating room:', error);
@@ -9187,7 +9185,7 @@ Return JSON format:
       const id = parseInt(req.params.id);
       const updates = insertRoomSchema.partial().parse(req.body);
       
-      const room = await dbStorage.updateRoom(id, updates);
+      const room = await storage.updateRoom(id, updates);
       
       if (!room) {
         return res.status(404).json({ message: "Room not found" });
@@ -9210,7 +9208,7 @@ Return JSON format:
   app.delete("/api/rooms/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
-      const success = await dbStorage.deleteRoom(id);
+      const success = await storage.deleteRoom(id);
       
       if (!success) {
         return res.status(404).json({ message: "Room not found" });
@@ -9226,7 +9224,7 @@ Return JSON format:
   // Get active rooms
   app.get("/api/rooms/active", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher/Tutor']), async (req: any, res) => {
     try {
-      const rooms = await dbStorage.getActiveRooms();
+      const rooms = await storage.getActiveRooms();
       res.json(rooms);
     } catch (error) {
       console.error('Error fetching active rooms:', error);
@@ -9238,7 +9236,7 @@ Return JSON format:
   app.get("/api/rooms/type/:type", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const type = req.params.type;
-      const rooms = await dbStorage.getRoomsByType(type);
+      const rooms = await storage.getRoomsByType(type);
       res.json(rooms);
     } catch (error) {
       console.error('Error fetching rooms by type:', error);
