@@ -73,6 +73,11 @@ export const queryClient = new QueryClient({
 // API request function for mutations
 export const apiRequest = async (url: string, options: RequestInit = {}) => {
   try {
+    // Validate input parameters
+    if (!url || typeof url !== 'string') {
+      throw new Error('Invalid URL provided');
+    }
+    
     // Ensure URL is properly formatted as relative path
     const finalUrl = url.startsWith('/') ? url : `/${url}`;
     
@@ -80,7 +85,7 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers as Record<string, string>,
+      ...((options.headers as Record<string, string>) || {}),
     };
     
     if (token) {
@@ -96,6 +101,9 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
       });
     } catch (fetchError: any) {
       console.error('Fetch error occurred:', fetchError);
+      if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+        throw new Error('Network error: Unable to connect to server. Please check your connection and try again.');
+      }
       throw new Error(`Network error: ${fetchError.message || 'Failed to fetch'}`);
     }
 
@@ -106,12 +114,25 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
     });
 
     if (!response.ok) {
-      const text = await response.text();
-      console.log('Error response text:', text);
-      throw new Error(`${response.status}: ${text}`);
+      let errorText = 'Unknown error';
+      try {
+        errorText = await response.text();
+      } catch (parseError) {
+        console.error('Failed to parse error response:', parseError);
+        errorText = `HTTP ${response.status} ${response.statusText}`;
+      }
+      console.log('Error response text:', errorText);
+      throw new Error(`${response.status}: ${errorText}`);
     }
 
-    const result = await response.json();
+    let result;
+    try {
+      result = await response.json();
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      throw new Error('Invalid JSON response from server');
+    }
+    
     console.log('Successful response:', result);
     return result;
   } catch (error) {
