@@ -28,7 +28,8 @@ import {
 export function CallernManagement() {
   const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
+  const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newTeacherForm, setNewTeacherForm] = useState({
     teacherId: '',
@@ -39,6 +40,16 @@ export function CallernManagement() {
   // Fetch teacher availability data
   const { data: teacherAvailability, isLoading: loadingAvailability } = useQuery({
     queryKey: ['/api/admin/callern/teacher-availability'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/callern/teacher-availability', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      const data = await response.json();
+      console.log('Teacher availability data:', data);
+      return data;
+    }
   });
 
   // Fetch available teachers
@@ -104,8 +115,8 @@ export function CallernManagement() {
         try {
           const errorData = JSON.parse(errorText);
           if (response.status === 409) {
-            // Schedule conflict
-            throw new Error(`Schedule conflict: ${errorData.conflictDetails || 'Teacher has existing commitments during selected hours'}`);
+            // Schedule conflict - throw the actual conflict details
+            throw new Error(errorData.conflictDetails || errorData.message || 'Teacher has existing commitments during selected hours');
           }
           throw new Error(errorData.message || 'Failed to add teacher to Callern');
         } catch (parseError) {
@@ -133,11 +144,15 @@ export function CallernManagement() {
       });
     },
     onError: (error: any) => {
-      if (error.message.includes('Schedule conflict:')) {
+      console.error('Add teacher error:', error);
+      
+      // Check if error message contains schedule conflict details
+      if (error.message.includes('scheduled sessions:')) {
         toast({
-          title: "Schedule Conflict Detected",
-          description: error.message.replace('Schedule conflict: ', ''),
-          variant: "destructive"
+          title: "Schedule Conflict - Cannot Add Teacher",
+          description: error.message,
+          variant: "destructive",
+          duration: 7000 // Longer duration for conflict messages
         });
       } else if (error.message.includes('Authentication failed')) {
         toast({
@@ -150,7 +165,7 @@ export function CallernManagement() {
       } else {
         toast({
           title: "Error",
-          description: error.message,
+          description: error.message || "Failed to add teacher to Callern",
           variant: "destructive"
         });
       }
@@ -158,6 +173,7 @@ export function CallernManagement() {
   });
 
   const toggleTeacherOnline = (teacherId: number, currentStatus: boolean) => {
+    console.log('Toggling teacher:', teacherId, 'from', currentStatus, 'to', !currentStatus);
     updateAvailabilityMutation.mutate({
       teacherId,
       updates: { isOnline: !currentStatus }
@@ -268,6 +284,7 @@ export function CallernManagement() {
                       <Switch
                         checked={teacher.isOnline}
                         onCheckedChange={() => toggleTeacherOnline(teacher.teacherId, teacher.isOnline)}
+                        disabled={updateAvailabilityMutation.isPending}
                       />
                     </div>
                     
@@ -296,7 +313,10 @@ export function CallernManagement() {
                       variant="outline"
                       size="sm"
                       className="w-full"
-                      onClick={() => setSelectedTeacher(teacher)}
+                      onClick={() => {
+                        setSelectedTeacher(teacher);
+                        setIsConfigDialogOpen(true);
+                      }}
                     >
                       <Settings className="h-3 w-3 mr-1" />
                       Configure
@@ -489,6 +509,99 @@ export function CallernManagement() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Configuration Dialog */}
+      <Dialog open={isConfigDialogOpen} onOpenChange={setIsConfigDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Configure Teacher Availability</DialogTitle>
+            <DialogDescription>
+              Update {selectedTeacher?.teacherName} {selectedTeacher?.teacherLastName}'s Callern settings
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTeacher && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Hourly Rate (IRR)</Label>
+                <Input 
+                  type="number" 
+                  defaultValue={selectedTeacher.hourlyRate || ''}
+                  placeholder="500000"
+                  id="config-hourly-rate"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Available Hours</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      id="config-morning"
+                      defaultChecked={selectedTeacher.availableHours?.includes('08:00-12:00')}
+                    />
+                    <Label htmlFor="config-morning" className="text-sm">Morning (08:00-12:00)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      id="config-afternoon"
+                      defaultChecked={selectedTeacher.availableHours?.includes('12:00-18:00')}
+                    />
+                    <Label htmlFor="config-afternoon" className="text-sm">Afternoon (12:00-18:00)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      id="config-evening"
+                      defaultChecked={selectedTeacher.availableHours?.includes('18:00-24:00')}
+                    />
+                    <Label htmlFor="config-evening" className="text-sm">Evening (18:00-24:00)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      id="config-overnight"
+                      defaultChecked={selectedTeacher.availableHours?.includes('00:00-08:00')}
+                    />
+                    <Label htmlFor="config-overnight" className="text-sm">Overnight (00:00-08:00)</Label>
+                  </div>
+                </div>
+              </div>
+              
+              <Button 
+                className="w-full"
+                onClick={() => {
+                  const hourlyRateInput = document.getElementById('config-hourly-rate') as HTMLInputElement;
+                  const morningChecked = (document.getElementById('config-morning') as HTMLInputElement).checked;
+                  const afternoonChecked = (document.getElementById('config-afternoon') as HTMLInputElement).checked;
+                  const eveningChecked = (document.getElementById('config-evening') as HTMLInputElement).checked;
+                  const overnightChecked = (document.getElementById('config-overnight') as HTMLInputElement).checked;
+                  
+                  const availableHours = [];
+                  if (morningChecked) availableHours.push('08:00-12:00');
+                  if (afternoonChecked) availableHours.push('12:00-18:00');
+                  if (eveningChecked) availableHours.push('18:00-24:00');
+                  if (overnightChecked) availableHours.push('00:00-08:00');
+                  
+                  updateAvailabilityMutation.mutate({
+                    teacherId: selectedTeacher.teacherId,
+                    updates: {
+                      hourlyRate: hourlyRateInput.value ? parseFloat(hourlyRateInput.value) : null,
+                      availableHours
+                    }
+                  });
+                  
+                  setIsConfigDialogOpen(false);
+                }}
+                disabled={updateAvailabilityMutation.isPending}
+              >
+                {updateAvailabilityMutation.isPending ? 'Updating...' : 'Update Configuration'}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

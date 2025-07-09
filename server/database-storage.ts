@@ -3207,7 +3207,12 @@ export class DatabaseStorage implements IStorage {
     return teachers;
   }
 
-  async updateTeacherCallernAvailability(teacherId: number, isOnline: boolean) {
+  async updateTeacherCallernAvailability(teacherId: number, updates: {
+    isOnline?: boolean;
+    availableHours?: string[];
+    hourlyRate?: number | null;
+    lastActiveAt?: Date;
+  }) {
     const existing = await db.select().from(teacherCallernAvailability)
       .where(eq(teacherCallernAvailability.teacherId, teacherId))
       .limit(1);
@@ -3216,18 +3221,25 @@ export class DatabaseStorage implements IStorage {
       const [newAvailability] = await db.insert(teacherCallernAvailability)
         .values({
           teacherId,
-          isOnline,
-          lastActiveAt: new Date()
+          isOnline: updates.isOnline || false,
+          availableHours: updates.availableHours || [],
+          hourlyRate: updates.hourlyRate !== undefined ? updates.hourlyRate : null,
+          lastActiveAt: updates.lastActiveAt || new Date()
         })
         .returning();
       return newAvailability;
     } else {
+      const updateData: any = {
+        updatedAt: new Date()
+      };
+      
+      if (updates.isOnline !== undefined) updateData.isOnline = updates.isOnline;
+      if (updates.availableHours !== undefined) updateData.availableHours = updates.availableHours;
+      if (updates.hourlyRate !== undefined) updateData.hourlyRate = updates.hourlyRate;
+      if (updates.lastActiveAt !== undefined) updateData.lastActiveAt = updates.lastActiveAt;
+      
       const [updated] = await db.update(teacherCallernAvailability)
-        .set({
-          isOnline,
-          lastActiveAt: new Date(),
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(eq(teacherCallernAvailability.teacherId, teacherId))
         .returning();
       return updated;
