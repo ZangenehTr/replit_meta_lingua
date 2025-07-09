@@ -2727,49 +2727,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get available rooms
+  // ===== ROOM MANAGEMENT API =====
+  
+  // Get all rooms
   app.get("/api/admin/rooms", authenticateToken, async (req: any, res) => {
     try {
-      // Mock room data - in production this would come from database
-      const rooms = [
-        {
-          id: "room-1",
-          name: "Room 101",
-          capacity: 20,
-          equipment: ['Whiteboard', 'Projector', 'Audio System'],
-          type: 'physical',
-          isAvailable: true
-        },
-        {
-          id: "room-2", 
-          name: "Room 201",
-          capacity: 15,
-          equipment: ['Smart Board', 'Video Conference'],
-          type: 'physical',
-          isAvailable: true
-        },
-        {
-          id: "virtual-1",
-          name: "Virtual Room A",
-          capacity: 50,
-          equipment: ['Screen Share', 'Recording', 'Breakout Rooms'],
-          type: 'virtual',
-          isAvailable: true
-        },
-        {
-          id: "virtual-2",
-          name: "Virtual Room B", 
-          capacity: 30,
-          equipment: ['Screen Share', 'Whiteboard', 'Polls'],
-          type: 'virtual',
-          isAvailable: true
-        }
-      ];
-
+      const rooms = await storage.getRooms();
       res.json(rooms);
     } catch (error) {
       console.error('Error fetching rooms:', error);
       res.status(500).json({ message: "Failed to fetch rooms" });
+    }
+  });
+
+  // Get single room by ID
+  app.get("/api/admin/rooms/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const roomId = parseInt(req.params.id);
+      const room = await storage.getRoomById(roomId);
+      
+      if (!room) {
+        return res.status(404).json({ message: "Room not found" });
+      }
+      
+      res.json(room);
+    } catch (error) {
+      console.error('Error fetching room:', error);
+      res.status(500).json({ message: "Failed to fetch room" });
+    }
+  });
+
+  // Create new room
+  app.post("/api/admin/rooms", authenticateToken, async (req: any, res) => {
+    try {
+      // Check admin permission
+      const hasPermission = await storage.checkUserPermission(req.user.role, 'rooms', 'create');
+      if (!hasPermission) {
+        return res.status(403).json({ message: "Permission denied" });
+      }
+
+      const roomData = {
+        name: req.body.name,
+        type: req.body.type || 'physical',
+        capacity: req.body.capacity || 20,
+        building: req.body.building,
+        floor: req.body.floor,
+        equipment: req.body.equipment || [],
+        amenities: req.body.amenities || [],
+        description: req.body.description,
+        maintenanceStatus: req.body.maintenanceStatus || 'operational',
+        virtualRoomUrl: req.body.virtualRoomUrl,
+        virtualRoomProvider: req.body.virtualRoomProvider,
+        isActive: req.body.isActive !== false
+      };
+
+      const room = await storage.createRoom(roomData);
+      res.status(201).json(room);
+    } catch (error) {
+      console.error('Error creating room:', error);
+      res.status(500).json({ message: "Failed to create room" });
+    }
+  });
+
+  // Update room
+  app.put("/api/admin/rooms/:id", authenticateToken, async (req: any, res) => {
+    try {
+      // Check admin permission
+      const hasPermission = await storage.checkUserPermission(req.user.role, 'rooms', 'update');
+      if (!hasPermission) {
+        return res.status(403).json({ message: "Permission denied" });
+      }
+
+      const roomId = parseInt(req.params.id);
+      const updates = {
+        name: req.body.name,
+        type: req.body.type,
+        capacity: req.body.capacity,
+        building: req.body.building,
+        floor: req.body.floor,
+        equipment: req.body.equipment,
+        amenities: req.body.amenities,
+        description: req.body.description,
+        maintenanceStatus: req.body.maintenanceStatus,
+        virtualRoomUrl: req.body.virtualRoomUrl,
+        virtualRoomProvider: req.body.virtualRoomProvider,
+        isActive: req.body.isActive
+      };
+
+      const room = await storage.updateRoom(roomId, updates);
+      
+      if (!room) {
+        return res.status(404).json({ message: "Room not found" });
+      }
+      
+      res.json(room);
+    } catch (error) {
+      console.error('Error updating room:', error);
+      res.status(500).json({ message: "Failed to update room" });
+    }
+  });
+
+  // Delete room
+  app.delete("/api/admin/rooms/:id", authenticateToken, async (req: any, res) => {
+    try {
+      // Check admin permission
+      const hasPermission = await storage.checkUserPermission(req.user.role, 'rooms', 'delete');
+      if (!hasPermission) {
+        return res.status(403).json({ message: "Permission denied" });
+      }
+
+      const roomId = parseInt(req.params.id);
+      const success = await storage.deleteRoom(roomId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Room not found" });
+      }
+      
+      res.json({ message: "Room deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting room:', error);
+      res.status(500).json({ message: "Failed to delete room" });
+    }
+  });
+
+  // Get active rooms (for scheduling)
+  app.get("/api/admin/rooms/active", authenticateToken, async (req: any, res) => {
+    try {
+      const rooms = await storage.getActiveRooms();
+      res.json(rooms);
+    } catch (error) {
+      console.error('Error fetching active rooms:', error);
+      res.status(500).json({ message: "Failed to fetch active rooms" });
     }
   });
 

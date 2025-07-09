@@ -8,7 +8,7 @@ import {
   skillAssessments, learningActivities, progressSnapshots, leads,
   communicationLogs, mentorAssignments, mentoringSessions, sessionPackages,
   callernPackages, studentCallernPackages, teacherCallernAvailability,
-  callernCallHistory, callernSyllabusTopics, studentCallernProgress,
+  callernCallHistory, callernSyllabusTopics, studentCallernProgress, rooms,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
@@ -27,6 +27,7 @@ import {
   type CallernPackage, type InsertCallernPackage, type StudentCallernPackage, type InsertStudentCallernPackage,
   type TeacherCallernAvailability, type InsertTeacherCallernAvailability, type CallernCallHistory, type InsertCallernCallHistory,
   type CallernSyllabusTopics, type InsertCallernSyllabusTopics, type StudentCallernProgress, type InsertStudentCallernProgress,
+  type Room, type InsertRoom,
   // Testing subsystem types
   tests, testQuestions, testAttempts, testAnswers,
   type Test, type InsertTest, type TestQuestion, type InsertTestQuestion,
@@ -3916,5 +3917,50 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(aiPronunciationAnalysis)
       .where(eq(aiPronunciationAnalysis.userId, userId))
       .orderBy(desc(aiPronunciationAnalysis.createdAt));
+  }
+
+  // ===== ROOM MANAGEMENT =====
+  async getRooms(): Promise<Room[]> {
+    return await db.select().from(rooms).orderBy(rooms.name);
+  }
+
+  async getRoomById(id: number): Promise<Room | undefined> {
+    const [room] = await db.select().from(rooms).where(eq(rooms.id, id));
+    return room;
+  }
+
+  async createRoom(room: InsertRoom): Promise<Room> {
+    const [newRoom] = await db.insert(rooms).values(room).returning();
+    return newRoom;
+  }
+
+  async updateRoom(id: number, updates: Partial<InsertRoom>): Promise<Room | undefined> {
+    const [updatedRoom] = await db
+      .update(rooms)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(rooms.id, id))
+      .returning();
+    return updatedRoom;
+  }
+
+  async deleteRoom(id: number): Promise<boolean> {
+    const result = await db.delete(rooms).where(eq(rooms.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getActiveRooms(): Promise<Room[]> {
+    return await db
+      .select()
+      .from(rooms)
+      .where(eq(rooms.isActive, true))
+      .orderBy(rooms.name);
+  }
+
+  async getRoomsByType(type: string): Promise<Room[]> {
+    return await db
+      .select()
+      .from(rooms)
+      .where(eq(rooms.type, type))
+      .orderBy(rooms.name);
   }
 }
