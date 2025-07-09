@@ -9483,10 +9483,18 @@ Return JSON format:
       );
 
       if (teacherScheduleConflicts.hasConflicts) {
+        // Provide detailed conflict information
+        const conflictSessions = teacherScheduleConflicts.conflicts
+          .filter(c => c.type === 'scheduled_session')
+          .map(c => `${c.courseTitle} on ${c.sessionTime}`)
+          .join(', ');
+          
         return res.status(409).json({
           message: "Schedule conflict detected",
           conflicts: teacherScheduleConflicts.conflicts,
-          conflictDetails: `Teacher has existing ${teacherScheduleConflicts.conflictType} classes during these hours: ${teacherScheduleConflicts.conflictingHours.join(', ')}`
+          conflictDetails: conflictSessions 
+            ? `Teacher has scheduled sessions: ${conflictSessions}. Please choose different hours or cancel conflicting sessions first.`
+            : `Teacher has existing ${teacherScheduleConflicts.conflictType} during these hours: ${teacherScheduleConflicts.conflictingHours.join(', ')}`
         });
       }
 
