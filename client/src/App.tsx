@@ -84,6 +84,7 @@ import AdminSupervisionPage from "@/pages/admin/supervision";
 import MentorMatchingPage from "@/pages/admin/mentor-matching";
 import UserManagement from "@/pages/admin/user-management";
 import TeacherStudentMatchingPage from "@/pages/admin/teacher-student-matching";
+import RoomManagement from "@/pages/admin/room-management";
 
 import { LanguageProvider } from "@/hooks/use-language";
 
@@ -410,6 +411,11 @@ function Router() {
           <AppLayout>
             <AdminClassesPage />
           </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/room-management">
+        <ProtectedRoute>
+          <RoomManagement />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/mentor-matching">

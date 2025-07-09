@@ -3,7 +3,7 @@ import {
   payments, notifications, instituteBranding, leads, invoices,
   communicationLogs, achievements, userAchievements,
   userStats, dailyGoals, skillAssessments, learningActivities, progressSnapshots,
-  moodEntries, moodRecommendations, learningAdaptations, attendanceRecords,
+  moodEntries, moodRecommendations, learningAdaptations, attendanceRecords, rooms,
   type User, type InsertUser, type Course, type InsertCourse,
   type Enrollment, type InsertEnrollment, type Session, type InsertSession,
   type Message, type InsertMessage, type Homework, type InsertHomework,
@@ -23,6 +23,7 @@ import {
   type MoodRecommendation, type InsertMoodRecommendation,
   type LearningAdaptation, type InsertLearningAdaptation,
   type AttendanceRecord, type InsertAttendanceRecord,
+  type Room, type InsertRoom,
   // Testing subsystem types
   tests, testQuestions, testAttempts, testAnswers,
   type Test, type InsertTest, type TestQuestion, type InsertTestQuestion,
@@ -375,6 +376,16 @@ export interface IStorage {
   // Pronunciation analysis
   createPronunciationAnalysis(analysis: InsertAiPronunciationAnalysis): Promise<AiPronunciationAnalysis>;
   getUserPronunciationAnalyses(userId: number): Promise<AiPronunciationAnalysis[]>;
+  
+  // ===== ROOM MANAGEMENT =====
+  // Room CRUD operations
+  getRooms(): Promise<Room[]>;
+  getRoomById(id: number): Promise<Room | undefined>;
+  createRoom(room: InsertRoom): Promise<Room>;
+  updateRoom(id: number, updates: Partial<InsertRoom>): Promise<Room | undefined>;
+  deleteRoom(id: number): Promise<boolean>;
+  getActiveRooms(): Promise<Room[]>;
+  getRoomsByType(type: string): Promise<Room[]>;
 }
 
 export class MemStorage implements IStorage {

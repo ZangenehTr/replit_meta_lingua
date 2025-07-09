@@ -143,6 +143,25 @@ export const enrollments = pgTable("enrollments", {
   completedAt: timestamp("completed_at")
 });
 
+// Rooms table for physical and virtual classrooms
+export const rooms = pgTable("rooms", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // e.g., "Room 101", "Conference Room A"
+  type: text("type").notNull().default("physical"), // "physical" or "virtual"
+  capacity: integer("capacity").notNull().default(20),
+  building: text("building"), // e.g., "Main Building", "East Wing"
+  floor: text("floor"), // e.g., "1st Floor", "Ground Floor"
+  equipment: text("equipment").array().default([]), // ["Whiteboard", "Projector", "Smart Board"]
+  amenities: text("amenities").array().default([]), // ["Air Conditioning", "Natural Light", "Wheelchair Access"]
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  maintenanceStatus: text("maintenance_status").default("operational"), // "operational", "maintenance", "unavailable"
+  virtualRoomUrl: text("virtual_room_url"), // For virtual rooms
+  virtualRoomProvider: text("virtual_room_provider"), // "zoom", "meet", "teams", etc.
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Course Sessions - Scheduled class sessions for courses
 export const courseSessions = pgTable("course_sessions", {
   id: serial("id").primaryKey(),
@@ -1753,6 +1772,13 @@ export const insertMentoringSessionSchema = createInsertSchema(mentoringSessions
   createdAt: true
 });
 
+// Insert schema for rooms
+export const insertRoomSchema = createInsertSchema(rooms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -1929,6 +1955,8 @@ export type ClassObservation = typeof classObservations.$inferSelect;
 export type InsertClassObservation = z.infer<typeof insertClassObservationSchema>;
 export type SystemMetric = typeof systemMetrics.$inferSelect;
 export type InsertSystemMetric = z.infer<typeof insertSystemMetricSchema>;
+export type Room = typeof rooms.$inferSelect;
+export type InsertRoom = z.infer<typeof insertRoomSchema>;
 export type MentorAssignment = typeof mentorAssignments.$inferSelect;
 export type InsertMentorAssignment = z.infer<typeof insertMentorAssignmentSchema>;
 export type MentoringSession = typeof mentoringSessions.$inferSelect;
