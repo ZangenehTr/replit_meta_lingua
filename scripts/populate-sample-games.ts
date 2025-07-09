@@ -19,7 +19,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 15,
       pointsPerCorrect: 10,
-      thumbnailUrl: "/images/word-match-kids.png",
+      thumbnailUrl: "/assets/games/word-match-kids.png",
       totalLevels: 20,
       isActive: true
     },
@@ -35,7 +35,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 20,
       pointsPerCorrect: 15,
-      thumbnailUrl: "/images/listen-choose.png",
+      thumbnailUrl: "/assets/games/listen-choose.png",
       totalLevels: 25,
       isActive: true
     },
@@ -51,7 +51,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 25,
       pointsPerCorrect: 20,
-      thumbnailUrl: "/images/color-grammar.png",
+      thumbnailUrl: "/assets/games/color-grammar.png",
       totalLevels: 30,
       isActive: true
     },
@@ -69,7 +69,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 30,
       pointsPerCorrect: 25,
-      thumbnailUrl: "/images/vocab-challenge.png",
+      thumbnailUrl: "/assets/games/vocab-challenge.png",
       totalLevels: 35,
       isActive: true
     },
@@ -85,7 +85,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 40,
       pointsPerCorrect: 30,
-      thumbnailUrl: "/images/story-builder.png",
+      thumbnailUrl: "/assets/games/story-builder.png",
       totalLevels: 40,
       isActive: true
     },
@@ -101,7 +101,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 35,
       pointsPerCorrect: 35,
-      thumbnailUrl: "/images/conversation-practice.png",
+      thumbnailUrl: "/assets/games/conversation-practice.png",
       totalLevels: 30,
       isActive: true
     },
@@ -119,7 +119,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 45,
       pointsPerCorrect: 40,
-      thumbnailUrl: "/images/grammar-quest.png",
+      thumbnailUrl: "/assets/games/grammar-quest.png",
       totalLevels: 50,
       isActive: true
     },
@@ -135,7 +135,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 50,
       pointsPerCorrect: 45,
-      thumbnailUrl: "/images/reading-pro.png",
+      thumbnailUrl: "/assets/games/reading-pro.png",
       totalLevels: 45,
       isActive: true
     },
@@ -151,7 +151,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 55,
       pointsPerCorrect: 50,
-      thumbnailUrl: "/images/debate-master.png",
+      thumbnailUrl: "/assets/games/debate-master.png",
       totalLevels: 40,
       isActive: true
     },
@@ -169,7 +169,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 60,
       pointsPerCorrect: 55,
-      thumbnailUrl: "/images/business-english.png",
+      thumbnailUrl: "/assets/games/business-english.png",
       totalLevels: 60,
       isActive: true
     },
@@ -185,7 +185,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 65,
       pointsPerCorrect: 60,
-      thumbnailUrl: "/images/academic-writing.png",
+      thumbnailUrl: "/assets/games/academic-writing.png",
       totalLevels: 55,
       isActive: true
     },
@@ -201,7 +201,7 @@ async function populateSampleGames() {
       gameMode: "single_player",
       duration: 70,
       pointsPerCorrect: 65,
-      thumbnailUrl: "/images/professional-listening.png",
+      thumbnailUrl: "/assets/games/professional-listening.png",
       totalLevels: 50,
       isActive: true
     }
