@@ -58,7 +58,11 @@ const iconMap = {
   DollarSign,
   Building2,
   Settings,
-  Globe
+  Globe,
+  Gamepad2: Home, // Using Home as fallback for Gamepad2
+  Play: Video, // Using Video as fallback for Play
+  UserCog: Users, // Using Users as fallback for UserCog
+  Share2: TrendingUp // Using TrendingUp as fallback for Share2
 };
 
 export function Sidebar() {
