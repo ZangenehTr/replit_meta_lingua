@@ -84,7 +84,7 @@ export function AdminDashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">{t('adminDashboard')}</h1>
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Complete Institute Management Platform - Enhanced Admin Features
           </p>
