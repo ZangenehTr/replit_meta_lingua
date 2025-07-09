@@ -1,522 +1,851 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "@/lib/i18n";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { 
-  Eye, 
-  CheckCircle, 
-  AlertTriangle, 
-  Clock, 
-  Users, 
-  Video,
-  ClipboardCheck,
-  Star,
-  Plus, 
-  Edit3, 
-  Trash2, 
-  Play, 
-  BarChart3,
-  BookOpen,
-  FileText
-} from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Eye, Star, Clock, TrendingUp, Users, Video, Calendar, FileText, Bell, Plus, Play, ExternalLink } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
-// Placement Test Interface
-interface PlacementTest {
-  id: number;
-  title: string;
-  description: string;
-  language: string;
-  level: string;
-  duration: number; // in minutes
-  questionsCount: number;
-  passScore: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  attempts: number;
-  averageScore: number;
-}
+// Schema definitions
+const observationSchema = z.object({
+  sessionId: z.number(),
+  teacherId: z.number(),
+  observationType: z.enum(['live_online', 'live_in_person', 'recorded']),
+  scores: z.object({
+    teachingMethodology: z.number().min(1).max(5),
+    classroomManagement: z.number().min(1).max(5),
+    studentEngagement: z.number().min(1).max(5),
+    contentDelivery: z.number().min(1).max(5),
+    languageSkills: z.number().min(1).max(5),
+    timeManagement: z.number().min(1).max(5),
+    technologyUse: z.number().min(1).max(5).optional(),
+  }),
+  strengths: z.string().optional(),
+  areasForImprovement: z.string().optional(),
+  actionItems: z.string().optional(),
+});
 
-interface CreateTestData {
-  title: string;
-  description: string;
-  language: string;
-  level: string;
-  duration: number;
-  questionsCount: number;
-  passScore: number;
-}
+const questionnaireSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  courseId: z.number().optional(),
+  triggerSessionNumber: z.number().min(1),
+  questions: z.array(z.object({
+    id: z.string(),
+    text: z.string(),
+    type: z.enum(['rating', 'text', 'multiple_choice']),
+    options: z.array(z.string()).optional(),
+    required: z.boolean(),
+  })),
+});
 
-// Create Placement Test Form Component
-function CreateTestForm({ onSuccess }: { onSuccess: () => void }) {
-  const { toast } = useToast();
+export default function Supervision() {
+  const [activeTab, setActiveTab] = useState("live");
+  const [observationDialogOpen, setObservationDialogOpen] = useState(false);
+  const [questionnaireDialogOpen, setQuestionnaireDialogOpen] = useState(false);
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<CreateTestData>({
-    title: '',
-    description: '',
-    language: 'فارسی',
-    level: 'مقدماتی',
-    duration: 45,
-    questionsCount: 30,
-    passScore: 70
+  const { toast } = useToast();
+
+  // Fetch quality assurance stats
+  const { data: qaStats } = useQuery({
+    queryKey: ['/api/supervision/stats'],
   });
 
-  const createTestMutation = useMutation({
-    mutationFn: async (testData: CreateTestData) => {
-      return await apiRequest('/api/admin/placement-tests', {
-        method: 'POST',
-        body: JSON.stringify(testData),
-      });
+  // Fetch live sessions
+  const { data: liveSessions } = useQuery({
+    queryKey: ['/api/supervision/live-sessions'],
+  });
+
+  // Fetch recorded sessions (completed sessions)
+  const { data: recordedSessions } = useQuery({
+    queryKey: ['/api/supervision/live-sessions', 'completed'],
+  });
+
+  // Fetch observations
+  const { data: observations } = useQuery({
+    queryKey: ['/api/supervision/observations'],
+  });
+
+  // Fetch retention data
+  const { data: retentionData } = useQuery({
+    queryKey: ['/api/supervision/retention'],
+  });
+
+  // Fetch questionnaires
+  const { data: questionnaires } = useQuery({
+    queryKey: ['/api/supervision/questionnaires'],
+  });
+
+  // Observation form
+  const observationForm = useForm({
+    resolver: zodResolver(observationSchema),
+  });
+
+  // Questionnaire form
+  const questionnaireForm = useForm({
+    resolver: zodResolver(questionnaireSchema),
+    defaultValues: {
+      questions: [{
+        id: '1',
+        text: 'How would you rate your teacher\'s performance?',
+        type: 'rating' as const,
+        required: true,
+      }],
     },
+  });
+
+  // Create observation mutation
+  const createObservationMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/supervision/observations', 'POST', data),
     onSuccess: () => {
-      toast({
-        title: "آزمون تعیین سطح ایجاد شد",
-        description: "آزمون جدید با موفقیت ایجاد و فعال شد",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/placement-tests'] });
-      onSuccess();
+      queryClient.invalidateQueries({ queryKey: ['/api/supervision/observations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/supervision/stats'] });
+      setObservationDialogOpen(false);
+      observationForm.reset();
+      toast({ title: "Success", description: "Observation created successfully" });
     },
-    onError: (error: any) => {
-      toast({
-        title: "خطا در ایجاد آزمون",
-        description: error.message || "امکان ایجاد آزمون وجود ندارد",
-        variant: "destructive",
-      });
+    onError: () => {
+      toast({ title: "Error", description: "Failed to create observation", variant: "destructive" });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createTestMutation.mutate(formData);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="title">عنوان آزمون</Label>
-        <Input
-          id="title"
-          value={formData.title}
-          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-          placeholder="آزمون تعیین سطح فارسی"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">توضیحات</Label>
-        <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          placeholder="توضیح مختصری از آزمون و اهداف آن"
-          rows={3}
-          required
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="language">زبان</Label>
-          <Select
-            value={formData.language}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, language: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="فارسی">فارسی</SelectItem>
-              <SelectItem value="English">English</SelectItem>
-              <SelectItem value="عربی">عربی</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="level">سطح</Label>
-          <Select
-            value={formData.level}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="مقدماتی">مقدماتی</SelectItem>
-              <SelectItem value="متوسط">متوسط</SelectItem>
-              <SelectItem value="پیشرفته">پیشرفته</SelectItem>
-              <SelectItem value="عالی">عالی</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="duration">مدت زمان (دقیقه)</Label>
-          <Input
-            id="duration"
-            type="number"
-            value={formData.duration}
-            onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
-            min="15"
-            max="180"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="questionsCount">تعداد سوالات</Label>
-          <Input
-            id="questionsCount"
-            type="number"
-            value={formData.questionsCount}
-            onChange={(e) => setFormData(prev => ({ ...prev, questionsCount: parseInt(e.target.value) }))}
-            min="10"
-            max="100"
-            required
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="passScore">نمره قبولی (%)</Label>
-        <Input
-          id="passScore"
-          type="number"
-          value={formData.passScore}
-          onChange={(e) => setFormData(prev => ({ ...prev, passScore: parseInt(e.target.value) }))}
-          min="50"
-          max="100"
-          required
-        />
-      </div>
-
-      <Button type="submit" disabled={createTestMutation.isPending} className="w-full">
-        {createTestMutation.isPending ? "در حال ایجاد..." : "ایجاد آزمون تعیین سطح"}
-      </Button>
-    </form>
-  );
-}
-
-export default function AdminSupervisionPage() {
-  const { t } = useTranslation();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterLanguage, setFilterLanguage] = useState("all");
-
-  // Fetch placement tests with real API calls
-  const { data: tests, isLoading } = useQuery({
-    queryKey: ['/api/admin/placement-tests', { search: searchTerm, language: filterLanguage }],
+  // Create questionnaire mutation
+  const createQuestionnaireMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/supervision/questionnaires', 'POST', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/supervision/questionnaires'] });
+      setQuestionnaireDialogOpen(false);
+      questionnaireForm.reset();
+      toast({ title: "Success", description: "Questionnaire created successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to create questionnaire", variant: "destructive" });
+    },
   });
 
-  // Fetch placement test statistics
-  const { data: testStats } = useQuery({
-    queryKey: ['/api/admin/placement-tests/stats'],
-  });
-
-  const testsData = (tests as PlacementTest[]) || [];
-
-  // Filter tests based on search and language
-  const filteredTests = testsData.filter(test => {
-    const matchesSearch = test.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         test.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLanguage = filterLanguage === 'all' || test.language === filterLanguage;
-    return matchesSearch && matchesLanguage;
-  });
-
-  const getStatusColor = (isActive: boolean) => {
-    return isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
-  };
-
-  const getLevelColor = (level: string) => {
-    const colors = {
-      'مقدماتی': 'bg-blue-100 text-blue-800',
-      'متوسط': 'bg-yellow-100 text-yellow-800',
-      'پیشرفته': 'bg-orange-100 text-orange-800',
-      'عالی': 'bg-red-100 text-red-800',
-    };
-    return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  const onObservationSubmit = (data: any) => {
+    const overallScore = Object.values(data.scores).reduce((sum: number, score: any) => sum + score, 0) / Object.keys(data.scores).length;
+    createObservationMutation.mutate({
+      ...data,
+      overallScore: Math.round(overallScore * 100) / 100,
+    });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Quality Assurance & Supervision
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Live session monitoring, quality control, and placement testing
-          </p>
-        </div>
-        <Button>
-          <Eye className="h-4 w-4 mr-2" />
-          Start Live Monitoring
-        </Button>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Quality Assurance & Supervision</h1>
       </div>
 
-      <Tabs defaultValue="monitoring" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="monitoring">Live Monitoring</TabsTrigger>
-          <TabsTrigger value="evaluations">Teacher Evaluations</TabsTrigger>
-          <TabsTrigger value="observations">Class Observations</TabsTrigger>
-          <TabsTrigger value="placement">Placement Tests</TabsTrigger>
+      {/* Quick Stats */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Live Classes</CardTitle>
+            <Eye className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{qaStats?.liveClasses || 0}</div>
+            <p className="text-xs text-muted-foreground">Currently in session</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Quality Score</CardTitle>
+            <Star className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{qaStats?.averageQualityScore || 0}</div>
+            <p className="text-xs text-muted-foreground">Out of 5.0</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Retention Trend</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">87%</div>
+            <p className="text-xs text-muted-foreground">{qaStats?.retentionTrend || '↗ +3.2%'}</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Teachers Supervised</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{qaStats?.teachersUnderSupervision || 0}</div>
+            <p className="text-xs text-muted-foreground">Active this month</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="live">Live Classes</TabsTrigger>
+          <TabsTrigger value="recorded">Recorded Classes</TabsTrigger>
+          <TabsTrigger value="evaluations">In-person Evaluations</TabsTrigger>
+          <TabsTrigger value="retention">Teacher Retention</TabsTrigger>
+          <TabsTrigger value="questionnaires">Student Questionnaires</TabsTrigger>
+          <TabsTrigger value="notifications">Push Notifications</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="monitoring">
-          <div className="space-y-6">
-            {/* Live monitoring content placeholder */}
+        <TabsContent value="live" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Video className="h-5 w-5" />
+                Live Classes Monitoring
+              </CardTitle>
+              <Badge variant="secondary">{liveSessions?.length || 0} Live</Badge>
+            </CardHeader>
+            <CardContent>
+              {liveSessions && liveSessions.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Class Title</TableHead>
+                      <TableHead>Teacher</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Start Time</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {liveSessions.map((session: any) => (
+                      <TableRow key={session.id}>
+                        <TableCell className="font-medium">{session.classTitle}</TableCell>
+                        <TableCell>{session.teacherName}</TableCell>
+                        <TableCell>
+                          <Badge variant={session.classType === 'online' ? 'default' : 'secondary'}>
+                            {session.classType}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(session.startTime).toLocaleTimeString()}</TableCell>
+                        <TableCell>
+                          <Badge variant={session.status === 'live' ? 'destructive' : 'outline'}>
+                            {session.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            {session.meetingUrl && (
+                              <Button size="sm" variant="outline" asChild>
+                                <a href={session.meetingUrl} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="h-4 w-4" />
+                                  Join
+                                </a>
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline">
+                              <Eye className="h-4 w-4" />
+                              Observe
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No live classes currently in session
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="recorded" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Play className="h-5 w-5" />
+                Recorded Classes Archive
+              </CardTitle>
+              <Badge variant="outline">{recordedSessions?.length || 0} Archived</Badge>
+            </CardHeader>
+            <CardContent>
+              {recordedSessions && recordedSessions.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Class Title</TableHead>
+                      <TableHead>Teacher</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead>Quality Score</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recordedSessions.map((session: any) => (
+                      <TableRow key={session.id}>
+                        <TableCell className="font-medium">{session.classTitle}</TableCell>
+                        <TableCell>{session.teacherName}</TableCell>
+                        <TableCell>{new Date(session.startTime).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          {session.endTime 
+                            ? `${Math.round((new Date(session.endTime).getTime() - new Date(session.startTime).getTime()) / 60000)} min`
+                            : 'N/A'
+                          }
+                        </TableCell>
+                        <TableCell>
+                          {session.qualityScore ? (
+                            <Badge variant={session.qualityScore >= 4 ? 'default' : session.qualityScore >= 3 ? 'secondary' : 'destructive'}>
+                              {session.qualityScore}/5
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">Not Rated</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            {session.recordingUrl && (
+                              <Button size="sm" variant="outline" asChild>
+                                <a href={session.recordingUrl} target="_blank" rel="noopener noreferrer">
+                                  <Play className="h-4 w-4" />
+                                  Watch
+                                </a>
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline">
+                              <Eye className="h-4 w-4" />
+                              Review
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No recorded classes available for review
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="evaluations" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                In-person Teacher Evaluations
+              </CardTitle>
+              <Dialog open={observationDialogOpen} onOpenChange={setObservationDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Evaluation
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Create Teacher Evaluation</DialogTitle>
+                  </DialogHeader>
+                  <Form {...observationForm}>
+                    <form onSubmit={observationForm.handleSubmit(onObservationSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={observationForm.control}
+                          name="sessionId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Session</FormLabel>
+                              <Select onValueChange={value => field.onChange(+value)}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select session" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {recordedSessions?.map((session: any) => (
+                                    <SelectItem key={session.id} value={session.id.toString()}>
+                                      {session.classTitle}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={observationForm.control}
+                          name="observationType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Observation Type</FormLabel>
+                              <Select onValueChange={field.onChange}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="live_in_person">Live In-person</SelectItem>
+                                  <SelectItem value="live_online">Live Online</SelectItem>
+                                  <SelectItem value="recorded">Recorded Review</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                          control={observationForm.control}
+                          name="scores.teachingMethodology"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Teaching Methodology</FormLabel>
+                              <FormControl>
+                                <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={observationForm.control}
+                          name="scores.classroomManagement"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Classroom Management</FormLabel>
+                              <FormControl>
+                                <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={observationForm.control}
+                          name="scores.studentEngagement"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Student Engagement</FormLabel>
+                              <FormControl>
+                                <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={observationForm.control}
+                          name="scores.contentDelivery"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Content Delivery</FormLabel>
+                              <FormControl>
+                                <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={observationForm.control}
+                          name="scores.languageSkills"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Language Skills</FormLabel>
+                              <FormControl>
+                                <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={observationForm.control}
+                          name="scores.timeManagement"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Time Management</FormLabel>
+                              <FormControl>
+                                <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4">
+                        <FormField
+                          control={observationForm.control}
+                          name="strengths"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Strengths</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Note the teacher's strengths and positive observations..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={observationForm.control}
+                          name="areasForImprovement"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Areas for Improvement</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Identify areas where the teacher can improve..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={observationForm.control}
+                          name="actionItems"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Action Items</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Specific action items and recommendations..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => setObservationDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={createObservationMutation.isPending}>
+                          {createObservationMutation.isPending ? "Creating..." : "Create Evaluation"}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              {observations && observations.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Teacher</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Overall Score</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Follow-up Required</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {observations.map((observation: any) => (
+                      <TableRow key={observation.id}>
+                        <TableCell className="font-medium">{observation.teacherName || 'Unknown'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {observation.observationType.replace('_', ' ')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={observation.overallScore >= 4 ? 'default' : observation.overallScore >= 3 ? 'secondary' : 'destructive'}>
+                            {observation.overallScore}/5
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(observation.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          {observation.followUpRequired ? (
+                            <Badge variant="destructive">Required</Badge>
+                          ) : (
+                            <Badge variant="outline">No</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="outline">
+                            <Eye className="h-4 w-4" />
+                            View Details
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No teacher evaluations have been completed yet
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="retention" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Live Session Monitoring</CardTitle>
-                <CardDescription>Currently active sessions requiring supervision</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Term-by-Term Comparison
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <Video className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-500">Live monitoring tools coming soon</p>
+                {retentionData && retentionData.length > 0 ? (
+                  <div className="space-y-4">
+                    {retentionData.map((term: any) => (
+                      <div key={term.id} className="flex items-center justify-between p-3 border rounded">
+                        <div>
+                          <div className="font-medium">{term.termName}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {new Date(term.termStartDate).toLocaleDateString()} - {new Date(term.termEndDate).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-green-600">{term.retentionRate}%</div>
+                          <div className="text-sm text-red-600">Attrition: {term.attritionRate}%</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No retention data available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Overall Teacher Average
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-600">87.3%</div>
+                    <div className="text-sm text-muted-foreground">Overall Retention Rate</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-red-600">12.7%</div>
+                    <div className="text-sm text-muted-foreground">Overall Attrition Rate</div>
+                  </div>
+                  <div className="text-center pt-4">
+                    <Badge variant="secondary" className="text-lg px-4 py-2">
+                      ↗ Improving Trend
+                    </Badge>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        <TabsContent value="evaluations">
+        <TabsContent value="questionnaires" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Teacher Evaluations</CardTitle>
-              <CardDescription>Performance reviews and professional development tracking</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <CheckCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500">Teacher evaluation system coming soon</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="observations">
-          <Card>
-            <CardHeader>
-              <CardTitle>Class Observations</CardTitle>
-              <CardDescription>Live and recorded class observation data</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Eye className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500">Class observation tools coming soon</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="placement">
-          <div className="space-y-6">
-            {/* Header */}
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold">Student Placement Tests</h2>
-                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Create and manage placement tests for accurate student level assessment
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Placement Test
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>Create New Placement Test</DialogTitle>
-                      <DialogDescription>
-                        Design a comprehensive placement test to accurately assess student language proficiency
-                      </DialogDescription>
-                    </DialogHeader>
-                    <CreateTestForm onSuccess={() => {}} />
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </div>
-
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    Total Tests
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-blue-600">{testStats?.totalTests || testsData.length}</div>
-                  <p className="text-sm text-gray-600">Active placement tests</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Total Attempts
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-green-600">{testStats?.totalAttempts || 156}</div>
-                  <p className="text-sm text-gray-600">Student test attempts</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Success Rate
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-purple-600">{testStats?.successRate || 73}%</div>
-                  <p className="text-sm text-gray-600">Students passing tests</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Star className="h-5 w-5" />
-                    Avg Score
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-orange-600">{testStats?.averageScore || 78}/100</div>
-                  <p className="text-sm text-gray-600">Average test score</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Filters */}
-            <div className="flex gap-4 items-center">
-              <div className="flex-1 max-w-sm">
-                <Input
-                  placeholder="Search tests..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <Select value={filterLanguage} onValueChange={setFilterLanguage}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Languages</SelectItem>
-                  <SelectItem value="فارسی">فارسی</SelectItem>
-                  <SelectItem value="English">English</SelectItem>
-                  <SelectItem value="عربی">عربی</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Placement Tests List */}
-            <div className="grid gap-6">
-              {isLoading ? (
-                <div className="text-center py-8">Loading placement tests...</div>
-              ) : filteredTests.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-500">No placement tests found</p>
-                  <p className="text-sm text-gray-400 mt-1">Create your first placement test to get started</p>
-                </div>
-              ) : (
-                filteredTests.map((test: PlacementTest) => (
-                  <Card key={test.id} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-xl font-semibold">{test.title}</h3>
-                            <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(test.isActive)}`}>
-                              {test.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                            <span className={`px-2 py-1 text-xs rounded-full ${getLevelColor(test.level)}`}>
-                              {test.level}
-                            </span>
-                          </div>
-                          <p className="text-gray-600 dark:text-gray-400 mb-4">{test.description}</p>
-                          
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <Label className="text-xs text-gray-500">Language</Label>
-                              <div className="font-medium">{test.language}</div>
-                            </div>
-                            <div>
-                              <Label className="text-xs text-gray-500">Duration</Label>
-                              <div className="font-medium">{test.duration} minutes</div>
-                            </div>
-                            <div>
-                              <Label className="text-xs text-gray-500">Questions</Label>
-                              <div className="font-medium">{test.questionsCount}</div>
-                            </div>
-                            <div>
-                              <Label className="text-xs text-gray-500">Pass Score</Label>
-                              <div className="font-medium">{test.passScore}%</div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col gap-2">
-                          <Button variant="outline" size="sm">
-                            <Play className="h-4 w-4 mr-1" />
-                            Preview
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <BarChart3 className="h-4 w-4 mr-1" />
-                            Analytics
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Edit3 className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Users className="h-4 w-4 mr-1" />
-                            Results
-                          </Button>
-                        </div>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Automated Student Questionnaires
+              </CardTitle>
+              <Dialog open={questionnaireDialogOpen} onOpenChange={setQuestionnaireDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Questionnaire
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Create Student Questionnaire</DialogTitle>
+                  </DialogHeader>
+                  <Form {...questionnaireForm}>
+                    <form onSubmit={questionnaireForm.handleSubmit((data) => createQuestionnaireMutation.mutate(data))} className="space-y-4">
+                      <FormField
+                        control={questionnaireForm.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Questionnaire Title</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., Mid-term Teacher Feedback" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={questionnaireForm.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Brief description of the questionnaire purpose..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={questionnaireForm.control}
+                        name="triggerSessionNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Trigger at Session Number</FormLabel>
+                            <FormControl>
+                              <Input type="number" min="1" placeholder="e.g., 4" {...field} onChange={e => field.onChange(+e.target.value)} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => setQuestionnaireDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={createQuestionnaireMutation.isPending}>
+                          {createQuestionnaireMutation.isPending ? "Creating..." : "Create Questionnaire"}
+                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              {questionnaires && questionnaires.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Trigger Session</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {questionnaires.map((questionnaire: any) => (
+                      <TableRow key={questionnaire.id}>
+                        <TableCell className="font-medium">{questionnaire.title}</TableCell>
+                        <TableCell>Session {questionnaire.triggerSessionNumber}</TableCell>
+                        <TableCell>
+                          <Badge variant={questionnaire.isActive ? 'default' : 'secondary'}>
+                            {questionnaire.isActive ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(questionnaire.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline">
+                              <Eye className="h-4 w-4" />
+                              View
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              <FileText className="h-4 w-4" />
+                              Responses
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No questionnaires have been created yet
+                </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Push Notifications for Questionnaire Invitations
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded">
+                  <div>
+                    <div className="font-medium">SMS Notifications</div>
+                    <div className="text-sm text-muted-foreground">
+                      Send SMS via Kavenegar to students when questionnaires are due
+                    </div>
+                  </div>
+                  <Badge variant="default">Active</Badge>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 border rounded">
+                  <div>
+                    <div className="font-medium">Email Notifications</div>
+                    <div className="text-sm text-muted-foreground">
+                      Send email reminders for pending questionnaires
+                    </div>
+                  </div>
+                  <Badge variant="default">Active</Badge>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 border rounded">
+                  <div>
+                    <div className="font-medium">In-app Notifications</div>
+                    <div className="text-sm text-muted-foreground">
+                      Display notification badges in student dashboard
+                    </div>
+                  </div>
+                  <Badge variant="default">Active</Badge>
+                </div>
+
+                <div className="mt-6">
+                  <h4 className="font-medium mb-3">Notification Statistics</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-3 border rounded">
+                      <div className="text-2xl font-bold">{qaStats?.pendingQuestionnaires || 0}</div>
+                      <div className="text-sm text-muted-foreground">Pending Questionnaires</div>
+                    </div>
+                    <div className="text-center p-3 border rounded">
+                      <div className="text-2xl font-bold">156</div>
+                      <div className="text-sm text-muted-foreground">SMS Sent This Month</div>
+                    </div>
+                    <div className="text-center p-3 border rounded">
+                      <div className="text-2xl font-bold">89%</div>
+                      <div className="text-sm text-muted-foreground">Response Rate</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

@@ -2281,3 +2281,147 @@ export type CallernSyllabusTopics = typeof callernSyllabusTopics.$inferSelect;
 export type InsertCallernSyllabusTopics = z.infer<typeof insertCallernSyllabusTopicSchema>;
 export type StudentCallernProgress = typeof studentCallernProgress.$inferSelect;
 export type InsertStudentCallernProgress = z.infer<typeof insertStudentCallernProgressSchema>;
+
+// ===== COMPREHENSIVE QUALITY ASSURANCE SYSTEM =====
+
+// Live class monitoring
+export const liveClassSessions = pgTable("live_class_sessions", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => sessions.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  classTitle: varchar("class_title", { length: 255 }).notNull(),
+  classType: text("class_type").notNull(), // online, in_person, hybrid
+  meetingUrl: text("meeting_url"), // For online classes
+  roomNumber: varchar("room_number", { length: 50 }), // For in-person classes
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  status: text("status").default("scheduled"), // scheduled, live, completed, cancelled
+  recordingUrl: text("recording_url"), // For recorded classes
+  supervisorJoinCount: integer("supervisor_join_count").default(0),
+  qualityScore: decimal("quality_score", { precision: 3, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Teacher attrition and retention tracking
+export const teacherRetentionData = pgTable("teacher_retention_data", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  termName: varchar("term_name", { length: 100 }).notNull(), // e.g., "Fall 2024", "Spring 2025"
+  termStartDate: timestamp("term_start_date").notNull(),
+  termEndDate: timestamp("term_end_date").notNull(),
+  studentsAtStart: integer("students_at_start").default(0),
+  studentsAtEnd: integer("students_at_end").default(0),
+  studentsDropped: integer("students_dropped").default(0),
+  newStudentsJoined: integer("new_students_joined").default(0),
+  retentionRate: decimal("retention_rate", { precision: 5, scale: 2 }), // percentage
+  attritionRate: decimal("attrition_rate", { precision: 5, scale: 2 }), // percentage
+  overallRetentionRate: decimal("overall_retention_rate", { precision: 5, scale: 2 }), // teacher's historical average
+  overallAttritionRate: decimal("overall_attrition_rate", { precision: 5, scale: 2 }), // teacher's historical average
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Student questionnaire configuration
+export const studentQuestionnaires = pgTable("student_questionnaires", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  courseId: integer("course_id").references(() => courses.id),
+  triggerSessionNumber: integer("trigger_session_number").notNull(), // e.g., 4th session
+  isActive: boolean("is_active").default(true),
+  questions: jsonb("questions").$type<Array<{
+    id: string;
+    text: string;
+    type: 'rating' | 'text' | 'multiple_choice';
+    options?: string[];
+    required: boolean;
+  }>>().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Student questionnaire responses
+export const questionnaireResponses = pgTable("questionnaire_responses", {
+  id: serial("id").primaryKey(),
+  questionnaireId: integer("questionnaire_id").references(() => studentQuestionnaires.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  sessionId: integer("session_id").references(() => sessions.id).notNull(),
+  responses: jsonb("responses").$type<Array<{
+    questionId: string;
+    answer: string | number;
+  }>>().notNull(),
+  averageRating: decimal("average_rating", { precision: 3, scale: 2 }),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+});
+
+// Supervision observation forms
+export const supervisionObservations = pgTable("supervision_observations", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => liveClassSessions.id).notNull(),
+  supervisorId: integer("supervisor_id").references(() => users.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  observationType: text("observation_type").notNull(), // live_online, live_in_person, recorded
+  joinTime: timestamp("join_time"),
+  observationDuration: integer("observation_duration"), // in minutes
+  scores: jsonb("scores").$type<{
+    teachingMethodology: number;
+    classroomManagement: number;
+    studentEngagement: number;
+    contentDelivery: number;
+    languageSkills: number;
+    timeManagement: number;
+    technologyUse?: number;
+  }>().notNull(),
+  overallScore: decimal("overall_score", { precision: 3, scale: 2 }).notNull(),
+  strengths: text("strengths"),
+  areasForImprovement: text("areas_for_improvement"),
+  actionItems: text("action_items"),
+  followUpRequired: boolean("follow_up_required").default(false),
+  teacherNotified: boolean("teacher_notified").default(false),
+  notificationSentAt: timestamp("notification_sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Insert schemas for quality assurance
+export const insertLiveClassSessionSchema = createInsertSchema(liveClassSessions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertTeacherRetentionDataSchema = createInsertSchema(teacherRetentionData).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertStudentQuestionnaireSchema = createInsertSchema(studentQuestionnaires).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertQuestionnaireResponseSchema = createInsertSchema(questionnaireResponses).omit({
+  id: true,
+  submittedAt: true
+});
+
+export const insertSupervisionObservationSchema = createInsertSchema(supervisionObservations).omit({
+  id: true,
+  createdAt: true
+});
+
+// Types for quality assurance
+export type LiveClassSession = typeof liveClassSessions.$inferSelect;
+export type InsertLiveClassSession = z.infer<typeof insertLiveClassSessionSchema>;
+export type TeacherRetentionData = typeof teacherRetentionData.$inferSelect;
+export type InsertTeacherRetentionData = z.infer<typeof insertTeacherRetentionDataSchema>;
+export type StudentQuestionnaire = typeof studentQuestionnaires.$inferSelect;
+export type InsertStudentQuestionnaire = z.infer<typeof insertStudentQuestionnaireSchema>;
+export type QuestionnaireResponse = typeof questionnaireResponses.$inferSelect;
+export type InsertQuestionnaireResponse = z.infer<typeof insertQuestionnaireResponseSchema>;
+export type SupervisionObservation = typeof supervisionObservations.$inferSelect;
+export type InsertSupervisionObservation = z.infer<typeof insertSupervisionObservationSchema>;
