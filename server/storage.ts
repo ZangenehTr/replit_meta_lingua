@@ -97,7 +97,12 @@ export interface IStorage {
   getCallernPackage(id: number): Promise<any | undefined>;
   setTeacherCallernAvailability(availabilityData: any): Promise<any>;
   getTeacherCallernAvailability(): Promise<any[]>;
-  updateTeacherCallernAvailability(teacherId: number, updates: any): Promise<any>;
+  updateTeacherCallernAvailability(teacherId: number, updates: {
+    isOnline?: boolean;
+    availableHours?: string[];
+    hourlyRate?: number | null;
+    lastActiveAt?: Date;
+  }): Promise<any>;
   getTeachersForCallern(): Promise<any[]>;
   getStudentCallernPackages(studentId: number): Promise<any[]>;
   createStudentCallernPackage(packageData: any): Promise<any>;
