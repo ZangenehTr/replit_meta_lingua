@@ -413,6 +413,156 @@ export class DatabaseStorage implements IStorage {
     return studentPackage;
   }
 
+  // Schedule Conflict Checking (Check-First Protocol)
+  async checkTeacherScheduleConflicts(teacherId: number, proposedHours: string[]): Promise<{
+    hasConflicts: boolean;
+    conflicts: any[];
+    conflictType: string;
+    conflictingHours: string[];
+  }> {
+    try {
+      // Convert proposed hours to time ranges for comparison
+      const proposedTimeRanges = proposedHours.map(hourRange => {
+        const [start, end] = hourRange.split('-');
+        return { start, end, range: hourRange };
+      });
+
+      const conflicts = [];
+      const conflictingHours = [];
+
+      // Check existing scheduled sessions (in-person and online classes)
+      const existingSessions = await db
+        .select({
+          id: sessions.id,
+          title: sessions.title,
+          scheduledAt: sessions.scheduledAt,
+          duration: sessions.duration,
+          status: sessions.status,
+          courseTitle: courses.title,
+          deliveryMode: courses.deliveryMode
+        })
+        .from(sessions)
+        .innerJoin(courses, eq(sessions.courseId, courses.id))
+        .where(and(
+          eq(sessions.tutorId, teacherId),
+          sql`${sessions.status} != 'cancelled'`
+        ));
+
+      // Check for conflicts with existing sessions
+      for (const session of existingSessions) {
+        if (session.scheduledAt) {
+          const sessionDate = new Date(session.scheduledAt);
+          const sessionStartHour = sessionDate.getHours().toString().padStart(2, '0') + ':' + 
+                                   sessionDate.getMinutes().toString().padStart(2, '0');
+          
+          const sessionEndTime = new Date(sessionDate.getTime() + (session.duration || 60) * 60000);
+          const sessionEndHour = sessionEndTime.getHours().toString().padStart(2, '0') + ':' + 
+                                 sessionEndTime.getMinutes().toString().padStart(2, '0');
+
+          // Check if session time overlaps with any proposed Callern hours
+          for (const proposedRange of proposedTimeRanges) {
+            if (this.timeRangesOverlap(
+              proposedRange.start, proposedRange.end,
+              sessionStartHour, sessionEndHour
+            )) {
+              conflicts.push({
+                type: 'scheduled_session',
+                sessionId: session.id,
+                sessionTitle: session.title,
+                courseTitle: session.courseTitle,
+                deliveryMode: session.deliveryMode,
+                scheduledAt: session.scheduledAt,
+                conflictingTimeRange: proposedRange.range
+              });
+              
+              if (!conflictingHours.includes(proposedRange.range)) {
+                conflictingHours.push(proposedRange.range);
+              }
+            }
+          }
+        }
+      }
+
+      // Check existing Callern availability
+      const existingCallernAvailability = await db
+        .select()
+        .from(teacherCallernAvailability)
+        .where(eq(teacherCallernAvailability.teacherId, teacherId));
+
+      for (const availability of existingCallernAvailability) {
+        if (availability.availableHours && availability.availableHours.length > 0) {
+          for (const existingHour of availability.availableHours) {
+            for (const proposedRange of proposedTimeRanges) {
+              const [existingStart, existingEnd] = existingHour.split('-');
+              
+              if (this.timeRangesOverlap(
+                proposedRange.start, proposedRange.end,
+                existingStart, existingEnd
+              )) {
+                conflicts.push({
+                  type: 'existing_callern_availability',
+                  existingHour,
+                  conflictingTimeRange: proposedRange.range
+                });
+                
+                if (!conflictingHours.includes(proposedRange.range)) {
+                  conflictingHours.push(proposedRange.range);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return {
+        hasConflicts: conflicts.length > 0,
+        conflicts,
+        conflictType: conflicts.length > 0 ? conflicts[0].type : '',
+        conflictingHours
+      };
+
+    } catch (error) {
+      console.error('Error checking teacher schedule conflicts:', error);
+      return {
+        hasConflicts: false,
+        conflicts: [],
+        conflictType: '',
+        conflictingHours: []
+      };
+    }
+  }
+
+  // Helper method to check if two time ranges overlap
+  private timeRangesOverlap(start1: string, end1: string, start2: string, end2: string): boolean {
+    const timeToMinutes = (time: string) => {
+      const [hours, minutes] = time.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+
+    const start1Minutes = timeToMinutes(start1);
+    const end1Minutes = timeToMinutes(end1);
+    const start2Minutes = timeToMinutes(start2);
+    const end2Minutes = timeToMinutes(end2);
+
+    // Handle overnight ranges (e.g., 22:00-06:00)
+    const range1Overnight = end1Minutes < start1Minutes;
+    const range2Overnight = end2Minutes < start2Minutes;
+
+    if (range1Overnight && range2Overnight) {
+      // Both ranges span midnight
+      return true; // Simplified: assume overlap for complex overnight cases
+    } else if (range1Overnight) {
+      // Range 1 spans midnight, check both parts
+      return (start2Minutes >= start1Minutes || end2Minutes <= end1Minutes);
+    } else if (range2Overnight) {
+      // Range 2 spans midnight, check both parts  
+      return (start1Minutes >= start2Minutes || end1Minutes <= end2Minutes);
+    } else {
+      // Normal ranges - check standard overlap
+      return !(end1Minutes <= start2Minutes || start1Minutes >= end2Minutes);
+    }
+  }
+
   // Sessions
   async getUserSessions(userId: number): Promise<(Session & { tutorName: string })[]> {
     const userSessions = await db
