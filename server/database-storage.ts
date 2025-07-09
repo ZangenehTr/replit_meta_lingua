@@ -3669,6 +3669,11 @@ export class DatabaseStorage implements IStorage {
     return await query.orderBy(desc(gameLeaderboards.score)).limit(100);
   }
 
+  async getGlobalLeaderboard(): Promise<any[]> {
+    // Return empty array for now - can be implemented later with real leaderboard data
+    return [];
+  }
+
   // ===== VIDEO LEARNING SUBSYSTEM =====
   // Video lessons
   async createVideoLesson(lesson: InsertVideoLesson): Promise<VideoLesson> {
