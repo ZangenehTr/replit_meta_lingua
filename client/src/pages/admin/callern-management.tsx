@@ -394,6 +394,9 @@ export function CallernManagement() {
                           <Label htmlFor="overnight" className="text-sm">Overnight (00:00-08:00)</Label>
                         </div>
                       </div>
+                      <div className="text-xs text-muted-foreground mt-2">
+                        💡 Tip: If you get schedule conflicts, try different hours that don't overlap with the teacher's existing classes
+                      </div>
                     </div>
                     
                     <Button 

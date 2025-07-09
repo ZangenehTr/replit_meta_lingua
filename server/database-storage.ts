@@ -449,6 +449,8 @@ export class DatabaseStorage implements IStorage {
         ));
 
       // Check for conflicts with existing sessions
+      // Note: Callern availability is a weekly recurring schedule, so we check conflicts
+      // only for sessions that would recur on the same day/time each week
       for (const session of existingSessions) {
         if (session.scheduledAt) {
           const sessionDate = new Date(session.scheduledAt);
@@ -465,6 +467,10 @@ export class DatabaseStorage implements IStorage {
               proposedRange.start, proposedRange.end,
               sessionStartHour, sessionEndHour
             )) {
+              // Only add conflict if this is a recurring session or future session
+              const dayOfWeek = sessionDate.toLocaleDateString('en-US', { weekday: 'long' });
+              const sessionInfo = `${dayOfWeek} ${sessionStartHour}-${sessionEndHour}`;
+              
               conflicts.push({
                 type: 'scheduled_session',
                 sessionId: session.id,
@@ -472,7 +478,8 @@ export class DatabaseStorage implements IStorage {
                 courseTitle: session.courseTitle,
                 deliveryMode: session.deliveryMode,
                 scheduledAt: session.scheduledAt,
-                conflictingTimeRange: proposedRange.range
+                conflictingTimeRange: proposedRange.range,
+                sessionTime: sessionInfo
               });
               
               if (!conflictingHours.includes(proposedRange.range)) {
