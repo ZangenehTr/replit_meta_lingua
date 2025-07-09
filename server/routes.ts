@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ollamaService } from "./ollama-service";
@@ -28,7 +29,34 @@ import {
   type InsertRoom
 } from "@shared/schema";
 import multer from "multer";
+import path from "path";
+import fs from "fs";
 import mammoth from "mammoth";
+
+// Configure multer for audio uploads
+const audioStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/audio/');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'audio-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const audioUpload = multer({ 
+  storage: audioStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files are allowed!'));
+    }
+  }
+});
 
 const JWT_SECRET = process.env.JWT_SECRET || "meta-lingua-secret-key";
 
@@ -68,6 +96,9 @@ const requireRole = (roles: string[]) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Serve static audio files
+  app.use('/uploads/audio', express.static('uploads/audio'));
   
   // Simple in-memory store for downloaded models (in production, use database)
   let downloadedModels: string[] = [
@@ -8637,7 +8668,7 @@ Return JSON format:
   });
 
   // Test questions routes
-  app.post("/api/teacher/tests/:testId/questions", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+  app.post("/api/teacher/tests/:testId/questions", authenticateToken, requireRole(['Teacher/Tutor']), audioUpload.single('audio'), async (req: any, res) => {
     try {
       const testId = parseInt(req.params.testId);
       const test = await storage.getTestById(testId);
@@ -8651,10 +8682,22 @@ Return JSON format:
         return res.status(403).json({ message: "Access denied" });
       }
       
-      const questionData = {
-        ...req.body,
-        testId
-      };
+      // Parse form data
+      let questionData = { ...req.body, testId };
+      
+      // Handle JSON fields that come as strings from FormData
+      if (typeof questionData.options === 'string') {
+        try {
+          questionData.options = JSON.parse(questionData.options);
+        } catch (e) {
+          // Keep as string if not valid JSON
+        }
+      }
+      
+      // Add audio file path if uploaded
+      if (req.file) {
+        questionData.questionAudio = `/uploads/audio/${req.file.filename}`;
+      }
       
       const question = await storage.createTestQuestion(questionData);
       
@@ -8665,6 +8708,16 @@ Return JSON format:
       res.status(201).json(question);
     } catch (error) {
       console.error('Error creating test question:', error);
+      
+      // Clean up uploaded file if question creation failed
+      if (req.file) {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (unlinkError) {
+          console.error('Error cleaning up uploaded file:', unlinkError);
+        }
+      }
+      
       res.status(500).json({ message: "Failed to create question" });
     }
   });
@@ -8690,6 +8743,29 @@ Return JSON format:
     } catch (error) {
       console.error('Error updating test question:', error);
       res.status(500).json({ message: "Failed to update question" });
+    }
+  });
+
+  // Get test questions
+  app.get("/api/teacher/tests/:testId/questions", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const testId = parseInt(req.params.testId);
+      const test = await storage.getTestById(testId);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      // Ensure teacher owns this test
+      if (test.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const questions = await storage.getTestQuestions(testId);
+      res.json(questions);
+    } catch (error) {
+      console.error('Error fetching test questions:', error);
+      res.status(500).json({ message: "Failed to fetch questions" });
     }
   });
 
