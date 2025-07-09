@@ -2422,7 +2422,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Phone number and verification code are required" });
       }
 
-      const result = await kavenegarService.sendVerificationCode(phoneNumber, code, template);
+      const templateToUse = template === 'none' ? undefined : template;
+      const result = await kavenegarService.sendVerificationCode(phoneNumber, code, templateToUse);
       res.json(result);
     } catch (error) {
       console.error('Verification SMS error:', error);

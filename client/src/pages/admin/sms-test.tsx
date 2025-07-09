@@ -317,7 +317,7 @@ export default function SMSTestPage() {
                       <SelectValue placeholder="Select a template or leave empty for simple SMS" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No Template (Simple SMS)</SelectItem>
+                      <SelectItem value="none">No Template (Simple SMS)</SelectItem>
                       {smsTemplates
                         .filter((t: any) => t.event === 'verification')
                         .map((template: any) => (
