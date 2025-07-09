@@ -34,6 +34,7 @@ import TeacherPaymentsPage from "@/pages/admin/teacher-payments";
 import WhiteLabelPage from "@/pages/admin/white-label";
 import SupervisionPage from "@/pages/admin/supervision";
 import SMSSettingsPage from "@/pages/admin/sms-settings";
+import SMSTestPage from "@/pages/admin/sms-test";
 import CampaignManagementPage from "@/pages/admin/campaign-management";
 import WebsiteBuilderPage from "@/pages/admin/website-builder";
 import WalletPage from "@/pages/wallet";
@@ -220,6 +221,11 @@ function Router() {
       <Route path="/admin/sms-settings">
         <ProtectedRoute>
           <SMSSettingsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/sms-test">
+        <ProtectedRoute>
+          <SMSTestPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/campaign-management">
