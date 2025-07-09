@@ -331,6 +331,11 @@ function Router() {
           <VideoPlayer />
         </ProtectedRoute>
       </Route>
+      <Route path="/student/games">
+        <ProtectedRoute>
+          <GamificationSystem />
+        </ProtectedRoute>
+      </Route>
 
       {/* Teacher Routes */}
       <Route path="/teacher/dashboard">

@@ -9570,6 +9570,210 @@ Return JSON format:
     }
   });
 
+  // ===== GAMIFICATION AND GAMES API ENDPOINTS =====
+
+  // Get available games with filtering
+  app.get("/api/student/games", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const { ageGroup, skillFocus, level } = req.query;
+      const games = await storage.getGamesByFilters({
+        ageGroup: ageGroup === 'all' ? undefined : ageGroup,
+        gameType: skillFocus === 'all' ? undefined : skillFocus,
+        level: level === 'all' ? undefined : level,
+        language: 'persian'
+      });
+      res.json(games);
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      res.status(500).json({ message: "Failed to fetch games" });
+    }
+  });
+
+  // Get user game progress
+  app.get("/api/student/game-progress", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const progress = await storage.getUserGameProgressByUser(req.user.id);
+      res.json(progress);
+    } catch (error) {
+      console.error('Error fetching game progress:', error);
+      res.status(500).json({ message: "Failed to fetch game progress" });
+    }
+  });
+
+  // Start a game session
+  app.post("/api/student/games/:gameId/start", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const game = await storage.getGameById(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      const session = await storage.createGameSession({
+        userId: req.user.id,
+        gameId,
+        levelId: null,
+        score: 0,
+        correctAnswers: 0,
+        wrongAnswers: 0,
+        isCompleted: false,
+        gameState: {}
+      });
+
+      res.json({ session, game });
+    } catch (error) {
+      console.error('Error starting game:', error);
+      res.status(500).json({ message: "Failed to start game" });
+    }
+  });
+
+  // End a game session
+  app.put("/api/student/games/sessions/:sessionId/end", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const { score, correctAnswers, wrongAnswers, xpEarned, coinsEarned, starsEarned } = req.body;
+      
+      const endedSession = await storage.endGameSession(sessionId, {
+        endedAt: new Date(),
+        score,
+        correctAnswers,
+        wrongAnswers,
+        xpEarned,
+        coinsEarned,
+        starsEarned,
+        isCompleted: true
+      });
+
+      // Update user stats
+      await storage.updateUserStats(req.user.id, {
+        totalXp: xpEarned,
+        gamesPlayed: 1
+      });
+
+      res.json(endedSession);
+    } catch (error) {
+      console.error('Error ending game session:', error);
+      res.status(500).json({ message: "Failed to end game session" });
+    }
+  });
+
+  // Get game sessions for user
+  app.get("/api/student/game-sessions", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const sessions = await storage.getUserGameSessions(req.user.id);
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching game sessions:', error);
+      res.status(500).json({ message: "Failed to fetch game sessions" });
+    }
+  });
+
+  // Get game leaderboard
+  app.get("/api/student/leaderboard", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const { gameId, type = 'score', period = 'week' } = req.query;
+      const leaderboard = await storage.getGameLeaderboard(
+        gameId ? parseInt(gameId) : undefined,
+        type,
+        period
+      );
+      res.json(leaderboard);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
+  // Get user achievements
+  app.get("/api/student/achievements", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const achievements = await storage.getUserAchievements(req.user.id);
+      res.json(achievements);
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+      res.status(500).json({ message: "Failed to fetch achievements" });
+    }
+  });
+
+  // Get user stats
+  app.get("/api/student/stats", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const stats = await storage.getUserStats(req.user.id);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      res.status(500).json({ message: "Failed to fetch user stats" });
+    }
+  });
+
+  // ===== GAME COURSE CONFIGURATION API =====
+
+  // Configure game as individual course
+  app.post("/api/admin/game-courses", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { gameId, title, description, ageGroup, level, price, duration, isActive } = req.body;
+      
+      const gameCourse = await storage.createGameCourse({
+        gameId,
+        title,
+        description,
+        ageGroup,
+        level,
+        price,
+        duration,
+        isActive: isActive !== false
+      });
+
+      res.status(201).json(gameCourse);
+    } catch (error) {
+      console.error('Error creating game course:', error);
+      res.status(500).json({ message: "Failed to create game course" });
+    }
+  });
+
+  // Get game courses
+  app.get("/api/admin/game-courses", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const gameCourses = await storage.getGameCourses();
+      res.json(gameCourses);
+    } catch (error) {
+      console.error('Error fetching game courses:', error);
+      res.status(500).json({ message: "Failed to fetch game courses" });
+    }
+  });
+
+  // Add game as supplementary to existing course
+  app.post("/api/admin/courses/:courseId/supplementary-games", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const { gameIds, isRequired = false } = req.body;
+
+      const supplementaryGames = await storage.addSupplementaryGames({
+        courseId,
+        gameIds,
+        isRequired
+      });
+
+      res.status(201).json(supplementaryGames);
+    } catch (error) {
+      console.error('Error adding supplementary games:', error);
+      res.status(500).json({ message: "Failed to add supplementary games" });
+    }
+  });
+
+  // Get supplementary games for course
+  app.get("/api/admin/courses/:courseId/supplementary-games", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const supplementaryGames = await storage.getSupplementaryGames(courseId);
+      res.json(supplementaryGames);
+    } catch (error) {
+      console.error('Error fetching supplementary games:', error);
+      res.status(500).json({ message: "Failed to fetch supplementary games" });
+    }
+  });
+
   // Purchase Callern package
   app.post("/api/student/callern/purchase", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
