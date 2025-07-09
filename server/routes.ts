@@ -9664,7 +9664,7 @@ Return JSON format:
         ageGroup: ageGroup === 'all' ? undefined : ageGroup,
         gameType: skillFocus === 'all' ? undefined : skillFocus,
         level: level === 'all' ? undefined : level,
-        language: 'persian'
+        language: 'english'
       });
       res.json(games);
     } catch (error) {
