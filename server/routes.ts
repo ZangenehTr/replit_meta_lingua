@@ -2439,6 +2439,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SMS connectivity test endpoint
+  app.get("/api/admin/sms/connectivity-test", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { kavenegarService } = await import('./kavenegar-service');
+      const result = await kavenegarService.testConnectivity();
+      res.json(result);
+    } catch (error) {
+      console.error('SMS connectivity test error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : "Connectivity test failed" 
+      });
+    }
+  });
+
   app.get("/api/admin/sms/account-info", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { kavenegarService } = await import('./kavenegar-service');

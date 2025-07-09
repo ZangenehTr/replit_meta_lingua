@@ -23,7 +23,9 @@ import {
   AlertCircle,
   Wallet,
   Phone,
-  List
+  List,
+  Wifi,
+  RefreshCw
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -49,6 +51,13 @@ export default function SMSTestPage() {
   const { data: smsTemplates = [] } = useQuery({
     queryKey: ['/api/admin/sms-templates'],
     retry: false,
+  });
+
+  // Test connectivity
+  const { data: connectivityResult, refetch: testConnectivity, isFetching: testingConnectivity } = useQuery({
+    queryKey: ['/api/admin/sms/connectivity-test'],
+    retry: false,
+    enabled: false, // Manual trigger only
   });
 
   // Test SMS mutation
@@ -178,21 +187,69 @@ export default function SMSTestPage() {
                   </div>
                 </>
               ) : (
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
-                  <span className="text-sm font-medium">
-                    {accountInfo?.error || "Service Not Connected"}
-                  </span>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <span className="text-sm font-medium">Service Connection Failed</span>
+                  </div>
+                  
+                  <div className="border rounded p-3 bg-yellow-50">
+                    <div className="flex items-center gap-2 text-yellow-700 mb-2">
+                      <Wifi className="h-4 w-4" />
+                      <span className="font-medium">Network Diagnosis</span>
+                    </div>
+                    <p className="text-sm text-yellow-600 mb-2">
+                      Connection to Kavenegar servers is failing. This often happens with cloud hosting platforms.
+                    </p>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => testConnectivity()}
+                      disabled={testingConnectivity}
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${testingConnectivity ? 'animate-spin' : ''}`} />
+                      {testingConnectivity ? 'Testing...' : 'Test Connection'}
+                    </Button>
+                    
+                    {connectivityResult && (
+                      <div className={`mt-3 p-2 rounded text-sm ${connectivityResult.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        <div className="font-medium">
+                          {connectivityResult.success ? '✓ Connected' : '✗ Connection Failed'}
+                          {connectivityResult.latency && ` (${connectivityResult.latency}ms)`}
+                        </div>
+                        {connectivityResult.error && (
+                          <div className="mt-1">Error: {connectivityResult.error}</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="text-xs text-gray-500">
+                    <strong>For Iranian deployment:</strong> This will work properly when deployed on Iranian servers.
+                    The SMS service is configured correctly but network routing from this hosting environment blocks Iranian services.
+                  </div>
                 </div>
               )}
             </div>
-            <Button 
-              variant="outline" 
-              onClick={() => refetchAccount()}
-              size="sm"
-            >
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => testConnectivity()}
+                disabled={testingConnectivity}
+                size="sm"
+              >
+                <Wifi className="h-4 w-4 mr-2" />
+                Test
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => refetchAccount()}
+                size="sm"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

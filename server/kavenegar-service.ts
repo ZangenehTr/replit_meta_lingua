@@ -31,6 +31,39 @@ export class KavenegarService {
     this.apiKey = process.env.KAVENEGAR_API_KEY || '';
     if (!this.apiKey) {
       console.warn('KAVENEGAR_API_KEY not provided - SMS service will not function');
+    } else {
+      console.log('Kavenegar API Key configured:', this.apiKey.substring(0, 8) + '...');
+    }
+  }
+
+  // Test connectivity to Kavenegar API
+  async testConnectivity(): Promise<{ success: boolean; error?: string; latency?: number }> {
+    const startTime = Date.now();
+    try {
+      const response = await fetch(`${this.baseUrl}/${this.apiKey}/account/info.json`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        },
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+      
+      const latency = Date.now() - startTime;
+      console.log(`Kavenegar connectivity test: ${response.status} in ${latency}ms`);
+      
+      return {
+        success: response.ok,
+        latency,
+        error: response.ok ? undefined : `HTTP ${response.status}: ${response.statusText}`
+      };
+    } catch (error: any) {
+      const latency = Date.now() - startTime;
+      console.error('Kavenegar connectivity test failed:', error.message);
+      return {
+        success: false,
+        latency,
+        error: error.name === 'TimeoutError' ? 'Connection timeout (5s)' : error.message
+      };
     }
   }
 
