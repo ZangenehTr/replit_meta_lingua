@@ -6605,6 +6605,60 @@ Return JSON format:
   });
 
   // ============================================
+  // GAMES MANAGEMENT API ROUTES
+  // ============================================
+  
+  app.get("/api/admin/games", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const games = await storage.getAllGames();
+      res.json(games);
+    } catch (error) {
+      console.error("Error fetching games:", error);
+      res.status(500).json({ message: "Failed to fetch games" });
+    }
+  });
+
+  app.post("/api/admin/games", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const gameData = req.body;
+      const game = await storage.createGame(gameData);
+      res.json(game);
+    } catch (error) {
+      console.error("Error creating game:", error);
+      res.status(500).json({ message: "Failed to create game" });
+    }
+  });
+
+  app.put("/api/admin/games/:id", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.id);
+      const gameData = req.body;
+      const game = await storage.updateGame(gameId, gameData);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      res.json(game);
+    } catch (error) {
+      console.error("Error updating game:", error);
+      res.status(500).json({ message: "Failed to update game" });
+    }
+  });
+
+  app.delete("/api/admin/games/:id", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.id);
+      const success = await storage.deleteGame(gameId);
+      if (!success) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      res.json({ message: "Game deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting game:", error);
+      res.status(500).json({ message: "Failed to delete game" });
+    }
+  });
+
+  // ============================================
   // STUDENT AI CONVERSATION ROUTES
   // ============================================
   

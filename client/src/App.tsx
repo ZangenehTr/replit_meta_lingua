@@ -29,6 +29,7 @@ import AdminSettings from "@/pages/admin/settings";
 import { IranianComplianceSettings } from "@/pages/admin/iranian-compliance-settings";
 import { FinancialReportsPage } from "@/pages/admin/FinancialReportsPage";
 import AIServicesManagement from "@/pages/admin/AIServicesManagement";
+import GamesManagement from "@/pages/admin/games-management";
 import TeacherPaymentsPage from "@/pages/admin/teacher-payments";
 import WhiteLabelPage from "@/pages/admin/white-label";
 import SupervisionPage from "@/pages/admin/supervision";
@@ -89,7 +90,7 @@ import { CallernManagement } from "@/pages/admin/callern-management";
 import CallernSystem from "@/pages/callern";
 import GamificationSystem from "@/pages/games";
 
-import { LanguageProvider } from "@/hooks/use-language";
+// Language provider removed - using useLanguage hook directly
 
 // QueryClient is now configured with centralized API client in lib/queryClient.ts
 
@@ -194,6 +195,11 @@ function Router() {
       <Route path="/admin/ai-management">
         <ProtectedRoute>
           <AIServicesManagement />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/games-management">
+        <ProtectedRoute>
+          <GamesManagement />
         </ProtectedRoute>
       </Route>
       
@@ -506,12 +512,10 @@ function AppWithBranding() {
 
   // Always render the app - don't block on branding
   return (
-    <LanguageProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
-    </LanguageProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Router />
+    </TooltipProvider>
   );
 }
 

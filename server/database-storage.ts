@@ -3536,13 +3536,13 @@ export class DatabaseStorage implements IStorage {
   async getGamesByAgeGroup(ageGroup: string): Promise<Game[]> {
     return await db.select().from(games)
       .where(eq(games.ageGroup, ageGroup))
-      .orderBy(games.order);
+      .orderBy(games.gameName);
   }
 
   async getGamesByLevel(level: string): Promise<Game[]> {
     return await db.select().from(games)
-      .where(eq(games.targetLevel, level))
-      .orderBy(games.order);
+      .where(eq(games.minLevel, level))
+      .orderBy(games.gameName);
   }
 
   async updateGame(id: number, game: Partial<InsertGame>): Promise<Game | undefined> {
@@ -4230,10 +4230,46 @@ export class DatabaseStorage implements IStorage {
       .orderBy(rooms.name);
   }
 
+  // ===== GAMES MANAGEMENT =====
+  async getAllGames(): Promise<Game[]> {
+    return await db.select().from(games).orderBy(games.gameName);
+  }
+
+  async createGame(gameData: InsertGame): Promise<Game> {
+    const [game] = await db.insert(games).values(gameData).returning();
+    return game;
+  }
+
+  async updateGame(id: number, gameData: Partial<InsertGame>): Promise<Game | undefined> {
+    const [game] = await db.update(games).set(gameData).where(eq(games.id, id)).returning();
+    return game;
+  }
+
+  async deleteGame(id: number): Promise<boolean> {
+    const result = await db.delete(games).where(eq(games.id, id));
+    return result.rowCount > 0;
+  }
+
   // Missing gamification methods
 
   async getGamesByFilters(filters: { ageGroup?: string, gameType?: string, level?: string, language?: string }): Promise<Game[]> {
-    let query = db.select({
+    // Build where conditions
+    const conditions = [eq(games.isActive, true)];
+    
+    if (filters.ageGroup && filters.ageGroup !== 'all') {
+      conditions.push(eq(games.ageGroup, filters.ageGroup));
+    }
+    if (filters.gameType && filters.gameType !== 'all') {
+      conditions.push(eq(games.gameType, filters.gameType));
+    }
+    if (filters.level && filters.level !== 'all') {
+      conditions.push(or(eq(games.minLevel, filters.level), eq(games.maxLevel, filters.level)));
+    }
+    if (filters.language && filters.language !== 'all') {
+      conditions.push(eq(games.language, filters.language));
+    }
+
+    return await db.select({
       id: games.id,
       title: games.gameName,
       description: games.description,
@@ -4245,22 +4281,9 @@ export class DatabaseStorage implements IStorage {
       xpReward: games.pointsPerCorrect,
       thumbnailUrl: games.thumbnailUrl,
       isActive: games.isActive
-    }).from(games).where(eq(games.isActive, true));
-
-    if (filters.ageGroup) {
-      query = query.where(eq(games.ageGroup, filters.ageGroup));
-    }
-    if (filters.gameType) {
-      query = query.where(eq(games.gameType, filters.gameType));
-    }
-    if (filters.level) {
-      query = query.where(or(eq(games.minLevel, filters.level), eq(games.maxLevel, filters.level)));
-    }
-    if (filters.language) {
-      query = query.where(eq(games.language, filters.language));
-    }
-
-    return await query.orderBy(games.ageGroup, games.gameType);
+    }).from(games)
+    .where(and(...conditions))
+    .orderBy(games.ageGroup, games.gameType);
   }
 
   async getUserAchievements(userId: number): Promise<any[]> {
