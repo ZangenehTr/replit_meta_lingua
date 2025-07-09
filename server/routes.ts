@@ -9500,7 +9500,10 @@ Return JSON format:
       const levelMapping = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
       const requiredMinLevel = levelMapping[game.minLevel] || 1;
       
-      if (userLevel < requiredMinLevel) {
+      // For admin users testing, allow bypass of level requirements
+      if (req.user.role === 'Admin') {
+        console.log('Admin user bypassing level requirements for game testing');
+      } else if (userLevel < requiredMinLevel) {
         return res.status(403).json({ 
           message: "User level insufficient for this game",
           requiredLevel: game.minLevel,

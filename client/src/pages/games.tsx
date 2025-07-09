@@ -255,11 +255,17 @@ export default function GamesPage() {
           )}
           
           <Button 
-            onClick={() => startGameMutation.mutate(game.id)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!startGameMutation.isPending) {
+                startGameMutation.mutate(game.id);
+              }
+            }}
             disabled={startGameMutation.isPending}
             className="w-full"
           >
-            {startGameMutation.isPending ? t.loading : t.startGame}
+            {startGameMutation.isPending ? 'Starting...' : t.startGame}
           </Button>
         </CardContent>
       </Card>
@@ -328,12 +334,18 @@ export default function GamesPage() {
           </div>
           
           <Button 
-            onClick={() => startGameMutation.mutate(gameProgress.gameId)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!startGameMutation.isPending) {
+                startGameMutation.mutate(gameProgress.gameId);
+              }
+            }}
             disabled={startGameMutation.isPending}
             className="w-full"
             variant="outline"
           >
-            ادامه بازی
+            {startGameMutation.isPending ? 'Starting...' : 'ادامه بازی'}
           </Button>
         </CardContent>
       </Card>
