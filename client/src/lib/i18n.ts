@@ -1,4 +1,6 @@
 // Multilingual support for Meta Lingua platform
+import { useState, useEffect } from 'react';
+
 export type Language = 'en' | 'fa' | 'ar';
 
 export interface Translations {
@@ -975,4 +977,39 @@ export function formatPersianDate(date: Date): string {
 // Direction utilities
 export function getTextDirection(language: Language): 'ltr' | 'rtl' {
   return language === 'fa' || language === 'ar' ? 'rtl' : 'ltr';
+}
+
+// Language detection and management
+export function getStoredLanguage(): Language {
+  if (typeof window === 'undefined') return 'en';
+  return (localStorage.getItem('language') as Language) || 'en';
+}
+
+export function setStoredLanguage(language: Language) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('language', language);
+  }
+}
+
+// useTranslation hook
+export function useTranslation() {
+  const [language, setLanguage] = useState<Language>(getStoredLanguage());
+
+  const changeLanguage = (newLanguage: Language) => {
+    setLanguage(newLanguage);
+    setStoredLanguage(newLanguage);
+  };
+
+  const t = (key: keyof Translations): string => {
+    return translations[language][key] || translations.en[key] || key;
+  };
+
+  const isRTL = language === 'fa' || language === 'ar';
+
+  return {
+    t,
+    language,
+    changeLanguage,
+    isRTL,
+  };
 }
