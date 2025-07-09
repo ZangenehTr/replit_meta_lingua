@@ -46,7 +46,11 @@ import {
   aiProgressTracking, aiActivitySessions, aiVocabularyTracking, aiGrammarTracking, aiPronunciationAnalysis,
   type AiProgressTracking, type InsertAiProgressTracking, type AiActivitySession, type InsertAiActivitySession,
   type AiVocabularyTracking, type InsertAiVocabularyTracking, type AiGrammarTracking, type InsertAiGrammarTracking,
-  type AiPronunciationAnalysis, type InsertAiPronunciationAnalysis
+  type AiPronunciationAnalysis, type InsertAiPronunciationAnalysis,
+  // Callern types
+  callernPackages, studentCallernPackages, teacherCallernAvailability, callernCallHistory,
+  type CallernPackage, type InsertCallernPackage, type StudentCallernPackage, type InsertStudentCallernPackage,
+  type TeacherCallernAvailability, type InsertTeacherCallernAvailability, type CallernCallHistory, type InsertCallernCallHistory
 } from "@shared/schema";
 
 export interface IStorage {
@@ -81,8 +85,22 @@ export interface IStorage {
   getCourse(id: number): Promise<Course | undefined>;
   getUserCourses(userId: number): Promise<(Course & { progress: number })[]>;
   createCourse(course: InsertCourse): Promise<Course>;
+  updateCourse(id: number, updates: Partial<Course>): Promise<Course | undefined>;
+  deleteCourse(id: number): Promise<void>;
+  getCourseEnrollments(courseId: number): Promise<any[]>;
   enrollInCourse(enrollment: InsertEnrollment): Promise<Enrollment>;
   unenrollFromCourse(userId: number, courseId: number): Promise<void>;
+
+  // Callern Management
+  createCallernPackage(packageData: any): Promise<any>;
+  getCallernPackages(): Promise<any[]>;
+  getCallernPackage(id: number): Promise<any | undefined>;
+  setTeacherCallernAvailability(availabilityData: any): Promise<any>;
+  getTeacherCallernAvailability(): Promise<any[]>;
+  updateTeacherCallernAvailability(teacherId: number, updates: any): Promise<any>;
+  getTeachersForCallern(): Promise<any[]>;
+  getStudentCallernPackages(studentId: number): Promise<any[]>;
+  createStudentCallernPackage(packageData: any): Promise<any>;
 
   // Sessions
   getUserSessions(userId: number): Promise<(Session & { tutorName: string })[]>;

@@ -51,6 +51,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   // Class Scheduling & Management
   { path: "/admin/classes", icon: "Calendar", label: t('classScheduling'), roles: ["Admin", "Supervisor"] },
   
+  // Callern Video Call Management
+  { path: "/admin/callern-management", icon: "Video", label: "Callern Management", roles: ["Admin", "Supervisor"] },
+  
   // Room Management
   { path: "/admin/room-management", icon: "Building2", label: "Room Management", roles: ["Admin", "Supervisor"] },
   

@@ -85,6 +85,7 @@ import MentorMatchingPage from "@/pages/admin/mentor-matching";
 import UserManagement from "@/pages/admin/user-management";
 import TeacherStudentMatchingPage from "@/pages/admin/teacher-student-matching";
 import RoomManagement from "@/pages/admin/room-management";
+import { CallernManagement } from "@/pages/admin/callern-management";
 import CallernSystem from "@/pages/callern";
 import GamificationSystem from "@/pages/games";
 
@@ -422,6 +423,13 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <AdminClassesPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/callern-management">
+        <ProtectedRoute>
+          <AppLayout>
+            <CallernManagement />
           </AppLayout>
         </ProtectedRoute>
       </Route>

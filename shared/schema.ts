@@ -100,8 +100,8 @@ export const courses = pgTable("courses", {
   sessionDuration: integer("session_duration").notNull(), // minutes per session (60, 90, 180)
   
   // Course delivery and format
-  deliveryMode: text("delivery_mode").notNull(), // "online", "in_person", "self_paced"
-  classFormat: text("class_format").notNull(), // "group", "one_on_one" (not applicable for self_paced)
+  deliveryMode: text("delivery_mode").notNull(), // "online", "in_person", "self_paced", "callern"
+  classFormat: text("class_format").notNull(), // "group", "one_on_one", "callern_package" (not applicable for self_paced)
   maxStudents: integer("max_students"), // null for one-on-one, number for group classes
   
   // Scheduling (not applicable for self_paced)
