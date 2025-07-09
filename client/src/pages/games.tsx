@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
 import { Trophy, Star, Clock, Target, Zap, Award, PlayCircle, Users, BookOpen, Headphones } from 'lucide-react';
+import { useLanguage } from '@/hooks/use-language';
 
 interface Game {
   id: number;
@@ -94,6 +95,7 @@ export default function GamesPage() {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [activeTab, setActiveTab] = useState('browse');
   const queryClient = useQueryClient();
+  const { t, isRTL, formatDate, formatNumber } = useLanguage();
 
   // Fetch available games
   const { data: games = [], isLoading: gamesLoading } = useQuery({
@@ -220,7 +222,7 @@ export default function GamesPage() {
           <div className="flex items-center justify-between text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
-              <span>{game.estimatedDuration} دقیقه</span>
+              <span>{game.estimatedDuration} {t.minutes}</span>
             </div>
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-500" />
@@ -231,22 +233,22 @@ export default function GamesPage() {
           {gameProgress && (
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span>پیشرفت</span>
+                <span>{t.progress}</span>
                 <span>{completionRate}%</span>
               </div>
               <Progress value={completionRate} className="h-2" />
               <div className="grid grid-cols-3 gap-2 text-xs text-gray-600">
                 <div className="text-center">
                   <div className="font-semibold">{timesPlayed}</div>
-                  <div>بازی شده</div>
+                  <div>{t.timesPlayed}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-semibold">{bestScore}</div>
-                  <div>بهترین امتیاز</div>
+                  <div>{t.bestScore}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-semibold">{gameProgress.currentLevel}</div>
-                  <div>سطح فعلی</div>
+                  <div>{t.currentLevel}</div>
                 </div>
               </div>
             </div>
@@ -257,7 +259,7 @@ export default function GamesPage() {
             disabled={startGameMutation.isPending}
             className="w-full"
           >
-            {startGameMutation.isPending ? 'در حال بارگذاری...' : 'شروع بازی'}
+            {startGameMutation.isPending ? t.loading : t.startGame}
           </Button>
         </CardContent>
       </Card>
@@ -450,11 +452,11 @@ export default function GamesPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className={`container mx-auto px-4 py-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">بازی‌های آموزشی</h1>
+        <h1 className="text-3xl font-bold mb-2">{t.gamesTitle}</h1>
         <p className="text-gray-600">
-          با بازی‌های تعاملی مهارت‌های زبانی خود را تقویت کنید
+          {t.gamesDescription}
         </p>
       </div>
 
@@ -466,8 +468,8 @@ export default function GamesPage() {
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-yellow-500" />
                 <div>
-                  <div className="text-2xl font-bold">{userStats.totalXp}</div>
-                  <div className="text-sm text-gray-600">مجموع XP</div>
+                  <div className="text-2xl font-bold">{formatNumber(userStats.totalXp)}</div>
+                  <div className="text-sm text-gray-600">{t.totalXp}</div>
                 </div>
               </div>
             </CardContent>
@@ -477,8 +479,8 @@ export default function GamesPage() {
               <div className="flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-blue-500" />
                 <div>
-                  <div className="text-2xl font-bold">{userStats.currentLevel}</div>
-                  <div className="text-sm text-gray-600">سطح فعلی</div>
+                  <div className="text-2xl font-bold">{formatNumber(userStats.currentLevel)}</div>
+                  <div className="text-sm text-gray-600">{t.currentLevelShort}</div>
                 </div>
               </div>
             </CardContent>
@@ -488,8 +490,8 @@ export default function GamesPage() {
               <div className="flex items-center gap-2">
                 <Target className="w-5 h-5 text-green-500" />
                 <div>
-                  <div className="text-2xl font-bold">{userStats.streakDays}</div>
-                  <div className="text-sm text-gray-600">روزهای متوالی</div>
+                  <div className="text-2xl font-bold">{formatNumber(userStats.streakDays)}</div>
+                  <div className="text-sm text-gray-600">{t.streakDays}</div>
                 </div>
               </div>
             </CardContent>
@@ -499,8 +501,8 @@ export default function GamesPage() {
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-purple-500" />
                 <div>
-                  <div className="text-2xl font-bold">{userStats.gamesPlayed || 0}</div>
-                  <div className="text-sm text-gray-600">بازی‌های انجام شده</div>
+                  <div className="text-2xl font-bold">{formatNumber(userStats.gamesPlayed || 0)}</div>
+                  <div className="text-sm text-gray-600">{t.gamesPlayed}</div>
                 </div>
               </div>
             </CardContent>
@@ -510,55 +512,55 @@ export default function GamesPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="browse">مرور بازی‌ها</TabsTrigger>
-          <TabsTrigger value="progress">پیشرفت</TabsTrigger>
-          <TabsTrigger value="history">تاریخچه</TabsTrigger>
-          <TabsTrigger value="leaderboard">جدول امتیازات</TabsTrigger>
-          <TabsTrigger value="achievements">دستاوردها</TabsTrigger>
+          <TabsTrigger value="browse">{t.browseGames}</TabsTrigger>
+          <TabsTrigger value="progress">{t.progress}</TabsTrigger>
+          <TabsTrigger value="history">{t.history}</TabsTrigger>
+          <TabsTrigger value="leaderboard">{t.leaderboard}</TabsTrigger>
+          <TabsTrigger value="achievements">{t.achievements}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="browse" className="space-y-6">
           <div className="flex flex-wrap gap-4">
             <Select value={selectedAge} onValueChange={setSelectedAge}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="گروه سنی" />
+                <SelectValue placeholder={t.ageGroup} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">همه گروه‌های سنی</SelectItem>
-                <SelectItem value="5-10">5-10 سال</SelectItem>
-                <SelectItem value="11-14">11-14 سال</SelectItem>
-                <SelectItem value="15-20">15-20 سال</SelectItem>
-                <SelectItem value="21+">21 سال به بالا</SelectItem>
+                <SelectItem value="all">{t.allAgeGroups}</SelectItem>
+                <SelectItem value="5-10">5-10</SelectItem>
+                <SelectItem value="11-14">11-14</SelectItem>
+                <SelectItem value="15-20">15-20</SelectItem>
+                <SelectItem value="21+">21+</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={selectedSkill} onValueChange={setSelectedSkill}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="مهارت" />
+                <SelectValue placeholder={t.skill} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">همه مهارت‌ها</SelectItem>
-                <SelectItem value="vocabulary">واژگان</SelectItem>
-                <SelectItem value="grammar">دستور زبان</SelectItem>
-                <SelectItem value="listening">شنیداری</SelectItem>
-                <SelectItem value="speaking">گفتاری</SelectItem>
-                <SelectItem value="reading">خواندن</SelectItem>
-                <SelectItem value="writing">نوشتن</SelectItem>
+                <SelectItem value="all">{t.allSkills}</SelectItem>
+                <SelectItem value="vocabulary">{t.vocabulary}</SelectItem>
+                <SelectItem value="grammar">{t.grammar}</SelectItem>
+                <SelectItem value="listening">{t.listening}</SelectItem>
+                <SelectItem value="speaking">{t.speaking}</SelectItem>
+                <SelectItem value="reading">{t.reading}</SelectItem>
+                <SelectItem value="writing">{t.writing}</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={selectedLevel} onValueChange={setSelectedLevel}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="سطح" />
+                <SelectValue placeholder={t.level} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">همه سطوح</SelectItem>
-                <SelectItem value="A1">A1 - مبتدی</SelectItem>
-                <SelectItem value="A2">A2 - مقدماتی</SelectItem>
-                <SelectItem value="B1">B1 - متوسط</SelectItem>
-                <SelectItem value="B2">B2 - متوسط به بالا</SelectItem>
-                <SelectItem value="C1">C1 - پیشرفته</SelectItem>
-                <SelectItem value="C2">C2 - تسلط کامل</SelectItem>
+                <SelectItem value="all">{t.allLevels}</SelectItem>
+                <SelectItem value="A1">A1</SelectItem>
+                <SelectItem value="A2">A2</SelectItem>
+                <SelectItem value="B1">B1</SelectItem>
+                <SelectItem value="B2">B2</SelectItem>
+                <SelectItem value="C1">C1</SelectItem>
+                <SelectItem value="C2">C2</SelectItem>
               </SelectContent>
             </Select>
           </div>

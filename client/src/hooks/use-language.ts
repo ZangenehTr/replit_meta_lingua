@@ -1,91 +1,145 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import { Language, translations, getTextDirection } from '@/lib/i18n';
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
-interface LanguageContextType {
-  currentLanguage: Language;
-  setLanguage: (lang: Language) => void;
-  t: (key: keyof typeof translations.en) => string;
-  direction: 'ltr' | 'rtl';
-  isRTL: boolean;
-}
-
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [currentLanguage, setCurrentLanguage] = useState<Language>('en');
-
-  useEffect(() => {
-    const savedLang = localStorage.getItem('meta-lingua-language') as Language;
-    if (savedLang && ['en', 'fa', 'ar'].includes(savedLang)) {
-      setCurrentLanguage(savedLang);
-      const direction = getTextDirection(savedLang);
-      document.documentElement.dir = direction;
-      document.documentElement.lang = savedLang;
-      
-      // Apply appropriate font and styling based on language
-      if (direction === 'rtl') {
-        document.body.style.fontFamily = "'Almarai', 'Tahoma', 'Arial', sans-serif";
-        document.body.classList.add('rtl');
-        document.body.classList.remove('ltr');
-      } else {
-        document.body.style.fontFamily = "'Inter', 'Arial', sans-serif";
-        document.body.classList.add('ltr');
-        document.body.classList.remove('rtl');
-      }
-    }
-  }, []);
-
-  const setLanguage = (lang: Language) => {
-    setCurrentLanguage(lang);
-    localStorage.setItem('meta-lingua-language', lang);
-    const direction = getTextDirection(lang);
-    document.documentElement.dir = direction;
-    document.documentElement.lang = lang;
-    
-    // Apply appropriate font and styling based on language
-    if (direction === 'rtl') {
-      document.body.style.fontFamily = "'Almarai', 'Tahoma', 'Arial', sans-serif";
-      document.body.classList.add('rtl');
-      document.body.classList.remove('ltr');
-    } else {
-      document.body.style.fontFamily = "'Inter', 'Arial', sans-serif";
-      document.body.classList.add('ltr');
-      document.body.classList.remove('rtl');
-    }
-  };
-
-  const t = (key: keyof typeof translations.en): string => {
-    return translations[currentLanguage]?.[key] || translations.en[key] || key;
-  };
-
-  const direction = getTextDirection(currentLanguage);
-  const isRTL = direction === 'rtl';
-
-  useEffect(() => {
-    document.documentElement.dir = direction;
-    document.documentElement.lang = currentLanguage;
-  }, [currentLanguage, direction]);
-
-  const value = {
-    currentLanguage,
-    setLanguage,
-    t,
-    direction,
-    isRTL
-  };
-
-  return React.createElement(
-    LanguageContext.Provider,
-    { value },
-    children
-  );
+export interface LanguageSettings {
+  language: string;
+  rtl: boolean;
+  dateFormat: string;
+  numberFormat: string;
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
+  // Get user preferences from API - fallback to localStorage for development
+  const { data: userPreferences } = useQuery({
+    queryKey: ['/api/users/me'],
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: false, // Disable for now, use localStorage
+  });
+
+  // Default to English unless user has specifically selected Farsi
+  const currentLanguage = userPreferences?.preferences?.language || localStorage.getItem('appLanguage') || 'en';
+  const isRTL = currentLanguage === 'fa';
+
+  // Helper function to change language
+  const changeLanguage = (newLanguage: string) => {
+    localStorage.setItem('appLanguage', newLanguage);
+    // Refresh the page to apply changes
+    window.location.reload();
+  };
+
+  const texts = {
+    en: {
+      // Games page
+      gamesTitle: "Educational Games",
+      gamesDescription: "Strengthen your language skills with interactive games",
+      browseGames: "Browse Games",
+      progress: "Progress",
+      history: "History",
+      leaderboard: "Leaderboard", 
+      achievements: "Achievements",
+      ageGroup: "Age Group",
+      allAgeGroups: "All Age Groups",
+      skill: "Skill",
+      allSkills: "All Skills",
+      vocabulary: "Vocabulary",
+      grammar: "Grammar",
+      listening: "Listening",
+      speaking: "Speaking",
+      reading: "Reading",
+      writing: "Writing",
+      level: "Level",
+      allLevels: "All Levels",
+      minutes: "minutes",
+      startGame: "Start Game",
+      loading: "Loading...",
+      continuGame: "Continue Game",
+      completion: "Completion",
+      currentLevel: "Current Level",
+      timesPlayed: "Times Played",
+      bestScore: "Best Score",
+      xpEarned: "XP Earned",
+      coins: "Coins",
+      lastPlayed: "Last Played:",
+      never: "Never",
+      score: "Score",
+      accuracy: "Accuracy",
+      correctAnswers: "Correct Answers",
+      wrongAnswers: "Wrong Answers",
+      date: "Date",
+      duration: "Duration",
+      totalXp: "Total XP",
+      currentLevelShort: "Current Level",
+      streakDays: "Streak Days",
+      gamesPlayed: "Games Played",
+      weeklyLeaderboard: "Weekly Leaderboard",
+      gamesCompleted: "Games Completed",
+      unlockedOn: "Unlocked on"
+    },
+    fa: {
+      // Games page
+      gamesTitle: "بازی‌های آموزشی",
+      gamesDescription: "با بازی‌های تعاملی مهارت‌های زبانی خود را تقویت کنید",
+      browseGames: "مرور بازی‌ها",
+      progress: "پیشرفت",
+      history: "تاریخچه",
+      leaderboard: "جدول امتیازات",
+      achievements: "دستاوردها",
+      ageGroup: "گروه سنی",
+      allAgeGroups: "همه گروه‌های سنی",
+      skill: "مهارت",
+      allSkills: "همه مهارت‌ها",
+      vocabulary: "واژگان",
+      grammar: "دستور زبان",
+      listening: "شنیداری",
+      speaking: "گفتاری",
+      reading: "خواندن",
+      writing: "نوشتن",
+      level: "سطح",
+      allLevels: "همه سطوح",
+      minutes: "دقیقه",
+      startGame: "شروع بازی",
+      loading: "در حال بارگذاری...",
+      continuGame: "ادامه بازی",
+      completion: "میزان تکمیل",
+      currentLevel: "سطح فعلی",
+      timesPlayed: "بازی شده",
+      bestScore: "بهترین امتیاز",
+      xpEarned: "XP کسب شده",
+      coins: "سکه",
+      lastPlayed: "آخرین بازی:",
+      never: "هرگز",
+      score: "امتیاز",
+      accuracy: "دقت",
+      correctAnswers: "پاسخ صحیح",
+      wrongAnswers: "پاسخ غلط",
+      date: "تاریخ",
+      duration: "مدت زمان",
+      totalXp: "مجموع XP",
+      currentLevelShort: "سطح فعلی",
+      streakDays: "روزهای متوالی",
+      gamesPlayed: "بازی‌های انجام شده",
+      weeklyLeaderboard: "جدول امتیازات هفته",
+      gamesCompleted: "بازی",
+      unlockedOn: "باز شده در"
+    }
+  };
+
+  return {
+    language: currentLanguage,
+    isRTL,
+    t: texts[currentLanguage] || texts.en,
+    changeLanguage,
+    formatDate: (date: string) => {
+      const dateObj = new Date(date);
+      return currentLanguage === 'fa' 
+        ? dateObj.toLocaleDateString('fa-IR')
+        : dateObj.toLocaleDateString('en-US');
+    },
+    formatNumber: (num: number) => {
+      return currentLanguage === 'fa'
+        ? num.toLocaleString('fa-IR')
+        : num.toLocaleString('en-US');
+    }
+  };
 }
