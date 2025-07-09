@@ -1774,15 +1774,15 @@ export class DatabaseStorage implements IStorage {
         enrollments: enrollmentData.count,
         todayClasses: todaySessionData.count,
         totalSessions: sessionData.count,
-        attendanceRate: enrollmentData.count > 0 ? Math.min(100, Math.max(60, 75 + Math.random() * 20)) : 0,
+        attendanceRate: enrollmentData.count > 0 ? Math.round(Math.min(100, Math.max(60, 75 + Math.random() * 20))) : 0,
         activeTeachers: teacherCount.count,
-        avgTeacherRating: teacherCount.count > 0 ? Math.min(5, Math.max(4.0, 4.2 + Math.random() * 0.8)) : 0,
+        avgTeacherRating: teacherCount.count > 0 ? Math.round((Math.min(5, Math.max(4.0, 4.2 + Math.random() * 0.8))) * 10) / 10 : 0,
         recentActivities,
         systemHealth,
-        userGrowth: parseFloat(userGrowth),
-        enrollmentGrowth: enrollmentData.count > 0 ? Math.min(50, Math.max(5, 10 + Math.random() * 20)) : 0,
-        revenueGrowth: parseFloat(revenueData.total) > 0 ? Math.min(100, Math.max(10, 15 + Math.random() * 30)) : 0,
-        completionRate: enrollmentData.count > 0 ? Math.min(100, Math.max(50, 65 + Math.random() * 25)) : 0
+        userGrowth: Math.round(parseFloat(userGrowth) * 10) / 10,
+        enrollmentGrowth: enrollmentData.count > 0 ? Math.round(Math.min(50, Math.max(5, 10 + Math.random() * 20)) * 10) / 10 : 0,
+        revenueGrowth: parseFloat(revenueData.total) > 0 ? Math.round(Math.min(100, Math.max(10, 15 + Math.random() * 30)) * 10) / 10 : 0,
+        completionRate: enrollmentData.count > 0 ? Math.round(Math.min(100, Math.max(50, 65 + Math.random() * 25))) : 0
       };
     } catch (error) {
       console.error('Error fetching admin dashboard stats:', error);
@@ -1879,7 +1879,7 @@ export class DatabaseStorage implements IStorage {
       return {
         ...mentor,
         activeStudents,
-        rating: 4.5 + Math.random() * 0.5, // Placeholder rating
+        rating: Math.round((4.5 + Math.random() * 0.5) * 10) / 10, // Placeholder rating
         availability: activeStudents < 10 ? 'Available' : 'Full' // Default max 10 students
       };
     });
@@ -2045,11 +2045,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.role, 'Student'));
 
     return {
-      monthlyRevenue: parseFloat(monthlyRevenueData.total),
+      monthlyRevenue: Math.round(parseFloat(monthlyRevenueData.total)),
       pendingInvoices: pendingInvoicesData.count,
       totalStudents: totalStudentsData.count,
       avgRevenuePerStudent: totalStudentsData.count > 0 
-        ? parseFloat(monthlyRevenueData.total) / totalStudentsData.count 
+        ? Math.round(parseFloat(monthlyRevenueData.total) / totalStudentsData.count) 
         : 0
     };
   }
@@ -2335,11 +2335,11 @@ export class DatabaseStorage implements IStorage {
       return {
         uptime: uptime.toFixed(1),
         activeUsers: activeUsersData.count,
-        systemLoad: Math.min(100, Math.max(30, 45 + Math.random() * 30)),
+        systemLoad: Math.round(Math.min(100, Math.max(30, 45 + Math.random() * 30))),
         databaseSize: '2.1GB',
         messagesSent: messagesData.count,
         deliveryRate: Math.round(deliveryRate),
-        qualityScore: parseFloat(qualityData.avg),
+        qualityScore: Math.round(parseFloat(qualityData.avg) * 10) / 10,
         customRoles: customRoles
       };
     } catch (error) {
@@ -3002,7 +3002,7 @@ export class DatabaseStorage implements IStorage {
         email: mentor.email,
         specializations: mentor.specializations || ['General', 'Conversation'],
         languages: mentor.languages || ['persian', 'english'],
-        rating: 4.5 + Math.random() * 0.5,
+        rating: Math.round((4.5 + Math.random() * 0.5) * 10) / 10,
         activeStudents: activeAssignments.length,
         maxStudents: 10,
         availability: 'available',
