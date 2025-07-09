@@ -247,6 +247,12 @@ function StudentDashboard() {
                 AI Practice
               </Button>
             </Link>
+            <Link href="/video-courses">
+              <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md">
+                <Video className="h-4 w-4 mr-2" />
+                Video Courses
+              </Button>
+            </Link>
             <Link href="/level-assessment">
               <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
                 <Target className="h-4 w-4 mr-2" />

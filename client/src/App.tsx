@@ -52,6 +52,9 @@ import HomeworkPage from "@/pages/student/homework";
 import MessagesPage from "@/pages/student/messages";
 import PaymentPage from "@/pages/student/payment";
 import StudentTestTaking from "@/pages/student/test-taking";
+import StudentVideoCourses from "@/pages/student/video-courses";
+import VideoCoursDetail from "@/pages/student/video-course-detail";
+import VideoPlayer from "@/pages/student/video-player";
 
 // Teacher pages
 import TeacherClassesPage from "@/pages/teacher/classes";
@@ -297,6 +300,21 @@ function Router() {
       <Route path="/tests">
         <ProtectedRoute>
           <StudentTestTaking />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/video-courses">
+        <ProtectedRoute>
+          <StudentVideoCourses />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/video-courses/:courseId">
+        <ProtectedRoute>
+          <VideoCoursDetail />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/video-player/:lessonId">
+        <ProtectedRoute>
+          <VideoPlayer />
         </ProtectedRoute>
       </Route>
 

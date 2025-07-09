@@ -1311,6 +1311,7 @@ export const gameLeaderboards = pgTable("game_leaderboards", {
 export const videoLessons = pgTable("video_lessons", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").references(() => courses.id),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(), // Added for teacher management
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   videoUrl: varchar("video_url", { length: 500 }).notNull(),
@@ -1335,6 +1336,10 @@ export const videoLessons = pgTable("video_lessons", {
   isFree: boolean("is_free").default(false),
   isPublished: boolean("is_published").default(true),
   
+  // Analytics
+  viewCount: integer("view_count").default(0),
+  completionRate: decimal("completion_rate", { precision: 5, scale: 2 }).default(0),
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -1342,13 +1347,13 @@ export const videoLessons = pgTable("video_lessons", {
 // Video Progress Tracking
 export const videoProgress = pgTable("video_progress", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  videoId: integer("video_id").references(() => videoLessons.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(), // Changed from userId to match API
+  videoLessonId: integer("video_lesson_id").references(() => videoLessons.id).notNull(), // Changed from videoId to match API
   
   // Progress tracking
-  watchedSeconds: integer("watched_seconds").default(0),
-  completionPercentage: decimal("completion_percentage", { precision: 5, scale: 2 }).default(0),
-  isCompleted: boolean("is_completed").default(false),
+  watchTime: integer("watch_time").default(0), // Current watch position in seconds
+  totalDuration: integer("total_duration").default(0), // Total video duration
+  completed: boolean("completed").default(false), // Changed from isCompleted to match API
   
   // Engagement metrics
   totalWatchTime: integer("total_watch_time").default(0), // including replays
@@ -1369,11 +1374,11 @@ export const videoProgress = pgTable("video_progress", {
 // Video Notes
 export const videoNotes = pgTable("video_notes", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  videoId: integer("video_id").references(() => videoLessons.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(), // Changed from userId to match API
+  videoLessonId: integer("video_lesson_id").references(() => videoLessons.id).notNull(), // Changed from videoId to match API
   
   timestamp: integer("timestamp").notNull(), // seconds in video
-  noteText: text("note_text").notNull(),
+  content: text("content").notNull(), // Changed from noteText to match API
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -1382,8 +1387,8 @@ export const videoNotes = pgTable("video_notes", {
 // Video Bookmarks
 export const videoBookmarks = pgTable("video_bookmarks", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  videoId: integer("video_id").references(() => videoLessons.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(), // Changed from userId to match API
+  videoLessonId: integer("video_lesson_id").references(() => videoLessons.id).notNull(), // Changed from videoId to match API
   
   timestamp: integer("timestamp").notNull(), // seconds in video
   title: varchar("title", { length: 100 }),
