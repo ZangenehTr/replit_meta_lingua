@@ -341,13 +341,16 @@ export default function GamesPage() {
   };
 
   const renderSessionCard = (session: GameSession) => {
+    // Find the game data from the games list
+    const gameData = games.find(game => game.id === session.gameId);
+    
     return (
       <Card key={session.id} className="hover:shadow-lg transition-shadow duration-200">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
-              {skillIcons[session.game.skillFocus] || <Target className="w-5 h-5" />}
-              <CardTitle className="text-lg">{session.game.title}</CardTitle>
+              {skillIcons[gameData?.gameType] || <Target className="w-5 h-5" />}
+              <CardTitle className="text-lg">{gameData?.gameName || 'بازی نامشخص'}</CardTitle>
             </div>
             <div className="flex items-center gap-1">
               {[...Array(session.starsEarned)].map((_, i) => (
