@@ -29,6 +29,12 @@ export function CallernManagement() {
   const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newTeacherForm, setNewTeacherForm] = useState({
+    teacherId: '',
+    hourlyRate: '',
+    availableHours: []
+  });
 
   // Fetch teacher availability data
   const { data: teacherAvailability, isLoading: loadingAvailability } = useQuery({
@@ -79,10 +85,86 @@ export function CallernManagement() {
     }
   });
 
+  // Add teacher to Callern mutation
+  const addTeacherMutation = useMutation({
+    mutationFn: async (teacherData: any) => {
+      const response = await fetch('/api/admin/callern/teacher-availability', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(teacherData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add teacher to Callern');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Teacher added to Callern successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/callern/teacher-availability'] });
+      setIsAddDialogOpen(false);
+      setNewTeacherForm({
+        teacherId: '',
+        hourlyRate: '',
+        availableHours: []
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   const toggleTeacherOnline = (teacherId: number, currentStatus: boolean) => {
     updateAvailabilityMutation.mutate({
       teacherId,
       updates: { isOnline: !currentStatus }
+    });
+  };
+
+  const handleAvailableHourChange = (timeSlot: string, checked: boolean) => {
+    const timeSlotMap = {
+      'morning': '08:00-12:00',
+      'afternoon': '12:00-18:00', 
+      'evening': '18:00-24:00',
+      'overnight': '00:00-08:00'
+    };
+
+    const timeRange = timeSlotMap[timeSlot];
+    const newHours = checked 
+      ? [...newTeacherForm.availableHours, timeRange]
+      : newTeacherForm.availableHours.filter(hour => hour !== timeRange);
+    
+    setNewTeacherForm(prev => ({
+      ...prev,
+      availableHours: newHours
+    }));
+  };
+
+  const handleSubmitNewTeacher = () => {
+    if (!newTeacherForm.teacherId) {
+      toast({
+        title: "Error",
+        description: "Please select a teacher",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    addTeacherMutation.mutate({
+      teacherId: newTeacherForm.teacherId,
+      hourlyRate: newTeacherForm.hourlyRate ? parseFloat(newTeacherForm.hourlyRate) : null,
+      availableHours: newTeacherForm.availableHours
     });
   };
 
@@ -196,7 +278,7 @@ export function CallernManagement() {
           {/* Add New Teacher Button */}
           <Card className="border-dashed">
             <CardContent className="flex items-center justify-center py-8">
-              <Dialog>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2">
                     <Plus className="h-4 w-4" />
@@ -213,7 +295,10 @@ export function CallernManagement() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label>Select Teacher</Label>
-                      <Select>
+                      <Select 
+                        value={newTeacherForm.teacherId} 
+                        onValueChange={(value) => setNewTeacherForm(prev => ({...prev, teacherId: value}))}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Choose a teacher" />
                         </SelectTrigger>
@@ -229,33 +314,62 @@ export function CallernManagement() {
                     
                     <div className="space-y-2">
                       <Label>Hourly Rate (IRR)</Label>
-                      <Input type="number" placeholder="500000" />
+                      <Input 
+                        type="number" 
+                        placeholder="500000"
+                        value={newTeacherForm.hourlyRate}
+                        onChange={(e) => setNewTeacherForm(prev => ({...prev, hourlyRate: e.target.value}))}
+                      />
                     </div>
                     
                     <div className="space-y-2">
                       <Label>Available Hours</Label>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="morning" />
+                          <input 
+                            type="checkbox" 
+                            id="morning"
+                            checked={newTeacherForm.availableHours.includes('08:00-12:00')}
+                            onChange={(e) => handleAvailableHourChange('morning', e.target.checked)}
+                          />
                           <Label htmlFor="morning" className="text-sm">Morning (08:00-12:00)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="afternoon" />
+                          <input 
+                            type="checkbox" 
+                            id="afternoon"
+                            checked={newTeacherForm.availableHours.includes('12:00-18:00')}
+                            onChange={(e) => handleAvailableHourChange('afternoon', e.target.checked)}
+                          />
                           <Label htmlFor="afternoon" className="text-sm">Afternoon (12:00-18:00)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="evening" />
+                          <input 
+                            type="checkbox" 
+                            id="evening"
+                            checked={newTeacherForm.availableHours.includes('18:00-24:00')}
+                            onChange={(e) => handleAvailableHourChange('evening', e.target.checked)}
+                          />
                           <Label htmlFor="evening" className="text-sm">Evening (18:00-24:00)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="overnight" />
+                          <input 
+                            type="checkbox" 
+                            id="overnight"
+                            checked={newTeacherForm.availableHours.includes('00:00-08:00')}
+                            onChange={(e) => handleAvailableHourChange('overnight', e.target.checked)}
+                          />
                           <Label htmlFor="overnight" className="text-sm">Overnight (00:00-08:00)</Label>
                         </div>
                       </div>
                     </div>
                     
-                    <Button className="w-full">
-                      Add Teacher
+                    <Button 
+                      className="w-full"
+                      onClick={handleSubmitNewTeacher}
+                      disabled={addTeacherMutation.isPending}
+                    >
+                      {addTeacherMutation.isPending ? 'Adding...' : 'Add Teacher'}
                     </Button>
                   </div>
                 </DialogContent>

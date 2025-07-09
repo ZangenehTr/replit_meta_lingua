@@ -9471,6 +9471,28 @@ Return JSON format:
     }
   });
 
+  // Add teacher to Callern availability
+  app.post("/api/admin/callern/teacher-availability", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { teacherId, hourlyRate, availableHours } = req.body;
+
+      const availability = await storage.setTeacherCallernAvailability({
+        teacherId: parseInt(teacherId),
+        isOnline: false, // Initial state
+        availableHours: availableHours || [],
+        hourlyRate: hourlyRate ? parseFloat(hourlyRate) : null
+      });
+
+      res.status(201).json({
+        message: "Teacher added to Callern successfully",
+        availability
+      });
+    } catch (error) {
+      console.error('Error adding teacher to Callern:', error);
+      res.status(500).json({ message: "Failed to add teacher to Callern" });
+    }
+  });
+
   // Update teacher standby status
   app.put("/api/admin/callern/teacher-availability/:teacherId", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
