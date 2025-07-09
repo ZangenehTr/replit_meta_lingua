@@ -169,3 +169,7 @@ For development and testing purposes, the following accounts are available:
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## AI Assistant Name
+
+Note: User previously chose a name for the AI assistant in the application. This needs to be recalled and implemented when mentioned.

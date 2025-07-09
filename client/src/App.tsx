@@ -90,6 +90,7 @@ import RoomManagement from "@/pages/admin/room-management";
 import { CallernManagement } from "@/pages/admin/callern-management";
 import CallernSystem from "@/pages/callern";
 import GamificationSystem from "@/pages/games";
+import AIPracticePage from "@/pages/ai-practice";
 
 // Language provider removed - using useLanguage hook directly
 
@@ -350,7 +351,7 @@ function Router() {
       </Route>
       <Route path="/ai-practice">
         <ProtectedRoute>
-          <GamificationSystem />
+          <AIPracticePage />
         </ProtectedRoute>
       </Route>
 

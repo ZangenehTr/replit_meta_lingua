@@ -160,7 +160,7 @@ export default function TutorsPage() {
             {filteredTutors.length} tutors found
             {userProfile?.targetLanguages?.length > 0 && (
               <span className="ml-2">
-                • Matched to your target language: {userProfile.targetLanguages.join(", ")}
+                • Matched to your target language: {Array.isArray(userProfile.targetLanguages) ? userProfile.targetLanguages.join(", ") : userProfile.targetLanguages}
               </span>
             )}
           </p>
@@ -203,7 +203,7 @@ export default function TutorsPage() {
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-gray-400" />
-                    <span>Languages: {tutor.languages.join(", ")}</span>
+                    <span>Languages: {Array.isArray(tutor.languages) ? tutor.languages.join(", ") : tutor.languages || 'Not specified'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-gray-400" />
