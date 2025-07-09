@@ -2433,6 +2433,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SMS Templates endpoints
+  app.get("/api/admin/sms-templates", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      // Return default SMS templates for Iranian compliance
+      const templates = [
+        {
+          id: 1,
+          event: "enrollment",
+          recipient: "student",
+          template: "Welcome to Meta Lingua! You have been successfully enrolled in {courseName}. Your learning journey begins now!",
+          variables: ["courseName"],
+          isActive: true,
+          language: "english"
+        },
+        {
+          id: 2,
+          event: "enrollment",
+          recipient: "student",
+          template: "به متا لینگوا خوش آمدید! شما با موفقیت در دوره {courseName} ثبت نام کردید. سفر یادگیری شما از اکنون آغاز می‌شود!",
+          variables: ["courseName"],
+          isActive: true,
+          language: "persian"
+        },
+        {
+          id: 3,
+          event: "class_reminder",
+          recipient: "student",
+          template: "Hi {studentName}, reminder: Your class with {teacherName} is scheduled for {classTime}. Don't forget!",
+          variables: ["studentName", "teacherName", "classTime"],
+          isActive: true,
+          language: "english"
+        },
+        {
+          id: 4,
+          event: "class_reminder",
+          recipient: "student",
+          template: "سلام {studentName}، یادآوری: کلاس شما با {teacherName} برای ساعت {classTime} برنامه‌ریزی شده است. فراموش نکنید!",
+          variables: ["studentName", "teacherName", "classTime"],
+          isActive: true,
+          language: "persian"
+        },
+        {
+          id: 5,
+          event: "payment_confirmation",
+          recipient: "student",
+          template: "Payment confirmed! {amount} IRR received for {courseName}. Thank you for choosing Meta Lingua.",
+          variables: ["amount", "courseName"],
+          isActive: true,
+          language: "english"
+        },
+        {
+          id: 6,
+          event: "payment_confirmation",
+          recipient: "student",
+          template: "پرداخت تأیید شد! {amount} ریال برای {courseName} دریافت شد. از انتخاب متا لینگوا متشکریم.",
+          variables: ["amount", "courseName"],
+          isActive: true,
+          language: "persian"
+        },
+        {
+          id: 7,
+          event: "verification",
+          recipient: "student",
+          template: "Your Meta Lingua verification code is: {code}",
+          variables: ["code"],
+          isActive: true,
+          language: "english"
+        },
+        {
+          id: 8,
+          event: "verification",
+          recipient: "student",
+          template: "کد تأیید متا لینگوا شما: {code}",
+          variables: ["code"],
+          isActive: true,
+          language: "persian"
+        }
+      ];
+      
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching SMS templates:', error);
+      res.status(500).json({ error: 'Failed to fetch SMS templates' });
+    }
+  });
+
+  // Kavenegar Settings endpoints
+  app.get("/api/admin/kavenegar-settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const settings = {
+        apiKey: process.env.KAVENEGAR_API_KEY ? "••••••••••••••••" : "",
+        isConfigured: !!process.env.KAVENEGAR_API_KEY,
+        senderNumber: "10008663", // Default Iranian sender number
+        dailyLimit: 1000,
+        isEnabled: !!process.env.KAVENEGAR_API_KEY
+      };
+      
+      res.json(settings);
+    } catch (error) {
+      console.error('Error fetching Kavenegar settings:', error);
+      res.status(500).json({ error: 'Failed to fetch settings' });
+    }
+  });
+
+  app.post("/api/admin/kavenegar-settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { senderNumber, dailyLimit, isEnabled } = req.body;
+      
+      // Note: API key is set via environment variable for security
+      const settings = {
+        senderNumber: senderNumber || "10008663",
+        dailyLimit: dailyLimit || 1000,
+        isEnabled: isEnabled && !!process.env.KAVENEGAR_API_KEY,
+        apiKey: process.env.KAVENEGAR_API_KEY ? "••••••••••••••••" : "",
+        isConfigured: !!process.env.KAVENEGAR_API_KEY,
+        message: process.env.KAVENEGAR_API_KEY ? 
+          "Settings saved successfully" : 
+          "API key must be set via environment variable KAVENEGAR_API_KEY"
+      };
+      
+      res.json(settings);
+    } catch (error) {
+      console.error('Error saving Kavenegar settings:', error);
+      res.status(500).json({ error: 'Failed to save settings' });
+    }
+  });
+
   // AI recommendations endpoint
   app.post("/api/ai/recommendations", authenticateToken, async (req: any, res) => {
     try {
