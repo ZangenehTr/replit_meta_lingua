@@ -1060,6 +1060,575 @@ export const insertPaymentTransactionSchema = createInsertSchema(paymentTransact
   createdAt: true
 });
 
+// ===== COMPREHENSIVE TESTING SUBSYSTEM =====
+
+// Tests/Quizzes
+export const tests = pgTable("tests", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  courseId: integer("course_id").references(() => courses.id),
+  teacherId: integer("teacher_id").references(() => users.id),
+  testType: varchar("test_type", { length: 50 }).notNull(), // quiz, exam, placement, practice, assessment
+  language: varchar("language", { length: 10 }).notNull(),
+  level: varchar("level", { length: 20 }).notNull(), // A1, A2, B1, B2, C1, C2
+  passingScore: integer("passing_score").default(60),
+  timeLimit: integer("time_limit"), // in minutes
+  maxAttempts: integer("max_attempts").default(1),
+  randomizeQuestions: boolean("randomize_questions").default(false),
+  showResults: boolean("show_results").default(true),
+  showCorrectAnswers: boolean("show_correct_answers").default(false),
+  isActive: boolean("is_active").default(true),
+  scheduledDate: timestamp("scheduled_date"),
+  dueDate: timestamp("due_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Test Questions - supports 8 question types
+export const testQuestions = pgTable("test_questions", {
+  id: serial("id").primaryKey(),
+  testId: integer("test_id").references(() => tests.id).notNull(),
+  questionType: varchar("question_type", { length: 50 }).notNull(), // multiple_choice, true_false, fill_blank, matching, ordering, short_answer, essay, speaking
+  questionText: text("question_text").notNull(),
+  questionAudio: varchar("question_audio", { length: 500 }), // for listening questions
+  questionImage: varchar("question_image", { length: 500 }), // for visual questions
+  points: integer("points").default(1),
+  order: integer("order").notNull(),
+  
+  // For multiple choice and true/false
+  options: jsonb("options"), // array of {id, text, isCorrect}
+  
+  // For fill in blank
+  blanksData: jsonb("blanks_data"), // array of {position, correctAnswer, acceptableAnswers}
+  
+  // For matching
+  matchingPairs: jsonb("matching_pairs"), // array of {left, right}
+  
+  // For ordering
+  orderingItems: jsonb("ordering_items"), // array in correct order
+  
+  // For short answer and essay
+  modelAnswer: text("model_answer"),
+  gradingCriteria: jsonb("grading_criteria"), // rubric for essay questions
+  
+  // For speaking
+  recordingPrompt: text("recording_prompt"),
+  maxRecordingDuration: integer("max_recording_duration"), // seconds
+  
+  explanation: text("explanation"), // shown after answering
+  skillCategory: varchar("skill_category", { length: 50 }), // grammar, vocabulary, reading, writing, listening, speaking
+  difficulty: varchar("difficulty", { length: 20 }).default("medium"), // easy, medium, hard
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Test Attempts
+export const testAttempts = pgTable("test_attempts", {
+  id: serial("id").primaryKey(),
+  testId: integer("test_id").references(() => tests.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  attemptNumber: integer("attempt_number").default(1),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  timeSpent: integer("time_spent"), // in seconds
+  score: decimal("score", { precision: 5, scale: 2 }),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }),
+  status: varchar("status", { length: 20 }).default("in_progress"), // in_progress, completed, abandoned, submitted
+  feedback: text("feedback"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Test Answers
+export const testAnswers = pgTable("test_answers", {
+  id: serial("id").primaryKey(),
+  attemptId: integer("attempt_id").references(() => testAttempts.id).notNull(),
+  questionId: integer("question_id").references(() => testQuestions.id).notNull(),
+  
+  // Different answer types
+  selectedOptionId: integer("selected_option_id"), // for multiple choice
+  booleanAnswer: boolean("boolean_answer"), // for true/false
+  textAnswer: text("text_answer"), // for short answer, essay, fill blank
+  matchingAnswer: jsonb("matching_answer"), // for matching questions
+  orderingAnswer: jsonb("ordering_answer"), // for ordering questions
+  recordingUrl: varchar("recording_url", { length: 500 }), // for speaking questions
+  
+  isCorrect: boolean("is_correct"),
+  pointsEarned: decimal("points_earned", { precision: 5, scale: 2 }),
+  feedback: text("feedback"),
+  gradedBy: integer("graded_by").references(() => users.id), // for manual grading
+  gradedAt: timestamp("graded_at"),
+  
+  answeredAt: timestamp("answered_at").defaultNow().notNull()
+});
+
+// ===== GAMIFICATION SUBSYSTEM =====
+
+// Language Learning Games
+export const games = pgTable("games", {
+  id: serial("id").primaryKey(),
+  gameName: varchar("game_name", { length: 255 }).notNull(),
+  gameCode: varchar("game_code", { length: 50 }).notNull().unique(), // unique identifier
+  description: text("description"),
+  gameType: varchar("game_type", { length: 50 }).notNull(), // vocabulary, grammar, listening, speaking, reading, writing, mixed
+  ageGroup: varchar("age_group", { length: 20 }).notNull(), // 5-10, 11-14, 15-20, 21+
+  minLevel: varchar("min_level", { length: 10 }).notNull(), // A1, A2, B1, B2, C1, C2
+  maxLevel: varchar("max_level", { length: 10 }).notNull(),
+  language: varchar("language", { length: 10 }).notNull(),
+  
+  // Game mechanics
+  gameMode: varchar("game_mode", { length: 50 }).notNull(), // single_player, multiplayer, competitive, collaborative
+  duration: integer("duration"), // estimated minutes per session
+  pointsPerCorrect: integer("points_per_correct").default(10),
+  bonusMultiplier: decimal("bonus_multiplier", { precision: 3, scale: 2 }).default(1.0),
+  livesSystem: boolean("lives_system").default(false),
+  timerEnabled: boolean("timer_enabled").default(false),
+  
+  // Resources
+  thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
+  backgroundImage: varchar("background_image", { length: 500 }),
+  soundEffects: jsonb("sound_effects"), // {correct: url, wrong: url, levelUp: url}
+  
+  // Progression
+  totalLevels: integer("total_levels").default(10),
+  unlockRequirements: jsonb("unlock_requirements"), // {minXP: 100, prerequisiteGames: []}
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Game Levels/Stages
+export const gameLevels = pgTable("game_levels", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").references(() => games.id).notNull(),
+  levelNumber: integer("level_number").notNull(),
+  levelName: varchar("level_name", { length: 100 }),
+  languageLevel: varchar("language_level", { length: 10 }).notNull(), // A1, A2, etc.
+  
+  // Level content
+  contentType: varchar("content_type", { length: 50 }).notNull(), // words, sentences, paragraphs, dialogues
+  contentData: jsonb("content_data").notNull(), // actual game content
+  
+  // Difficulty settings
+  difficulty: varchar("difficulty", { length: 20 }).default("medium"),
+  speedMultiplier: decimal("speed_multiplier", { precision: 3, scale: 2 }).default(1.0),
+  itemCount: integer("item_count").default(10), // number of items in this level
+  
+  // Rewards
+  xpReward: integer("xp_reward").default(50),
+  coinsReward: integer("coins_reward").default(10),
+  badgeId: integer("badge_id").references(() => achievements.id),
+  
+  // Progression
+  passingScore: integer("passing_score").default(70), // percentage
+  starsThresholds: jsonb("stars_thresholds"), // {1: 60, 2: 80, 3: 95}
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// User Game Progress
+export const userGameProgress = pgTable("user_game_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  gameId: integer("game_id").references(() => games.id).notNull(),
+  currentLevel: integer("current_level").default(1),
+  
+  // Overall progress
+  totalScore: integer("total_score").default(0),
+  totalXpEarned: integer("total_xp_earned").default(0),
+  totalCoinsEarned: integer("total_coins_earned").default(0),
+  totalPlayTime: integer("total_play_time").default(0), // in seconds
+  sessionsPlayed: integer("sessions_played").default(0),
+  
+  // Performance metrics
+  accuracy: decimal("accuracy", { precision: 5, scale: 2 }), // percentage
+  averageSpeed: decimal("average_speed", { precision: 5, scale: 2 }), // items per minute
+  longestStreak: integer("longest_streak").default(0),
+  perfectLevels: integer("perfect_levels").default(0),
+  
+  lastPlayedAt: timestamp("last_played_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Game Sessions
+export const gameSessions = pgTable("game_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  gameId: integer("game_id").references(() => games.id).notNull(),
+  levelId: integer("level_id").references(() => gameLevels.id),
+  
+  // Session data
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  endedAt: timestamp("ended_at"),
+  duration: integer("duration"), // in seconds
+  
+  // Performance
+  score: integer("score").default(0),
+  correctAnswers: integer("correct_answers").default(0),
+  wrongAnswers: integer("wrong_answers").default(0),
+  accuracy: decimal("accuracy", { precision: 5, scale: 2 }),
+  starsEarned: integer("stars_earned").default(0), // 0-3
+  
+  // Rewards
+  xpEarned: integer("xp_earned").default(0),
+  coinsEarned: integer("coins_earned").default(0),
+  newBadges: jsonb("new_badges"), // array of achievement IDs
+  
+  // Game state
+  gameState: jsonb("game_state"), // for resuming
+  isCompleted: boolean("is_completed").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Game Leaderboards
+export const gameLeaderboards = pgTable("game_leaderboards", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").references(() => games.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  
+  // Leaderboard types
+  leaderboardType: varchar("leaderboard_type", { length: 50 }).notNull(), // daily, weekly, monthly, all_time
+  period: varchar("period", { length: 20 }), // "2024-01", "2024-W05", etc.
+  
+  // Scores
+  score: integer("score").notNull(),
+  rank: integer("rank"),
+  
+  // Additional metrics
+  gamesPlayed: integer("games_played").default(1),
+  perfectGames: integer("perfect_games").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// ===== VIDEO-BASED COURSES SUBSYSTEM =====
+
+// Video Lessons
+export const videoLessons = pgTable("video_lessons", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => courses.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  videoUrl: varchar("video_url", { length: 500 }).notNull(),
+  thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
+  duration: integer("duration").notNull(), // in seconds
+  
+  // Content organization
+  moduleId: integer("module_id"), // for grouping lessons
+  orderIndex: integer("order_index").notNull(),
+  
+  // Learning metadata
+  language: varchar("language", { length: 10 }).notNull(),
+  level: varchar("level", { length: 20 }).notNull(), // A1, A2, B1, B2, C1, C2
+  skillFocus: varchar("skill_focus", { length: 50 }), // speaking, listening, grammar, vocabulary
+  
+  // Supplementary materials
+  transcriptUrl: varchar("transcript_url", { length: 500 }),
+  subtitlesUrl: varchar("subtitles_url", { length: 500 }),
+  materialsUrl: varchar("materials_url", { length: 500 }), // PDF, exercises
+  
+  // Access control
+  isFree: boolean("is_free").default(false),
+  isPublished: boolean("is_published").default(true),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Video Progress Tracking
+export const videoProgress = pgTable("video_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  videoId: integer("video_id").references(() => videoLessons.id).notNull(),
+  
+  // Progress tracking
+  watchedSeconds: integer("watched_seconds").default(0),
+  completionPercentage: decimal("completion_percentage", { precision: 5, scale: 2 }).default(0),
+  isCompleted: boolean("is_completed").default(false),
+  
+  // Engagement metrics
+  totalWatchTime: integer("total_watch_time").default(0), // including replays
+  pauseCount: integer("pause_count").default(0),
+  rewindCount: integer("rewind_count").default(0),
+  playbackSpeed: decimal("playback_speed", { precision: 3, scale: 2 }).default(1.0),
+  
+  // Learning tracking
+  notesCount: integer("notes_count").default(0),
+  bookmarksCount: integer("bookmarks_count").default(0),
+  
+  lastWatchedAt: timestamp("last_watched_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Video Notes
+export const videoNotes = pgTable("video_notes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  videoId: integer("video_id").references(() => videoLessons.id).notNull(),
+  
+  timestamp: integer("timestamp").notNull(), // seconds in video
+  noteText: text("note_text").notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Video Bookmarks
+export const videoBookmarks = pgTable("video_bookmarks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  videoId: integer("video_id").references(() => videoLessons.id).notNull(),
+  
+  timestamp: integer("timestamp").notNull(), // seconds in video
+  title: varchar("title", { length: 100 }),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// ===== ENHANCED LMS FEATURES =====
+
+// Discussion Forums
+export const forumCategories = pgTable("forum_categories", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => courses.id),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  icon: varchar("icon", { length: 50 }),
+  orderIndex: integer("order_index").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const forumThreads = pgTable("forum_threads", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").references(() => forumCategories.id).notNull(),
+  authorId: integer("author_id").references(() => users.id).notNull(),
+  
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  
+  isPinned: boolean("is_pinned").default(false),
+  isLocked: boolean("is_locked").default(false),
+  
+  viewCount: integer("view_count").default(0),
+  replyCount: integer("reply_count").default(0),
+  lastReplyAt: timestamp("last_reply_at"),
+  lastReplyBy: integer("last_reply_by").references(() => users.id),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const forumPosts = pgTable("forum_posts", {
+  id: serial("id").primaryKey(),
+  threadId: integer("thread_id").references(() => forumThreads.id).notNull(),
+  authorId: integer("author_id").references(() => users.id).notNull(),
+  
+  content: text("content").notNull(),
+  
+  isAnswer: boolean("is_answer").default(false), // for Q&A threads
+  upvotes: integer("upvotes").default(0),
+  
+  editedAt: timestamp("edited_at"),
+  editedBy: integer("edited_by").references(() => users.id),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Gradebook
+export const gradebookEntries = pgTable("gradebook_entries", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  
+  // Grade components
+  assignmentGrades: jsonb("assignment_grades"), // {assignmentId: grade}
+  testGrades: jsonb("test_grades"), // {testId: grade}
+  participationGrade: decimal("participation_grade", { precision: 5, scale: 2 }),
+  attendanceGrade: decimal("attendance_grade", { precision: 5, scale: 2 }),
+  
+  // Overall grades
+  currentGrade: decimal("current_grade", { precision: 5, scale: 2 }),
+  projectedGrade: decimal("projected_grade", { precision: 5, scale: 2 }),
+  letterGrade: varchar("letter_grade", { length: 5 }),
+  
+  // Teacher feedback
+  comments: text("comments"),
+  lastUpdatedBy: integer("last_updated_by").references(() => users.id),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Content Library
+export const contentLibrary = pgTable("content_library", {
+  id: serial("id").primaryKey(),
+  creatorId: integer("creator_id").references(() => users.id).notNull(),
+  
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  contentType: varchar("content_type", { length: 50 }).notNull(), // document, audio, image, worksheet, presentation
+  fileUrl: varchar("file_url", { length: 500 }).notNull(),
+  thumbnailUrl: varchar("thumbnail_url", { length: 500 }),
+  
+  // Metadata
+  language: varchar("language", { length: 10 }).notNull(),
+  level: varchar("level", { length: 20 }), // A1-C2
+  skillArea: varchar("skill_area", { length: 50 }), // grammar, vocabulary, etc.
+  tags: text("tags").array().default([]),
+  
+  // Usage tracking
+  downloadCount: integer("download_count").default(0),
+  useCount: integer("use_count").default(0),
+  rating: decimal("rating", { precision: 3, scale: 2 }),
+  
+  // Sharing
+  isPublic: boolean("is_public").default(false),
+  licenseType: varchar("license_type", { length: 50 }), // CC-BY, proprietary, etc.
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// ===== AI INTEGRATION FOR COMPREHENSIVE TRACKING =====
+
+// AI Progress Tracking
+export const aiProgressTracking = pgTable("ai_progress_tracking", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  
+  // Speaking Skills
+  speakingAccuracy: decimal("speaking_accuracy", { precision: 5, scale: 2 }),
+  speakingFluency: decimal("speaking_fluency", { precision: 5, scale: 2 }),
+  pronunciation: decimal("pronunciation", { precision: 5, scale: 2 }),
+  intonation: decimal("intonation", { precision: 5, scale: 2 }),
+  
+  // Writing Skills
+  writingAccuracy: decimal("writing_accuracy", { precision: 5, scale: 2 }),
+  writingComplexity: decimal("writing_complexity", { precision: 5, scale: 2 }),
+  writingCoherence: decimal("writing_coherence", { precision: 5, scale: 2 }),
+  
+  // Vocabulary
+  vocabularySize: integer("vocabulary_size"),
+  vocabularyRetention: decimal("vocabulary_retention", { precision: 5, scale: 2 }),
+  vocabularyUsage: decimal("vocabulary_usage", { precision: 5, scale: 2 }),
+  
+  // Grammar
+  grammarAccuracy: decimal("grammar_accuracy", { precision: 5, scale: 2 }),
+  grammarComplexity: decimal("grammar_complexity", { precision: 5, scale: 2 }),
+  
+  // Overall Progress
+  overallLevel: varchar("overall_level", { length: 10 }), // A1-C2
+  progressRate: decimal("progress_rate", { precision: 5, scale: 2 }), // percentage per month
+  
+  lastAssessedAt: timestamp("last_assessed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// AI Activity Sessions
+export const aiActivitySessions = pgTable("ai_activity_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  activityType: varchar("activity_type", { length: 50 }).notNull(), // speaking_practice, writing_exercise, vocabulary_game, grammar_quiz
+  
+  // Session details
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  endedAt: timestamp("ended_at"),
+  duration: integer("duration"), // seconds
+  
+  // AI Analysis
+  aiModel: varchar("ai_model", { length: 50 }),
+  analysisData: jsonb("analysis_data"), // detailed AI analysis results
+  
+  // Performance metrics
+  score: decimal("score", { precision: 5, scale: 2 }),
+  mistakes: jsonb("mistakes"), // array of mistake objects
+  improvements: jsonb("improvements"), // suggested improvements
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// AI Vocabulary Tracking
+export const aiVocabularyTracking = pgTable("ai_vocabulary_tracking", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  word: varchar("word", { length: 100 }).notNull(),
+  language: varchar("language", { length: 10 }).notNull(),
+  
+  // Learning metrics
+  timesEncountered: integer("times_encountered").default(1),
+  timesUsedCorrectly: integer("times_used_correctly").default(0),
+  timesUsedIncorrectly: integer("times_used_incorrectly").default(0),
+  
+  // Retention data
+  firstSeenAt: timestamp("first_seen_at").defaultNow().notNull(),
+  lastSeenAt: timestamp("last_seen_at"),
+  lastUsedAt: timestamp("last_used_at"),
+  masteryLevel: decimal("mastery_level", { precision: 3, scale: 2 }).default(0), // 0-1
+  
+  // Context
+  contexts: jsonb("contexts"), // array of usage contexts
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// AI Grammar Pattern Tracking
+export const aiGrammarTracking = pgTable("ai_grammar_tracking", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  patternType: varchar("pattern_type", { length: 100 }).notNull(), // tense, conditional, modal, etc.
+  patternName: varchar("pattern_name", { length: 255 }).notNull(),
+  
+  // Mastery metrics
+  correctUsage: integer("correct_usage").default(0),
+  incorrectUsage: integer("incorrect_usage").default(0),
+  accuracy: decimal("accuracy", { precision: 5, scale: 2 }),
+  
+  // Learning progress
+  introduced: boolean("introduced").default(true),
+  practiced: boolean("practiced").default(false),
+  mastered: boolean("mastered").default(false),
+  
+  // Examples and feedback
+  exampleSentences: jsonb("example_sentences"),
+  commonMistakes: jsonb("common_mistakes"),
+  
+  lastPracticedAt: timestamp("last_practiced_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// AI Pronunciation Analysis
+export const aiPronunciationAnalysis = pgTable("ai_pronunciation_analysis", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  sessionId: integer("session_id").references(() => aiActivitySessions.id),
+  
+  // Audio data
+  audioUrl: varchar("audio_url", { length: 500 }).notNull(),
+  transcription: text("transcription"),
+  expectedText: text("expected_text"),
+  
+  // Analysis results
+  overallScore: decimal("overall_score", { precision: 5, scale: 2 }),
+  clarity: decimal("clarity", { precision: 5, scale: 2 }),
+  fluency: decimal("fluency", { precision: 5, scale: 2 }),
+  nativelikeness: decimal("nativelikeness", { precision: 5, scale: 2 }),
+  
+  // Detailed feedback
+  phoneticAnalysis: jsonb("phonetic_analysis"), // phoneme-level analysis
+  stressPatterns: jsonb("stress_patterns"),
+  intonationAnalysis: jsonb("intonation_analysis"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
 // TEACHER EVALUATIONS (Supervisor)
 export const teacherEvaluations = pgTable("teacher_evaluations", {
   id: serial("id").primaryKey(),
@@ -1430,6 +1999,192 @@ export type MoodRecommendation = typeof moodRecommendations.$inferSelect;
 export type InsertMoodRecommendation = z.infer<typeof insertMoodRecommendationSchema>;
 export type LearningAdaptation = typeof learningAdaptations.$inferSelect;
 export type InsertLearningAdaptation = z.infer<typeof insertLearningAdaptationSchema>;
+
+// Testing subsystem insert schemas
+export const insertTestSchema = createInsertSchema(tests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertTestQuestionSchema = createInsertSchema(testQuestions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertTestAttemptSchema = createInsertSchema(testAttempts).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertTestAnswerSchema = createInsertSchema(testAnswers).omit({
+  id: true,
+  answeredAt: true
+});
+
+// Gamification insert schemas
+export const insertGameSchema = createInsertSchema(games).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertGameLevelSchema = createInsertSchema(gameLevels).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertUserGameProgressSchema = createInsertSchema(userGameProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertGameSessionSchema = createInsertSchema(gameSessions).omit({
+  id: true,
+  startedAt: true,
+  createdAt: true
+});
+
+export const insertGameLeaderboardSchema = createInsertSchema(gameLeaderboards).omit({
+  id: true,
+  createdAt: true
+});
+
+// Video learning insert schemas
+export const insertVideoLessonSchema = createInsertSchema(videoLessons).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertVideoProgressSchema = createInsertSchema(videoProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertVideoNoteSchema = createInsertSchema(videoNotes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertVideoBookmarkSchema = createInsertSchema(videoBookmarks).omit({
+  id: true,
+  createdAt: true
+});
+
+// LMS insert schemas
+export const insertForumCategorySchema = createInsertSchema(forumCategories).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertForumThreadSchema = createInsertSchema(forumThreads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertForumPostSchema = createInsertSchema(forumPosts).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertGradebookEntrySchema = createInsertSchema(gradebookEntries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertContentLibrarySchema = createInsertSchema(contentLibrary).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// AI tracking insert schemas
+export const insertAiProgressTrackingSchema = createInsertSchema(aiProgressTracking).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertAiActivitySessionSchema = createInsertSchema(aiActivitySessions).omit({
+  id: true,
+  startedAt: true,
+  createdAt: true
+});
+
+export const insertAiVocabularyTrackingSchema = createInsertSchema(aiVocabularyTracking).omit({
+  id: true,
+  firstSeenAt: true,
+  createdAt: true
+});
+
+export const insertAiGrammarTrackingSchema = createInsertSchema(aiGrammarTracking).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertAiPronunciationAnalysisSchema = createInsertSchema(aiPronunciationAnalysis).omit({
+  id: true,
+  createdAt: true
+});
+
+// Types for new subsystem tables
+export type Test = typeof tests.$inferSelect;
+export type InsertTest = z.infer<typeof insertTestSchema>;
+export type TestQuestion = typeof testQuestions.$inferSelect;
+export type InsertTestQuestion = z.infer<typeof insertTestQuestionSchema>;
+export type TestAttempt = typeof testAttempts.$inferSelect;
+export type InsertTestAttempt = z.infer<typeof insertTestAttemptSchema>;
+export type TestAnswer = typeof testAnswers.$inferSelect;
+export type InsertTestAnswer = z.infer<typeof insertTestAnswerSchema>;
+
+export type Game = typeof games.$inferSelect;
+export type InsertGame = z.infer<typeof insertGameSchema>;
+export type GameLevel = typeof gameLevels.$inferSelect;
+export type InsertGameLevel = z.infer<typeof insertGameLevelSchema>;
+export type UserGameProgress = typeof userGameProgress.$inferSelect;
+export type InsertUserGameProgress = z.infer<typeof insertUserGameProgressSchema>;
+export type GameSession = typeof gameSessions.$inferSelect;
+export type InsertGameSession = z.infer<typeof insertGameSessionSchema>;
+export type GameLeaderboard = typeof gameLeaderboards.$inferSelect;
+export type InsertGameLeaderboard = z.infer<typeof insertGameLeaderboardSchema>;
+
+export type VideoLesson = typeof videoLessons.$inferSelect;
+export type InsertVideoLesson = z.infer<typeof insertVideoLessonSchema>;
+export type VideoProgress = typeof videoProgress.$inferSelect;
+export type InsertVideoProgress = z.infer<typeof insertVideoProgressSchema>;
+export type VideoNote = typeof videoNotes.$inferSelect;
+export type InsertVideoNote = z.infer<typeof insertVideoNoteSchema>;
+export type VideoBookmark = typeof videoBookmarks.$inferSelect;
+export type InsertVideoBookmark = z.infer<typeof insertVideoBookmarkSchema>;
+
+export type ForumCategory = typeof forumCategories.$inferSelect;
+export type InsertForumCategory = z.infer<typeof insertForumCategorySchema>;
+export type ForumThread = typeof forumThreads.$inferSelect;
+export type InsertForumThread = z.infer<typeof insertForumThreadSchema>;
+export type ForumPost = typeof forumPosts.$inferSelect;
+export type InsertForumPost = z.infer<typeof insertForumPostSchema>;
+export type GradebookEntry = typeof gradebookEntries.$inferSelect;
+export type InsertGradebookEntry = z.infer<typeof insertGradebookEntrySchema>;
+export type ContentLibraryItem = typeof contentLibrary.$inferSelect;
+export type InsertContentLibraryItem = z.infer<typeof insertContentLibrarySchema>;
+
+export type AiProgressTracking = typeof aiProgressTracking.$inferSelect;
+export type InsertAiProgressTracking = z.infer<typeof insertAiProgressTrackingSchema>;
+export type AiActivitySession = typeof aiActivitySessions.$inferSelect;
+export type InsertAiActivitySession = z.infer<typeof insertAiActivitySessionSchema>;
+export type AiVocabularyTracking = typeof aiVocabularyTracking.$inferSelect;
+export type InsertAiVocabularyTracking = z.infer<typeof insertAiVocabularyTrackingSchema>;
+export type AiGrammarTracking = typeof aiGrammarTracking.$inferSelect;
+export type InsertAiGrammarTracking = z.infer<typeof insertAiGrammarTrackingSchema>;
+export type AiPronunciationAnalysis = typeof aiPronunciationAnalysis.$inferSelect;
+export type InsertAiPronunciationAnalysis = z.infer<typeof insertAiPronunciationAnalysisSchema>;
 
 // Mood categories and recommendation types for Iranian context
 export const MOOD_CATEGORIES = [

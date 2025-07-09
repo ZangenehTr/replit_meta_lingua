@@ -51,6 +51,7 @@ import SessionsPage from "@/pages/student/sessions";
 import HomeworkPage from "@/pages/student/homework";
 import MessagesPage from "@/pages/student/messages";
 import PaymentPage from "@/pages/student/payment";
+import StudentTestTaking from "@/pages/student/test-taking";
 
 // Teacher pages
 import TeacherClassesPage from "@/pages/teacher/classes";
@@ -59,6 +60,7 @@ import TeacherHomeworkPage from "@/pages/teacher/homework";
 import TeacherStudentsPage from "@/pages/teacher/students";
 import TeacherResourcesPage from "@/pages/teacher/resources";
 import TeacherReportsPage from "@/pages/teacher/reports";
+import TeacherTestsPage from "@/pages/teacher/tests";
 
 // Mentor pages
 import MentorStudentsPage from "@/pages/mentor/students";
@@ -291,6 +293,11 @@ function Router() {
           <PaymentPage />
         </ProtectedRoute>
       </Route>
+      <Route path="/tests">
+        <ProtectedRoute>
+          <StudentTestTaking />
+        </ProtectedRoute>
+      </Route>
 
       {/* Teacher Routes */}
       <Route path="/teacher/dashboard">
@@ -326,6 +333,11 @@ function Router() {
       <Route path="/teacher/reports">
         <ProtectedRoute>
           <TeacherReportsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/tests">
+        <ProtectedRoute>
+          <TeacherTestsPage />
         </ProtectedRoute>
       </Route>
 

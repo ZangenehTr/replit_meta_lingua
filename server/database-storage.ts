@@ -26,7 +26,30 @@ import {
   type MentoringSession, type InsertMentoringSession,
   type CallernPackage, type InsertCallernPackage, type StudentCallernPackage, type InsertStudentCallernPackage,
   type TeacherCallernAvailability, type InsertTeacherCallernAvailability, type CallernCallHistory, type InsertCallernCallHistory,
-  type CallernSyllabusTopics, type InsertCallernSyllabusTopics, type StudentCallernProgress, type InsertStudentCallernProgress
+  type CallernSyllabusTopics, type InsertCallernSyllabusTopics, type StudentCallernProgress, type InsertStudentCallernProgress,
+  // Testing subsystem types
+  tests, testQuestions, testAttempts, testAnswers,
+  type Test, type InsertTest, type TestQuestion, type InsertTestQuestion,
+  type TestAttempt, type InsertTestAttempt, type TestAnswer, type InsertTestAnswer,
+  // Gamification types
+  games, gameLevels, userGameProgress, gameSessions, gameLeaderboards,
+  type Game, type InsertGame, type GameLevel, type InsertGameLevel,
+  type UserGameProgress, type InsertUserGameProgress, type GameSession, type InsertGameSession,
+  type GameLeaderboard, type InsertGameLeaderboard,
+  // Video learning types
+  videoLessons, videoProgress, videoNotes, videoBookmarks,
+  type VideoLesson, type InsertVideoLesson, type VideoProgress, type InsertVideoProgress,
+  type VideoNote, type InsertVideoNote, type VideoBookmark, type InsertVideoBookmark,
+  // LMS types
+  forumCategories, forumThreads, forumPosts, gradebookEntries, contentLibrary,
+  type ForumCategory, type InsertForumCategory, type ForumThread, type InsertForumThread,
+  type ForumPost, type InsertForumPost, type GradebookEntry, type InsertGradebookEntry,
+  type ContentLibraryItem, type InsertContentLibraryItem,
+  // AI tracking types
+  aiProgressTracking, aiActivitySessions, aiVocabularyTracking, aiGrammarTracking, aiPronunciationAnalysis,
+  type AiProgressTracking, type InsertAiProgressTracking, type AiActivitySession, type InsertAiActivitySession,
+  type AiVocabularyTracking, type InsertAiVocabularyTracking, type AiGrammarTracking, type InsertAiGrammarTracking,
+  type AiPronunciationAnalysis, type InsertAiPronunciationAnalysis
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -3108,5 +3131,573 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return progress;
+  }
+
+  // Helper method to get courses taught by a teacher
+  async getTeacherCourses(teacherId: number): Promise<Course[]> {
+    return await db.select().from(courses)
+      .where(eq(courses.instructorId, teacherId));
+  }
+  
+  // Helper method to get user enrollments
+  async getUserEnrollments(userId: number): Promise<Enrollment[]> {
+    return await db.select().from(enrollments)
+      .where(eq(enrollments.userId, userId));
+  }
+
+  // ===== TESTING SUBSYSTEM =====
+  // Test management
+  async createTest(test: InsertTest): Promise<Test> {
+    const [newTest] = await db.insert(tests).values(test).returning();
+    return newTest;
+  }
+
+  async getTestById(id: number): Promise<Test | undefined> {
+    const [test] = await db.select().from(tests).where(eq(tests.id, id));
+    return test;
+  }
+
+  async getTestsByCourse(courseId: number): Promise<Test[]> {
+    return await db.select().from(tests).where(eq(tests.courseId, courseId));
+  }
+
+  async getTestsByTeacher(teacherId: number): Promise<Test[]> {
+    return await db.select().from(tests).where(eq(tests.createdBy, teacherId));
+  }
+
+  async updateTest(id: number, test: Partial<InsertTest>): Promise<Test | undefined> {
+    const [updated] = await db.update(tests)
+      .set({ ...test, updatedAt: new Date() })
+      .where(eq(tests.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTest(id: number): Promise<boolean> {
+    const result = await db.delete(tests).where(eq(tests.id, id));
+    return result.length > 0;
+  }
+
+  // Test questions
+  async createTestQuestion(question: InsertTestQuestion): Promise<TestQuestion> {
+    const [newQuestion] = await db.insert(testQuestions).values(question).returning();
+    return newQuestion;
+  }
+
+  async getTestQuestions(testId: number): Promise<TestQuestion[]> {
+    return await db.select().from(testQuestions)
+      .where(eq(testQuestions.testId, testId))
+      .orderBy(testQuestions.order);
+  }
+
+  async updateTestQuestion(id: number, question: Partial<InsertTestQuestion>): Promise<TestQuestion | undefined> {
+    const [updated] = await db.update(testQuestions)
+      .set({ ...question, updatedAt: new Date() })
+      .where(eq(testQuestions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTestQuestion(id: number): Promise<boolean> {
+    const result = await db.delete(testQuestions).where(eq(testQuestions.id, id));
+    return result.length > 0;
+  }
+
+  // Test attempts
+  async createTestAttempt(attempt: InsertTestAttempt): Promise<TestAttempt> {
+    const [newAttempt] = await db.insert(testAttempts).values(attempt).returning();
+    return newAttempt;
+  }
+
+  async getTestAttemptById(id: number): Promise<TestAttempt | undefined> {
+    const [attempt] = await db.select().from(testAttempts).where(eq(testAttempts.id, id));
+    return attempt;
+  }
+
+  async getStudentTestAttempts(studentId: number, testId: number): Promise<TestAttempt[]> {
+    return await db.select().from(testAttempts)
+      .where(and(
+        eq(testAttempts.studentId, studentId),
+        eq(testAttempts.testId, testId)
+      ))
+      .orderBy(desc(testAttempts.createdAt));
+  }
+
+  async updateTestAttempt(id: number, attempt: Partial<InsertTestAttempt>): Promise<TestAttempt | undefined> {
+    const [updated] = await db.update(testAttempts)
+      .set(attempt)
+      .where(eq(testAttempts.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Test answers
+  async saveTestAnswer(answer: InsertTestAnswer): Promise<TestAnswer> {
+    const [newAnswer] = await db.insert(testAnswers).values(answer).returning();
+    return newAnswer;
+  }
+
+  async getTestAnswers(attemptId: number): Promise<TestAnswer[]> {
+    return await db.select().from(testAnswers)
+      .where(eq(testAnswers.attemptId, attemptId));
+  }
+
+  async gradeTestAnswer(id: number, grade: { isCorrect: boolean; pointsEarned: number; feedback?: string }): Promise<TestAnswer | undefined> {
+    const [updated] = await db.update(testAnswers)
+      .set({
+        isCorrect: grade.isCorrect,
+        pointsEarned: grade.pointsEarned,
+        feedback: grade.feedback
+      })
+      .where(eq(testAnswers.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ===== GAMIFICATION SUBSYSTEM =====
+  // Games
+  async createGame(game: InsertGame): Promise<Game> {
+    const [newGame] = await db.insert(games).values(game).returning();
+    return newGame;
+  }
+
+  async getGameById(id: number): Promise<Game | undefined> {
+    const [game] = await db.select().from(games).where(eq(games.id, id));
+    return game;
+  }
+
+  async getGamesByAgeGroup(ageGroup: string): Promise<Game[]> {
+    return await db.select().from(games)
+      .where(eq(games.ageGroup, ageGroup))
+      .orderBy(games.order);
+  }
+
+  async getGamesByLevel(level: string): Promise<Game[]> {
+    return await db.select().from(games)
+      .where(eq(games.targetLevel, level))
+      .orderBy(games.order);
+  }
+
+  async updateGame(id: number, game: Partial<InsertGame>): Promise<Game | undefined> {
+    const [updated] = await db.update(games)
+      .set({ ...game, updatedAt: new Date() })
+      .where(eq(games.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Game levels
+  async createGameLevel(level: InsertGameLevel): Promise<GameLevel> {
+    const [newLevel] = await db.insert(gameLevels).values(level).returning();
+    return newLevel;
+  }
+
+  async getGameLevels(gameId: number): Promise<GameLevel[]> {
+    return await db.select().from(gameLevels)
+      .where(eq(gameLevels.gameId, gameId))
+      .orderBy(gameLevels.levelNumber);
+  }
+
+  async updateGameLevel(id: number, level: Partial<InsertGameLevel>): Promise<GameLevel | undefined> {
+    const [updated] = await db.update(gameLevels)
+      .set(level)
+      .where(eq(gameLevels.id, id))
+      .returning();
+    return updated;
+  }
+
+  // User game progress
+  async getOrCreateUserGameProgress(userId: number, gameId: number): Promise<UserGameProgress> {
+    const [existing] = await db.select().from(userGameProgress)
+      .where(and(
+        eq(userGameProgress.userId, userId),
+        eq(userGameProgress.gameId, gameId)
+      ));
+
+    if (existing) return existing;
+
+    const [newProgress] = await db.insert(userGameProgress)
+      .values({ userId, gameId })
+      .returning();
+    return newProgress;
+  }
+
+  async updateUserGameProgress(id: number, progress: Partial<InsertUserGameProgress>): Promise<UserGameProgress | undefined> {
+    const [updated] = await db.update(userGameProgress)
+      .set({ ...progress, updatedAt: new Date() })
+      .where(eq(userGameProgress.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getUserGameProgressByUser(userId: number): Promise<UserGameProgress[]> {
+    return await db.select().from(userGameProgress)
+      .where(eq(userGameProgress.userId, userId));
+  }
+
+  // Game sessions
+  async createGameSession(session: InsertGameSession): Promise<GameSession> {
+    const [newSession] = await db.insert(gameSessions).values(session).returning();
+    return newSession;
+  }
+
+  async endGameSession(id: number, sessionData: Partial<InsertGameSession>): Promise<GameSession | undefined> {
+    const [updated] = await db.update(gameSessions)
+      .set({
+        ...sessionData,
+        endedAt: new Date(),
+        status: 'completed'
+      })
+      .where(eq(gameSessions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getUserGameSessions(userId: number, gameId?: number): Promise<GameSession[]> {
+    let query = db.select().from(gameSessions).where(eq(gameSessions.userId, userId));
+    if (gameId) {
+      query = query.where(eq(gameSessions.gameId, gameId));
+    }
+    return await query.orderBy(desc(gameSessions.startedAt));
+  }
+
+  // Leaderboards
+  async updateGameLeaderboard(entry: InsertGameLeaderboard): Promise<GameLeaderboard> {
+    // Check if entry exists
+    const [existing] = await db.select().from(gameLeaderboards)
+      .where(and(
+        eq(gameLeaderboards.gameId, entry.gameId),
+        eq(gameLeaderboards.userId, entry.userId),
+        eq(gameLeaderboards.leaderboardType, entry.leaderboardType),
+        eq(gameLeaderboards.period, entry.period)
+      ));
+
+    if (existing && existing.score < (entry.score || 0)) {
+      // Update if new score is higher
+      const [updated] = await db.update(gameLeaderboards)
+        .set({ ...entry, updatedAt: new Date() })
+        .where(eq(gameLeaderboards.id, existing.id))
+        .returning();
+      return updated;
+    } else if (!existing) {
+      // Create new entry
+      const [newEntry] = await db.insert(gameLeaderboards).values(entry).returning();
+      return newEntry;
+    }
+
+    return existing;
+  }
+
+  async getGameLeaderboard(gameId: number, type: string, period?: string): Promise<GameLeaderboard[]> {
+    let query = db.select().from(gameLeaderboards)
+      .where(and(
+        eq(gameLeaderboards.gameId, gameId),
+        eq(gameLeaderboards.leaderboardType, type)
+      ));
+
+    if (period) {
+      query = query.where(eq(gameLeaderboards.period, period));
+    }
+
+    return await query.orderBy(desc(gameLeaderboards.score)).limit(100);
+  }
+
+  // ===== VIDEO LEARNING SUBSYSTEM =====
+  // Video lessons
+  async createVideoLesson(lesson: InsertVideoLesson): Promise<VideoLesson> {
+    const [newLesson] = await db.insert(videoLessons).values(lesson).returning();
+    return newLesson;
+  }
+
+  async getVideoLessonById(id: number): Promise<VideoLesson | undefined> {
+    const [lesson] = await db.select().from(videoLessons).where(eq(videoLessons.id, id));
+    return lesson;
+  }
+
+  async getVideoLessonsByCourse(courseId: number): Promise<VideoLesson[]> {
+    return await db.select().from(videoLessons)
+      .where(eq(videoLessons.courseId, courseId))
+      .orderBy(videoLessons.order);
+  }
+
+  async updateVideoLesson(id: number, lesson: Partial<InsertVideoLesson>): Promise<VideoLesson | undefined> {
+    const [updated] = await db.update(videoLessons)
+      .set({ ...lesson, updatedAt: new Date() })
+      .where(eq(videoLessons.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteVideoLesson(id: number): Promise<boolean> {
+    const result = await db.delete(videoLessons).where(eq(videoLessons.id, id));
+    return result.length > 0;
+  }
+
+  // Video progress
+  async getOrCreateVideoProgress(userId: number, videoId: number): Promise<VideoProgress> {
+    const [existing] = await db.select().from(videoProgress)
+      .where(and(
+        eq(videoProgress.userId, userId),
+        eq(videoProgress.videoId, videoId)
+      ));
+
+    if (existing) return existing;
+
+    const [newProgress] = await db.insert(videoProgress)
+      .values({ userId, videoId })
+      .returning();
+    return newProgress;
+  }
+
+  async updateVideoProgress(userId: number, videoId: number, progress: Partial<InsertVideoProgress>): Promise<VideoProgress | undefined> {
+    const [updated] = await db.update(videoProgress)
+      .set({ ...progress, updatedAt: new Date() })
+      .where(and(
+        eq(videoProgress.userId, userId),
+        eq(videoProgress.videoId, videoId)
+      ))
+      .returning();
+    return updated;
+  }
+
+  async getUserVideoProgress(userId: number): Promise<VideoProgress[]> {
+    return await db.select().from(videoProgress)
+      .where(eq(videoProgress.userId, userId));
+  }
+
+  // Video notes & bookmarks
+  async createVideoNote(note: InsertVideoNote): Promise<VideoNote> {
+    const [newNote] = await db.insert(videoNotes).values(note).returning();
+    return newNote;
+  }
+
+  async getUserVideoNotes(userId: number, videoId: number): Promise<VideoNote[]> {
+    return await db.select().from(videoNotes)
+      .where(and(
+        eq(videoNotes.userId, userId),
+        eq(videoNotes.videoId, videoId)
+      ))
+      .orderBy(videoNotes.timestamp);
+  }
+
+  async createVideoBookmark(bookmark: InsertVideoBookmark): Promise<VideoBookmark> {
+    const [newBookmark] = await db.insert(videoBookmarks).values(bookmark).returning();
+    return newBookmark;
+  }
+
+  async getUserVideoBookmarks(userId: number, videoId: number): Promise<VideoBookmark[]> {
+    return await db.select().from(videoBookmarks)
+      .where(and(
+        eq(videoBookmarks.userId, userId),
+        eq(videoBookmarks.videoId, videoId)
+      ))
+      .orderBy(videoBookmarks.timestamp);
+  }
+
+  // ===== LMS FEATURES =====
+  // Forums
+  async createForumCategory(category: InsertForumCategory): Promise<ForumCategory> {
+    const [newCategory] = await db.insert(forumCategories).values(category).returning();
+    return newCategory;
+  }
+
+  async getForumCategories(courseId?: number): Promise<ForumCategory[]> {
+    if (courseId) {
+      return await db.select().from(forumCategories)
+        .where(eq(forumCategories.courseId, courseId))
+        .orderBy(forumCategories.order);
+    }
+    return await db.select().from(forumCategories).orderBy(forumCategories.order);
+  }
+
+  async createForumThread(thread: InsertForumThread): Promise<ForumThread> {
+    const [newThread] = await db.insert(forumThreads).values(thread).returning();
+    return newThread;
+  }
+
+  async getForumThreads(categoryId: number): Promise<ForumThread[]> {
+    return await db.select().from(forumThreads)
+      .where(eq(forumThreads.categoryId, categoryId))
+      .orderBy(desc(forumThreads.isPinned), desc(forumThreads.updatedAt));
+  }
+
+  async createForumPost(post: InsertForumPost): Promise<ForumPost> {
+    const [newPost] = await db.insert(forumPosts).values(post).returning();
+    
+    // Update thread's last activity
+    await db.update(forumThreads)
+      .set({ updatedAt: new Date() })
+      .where(eq(forumThreads.id, post.threadId));
+    
+    return newPost;
+  }
+
+  async getForumPosts(threadId: number): Promise<ForumPost[]> {
+    return await db.select().from(forumPosts)
+      .where(eq(forumPosts.threadId, threadId))
+      .orderBy(forumPosts.createdAt);
+  }
+
+  // Gradebook
+  async getOrCreateGradebookEntry(courseId: number, studentId: number): Promise<GradebookEntry> {
+    const [existing] = await db.select().from(gradebookEntries)
+      .where(and(
+        eq(gradebookEntries.courseId, courseId),
+        eq(gradebookEntries.studentId, studentId)
+      ));
+
+    if (existing) return existing;
+
+    const [newEntry] = await db.insert(gradebookEntries)
+      .values({ courseId, studentId })
+      .returning();
+    return newEntry;
+  }
+
+  async updateGradebookEntry(id: number, entry: Partial<InsertGradebookEntry>): Promise<GradebookEntry | undefined> {
+    const [updated] = await db.update(gradebookEntries)
+      .set({ ...entry, updatedAt: new Date() })
+      .where(eq(gradebookEntries.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getCourseGradebook(courseId: number): Promise<GradebookEntry[]> {
+    return await db.select().from(gradebookEntries)
+      .where(eq(gradebookEntries.courseId, courseId));
+  }
+
+  // Content library
+  async createContentLibraryItem(item: InsertContentLibraryItem): Promise<ContentLibraryItem> {
+    const [newItem] = await db.insert(contentLibrary).values(item).returning();
+    return newItem;
+  }
+
+  async searchContentLibrary(filters: { language?: string; level?: string; skillArea?: string; query?: string }): Promise<ContentLibraryItem[]> {
+    let query = db.select().from(contentLibrary);
+    
+    const conditions = [];
+    if (filters.language) conditions.push(eq(contentLibrary.language, filters.language));
+    if (filters.level) conditions.push(eq(contentLibrary.level, filters.level));
+    if (filters.skillArea) conditions.push(eq(contentLibrary.skillArea, filters.skillArea));
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    return await query.orderBy(desc(contentLibrary.createdAt));
+  }
+
+  async updateContentLibraryItem(id: number, item: Partial<InsertContentLibraryItem>): Promise<ContentLibraryItem | undefined> {
+    const [updated] = await db.update(contentLibrary)
+      .set({ ...item, updatedAt: new Date() })
+      .where(eq(contentLibrary.id, id))
+      .returning();
+    return updated;
+  }
+
+  // ===== AI TRACKING =====
+  // Progress tracking
+  async getOrCreateAiProgressTracking(userId: number): Promise<AiProgressTracking> {
+    const [existing] = await db.select().from(aiProgressTracking)
+      .where(eq(aiProgressTracking.userId, userId));
+
+    if (existing) return existing;
+
+    const [newTracking] = await db.insert(aiProgressTracking)
+      .values({ userId })
+      .returning();
+    return newTracking;
+  }
+
+  async updateAiProgressTracking(userId: number, progress: Partial<InsertAiProgressTracking>): Promise<AiProgressTracking | undefined> {
+    const [updated] = await db.update(aiProgressTracking)
+      .set({ ...progress, updatedAt: new Date() })
+      .where(eq(aiProgressTracking.userId, userId))
+      .returning();
+    return updated;
+  }
+
+  // Activity sessions
+  async createAiActivitySession(session: InsertAiActivitySession): Promise<AiActivitySession> {
+    const [newSession] = await db.insert(aiActivitySessions).values(session).returning();
+    return newSession;
+  }
+
+  async endAiActivitySession(id: number, sessionData: Partial<InsertAiActivitySession>): Promise<AiActivitySession | undefined> {
+    const [updated] = await db.update(aiActivitySessions)
+      .set({
+        ...sessionData,
+        endedAt: new Date()
+      })
+      .where(eq(aiActivitySessions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getUserAiActivitySessions(userId: number, activityType?: string): Promise<AiActivitySession[]> {
+    let query = db.select().from(aiActivitySessions).where(eq(aiActivitySessions.userId, userId));
+    if (activityType) {
+      query = query.where(eq(aiActivitySessions.activityType, activityType));
+    }
+    return await query.orderBy(desc(aiActivitySessions.startedAt));
+  }
+
+  // Vocabulary tracking
+  async trackVocabularyWord(tracking: InsertAiVocabularyTracking): Promise<AiVocabularyTracking> {
+    // Check if word already tracked
+    const [existing] = await db.select().from(aiVocabularyTracking)
+      .where(and(
+        eq(aiVocabularyTracking.userId, tracking.userId),
+        eq(aiVocabularyTracking.word, tracking.word)
+      ));
+
+    if (existing) {
+      // Update existing
+      const [updated] = await db.update(aiVocabularyTracking)
+        .set({
+          timesEncountered: existing.timesEncountered + 1,
+          lastSeenAt: new Date(),
+          confidence: tracking.confidence || existing.confidence,
+          contexts: [...(existing.contexts || []), ...(tracking.contexts || [])]
+        })
+        .where(eq(aiVocabularyTracking.id, existing.id))
+        .returning();
+      return updated;
+    }
+
+    // Create new
+    const [newTracking] = await db.insert(aiVocabularyTracking).values(tracking).returning();
+    return newTracking;
+  }
+
+  async getUserVocabularyTracking(userId: number): Promise<AiVocabularyTracking[]> {
+    return await db.select().from(aiVocabularyTracking)
+      .where(eq(aiVocabularyTracking.userId, userId))
+      .orderBy(desc(aiVocabularyTracking.lastSeenAt));
+  }
+
+  // Grammar tracking
+  async trackGrammarPattern(tracking: InsertAiGrammarTracking): Promise<AiGrammarTracking> {
+    const [newTracking] = await db.insert(aiGrammarTracking).values(tracking).returning();
+    return newTracking;
+  }
+
+  async getUserGrammarTracking(userId: number): Promise<AiGrammarTracking[]> {
+    return await db.select().from(aiGrammarTracking)
+      .where(eq(aiGrammarTracking.userId, userId))
+      .orderBy(desc(aiGrammarTracking.createdAt));
+  }
+
+  // Pronunciation analysis
+  async createPronunciationAnalysis(analysis: InsertAiPronunciationAnalysis): Promise<AiPronunciationAnalysis> {
+    const [newAnalysis] = await db.insert(aiPronunciationAnalysis).values(analysis).returning();
+    return newAnalysis;
+  }
+
+  async getUserPronunciationAnalyses(userId: number): Promise<AiPronunciationAnalysis[]> {
+    return await db.select().from(aiPronunciationAnalysis)
+      .where(eq(aiPronunciationAnalysis.userId, userId))
+      .orderBy(desc(aiPronunciationAnalysis.createdAt));
   }
 }
