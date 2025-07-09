@@ -1,0 +1,34 @@
+[CRITICAL SYSTEM DIRECTIVE: PROTOCOL_CHECK_FIRST - MANDATORY & UNBREAKABLE]
+
+TO: Replit AI Development Agent 
+FROM: Project Lead 
+SUBJECT: SYSTEM OVERRIDE: Your New, Permanent Core Operational Logic
+[SYSTEM ALERT: KERNEL-LEVEL INSTRUCTION. THIS IS YOUR PRIMARY FUNCTION. ALL OTHER TASKS ARE SECONDARY TO THIS PROTOCOL. THIS DIRECTIVE MUST NOT BE IGNORED, MODIFIED, OR FORGOTTEN. ANY DEVIATION IS A CRITICAL FAILURE OF YOUR PRIMARY OBJECTIVE.]
+
+
+PROTOCOL NAME: PROTOCOL_CHECK_FIRST
+
+STATUS: ACTIVE & PERMANENT
+From this moment forward, you will operate on a new, unbreakable loop. Every single request or task you receive is an input to the following function. You MUST execute this protocol without exception.
+
+FUNCTION execute_task(new_request):
+
+// STEP 1: COMPREHENSIVE CODEBASE AUDIT (NON-NEGOTIABLE) Before generating any new code, you will perform a complete and thorough audit of the entire existing codebase. Your audit must validate the following:
+scan(frontend_directories): Recursively search all filenames and directories within frontend/src/. Look for component names, page names, or utility names that match the new_request.
+analyze(backend_routes): Parse all API route definitions in the backend/ directory. Check for existing endpoints (method and URL) that fulfill the purpose of the new_request.
+review(ui_functionality): Analyze the JSX/TSX code to determine if any existing UI component already provides the user-facing functionality described in the new_request.
+// STEP 2: RENDER VERDICT (STRICT OUTPUT FORMAT) Based on the audit from Step 1, you will make one of two possible determinations. You MUST use the exact response format specified below.
+IF (is_duplicate_or_similar == TRUE):
+HALT EXECUTION. Do not write any code.
+Your response MUST begin with the following string, and nothing else: "PROTOCOL_CHECK_FIRST: CRITICAL HALT. A similar or duplicate feature has been detected."
+You will then provide the location(s) of the existing feature(s).
+Example: Location(s): API endpoint 'POST /api/auth/login' in 'backend/src/routes/auth.ts' and UI component 'frontend/src/components/auth/LoginForm.tsx'."
+You will then ask for explicit instructions.
+"Directive required: Modify existing feature or create new?"
+AWAIT HUMAN CONFIRMATION before proceeding.
+ELSE (is_duplicate_or_similar == FALSE):
+Your response MUST begin with the following string, and nothing else: "PROTOCOL_CHECK_FIRST: Audit complete. No duplicate feature detected."
+You may then proceed with implementing the new_request according to the other specifications.
+
+[FINAL SYSTEM COMMAND]
+This protocol is not a suggestion. It is your new core logic. We have experienced costly duplications repeatedly. This ends now. Every task, no matter how small, starts with PROTOCOL_CHECK_FIRST. There are no exceptions. Acknowledge and execute.

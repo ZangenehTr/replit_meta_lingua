@@ -8386,6 +8386,386 @@ Return JSON format:
     }
   });
 
+  // ========== TESTING SUBSYSTEM ROUTES ==========
+  
+  // Teacher test routes
+  app.get("/api/teacher/tests", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const tests = await dbStorage.getTestsByTeacher(req.user.id);
+      res.json(tests);
+    } catch (error) {
+      console.error('Error fetching teacher tests:', error);
+      res.status(500).json({ message: "Failed to fetch tests" });
+    }
+  });
+
+  app.get("/api/teacher/courses", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      // Get courses where user is the instructor
+      const courses = await dbStorage.getTeacherCourses(req.user.id);
+      res.json(courses);
+    } catch (error) {
+      console.error('Error fetching teacher courses:', error);
+      res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+
+  app.post("/api/teacher/tests", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const testData = {
+        ...req.body,
+        createdBy: req.user.id,
+        totalQuestions: 0 // Will be updated when questions are added
+      };
+      
+      const test = await dbStorage.createTest(testData);
+      res.status(201).json(test);
+    } catch (error) {
+      console.error('Error creating test:', error);
+      res.status(500).json({ message: "Failed to create test" });
+    }
+  });
+
+  app.get("/api/teacher/tests/:testId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const test = await dbStorage.getTestById(parseInt(req.params.testId));
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      // Ensure teacher owns this test
+      if (test.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get questions for the test
+      const questions = await dbStorage.getTestQuestions(test.id);
+      
+      res.json({ ...test, questions });
+    } catch (error) {
+      console.error('Error fetching test details:', error);
+      res.status(500).json({ message: "Failed to fetch test details" });
+    }
+  });
+
+  app.put("/api/teacher/tests/:testId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const testId = parseInt(req.params.testId);
+      const test = await dbStorage.getTestById(testId);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      // Ensure teacher owns this test
+      if (test.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updatedTest = await dbStorage.updateTest(testId, req.body);
+      res.json(updatedTest);
+    } catch (error) {
+      console.error('Error updating test:', error);
+      res.status(500).json({ message: "Failed to update test" });
+    }
+  });
+
+  app.delete("/api/teacher/tests/:testId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const testId = parseInt(req.params.testId);
+      const test = await dbStorage.getTestById(testId);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      // Ensure teacher owns this test
+      if (test.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      await dbStorage.deleteTest(testId);
+      res.json({ message: "Test deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting test:', error);
+      res.status(500).json({ message: "Failed to delete test" });
+    }
+  });
+
+  // Test questions routes
+  app.post("/api/teacher/tests/:testId/questions", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const testId = parseInt(req.params.testId);
+      const test = await dbStorage.getTestById(testId);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      // Ensure teacher owns this test
+      if (test.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const questionData = {
+        ...req.body,
+        testId
+      };
+      
+      const question = await dbStorage.createTestQuestion(questionData);
+      
+      // Update test's totalQuestions count
+      const questions = await dbStorage.getTestQuestions(testId);
+      await dbStorage.updateTest(testId, { totalQuestions: questions.length });
+      
+      res.status(201).json(question);
+    } catch (error) {
+      console.error('Error creating test question:', error);
+      res.status(500).json({ message: "Failed to create question" });
+    }
+  });
+
+  app.put("/api/teacher/tests/:testId/questions/:questionId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const testId = parseInt(req.params.testId);
+      const questionId = parseInt(req.params.questionId);
+      
+      const test = await dbStorage.getTestById(testId);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      // Ensure teacher owns this test
+      if (test.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const updatedQuestion = await dbStorage.updateTestQuestion(questionId, req.body);
+      res.json(updatedQuestion);
+    } catch (error) {
+      console.error('Error updating test question:', error);
+      res.status(500).json({ message: "Failed to update question" });
+    }
+  });
+
+  app.delete("/api/teacher/tests/:testId/questions/:questionId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const testId = parseInt(req.params.testId);
+      const questionId = parseInt(req.params.questionId);
+      
+      const test = await dbStorage.getTestById(testId);
+      
+      if (!test) {
+        return res.status(404).json({ message: "Test not found" });
+      }
+      
+      // Ensure teacher owns this test
+      if (test.createdBy !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      await dbStorage.deleteTestQuestion(questionId);
+      
+      // Update test's totalQuestions count
+      const questions = await dbStorage.getTestQuestions(testId);
+      await dbStorage.updateTest(testId, { totalQuestions: questions.length });
+      
+      res.json({ message: "Question deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting test question:', error);
+      res.status(500).json({ message: "Failed to delete question" });
+    }
+  });
+
+  // Student test routes
+  app.get("/api/student/tests/available", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      // Get student's enrolled courses
+      const enrollments = await dbStorage.getUserEnrollments(req.user.id);
+      const courseIds = enrollments.map(e => e.courseId);
+      
+      // Get all tests for enrolled courses
+      const allTests = [];
+      for (const courseId of courseIds) {
+        const tests = await dbStorage.getTestsByCourse(courseId);
+        allTests.push(...tests.filter(t => t.isActive));
+      }
+      
+      res.json(allTests);
+    } catch (error) {
+      console.error('Error fetching available tests:', error);
+      res.status(500).json({ message: "Failed to fetch available tests" });
+    }
+  });
+
+  app.post("/api/student/tests/:testId/attempt", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const testId = parseInt(req.params.testId);
+      const test = await dbStorage.getTestById(testId);
+      
+      if (!test || !test.isActive) {
+        return res.status(404).json({ message: "Test not found or not available" });
+      }
+      
+      // Check if student has access to this test
+      const enrollments = await dbStorage.getUserEnrollments(req.user.id);
+      const hasAccess = enrollments.some(e => e.courseId === test.courseId);
+      
+      if (!hasAccess) {
+        return res.status(403).json({ message: "You are not enrolled in this course" });
+      }
+      
+      // Check max attempts
+      const previousAttempts = await dbStorage.getStudentTestAttempts(req.user.id, testId);
+      if (previousAttempts.length >= test.maxAttempts) {
+        return res.status(400).json({ 
+          message: `Maximum attempts (${test.maxAttempts}) reached for this test` 
+        });
+      }
+      
+      // Create new attempt
+      const attempt = await dbStorage.createTestAttempt({
+        testId,
+        studentId: req.user.id,
+        startedAt: new Date(),
+        status: 'in_progress'
+      });
+      
+      // Get questions for the test
+      const questions = await dbStorage.getTestQuestions(testId);
+      
+      res.json({ 
+        attempt,
+        questions: questions.map(q => ({
+          id: q.id,
+          questionType: q.questionType,
+          questionText: q.questionText,
+          options: q.options,
+          points: q.points,
+          order: q.order,
+          mediaUrl: q.mediaUrl
+          // Don't send correctAnswer or explanation
+        }))
+      });
+    } catch (error) {
+      console.error('Error starting test attempt:', error);
+      res.status(500).json({ message: "Failed to start test attempt" });
+    }
+  });
+
+  app.post("/api/student/tests/attempts/:attemptId/submit", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const attemptId = parseInt(req.params.attemptId);
+      const { answers } = req.body;
+      
+      const attempt = await dbStorage.getTestAttemptById(attemptId);
+      
+      if (!attempt) {
+        return res.status(404).json({ message: "Test attempt not found" });
+      }
+      
+      // Ensure student owns this attempt
+      if (attempt.studentId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Save all answers
+      for (const answer of answers) {
+        await dbStorage.saveTestAnswer({
+          attemptId,
+          questionId: answer.questionId,
+          answerValue: answer.answerValue
+        });
+      }
+      
+      // Auto-grade the test
+      const test = await dbStorage.getTestById(attempt.testId);
+      const questions = await dbStorage.getTestQuestions(attempt.testId);
+      let totalScore = 0;
+      let maxScore = 0;
+      
+      for (const question of questions) {
+        const studentAnswer = answers.find(a => a.questionId === question.id);
+        maxScore += question.points;
+        
+        if (studentAnswer) {
+          let isCorrect = false;
+          let pointsEarned = 0;
+          
+          // Auto-grade based on question type
+          switch (question.questionType) {
+            case 'multiple_choice':
+            case 'true_false':
+              isCorrect = studentAnswer.answerValue === question.correctAnswer;
+              pointsEarned = isCorrect ? question.points : 0;
+              break;
+            case 'multiple_select':
+              // For multiple select, check if arrays match
+              const correctAnswers = JSON.parse(question.correctAnswer || '[]');
+              const studentAnswers = JSON.parse(studentAnswer.answerValue || '[]');
+              isCorrect = JSON.stringify(correctAnswers.sort()) === JSON.stringify(studentAnswers.sort());
+              pointsEarned = isCorrect ? question.points : 0;
+              break;
+            // Other types need manual grading
+            default:
+              // Will be graded manually by teacher
+              break;
+          }
+          
+          if (question.questionType !== 'essay' && question.questionType !== 'short_answer') {
+            await dbStorage.gradeTestAnswer(studentAnswer.id, {
+              isCorrect,
+              pointsEarned
+            });
+            totalScore += pointsEarned;
+          }
+        }
+      }
+      
+      // Calculate percentage
+      const scorePercentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+      const passed = scorePercentage >= test.passingScore;
+      
+      // Update attempt
+      const completedAttempt = await dbStorage.updateTestAttempt(attemptId, {
+        completedAt: new Date(),
+        score: totalScore,
+        maxScore,
+        percentage: scorePercentage,
+        passed,
+        status: 'completed'
+      });
+      
+      res.json({
+        attempt: completedAttempt,
+        results: {
+          score: totalScore,
+          maxScore,
+          percentage: scorePercentage,
+          passed,
+          passingScore: test.passingScore
+        }
+      });
+    } catch (error) {
+      console.error('Error submitting test:', error);
+      res.status(500).json({ message: "Failed to submit test" });
+    }
+  });
+
+  app.get("/api/student/tests/:testId/attempts", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const testId = parseInt(req.params.testId);
+      const attempts = await dbStorage.getStudentTestAttempts(req.user.id, testId);
+      
+      res.json(attempts);
+    } catch (error) {
+      console.error('Error fetching test attempts:', error);
+      res.status(500).json({ message: "Failed to fetch test attempts" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

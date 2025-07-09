@@ -22,7 +22,30 @@ import {
   type MoodEntry, type InsertMoodEntry,
   type MoodRecommendation, type InsertMoodRecommendation,
   type LearningAdaptation, type InsertLearningAdaptation,
-  type AttendanceRecord, type InsertAttendanceRecord
+  type AttendanceRecord, type InsertAttendanceRecord,
+  // Testing subsystem types
+  tests, testQuestions, testAttempts, testAnswers,
+  type Test, type InsertTest, type TestQuestion, type InsertTestQuestion,
+  type TestAttempt, type InsertTestAttempt, type TestAnswer, type InsertTestAnswer,
+  // Gamification types
+  games, gameLevels, userGameProgress, gameSessions, gameLeaderboards,
+  type Game, type InsertGame, type GameLevel, type InsertGameLevel,
+  type UserGameProgress, type InsertUserGameProgress, type GameSession, type InsertGameSession,
+  type GameLeaderboard, type InsertGameLeaderboard,
+  // Video learning types
+  videoLessons, videoProgress, videoNotes, videoBookmarks,
+  type VideoLesson, type InsertVideoLesson, type VideoProgress, type InsertVideoProgress,
+  type VideoNote, type InsertVideoNote, type VideoBookmark, type InsertVideoBookmark,
+  // LMS types
+  forumCategories, forumThreads, forumPosts, gradebookEntries, contentLibrary,
+  type ForumCategory, type InsertForumCategory, type ForumThread, type InsertForumThread,
+  type ForumPost, type InsertForumPost, type GradebookEntry, type InsertGradebookEntry,
+  type ContentLibraryItem, type InsertContentLibraryItem,
+  // AI tracking types
+  aiProgressTracking, aiActivitySessions, aiVocabularyTracking, aiGrammarTracking, aiPronunciationAnalysis,
+  type AiProgressTracking, type InsertAiProgressTracking, type AiActivitySession, type InsertAiActivitySession,
+  type AiVocabularyTracking, type InsertAiVocabularyTracking, type AiGrammarTracking, type InsertAiGrammarTracking,
+  type AiPronunciationAnalysis, type InsertAiPronunciationAnalysis
 } from "@shared/schema";
 
 export interface IStorage {
@@ -239,6 +262,119 @@ export interface IStorage {
   // Website Builder
   getWebsiteTemplates(): Promise<any[]>;
   deployWebsite(deployment: any): Promise<any>;
+  
+  // ===== TESTING SUBSYSTEM =====
+  // Test management
+  createTest(test: InsertTest): Promise<Test>;
+  getTestById(id: number): Promise<Test | undefined>;
+  getTestsByCourse(courseId: number): Promise<Test[]>;
+  getTestsByTeacher(teacherId: number): Promise<Test[]>;
+  updateTest(id: number, test: Partial<InsertTest>): Promise<Test | undefined>;
+  deleteTest(id: number): Promise<boolean>;
+  
+  // Test questions
+  createTestQuestion(question: InsertTestQuestion): Promise<TestQuestion>;
+  getTestQuestions(testId: number): Promise<TestQuestion[]>;
+  updateTestQuestion(id: number, question: Partial<InsertTestQuestion>): Promise<TestQuestion | undefined>;
+  deleteTestQuestion(id: number): Promise<boolean>;
+  
+  // Test attempts
+  createTestAttempt(attempt: InsertTestAttempt): Promise<TestAttempt>;
+  getTestAttemptById(id: number): Promise<TestAttempt | undefined>;
+  getStudentTestAttempts(studentId: number, testId: number): Promise<TestAttempt[]>;
+  updateTestAttempt(id: number, attempt: Partial<InsertTestAttempt>): Promise<TestAttempt | undefined>;
+  
+  // Test answers
+  saveTestAnswer(answer: InsertTestAnswer): Promise<TestAnswer>;
+  getTestAnswers(attemptId: number): Promise<TestAnswer[]>;
+  gradeTestAnswer(id: number, grade: { isCorrect: boolean; pointsEarned: number; feedback?: string }): Promise<TestAnswer | undefined>;
+  
+  // ===== GAMIFICATION SUBSYSTEM =====
+  // Games
+  createGame(game: InsertGame): Promise<Game>;
+  getGameById(id: number): Promise<Game | undefined>;
+  getGamesByAgeGroup(ageGroup: string): Promise<Game[]>;
+  getGamesByLevel(level: string): Promise<Game[]>;
+  updateGame(id: number, game: Partial<InsertGame>): Promise<Game | undefined>;
+  
+  // Game levels
+  createGameLevel(level: InsertGameLevel): Promise<GameLevel>;
+  getGameLevels(gameId: number): Promise<GameLevel[]>;
+  updateGameLevel(id: number, level: Partial<InsertGameLevel>): Promise<GameLevel | undefined>;
+  
+  // User game progress
+  getOrCreateUserGameProgress(userId: number, gameId: number): Promise<UserGameProgress>;
+  updateUserGameProgress(id: number, progress: Partial<InsertUserGameProgress>): Promise<UserGameProgress | undefined>;
+  getUserGameProgressByUser(userId: number): Promise<UserGameProgress[]>;
+  
+  // Game sessions
+  createGameSession(session: InsertGameSession): Promise<GameSession>;
+  endGameSession(id: number, sessionData: Partial<InsertGameSession>): Promise<GameSession | undefined>;
+  getUserGameSessions(userId: number, gameId?: number): Promise<GameSession[]>;
+  
+  // Leaderboards
+  updateGameLeaderboard(entry: InsertGameLeaderboard): Promise<GameLeaderboard>;
+  getGameLeaderboard(gameId: number, type: string, period?: string): Promise<GameLeaderboard[]>;
+  
+  // ===== VIDEO LEARNING SUBSYSTEM =====
+  // Video lessons
+  createVideoLesson(lesson: InsertVideoLesson): Promise<VideoLesson>;
+  getVideoLessonById(id: number): Promise<VideoLesson | undefined>;
+  getVideoLessonsByCourse(courseId: number): Promise<VideoLesson[]>;
+  updateVideoLesson(id: number, lesson: Partial<InsertVideoLesson>): Promise<VideoLesson | undefined>;
+  deleteVideoLesson(id: number): Promise<boolean>;
+  
+  // Video progress
+  getOrCreateVideoProgress(userId: number, videoId: number): Promise<VideoProgress>;
+  updateVideoProgress(userId: number, videoId: number, progress: Partial<InsertVideoProgress>): Promise<VideoProgress | undefined>;
+  getUserVideoProgress(userId: number): Promise<VideoProgress[]>;
+  
+  // Video notes & bookmarks
+  createVideoNote(note: InsertVideoNote): Promise<VideoNote>;
+  getUserVideoNotes(userId: number, videoId: number): Promise<VideoNote[]>;
+  createVideoBookmark(bookmark: InsertVideoBookmark): Promise<VideoBookmark>;
+  getUserVideoBookmarks(userId: number, videoId: number): Promise<VideoBookmark[]>;
+  
+  // ===== LMS FEATURES =====
+  // Forums
+  createForumCategory(category: InsertForumCategory): Promise<ForumCategory>;
+  getForumCategories(courseId?: number): Promise<ForumCategory[]>;
+  createForumThread(thread: InsertForumThread): Promise<ForumThread>;
+  getForumThreads(categoryId: number): Promise<ForumThread[]>;
+  createForumPost(post: InsertForumPost): Promise<ForumPost>;
+  getForumPosts(threadId: number): Promise<ForumPost[]>;
+  
+  // Gradebook
+  getOrCreateGradebookEntry(courseId: number, studentId: number): Promise<GradebookEntry>;
+  updateGradebookEntry(id: number, entry: Partial<InsertGradebookEntry>): Promise<GradebookEntry | undefined>;
+  getCourseGradebook(courseId: number): Promise<GradebookEntry[]>;
+  
+  // Content library
+  createContentLibraryItem(item: InsertContentLibraryItem): Promise<ContentLibraryItem>;
+  searchContentLibrary(filters: { language?: string; level?: string; skillArea?: string; query?: string }): Promise<ContentLibraryItem[]>;
+  updateContentLibraryItem(id: number, item: Partial<InsertContentLibraryItem>): Promise<ContentLibraryItem | undefined>;
+  
+  // ===== AI TRACKING =====
+  // Progress tracking
+  getOrCreateAiProgressTracking(userId: number): Promise<AiProgressTracking>;
+  updateAiProgressTracking(userId: number, progress: Partial<InsertAiProgressTracking>): Promise<AiProgressTracking | undefined>;
+  
+  // Activity sessions
+  createAiActivitySession(session: InsertAiActivitySession): Promise<AiActivitySession>;
+  endAiActivitySession(id: number, sessionData: Partial<InsertAiActivitySession>): Promise<AiActivitySession | undefined>;
+  getUserAiActivitySessions(userId: number, activityType?: string): Promise<AiActivitySession[]>;
+  
+  // Vocabulary tracking
+  trackVocabularyWord(tracking: InsertAiVocabularyTracking): Promise<AiVocabularyTracking>;
+  getUserVocabularyTracking(userId: number): Promise<AiVocabularyTracking[]>;
+  
+  // Grammar tracking
+  trackGrammarPattern(tracking: InsertAiGrammarTracking): Promise<AiGrammarTracking>;
+  getUserGrammarTracking(userId: number): Promise<AiGrammarTracking[]>;
+  
+  // Pronunciation analysis
+  createPronunciationAnalysis(analysis: InsertAiPronunciationAnalysis): Promise<AiPronunciationAnalysis>;
+  getUserPronunciationAnalyses(userId: number): Promise<AiPronunciationAnalysis[]>;
 }
 
 export class MemStorage implements IStorage {
