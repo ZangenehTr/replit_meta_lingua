@@ -3189,7 +3189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Placement Tests Management endpoints
-  app.get("/api/admin/placement-tests", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+  app.get("/api/admin/placement-tests", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const { search, language } = req.query;
       let tests = await storage.getPlacementTests();
@@ -3212,7 +3212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/placement-tests", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/placement-tests", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const testData = {
         ...req.body,
@@ -3231,7 +3231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/placement-tests/stats", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+  app.get("/api/admin/placement-tests/stats", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const tests = await storage.getPlacementTests();
       const attempts = await storage.getPlacementTestAttempts();
@@ -3271,7 +3271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/placement-tests/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.put("/api/admin/placement-tests/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const testId = parseInt(req.params.id);
       const updatedTest = await storage.updatePlacementTest(testId, {
@@ -3285,7 +3285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/placement-tests/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.delete("/api/admin/placement-tests/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const testId = parseInt(req.params.id);
       await storage.deletePlacementTest(testId);

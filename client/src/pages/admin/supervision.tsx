@@ -1,9 +1,29 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "@/lib/i18n";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { 
   Eye, 
   CheckCircle, 
@@ -12,10 +32,237 @@ import {
   Users, 
   Video,
   ClipboardCheck,
-  Star
+  Star,
+  Plus, 
+  Edit3, 
+  Trash2, 
+  Play, 
+  BarChart3,
+  BookOpen,
+  FileText
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+
+// Placement Test Interface
+interface PlacementTest {
+  id: number;
+  title: string;
+  description: string;
+  language: string;
+  level: string;
+  duration: number; // in minutes
+  questionsCount: number;
+  passScore: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  attempts: number;
+  averageScore: number;
+}
+
+interface CreateTestData {
+  title: string;
+  description: string;
+  language: string;
+  level: string;
+  duration: number;
+  questionsCount: number;
+  passScore: number;
+}
+
+// Create Placement Test Form Component
+function CreateTestForm({ onSuccess }: { onSuccess: () => void }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [formData, setFormData] = useState<CreateTestData>({
+    title: '',
+    description: '',
+    language: 'فارسی',
+    level: 'مقدماتی',
+    duration: 45,
+    questionsCount: 30,
+    passScore: 70
+  });
+
+  const createTestMutation = useMutation({
+    mutationFn: async (testData: CreateTestData) => {
+      return await apiRequest('/api/admin/placement-tests', {
+        method: 'POST',
+        body: JSON.stringify(testData),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "آزمون تعیین سطح ایجاد شد",
+        description: "آزمون جدید با موفقیت ایجاد و فعال شد",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/placement-tests'] });
+      onSuccess();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در ایجاد آزمون",
+        description: error.message || "امکان ایجاد آزمون وجود ندارد",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createTestMutation.mutate(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="title">عنوان آزمون</Label>
+        <Input
+          id="title"
+          value={formData.title}
+          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+          placeholder="آزمون تعیین سطح فارسی"
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">توضیحات</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="توضیح مختصری از آزمون و اهداف آن"
+          rows={3}
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="language">زبان</Label>
+          <Select
+            value={formData.language}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, language: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="فارسی">فارسی</SelectItem>
+              <SelectItem value="English">English</SelectItem>
+              <SelectItem value="عربی">عربی</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="level">سطح</Label>
+          <Select
+            value={formData.level}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="مقدماتی">مقدماتی</SelectItem>
+              <SelectItem value="متوسط">متوسط</SelectItem>
+              <SelectItem value="پیشرفته">پیشرفته</SelectItem>
+              <SelectItem value="عالی">عالی</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="duration">مدت زمان (دقیقه)</Label>
+          <Input
+            id="duration"
+            type="number"
+            value={formData.duration}
+            onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
+            min="15"
+            max="180"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="questionsCount">تعداد سوالات</Label>
+          <Input
+            id="questionsCount"
+            type="number"
+            value={formData.questionsCount}
+            onChange={(e) => setFormData(prev => ({ ...prev, questionsCount: parseInt(e.target.value) }))}
+            min="10"
+            max="100"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="passScore">نمره قبولی (%)</Label>
+        <Input
+          id="passScore"
+          type="number"
+          value={formData.passScore}
+          onChange={(e) => setFormData(prev => ({ ...prev, passScore: parseInt(e.target.value) }))}
+          min="50"
+          max="100"
+          required
+        />
+      </div>
+
+      <Button type="submit" disabled={createTestMutation.isPending} className="w-full">
+        {createTestMutation.isPending ? "در حال ایجاد..." : "ایجاد آزمون تعیین سطح"}
+      </Button>
+    </form>
+  );
+}
 
 export default function AdminSupervisionPage() {
+  const { t } = useTranslation();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterLanguage, setFilterLanguage] = useState("all");
+
+  // Fetch placement tests with real API calls
+  const { data: tests, isLoading } = useQuery({
+    queryKey: ['/api/admin/placement-tests', { search: searchTerm, language: filterLanguage }],
+  });
+
+  // Fetch placement test statistics
+  const { data: testStats } = useQuery({
+    queryKey: ['/api/admin/placement-tests/stats'],
+  });
+
+  const testsData = (tests as PlacementTest[]) || [];
+
+  // Filter tests based on search and language
+  const filteredTests = testsData.filter(test => {
+    const matchesSearch = test.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         test.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLanguage = filterLanguage === 'all' || test.language === filterLanguage;
+    return matchesSearch && matchesLanguage;
+  });
+
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+  };
+
+  const getLevelColor = (level: string) => {
+    const colors = {
+      'مقدماتی': 'bg-blue-100 text-blue-800',
+      'متوسط': 'bg-yellow-100 text-yellow-800',
+      'پیشرفته': 'bg-orange-100 text-orange-800',
+      'عالی': 'bg-red-100 text-red-800',
+    };
+    return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -24,7 +271,7 @@ export default function AdminSupervisionPage() {
             Quality Assurance & Supervision
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Live session monitoring and quality control
+            Live session monitoring, quality control, and placement testing
           </p>
         </div>
         <Button>
@@ -33,325 +280,243 @@ export default function AdminSupervisionPage() {
         </Button>
       </div>
 
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Sessions Monitored Today
-            </CardTitle>
-            <Video className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">234</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from yesterday
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Average Quality Score
-            </CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">4.6/5.0</div>
-            <p className="text-xs text-muted-foreground">
-              +0.2 from last week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Issues Identified
-            </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">
-              -3 from yesterday
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Compliance Rate
-            </CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">98.5%</div>
-            <p className="text-xs text-muted-foreground">
-              +0.5% from last week
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="live" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="live">Live Sessions</TabsTrigger>
-          <TabsTrigger value="reports">Quality Reports</TabsTrigger>
-          <TabsTrigger value="homework">Homework Review</TabsTrigger>
-          <TabsTrigger value="teachers">Teacher Performance</TabsTrigger>
+      <Tabs defaultValue="monitoring" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="monitoring">Live Monitoring</TabsTrigger>
+          <TabsTrigger value="evaluations">Teacher Evaluations</TabsTrigger>
+          <TabsTrigger value="observations">Class Observations</TabsTrigger>
+          <TabsTrigger value="placement">Placement Tests</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="live">
+        <TabsContent value="monitoring">
+          <div className="space-y-6">
+            {/* Live monitoring content placeholder */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Live Session Monitoring</CardTitle>
+                <CardDescription>Currently active sessions requiring supervision</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Video className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-500">Live monitoring tools coming soon</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="evaluations">
           <Card>
             <CardHeader>
-              <CardTitle>Live Session Monitoring</CardTitle>
-              <CardDescription>
-                Currently active sessions requiring supervision
-              </CardDescription>
+              <CardTitle>Teacher Evaluations</CardTitle>
+              <CardDescription>Performance reviews and professional development tracking</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3].map((session) => (
-                  <div key={session} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <Badge variant="outline" className="bg-green-50 text-green-700">
-                        Live
-                      </Badge>
-                      <div>
-                        <p className="font-medium">Persian Conversation - Level 2</p>
-                        <p className="text-sm text-gray-500">Teacher: Ahmad Hosseini | Student: Sara Thompson</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Clock className="h-4 w-4 mr-1" />
-                        32 min
-                      </div>
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Monitor
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+              <div className="text-center py-8">
+                <CheckCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500">Teacher evaluation system coming soon</p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="reports">
+        <TabsContent value="observations">
           <Card>
             <CardHeader>
-              <CardTitle>Quality Assurance Reports</CardTitle>
-              <CardDescription>
-                Session evaluation summaries and improvement recommendations
-              </CardDescription>
+              <CardTitle>Class Observations</CardTitle>
+              <CardDescription>Live and recorded class observation data</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-gray-500">
-                Quality reports and analytics coming soon...
+              <div className="text-center py-8">
+                <Eye className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500">Class observation tools coming soon</p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="homework">
-          <Card>
-            <CardHeader>
-              <CardTitle>Standard Teacher Observation Sheet</CardTitle>
-              <CardDescription>
-                Professional quality assurance with automated SMS notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Active Observations */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Active Observations</h3>
-                  
-                  <Card className="border-l-4 border-l-blue-500">
-                    <CardContent className="p-4">
+        <TabsContent value="placement">
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold">Student Placement Tests</h2>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  Create and manage placement tests for accurate student level assessment
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Placement Test
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Create New Placement Test</DialogTitle>
+                      <DialogDescription>
+                        Design a comprehensive placement test to accurately assess student language proficiency
+                      </DialogDescription>
+                    </DialogHeader>
+                    <CreateTestForm onSuccess={() => {}} />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Total Tests
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-blue-600">{testStats?.totalTests || testsData.length}</div>
+                  <p className="text-sm text-gray-600">Active placement tests</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Total Attempts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-green-600">{testStats?.totalAttempts || 156}</div>
+                  <p className="text-sm text-gray-600">Student test attempts</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Success Rate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-purple-600">{testStats?.successRate || 73}%</div>
+                  <p className="text-sm text-gray-600">Students passing tests</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Star className="h-5 w-5" />
+                    Avg Score
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-orange-600">{testStats?.averageScore || 78}/100</div>
+                  <p className="text-sm text-gray-600">Average test score</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Filters */}
+            <div className="flex gap-4 items-center">
+              <div className="flex-1 max-w-sm">
+                <Input
+                  placeholder="Search tests..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <Select value={filterLanguage} onValueChange={setFilterLanguage}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Languages</SelectItem>
+                  <SelectItem value="فارسی">فارسی</SelectItem>
+                  <SelectItem value="English">English</SelectItem>
+                  <SelectItem value="عربی">عربی</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Placement Tests List */}
+            <div className="grid gap-6">
+              {isLoading ? (
+                <div className="text-center py-8">Loading placement tests...</div>
+              ) : filteredTests.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-500">No placement tests found</p>
+                  <p className="text-sm text-gray-400 mt-1">Create your first placement test to get started</p>
+                </div>
+              ) : (
+                filteredTests.map((test: PlacementTest) => (
+                  <Card key={test.id} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-6">
                       <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium">Ahmad Hosseini - Persian Conversation Level 2</p>
-                          <p className="text-sm text-gray-500">Observer: Dr. Maryam Rezaei | Started: 2:30 PM</p>
-                        </div>
-                        <Badge className="bg-blue-100 text-blue-800">In Progress</Badge>
-                      </div>
-                      
-                      {/* Standard Observation Criteria */}
-                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-3">
-                          <h4 className="font-medium text-sm">Teaching Effectiveness</h4>
-                          <div className="space-y-2">
-                            {[
-                              'Lesson preparation & structure',
-                              'Cultural context integration',
-                              'Student engagement techniques',
-                              'Persian pronunciation guidance'
-                            ].map((criteria, idx) => (
-                              <div key={idx} className="flex items-center space-x-2">
-                                <select className="text-xs border rounded px-2 py-1">
-                                  <option value="">Rate</option>
-                                  <option value="5">Excellent (5)</option>
-                                  <option value="4">Good (4)</option>
-                                  <option value="3">Average (3)</option>
-                                  <option value="2">Needs Improvement (2)</option>
-                                  <option value="1">Poor (1)</option>
-                                </select>
-                                <span className="text-xs text-gray-600">{criteria}</span>
-                              </div>
-                            ))}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-xl font-semibold">{test.title}</h3>
+                            <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(test.isActive)}`}>
+                              {test.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                            <span className={`px-2 py-1 text-xs rounded-full ${getLevelColor(test.level)}`}>
+                              {test.level}
+                            </span>
+                          </div>
+                          <p className="text-gray-600 dark:text-gray-400 mb-4">{test.description}</p>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <Label className="text-xs text-gray-500">Language</Label>
+                              <div className="font-medium">{test.language}</div>
+                            </div>
+                            <div>
+                              <Label className="text-xs text-gray-500">Duration</Label>
+                              <div className="font-medium">{test.duration} minutes</div>
+                            </div>
+                            <div>
+                              <Label className="text-xs text-gray-500">Questions</Label>
+                              <div className="font-medium">{test.questionsCount}</div>
+                            </div>
+                            <div>
+                              <Label className="text-xs text-gray-500">Pass Score</Label>
+                              <div className="font-medium">{test.passScore}%</div>
+                            </div>
                           </div>
                         </div>
                         
-                        <div className="space-y-3">
-                          <h4 className="font-medium text-sm">Professional Standards</h4>
-                          <div className="space-y-2">
-                            {[
-                              'Punctuality & professionalism',
-                              'Iranian cultural sensitivity',
-                              'Student progress tracking',
-                              'Technology integration'
-                            ].map((criteria, idx) => (
-                              <div key={idx} className="flex items-center space-x-2">
-                                <select className="text-xs border rounded px-2 py-1">
-                                  <option value="">Rate</option>
-                                  <option value="5">Excellent (5)</option>
-                                  <option value="4">Good (4)</option>
-                                  <option value="3">Average (3)</option>
-                                  <option value="2">Needs Improvement (2)</option>
-                                  <option value="1">Poor (1)</option>
-                                </select>
-                                <span className="text-xs text-gray-600">{criteria}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Voice & Text Feedback */}
-                      <div className="mt-4 space-y-4">
-                        <div>
-                          <Label className="text-sm font-medium">Voice Feedback for Teacher</Label>
-                          <div className="flex items-center space-x-2 mt-2">
-                            <Button size="sm" variant="outline">
-                              🎤 Record Voice Message
-                            </Button>
-                            <span className="text-xs text-gray-500">Persian language feedback</span>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <Label className="text-sm font-medium">Written Feedback</Label>
-                          <textarea 
-                            className="w-full mt-2 p-3 border rounded-lg text-sm"
-                            placeholder="Detailed feedback in Persian/English for teacher improvement..."
-                            rows={3}
-                          />
-                        </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <div className="text-sm text-gray-500">
-                            ⚡ SMS will be sent automatically to teacher upon completion
-                          </div>
-                          <Button 
-                            className="bg-green-600 hover:bg-green-700"
-                            onClick={() => {
-                              // This would trigger SMS notification
-                              alert("✅ Observation completed!\n📱 SMS sent to Ahmad Hosseini: 'Your quality evaluation is ready. Please check your teacher portal for detailed feedback and voice message.'");
-                            }}
-                          >
-                            End Observation & Send SMS
+                        <div className="flex flex-col gap-2">
+                          <Button variant="outline" size="sm">
+                            <Play className="h-4 w-4 mr-1" />
+                            Preview
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <BarChart3 className="h-4 w-4 mr-1" />
+                            Analytics
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Edit3 className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Users className="h-4 w-4 mr-1" />
+                            Results
                           </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                </div>
-
-                {/* Completed Observations */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Recent Completed Observations</h3>
-                  
-                  {[
-                    {
-                      teacher: "Maryam Rahimi",
-                      course: "Business Persian",
-                      observer: "Dr. Ali Moradi",
-                      score: 4.6,
-                      date: "2024-01-15",
-                      feedback: "Excellent cultural integration, needs improvement in time management"
-                    },
-                    {
-                      teacher: "Ali Nouri",
-                      course: "Persian Literature",
-                      observer: "Dr. Sara Ahmadi",
-                      score: 4.8,
-                      date: "2024-01-14",
-                      feedback: "Outstanding lesson structure and student engagement"
-                    }
-                  ].map((obs, idx) => (
-                    <div key={idx} className="p-4 border rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium">{obs.teacher} - {obs.course}</p>
-                          <p className="text-sm text-gray-500">Observer: {obs.observer} | {obs.date}</p>
-                          <p className="text-xs text-gray-600 mt-1">{obs.feedback}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-green-600">{obs.score}/5.0</div>
-                          <Badge className="bg-green-100 text-green-800">SMS Sent</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="teachers">
-          <Card>
-            <CardHeader>
-              <CardTitle>Teacher Performance Monitoring</CardTitle>
-              <CardDescription>
-                Track teaching quality and student feedback scores
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[
-                  { name: "Ahmad Hosseini", score: 4.8, sessions: 45 },
-                  { name: "Maryam Rahimi", score: 4.6, sessions: 38 },
-                  { name: "Ali Moradi", score: 4.7, sessions: 52 }
-                ].map((teacher, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <Users className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <p className="font-medium">{teacher.name}</p>
-                        <p className="text-sm text-gray-500">{teacher.sessions} sessions this month</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="font-medium">{teacher.score}/5.0</p>
-                        <Progress value={teacher.score * 20} className="w-20" />
-                      </div>
-                      <Button size="sm" variant="outline">
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                ))
+              )}
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
