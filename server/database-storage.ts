@@ -4229,4 +4229,140 @@ export class DatabaseStorage implements IStorage {
       .where(eq(rooms.type, type))
       .orderBy(rooms.name);
   }
+
+  // Missing gamification methods
+
+  async getGamesByFilters(filters: { ageGroup?: string, gameType?: string, level?: string, language?: string }): Promise<Game[]> {
+    let query = db.select({
+      id: games.id,
+      title: games.gameName,
+      description: games.description,
+      gameType: games.gameType,
+      ageGroup: games.ageGroup,
+      difficultyLevel: games.minLevel,
+      skillFocus: games.gameType,
+      estimatedDuration: games.duration,
+      xpReward: games.pointsPerCorrect,
+      thumbnailUrl: games.thumbnailUrl,
+      isActive: games.isActive
+    }).from(games).where(eq(games.isActive, true));
+
+    if (filters.ageGroup) {
+      query = query.where(eq(games.ageGroup, filters.ageGroup));
+    }
+    if (filters.gameType) {
+      query = query.where(eq(games.gameType, filters.gameType));
+    }
+    if (filters.level) {
+      query = query.where(or(eq(games.minLevel, filters.level), eq(games.maxLevel, filters.level)));
+    }
+    if (filters.language) {
+      query = query.where(eq(games.language, filters.language));
+    }
+
+    return await query.orderBy(games.ageGroup, games.gameType);
+  }
+
+  async getUserAchievements(userId: number): Promise<any[]> {
+    return await db.select({
+      id: achievements.id,
+      title: achievements.title,
+      description: achievements.description,
+      badgeIcon: achievements.icon,
+      xpReward: achievements.xpReward,
+      category: achievements.type,
+      isUnlocked: sql<boolean>`${userAchievements.id} IS NOT NULL`,
+      unlockedAt: userAchievements.unlockedAt
+    }).from(achievements)
+    .leftJoin(userAchievements, and(eq(userAchievements.achievementId, achievements.id), eq(userAchievements.userId, userId)))
+    .where(eq(achievements.isActive, true))
+    .orderBy(desc(userAchievements.unlockedAt), achievements.title);
+  }
+
+  async getUserStats(userId: number): Promise<any> {
+    const [stats] = await db.select().from(userStats).where(eq(userStats.userId, userId));
+    
+    if (!stats) {
+      // Create default stats if none exist
+      const [newStats] = await db.insert(userStats).values({
+        userId,
+        totalXp: 0,
+        currentLevel: 1,
+        streakDays: 0,
+        longestStreak: 0,
+        totalStudyTime: 0,
+        lessonsCompleted: 0,
+        quizzesCompleted: 0,
+        perfectScores: 0,
+        wordsLearned: 0,
+        conversationsCompleted: 0
+      }).returning();
+      return newStats;
+    }
+    
+    return stats;
+  }
+
+  async updateUserStats(userId: number, statsUpdate: any): Promise<any> {
+    const currentStats = await this.getUserStats(userId);
+    
+    const [updatedStats] = await db.update(userStats).set({
+      totalXp: currentStats.totalXp + (statsUpdate.totalXp || 0),
+      lessonsCompleted: currentStats.lessonsCompleted + (statsUpdate.lessonsCompleted || 0),
+      quizzesCompleted: currentStats.quizzesCompleted + (statsUpdate.quizzesCompleted || 0),
+      perfectScores: currentStats.perfectScores + (statsUpdate.perfectScores || 0),
+      wordsLearned: currentStats.wordsLearned + (statsUpdate.wordsLearned || 0),
+      conversationsCompleted: currentStats.conversationsCompleted + (statsUpdate.conversationsCompleted || 0),
+      updatedAt: new Date()
+    }).where(eq(userStats.userId, userId)).returning();
+    
+    return updatedStats;
+  }
+
+  // Game courses (individual courses)
+  async createGameCourse(gameCourse: any): Promise<any> {
+    const [newGameCourse] = await db.execute(sql`
+      INSERT INTO game_courses (game_id, title, description, age_group, level, price, duration, is_active)
+      VALUES (${gameCourse.gameId}, ${gameCourse.title}, ${gameCourse.description}, ${gameCourse.ageGroup}, ${gameCourse.level}, ${gameCourse.price}, ${gameCourse.duration}, ${gameCourse.isActive})
+      RETURNING *
+    `);
+    return newGameCourse;
+  }
+
+  async getGameCourses(): Promise<any[]> {
+    const result = await db.execute(sql`
+      SELECT gc.*, g.game_name, g.description as game_description, g.game_type, g.age_group as game_age_group, g.min_level, g.max_level, g.duration as game_duration, g.thumbnail_url
+      FROM game_courses gc
+      JOIN games g ON gc.game_id = g.id
+      WHERE gc.is_active = true
+      ORDER BY gc.created_at DESC
+    `);
+    return result.rows;
+  }
+
+  // Supplementary games (for existing courses)
+  async addSupplementaryGames(data: { courseId: number, gameIds: number[], isRequired: boolean }): Promise<any> {
+    const results = [];
+    for (const gameId of data.gameIds) {
+      const [result] = await db.execute(sql`
+        INSERT INTO course_supplementary_games (course_id, game_id, is_required)
+        VALUES (${data.courseId}, ${gameId}, ${data.isRequired})
+        ON CONFLICT (course_id, game_id) DO UPDATE SET is_required = ${data.isRequired}
+        RETURNING *
+      `);
+      results.push(result);
+    }
+    return results;
+  }
+
+  async getSupplementaryGames(courseId: number): Promise<any[]> {
+    const result = await db.execute(sql`
+      SELECT csg.*, g.game_name, g.description, g.game_type, g.age_group, g.min_level, g.max_level, g.duration, g.thumbnail_url
+      FROM course_supplementary_games csg
+      JOIN games g ON csg.game_id = g.id
+      WHERE csg.course_id = ${courseId}
+      ORDER BY csg.order_index, csg.created_at
+    `);
+    return result.rows;
+  }
 }

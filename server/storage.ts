@@ -327,6 +327,7 @@ export interface IStorage {
   getGameById(id: number): Promise<Game | undefined>;
   getGamesByAgeGroup(ageGroup: string): Promise<Game[]>;
   getGamesByLevel(level: string): Promise<Game[]>;
+  getGamesByFilters(filters: { ageGroup?: string, gameType?: string, level?: string, language?: string }): Promise<Game[]>;
   updateGame(id: number, game: Partial<InsertGame>): Promise<Game | undefined>;
   
   // Game levels
@@ -346,7 +347,20 @@ export interface IStorage {
   
   // Leaderboards
   updateGameLeaderboard(entry: InsertGameLeaderboard): Promise<GameLeaderboard>;
-  getGameLeaderboard(gameId: number, type: string, period?: string): Promise<GameLeaderboard[]>;
+  getGameLeaderboard(gameId?: number, type?: string, period?: string): Promise<GameLeaderboard[]>;
+  
+  // User achievements and stats
+  getUserAchievements(userId: number): Promise<any[]>;
+  getUserStats(userId: number): Promise<any>;
+  updateUserStats(userId: number, stats: any): Promise<any>;
+  
+  // Game courses (individual courses)
+  createGameCourse(gameCourse: any): Promise<any>;
+  getGameCourses(): Promise<any[]>;
+  
+  // Supplementary games (for existing courses)
+  addSupplementaryGames(data: { courseId: number, gameIds: number[], isRequired: boolean }): Promise<any>;
+  getSupplementaryGames(courseId: number): Promise<any[]>;
   
   // ===== VIDEO LEARNING SUBSYSTEM =====
   // Video lessons
