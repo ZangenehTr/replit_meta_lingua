@@ -22,8 +22,10 @@ import {
   CheckCircle,
   AlertCircle,
   Wallet,
-  Phone
+  Phone,
+  List
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SMSTestPage() {
   const { toast } = useToast();
@@ -40,6 +42,12 @@ export default function SMSTestPage() {
   // Get account info
   const { data: accountInfo, refetch: refetchAccount } = useQuery({
     queryKey: ['/api/admin/sms/account-info'],
+    retry: false,
+  });
+
+  // Get SMS templates
+  const { data: smsTemplates = [] } = useQuery({
+    queryKey: ['/api/admin/sms-templates'],
     retry: false,
   });
 
@@ -191,9 +199,10 @@ export default function SMSTestPage() {
 
       {/* Testing Tabs */}
       <Tabs defaultValue="simple" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="simple">Simple SMS Test</TabsTrigger>
           <TabsTrigger value="verification">Verification SMS</TabsTrigger>
+          <TabsTrigger value="templates">Templates</TabsTrigger>
         </TabsList>
 
         <TabsContent value="simple">
@@ -299,15 +308,27 @@ export default function SMSTestPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="template">Template Name (Optional)</Label>
-                  <Input
-                    id="template"
-                    placeholder="verify"
+                  <Label htmlFor="template">Template Selection (Optional)</Label>
+                  <Select
                     value={verificationData.template}
-                    onChange={(e) => setVerificationData({ ...verificationData, template: e.target.value })}
-                  />
+                    onValueChange={(value) => setVerificationData({ ...verificationData, template: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a template or leave empty for simple SMS" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No Template (Simple SMS)</SelectItem>
+                      {smsTemplates
+                        .filter((t: any) => t.event === 'verification')
+                        .map((template: any) => (
+                          <SelectItem key={template.id} value={template.id.toString()}>
+                            Template {template.id} ({template.language})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground">
-                    Leave empty to use simple SMS, or specify a Kavenegar template name
+                    Select a verification template or leave empty for simple SMS
                   </p>
                 </div>
 
@@ -320,6 +341,57 @@ export default function SMSTestPage() {
                   {verificationSMSMutation.isPending ? "Sending..." : "Send Verification SMS"}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="templates">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <List className="h-5 w-5" />
+                SMS Templates
+              </CardTitle>
+              <CardDescription>
+                Available SMS templates with their template IDs for Kavenegar
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {smsTemplates.map((template: any) => (
+                  <div key={template.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">ID: {template.id}</Badge>
+                        <Badge variant={template.language === 'persian' ? 'default' : 'secondary'}>
+                          {template.language}
+                        </Badge>
+                        <Badge variant="outline">{template.event}</Badge>
+                      </div>
+                      <Badge variant={template.isActive ? 'default' : 'destructive'}>
+                        {template.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      <strong>Recipient:</strong> {template.recipient}
+                    </p>
+                    <p className="text-sm bg-muted p-2 rounded font-mono">
+                      {template.template}
+                    </p>
+                    {template.variables && template.variables.length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        <strong>Variables:</strong> {template.variables.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                ))}
+                
+                {smsTemplates.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No SMS templates available
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
