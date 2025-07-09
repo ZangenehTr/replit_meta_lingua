@@ -9466,7 +9466,7 @@ Return JSON format:
     }
   });
 
-  // Start a specific game (alternative endpoint)
+  // Start a specific game (alternative endpoint) with CHECK-FIRST PROTOCOL
   app.post("/api/student/games/:gameId/start", authenticateToken, async (req: any, res) => {
     try {
       const gameId = parseInt(req.params.gameId);
@@ -9475,10 +9475,56 @@ Return JSON format:
         return res.status(400).json({ message: "Game ID is required" });
       }
 
-      // Create or get user game progress
+      // CHECK-FIRST PROTOCOL: Validate game and user prerequisites
+      const game = await storage.getGameById(gameId);
+      if (!game || !game.isActive) {
+        return res.status(404).json({ message: "Game not found or inactive" });
+      }
+
+      // CHECK: User already has active session for this game
+      const activeSessions = await storage.getUserGameSessions(req.user.id, gameId);
+      const activeSession = activeSessions.find(s => s.status === 'active');
+      if (activeSession) {
+        return res.status(409).json({ 
+          message: "Active game session already exists", 
+          sessionId: activeSession.id,
+          existingSession: activeSession
+        });
+      }
+
+      // CHECK: User level requirements (self-hosted validation)
+      const userStats = await storage.getUserStats(req.user.id);
+      const userLevel = userStats?.currentLevel || 1;
+      
+      // Self-hosted level validation (no external APIs)
+      const levelMapping = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
+      const requiredMinLevel = levelMapping[game.minLevel] || 1;
+      
+      if (userLevel < requiredMinLevel) {
+        return res.status(403).json({ 
+          message: "User level insufficient for this game",
+          requiredLevel: game.minLevel,
+          userLevel: Object.keys(levelMapping)[userLevel - 1] || 'A1'
+        });
+      }
+
+      // CHECK: No schedule conflicts (for Iranian self-hosted compliance)
+      const now = new Date();
+      const recentSessions = await storage.getUserGameSessions(req.user.id);
+      const recentActiveCount = recentSessions.filter(s => 
+        s.startedAt && new Date(s.startedAt).getTime() > now.getTime() - 30 * 60 * 1000 // 30 minutes
+      ).length;
+
+      if (recentActiveCount >= 3) {
+        return res.status(429).json({ 
+          message: "Too many recent game sessions. Please wait before starting a new game.",
+          waitTime: "30 minutes"
+        });
+      }
+
+      // All checks passed - create game session
       const progress = await storage.getOrCreateUserGameProgress(req.user.id, gameId);
       
-      // Create new game session
       const session = await storage.createGameSession({
         userId: req.user.id,
         gameId,
@@ -9489,7 +9535,16 @@ Return JSON format:
         status: 'active'
       });
 
-      res.status(201).json({ sessionId: session.id, session });
+      res.status(201).json({ 
+        sessionId: session.id, 
+        session,
+        checksCompleted: {
+          gameExists: true,
+          userEligible: true,
+          noConflicts: true,
+          levelRequirementMet: true
+        }
+      });
     } catch (error) {
       console.error('Error starting game:', error);
       res.status(500).json({ message: "Failed to start game" });
