@@ -617,9 +617,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Test Shetab connection
           return { status: "success", responseTime: "180ms" };
         },
-        "Kavenegar SMS": () => {
-          // Test Kavenegar SMS
-          return { status: "success", responseTime: "320ms" };
+        "Kavenegar SMS": async () => {
+          try {
+            const { kavenegarService } = await import('./kavenegar-service');
+            const startTime = Date.now();
+            const result = await kavenegarService.testService();
+            const responseTime = Date.now() - startTime;
+            
+            return { 
+              status: result.success ? "success" : "error", 
+              responseTime: `${responseTime}ms`,
+              message: result.message,
+              balance: result.balance
+            };
+          } catch (error) {
+            return { 
+              status: "error", 
+              responseTime: "timeout",
+              message: error instanceof Error ? error.message : "Service unavailable"
+            };
+          }
         },
         "Email Service": () => {
           // Test email service
@@ -2335,24 +2352,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/notifications/sms", authenticateToken, async (req: any, res) => {
     try {
-      const { message, type } = req.body;
+      const { message, type, phoneNumber } = req.body;
+      const { kavenegarService } = await import('./kavenegar-service');
       
-      // Mock Kavenegar SMS API call
-      const kavenegarResponse = await fetch('https://api.kavenegar.com/v1/API_KEY/sms/send.json', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          receptor: req.user.phoneNumber || '',
-          message: message
-        })
-      }).catch(() => ({ ok: false }));
+      const recipient = phoneNumber || req.user.phoneNumber || req.user.phone;
+      
+      if (!recipient) {
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+
+      const result = await kavenegarService.sendSimpleSMS(recipient, message);
 
       res.json({ 
-        sent: kavenegarResponse.ok,
-        message: "SMS notification processed"
+        success: result.success,
+        messageId: result.messageId,
+        status: result.status,
+        cost: result.cost,
+        error: result.error,
+        message: result.success ? "SMS sent successfully" : "Failed to send SMS"
       });
     } catch (error) {
-      res.status(400).json({ message: "Failed to send SMS" });
+      console.error('SMS sending error:', error);
+      res.status(500).json({ message: "Failed to send SMS" });
+    }
+  });
+
+  // SMS Testing endpoints
+  app.post("/api/admin/sms/test", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { phoneNumber, message } = req.body;
+      const { kavenegarService } = await import('./kavenegar-service');
+      
+      if (!phoneNumber || !message) {
+        return res.status(400).json({ message: "Phone number and message are required" });
+      }
+
+      const result = await kavenegarService.sendSimpleSMS(phoneNumber, message);
+
+      res.json(result);
+    } catch (error) {
+      console.error('SMS test error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : "SMS test failed" 
+      });
+    }
+  });
+
+  app.get("/api/admin/sms/account-info", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { kavenegarService } = await import('./kavenegar-service');
+      const result = await kavenegarService.getAccountInfo();
+      res.json(result);
+    } catch (error) {
+      console.error('SMS account info error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : "Failed to get account info" 
+      });
+    }
+  });
+
+  app.post("/api/admin/sms/send-verification", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { phoneNumber, code, template } = req.body;
+      const { kavenegarService } = await import('./kavenegar-service');
+      
+      if (!phoneNumber || !code) {
+        return res.status(400).json({ message: "Phone number and verification code are required" });
+      }
+
+      const result = await kavenegarService.sendVerificationCode(phoneNumber, code, template);
+      res.json(result);
+    } catch (error) {
+      console.error('Verification SMS error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : "Failed to send verification SMS" 
+      });
     }
   });
 
