@@ -4655,21 +4655,7 @@ export class DatabaseStorage implements IStorage {
 
   // Support Tickets
   async getSupportTickets(filters?: { status?: string; priority?: string; assignedTo?: number }): Promise<any[]> {
-    let query = db.select({
-      id: supportTickets.id,
-      title: supportTickets.title,
-      description: supportTickets.description,
-      priority: supportTickets.priority,
-      status: supportTickets.status,
-      category: supportTickets.category,
-      studentId: supportTickets.studentId,
-      studentName: supportTickets.studentName,
-      assignedTo: supportTickets.assignedTo,
-      attachments: supportTickets.attachments,
-      createdAt: supportTickets.createdAt,
-      updatedAt: supportTickets.updatedAt
-    })
-    .from(supportTickets);
+    let query = db.select().from(supportTickets);
 
     if (filters?.status) {
       query = query.where(eq(supportTickets.status, filters.status));
@@ -4722,18 +4708,7 @@ export class DatabaseStorage implements IStorage {
 
   // Chat Conversations
   async getChatConversations(userId: number): Promise<any[]> {
-    return await db.select({
-      id: chatConversations.id,
-      participants: chatConversations.participants,
-      lastMessage: chatConversations.lastMessage,
-      lastMessageAt: chatConversations.lastMessageAt,
-      unreadCount: chatConversations.unreadCount,
-      type: chatConversations.type,
-      title: chatConversations.title,
-      isActive: chatConversations.isActive,
-      createdAt: chatConversations.createdAt,
-      updatedAt: chatConversations.updatedAt
-    }).from(chatConversations)
+    return await db.select().from(chatConversations)
       .where(sql`${userId}::text = ANY(${chatConversations.participants})`)
       .orderBy(desc(chatConversations.lastMessageAt));
   }
