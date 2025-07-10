@@ -47,10 +47,24 @@ export function IranianComplianceSettings() {
     mutationFn: async () => {
       return apiRequest('/api/admin/test-voip', { method: 'POST' });
     },
-    onSuccess: () => {
-      toast({ title: "VoIP Test", description: "Isabel VoIP connection successful" });
+    onSuccess: (data) => {
+      console.log('VoIP test success:', data);
+      const response = data as any;
+      if (response.success) {
+        toast({ 
+          title: "VoIP Test Successful", 
+          description: `${response.provider} connected successfully. Server: ${response.server}, Status: ${response.status}` 
+        });
+      } else {
+        toast({ 
+          title: "VoIP Test", 
+          description: response.message || "Connection validated but external test failed",
+          variant: "default"
+        });
+      }
     },
     onError: (error) => {
+      console.error('VoIP test error:', error);
       toast({ title: "VoIP Test Failed", description: error.message, variant: "destructive" });
     }
   });
