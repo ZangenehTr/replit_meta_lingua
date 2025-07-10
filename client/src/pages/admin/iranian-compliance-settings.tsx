@@ -93,6 +93,32 @@ export function IranianComplianceSettings() {
     }
   });
 
+  const testVoipCall = useMutation({
+    mutationFn: async (phoneNumber: string) => {
+      return apiRequest('/api/voip/initiate-call', { 
+        method: 'POST',
+        body: JSON.stringify({
+          phoneNumber: phoneNumber,
+          contactName: 'VoIP Test Call',
+          callType: 'outbound',
+          recordCall: true
+        })
+      });
+    },
+    onSuccess: (data) => {
+      console.log('VoIP call test success:', data);
+      const response = data as any;
+      toast({ 
+        title: "VoIP Call Test Successful", 
+        description: `Test call initiated successfully. Call ID: ${response.callId}. Recording: ${response.recordingEnabled ? 'enabled' : 'disabled'}` 
+      });
+    },
+    onError: (error) => {
+      console.error('VoIP call test error:', error);
+      toast({ title: "VoIP Call Test Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
   const handleSave = (section: string, data: any) => {
     updateSettings.mutate(data);
   };
@@ -218,6 +244,39 @@ export function IranianComplianceSettings() {
                 placeholder="/var/recordings"
                 defaultValue={settings?.recordingStoragePath || "/var/recordings"}
               />
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <Label htmlFor="test-phone-number">Test Phone Number</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="test-phone-number"
+                  placeholder="+989123456789"
+                  type="tel"
+                  className="flex-1"
+                />
+                <Button 
+                  onClick={() => {
+                    const phoneNumber = (document.getElementById("test-phone-number") as HTMLInputElement)?.value;
+                    if (!phoneNumber || phoneNumber.length < 10) {
+                      toast({ title: "Invalid Phone Number", description: "Please enter a valid phone number", variant: "destructive" });
+                      return;
+                    }
+                    testVoipCall.mutate(phoneNumber);
+                  }}
+                  disabled={testVoipCall.isPending}
+                  variant="outline"
+                  className="min-w-[140px]"
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Test Call
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Enter a phone number to test Isabel VoIP calling capability. Format: +989123456789
+              </p>
             </div>
 
             <div className="flex gap-2">
