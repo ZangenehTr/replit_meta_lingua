@@ -173,14 +173,24 @@ export default function SMSSettingsPage() {
               </p>
             </div>
 
-            <div>
-              <Label htmlFor="senderNumber">Sender Number</Label>
-              <Input
-                id="senderNumber"
-                placeholder="10008663"
-                value={kavenegarData.senderNumber}
-                onChange={(e) => setKavenegarData({ ...kavenegarData, senderNumber: e.target.value })}
-              />
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-2 mb-2">
+                <Settings className="h-4 w-4 text-blue-600" />
+                <span className="font-medium text-blue-900 dark:text-blue-100">Sender Configuration</span>
+              </div>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Sender number and API key are configured in <strong>Third Party Settings → SMS</strong>. 
+                Use this page to manage SMS templates and daily limits only.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => window.location.href = '/admin/iranian-compliance-settings'}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Configure Sender & API
+              </Button>
             </div>
 
             <div>
