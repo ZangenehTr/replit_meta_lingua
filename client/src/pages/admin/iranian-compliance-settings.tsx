@@ -80,7 +80,7 @@ export function IranianComplianceSettings() {
   });
 
   const handleSave = (section: string, data: any) => {
-    updateSettings.mutate({ [section]: data });
+    updateSettings.mutate(data);
   };
 
   if (isLoading) {
@@ -369,11 +369,11 @@ export function IranianComplianceSettings() {
                 <div>
                   <h3 className="font-medium text-blue-900 dark:text-blue-100">Kavenegar SMS Integration</h3>
                   <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                    SMS service is {settings?.smsEnabled ? 'enabled' : 'disabled'} for Iranian market compliance
+                    SMS service is {settings?.kavenegarEnabled ? 'enabled' : 'disabled'} for Iranian market compliance
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {settings?.smsEnabled ? (
+                  {settings?.kavenegarEnabled ? (
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   ) : (
                     <AlertCircle className="h-5 w-5 text-yellow-600" />
@@ -394,13 +394,13 @@ export function IranianComplianceSettings() {
               <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-sm text-gray-600 dark:text-gray-400">Service Status</div>
                 <div className="font-medium">
-                  {settings?.smsEnabled ? 'Active' : 'Inactive'}
+                  {settings?.kavenegarEnabled ? 'Active' : 'Inactive'}
                 </div>
               </div>
               <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-sm text-gray-600 dark:text-gray-400">Sender Number</div>
                 <div className="font-medium">
-                  {settings?.smsSenderNumber || 'Not configured'}
+                  {settings?.kavenegarSender || 'Not configured'}
                 </div>
               </div>
               <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -644,7 +644,7 @@ export function IranianComplianceSettings() {
               <span className="text-sm">Shetab Banking</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${settings?.smsEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
+              <div className={`w-3 h-3 rounded-full ${settings?.kavenegarEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
               <span className="text-sm">Kavenegar SMS</span>
             </div>
             <div className="flex items-center gap-2">
