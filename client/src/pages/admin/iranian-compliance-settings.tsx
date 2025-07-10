@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Save, TestTube, Phone, CreditCard, MessageSquare, Settings, CheckCircle2, AlertCircle, Info, Eye, EyeOff } from "lucide-react";
+import { Save, TestTube, Phone, CreditCard, MessageSquare, Settings, CheckCircle2, CheckCircle, AlertCircle, Info, Eye, EyeOff } from "lucide-react";
 
 export function IranianComplianceSettings() {
   const queryClient = useQueryClient();
