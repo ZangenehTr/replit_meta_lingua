@@ -1009,7 +1009,7 @@ export function AdminCourses() {
 
                     {/* Iranian Compliance & Localization */}
                     <div className="space-y-3">
-                      <Label className="text-lg font-semibold">Iranian Compliance & Localization</Label>
+                      <Label className="text-lg font-semibold">Third Party Settings & Localization</Label>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-3">
                           <div className="flex items-center space-x-2">
