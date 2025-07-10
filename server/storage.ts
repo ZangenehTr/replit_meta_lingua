@@ -4,6 +4,7 @@ import {
   communicationLogs, achievements, userAchievements,
   userStats, dailyGoals, skillAssessments, learningActivities, progressSnapshots,
   moodEntries, moodRecommendations, learningAdaptations, attendanceRecords, rooms,
+  studentQuestionnaires, questionnaireResponses,
   type User, type InsertUser, type Course, type InsertCourse,
   type Enrollment, type InsertEnrollment, type Session, type InsertSession,
   type Message, type InsertMessage, type Homework, type InsertHomework,
@@ -24,6 +25,8 @@ import {
   type LearningAdaptation, type InsertLearningAdaptation,
   type AttendanceRecord, type InsertAttendanceRecord,
   type Room, type InsertRoom,
+  type StudentQuestionnaire, type InsertStudentQuestionnaire,
+  type QuestionnaireResponse, type InsertQuestionnaireResponse,
   // Testing subsystem types
   tests, testQuestions, testAttempts, testAnswers,
   type Test, type InsertTest, type TestQuestion, type InsertTestQuestion,
@@ -294,6 +297,17 @@ export interface IStorage {
   // Website Builder
   getWebsiteTemplates(): Promise<any[]>;
   deployWebsite(deployment: any): Promise<any>;
+  
+  // Supervision System - Student Questionnaires
+  getStudentQuestionnaires(courseId?: number): Promise<StudentQuestionnaire[]>;
+  createStudentQuestionnaire(questionnaire: InsertStudentQuestionnaire): Promise<StudentQuestionnaire>;
+  updateStudentQuestionnaire(id: number, updates: Partial<StudentQuestionnaire>): Promise<StudentQuestionnaire | undefined>;
+  deleteStudentQuestionnaire(id: number): Promise<void>;
+  
+  // Questionnaire Responses
+  getQuestionnaireResponses(questionnaireId?: number, teacherId?: number): Promise<QuestionnaireResponse[]>;
+  createQuestionnaireResponse(response: InsertQuestionnaireResponse): Promise<QuestionnaireResponse>;
+  updateQuestionnaireResponse(id: number, updates: Partial<QuestionnaireResponse>): Promise<QuestionnaireResponse | undefined>;
   
   // ===== TESTING SUBSYSTEM =====
   // Test management
