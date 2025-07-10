@@ -707,16 +707,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/test/kavehnegar", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/test-sms", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const settings = await storage.getAdminSettings();
-      if (!settings?.kavehnegarEnabled || !settings?.kavehnegarApiKey) {
-        return res.status(400).json({ message: "Kavehnegar configuration incomplete" });
+      if (!settings?.kavenegarEnabled || !settings?.kavenegarApiKey) {
+        return res.status(400).json({ message: "Kavenegar configuration incomplete" });
       }
-      res.json({ message: "Kavehnegar connection test successful" });
+      
+      // Test actual Kavenegar connection
+      try {
+        const { kavenegarService } = await import('./kavenegar-service');
+        const result = await kavenegarService.testService();
+        if (result.success) {
+          res.json({ message: "Kavenegar SMS connection test successful", balance: result.balance });
+        } else {
+          res.status(400).json({ message: result.message || "Kavenegar connection test failed" });
+        }
+      } catch (error) {
+        console.error("Kavenegar API test error:", error);
+        res.status(400).json({ message: "Failed to connect to Kavenegar API. Please check your API key." });
+      }
     } catch (error) {
-      console.error("Kavehnegar test error:", error);
-      res.status(500).json({ message: "Kavehnegar connection test failed" });
+      console.error("SMS test error:", error);
+      res.status(500).json({ message: "SMS connection test failed" });
     }
   });
 
