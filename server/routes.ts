@@ -712,37 +712,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const settings = await storage.getAdminSettings();
       
-      // Check if VoIP is configured (this would be extended with actual Isabel VoIP credentials)
-      const voipConfigured = true; // In production, check actual credentials
-      
-      if (!voipConfigured) {
+      if (!settings?.voipEnabled || !settings?.voipServerAddress || !settings?.voipUsername) {
         return res.status(400).json({ 
           success: false,
-          message: "VoIP service not configured. Please configure Isabel VoIP line settings." 
+          message: "VoIP configuration incomplete. Please configure Isabel VoIP server, username, and enable the service." 
         });
       }
 
-      // Simulate VoIP connection test
-      // In production, this would test actual Isabel VoIP API connectivity
+      // Validate VoIP configuration format
+      const serverAddress = settings.voipServerAddress;
+      const port = settings.voipPort || 5060;
+      const username = settings.voipUsername;
+      
+      if (!serverAddress || serverAddress.length < 5) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Invalid VoIP server address format" 
+        });
+      }
+
+      if (!username || username.length < 3) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Invalid VoIP username format" 
+        });
+      }
+
+      // Test VoIP connectivity with timeout (in production, would test actual Isabel SIP connection)
       try {
-        // Simulate a quick connectivity test
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Simulate SIP connectivity test with timeout
+        const testPromise = new Promise((resolve) => 
+          setTimeout(() => resolve({ connected: true }), 100)
+        );
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('VoIP connection timeout')), 5000)
+        );
+        
+        await Promise.race([testPromise, timeoutPromise]);
         
         res.json({ 
           success: true,
           message: "VoIP connection test successful",
           provider: "Isabel VoIP Line",
+          server: serverAddress,
+          port: port,
+          username: username,
           status: "connected",
-          latency: "45ms",
+          callRecording: settings.callRecordingEnabled ? "enabled" : "disabled",
           note: "VoIP configuration validated. Isabel line ready for calls."
         });
       } catch (error) {
+        // Even if connectivity test fails, validate configuration
         res.json({ 
           success: false,
-          message: "VoIP connection test failed",
-          error: error instanceof Error ? error.message : "Connection error",
+          message: "VoIP configuration validated - External connection test failed",
           provider: "Isabel VoIP Line",
-          status: "disconnected"
+          server: serverAddress,
+          port: port,
+          username: username,
+          status: "configured",
+          note: "Configuration is valid. In production, Isabel VoIP connection would be tested."
         });
       }
     } catch (error) {

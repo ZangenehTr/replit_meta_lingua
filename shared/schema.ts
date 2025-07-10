@@ -1868,6 +1868,15 @@ export const adminSettings = pgTable("admin_settings", {
   kavenegarSender: varchar("kavenegar_sender", { length: 50 }),
   kavenegarEnabled: boolean("kavenegar_enabled").default(false),
   
+  // VoIP Settings (Isabel Line)
+  voipServerAddress: varchar("voip_server_address", { length: 255 }),
+  voipPort: integer("voip_port").default(5060),
+  voipUsername: varchar("voip_username", { length: 100 }),
+  voipPassword: text("voip_password"),
+  voipEnabled: boolean("voip_enabled").default(false),
+  callRecordingEnabled: boolean("call_recording_enabled").default(false),
+  recordingStoragePath: varchar("recording_storage_path", { length: 500 }).default("/var/recordings"),
+  
   // Email Settings
   emailSmtpHost: varchar("email_smtp_host", { length: 255 }),
   emailSmtpPort: integer("email_smtp_port").default(587),
