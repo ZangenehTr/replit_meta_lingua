@@ -118,7 +118,8 @@ export default function AdminCommunicationsPage() {
     type: "info" as 'info' | 'warning' | 'success' | 'error',
     targetAudience: "all_users",
     channels: ["push", "email"] as string[],
-    status: "sent" as 'draft' | 'scheduled' | 'sent'
+    status: "sent" as 'draft' | 'scheduled' | 'sent',
+    testPhoneNumber: ""
   });
 
   // Real API calls for support tickets
@@ -1080,6 +1081,18 @@ export default function AdminCommunicationsPage() {
                   </div>
                 </div>
               </div>
+              {notificationForm.channels.includes('sms') && (
+                <div>
+                  <Label htmlFor="test-phone">Test Phone Number (for SMS)</Label>
+                  <Input
+                    id="test-phone"
+                    placeholder="+98912345678"
+                    value={notificationForm.testPhoneNumber}
+                    onChange={(e) => setNotificationForm({...notificationForm, testPhoneNumber: e.target.value})}
+                  />
+                  <p className="text-sm text-gray-500 mt-1">Enter a phone number to test SMS delivery</p>
+                </div>
+              )}
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
