@@ -10868,6 +10868,284 @@ Return JSON format:
     }
   });
 
+  // ==================== MODERN COMMUNICATION SYSTEM ====================
+
+  // Support Tickets
+  app.get("/api/support-tickets", authenticateToken, async (req, res) => {
+    try {
+      const { status, priority, assignedTo } = req.query;
+      const tickets = await storage.getSupportTickets({
+        status: status as string,
+        priority: priority as string,
+        assignedTo: assignedTo ? parseInt(assignedTo as string) : undefined
+      });
+      res.json(tickets);
+    } catch (error) {
+      console.error('Error fetching support tickets:', error);
+      res.status(500).json({ message: 'Failed to fetch support tickets' });
+    }
+  });
+
+  app.get("/api/support-tickets/:id", authenticateToken, async (req, res) => {
+    try {
+      const ticket = await storage.getSupportTicket(parseInt(req.params.id));
+      if (!ticket) {
+        return res.status(404).json({ message: 'Ticket not found' });
+      }
+      res.json(ticket);
+    } catch (error) {
+      console.error('Error fetching support ticket:', error);
+      res.status(500).json({ message: 'Failed to fetch support ticket' });
+    }
+  });
+
+  app.post("/api/support-tickets", authenticateToken, async (req, res) => {
+    try {
+      const ticketData = {
+        ...req.body,
+        studentId: req.user.role === 'Student' ? req.user.id : req.body.studentId
+      };
+      const ticket = await storage.createSupportTicket(ticketData);
+      res.status(201).json(ticket);
+    } catch (error) {
+      console.error('Error creating support ticket:', error);
+      res.status(500).json({ message: 'Failed to create support ticket' });
+    }
+  });
+
+  app.patch("/api/support-tickets/:id", authenticateToken, requireRole(['Admin', 'Manager', 'Call Center Agent']), async (req, res) => {
+    try {
+      const ticket = await storage.updateSupportTicket(parseInt(req.params.id), req.body);
+      if (!ticket) {
+        return res.status(404).json({ message: 'Ticket not found' });
+      }
+      res.json(ticket);
+    } catch (error) {
+      console.error('Error updating support ticket:', error);
+      res.status(500).json({ message: 'Failed to update support ticket' });
+    }
+  });
+
+  app.delete("/api/support-tickets/:id", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+    try {
+      await storage.deleteSupportTicket(parseInt(req.params.id));
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting support ticket:', error);
+      res.status(500).json({ message: 'Failed to delete support ticket' });
+    }
+  });
+
+  // Support Ticket Messages
+  app.get("/api/support-tickets/:ticketId/messages", authenticateToken, async (req, res) => {
+    try {
+      const messages = await storage.getSupportTicketMessages(parseInt(req.params.ticketId));
+      res.json(messages);
+    } catch (error) {
+      console.error('Error fetching ticket messages:', error);
+      res.status(500).json({ message: 'Failed to fetch ticket messages' });
+    }
+  });
+
+  app.post("/api/support-tickets/:ticketId/messages", authenticateToken, async (req, res) => {
+    try {
+      const messageData = {
+        ...req.body,
+        ticketId: parseInt(req.params.ticketId),
+        senderId: req.user.id,
+        senderName: `${req.user.firstName} ${req.user.lastName}`,
+        senderType: req.user.role === 'Student' ? 'student' : 'staff'
+      };
+      const message = await storage.createSupportTicketMessage(messageData);
+      res.status(201).json(message);
+    } catch (error) {
+      console.error('Error creating ticket message:', error);
+      res.status(500).json({ message: 'Failed to create ticket message' });
+    }
+  });
+
+  // Chat Conversations
+  app.get("/api/chat/conversations", authenticateToken, async (req, res) => {
+    try {
+      const conversations = await storage.getChatConversations(req.user.id);
+      res.json(conversations);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      res.status(500).json({ message: 'Failed to fetch conversations' });
+    }
+  });
+
+  app.get("/api/chat/conversations/:id", authenticateToken, async (req, res) => {
+    try {
+      const conversation = await storage.getChatConversation(parseInt(req.params.id));
+      if (!conversation) {
+        return res.status(404).json({ message: 'Conversation not found' });
+      }
+      res.json(conversation);
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
+      res.status(500).json({ message: 'Failed to fetch conversation' });
+    }
+  });
+
+  app.post("/api/chat/conversations", authenticateToken, async (req, res) => {
+    try {
+      const conversationData = {
+        ...req.body,
+        createdBy: req.user.id,
+        participants: [...(req.body.participants || []), req.user.id]
+      };
+      const conversation = await storage.createChatConversation(conversationData);
+      res.status(201).json(conversation);
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      res.status(500).json({ message: 'Failed to create conversation' });
+    }
+  });
+
+  app.patch("/api/chat/conversations/:id", authenticateToken, async (req, res) => {
+    try {
+      const conversation = await storage.updateChatConversation(parseInt(req.params.id), req.body);
+      if (!conversation) {
+        return res.status(404).json({ message: 'Conversation not found' });
+      }
+      res.json(conversation);
+    } catch (error) {
+      console.error('Error updating conversation:', error);
+      res.status(500).json({ message: 'Failed to update conversation' });
+    }
+  });
+
+  // Chat Messages
+  app.get("/api/chat/conversations/:conversationId/messages", authenticateToken, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const messages = await storage.getChatMessages(parseInt(req.params.conversationId), limit);
+      res.json(messages);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      res.status(500).json({ message: 'Failed to fetch messages' });
+    }
+  });
+
+  app.post("/api/chat/conversations/:conversationId/messages", authenticateToken, async (req, res) => {
+    try {
+      const messageData = {
+        ...req.body,
+        conversationId: parseInt(req.params.conversationId),
+        senderId: req.user.id
+      };
+      const message = await storage.createChatMessage(messageData);
+      res.status(201).json(message);
+    } catch (error) {
+      console.error('Error creating message:', error);
+      res.status(500).json({ message: 'Failed to create message' });
+    }
+  });
+
+  app.patch("/api/chat/messages/:id", authenticateToken, async (req, res) => {
+    try {
+      const message = await storage.updateChatMessage(parseInt(req.params.id), req.body);
+      if (!message) {
+        return res.status(404).json({ message: 'Message not found' });
+      }
+      res.json(message);
+    } catch (error) {
+      console.error('Error updating message:', error);
+      res.status(500).json({ message: 'Failed to update message' });
+    }
+  });
+
+  app.delete("/api/chat/messages/:id", authenticateToken, async (req, res) => {
+    try {
+      await storage.deleteChatMessage(parseInt(req.params.id));
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      res.status(500).json({ message: 'Failed to delete message' });
+    }
+  });
+
+  // Push Notifications
+  app.get("/api/push-notifications", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+    try {
+      const { targetAudience, status } = req.query;
+      const notifications = await storage.getPushNotifications({
+        targetAudience: targetAudience as string,
+        status: status as string
+      });
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ message: 'Failed to fetch notifications' });
+    }
+  });
+
+  app.get("/api/push-notifications/:id", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+    try {
+      const notification = await storage.getPushNotification(parseInt(req.params.id));
+      if (!notification) {
+        return res.status(404).json({ message: 'Notification not found' });
+      }
+      res.json(notification);
+    } catch (error) {
+      console.error('Error fetching notification:', error);
+      res.status(500).json({ message: 'Failed to fetch notification' });
+    }
+  });
+
+  app.post("/api/push-notifications", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+    try {
+      const notificationData = {
+        ...req.body,
+        createdBy: req.user.id
+      };
+      const notification = await storage.createPushNotification(notificationData);
+      
+      // TODO: Implement actual notification delivery logic here
+      // This would integrate with web push, SMS, and email services
+      
+      res.status(201).json(notification);
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      res.status(500).json({ message: 'Failed to create notification' });
+    }
+  });
+
+  app.patch("/api/push-notifications/:id", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+    try {
+      const notification = await storage.updatePushNotification(parseInt(req.params.id), req.body);
+      if (!notification) {
+        return res.status(404).json({ message: 'Notification not found' });
+      }
+      res.json(notification);
+    } catch (error) {
+      console.error('Error updating notification:', error);
+      res.status(500).json({ message: 'Failed to update notification' });
+    }
+  });
+
+  app.delete("/api/push-notifications/:id", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+    try {
+      await storage.deletePushNotification(parseInt(req.params.id));
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      res.status(500).json({ message: 'Failed to delete notification' });
+    }
+  });
+
+  // Get notification delivery logs
+  app.get("/api/push-notifications/:id/delivery-logs", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+    try {
+      const logs = await storage.getNotificationDeliveryLogs(parseInt(req.params.id));
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching delivery logs:', error);
+      res.status(500).json({ message: 'Failed to fetch delivery logs' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
