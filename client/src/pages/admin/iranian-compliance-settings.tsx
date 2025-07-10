@@ -42,6 +42,34 @@ export function IranianComplianceSettings() {
     }
   });
 
+  // Diagnostic VoIP mutation
+  const diagnosticVoipConnection = useMutation({
+    mutationFn: async () => {
+      return apiRequest('/api/admin/diagnostic-voip', { method: 'POST' });
+    },
+    onSuccess: (data) => {
+      console.log('VoIP diagnostic success:', data);
+      const response = data as any;
+      const summary = response.summary;
+      const recommendations = response.recommendations;
+      
+      toast({ 
+        title: response.success ? "VoIP Diagnostic Complete" : "VoIP Diagnostic Issues Found", 
+        description: `${summary.testsPassed}/${summary.testsRun} tests passed. Server: ${summary.serverInfo}. ${recommendations.length > 0 ? 'Check console for recommendations.' : ''}`,
+        variant: response.success ? "default" : "destructive"
+      });
+      
+      if (recommendations.length > 0) {
+        console.log('VoIP Server Recommendations:');
+        recommendations.forEach((rec: string, i: number) => console.log(`${i + 1}. ${rec}`));
+      }
+    },
+    onError: (error) => {
+      console.error('VoIP diagnostic error:', error);
+      toast({ title: "VoIP Diagnostic Failed", description: error.message, variant: "destructive" });
+    }
+  });
+
   // Test connection mutations
   const testVoipConnection = useMutation({
     mutationFn: async () => {
@@ -284,6 +312,15 @@ export function IranianComplianceSettings() {
             </div>
 
             <div className="flex gap-2">
+              <Button 
+                onClick={() => diagnosticVoipConnection.mutate()}
+                disabled={diagnosticVoipConnection.isPending}
+                variant="outline"
+                className="bg-blue-50 border-blue-200 hover:bg-blue-100"
+              >
+                <TestTube className="h-4 w-4 mr-2" />
+                {diagnosticVoipConnection.isPending ? 'Diagnosing...' : 'Full Diagnostic'}
+              </Button>
               <Button 
                 onClick={() => testVoipConnection.mutate()}
                 disabled={testVoipConnection.isPending}
