@@ -10879,7 +10879,12 @@ Return JSON format:
         priority: priority as string,
         assignedTo: assignedTo ? parseInt(assignedTo as string) : undefined
       });
-      res.json(tickets);
+      // Add messages array to each ticket
+      const ticketsWithMessages = tickets.map(ticket => ({
+        ...ticket,
+        messages: [] // Will be populated when individual ticket is fetched
+      }));
+      res.json(ticketsWithMessages);
     } catch (error) {
       console.error('Error fetching support tickets:', error);
       res.status(500).json({ message: 'Failed to fetch support tickets' });
