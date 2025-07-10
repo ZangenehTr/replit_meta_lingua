@@ -707,6 +707,170 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comprehensive VoIP Connection Diagnostic endpoint
+  app.post("/api/admin/diagnostic-voip", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const settings = await storage.getAdminSettings();
+      
+      if (!settings?.voipServerAddress || !settings?.voipUsername) {
+        return res.status(400).json({ 
+          success: false,
+          message: "VoIP configuration incomplete. Please configure Isabel VoIP server address and username first." 
+        });
+      }
+
+      const serverAddress = settings.voipServerAddress;
+      const port = settings.voipPort || 5038;
+      const username = settings.voipUsername;
+
+      console.log(`\n=== COMPREHENSIVE ISABEL VOIP DIAGNOSTIC ===`);
+      console.log(`Target Server: ${serverAddress}:${port}`);
+      console.log(`Username: ${username}`);
+      console.log(`Password: ${settings.voipPassword ? '[CONFIGURED]' : '[NOT SET]'}`);
+      
+      const diagnostics = {
+        server: serverAddress,
+        port: port,
+        username: username,
+        tests: {}
+      };
+
+      // Test 1: Basic TCP connectivity
+      try {
+        console.log(`\n1. Testing TCP connectivity to ${serverAddress}:${port}...`);
+        const tcpTest = await fetch(`http://${serverAddress}:${port}/`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(3000)
+        });
+        diagnostics.tests.tcpConnectivity = { 
+          status: 'success', 
+          message: 'TCP connection successful',
+          httpStatus: tcpTest.status
+        };
+        console.log(`✓ TCP connection successful (HTTP ${tcpTest.status})`);
+      } catch (error) {
+        const errorMsg = error.message.includes('timeout') ? 'Connection timeout' : 
+                        error.message.includes('ECONNREFUSED') ? 'Connection refused' :
+                        error.message.includes('ENOTFOUND') ? 'Host not found' : error.message;
+        diagnostics.tests.tcpConnectivity = { 
+          status: 'failed', 
+          message: errorMsg 
+        };
+        console.log(`✗ TCP connection failed: ${errorMsg}`);
+      }
+
+      // Test 2: SIP port alternative check
+      try {
+        console.log(`\n2. Testing alternative SIP port ${serverAddress}:5060...`);
+        const sipTest = await fetch(`http://${serverAddress}:5060/`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(3000)
+        });
+        diagnostics.tests.alternativeSipPort = { 
+          status: 'success', 
+          message: 'Alternative SIP port (5060) accessible',
+          httpStatus: sipTest.status
+        };
+        console.log(`✓ Alternative SIP port accessible (HTTP ${sipTest.status})`);
+      } catch (error) {
+        diagnostics.tests.alternativeSipPort = { 
+          status: 'failed', 
+          message: 'Alternative SIP port not accessible' 
+        };
+        console.log(`✗ Alternative SIP port not accessible`);
+      }
+
+      // Test 3: HTTP API port check
+      try {
+        console.log(`\n3. Testing HTTP API port ${serverAddress}:${port + 1000}...`);
+        const apiTest = await fetch(`http://${serverAddress}:${port + 1000}/`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(3000)
+        });
+        diagnostics.tests.httpApiPort = { 
+          status: 'success', 
+          message: 'HTTP API port accessible',
+          httpStatus: apiTest.status
+        };
+        console.log(`✓ HTTP API port accessible (HTTP ${apiTest.status})`);
+      } catch (error) {
+        diagnostics.tests.httpApiPort = { 
+          status: 'failed', 
+          message: 'HTTP API port not accessible' 
+        };
+        console.log(`✗ HTTP API port not accessible`);
+      }
+
+      // Test 4: Isabel VoIP service real connection attempt
+      try {
+        console.log(`\n4. Testing real Isabel VoIP service connection...`);
+        const { isabelVoipService } = await import('./isabel-voip-service');
+        
+        await isabelVoipService.configure({
+          serverAddress: serverAddress,
+          port: port,
+          username: username,
+          password: settings.voipPassword || '',
+          enabled: true,
+          callRecordingEnabled: settings.callRecordingEnabled || false,
+          recordingStoragePath: settings.recordingStoragePath || '/var/recordings'
+        });
+        
+        const testResult = await isabelVoipService.testConnection();
+        diagnostics.tests.voipServiceConnection = testResult;
+        console.log(`${testResult.success ? '✓' : '✗'} VoIP service test: ${testResult.message}`);
+      } catch (error) {
+        diagnostics.tests.voipServiceConnection = { 
+          success: false, 
+          message: `VoIP service error: ${error.message}` 
+        };
+        console.log(`✗ VoIP service error: ${error.message}`);
+      }
+
+      console.log(`\n=== DIAGNOSTIC COMPLETE ===\n`);
+
+      // Generate summary and recommendations
+      const passedTests = Object.values(diagnostics.tests).filter(test => test.status === 'success' || test.success).length;
+      const totalTests = Object.keys(diagnostics.tests).length;
+      
+      let recommendations = [];
+      if (diagnostics.tests.tcpConnectivity?.status === 'failed') {
+        recommendations.push("Check firewall settings - port may be blocked");
+        recommendations.push("Verify server IP address is correct");
+        recommendations.push("Ensure you're connecting from an allowed IP range");
+      }
+      if (diagnostics.tests.alternativeSipPort?.status === 'success') {
+        recommendations.push("Consider using port 5060 instead of 5038");
+      }
+      if (passedTests === 0) {
+        recommendations.push("Server appears to be unreachable from this environment");
+        recommendations.push("Consider using VPN or allowlisting this IP address");
+      }
+
+      res.json({
+        success: passedTests > 0,
+        message: `Diagnostic complete: ${passedTests}/${totalTests} tests passed`,
+        diagnostics,
+        recommendations,
+        summary: {
+          serverReachable: passedTests > 0,
+          testsRun: totalTests,
+          testsPassed: passedTests,
+          serverInfo: `${serverAddress}:${port}`,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+    } catch (error) {
+      console.error('VoIP diagnostic error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: "Diagnostic failed",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // VoIP Connection Test endpoint
   app.post("/api/admin/test-voip", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
