@@ -4663,19 +4663,13 @@ export class DatabaseStorage implements IStorage {
       status: supportTickets.status,
       category: supportTickets.category,
       studentId: supportTickets.studentId,
-      studentName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+      studentName: supportTickets.studentName,
       assignedTo: supportTickets.assignedTo,
       attachments: supportTickets.attachments,
-      tags: supportTickets.tags,
-      resolution: supportTickets.resolution,
-      satisfactionRating: supportTickets.satisfactionRating,
       createdAt: supportTickets.createdAt,
-      updatedAt: supportTickets.updatedAt,
-      resolvedAt: supportTickets.resolvedAt,
-      closedAt: supportTickets.closedAt
+      updatedAt: supportTickets.updatedAt
     })
-    .from(supportTickets)
-    .leftJoin(users, eq(supportTickets.studentId, users.id));
+    .from(supportTickets);
 
     if (filters?.status) {
       query = query.where(eq(supportTickets.status, filters.status));
