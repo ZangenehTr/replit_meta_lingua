@@ -712,10 +712,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const settings = await storage.getAdminSettings();
       
-      if (!settings?.voipEnabled || !settings?.voipServerAddress || !settings?.voipUsername) {
+      // Check if VoIP credentials are configured (don't require it to be enabled for testing)
+      if (!settings?.voipServerAddress || !settings?.voipUsername) {
         return res.status(400).json({ 
           success: false,
-          message: "VoIP configuration incomplete. Please configure Isabel VoIP server, username, and enable the service." 
+          message: "VoIP configuration incomplete. Please configure Isabel VoIP server address and username before testing." 
         });
       }
 
