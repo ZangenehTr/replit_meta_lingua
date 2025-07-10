@@ -11035,10 +11035,14 @@ Return JSON format:
 
   app.post("/api/chat/conversations/:conversationId/messages", authenticateToken, async (req, res) => {
     try {
+      const user = await storage.getUser(req.user.id);
+      const senderName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.email || 'Unknown User';
+      
       const messageData = {
         ...req.body,
         conversationId: parseInt(req.params.conversationId),
-        senderId: req.user.id
+        senderId: req.user.id,
+        senderName: senderName
       };
       const message = await storage.createChatMessage(messageData);
       res.status(201).json(message);
@@ -11101,14 +11105,25 @@ Return JSON format:
 
   app.post("/api/push-notifications", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
     try {
-      const notificationData = {
-        ...req.body,
+      const { testPhoneNumber, ...notificationData } = req.body;
+      const notification = await storage.createPushNotification({
+        ...notificationData,
         createdBy: req.user.id
-      };
-      const notification = await storage.createPushNotification(notificationData);
+      });
       
-      // TODO: Implement actual notification delivery logic here
-      // This would integrate with web push, SMS, and email services
+      // Send SMS if SMS channel is selected and test phone number is provided
+      if (notificationData.channels?.includes('sms') && testPhoneNumber) {
+        try {
+          await kavenegar.sendSMS(
+            testPhoneNumber,
+            `${notification.title}\n\n${notification.message}`
+          );
+          console.log('SMS sent successfully to:', testPhoneNumber);
+        } catch (smsError) {
+          console.error('Failed to send SMS:', smsError);
+          // Continue execution even if SMS fails
+        }
+      }
       
       res.status(201).json(notification);
     } catch (error) {
