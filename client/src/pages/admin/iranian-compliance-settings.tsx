@@ -93,8 +93,8 @@ export function IranianComplianceSettings() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Iranian Market Compliance Settings</h1>
-          <p className="text-muted-foreground mt-1">Configure local Iranian services for full compliance and self-hosting</p>
+          <h1 className="text-2xl font-bold">Third Party Settings</h1>
+          <p className="text-muted-foreground mt-1">Configure third-party Iranian services for local deployment</p>
         </div>
         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
           <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -548,7 +548,7 @@ export function IranianComplianceSettings() {
       {/* Status Summary */}
       <Card>
         <CardHeader>
-          <CardTitle>Iranian Compliance Status</CardTitle>
+          <CardTitle>Third Party Services Status</CardTitle>
           <CardDescription>Current status of all Iranian market integrations</CardDescription>
         </CardHeader>
         <CardContent>

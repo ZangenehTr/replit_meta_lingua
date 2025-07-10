@@ -1863,10 +1863,10 @@ export const adminSettings = pgTable("admin_settings", {
   shetabEnvironment: varchar("shetab_environment", { length: 20 }).default("sandbox"),
   shetabEnabled: boolean("shetab_enabled").default(false),
   
-  // SMS API Settings (Kavehnegar)
-  kavehnegarApiKey: text("kavehnegar_api_key"),
-  kavehnegarSender: varchar("kavehnegar_sender", { length: 50 }),
-  kavehnegarEnabled: boolean("kavehnegar_enabled").default(false),
+  // SMS API Settings (Kavenegar)
+  kavenegarApiKey: text("kavenegar_api_key"),
+  kavenegarSender: varchar("kavenegar_sender", { length: 50 }),
+  kavenegarEnabled: boolean("kavenegar_enabled").default(false),
   
   // Email Settings
   emailSmtpHost: varchar("email_smtp_host", { length: 255 }),
