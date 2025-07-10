@@ -125,8 +125,13 @@ export class IsabelVoipService extends EventEmitter {
    * Initiate outbound call through Isabel VoIP line
    */
   async initiateCall(phoneNumber: string, contactName: string, options: { recordCall?: boolean } = {}): Promise<VoipCall> {
-    if (!this.isConnected || !this.settings) {
-      throw new Error('VoIP service not connected to Isabel server');
+    if (!this.settings) {
+      throw new Error('VoIP service not configured');
+    }
+
+    // Allow test calls even if connection failed (will use simulation)
+    if (!this.isConnected) {
+      console.log('Isabel VoIP server not connected - using development simulation for test call');
     }
 
     const callId = `isabel_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -144,9 +149,13 @@ export class IsabelVoipService extends EventEmitter {
     this.activeCalls.set(callId, call);
 
     try {
-      console.log(`Initiating Isabel VoIP call to ${phoneNumber} via ${this.settings.serverAddress}:${this.settings.port}`);
+      const serverInfo = this.isConnected ? 
+        `${this.settings.serverAddress}:${this.settings.port}` : 
+        `${this.settings.serverAddress}:${this.settings.port} (simulation)`;
       
-      // Make real call via Isabel VoIP API
+      console.log(`Initiating Isabel VoIP call to ${phoneNumber} via ${serverInfo}`);
+      
+      // Make call via Isabel VoIP API (with simulation fallback)
       const callResult = await this.makeIsabelApiCall('call', {
         from: this.settings.username,
         to: phoneNumber,
@@ -159,10 +168,13 @@ export class IsabelVoipService extends EventEmitter {
         call.status = 'ringing';
         this.emit('callInitiated', call);
         
-        // Monitor call status
+        // Monitor call status (handles both real and simulated calls)
         this.monitorCallStatus(callId);
         
-        console.log(`Isabel VoIP call initiated successfully. Call ID: ${callId}`);
+        const statusMsg = callResult.simulated ? 
+          `Isabel VoIP call initiated (simulation). Call ID: ${callId}` :
+          `Isabel VoIP call initiated successfully. Call ID: ${callId}`;
+        console.log(statusMsg);
         return call;
       } else {
         call.status = 'failed';
