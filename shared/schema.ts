@@ -2434,3 +2434,162 @@ export type QuestionnaireResponse = typeof questionnaireResponses.$inferSelect;
 export type InsertQuestionnaireResponse = z.infer<typeof insertQuestionnaireResponseSchema>;
 export type SupervisionObservation = typeof supervisionObservations.$inferSelect;
 export type InsertSupervisionObservation = z.infer<typeof insertSupervisionObservationSchema>;
+
+// ===== MODERN COMMUNICATION SYSTEM =====
+
+// Support Tickets
+export const supportTickets = pgTable("support_tickets", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  priority: varchar("priority", { length: 20 }).notNull().default("medium"), // low, medium, high, urgent
+  status: varchar("status", { length: 20 }).notNull().default("open"), // open, in_progress, resolved, closed
+  category: varchar("category", { length: 100 }).notNull(), // technical, billing, course, general
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  assignedTo: integer("assigned_to").references(() => users.id),
+  attachments: text("attachments").array().default([]), // file URLs
+  tags: text("tags").array().default([]),
+  resolution: text("resolution"),
+  satisfactionRating: integer("satisfaction_rating"), // 1-5
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  resolvedAt: timestamp("resolved_at"),
+  closedAt: timestamp("closed_at")
+});
+
+// Support Ticket Messages
+export const supportTicketMessages = pgTable("support_ticket_messages", {
+  id: serial("id").primaryKey(),
+  ticketId: integer("ticket_id").references(() => supportTickets.id).notNull(),
+  message: text("message").notNull(),
+  senderType: varchar("sender_type", { length: 20 }).notNull(), // student, staff
+  senderId: integer("sender_id").references(() => users.id).notNull(),
+  senderName: varchar("sender_name", { length: 255 }).notNull(),
+  isInternal: boolean("is_internal").default(false), // internal staff notes
+  attachments: text("attachments").array().default([]),
+  sentAt: timestamp("sent_at").defaultNow().notNull()
+});
+
+// Chat Conversations
+export const chatConversations = pgTable("chat_conversations", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }),
+  type: varchar("type", { length: 20 }).notNull().default("direct"), // direct, group
+  participants: integer("participants").array().notNull(), // user IDs
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  lastMessage: text("last_message"),
+  lastMessageAt: timestamp("last_message_at"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Chat Messages
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").references(() => chatConversations.id).notNull(),
+  senderId: integer("sender_id").references(() => users.id).notNull(),
+  message: text("message").notNull(),
+  messageType: varchar("message_type", { length: 20 }).default("text"), // text, image, file, system
+  attachments: text("attachments").array().default([]),
+  isEdited: boolean("is_edited").default(false),
+  editedAt: timestamp("edited_at"),
+  replyTo: integer("reply_to").references(() => chatMessages.id),
+  reactions: jsonb("reactions"), // {emoji: [userIds]}
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  readBy: jsonb("read_by") // {userId: timestamp}
+});
+
+// Push Notifications
+export const pushNotifications = pgTable("push_notifications", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  type: varchar("type", { length: 20 }).notNull().default("info"), // info, warning, success, error
+  targetAudience: varchar("target_audience", { length: 100 }).notNull(), // all, students, teachers, staff, specific_users
+  targetUserIds: integer("target_user_ids").array().default([]), // specific user IDs if targeted
+  channels: text("channels").array().notNull(), // web_push, in_app, sms, email
+  
+  // Notification content
+  icon: varchar("icon", { length: 255 }),
+  image: varchar("image", { length: 255 }),
+  actionUrl: varchar("action_url", { length: 500 }),
+  actionText: varchar("action_text", { length: 100 }),
+  
+  // Scheduling
+  status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, scheduled, sent, failed
+  scheduledAt: timestamp("scheduled_at"),
+  sentAt: timestamp("sent_at"),
+  
+  // Analytics
+  deliveryStats: jsonb("delivery_stats"), // {sent: 0, delivered: 0, clicked: 0, failed: 0}
+  
+  // Settings
+  priority: varchar("priority", { length: 20 }).default("normal"), // low, normal, high
+  ttl: integer("ttl").default(86400), // time to live in seconds
+  
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Notification Delivery Logs
+export const notificationDeliveryLogs = pgTable("notification_delivery_logs", {
+  id: serial("id").primaryKey(),
+  notificationId: integer("notification_id").references(() => pushNotifications.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  channel: varchar("channel", { length: 50 }).notNull(), // web_push, in_app, sms, email
+  status: varchar("status", { length: 20 }).notNull(), // sent, delivered, failed, clicked
+  errorMessage: text("error_message"),
+  deliveredAt: timestamp("delivered_at"),
+  clickedAt: timestamp("clicked_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Insert schemas for communication system
+export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertSupportTicketMessageSchema = createInsertSchema(supportTicketMessages).omit({
+  id: true,
+  sentAt: true
+});
+
+export const insertChatConversationSchema = createInsertSchema(chatConversations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
+  id: true,
+  sentAt: true
+});
+
+export const insertPushNotificationSchema = createInsertSchema(pushNotifications).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertNotificationDeliveryLogSchema = createInsertSchema(notificationDeliveryLogs).omit({
+  id: true,
+  createdAt: true
+});
+
+// Communication system types
+export type SupportTicket = typeof supportTickets.$inferSelect;
+export type InsertSupportTicket = z.infer<typeof insertSupportTicketSchema>;
+export type SupportTicketMessage = typeof supportTicketMessages.$inferSelect;
+export type InsertSupportTicketMessage = z.infer<typeof insertSupportTicketMessageSchema>;
+export type ChatConversation = typeof chatConversations.$inferSelect;
+export type InsertChatConversation = z.infer<typeof insertChatConversationSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type PushNotification = typeof pushNotifications.$inferSelect;
+export type InsertPushNotification = z.infer<typeof insertPushNotificationSchema>;
+export type NotificationDeliveryLog = typeof notificationDeliveryLogs.$inferSelect;
+export type InsertNotificationDeliveryLog = z.infer<typeof insertNotificationDeliveryLogSchema>;

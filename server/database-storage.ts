@@ -55,7 +55,12 @@ import {
   liveClassSessions, teacherRetentionData, studentQuestionnaires, questionnaireResponses, supervisionObservations,
   type LiveClassSession, type InsertLiveClassSession, type TeacherRetentionData, type InsertTeacherRetentionData,
   type StudentQuestionnaire, type InsertStudentQuestionnaire, type QuestionnaireResponse, type InsertQuestionnaireResponse,
-  type SupervisionObservation, type InsertSupervisionObservation
+  type SupervisionObservation, type InsertSupervisionObservation,
+  // Communication system types
+  supportTickets, supportTicketMessages, chatConversations, chatMessages, pushNotifications, notificationDeliveryLogs,
+  type SupportTicket, type InsertSupportTicket, type SupportTicketMessage, type InsertSupportTicketMessage,
+  type ChatConversation, type InsertChatConversation, type ChatMessage, type InsertChatMessage,
+  type PushNotification, type InsertPushNotification, type NotificationDeliveryLog, type InsertNotificationDeliveryLog
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -4644,5 +4649,219 @@ export class DatabaseStorage implements IStorage {
       .where(eq(questionnaireResponses.id, id))
       .returning();
     return updated;
+  }
+
+  // ===== MODERN COMMUNICATION SYSTEM =====
+
+  // Support Tickets
+  async getSupportTickets(filters?: { status?: string; priority?: string; assignedTo?: number }): Promise<any[]> {
+    let query = db.select({
+      id: supportTickets.id,
+      title: supportTickets.title,
+      description: supportTickets.description,
+      priority: supportTickets.priority,
+      status: supportTickets.status,
+      category: supportTickets.category,
+      studentId: supportTickets.studentId,
+      studentName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+      assignedTo: supportTickets.assignedTo,
+      attachments: supportTickets.attachments,
+      tags: supportTickets.tags,
+      resolution: supportTickets.resolution,
+      satisfactionRating: supportTickets.satisfactionRating,
+      createdAt: supportTickets.createdAt,
+      updatedAt: supportTickets.updatedAt,
+      resolvedAt: supportTickets.resolvedAt,
+      closedAt: supportTickets.closedAt
+    })
+    .from(supportTickets)
+    .leftJoin(users, eq(supportTickets.studentId, users.id));
+
+    if (filters?.status) {
+      query = query.where(eq(supportTickets.status, filters.status));
+    }
+    if (filters?.priority) {
+      query = query.where(eq(supportTickets.priority, filters.priority));
+    }
+    if (filters?.assignedTo) {
+      query = query.where(eq(supportTickets.assignedTo, filters.assignedTo));
+    }
+
+    return await query.orderBy(desc(supportTickets.createdAt));
+  }
+
+  async getSupportTicket(id: number): Promise<SupportTicket | undefined> {
+    const [ticket] = await db.select().from(supportTickets)
+      .where(eq(supportTickets.id, id));
+    return ticket;
+  }
+
+  async createSupportTicket(ticket: InsertSupportTicket): Promise<SupportTicket> {
+    const [newTicket] = await db.insert(supportTickets).values(ticket).returning();
+    return newTicket;
+  }
+
+  async updateSupportTicket(id: number, updates: Partial<SupportTicket>): Promise<SupportTicket | undefined> {
+    const [updatedTicket] = await db
+      .update(supportTickets)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(supportTickets.id, id))
+      .returning();
+    return updatedTicket;
+  }
+
+  async deleteSupportTicket(id: number): Promise<void> {
+    await db.delete(supportTickets).where(eq(supportTickets.id, id));
+  }
+
+  // Support Ticket Messages
+  async getSupportTicketMessages(ticketId: number): Promise<SupportTicketMessage[]> {
+    return await db.select().from(supportTicketMessages)
+      .where(eq(supportTicketMessages.ticketId, ticketId))
+      .orderBy(supportTicketMessages.sentAt);
+  }
+
+  async createSupportTicketMessage(message: InsertSupportTicketMessage): Promise<SupportTicketMessage> {
+    const [newMessage] = await db.insert(supportTicketMessages).values(message).returning();
+    return newMessage;
+  }
+
+  // Chat Conversations
+  async getChatConversations(userId: number): Promise<any[]> {
+    return await db.select().from(chatConversations)
+      .where(sql`${userId} = ANY(${chatConversations.participants})`)
+      .orderBy(desc(chatConversations.lastMessageAt));
+  }
+
+  async getChatConversation(id: number): Promise<ChatConversation | undefined> {
+    const [conversation] = await db.select().from(chatConversations)
+      .where(eq(chatConversations.id, id));
+    return conversation;
+  }
+
+  async createChatConversation(conversation: InsertChatConversation): Promise<ChatConversation> {
+    const [newConversation] = await db.insert(chatConversations).values(conversation).returning();
+    return newConversation;
+  }
+
+  async updateChatConversation(id: number, updates: Partial<ChatConversation>): Promise<ChatConversation | undefined> {
+    const [updatedConversation] = await db
+      .update(chatConversations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(chatConversations.id, id))
+      .returning();
+    return updatedConversation;
+  }
+
+  // Chat Messages
+  async getChatMessages(conversationId: number, limit: number = 50): Promise<any[]> {
+    return await db.select({
+      id: chatMessages.id,
+      conversationId: chatMessages.conversationId,
+      senderId: chatMessages.senderId,
+      senderName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+      message: chatMessages.message,
+      messageType: chatMessages.messageType,
+      attachments: chatMessages.attachments,
+      isEdited: chatMessages.isEdited,
+      editedAt: chatMessages.editedAt,
+      replyTo: chatMessages.replyTo,
+      reactions: chatMessages.reactions,
+      sentAt: chatMessages.sentAt,
+      readBy: chatMessages.readBy
+    })
+    .from(chatMessages)
+    .leftJoin(users, eq(chatMessages.senderId, users.id))
+    .where(eq(chatMessages.conversationId, conversationId))
+    .orderBy(desc(chatMessages.sentAt))
+    .limit(limit);
+  }
+
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const [newMessage] = await db.insert(chatMessages).values(message).returning();
+    
+    // Update conversation's lastMessage and lastMessageAt
+    await db.update(chatConversations)
+      .set({
+        lastMessage: message.message,
+        lastMessageAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(chatConversations.id, message.conversationId));
+
+    return newMessage;
+  }
+
+  async updateChatMessage(id: number, updates: Partial<ChatMessage>): Promise<ChatMessage | undefined> {
+    const [updatedMessage] = await db
+      .update(chatMessages)
+      .set({ ...updates, isEdited: true, editedAt: new Date() })
+      .where(eq(chatMessages.id, id))
+      .returning();
+    return updatedMessage;
+  }
+
+  async deleteChatMessage(id: number): Promise<void> {
+    await db.delete(chatMessages).where(eq(chatMessages.id, id));
+  }
+
+  // Push Notifications
+  async getPushNotifications(filters?: { targetAudience?: string; status?: string }): Promise<PushNotification[]> {
+    let query = db.select().from(pushNotifications);
+
+    if (filters?.targetAudience) {
+      query = query.where(eq(pushNotifications.targetAudience, filters.targetAudience));
+    }
+    if (filters?.status) {
+      query = query.where(eq(pushNotifications.status, filters.status));
+    }
+
+    return await query.orderBy(desc(pushNotifications.createdAt));
+  }
+
+  async getPushNotification(id: number): Promise<PushNotification | undefined> {
+    const [notification] = await db.select().from(pushNotifications)
+      .where(eq(pushNotifications.id, id));
+    return notification;
+  }
+
+  async createPushNotification(notification: InsertPushNotification): Promise<PushNotification> {
+    const [newNotification] = await db.insert(pushNotifications).values(notification).returning();
+    return newNotification;
+  }
+
+  async updatePushNotification(id: number, updates: Partial<PushNotification>): Promise<PushNotification | undefined> {
+    const [updatedNotification] = await db
+      .update(pushNotifications)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(pushNotifications.id, id))
+      .returning();
+    return updatedNotification;
+  }
+
+  async deletePushNotification(id: number): Promise<void> {
+    await db.delete(pushNotifications).where(eq(pushNotifications.id, id));
+  }
+
+  // Notification Delivery Logs
+  async createNotificationDeliveryLog(log: InsertNotificationDeliveryLog): Promise<NotificationDeliveryLog> {
+    const [newLog] = await db.insert(notificationDeliveryLogs).values(log).returning();
+    return newLog;
+  }
+
+  async getNotificationDeliveryLogs(notificationId: number): Promise<NotificationDeliveryLog[]> {
+    return await db.select().from(notificationDeliveryLogs)
+      .where(eq(notificationDeliveryLogs.notificationId, notificationId))
+      .orderBy(desc(notificationDeliveryLogs.createdAt));
+  }
+
+  async updateNotificationDeliveryStatus(logId: number, status: string, deliveredAt?: Date, clickedAt?: Date): Promise<void> {
+    const updates: any = { status };
+    if (deliveredAt) updates.deliveredAt = deliveredAt;
+    if (clickedAt) updates.clickedAt = clickedAt;
+
+    await db.update(notificationDeliveryLogs)
+      .set(updates)
+      .where(eq(notificationDeliveryLogs.id, logId));
   }
 }
