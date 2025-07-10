@@ -739,40 +739,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Test VoIP connectivity with timeout (in production, would test actual Isabel SIP connection)
+      // Test real Isabel VoIP connectivity
       try {
-        // Simulate SIP connectivity test with timeout
-        const testPromise = new Promise((resolve) => 
-          setTimeout(() => resolve({ connected: true }), 100)
-        );
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('VoIP connection timeout')), 5000)
-        );
+        // Configure and test real Isabel VoIP connection
+        const { isabelVoipService } = await import('./isabel-voip-service');
         
-        await Promise.race([testPromise, timeoutPromise]);
-        
-        res.json({ 
-          success: true,
-          message: "VoIP connection test successful",
-          provider: "Isabel VoIP Line",
-          server: serverAddress,
+        await isabelVoipService.configure({
+          serverAddress: serverAddress,
           port: port,
           username: username,
-          status: "connected",
-          callRecording: settings.callRecordingEnabled ? "enabled" : "disabled",
-          note: "VoIP configuration validated. Isabel line ready for calls."
+          password: settings.voipPassword || '',
+          enabled: true,
+          callRecordingEnabled: settings.callRecordingEnabled || false,
+          recordingStoragePath: settings.recordingStoragePath || '/var/recordings'
         });
+        
+        const testResult = await isabelVoipService.testConnection();
+        
+        if (testResult.success) {
+          res.json({ 
+            success: true,
+            message: "Isabel VoIP connection test successful",
+            provider: "Isabel VoIP Line",
+            server: serverAddress,
+            port: port,
+            username: username,
+            status: "connected",
+            callRecording: settings.callRecordingEnabled ? "enabled" : "disabled",
+            note: "Real Isabel VoIP server connection verified. Ready for calls.",
+            details: testResult.details
+          });
+        } else {
+          res.json({ 
+            success: false,
+            message: testResult.message,
+            provider: "Isabel VoIP Line",
+            server: serverAddress,
+            port: port,
+            username: username,
+            status: "connection_failed",
+            note: "Configuration valid but unable to connect to Isabel VoIP server."
+          });
+        }
       } catch (error) {
-        // Even if connectivity test fails, validate configuration
+        console.error('Isabel VoIP test error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         res.json({ 
           success: false,
-          message: "VoIP configuration validated - External connection test failed",
+          message: `Isabel VoIP connection test failed: ${errorMessage}`,
           provider: "Isabel VoIP Line",
           server: serverAddress,
           port: port,
           username: username,
-          status: "configured",
-          note: "Configuration is valid. In production, Isabel VoIP connection would be tested."
+          status: "error",
+          note: "Unable to test Isabel VoIP connection. Please check server configuration."
         });
       }
     } catch (error) {
@@ -4071,31 +4091,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { phoneNumber, contactName, callType, recordCall } = req.body;
       
-      // Create call log entry for tracking
-      const callLog = {
-        id: Date.now(),
-        phoneNumber,
-        contactName,
-        callType,
-        recordCall,
-        initiatedAt: new Date(),
-        status: 'initiated',
-        duration: 0,
-        recordingUrl: null
-      };
+      // Validate phone number format
+      if (!phoneNumber || phoneNumber.length < 10) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid phone number format"
+        });
+      }
 
-      // In production, this would integrate with Isabel VoIP API
-      // For now, simulate successful call initiation
+      // Get VoIP settings from database
+      const settings = await storage.getAdminSettings();
+      if (!settings?.voipEnabled || !settings?.voipServerAddress || !settings?.voipUsername) {
+        return res.status(400).json({
+          success: false,
+          message: "VoIP service not configured. Please configure Isabel VoIP settings first."
+        });
+      }
+
+      // Configure and initialize Isabel VoIP service
+      const { isabelVoipService } = await import('./isabel-voip-service');
+      
+      // Configure VoIP service with current settings
+      await isabelVoipService.configure({
+        serverAddress: settings.voipServerAddress,
+        port: settings.voipPort || 5038,
+        username: settings.voipUsername,
+        password: settings.voipPassword || '',
+        enabled: settings.voipEnabled,
+        callRecordingEnabled: settings.callRecordingEnabled || false,
+        recordingStoragePath: settings.recordingStoragePath || '/var/recordings'
+      });
+
+      // Initiate real call through Isabel VoIP server
+      const call = await isabelVoipService.initiateCall(phoneNumber, contactName, {
+        recordCall: recordCall ?? settings.callRecordingEnabled
+      });
+
+      console.log(`Real Isabel VoIP call initiated to ${phoneNumber} via ${settings.voipServerAddress}:${settings.voipPort}`);
+      
       res.json({
         success: true,
-        callId: callLog.id,
-        message: "VoIP call initiated successfully",
-        recordingEnabled: recordCall
+        callId: call.callId,
+        message: "VoIP call initiated successfully via Isabel server",
+        recordingEnabled: call.recordingEnabled,
+        server: settings.voipServerAddress,
+        port: settings.voipPort,
+        status: call.status,
+        startTime: call.startTime
       });
     } catch (error) {
+      console.error('Isabel VoIP call failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ 
         success: false, 
-        message: "Failed to initiate VoIP call via Isabel line" 
+        message: `Failed to initiate VoIP call via Isabel line: ${errorMessage}`
       });
     }
   });
