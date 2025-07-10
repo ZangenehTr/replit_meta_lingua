@@ -4101,11 +4101,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get VoIP settings from database
       const settings = await storage.getAdminSettings();
-      if (!settings?.voipEnabled || !settings?.voipServerAddress || !settings?.voipUsername) {
+      if (!settings?.voipServerAddress || !settings?.voipUsername) {
         return res.status(400).json({
           success: false,
-          message: "VoIP service not configured. Please configure Isabel VoIP settings first."
+          message: "VoIP service not configured. Please configure Isabel VoIP server address and username first."
         });
+      }
+
+      // Check if VoIP is enabled for production calls (allow testing even if disabled)
+      if (!settings.voipEnabled) {
+        console.log('VoIP is disabled but allowing test call for configuration verification');
       }
 
       // Configure and initialize Isabel VoIP service
