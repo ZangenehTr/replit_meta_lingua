@@ -4722,8 +4722,19 @@ export class DatabaseStorage implements IStorage {
 
   // Chat Conversations
   async getChatConversations(userId: number): Promise<any[]> {
-    return await db.select().from(chatConversations)
-      .where(sql`${userId} = ANY(${chatConversations.participants})`)
+    return await db.select({
+      id: chatConversations.id,
+      participants: chatConversations.participants,
+      lastMessage: chatConversations.lastMessage,
+      lastMessageAt: chatConversations.lastMessageAt,
+      unreadCount: chatConversations.unreadCount,
+      type: chatConversations.type,
+      title: chatConversations.title,
+      isActive: chatConversations.isActive,
+      createdAt: chatConversations.createdAt,
+      updatedAt: chatConversations.updatedAt
+    }).from(chatConversations)
+      .where(sql`${userId}::text = ANY(${chatConversations.participants})`)
       .orderBy(desc(chatConversations.lastMessageAt));
   }
 
@@ -4801,7 +4812,21 @@ export class DatabaseStorage implements IStorage {
 
   // Push Notifications
   async getPushNotifications(filters?: { targetAudience?: string; status?: string }): Promise<PushNotification[]> {
-    let query = db.select().from(pushNotifications);
+    let query = db.select({
+      id: pushNotifications.id,
+      title: pushNotifications.title,
+      message: pushNotifications.message,
+      type: pushNotifications.type,
+      targetAudience: pushNotifications.targetAudience,
+      channels: pushNotifications.channels,
+      status: pushNotifications.status,
+      scheduledAt: pushNotifications.scheduledAt,
+      sentAt: pushNotifications.sentAt,
+      deliveryStats: pushNotifications.deliveryStats,
+      createdBy: pushNotifications.createdBy,
+      createdAt: pushNotifications.createdAt,
+      updatedAt: pushNotifications.updatedAt
+    }).from(pushNotifications);
 
     if (filters?.targetAudience) {
       query = query.where(eq(pushNotifications.targetAudience, filters.targetAudience));
