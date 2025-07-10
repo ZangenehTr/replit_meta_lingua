@@ -351,77 +351,64 @@ export function IranianComplianceSettings() {
         </Card>
       )}
 
-      {/* SMS Settings */}
+      {/* SMS Settings Overview */}
       {activeTab === "sms" && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
-              Kavenegar SMS Service Configuration
+              SMS Service Status
             </CardTitle>
-            <CardDescription>Configure Kavenegar SMS service for Iranian mobile communications</CardDescription>
+            <CardDescription>Overview of Kavenegar SMS service integration for Iranian mobile communications</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="kavenegar-api-key">Kavenegar API Key</Label>
-              <Input
-                id="kavenegar-api-key"
-                type="password"
-                placeholder="Your Kavenegar API key"
-                defaultValue={settings?.kavehnegarApiKey || ""}
-              />
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium text-blue-900 dark:text-blue-100">Kavenegar SMS Integration</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                    SMS service is {settings?.smsEnabled ? 'enabled' : 'disabled'} for Iranian market compliance
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {settings?.smsEnabled ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-yellow-600" />
+                  )}
+                  <Button
+                    onClick={() => window.location.href = '/admin/sms-settings'}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Manage SMS Settings
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="sender-number">Sender Number</Label>
-              <Input
-                id="sender-number"
-                placeholder="10004346"
-                defaultValue={settings?.smsSenderNumber || ""}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-sm text-gray-600 dark:text-gray-400">Service Status</div>
+                <div className="font-medium">
+                  {settings?.smsEnabled ? 'Active' : 'Inactive'}
+                </div>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-sm text-gray-600 dark:text-gray-400">Sender Number</div>
+                <div className="font-medium">
+                  {settings?.smsSenderNumber || 'Not configured'}
+                </div>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-sm text-gray-600 dark:text-gray-400">Provider</div>
+                <div className="font-medium">Kavenegar</div>
+              </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="sms-enabled"
-                defaultChecked={settings?.smsEnabled || false}
-              />
-              <Label htmlFor="sms-enabled">Enable SMS Integration</Label>
-            </div>
-
-            <Separator />
-
-            <div>
-              <Label htmlFor="sms-templates">SMS Templates</Label>
-              <Textarea
-                id="sms-templates"
-                placeholder="Welcome: Welcome to Meta Lingua!&#10;Verification: Your verification code is {code}&#10;Reminder: You have a class starting in 30 minutes"
-                defaultValue={settings?.smsTemplates || ""}
-                rows={4}
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <Button 
-                onClick={() => testSmsConnection.mutate()}
-                disabled={testSmsConnection.isPending}
-                variant="outline"
-              >
-                <TestTube className="h-4 w-4 mr-2" />
-                Test Connection
-              </Button>
-              <Button 
-                onClick={() => handleSave("sms", {
-                  kavehnegarApiKey: (document.getElementById("kavenegar-api-key") as HTMLInputElement)?.value,
-                  smsSenderNumber: (document.getElementById("sender-number") as HTMLInputElement)?.value,
-                  smsEnabled: (document.getElementById("sms-enabled") as HTMLInputElement)?.checked,
-                  smsTemplates: (document.getElementById("sms-templates") as HTMLTextAreaElement)?.value
-                })}
-                disabled={updateSettings.isPending}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Save SMS Settings
-              </Button>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              <p>For complete SMS configuration including templates, testing, and detailed settings, use the dedicated SMS Settings page.</p>
             </div>
           </CardContent>
         </Card>
