@@ -2442,21 +2442,17 @@ export type InsertSupervisionObservation = z.infer<typeof insertSupervisionObser
 // Support Tickets
 export const supportTickets = pgTable("support_tickets", {
   id: serial("id").primaryKey(),
-  title: varchar("title", { length: 255 }).notNull(),
+  title: text("title").notNull(),
   description: text("description").notNull(),
-  priority: varchar("priority", { length: 20 }).notNull().default("medium"), // low, medium, high, urgent
-  status: varchar("status", { length: 20 }).notNull().default("open"), // open, in_progress, resolved, closed
-  category: varchar("category", { length: 100 }).notNull(), // technical, billing, course, general
-  studentId: integer("student_id").references(() => users.id).notNull(),
-  assignedTo: integer("assigned_to").references(() => users.id),
+  priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
+  status: text("status").notNull().default("open"), // open, in_progress, resolved, closed
+  category: text("category"), // technical, billing, course, general
+  studentId: integer("student_id"),
+  studentName: text("student_name"),
+  assignedTo: text("assigned_to"), // Agent/staff handling the ticket
   attachments: text("attachments").array().default([]), // file URLs
-  tags: text("tags").array().default([]),
-  resolution: text("resolution"),
-  satisfactionRating: integer("satisfaction_rating"), // 1-5
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  resolvedAt: timestamp("resolved_at"),
-  closedAt: timestamp("closed_at")
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Support Ticket Messages
@@ -2475,15 +2471,15 @@ export const supportTicketMessages = pgTable("support_ticket_messages", {
 // Chat Conversations
 export const chatConversations = pgTable("chat_conversations", {
   id: serial("id").primaryKey(),
-  title: varchar("title", { length: 255 }),
-  type: varchar("type", { length: 20 }).notNull().default("direct"), // direct, group
-  participants: integer("participants").array().notNull(), // user IDs
-  createdBy: integer("created_by").references(() => users.id).notNull(),
+  title: text("title"),
+  type: text("type").notNull().default("direct"), // direct, group
+  participants: text("participants").array().notNull(), // user IDs
   lastMessage: text("last_message"),
   lastMessageAt: timestamp("last_message_at"),
+  unreadCount: integer("unread_count").default(0),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Chat Messages

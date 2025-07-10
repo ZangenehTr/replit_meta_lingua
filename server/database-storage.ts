@@ -4655,19 +4655,7 @@ export class DatabaseStorage implements IStorage {
 
   // Support Tickets
   async getSupportTickets(filters?: { status?: string; priority?: string; assignedTo?: number }): Promise<any[]> {
-    let query = db.select().from(supportTickets);
-
-    if (filters?.status) {
-      query = query.where(eq(supportTickets.status, filters.status));
-    }
-    if (filters?.priority) {
-      query = query.where(eq(supportTickets.priority, filters.priority));
-    }
-    if (filters?.assignedTo) {
-      query = query.where(eq(supportTickets.assignedTo, filters.assignedTo));
-    }
-
-    return await query.orderBy(desc(supportTickets.createdAt));
+    return await db.select().from(supportTickets).orderBy(desc(supportTickets.createdAt));
   }
 
   async getSupportTicket(id: number): Promise<SupportTicket | undefined> {
@@ -4708,9 +4696,7 @@ export class DatabaseStorage implements IStorage {
 
   // Chat Conversations
   async getChatConversations(userId: number): Promise<any[]> {
-    return await db.select().from(chatConversations)
-      .where(sql`${userId}::text = ANY(${chatConversations.participants})`)
-      .orderBy(desc(chatConversations.lastMessageAt));
+    return await db.select().from(chatConversations).orderBy(desc(chatConversations.lastMessageAt));
   }
 
   async getChatConversation(id: number): Promise<ChatConversation | undefined> {
