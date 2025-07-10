@@ -115,7 +115,11 @@ export function IranianComplianceSettings() {
     },
     onError: (error) => {
       console.error('VoIP call test error:', error);
-      toast({ title: "VoIP Call Test Failed", description: error.message, variant: "destructive" });
+      let errorMessage = error.message;
+      if (errorMessage.includes('not configured')) {
+        errorMessage = "Please save VoIP settings first, then try the test call";
+      }
+      toast({ title: "VoIP Call Test Failed", description: errorMessage, variant: "destructive" });
     }
   });
 
