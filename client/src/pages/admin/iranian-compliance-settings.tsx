@@ -408,8 +408,72 @@ export function IranianComplianceSettings() {
               </div>
             </div>
 
+            <Separator />
+
+            {/* SMS API Configuration */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-sm">SMS API Configuration</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="kavenegar-api-key">Kavenegar API Key</Label>
+                  <Input
+                    id="kavenegar-api-key"
+                    type="password"
+                    placeholder="Enter your Kavenegar API key"
+                    defaultValue={settings?.kavenegarApiKey || ""}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Get your API key from Kavenegar panel → API Settings
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="kavenegar-sender">Sender Number</Label>
+                  <Input
+                    id="kavenegar-sender"
+                    placeholder="10008663"
+                    defaultValue={settings?.kavenegarSender || "10008663"}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Your Kavenegar sender number or line
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="kavenegar-enabled"
+                  defaultChecked={settings?.kavenegarEnabled || false}
+                />
+                <Label htmlFor="kavenegar-enabled">Enable Kavenegar SMS Service</Label>
+              </div>
+
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => testSmsConnection.mutate()}
+                  disabled={testSmsConnection.isPending}
+                  variant="outline"
+                >
+                  <TestTube className="h-4 w-4 mr-2" />
+                  Test SMS Connection
+                </Button>
+                <Button 
+                  onClick={() => handleSave("sms", {
+                    kavenegarApiKey: (document.getElementById("kavenegar-api-key") as HTMLInputElement)?.value,
+                    kavenegarSender: (document.getElementById("kavenegar-sender") as HTMLInputElement)?.value,
+                    kavenegarEnabled: (document.getElementById("kavenegar-enabled") as HTMLInputElement)?.checked
+                  })}
+                  disabled={updateSettings.isPending}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save SMS Settings
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
+
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              <p>For complete SMS configuration including templates, testing, and detailed settings, use the dedicated SMS Settings page.</p>
+              <p>For advanced SMS configuration including templates, bulk messaging, and detailed analytics, use the dedicated SMS Settings page.</p>
             </div>
           </CardContent>
         </Card>
