@@ -12,12 +12,13 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { Save, TestTube, Phone, CreditCard, MessageSquare, Settings, CheckCircle2, AlertCircle, Info } from "lucide-react";
+import { Save, TestTube, Phone, CreditCard, MessageSquare, Settings, CheckCircle2, AlertCircle, Info, Eye, EyeOff } from "lucide-react";
 
 export function IranianComplianceSettings() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"voip" | "shetab" | "sms" | "general">("voip");
+  const [showApiKey, setShowApiKey] = useState(false);
 
   // Fetch current admin settings
   const { data: settings, isLoading } = useQuery({
@@ -416,12 +417,28 @@ export function IranianComplianceSettings() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="kavenegar-api-key">Kavenegar API Key</Label>
-                  <Input
-                    id="kavenegar-api-key"
-                    type="password"
-                    placeholder="Enter your Kavenegar API key"
-                    defaultValue={settings?.kavenegarApiKey || ""}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="kavenegar-api-key"
+                      type={showApiKey ? "text" : "password"}
+                      placeholder="Enter your Kavenegar API key"
+                      defaultValue={settings?.kavenegarApiKey || ""}
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                    >
+                      {showApiKey ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </Button>
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">
                     Get your API key from Kavenegar panel → API Settings
                   </p>
