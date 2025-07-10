@@ -9,6 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   HeadphonesIcon,
   MessageSquare, 
@@ -95,6 +98,28 @@ export default function AdminCommunicationsPage() {
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [notificationDialog, setNotificationDialog] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<ChatConversation | null>(null);
+  const [ticketReply, setTicketReply] = useState("");
+  
+  // New ticket form state
+  const [ticketForm, setTicketForm] = useState({
+    title: "",
+    description: "",
+    priority: "medium",
+    category: "general_inquiry",
+    studentId: 33, // Default to current user
+    studentName: "Admin User"
+  });
+  
+  // Notification form state
+  const [notificationForm, setNotificationForm] = useState({
+    title: "",
+    message: "",
+    type: "info" as 'info' | 'warning' | 'success' | 'error',
+    targetAudience: "all_users",
+    channels: ["push", "email"] as string[],
+    status: "sent" as 'draft' | 'scheduled' | 'sent'
+  });
 
   // Real API calls for support tickets
   const { data: tickets, isLoading: ticketsLoading } = useQuery({
@@ -187,6 +212,24 @@ export default function AdminCommunicationsPage() {
       default: return <AlertTriangle className="h-4 w-4 text-gray-500" />;
     }
   };
+  
+  // Send ticket reply mutation
+  const sendTicketReplyMutation = useMutation({
+    mutationFn: async ({ ticketId, message }: { ticketId: number; message: string }) => {
+      return apiRequest(`/api/support-tickets/${ticketId}/messages`, { 
+        method: 'POST', 
+        body: JSON.stringify({ message }) 
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/support-tickets'] });
+      toast({ title: "Reply sent successfully" });
+      setTicketReply("");
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to send reply", description: error.message, variant: "destructive" });
+    }
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -414,15 +457,28 @@ export default function AdminCommunicationsPage() {
                         <Textarea 
                           placeholder="Type your response..." 
                           className="mb-2"
+                          value={ticketReply}
+                          onChange={(e) => setTicketReply(e.target.value)}
                         />
                         <div className="flex justify-between">
                           <Button variant="outline" size="sm">
                             <Paperclip className="h-4 w-4 mr-2" />
                             Attach File
                           </Button>
-                          <Button size="sm">
+                          <Button 
+                            size="sm"
+                            onClick={() => {
+                              if (ticketReply.trim()) {
+                                sendTicketReplyMutation.mutate({
+                                  ticketId: selectedTicket.id,
+                                  message: ticketReply
+                                });
+                              }
+                            }}
+                            disabled={!ticketReply.trim() || sendTicketReplyMutation.isPending}
+                          >
                             <Send className="h-4 w-4 mr-2" />
-                            Send Reply
+                            {sendTicketReplyMutation.isPending ? 'Sending...' : 'Send Reply'}
                           </Button>
                         </div>
                       </div>
@@ -459,7 +515,10 @@ export default function AdminCommunicationsPage() {
                         conversationsData.map((conversation) => (
                           <div
                             key={conversation.id}
-                            className="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                            className={`p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
+                              selectedConversation?.id === conversation.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                            }`}
+                            onClick={() => setSelectedConversation(conversation)}
                           >
                             <div className="flex items-center gap-3">
                               <div className="relative">
@@ -549,8 +608,15 @@ export default function AdminCommunicationsPage() {
                         }}
                       />
                       <Button 
-                        onClick={() => chatInput.trim() && setChatInput("")}
-                        disabled={!chatInput.trim()}
+                        onClick={() => {
+                          if (chatInput.trim() && selectedConversation) {
+                            sendMessageMutation.mutate({
+                              conversationId: selectedConversation.id,
+                              message: chatInput
+                            });
+                          }
+                        }}
+                        disabled={!chatInput.trim() || !selectedConversation || sendMessageMutation.isPending}
                       >
                         <Send className="h-4 w-4" />
                       </Button>
@@ -635,18 +701,28 @@ export default function AdminCommunicationsPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <label className="text-sm font-medium mb-2 block">Title</label>
-                    <Input placeholder="Notification title..." />
+                    <Input 
+                      placeholder="Notification title..." 
+                      value={notificationForm.title}
+                      onChange={(e) => setNotificationForm({...notificationForm, title: e.target.value})}
+                    />
                   </div>
                   
                   <div>
                     <label className="text-sm font-medium mb-2 block">Message</label>
-                    <Textarea placeholder="Notification message..." />
+                    <Textarea 
+                      placeholder="Notification message..." 
+                      value={notificationForm.message}
+                      onChange={(e) => setNotificationForm({...notificationForm, message: e.target.value})}
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium mb-2 block">Target Audience</label>
-                      <Select defaultValue="all">
+                      <Select 
+                        defaultValue="all" 
+                        onValueChange={(value) => setNotificationForm({...notificationForm, targetAudience: value})}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -698,9 +774,17 @@ export default function AdminCommunicationsPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button className="flex-1">
+                    <Button 
+                      className="flex-1"
+                      onClick={() => {
+                        if (notificationForm.title && notificationForm.message) {
+                          sendNotificationMutation.mutate(notificationForm);
+                        }
+                      }}
+                      disabled={!notificationForm.title || !notificationForm.message || sendNotificationMutation.isPending}
+                    >
                       <Send className="h-4 w-4 mr-2" />
-                      Send Now
+                      {sendNotificationMutation.isPending ? 'Sending...' : 'Send Now'}
                     </Button>
                     <Button variant="outline">
                       <Clock className="h-4 w-4 mr-2" />
@@ -798,6 +882,225 @@ export default function AdminCommunicationsPage() {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        {/* New Ticket Dialog */}
+        <Dialog open={newTicketDialog} onOpenChange={setNewTicketDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Support Ticket</DialogTitle>
+              <DialogDescription>
+                Submit a new support request
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="ticket-title">Title</Label>
+                <Input
+                  id="ticket-title"
+                  placeholder="Brief description of the issue"
+                  value={ticketForm.title}
+                  onChange={(e) => setTicketForm({...ticketForm, title: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ticket-description">Description</Label>
+                <Textarea
+                  id="ticket-description"
+                  placeholder="Provide detailed information about your request"
+                  rows={4}
+                  value={ticketForm.description}
+                  onChange={(e) => setTicketForm({...ticketForm, description: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Priority</Label>
+                  <Select
+                    value={ticketForm.priority}
+                    onValueChange={(value) => setTicketForm({...ticketForm, priority: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Category</Label>
+                  <Select
+                    value={ticketForm.category}
+                    onValueChange={(value) => setTicketForm({...ticketForm, category: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general_inquiry">General Inquiry</SelectItem>
+                      <SelectItem value="technical_issue">Technical Issue</SelectItem>
+                      <SelectItem value="billing">Billing</SelectItem>
+                      <SelectItem value="course_help">Course Help</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setNewTicketDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (ticketForm.title && ticketForm.description) {
+                      createTicketMutation.mutate(ticketForm);
+                    }
+                  }}
+                  disabled={!ticketForm.title || !ticketForm.description || createTicketMutation.isPending}
+                >
+                  {createTicketMutation.isPending ? 'Creating...' : 'Create Ticket'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Notification Dialog */}
+        <Dialog open={notificationDialog} onOpenChange={setNotificationDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Send Push Notification</DialogTitle>
+              <DialogDescription>
+                Create and send notifications to users
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="notification-title">Title</Label>
+                <Input
+                  id="notification-title"
+                  placeholder="Notification title"
+                  value={notificationForm.title}
+                  onChange={(e) => setNotificationForm({...notificationForm, title: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="notification-message">Message</Label>
+                <Textarea
+                  id="notification-message"
+                  placeholder="Notification message"
+                  rows={3}
+                  value={notificationForm.message}
+                  onChange={(e) => setNotificationForm({...notificationForm, message: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Target Audience</Label>
+                  <Select
+                    value={notificationForm.targetAudience}
+                    onValueChange={(value) => setNotificationForm({...notificationForm, targetAudience: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_users">All Users</SelectItem>
+                      <SelectItem value="students">Students Only</SelectItem>
+                      <SelectItem value="teachers">Teachers Only</SelectItem>
+                      <SelectItem value="staff">Staff Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Type</Label>
+                  <Select
+                    value={notificationForm.type}
+                    onValueChange={(value: 'info' | 'warning' | 'success' | 'error') => setNotificationForm({...notificationForm, type: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="info">Info</SelectItem>
+                      <SelectItem value="success">Success</SelectItem>
+                      <SelectItem value="warning">Warning</SelectItem>
+                      <SelectItem value="error">Error</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label>Delivery Channels</Label>
+                <div className="space-y-2 mt-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="channel-push"
+                      checked={notificationForm.channels.includes('push')}
+                      onCheckedChange={(checked) => {
+                        const channels = checked 
+                          ? [...notificationForm.channels, 'push']
+                          : notificationForm.channels.filter(c => c !== 'push');
+                        setNotificationForm({...notificationForm, channels});
+                      }}
+                    />
+                    <label htmlFor="channel-push" className="text-sm">Push Notification</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="channel-email"
+                      checked={notificationForm.channels.includes('email')}
+                      onCheckedChange={(checked) => {
+                        const channels = checked 
+                          ? [...notificationForm.channels, 'email']
+                          : notificationForm.channels.filter(c => c !== 'email');
+                        setNotificationForm({...notificationForm, channels});
+                      }}
+                    />
+                    <label htmlFor="channel-email" className="text-sm">Email</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="channel-sms"
+                      checked={notificationForm.channels.includes('sms')}
+                      onCheckedChange={(checked) => {
+                        const channels = checked 
+                          ? [...notificationForm.channels, 'sms']
+                          : notificationForm.channels.filter(c => c !== 'sms');
+                        setNotificationForm({...notificationForm, channels});
+                      }}
+                    />
+                    <label htmlFor="channel-sms" className="text-sm">SMS (via Kavenegar)</label>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setNotificationDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (notificationForm.title && notificationForm.message) {
+                      sendNotificationMutation.mutate(notificationForm);
+                    }
+                  }}
+                  disabled={!notificationForm.title || !notificationForm.message || sendNotificationMutation.isPending}
+                >
+                  {sendNotificationMutation.isPending ? 'Sending...' : 'Send Notification'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
