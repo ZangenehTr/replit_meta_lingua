@@ -4555,9 +4555,9 @@ export class DatabaseStorage implements IStorage {
     pendingQuestionnaires: number;
     retentionTrend: string;
   }> {
-    const liveClasses = await this.db.select().from(liveClassSessions).where(eq(liveClassSessions.status, 'live'));
-    const observations = await this.db.select().from(supervisionObservations);
-    const questionnaires = await this.db.select().from(studentQuestionnaires).where(eq(studentQuestionnaires.isActive, true));
+    const liveClasses = await db.select().from(liveClassSessions).where(eq(liveClassSessions.status, 'live'));
+    const observations = await db.select().from(supervisionObservations);
+    const questionnaires = await db.select().from(studentQuestionnaires).where(eq(studentQuestionnaires.isActive, true));
     
     // Calculate average quality score
     const scoresSum = observations.reduce((sum, obs) => sum + (parseFloat(obs.overallScore?.toString() || '0')), 0);
@@ -4574,5 +4574,75 @@ export class DatabaseStorage implements IStorage {
       pendingQuestionnaires: questionnaires.length,
       retentionTrend: '↗ +3.2%' // This would be calculated based on retention data
     };
+  }
+
+  // ===== SUPERVISION SYSTEM - STUDENT QUESTIONNAIRES =====
+  
+  async getStudentQuestionnaires(courseId?: number): Promise<StudentQuestionnaire[]> {
+    if (courseId) {
+      return await db
+        .select()
+        .from(studentQuestionnaires)
+        .where(eq(studentQuestionnaires.courseId, courseId))
+        .orderBy(desc(studentQuestionnaires.createdAt));
+    }
+    
+    return await db
+      .select()
+      .from(studentQuestionnaires)
+      .orderBy(desc(studentQuestionnaires.createdAt));
+  }
+
+  async createStudentQuestionnaire(questionnaire: InsertStudentQuestionnaire): Promise<StudentQuestionnaire> {
+    const [created] = await db.insert(studentQuestionnaires).values(questionnaire).returning();
+    return created;
+  }
+
+  async updateStudentQuestionnaire(id: number, updates: Partial<StudentQuestionnaire>): Promise<StudentQuestionnaire | undefined> {
+    const [updated] = await db
+      .update(studentQuestionnaires)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(studentQuestionnaires.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteStudentQuestionnaire(id: number): Promise<void> {
+    await db.delete(studentQuestionnaires).where(eq(studentQuestionnaires.id, id));
+  }
+
+  // ===== QUESTIONNAIRE RESPONSES =====
+  
+  async getQuestionnaireResponses(questionnaireId?: number, teacherId?: number): Promise<QuestionnaireResponse[]> {
+    let query = db.select().from(questionnaireResponses);
+    
+    if (questionnaireId && teacherId) {
+      query = query.where(
+        and(
+          eq(questionnaireResponses.questionnaireId, questionnaireId),
+          eq(questionnaireResponses.teacherId, teacherId)
+        )
+      );
+    } else if (questionnaireId) {
+      query = query.where(eq(questionnaireResponses.questionnaireId, questionnaireId));
+    } else if (teacherId) {
+      query = query.where(eq(questionnaireResponses.teacherId, teacherId));
+    }
+    
+    return await query.orderBy(desc(questionnaireResponses.submittedAt));
+  }
+
+  async createQuestionnaireResponse(response: InsertQuestionnaireResponse): Promise<QuestionnaireResponse> {
+    const [created] = await db.insert(questionnaireResponses).values(response).returning();
+    return created;
+  }
+
+  async updateQuestionnaireResponse(id: number, updates: Partial<QuestionnaireResponse>): Promise<QuestionnaireResponse | undefined> {
+    const [updated] = await db
+      .update(questionnaireResponses)
+      .set(updates)
+      .where(eq(questionnaireResponses.id, id))
+      .returning();
+    return updated;
   }
 }
