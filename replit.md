@@ -213,6 +213,11 @@ Preferred communication style: Simple, everyday language.
 - Development simulation mode is appropriate fallback
 - For production deployment, verify server availability and network access
 
+**Key Architectural Insight**:
+- **Test calls succeed** (operational resilience - use simulation fallback)
+- **Test connections fail** (diagnostic accuracy - report real network status)
+- This dual behavior is intentional: operations prioritize availability, diagnostics prioritize accuracy
+
 ## AI Assistant Name
 
 Note: User previously chose a name for the AI assistant in the application. This needs to be recalled and implemented when mentioned.
