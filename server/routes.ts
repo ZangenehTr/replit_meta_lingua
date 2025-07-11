@@ -884,9 +884,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Validate VoIP configuration format
+      // Validate VoIP configuration format - Use 5038 for Isabel VoIP (Asterisk Manager Interface)
       const serverAddress = settings.voipServerAddress;
-      const port = settings.voipPort || 5060;
+      const port = settings.voipPort || 5038; // Default to 5038 for Isabel VoIP
       const username = settings.voipUsername;
       
       if (!serverAddress || serverAddress.length < 5) {
@@ -4250,10 +4250,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // VoIP Integration endpoint for Isabel VoIP line
-  app.post("/api/voip/initiate-call", async (req, res) => {
+  // Call Center Call Logs endpoint
+  app.get("/api/callcenter/call-logs", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
     try {
-      const { phoneNumber, contactName, callType, recordCall } = req.body;
+      const callLogs = await storage.getCallCenterLogs();
+      res.json(callLogs);
+    } catch (error) {
+      console.error('Error fetching call logs:', error);
+      res.status(500).json({ message: "Failed to fetch call logs" });
+    }
+  });
+
+  // VoIP Status endpoint
+  app.get("/api/voip/status", authenticateToken, async (req: any, res) => {
+    try {
+      const settings = await storage.getAdminSettings();
+      const { isabelVoipService } = await import('./isabel-voip-service');
+      
+      if (!settings?.voipServerAddress) {
+        return res.json({ 
+          connected: false, 
+          message: "VoIP not configured",
+          provider: "Isabel VoIP Line",
+          shortNumber: "+9848325"
+        });
+      }
+
+      // Quick connection check
+      const isConnected = isabelVoipService.isConnected || false;
+      
+      res.json({
+        connected: isConnected,
+        provider: "Isabel VoIP Line", 
+        server: settings.voipServerAddress,
+        port: settings.voipPort || 5038,
+        shortNumber: "+9848325",
+        username: settings.voipUsername,
+        message: isConnected ? "Connected" : "Offline"
+      });
+    } catch (error) {
+      res.json({ 
+        connected: false, 
+        message: "Status check failed",
+        provider: "Isabel VoIP Line",
+        shortNumber: "+9848325"
+      });
+    }
+  });
+
+  // End Call endpoint
+  app.post("/api/voip/end-call", authenticateToken, async (req, res) => {
+    try {
+      const { callId } = req.body;
+      
+      if (!callId) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Call ID is required" 
+        });
+      }
+
+      // End call via Isabel VoIP service
+      const { isabelVoipService } = await import('./isabel-voip-service');
+      const result = await isabelVoipService.endCall(callId);
+      
+      // Log call completion to student history
+      if (result.success) {
+        await storage.logCallCompletion({
+          callId,
+          agentId: req.user.id,
+          duration: result.duration,
+          recordingUrl: result.recordingUrl
+        });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error ending call:', error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to end call" 
+      });
+    }
+  });
+
+  // VoIP Integration endpoint for Isabel VoIP line
+  app.post("/api/voip/initiate-call", authenticateToken, async (req: any, res) => {
+    try {
+      const { phoneNumber, contactName, callType, recordCall = true, source = 'manual' } = req.body;
       
       // Validate phone number format
       if (!phoneNumber || phoneNumber.length < 10) {
