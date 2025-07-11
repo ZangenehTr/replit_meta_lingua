@@ -274,6 +274,12 @@ function CallCenterDashboard() {
             </div>
           </div>
           <div className="flex gap-3">
+            <Link href="/callcenter/voip">
+              <Button className="bg-blue-600 hover:bg-blue-700 shadow-md">
+                <Headphones className="h-4 w-4 mr-2" />
+                VoIP Center
+              </Button>
+            </Link>
             <Link href="/callcenter/leads/new">
               <Button className="bg-teal-600 hover:bg-teal-700 shadow-md">
                 <UserPlus className="h-4 w-4 mr-2" />
