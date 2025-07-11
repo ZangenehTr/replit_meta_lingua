@@ -126,6 +126,26 @@ Meta Lingua is an AI-enhanced multilingual language learning and institute manag
 4. **Rollback**: Replit automatically maintains deployment history
 5. **Database Changes**: Run `npm run db:push` before redeployment
 
+### Self-Hosting Requirements
+**Server Specifications:**
+- **CPU**: 4+ cores recommended
+- **RAM**: 8GB+ for smooth operation
+- **Storage**: 100GB+ SSD for database and recordings
+- **OS**: Ubuntu 20.04+ or CentOS 8+
+
+**Required Services:**
+- **PostgreSQL 14+**: Main database
+- **Node.js 18+**: Application runtime
+- **Nginx**: Reverse proxy and SSL termination
+- **Docker** (optional): Containerized deployment
+
+**Network Requirements:**
+- **Domain**: Your custom domain (e.g., academy.yoursite.com)
+- **SSL Certificate**: Let's Encrypt or commercial
+- **VoIP Access**: Direct connection to Isabel server (46.100.5.198:5038)
+- **SMS Gateway**: Kavenegar API access
+- **Backup**: Regular database backups to secure storage
+
 ### Configuration Management
 - Environment-based configuration system
 - Support for Iranian payment and SMS providers
