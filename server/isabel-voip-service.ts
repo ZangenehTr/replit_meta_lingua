@@ -270,7 +270,7 @@ export class IsabelVoipService extends EventEmitter {
   /**
    * Attempt SIP protocol connection (production method)
    */
-  private async attemptSipConnection(action: string, params: any): Promise<{ success: boolean; data?: any }> {
+  private async attemptSipConnection(action: string, params: any): Promise<{ success: boolean; data?: any; diagnostics?: any }> {
     try {
       // Real SIP implementation would use libraries like sip.js or node-sip
       // For now, attempt basic TCP connection to verify server availability
@@ -278,28 +278,75 @@ export class IsabelVoipService extends EventEmitter {
       
       return new Promise((resolve) => {
         const socket = new net.Socket();
+        const startTime = Date.now();
+        let diagnostics = {
+          method: 'TCP',
+          startTime,
+          server: this.settings!.serverAddress,
+          port: this.settings!.port
+        };
+
         const timeout = setTimeout(() => {
           socket.destroy();
-          resolve({ success: false });
+          resolve({ 
+            success: false, 
+            diagnostics: { 
+              ...diagnostics, 
+              endTime: Date.now(),
+              duration: Date.now() - startTime,
+              error: 'Connection timeout',
+              status: 'timeout'
+            }
+          });
         }, 3000); // Shorter timeout for SIP test
 
         socket.connect(this.settings!.port, this.settings!.serverAddress, () => {
           clearTimeout(timeout);
+          const endTime = Date.now();
           socket.destroy();
+          
+          console.log(`✓ TCP connection to ${this.settings!.serverAddress}:${this.settings!.port} successful (${endTime - startTime}ms)`);
+          
           // If TCP connection succeeds, simulate SIP success
           resolve({ 
             success: true, 
-            data: this.getSimulatedResponse(action, params)
+            data: this.getSimulatedResponse(action, params),
+            diagnostics: {
+              ...diagnostics,
+              endTime,
+              duration: endTime - startTime,
+              status: 'connected'
+            }
           });
         });
 
-        socket.on('error', () => {
+        socket.on('error', (error) => {
           clearTimeout(timeout);
-          resolve({ success: false });
+          const endTime = Date.now();
+          
+          console.log(`✗ TCP connection to ${this.settings!.serverAddress}:${this.settings!.port} failed: ${error.message}`);
+          
+          resolve({ 
+            success: false,
+            diagnostics: {
+              ...diagnostics,
+              endTime,
+              duration: endTime - startTime,
+              error: error.message,
+              status: 'connection_refused'
+            }
+          });
         });
       });
     } catch (error) {
-      return { success: false };
+      return { 
+        success: false, 
+        diagnostics: { 
+          method: 'TCP',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          status: 'exception'
+        }
+      };
     }
   }
 
@@ -390,6 +437,9 @@ export class IsabelVoipService extends EventEmitter {
 
     console.log(`Testing Isabel VoIP connection to ${this.settings.serverAddress}:${this.settings.port}`);
 
+    // Run comprehensive network diagnostics
+    const networkDiagnostics = await this.runNetworkDiagnostics();
+    
     try {
       // Test SIP connection first
       const sipResult = await this.attemptSipConnection('connect', {});
@@ -405,7 +455,11 @@ export class IsabelVoipService extends EventEmitter {
             username: this.settings.username,
             status: 'connected',
             method: 'SIP',
-            note: 'Real connection established'
+            note: 'Real connection established',
+            diagnostics: {
+              sip: sipResult.diagnostics,
+              network: networkDiagnostics
+            }
           }
         };
       }
@@ -424,17 +478,19 @@ export class IsabelVoipService extends EventEmitter {
             username: this.settings.username,
             status: 'connected',
             method: 'HTTP',
-            note: 'HTTP API connection established'
+            note: 'HTTP API connection established',
+            diagnostics: {
+              http: httpResult.diagnostics,
+              network: networkDiagnostics
+            }
           }
         };
       }
 
-      // Both methods failed - use simulation for development
-      const simulatedResult = this.getSimulatedResponse('connect', {});
-      
+      // Both methods failed - provide detailed diagnostics
       return {
         success: false, // Report as false since real connection failed
-        message: 'Real Isabel VoIP server not accessible - development mode active',
+        message: this.getDiagnosticMessage(networkDiagnostics, sipResult.diagnostics),
         details: {
           provider: 'Isabel VoIP Line',
           server: this.settings.serverAddress,
@@ -443,7 +499,12 @@ export class IsabelVoipService extends EventEmitter {
           status: 'connection_failed',
           method: 'simulation',
           note: 'Configuration valid but unable to connect to Isabel VoIP server.',
-          simulated: true
+          simulated: true,
+          diagnostics: {
+            sip: sipResult.diagnostics,
+            network: networkDiagnostics,
+            recommendations: this.getRecommendations(networkDiagnostics, sipResult.diagnostics)
+          }
         }
       };
 
@@ -459,10 +520,152 @@ export class IsabelVoipService extends EventEmitter {
           username: this.settings.username,
           status: 'connection_failed',
           error: errorMessage,
-          note: 'Connection test encountered an error'
+          note: 'Connection test encountered an error',
+          diagnostics: {
+            network: networkDiagnostics,
+            error: errorMessage
+          }
         }
       };
     }
+  }
+
+  /**
+   * Run comprehensive network diagnostics
+   */
+  private async runNetworkDiagnostics(): Promise<any> {
+    const diagnostics = {
+      timestamp: new Date().toISOString(),
+      server: this.settings!.serverAddress,
+      port: this.settings!.port,
+      tests: []
+    };
+
+    // Test basic connectivity
+    try {
+      const dns = await import('dns');
+      const util = await import('util');
+      const lookup = util.promisify(dns.lookup);
+      
+      const resolved = await lookup(this.settings!.serverAddress);
+      diagnostics.tests.push({
+        name: 'DNS Resolution',
+        status: 'success',
+        result: `${this.settings!.serverAddress} resolves to ${resolved.address}`,
+        ip: resolved.address
+      });
+    } catch (error) {
+      diagnostics.tests.push({
+        name: 'DNS Resolution',
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+
+    // Test ping-like connectivity
+    try {
+      const net = await import('net');
+      const pingResult = await new Promise((resolve) => {
+        const socket = new net.Socket();
+        const startTime = Date.now();
+        
+        const timeout = setTimeout(() => {
+          socket.destroy();
+          resolve({
+            status: 'timeout',
+            duration: Date.now() - startTime,
+            error: 'Connection timeout'
+          });
+        }, 5000);
+
+        socket.connect(this.settings!.port, this.settings!.serverAddress, () => {
+          clearTimeout(timeout);
+          socket.destroy();
+          resolve({
+            status: 'success',
+            duration: Date.now() - startTime,
+            message: 'Port is reachable'
+          });
+        });
+
+        socket.on('error', (error) => {
+          clearTimeout(timeout);
+          resolve({
+            status: 'failed',
+            duration: Date.now() - startTime,
+            error: error.message
+          });
+        });
+      });
+
+      diagnostics.tests.push({
+        name: 'Port Connectivity',
+        ...pingResult
+      });
+    } catch (error) {
+      diagnostics.tests.push({
+        name: 'Port Connectivity',
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+
+    return diagnostics;
+  }
+
+  /**
+   * Get diagnostic message based on test results
+   */
+  private getDiagnosticMessage(networkDiagnostics: any, sipDiagnostics: any): string {
+    const dnsTest = networkDiagnostics.tests.find(t => t.name === 'DNS Resolution');
+    const portTest = networkDiagnostics.tests.find(t => t.name === 'Port Connectivity');
+
+    if (dnsTest?.status === 'failed') {
+      return `DNS resolution failed for ${this.settings!.serverAddress} - server may not exist`;
+    }
+
+    if (portTest?.status === 'timeout') {
+      return `Connection timeout to ${this.settings!.serverAddress}:${this.settings!.port} - server may be down or port blocked`;
+    }
+
+    if (portTest?.status === 'failed') {
+      return `Connection refused by ${this.settings!.serverAddress}:${this.settings!.port} - server may not be listening on this port`;
+    }
+
+    return 'Real Isabel VoIP server not accessible - development mode active';
+  }
+
+  /**
+   * Get recommendations based on diagnostic results
+   */
+  private getRecommendations(networkDiagnostics: any, sipDiagnostics: any): string[] {
+    const recommendations = [];
+    const dnsTest = networkDiagnostics.tests.find(t => t.name === 'DNS Resolution');
+    const portTest = networkDiagnostics.tests.find(t => t.name === 'Port Connectivity');
+
+    if (dnsTest?.status === 'failed') {
+      recommendations.push('Verify the server address is correct');
+      recommendations.push('Check if the server is operational');
+    }
+
+    if (portTest?.status === 'timeout') {
+      recommendations.push('Check if firewall is blocking the connection');
+      recommendations.push('Verify the server is running on the specified port');
+      recommendations.push('Test from a different network if possible');
+    }
+
+    if (portTest?.status === 'failed') {
+      recommendations.push('Verify the port number (5038) is correct');
+      recommendations.push('Check if the VoIP service is running on the server');
+    }
+
+    if (recommendations.length === 0) {
+      recommendations.push('Server appears reachable but VoIP protocol negotiation failed');
+      recommendations.push('This is normal in development environments');
+      recommendations.push('System will use simulation mode for testing');
+    }
+
+    return recommendations;
   }
 
   /**
