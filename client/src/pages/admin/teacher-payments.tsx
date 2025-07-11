@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   DollarSign, 
   Clock, 
@@ -13,7 +16,12 @@ import {
   AlertCircle, 
   Calculator,
   Download,
-  Send
+  Send,
+  Edit,
+  Users,
+  TrendingUp,
+  Calendar,
+  Phone
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -33,33 +41,73 @@ interface TeacherPayment {
   status: 'pending' | 'calculated' | 'approved' | 'paid';
   calculatedAt: string;
   paidAt?: string;
+  callernHours?: number;
+  callernRate?: number;
+  callernPay?: number;
+  department: 'regular' | 'callern' | 'both';
+}
+
+interface Teacher {
+  id: number;
+  name: string;
+  hourlyRate: number;
+  callernRate?: number;
+  totalSessions: number;
+  totalHours: number;
+  performance: number;
+  department: 'regular' | 'callern' | 'both';
 }
 
 export default function TeacherPaymentsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedPeriod, setSelectedPeriod] = useState('current');
-  const [selectedTeacher, setSelectedTeacher] = useState<number | null>(null);
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [showRateDialog, setShowRateDialog] = useState(false);
 
   // Fetch teacher payments data
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ['/api/admin/teacher-payments', selectedPeriod],
   });
 
-  // Calculate payments mutation
+  // Fetch teachers data with their individual rates
+  const { data: teachers = [], isLoading: teachersLoading } = useQuery<Teacher[]>({
+    queryKey: ['/api/teachers/rates']
+  });
+
+  // Calculate payments mutation using individual teacher rates
   const calculatePaymentsMutation = useMutation({
     mutationFn: (period: string) => 
       apiRequest('/api/admin/teacher-payments/calculate', { 
         method: 'POST', 
-        body: JSON.stringify({ period }),
+        body: JSON.stringify({ period, useIndividualRates: true }),
         headers: { 'Content-Type': 'application/json' }
       }),
     onSuccess: () => {
       toast({
         title: "Payments Calculated",
-        description: "Teacher payments have been calculated successfully.",
+        description: "Teacher payments calculated using individual hourly rates.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/teacher-payments'] });
+    },
+  });
+
+  // Update teacher rate mutation
+  const updateTeacherRateMutation = useMutation({
+    mutationFn: ({ teacherId, regularRate, callernRate }: { teacherId: number, regularRate: number, callernRate?: number }) => 
+      apiRequest(`/api/teachers/${teacherId}/rates`, {
+        method: 'PUT',
+        body: JSON.stringify({ regularRate, callernRate }),
+        headers: { 'Content-Type': 'application/json' }
+      }),
+    onSuccess: () => {
+      toast({
+        title: "Rate Updated",
+        description: "Teacher hourly rate has been updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/teachers/rates'] });
+      setShowRateDialog(false);
+      setSelectedTeacher(null);
     },
   });
 
@@ -90,24 +138,118 @@ export default function TeacherPaymentsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Teacher Payment Management
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Automated session-based payment calculation system
-          </p>
+    <AppLayout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Teacher Payment Management
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Automated session-based payment calculation using individual teacher rates
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Dialog open={showRateDialog} onOpenChange={setShowRateDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Manage Rates
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Teacher Rate Management</DialogTitle>
+                  <DialogDescription>
+                    Update hourly rates for regular classes and Callern standby
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="teacherSelect">Select Teacher</Label>
+                    <Select 
+                      value={selectedTeacher?.id.toString() || ''} 
+                      onValueChange={(value) => {
+                        const teacher = teachers.find(t => t.id === parseInt(value));
+                        setSelectedTeacher(teacher || null);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a teacher" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teachers.map((teacher) => (
+                          <SelectItem key={teacher.id} value={teacher.id.toString()}>
+                            {teacher.name} ({teacher.department})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {selectedTeacher && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="regularRate">Regular Classes Rate (IRR/hour)</Label>
+                        <Input
+                          id="regularRate"
+                          type="number"
+                          defaultValue={selectedTeacher.hourlyRate}
+                          placeholder="75000"
+                        />
+                      </div>
+                      
+                      {(selectedTeacher.department === 'callern' || selectedTeacher.department === 'both') && (
+                        <div>
+                          <Label htmlFor="callernRate">Callern Standby Rate (IRR/hour)</Label>
+                          <Input
+                            id="callernRate"
+                            type="number"
+                            defaultValue={selectedTeacher.callernRate || 0}
+                            placeholder="65000"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => {
+                        if (selectedTeacher) {
+                          const regularRateInput = document.getElementById('regularRate') as HTMLInputElement;
+                          const callernRateInput = document.getElementById('callernRate') as HTMLInputElement;
+                          const regularRate = parseInt(regularRateInput.value);
+                          const callernRate = callernRateInput ? parseInt(callernRateInput.value) : undefined;
+                          
+                          updateTeacherRateMutation.mutate({
+                            teacherId: selectedTeacher.id,
+                            regularRate,
+                            callernRate
+                          });
+                        }
+                      }}
+                      disabled={updateTeacherRateMutation.isPending}
+                    >
+                      {updateTeacherRateMutation.isPending ? 'Updating...' : 'Update Rate'}
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowRateDialog(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <Button 
+              onClick={() => calculatePaymentsMutation.mutate(selectedPeriod)}
+              disabled={calculatePaymentsMutation.isPending}
+            >
+              <Calculator className="h-4 w-4 mr-2" />
+              {calculatePaymentsMutation.isPending ? 'Calculating...' : 'Calculate Payments'}
+            </Button>
+          </div>
         </div>
-        <Button 
-          onClick={() => calculatePaymentsMutation.mutate(selectedPeriod)}
-          disabled={calculatePaymentsMutation.isPending}
-        >
-          <Calculator className="h-4 w-4 mr-2" />
-          Calculate Payments
-        </Button>
-      </div>
 
       {/* Payment Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -353,6 +495,7 @@ export default function TeacherPaymentsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </AppLayout>
   );
 }
