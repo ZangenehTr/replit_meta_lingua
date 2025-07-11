@@ -57,8 +57,10 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
     try {
       result = await response.json();
     } catch (parseError) {
-      console.error('Failed to parse JSON response:', parseError);
-      throw new Error('Invalid JSON response from server');
+      console.error(`Failed to parse JSON response from ${finalUrl}:`, parseError);
+      const responseText = await response.clone().text();
+      console.error('Response text:', responseText);
+      throw new Error(`Invalid JSON response from server: ${finalUrl}`);
     }
 
     return result;
@@ -163,8 +165,10 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
     try {
       result = await response.json();
     } catch (parseError) {
-      console.error('Failed to parse JSON response:', parseError);
-      throw new Error('Invalid JSON response from server');
+      console.error(`Failed to parse JSON response from ${finalUrl}:`, parseError);
+      const responseText = await response.clone().text();
+      console.error('Response text:', responseText);
+      throw new Error(`Invalid JSON response from server: ${finalUrl}`);
     }
     
     console.log('Successful response:', result);
