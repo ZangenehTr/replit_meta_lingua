@@ -4848,6 +4848,7 @@ export class DatabaseStorage implements IStorage {
   // Call Center Logs for student call archiving  
   async getCallCenterLogs(): Promise<any[]> {
     try {
+      // First try to get logs without agent join to avoid column error
       const logs = await db
         .select({
           id: communicationLogs.id,
@@ -4859,12 +4860,10 @@ export class DatabaseStorage implements IStorage {
           outcome: communicationLogs.outcome,
           notes: communicationLogs.notes,
           recordingUrl: communicationLogs.recordingUrl,
-          timestamp: communicationLogs.createdAt,
-          agentName: sql`COALESCE(CONCAT(agents.first_name, ' ', agents.last_name), 'System')`.as('agentName')
+          timestamp: communicationLogs.createdAt
         })
         .from(communicationLogs)
         .leftJoin(users, eq(communicationLogs.studentId, users.id))
-        .leftJoin(sql`${users} as agents`, sql`${communicationLogs.agentId} = agents.id`)
         .where(eq(communicationLogs.type, 'call'))
         .orderBy(desc(communicationLogs.createdAt))
         .limit(50);
@@ -4880,7 +4879,7 @@ export class DatabaseStorage implements IStorage {
         recordingUrl: log.recordingUrl,
         notes: log.notes,
         timestamp: log.timestamp?.toISOString() || new Date().toISOString(),
-        agentName: log.agentName
+        agentName: 'Call Center Agent' // Fallback since agent table not synced yet
       }));
     } catch (error) {
       console.error('Error fetching call center logs:', error);

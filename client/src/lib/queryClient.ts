@@ -44,11 +44,24 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`${response.status}: ${text}`);
+      let errorText = 'Unknown error';
+      try {
+        errorText = await response.text();
+      } catch (parseError) {
+        errorText = `HTTP ${response.status} ${response.statusText}`;
+      }
+      throw new Error(`${response.status}: ${errorText}`);
     }
 
-    return response.json();
+    let result;
+    try {
+      result = await response.json();
+    } catch (parseError) {
+      console.error('Failed to parse JSON response:', parseError);
+      throw new Error('Invalid JSON response from server');
+    }
+
+    return result;
   } catch (error) {
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
       throw new Error('Network error: Unable to connect to server. Please check your connection and try again.');
