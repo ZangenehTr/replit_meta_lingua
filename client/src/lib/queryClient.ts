@@ -92,13 +92,34 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
       headers.Authorization = `Bearer ${token}`;
     }
     
+    // Handle request body serialization
+    const requestOptions: RequestInit = {
+      ...options,
+      headers,
+      credentials: 'include',
+    };
+
+    // Properly serialize body to JSON if it's an object
+    if (options.body !== undefined) {
+      if (typeof options.body === 'string') {
+        requestOptions.body = options.body;
+      } else if (options.body instanceof FormData) {
+        requestOptions.body = options.body;
+        // Remove Content-Type header for FormData
+        delete (requestOptions.headers as any)['Content-Type'];
+      } else {
+        try {
+          requestOptions.body = JSON.stringify(options.body);
+        } catch (error) {
+          console.error('Failed to stringify request body:', error);
+          throw new Error('Invalid request body format');
+        }
+      }
+    }
+
     let response;
     try {
-      response = await fetch(finalUrl, {
-        ...options,
-        headers,
-        credentials: 'include',
-      });
+      response = await fetch(finalUrl, requestOptions);
     } catch (fetchError: any) {
       console.error('Fetch error occurred:', fetchError);
       if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
