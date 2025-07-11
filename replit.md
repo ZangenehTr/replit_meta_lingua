@@ -113,10 +113,18 @@ Meta Lingua is an AI-enhanced multilingual language learning and institute manag
 - Hot reload and development optimizations enabled
 
 ### Production Deployment
-- Self-contained application bundle downloadable as ZIP
+- **Primary Method**: Use Replit Deploy button for instant deployment
+- **Alternative**: Self-contained application bundle downloadable as ZIP
 - Docker containerization for easy deployment
 - Environment configuration for Iranian hosting requirements
 - No external dependencies on blocked services
+
+### Post-Deployment Maintenance Workflow
+1. **Bug Reports/Changes**: Continue development on Replit
+2. **Testing**: Verify fixes in development environment
+3. **Re-deployment**: Use Replit Deploy button to update production
+4. **Rollback**: Replit automatically maintains deployment history
+5. **Database Changes**: Run `npm run db:push` before redeployment
 
 ### Configuration Management
 - Environment-based configuration system
