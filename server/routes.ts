@@ -8738,6 +8738,29 @@ Return JSON format:
     }
   });
 
+  // Teacher Rates Management
+  app.get("/api/teachers/rates", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const teachers = await storage.getTeachersWithRates();
+      res.json(teachers);
+    } catch (error) {
+      console.error('Error fetching teacher rates:', error);
+      res.status(500).json({ error: 'Failed to fetch teacher rates' });
+    }
+  });
+
+  app.put("/api/teachers/:id/rates", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.id);
+      const { regularRate, callernRate } = req.body;
+      const updatedTeacher = await storage.updateTeacherRates(teacherId, regularRate, callernRate);
+      res.json(updatedTeacher);
+    } catch (error) {
+      console.error('Error updating teacher rates:', error);
+      res.status(500).json({ error: 'Failed to update teacher rates' });
+    }
+  });
+
   // White-Label Institute Management
   app.get("/api/admin/white-label/institutes", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {

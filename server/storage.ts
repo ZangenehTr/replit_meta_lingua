@@ -283,6 +283,8 @@ export interface IStorage {
   getTeacherPayments(period: string): Promise<any[]>;
   calculateTeacherPayments(period: string): Promise<any[]>;
   approveTeacherPayment(paymentId: number): Promise<any>;
+  getTeachersWithRates(): Promise<any[]>;
+  updateTeacherRates(teacherId: number, regularRate: number, callernRate?: number): Promise<any>;
   
   // White-Label Institute Management
   getWhiteLabelInstitutes(): Promise<any[]>;
@@ -292,6 +294,7 @@ export interface IStorage {
   // Campaign Management
   getMarketingCampaigns(): Promise<any[]>;
   createMarketingCampaign(campaign: any): Promise<any>;
+  updateMarketingCampaign(campaignId: number, updates: any): Promise<any>;
   getCampaignAnalytics(): Promise<any>;
   
   // Website Builder
@@ -1998,6 +2001,51 @@ export class MemStorage implements IStorage {
 
   async approveTeacherPayment(paymentId: number): Promise<any> {
     return { id: paymentId, status: 'approved' };
+  }
+
+  async getTeachersWithRates(): Promise<any[]> {
+    return [
+      {
+        id: 1,
+        name: "محمد احمدی",
+        hourlyRate: 75000,
+        callernRate: 65000,
+        totalSessions: 45,
+        totalHours: 68,
+        performance: 4.8,
+        department: 'both'
+      },
+      {
+        id: 2,
+        name: "فاطمه صادقی",
+        hourlyRate: 80000,
+        callernRate: null,
+        totalSessions: 38,
+        totalHours: 57,
+        performance: 4.9,
+        department: 'regular'
+      },
+      {
+        id: 3,
+        name: "علی رضایی",
+        hourlyRate: 70000,
+        callernRate: 60000,
+        totalSessions: 29,
+        totalHours: 44,
+        performance: 4.6,
+        department: 'both'
+      }
+    ];
+  }
+
+  async updateTeacherRates(teacherId: number, regularRate: number, callernRate?: number): Promise<any> {
+    return {
+      id: teacherId,
+      hourlyRate: regularRate,
+      callernRate: callernRate,
+      updatedAt: new Date().toISOString(),
+      message: 'Teacher rates updated successfully'
+    };
   }
 
   async getWhiteLabelInstitutes(): Promise<any[]> {
