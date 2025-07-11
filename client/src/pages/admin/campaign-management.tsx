@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   Megaphone, 
   Target, 
@@ -28,7 +31,16 @@ import {
   Instagram,
   Youtube,
   Linkedin,
-  Twitter
+  Twitter,
+  Send,
+  MessageSquare,
+  Bot,
+  Zap,
+  Upload,
+  Download,
+  Eye,
+  Edit,
+  Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -59,6 +71,12 @@ export default function CampaignManagementPage() {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [showNewCampaignDialog, setShowNewCampaignDialog] = useState(false);
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [showTelegramDialog, setShowTelegramDialog] = useState(false);
+  const [showAIDialog, setShowAIDialog] = useState(false);
+  const [emailContent, setEmailContent] = useState('');
+  const [telegramContent, setTelegramContent] = useState('');
+  const [aiResponse, setAIResponse] = useState('');
 
   // Fetch campaigns data
   const { data: campaigns = [], isLoading } = useQuery<Campaign[]>({
@@ -247,31 +265,245 @@ export default function CampaignManagementPage() {
     }
   ];
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            360° Campaign Management
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Professional marketing tools & social media integration
-          </p>
-        </div>
-        <div className="flex space-x-2">
-          <Button variant="outline">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
-          </Button>
-          <Button onClick={handleNewCampaign} disabled={createCampaignMutation.isPending}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Campaign
-          </Button>
-        </div>
-      </div>
+  // Email broadcast mutation
+  const sendEmailMutation = useMutation({
+    mutationFn: async (emailData: { recipients: string[], subject: string, content: string }) => {
+      return apiRequest('/api/admin/send-email', {
+        method: 'POST',
+        body: emailData
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Email sent successfully to all students" });
+      setShowEmailDialog(false);
+      setEmailContent('');
+    },
+    onError: () => {
+      toast({ title: "Failed to send email", variant: "destructive" });
+    }
+  });
 
-      {/* Campaign Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+  // Telegram automation mutation
+  const telegramMutation = useMutation({
+    mutationFn: async (telegramData: { channelId: string, message: string, autoReply: boolean }) => {
+      return apiRequest('/api/admin/telegram-automation', {
+        method: 'POST',
+        body: telegramData
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Telegram message sent and auto-reply configured" });
+      setShowTelegramDialog(false);
+      setTelegramContent('');
+    },
+    onError: () => {
+      toast({ title: "Failed to configure Telegram automation", variant: "destructive" });
+    }
+  });
+
+  // AI assistant mutation
+  const aiAssistantMutation = useMutation({
+    mutationFn: async (query: string) => {
+      return apiRequest('/api/admin/ai-assistant', {
+        method: 'POST',
+        body: { query }
+      });
+    },
+    onSuccess: (data) => {
+      setAIResponse(data.response);
+      toast({ title: "AI assistant responded successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to get AI response", variant: "destructive" });
+    }
+  });
+
+  // Handle email broadcast
+  const handleEmailBroadcast = async () => {
+    if (!emailContent.trim()) {
+      toast({ title: "Please enter email content", variant: "destructive" });
+      return;
+    }
+
+    sendEmailMutation.mutate({
+      recipients: ['all_students'],
+      subject: 'Important Update from Meta Lingua',
+      content: emailContent
+    });
+  };
+
+  // Handle Telegram automation
+  const handleTelegramAutomation = async () => {
+    if (!telegramContent.trim()) {
+      toast({ title: "Please enter Telegram message", variant: "destructive" });
+      return;
+    }
+
+    telegramMutation.mutate({
+      channelId: '@metalingua_channel',
+      message: telegramContent,
+      autoReply: true
+    });
+  };
+
+  // Handle AI assistant
+  const handleAIAssistant = async (query: string) => {
+    aiAssistantMutation.mutate(query);
+  };
+
+  return (
+    <AppLayout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              360° Campaign Management
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Professional marketing tools & social media integration
+            </p>
+          </div>
+          <div className="flex space-x-2">
+            <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Mail className="h-4 w-4 mr-2" />
+                  Email Broadcast
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Send Email to All Students</DialogTitle>
+                  <DialogDescription>
+                    Broadcast email to all registered students
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="emailContent">Email Content</Label>
+                    <Textarea
+                      id="emailContent"
+                      placeholder="Enter your email message..."
+                      value={emailContent}
+                      onChange={(e) => setEmailContent(e.target.value)}
+                      rows={5}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleEmailBroadcast} disabled={sendEmailMutation.isPending}>
+                      <Send className="h-4 w-4 mr-2" />
+                      {sendEmailMutation.isPending ? 'Sending...' : 'Send Email'}
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowEmailDialog(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={showTelegramDialog} onOpenChange={setShowTelegramDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Telegram Automation
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Telegram Channel Automation</DialogTitle>
+                  <DialogDescription>
+                    Post to Telegram channel with auto-reply enabled
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="telegramContent">Message Content</Label>
+                    <Textarea
+                      id="telegramContent"
+                      placeholder="Enter your Telegram message..."
+                      value={telegramContent}
+                      onChange={(e) => setTelegramContent(e.target.value)}
+                      rows={5}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch defaultChecked />
+                    <Label>Enable AI Auto-Reply</Label>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleTelegramAutomation} disabled={telegramMutation.isPending}>
+                      <Send className="h-4 w-4 mr-2" />
+                      {telegramMutation.isPending ? 'Sending...' : 'Send & Configure'}
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowTelegramDialog(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={showAIDialog} onOpenChange={setShowAIDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Bot className="h-4 w-4 mr-2" />
+                  AI Assistant
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Fine-tuned AI Assistant</DialogTitle>
+                  <DialogDescription>
+                    Query the AI assistant for marketing insights
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="aiQuery">Your Question</Label>
+                    <Input
+                      id="aiQuery"
+                      placeholder="e.g., How can I improve student engagement?"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAIAssistant(e.currentTarget.value);
+                        }
+                      }}
+                    />
+                  </div>
+                  {aiResponse && (
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm">{aiResponse}</p>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => {
+                        const input = document.getElementById('aiQuery') as HTMLInputElement;
+                        if (input?.value) handleAIAssistant(input.value);
+                      }}
+                      disabled={aiAssistantMutation.isPending}
+                    >
+                      <Bot className="h-4 w-4 mr-2" />
+                      {aiAssistantMutation.isPending ? 'Asking...' : 'Ask AI'}
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowAIDialog(false)}>
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Button onClick={handleNewCampaign} disabled={createCampaignMutation.isPending}>
+              <Plus className="h-4 w-4 mr-2" />
+              {createCampaignMutation.isPending ? 'Creating...' : 'New Campaign'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Campaign Overview Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -707,6 +939,7 @@ export default function CampaignManagementPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

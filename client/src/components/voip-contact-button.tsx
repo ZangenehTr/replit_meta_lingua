@@ -14,6 +14,16 @@ export function VoIPContactButton({ phoneNumber, contactName, className }: VoIPC
   const { toast } = useToast();
 
   const handleVoIPCall = async () => {
+    // Validate phone number
+    if (!phoneNumber || phoneNumber.trim() === '') {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please provide a valid phone number to make a call.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsCallActive(true);
       
@@ -22,9 +32,10 @@ export function VoIPContactButton({ phoneNumber, contactName, className }: VoIPC
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
         body: JSON.stringify({
-          phoneNumber: phoneNumber,
+          phoneNumber: phoneNumber.trim(),
           contactName: contactName,
           callType: 'outbound',
           recordCall: true
@@ -32,7 +43,8 @@ export function VoIPContactButton({ phoneNumber, contactName, className }: VoIPC
       });
 
       if (!voipResponse.ok) {
-        throw new Error('Failed to initiate VoIP call');
+        const errorData = await voipResponse.json().catch(() => ({ error: 'Network error' }));
+        throw new Error(errorData.error || 'Failed to initiate VoIP call');
       }
 
       const callData = await voipResponse.json();
@@ -42,20 +54,62 @@ export function VoIPContactButton({ phoneNumber, contactName, className }: VoIPC
         description: `Connecting to ${contactName} at ${phoneNumber}`,
       });
 
-      // Simulate call duration tracking
+      // Log the call in communication system
+      await fetch('/api/callcenter/log-call', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify({
+          phoneNumber: phoneNumber.trim(),
+          contactName: contactName,
+          callId: callData.callId,
+          direction: 'outbound',
+          status: 'initiated'
+        })
+      });
+
+      // Monitor call status
+      const monitorCall = setInterval(async () => {
+        try {
+          const statusResponse = await fetch(`/api/voip/call-status/${callData.callId}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            }
+          });
+          
+          if (statusResponse.ok) {
+            const status = await statusResponse.json();
+            if (status.status === 'completed' || status.status === 'failed') {
+              clearInterval(monitorCall);
+              setIsCallActive(false);
+              toast({
+                title: status.status === 'completed' ? "Call Completed" : "Call Failed",
+                description: `Call with ${contactName} has been ${status.status}${status.recordingUrl ? ' and recorded' : ''}`,
+                variant: status.status === 'completed' ? 'default' : 'destructive'
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error monitoring call:', error);
+        }
+      }, 2000);
+
+      // Cleanup after 30 seconds if still active
       setTimeout(() => {
-        setIsCallActive(false);
-        toast({
-          title: "Call Recorded",
-          description: `Call with ${contactName} has been recorded via Isabel VoIP`,
-        });
-      }, 5000);
+        if (isCallActive) {
+          clearInterval(monitorCall);
+          setIsCallActive(false);
+        }
+      }, 30000);
 
     } catch (error) {
       setIsCallActive(false);
+      console.error('VoIP call error:', error);
       toast({
         title: "VoIP Call Failed",
-        description: "Unable to connect via Isabel VoIP line. Please check configuration.",
+        description: error.message || "Unable to connect via Isabel VoIP line. Please check configuration.",
         variant: "destructive",
       });
     }

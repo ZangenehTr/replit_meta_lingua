@@ -1,4 +1,6 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,8 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Globe, 
   Layout, 
@@ -50,7 +54,6 @@ import {
   Save,
   Plus
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 interface WebsiteTemplate {
   id: number;
@@ -104,6 +107,7 @@ interface WebsiteSection {
 
 export default function WebsiteBuilderPage() {
   const { toast } = useToast();
+  const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [selectedTemplate, setSelectedTemplate] = useState<WebsiteTemplate | null>(null);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -111,585 +115,669 @@ export default function WebsiteBuilderPage() {
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'fa'>('en');
   const [isRtlMode, setIsRtlMode] = useState(false);
   const [editingPage, setEditingPage] = useState<WebsitePage | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newPageData, setNewPageData] = useState({
+    title: '',
+    titleEn: '',
+    titleFa: '',
+    slug: '',
+    template: '',
+    language: 'en',
+    direction: 'ltr'
+  });
 
-  // Fetch website pages from API - NO MOCK DATA
+  // Fetch website pages from API
   const { data: websitePages = [], isLoading: pagesLoading } = useQuery<WebsitePage[]>({
     queryKey: ['/api/website-pages']
   });
 
-  // Fetch website templates from API - NO MOCK DATA  
+  // Fetch website templates from API
   const { data: websiteTemplates = [], isLoading: templatesLoading } = useQuery<WebsiteTemplate[]>({
     queryKey: ['/api/website-templates']
   });
 
   // Create new website page mutation
   const createPageMutation = useMutation({
-    mutationFn: async (pageData: Partial<WebsitePage>) => {
+    mutationFn: async (pageData: any) => {
       return apiRequest('/api/website-pages', {
         method: 'POST',
-        body: JSON.stringify(pageData)
+        body: pageData
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/website-pages'] });
       toast({
-        title: "Success",
-        description: "Website page created successfully",
+        title: "Page Created",
+        description: "New website page has been created successfully.",
+      });
+      setIsCreateDialogOpen(false);
+      setNewPageData({
+        title: '',
+        titleEn: '',
+        titleFa: '',
+        slug: '',
+        template: '',
+        language: 'en',
+        direction: 'ltr'
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/website-pages'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create page. Please try again.",
+        variant: "destructive",
       });
     }
   });
 
   // Update website page mutation
   const updatePageMutation = useMutation({
-    mutationFn: async (pageData: Partial<WebsitePage>) => {
-      return apiRequest(`/api/website-pages/${pageData.id}`, {
+    mutationFn: async ({ id, data }: { id: number, data: any }) => {
+      return apiRequest(`/api/website-pages/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(pageData)
+        body: data
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/website-pages'] });
       toast({
-        title: "Success", 
-        description: "Website page updated successfully",
+        title: "Page Updated",
+        description: "Website page has been updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/website-pages'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update page. Please try again.",
+        variant: "destructive",
       });
     }
   });
 
-  // Delete website page mutation
-  const deletePageMutation = useMutation({
-    mutationFn: async (pageId: number) => {
-      return apiRequest(`/api/website-pages/${pageId}`, {
-        method: 'DELETE'
+  // Deploy website mutation
+  const deployWebsiteMutation = useMutation({
+    mutationFn: async (deploymentData: any) => {
+      return apiRequest('/api/website-deploy', {
+        method: 'POST',
+        body: deploymentData
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/website-pages'] });
+    onSuccess: (data) => {
       toast({
-        title: "Success",
-        description: "Website page deleted successfully",
+        title: "Website Deployed",
+        description: `Website is now live at ${data.url}`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Deployment Failed",
+        description: "Failed to deploy website. Please try again.",
+        variant: "destructive",
       });
     }
   });
 
-  // Professional Farsi-supported page elements
-  const farsiPageElements = [
-    { type: 'hero', label: 'Hero Section', labelEn: 'Hero Section', labelFa: 'بخش اصلی', icon: Layout },
-    { type: 'courses', label: 'Course Grid', labelEn: 'Course Grid', labelFa: 'شبکه دوره‌ها', icon: BookOpen },
-    { type: 'teachers', label: 'Teacher Profiles', labelEn: 'Teacher Profiles', labelFa: 'پروفایل استادان', icon: Users },
-    { type: 'testimonials', label: 'Testimonials', labelEn: 'Testimonials', labelFa: 'نظرات دانشجویان', icon: Star },
-    { type: 'pricing', label: 'Pricing Table', labelEn: 'Pricing Table', labelFa: 'جدول قیمت‌ها', icon: CheckCircle },
-    { type: 'contact', label: 'Contact Form', labelEn: 'Contact Form', labelFa: 'فرم تماس', icon: Phone },
-    { type: 'social', label: 'Social Media', labelEn: 'Social Media', labelFa: 'رسانه‌های اجتماعی', icon: Instagram },
-    { type: 'calendar', label: 'Event Calendar', labelEn: 'Event Calendar', labelFa: 'تقویم رویدادها', icon: Calendar },
-    { type: 'about', label: 'About Us', labelEn: 'About Us', labelFa: 'درباره ما', icon: FileText },
-    { type: 'gallery', label: 'Media Gallery', labelEn: 'Media Gallery', labelFa: 'گالری تصاویر', icon: Image },
-    { type: 'video', label: 'Video Section', labelEn: 'Video Section', labelFa: 'بخش ویدیو', icon: Video },
-    { type: 'faq', label: 'FAQ Section', labelEn: 'FAQ Section', labelFa: 'پرسش‌های متداول', icon: MessageSquare }
-  ];
+  // Handle template selection
+  const handleTemplateSelection = (template: WebsiteTemplate) => {
+    setSelectedTemplate(template);
+    setIsRtlMode(template.isRtlSupported);
+  };
 
-  const socialIntegrations = [
-    { platform: 'Instagram', icon: Instagram, color: 'bg-pink-500', connected: true },
-    { platform: 'YouTube', icon: Youtube, color: 'bg-red-500', connected: true },
-    { platform: 'LinkedIn', icon: Linkedin, color: 'bg-blue-600', connected: false },
-    { platform: 'Twitter', icon: Twitter, color: 'bg-blue-400', connected: true },
-    { platform: 'Telegram', icon: MessageSquare, color: 'bg-blue-500', connected: true }
-  ];
-
-  const handleCreatePage = () => {
+  // Handle page creation
+  const handleCreatePage = async () => {
     if (!selectedTemplate) {
       toast({
         title: "Error",
-        description: "Please select a template first",
-        variant: "destructive"
+        description: "Please select a template first.",
+        variant: "destructive",
       });
       return;
     }
 
-    const newPage = {
-      title: `New ${selectedTemplate.name} Page`,
-      titleEn: `New ${selectedTemplate.nameEn || selectedTemplate.name} Page`,
-      titleFa: `صفحه جدید ${selectedTemplate.nameFa || selectedTemplate.name}`,
-      slug: `new-${selectedTemplate.category}-page-${Date.now()}`,
-      template: selectedTemplate.name,
-      status: 'draft' as const,
-      language: currentLanguage,
-      direction: isRtlMode ? 'rtl' as const : 'ltr' as const,
+    const fullPageData = {
+      ...newPageData,
+      template: selectedTemplate.id,
+      status: 'draft',
       content: {
-        sections: []
+        sections: generateDefaultSections(selectedTemplate)
       }
     };
 
-    createPageMutation.mutate(newPage);
+    createPageMutation.mutate(fullPageData);
+  };
+
+  // Generate default sections based on template
+  const generateDefaultSections = (template: WebsiteTemplate): WebsiteSection[] => {
+    const sections: WebsiteSection[] = [];
+    
+    // Hero section
+    sections.push({
+      id: 'hero',
+      type: 'hero',
+      label: 'Hero Section',
+      labelEn: 'Hero Section',
+      labelFa: 'بخش اصلی',
+      content: {
+        en: {
+          title: 'Learn English with Expert Teachers',
+          subtitle: 'Join our comprehensive English learning program',
+          buttonText: 'Start Learning',
+          backgroundImage: '/api/placeholder/1200/600'
+        },
+        fa: {
+          title: 'یادگیری انگلیسی با اساتید متخصص',
+          subtitle: 'به برنامه جامع آموزش انگلیسی ما بپیوندید',
+          buttonText: 'شروع یادگیری',
+          backgroundImage: '/api/placeholder/1200/600'
+        }
+      },
+      styles: {
+        direction: isRtlMode ? 'rtl' : 'ltr',
+        textAlign: isRtlMode ? 'right' : 'left',
+        fontFamily: isRtlMode ? 'Vazir' : 'Inter'
+      }
+    });
+
+    // Courses section
+    sections.push({
+      id: 'courses',
+      type: 'courses',
+      label: 'Courses Section',
+      labelEn: 'Courses Section',
+      labelFa: 'بخش دوره‌ها',
+      content: {
+        en: {
+          title: 'Our Courses',
+          subtitle: 'Choose from our wide range of English courses',
+          showPricing: true,
+          showOnlinePayment: true,
+          coursesDisplayMode: 'cards'
+        },
+        fa: {
+          title: 'دوره‌های ما',
+          subtitle: 'از میان طیف گسترده‌ای از دوره‌های انگلیسی انتخاب کنید',
+          showPricing: true,
+          showOnlinePayment: true,
+          coursesDisplayMode: 'cards'
+        }
+      },
+      styles: {
+        direction: isRtlMode ? 'rtl' : 'ltr',
+        textAlign: isRtlMode ? 'right' : 'left',
+        fontFamily: isRtlMode ? 'Vazir' : 'Inter'
+      }
+    });
+
+    return sections;
+  };
+
+  // Handle page deployment
+  const handleDeployment = async (pageId: number) => {
+    const page = websitePages.find(p => p.id === pageId);
+    if (!page) return;
+
+    const deploymentData = {
+      pageId: pageId,
+      domain: `${page.slug}.iranlearn.ir`,
+      customDomain: null,
+      sslEnabled: true,
+      seoSettings: {
+        title: page.title,
+        description: `${page.title} - Professional English Learning`,
+        keywords: ['english', 'learning', 'courses', 'iran', 'language'],
+        ogImage: '/api/placeholder/1200/630'
+      },
+      analytics: {
+        googleAnalytics: '',
+        facebookPixel: '',
+        hotjar: ''
+      },
+      integrations: {
+        paymentGateway: 'shetab',
+        smsProvider: 'kavenegar',
+        emailProvider: 'internal'
+      }
+    };
+
+    deployWebsiteMutation.mutate(deploymentData);
   };
 
   return (
-    <div className="space-y-6" dir={isRtlMode ? 'rtl' : 'ltr'}>
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {currentLanguage === 'fa' ? 'سایت ساز و صفحات تبلیغاتی' : 'Website Builder & Campaign Pages'}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            {currentLanguage === 'fa' 
-              ? 'ایجاد وب‌سایت‌های بهینه شده برای تبدیل با پشتیبانی کامل فارسی'
-              : 'Create conversion-optimized websites with full Farsi support'
-            }
-          </p>
-        </div>
-        <div className="flex space-x-2 rtl:space-x-reverse">
-          {/* Language Toggle */}
-          <Button 
-            variant="outline" 
-            onClick={() => setCurrentLanguage(currentLanguage === 'en' ? 'fa' : 'en')}
-          >
-            <Languages className="h-4 w-4 mr-2" />
-            {currentLanguage === 'en' ? 'فارسی' : 'English'}
-          </Button>
-          
-          {/* RTL Toggle */}
-          <Button 
-            variant="outline" 
-            onClick={() => setIsRtlMode(!isRtlMode)}
-          >
-            {isRtlMode ? <AlignLeft className="h-4 w-4" /> : <AlignRight className="h-4 w-4" />}
-          </Button>
-          
-          <Button variant="outline">
-            <Eye className="h-4 w-4 mr-2" />
-            {currentLanguage === 'fa' ? 'پیش‌نمایش' : 'Preview'}
-          </Button>
-          <Button onClick={handleCreatePage} disabled={createPageMutation.isPending}>
-            <Plus className="h-4 w-4 mr-2" />
-            {currentLanguage === 'fa' ? 'صفحه جدید' : 'New Page'}
-          </Button>
-        </div>
-      </div>
-
-      <Tabs defaultValue="pages" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="pages">
-            {currentLanguage === 'fa' ? 'صفحات' : 'Pages'}
-          </TabsTrigger>
-          <TabsTrigger value="templates">
-            {currentLanguage === 'fa' ? 'قالب‌ها' : 'Templates'}
-          </TabsTrigger>
-          <TabsTrigger value="builder">
-            {currentLanguage === 'fa' ? 'ویرایشگر' : 'Builder'}
-          </TabsTrigger>
-          <TabsTrigger value="analytics">
-            {currentLanguage === 'fa' ? 'آمار' : 'Analytics'}
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Existing Pages Tab */}
-        <TabsContent value="pages">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {currentLanguage === 'fa' ? 'صفحات موجود' : 'Existing Pages'}
-              </CardTitle>
-              <CardDescription>
-                {currentLanguage === 'fa' 
-                  ? 'مدیریت و ویرایش صفحات وب‌سایت با پشتیبانی دو زبانه'
-                  : 'Manage and edit your website pages with bilingual support'
-                }
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pagesLoading ? (
-                <div className="text-center py-8">
-                  {currentLanguage === 'fa' ? 'در حال بارگذاری...' : 'Loading...'}
-                </div>
-              ) : websitePages.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  {currentLanguage === 'fa' 
-                    ? 'هیچ صفحه‌ای یافت نشد. اولین صفحه خود را ایجاد کنید!'
-                    : 'No pages found. Create your first page!'
-                  }
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {websitePages.map((page: any) => (
-                    <Card key={page.id} className="hover:shadow-lg transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <CardTitle className="text-lg">
-                              {currentLanguage === 'fa' ? page.titleFa || page.title : page.titleEn || page.title}
-                            </CardTitle>
-                            <p className="text-sm text-gray-500">{page.slug}</p>
-                          </div>
-                          <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
-                            {page.status}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span>{currentLanguage === 'fa' ? 'بازدید:' : 'Visits:'}</span>
-                            <span className="font-bold">{page.visits?.toLocaleString() || 0}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>{currentLanguage === 'fa' ? 'تبدیل:' : 'Conversions:'}</span>
-                            <span className="font-bold">{page.conversions || 0}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>{currentLanguage === 'fa' ? 'آخرین تغییر:' : 'Last Modified:'}</span>
-                            <span>{page.lastModified}</span>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2 mt-4 rtl:space-x-reverse">
-                          <Button size="sm" variant="outline" onClick={() => setEditingPage(page)}>
-                            <Edit2 className="h-3 w-3 mr-1" />
-                            {currentLanguage === 'fa' ? 'ویرایش' : 'Edit'}
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Eye className="h-3 w-3 mr-1" />
-                            {currentLanguage === 'fa' ? 'نمایش' : 'View'}
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Copy className="h-3 w-3 mr-1" />
-                            {currentLanguage === 'fa' ? 'کپی' : 'Copy'}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Templates Tab */}
-        <TabsContent value="templates">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {currentLanguage === 'fa' ? 'قالب‌های حرفه‌ای' : 'Professional Templates'}
-              </CardTitle>
-              <CardDescription>
-                {currentLanguage === 'fa' 
-                  ? 'قالب‌های آماده با پشتیبانی کامل RTL و فارسی'
-                  : 'Ready-made templates with full RTL and Farsi support'
-                }
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {templatesLoading ? (
-                <div className="text-center py-8">
-                  {currentLanguage === 'fa' ? 'در حال بارگذاری قالب‌ها...' : 'Loading templates...'}
-                </div>
-              ) : websiteTemplates.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  {currentLanguage === 'fa' 
-                    ? 'هیچ قالبی یافت نشد.'
-                    : 'No templates found.'
-                  }
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {websiteTemplates.map((template: any) => (
-                    <Card 
-                      key={template.id} 
-                      className={`cursor-pointer transition-all hover:shadow-lg ${
-                        selectedTemplate?.id === template.id ? 'ring-2 ring-blue-500' : ''
-                      }`}
-                      onClick={() => setSelectedTemplate(template)}
-                    >
-                      <CardHeader className="p-0">
-                        <div className="h-40 bg-gradient-to-br from-blue-500 to-purple-600 rounded-t-lg flex items-center justify-center">
-                          <Globe className="h-12 w-12 text-white" />
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <CardTitle className="text-lg mb-2">
-                          {currentLanguage === 'fa' ? template.nameFa || template.name : template.nameEn || template.name}
-                        </CardTitle>
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap gap-1">
-                            {(currentLanguage === 'fa' ? template.featuresFa || template.features : template.featuresEn || template.features)
-                              ?.slice(0, 3)
-                              .map((feature: string, index: number) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
-                                  {feature}
-                                </Badge>
-                              ))
-                            }
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="flex items-center">
-                              <Smartphone className="h-3 w-3 mr-1" />
-                              {template.isResponsive ? 
-                                (currentLanguage === 'fa' ? 'ریسپانسیو' : 'Responsive') : 
-                                (currentLanguage === 'fa' ? 'غیر ریسپانسیو' : 'Not Responsive')
-                              }
-                            </span>
-                            <span className="flex items-center">
-                              <Languages className="h-3 w-3 mr-1" />
-                              {template.isRtlSupported ? 
-                                (currentLanguage === 'fa' ? 'RTL' : 'RTL Support') : 
-                                (currentLanguage === 'fa' ? 'LTR فقط' : 'LTR Only')
-                              }
-                            </span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Page Builder Tab */}
-        <TabsContent value="builder">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Page Elements Panel */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {currentLanguage === 'fa' ? 'عناصر صفحه' : 'Page Elements'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {farsiPageElements.map((element) => {
-                    const IconComponent = element.icon;
-                    return (
-                      <div
-                        key={element.type}
-                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                          activeSection === element.type ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
-                        }`}
-                        onClick={() => setActiveSection(element.type)}
-                      >
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                          <IconComponent className="h-4 w-4" />
-                          <span className="text-sm">
-                            {currentLanguage === 'fa' ? element.labelFa : element.labelEn}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Page Builder Canvas */}
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg">
-                    {currentLanguage === 'fa' ? 'طراح صفحه' : 'Page Builder'}
-                  </CardTitle>
-                  <div className="flex space-x-2 rtl:space-x-reverse">
-                    <Button
-                      size="sm"
-                      variant={previewMode === 'desktop' ? 'default' : 'outline'}
-                      onClick={() => setPreviewMode('desktop')}
-                    >
-                      <Monitor className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={previewMode === 'tablet' ? 'default' : 'outline'}
-                      onClick={() => setPreviewMode('tablet')}
-                    >
-                      <Tablet className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={previewMode === 'mobile' ? 'default' : 'outline'}
-                      onClick={() => setPreviewMode('mobile')}
-                    >
-                      <Smartphone className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className={`border rounded-lg bg-white min-h-96 ${
-                  previewMode === 'desktop' ? 'w-full' :
-                  previewMode === 'tablet' ? 'w-3/4 mx-auto' : 'w-1/2 mx-auto'
-                } transition-all duration-300`}>
-                  <div className="p-8 text-center text-gray-400">
-                    <Layout className="h-16 w-16 mx-auto mb-4" />
-                    <p>
-                      {currentLanguage === 'fa' 
-                        ? 'برای شروع، یک عنصر از پنل سمت چپ انتخاب کنید'
-                        : 'Select an element from the left panel to start building'
-                      }
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Properties Panel */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {currentLanguage === 'fa' ? 'تنظیمات' : 'Properties'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="language-select">
-                      {currentLanguage === 'fa' ? 'زبان محتوا' : 'Content Language'}
-                    </Label>
-                    <Select value={currentLanguage} onValueChange={(value: 'en' | 'fa') => setCurrentLanguage(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="fa">فارسی</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <Switch 
-                      id="rtl-mode" 
-                      checked={isRtlMode} 
-                      onCheckedChange={setIsRtlMode} 
-                    />
-                    <Label htmlFor="rtl-mode">
-                      {currentLanguage === 'fa' ? 'حالت راست به چپ' : 'RTL Mode'}
-                    </Label>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="font-select">
-                      {currentLanguage === 'fa' ? 'فونت' : 'Font Family'}
-                    </Label>
-                    <Select defaultValue="default">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="default">
-                          {currentLanguage === 'fa' ? 'پیش‌فرض' : 'Default'}
-                        </SelectItem>
-                        <SelectItem value="vazir">Vazir (فارسی)</SelectItem>
-                        <SelectItem value="tanha">Tanha (فارسی)</SelectItem>
-                        <SelectItem value="inter">Inter</SelectItem>
-                        <SelectItem value="roboto">Roboto</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button className="w-full" disabled={updatePageMutation.isPending}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {currentLanguage === 'fa' ? 'ذخیره تغییرات' : 'Save Changes'}
+    <AppLayout>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Website Builder
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300">
+                Create responsive, SEO-optimized websites with online payment integration
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setCurrentLanguage(currentLanguage === 'en' ? 'fa' : 'en')}
+                variant="outline"
+              >
+                <Languages className="w-4 h-4 mr-2" />
+                {currentLanguage === 'en' ? 'English' : 'فارسی'}
+              </Button>
+              <Button 
+                onClick={() => setIsRtlMode(!isRtlMode)}
+                variant="outline"
+              >
+                <AlignRight className="w-4 h-4 mr-2" />
+                {isRtlMode ? 'RTL' : 'LTR'}
+              </Button>
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Page
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Create New Website Page</DialogTitle>
+                    <DialogDescription>
+                      Create a new page for your website with SEO optimization and payment integration
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="title">Page Title</Label>
+                      <Input
+                        id="title"
+                        value={newPageData.title}
+                        onChange={(e) => setNewPageData({ ...newPageData, title: e.target.value })}
+                        placeholder="Enter page title"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="slug">URL Slug</Label>
+                      <Input
+                        id="slug"
+                        value={newPageData.slug}
+                        onChange={(e) => setNewPageData({ ...newPageData, slug: e.target.value })}
+                        placeholder="page-url-slug"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="titleEn">Title (English)</Label>
+                      <Input
+                        id="titleEn"
+                        value={newPageData.titleEn}
+                        onChange={(e) => setNewPageData({ ...newPageData, titleEn: e.target.value })}
+                        placeholder="English title"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="titleFa">Title (Persian)</Label>
+                      <Input
+                        id="titleFa"
+                        value={newPageData.titleFa}
+                        onChange={(e) => setNewPageData({ ...newPageData, titleFa: e.target.value })}
+                        placeholder="عنوان فارسی"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="language">Language</Label>
+                      <Select value={newPageData.language} onValueChange={(value) => setNewPageData({ ...newPageData, language: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="en">English</SelectItem>
+                          <SelectItem value="fa">فارسی</SelectItem>
+                          <SelectItem value="both">Both</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="direction">Text Direction</Label>
+                      <Select value={newPageData.direction} onValueChange={(value) => setNewPageData({ ...newPageData, direction: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select direction" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ltr">Left to Right</SelectItem>
+                          <SelectItem value="rtl">Right to Left</SelectItem>
+                          <SelectItem value="auto">Auto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleCreatePage}
+                      disabled={createPageMutation.isPending}
+                    >
+                      {createPageMutation.isPending ? 'Creating...' : 'Create Page'}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
-        </TabsContent>
 
-        {/* Analytics Tab */}
-        <TabsContent value="analytics">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <TrendingUp className="h-5 w-5 mr-2" />
-                  {currentLanguage === 'fa' ? 'آمار بازدید' : 'Page Views'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
-                  {websitePages.reduce((total: number, page: any) => total + (page.visits || 0), 0).toLocaleString()}
-                </div>
-                <p className="text-sm text-gray-600">
-                  {currentLanguage === 'fa' ? 'کل بازدیدها' : 'Total visits'}
-                </p>
-              </CardContent>
-            </Card>
+          <Tabs defaultValue="pages" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="pages">Pages</TabsTrigger>
+              <TabsTrigger value="templates">Templates</TabsTrigger>
+              <TabsTrigger value="builder">Builder</TabsTrigger>
+              <TabsTrigger value="deploy">Deploy</TabsTrigger>
+            </TabsList>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Target className="h-5 w-5 mr-2" />
-                  {currentLanguage === 'fa' ? 'نرخ تبدیل' : 'Conversion Rate'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
-                  {websitePages.length > 0 
-                    ? `${((websitePages.reduce((total: number, page: any) => total + (page.conversions || 0), 0) / 
-                         websitePages.reduce((total: number, page: any) => total + (page.visits || 0), 0)) * 100).toFixed(1)}%`
-                    : '0%'
-                  }
-                </div>
-                <p className="text-sm text-gray-600">
-                  {currentLanguage === 'fa' ? 'متوسط تبدیل' : 'Average conversion'}
-                </p>
-              </CardContent>
-            </Card>
+            <TabsContent value="pages" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold">Website Pages</h2>
+              </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Globe className="h-5 w-5 mr-2" />
-                  {currentLanguage === 'fa' ? 'صفحات فعال' : 'Active Pages'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
-                  {websitePages.filter((page: any) => page.status === 'published').length}
-                </div>
-                <p className="text-sm text-gray-600">
-                  {currentLanguage === 'fa' ? 'منتشر شده' : 'Published pages'}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Social Media Integration */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>
-                {currentLanguage === 'fa' ? 'اتصال رسانه‌های اجتماعی' : 'Social Media Integration'}
-              </CardTitle>
-              <CardDescription>
-                {currentLanguage === 'fa' 
-                  ? 'مدیریت اتصالات شبکه‌های اجتماعی'
-                  : 'Manage your social media connections'
-                }
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                {socialIntegrations.map((social, index) => (
-                  <Card key={index} className="text-center">
-                    <CardContent className="p-4">
-                      <div className={`${social.color} w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3`}>
-                        <social.icon className="h-6 w-6 text-white" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {websitePages.map((page) => (
+                  <Card key={page.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-lg">{page.title}</CardTitle>
+                          <CardDescription>/{page.slug}</CardDescription>
+                        </div>
+                        <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
+                          {page.status}
+                        </Badge>
                       </div>
-                      <h3 className="font-semibold mb-2">{social.platform}</h3>
-                      <Badge variant={social.connected ? 'default' : 'secondary'}>
-                        {social.connected 
-                          ? (currentLanguage === 'fa' ? 'متصل' : 'Connected')
-                          : (currentLanguage === 'fa' ? 'قطع' : 'Disconnected')
-                        }
-                      </Badge>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <Eye className="w-4 h-4" />
+                            {page.visits} visits
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Target className="w-4 h-4" />
+                            {((page.conversions / page.visits) * 100 || 0).toFixed(1)}% conversion
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            onClick={() => setEditingPage(page)}
+                            className="flex-1"
+                          >
+                            <Edit2 className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeployment(page.id)}
+                            disabled={deployWebsiteMutation.isPending}
+                            className="flex-1"
+                          >
+                            <Globe className="w-4 h-4 mr-1" />
+                            {deployWebsiteMutation.isPending ? 'Deploying...' : 'Deploy'}
+                          </Button>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+
+              {websitePages.length === 0 && (
+                <div className="text-center py-12">
+                  <Globe className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    No pages created yet
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Create your first website page to get started.
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="templates" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {websiteTemplates.map((template) => (
+                  <Card key={template.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-lg">
+                            {currentLanguage === 'en' ? template.nameEn : template.nameFa}
+                          </CardTitle>
+                          <CardDescription>{template.category}</CardDescription>
+                        </div>
+                        <div className="flex gap-1">
+                          {template.isResponsive && (
+                            <Badge variant="secondary">
+                              <Smartphone className="w-3 h-3 mr-1" />
+                              Responsive
+                            </Badge>
+                          )}
+                          {template.isRtlSupported && (
+                            <Badge variant="secondary">
+                              <AlignRight className="w-3 h-3 mr-1" />
+                              RTL
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
+                          <Eye className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {(currentLanguage === 'en' ? template.featuresEn : template.featuresFa).map((feature, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {feature}
+                            </Badge>
+                          ))}
+                        </div>
+                        <Button 
+                          onClick={() => handleTemplateSelection(template)}
+                          className="w-full"
+                          variant={selectedTemplate?.id === template.id ? 'default' : 'outline'}
+                        >
+                          {selectedTemplate?.id === template.id ? 'Selected' : 'Select Template'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="builder" className="space-y-6">
+              {editingPage ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Page Editor</CardTitle>
+                        <CardDescription>Edit your page content and styling</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                            <Layout className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-500">
+                              Page builder interface - drag and drop sections here
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="lg:col-span-1">
+                    <Card>
+                      <CardHeader>
+                        <div className="flex justify-between items-center">
+                          <CardTitle>Preview</CardTitle>
+                          <div className="flex gap-1">
+                            <Button 
+                              size="sm" 
+                              variant={previewMode === 'desktop' ? 'default' : 'outline'}
+                              onClick={() => setPreviewMode('desktop')}
+                            >
+                              <Monitor className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={previewMode === 'tablet' ? 'default' : 'outline'}
+                              onClick={() => setPreviewMode('tablet')}
+                            >
+                              <Tablet className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant={previewMode === 'mobile' ? 'default' : 'outline'}
+                              onClick={() => setPreviewMode('mobile')}
+                            >
+                              <Smartphone className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className={`border rounded-lg overflow-hidden ${
+                          previewMode === 'desktop' ? 'h-96' : 
+                          previewMode === 'tablet' ? 'h-80 max-w-sm mx-auto' : 
+                          'h-64 max-w-xs mx-auto'
+                        }`}>
+                          <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-full flex items-center justify-center text-white">
+                            <div className="text-center">
+                              <h3 className="text-lg font-bold mb-2">Live Preview</h3>
+                              <p className="text-sm opacity-90">
+                                {editingPage.title}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="mt-4">
+                      <CardContent className="pt-6">
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={() => updatePageMutation.mutate({ id: editingPage.id, data: editingPage })}
+                            disabled={updatePageMutation.isPending}
+                            className="flex-1"
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            {updatePageMutation.isPending ? 'Saving...' : 'Save'}
+                          </Button>
+                          <Button 
+                            onClick={() => handleDeployment(editingPage.id)}
+                            disabled={deployWebsiteMutation.isPending}
+                            variant="outline"
+                          >
+                            <Globe className="w-4 h-4 mr-2" />
+                            Deploy
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Layout className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    Select a page to edit
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Choose a page from the Pages tab to start editing.
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="deploy" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Website Deployment</CardTitle>
+                  <CardDescription>
+                    Deploy your website with SEO optimization and payment integration
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Domain Name</Label>
+                        <Input placeholder="your-site.iranlearn.ir" />
+                      </div>
+                      <div>
+                        <Label>Custom Domain (Optional)</Label>
+                        <Input placeholder="www.yoursite.com" />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <Label>SEO Settings</Label>
+                      <div className="grid grid-cols-1 gap-3">
+                        <Input placeholder="Page Title" />
+                        <Textarea placeholder="Meta Description" />
+                        <Input placeholder="Keywords (comma-separated)" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label>Payment Integration</Label>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Switch />
+                          <Label>Enable Shetab Payment Gateway</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch />
+                          <Label>Enable Bank Transfer</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch />
+                          <Label>Enable Installment Plans</Label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => {
+                          deployWebsiteMutation.mutate({
+                            domain: 'main-site.iranlearn.ir',
+                            sslEnabled: true,
+                            pages: websitePages.filter(p => p.status === 'published')
+                          });
+                        }}
+                        disabled={deployWebsiteMutation.isPending}
+                        className="flex-1"
+                      >
+                        <Globe className="w-4 h-4 mr-2" />
+                        {deployWebsiteMutation.isPending ? 'Deploying...' : 'Deploy Website'}
+                      </Button>
+                      <Button variant="outline">
+                        <Eye className="w-4 h-4 mr-2" />
+                        Preview
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    </AppLayout>
   );
 }

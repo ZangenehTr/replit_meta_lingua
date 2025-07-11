@@ -74,7 +74,7 @@ export function AdminStudents() {
   const queryClient = useQueryClient();
 
   // Handle VoIP call functionality
-  const handleVoIPCall = (student: any) => {
+  const handleVoIPCall = async (student: any) => {
     // Check if student has a phone number
     if (!student.phone) {
       toast({
@@ -85,16 +85,45 @@ export function AdminStudents() {
       return;
     }
 
-    // For now, this will be a placeholder that connects to the VoIP system
-    // In production, this would interface with your VoIP provider
-    toast({
-      title: "Initiating VoIP Call",
-      description: `Connecting to ${student.firstName} ${student.lastName} at ${student.phone}...`,
-    });
+    try {
+      // Use the VoIP API to initiate call
+      const response = await fetch('/api/voip/initiate-call', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify({
+          phoneNumber: student.phone,
+          contactName: `${student.firstName} ${student.lastName}`,
+          callType: 'outbound',
+          recordCall: true,
+          studentId: student.id
+        })
+      });
 
-    // Here you would integrate with your VoIP system
-    // Example: window.voipSystem.initiateCall(student.phone);
-    console.log(`VoIP call initiated to ${student.firstName} ${student.lastName} at ${student.phone}`);
+      if (!response.ok) {
+        throw new Error('Failed to initiate call');
+      }
+
+      const callData = await response.json();
+      
+      toast({
+        title: "VoIP Call Initiated",
+        description: `Connecting to ${student.firstName} ${student.lastName} at ${student.phone}...`,
+      });
+
+      // Log the call attempt
+      console.log(`VoIP call initiated to ${student.firstName} ${student.lastName} at ${student.phone}`, callData);
+      
+    } catch (error) {
+      console.error('VoIP call error:', error);
+      toast({
+        title: "Call Failed",
+        description: "Unable to initiate VoIP call. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle course selection and fee calculation
