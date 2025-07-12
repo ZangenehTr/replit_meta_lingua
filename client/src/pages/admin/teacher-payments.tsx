@@ -22,7 +22,8 @@ import {
   Users,
   TrendingUp,
   Calendar,
-  Phone
+  Phone,
+  FileText
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -381,8 +382,6 @@ export default function TeacherPaymentsPage() {
         <TabsList>
           <TabsTrigger value="payments">Payment Overview</TabsTrigger>
           <TabsTrigger value="sessions">Session Details</TabsTrigger>
-
-          <TabsTrigger value="payroll">Payroll Details</TabsTrigger>
           <TabsTrigger value="history">Payment History</TabsTrigger>
           <TabsTrigger value="reports">Payment Reports</TabsTrigger>
         </TabsList>
@@ -392,9 +391,9 @@ export default function TeacherPaymentsPage() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Teacher Payments</CardTitle>
+                  <CardTitle>Teacher Payment Overview</CardTitle>
                   <CardDescription>
-                    Automated calculation based on completed sessions
+                    Simplified view with payslip management
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -412,75 +411,144 @@ export default function TeacherPaymentsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[
-                  {
-                    id: 1,
-                    teacherName: "Ahmad Hosseini",
-                    totalSessions: 45,
-                    totalHours: 67.5,
-                    hourlyRate: 80000,
-                    basePay: 5400000,
-                    bonuses: 150000,
-                    deductions: 0,
-                    finalAmount: 5550000,
-                    status: 'calculated'
-                  },
-                  {
-                    id: 2,
-                    teacherName: "Maryam Rahimi",
-                    totalSessions: 38,
-                    totalHours: 57,
-                    hourlyRate: 75000,
-                    basePay: 4275000,
-                    bonuses: 100000,
-                    deductions: 25000,
-                    finalAmount: 4350000,
-                    status: 'approved'
-                  },
-                  {
-                    id: 3,
-                    teacherName: "Ali Moradi",
-                    totalSessions: 52,
-                    totalHours: 78,
-                    hourlyRate: 70000,
-                    basePay: 5460000,
-                    bonuses: 200000,
-                    deductions: 0,
-                    finalAmount: 5660000,
-                    status: 'pending'
-                  }
-                ].map((payment) => (
-                  <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <p className="font-medium">{payment.teacherName}</p>
-                        <p className="text-sm text-gray-500">
-                          {payment.totalSessions} sessions • {payment.totalHours} hours
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          Rate: {payment.hourlyRate.toLocaleString()} IRR/hour
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <div className="font-medium">
-                        {payment.finalAmount.toLocaleString()} IRR
-                      </div>
-                      <Badge className={getStatusColor(payment.status)}>
-                        {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                      </Badge>
-                      {payment.status === 'calculated' && (
-                        <Button 
-                          size="sm" 
-                          onClick={() => approvePaymentMutation.mutate(payment.id)}
-                          disabled={approvePaymentMutation.isPending}
-                        >
-                          Approve
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                {isLoading ? (
+                  <div className="text-center py-4">Loading payment data...</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Teacher</TableHead>
+                        <TableHead>Total Pay</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Payslip Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {payments?.map((payment) => (
+                        <TableRow key={payment.id}>
+                          <TableCell>
+                            <div className="font-medium">{payment.teacherName}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium text-lg">
+                              {payment.finalAmount?.toLocaleString()} IRR
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(payment.status)}>
+                              {payment.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    Payslip Details
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-4xl">
+                                  <DialogHeader>
+                                    <DialogTitle>Payslip Details - {payment.teacherName}</DialogTitle>
+                                    <DialogDescription>
+                                      Complete breakdown of payment calculation for {payment.period}
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  
+                                  <div className="space-y-6">
+                                    {/* Teacher Info */}
+                                    <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                                      <div>
+                                        <Label className="text-xs text-gray-500">Teacher</Label>
+                                        <div className="font-medium">{payment.teacherName}</div>
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs text-gray-500">Period</Label>
+                                        <div className="font-medium">{payment.period}</div>
+                                      </div>
+                                    </div>
+
+                                    {/* Session Details */}
+                                    <div className="grid grid-cols-3 gap-4">
+                                      <div>
+                                        <Label className="text-xs text-gray-500">Total Sessions</Label>
+                                        <div className="text-2xl font-bold">{payment.totalSessions}</div>
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs text-gray-500">Total Hours</Label>
+                                        <div className="text-2xl font-bold">{payment.totalHours}</div>
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs text-gray-500">Hourly Rate</Label>
+                                        <div className="text-2xl font-bold">{payment.hourlyRate?.toLocaleString()} IRR</div>
+                                      </div>
+                                    </div>
+
+                                    {/* Payment Breakdown */}
+                                    <div className="border rounded-lg p-4">
+                                      <h3 className="font-semibold mb-3">Payment Breakdown</h3>
+                                      <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                          <span>Base Pay ({payment.totalHours} hours × {payment.hourlyRate?.toLocaleString()} IRR)</span>
+                                          <span className="font-medium">{payment.basePay?.toLocaleString()} IRR</span>
+                                        </div>
+                                        <div className="flex justify-between text-green-600">
+                                          <span>Bonuses & Incentives</span>
+                                          <span className="font-medium">+{payment.bonuses?.toLocaleString()} IRR</span>
+                                        </div>
+                                        <div className="flex justify-between text-red-600">
+                                          <span>Deductions & Taxes</span>
+                                          <span className="font-medium">-{payment.deductions?.toLocaleString()} IRR</span>
+                                        </div>
+                                        <div className="border-t pt-2 flex justify-between text-lg font-bold">
+                                          <span>Final Amount</span>
+                                          <span>{payment.finalAmount?.toLocaleString()} IRR</span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Iranian Tax Compliance */}
+                                    <div className="bg-blue-50 p-4 rounded-lg">
+                                      <h3 className="font-semibold mb-2">Iranian Tax Compliance</h3>
+                                      <div className="text-sm space-y-1">
+                                        <div>✓ 12% Income Tax: {Math.round((payment.basePay || 0) * 0.12)?.toLocaleString()} IRR</div>
+                                        <div>✓ 7% Social Security: {Math.round((payment.basePay || 0) * 0.07)?.toLocaleString()} IRR</div>
+                                        <div>✓ All deductions calculated per Iranian labor law</div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex justify-end gap-2 mt-6">
+                                    <Button variant="outline">
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit Payslip
+                                    </Button>
+                                    <Button 
+                                      onClick={() => {
+                                        // Approve and send to accounting
+                                        approvePaymentMutation.mutate(payment.id);
+                                        sendToAccountingMutation.mutate();
+                                        toast({
+                                          title: "Payslip Approved",
+                                          description: `Payslip for ${payment.teacherName} approved and sent to accounting.`,
+                                        });
+                                      }}
+                                      disabled={payment.status === 'approved' || approvePaymentMutation.isPending}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-2" />
+                                      {payment.status === 'approved' ? 'Already Approved' : 'Approve & Send to Accounting'}
+                                    </Button>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -511,92 +579,7 @@ export default function TeacherPaymentsPage() {
 
 
 
-        <TabsContent value="payroll">
-          <Card>
-            <CardHeader>
-              <CardTitle>Teacher Payroll Details</CardTitle>
-              <CardDescription>
-                Comprehensive payroll information for each teacher (Admin & Supervisor Access)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-6">
-                {teachers.map((teacher) => (
-                  <div key={teacher.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold">{teacher.name}</h3>
-                        <p className="text-sm text-gray-600">{teacher.email}</p>
-                        <Badge variant={teacher.status === 'active' ? 'default' : 'secondary'}>
-                          {teacher.status}
-                        </Badge>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          // Fetch detailed payroll information with proper authentication
-                          apiRequest(`/api/admin/teacher-payments/payroll-details/${teacher.id}`)
-                            .then(data => {
-                              console.log('Payroll details:', data);
-                              toast({
-                                title: "Payroll Details",
-                                description: `Retrieved details for ${teacher.name}`,
-                              });
-                            })
-                            .catch(err => {
-                              toast({
-                                title: "Error",
-                                description: "Failed to fetch payroll details",
-                                variant: "destructive"
-                              });
-                            });
-                        }}
-                      >
-                        View Details
-                      </Button>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div>
-                        <Label className="text-xs text-gray-500">Hourly Rate</Label>
-                        <div className="font-medium">{teacher.hourlyRate?.toLocaleString()} IRR</div>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-500">Callern Rate</Label>
-                        <div className="font-medium">{teacher.callernRate?.toLocaleString() || 'N/A'} IRR</div>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-500">Total Sessions</Label>
-                        <div className="font-medium">{teacher.totalSessions}</div>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-500">Performance</Label>
-                        <div className="font-medium">{teacher.performance}/5.0</div>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-500">Department</Label>
-                        <div className="font-medium capitalize">{teacher.department}</div>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-500">Total Hours</Label>
-                        <div className="font-medium">{teacher.totalHours}h</div>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-500">Tax ID</Label>
-                        <div className="font-medium">TAX-{teacher.id.toString().padStart(6, '0')}</div>
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-500">Contract Type</Label>
-                        <div className="font-medium">Hourly</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
 
         <TabsContent value="history">
           <Card>

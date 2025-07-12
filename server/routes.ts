@@ -8837,9 +8837,10 @@ Return JSON format:
     try {
       const teacherId = parseInt(req.params.teacherId);
       
-      // Get detailed teacher payroll information
-      const teacher = await storage.getUserById(teacherId);
-      if (!teacher || teacher.role !== 'Teacher') {
+      // Get detailed teacher information
+      const teachers = await storage.getTeachers();
+      const teacher = teachers.find(t => t.id === teacherId);
+      if (!teacher) {
         return res.status(404).json({ message: "Teacher not found" });
       }
 
