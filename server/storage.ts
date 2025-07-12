@@ -285,6 +285,8 @@ export interface IStorage {
   approveTeacherPayment(paymentId: number): Promise<any>;
   getTeachersWithRates(): Promise<any[]>;
   updateTeacherRates(teacherId: number, regularRate: number, callernRate?: number): Promise<any>;
+  getTeacherSessionCount(teacherId: number): Promise<number>;
+  getTeacherPaymentHistory(teacherId: number, limit: number, offset: number): Promise<any[]>;
   
   // White-Label Institute Management
   getWhiteLabelInstitutes(): Promise<any[]>;

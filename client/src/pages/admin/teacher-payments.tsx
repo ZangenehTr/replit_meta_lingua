@@ -376,6 +376,8 @@ export default function TeacherPaymentsPage() {
           <TabsTrigger value="payments">Payment Overview</TabsTrigger>
           <TabsTrigger value="sessions">Session Details</TabsTrigger>
           <TabsTrigger value="rates">Rate Management</TabsTrigger>
+          <TabsTrigger value="payroll">Payroll Details</TabsTrigger>
+          <TabsTrigger value="history">Payment History</TabsTrigger>
           <TabsTrigger value="reports">Payment Reports</TabsTrigger>
         </TabsList>
 
@@ -533,6 +535,182 @@ export default function TeacherPaymentsPage() {
                 >
                   {updateRateStructureMutation.isPending ? 'Updating...' : 'Update Rate Structure'}
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="payroll">
+          <Card>
+            <CardHeader>
+              <CardTitle>Teacher Payroll Details</CardTitle>
+              <CardDescription>
+                Comprehensive payroll information for each teacher (Admin & Supervisor Access)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6">
+                {teachers.map((teacher) => (
+                  <div key={teacher.id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">{teacher.name}</h3>
+                        <p className="text-sm text-gray-600">{teacher.email}</p>
+                        <Badge variant={teacher.status === 'active' ? 'default' : 'secondary'}>
+                          {teacher.status}
+                        </Badge>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          // Fetch detailed payroll information
+                          fetch(`/api/admin/teacher-payments/payroll-details/${teacher.id}`)
+                            .then(res => res.json())
+                            .then(data => {
+                              console.log('Payroll details:', data);
+                              toast({
+                                title: "Payroll Details",
+                                description: `Retrieved details for ${teacher.name}`,
+                              });
+                            })
+                            .catch(err => {
+                              toast({
+                                title: "Error",
+                                description: "Failed to fetch payroll details",
+                                variant: "destructive"
+                              });
+                            });
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <Label className="text-xs text-gray-500">Hourly Rate</Label>
+                        <div className="font-medium">{teacher.hourlyRate?.toLocaleString()} IRR</div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Callern Rate</Label>
+                        <div className="font-medium">{teacher.callernRate?.toLocaleString() || 'N/A'} IRR</div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Total Sessions</Label>
+                        <div className="font-medium">{teacher.totalSessions}</div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Performance</Label>
+                        <div className="font-medium">{teacher.performance}/5.0</div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Department</Label>
+                        <div className="font-medium capitalize">{teacher.department}</div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Total Hours</Label>
+                        <div className="font-medium">{teacher.totalHours}h</div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Tax ID</Label>
+                        <div className="font-medium">TAX-{teacher.id.toString().padStart(6, '0')}</div>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Contract Type</Label>
+                        <div className="font-medium">Hourly</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment History</CardTitle>
+              <CardDescription>
+                Historical payment records for all teachers (Admin & Supervisor Access)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex gap-4 items-center">
+                  <Select defaultValue="all">
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Select Teacher" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Teachers</SelectItem>
+                      {teachers.map((teacher) => (
+                        <SelectItem key={teacher.id} value={teacher.id.toString()}>
+                          {teacher.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      // Fetch payment history for selected teacher
+                      const selectedTeacherId = teachers[0]?.id || 1;
+                      fetch(`/api/admin/teacher-payments/history/${selectedTeacherId}`)
+                        .then(res => res.json())
+                        .then(data => {
+                          console.log('Payment history:', data);
+                          toast({
+                            title: "Payment History",
+                            description: `Retrieved ${data.payments.length} payment records`,
+                          });
+                        })
+                        .catch(err => {
+                          toast({
+                            title: "Error",
+                            description: "Failed to fetch payment history",
+                            variant: "destructive"
+                          });
+                        });
+                    }}
+                  >
+                    Load History
+                  </Button>
+                </div>
+                
+                <div className="border rounded-lg">
+                  <div className="grid grid-cols-7 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
+                    <div>Period</div>
+                    <div>Sessions</div>
+                    <div>Hours</div>
+                    <div>Gross Amount</div>
+                    <div>Deductions</div>
+                    <div>Net Amount</div>
+                    <div>Status</div>
+                  </div>
+                  
+                  {/* Sample payment history rows */}
+                  {[
+                    { period: '2024-12', sessions: 42, hours: 63, gross: 47250000, deductions: 8977500, net: 38272500, status: 'paid' },
+                    { period: '2024-11', sessions: 38, hours: 57, gross: 42750000, deductions: 8122500, net: 34627500, status: 'paid' },
+                    { period: '2024-10', sessions: 45, hours: 68, gross: 51000000, deductions: 9690000, net: 41310000, status: 'approved' },
+                  ].map((record, index) => (
+                    <div key={index} className="grid grid-cols-7 gap-4 p-4 border-b text-sm">
+                      <div>{record.period}</div>
+                      <div>{record.sessions}</div>
+                      <div>{record.hours}h</div>
+                      <div className="font-medium">{record.gross.toLocaleString()} IRR</div>
+                      <div className="text-red-600">-{record.deductions.toLocaleString()} IRR</div>
+                      <div className="font-medium text-green-600">{record.net.toLocaleString()} IRR</div>
+                      <div>
+                        <Badge variant={record.status === 'paid' ? 'default' : record.status === 'approved' ? 'secondary' : 'outline'}>
+                          {record.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
