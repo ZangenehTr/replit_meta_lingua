@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
   DollarSign, 
   Clock, 
@@ -64,6 +65,7 @@ export default function TeacherPaymentsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('current');
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [showRateDialog, setShowRateDialog] = useState(false);
+  const [selectedTeacherForHistory, setSelectedTeacherForHistory] = useState<string>("all");
 
   // Fetch teacher payments data
   const { data: payments = [], isLoading } = useQuery({
@@ -298,13 +300,71 @@ export default function TeacherPaymentsPage() {
               </DialogContent>
             </Dialog>
             
-            <Button 
-              onClick={() => calculatePaymentsMutation.mutate(selectedPeriod)}
-              disabled={calculatePaymentsMutation.isPending}
-            >
-              <Calculator className="h-4 w-4 mr-2" />
-              {calculatePaymentsMutation.isPending ? 'Calculating...' : 'Calculate Payments'}
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button disabled={calculatePaymentsMutation.isPending}>
+                  <Calculator className="h-4 w-4 mr-2" />
+                  {calculatePaymentsMutation.isPending ? 'Calculating...' : 'Calculate Payments'}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Calculate Teacher Payments</DialogTitle>
+                  <DialogDescription>
+                    Select the period for salary calculation and payment processing
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="startDate">Start Date</Label>
+                      <Input 
+                        id="startDate" 
+                        type="date" 
+                        defaultValue="2024-12-01"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="endDate">End Date</Label>
+                      <Input 
+                        id="endDate" 
+                        type="date" 
+                        defaultValue="2024-12-31"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="paymentType">Payment Type</Label>
+                    <Select defaultValue="all">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select payment type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sessions (Regular + Callern)</SelectItem>
+                        <SelectItem value="regular">Regular Sessions Only</SelectItem>
+                        <SelectItem value="callern">Callern Sessions Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button 
+                      onClick={() => {
+                        const startDate = (document.getElementById('startDate') as HTMLInputElement).value;
+                        const endDate = (document.getElementById('endDate') as HTMLInputElement).value;
+                        const customPeriod = `${startDate}_to_${endDate}`;
+                        calculatePaymentsMutation.mutate(customPeriod);
+                      }}
+                      disabled={calculatePaymentsMutation.isPending}
+                    >
+                      {calculatePaymentsMutation.isPending ? 'Calculating...' : 'Calculate Payments'}
+                    </Button>
+                    <DialogClose asChild>
+                      <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -506,35 +566,55 @@ export default function TeacherPaymentsPage() {
         <TabsContent value="rates">
           <Card>
             <CardHeader>
-              <CardTitle>Hourly Rate Management</CardTitle>
+              <CardTitle>Rate Management</CardTitle>
               <CardDescription>
-                Set and manage teacher hourly rates based on experience and performance
+                Manage hourly rates for both regular sessions and callern service (both rates displayed)
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Base Hourly Rate (IRR)</Label>
-                    <Input type="number" defaultValue="75000" />
-                  </div>
-                  <div>
-                    <Label>Performance Bonus (%)</Label>
-                    <Input type="number" defaultValue="10" />
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => {
-                    const baseRateElement = document.querySelector('input[defaultValue="75000"]') as HTMLInputElement;
-                    const bonusElement = document.querySelector('input[defaultValue="10"]') as HTMLInputElement;
-                    const baseRate = parseInt(baseRateElement?.value || '75000');
-                    const bonusPercentage = parseInt(bonusElement?.value || '10');
-                    updateRateStructureMutation.mutate({ baseRate, bonusPercentage });
-                  }}
-                  disabled={updateRateStructureMutation.isPending}
-                >
-                  {updateRateStructureMutation.isPending ? 'Updating...' : 'Update Rate Structure'}
-                </Button>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Teacher</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Regular & Callern Rates</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {teachers?.map((teacher) => (
+                      <TableRow key={teacher.id}>
+                        <TableCell>{teacher.name}</TableCell>
+                        <TableCell>{teacher.email}</TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-medium">Regular: {teacher.hourlyRate?.toLocaleString()} IRR</div>
+                            <div className="text-sm text-gray-600">Callern: {teacher.callernRate?.toLocaleString() || 'N/A'} IRR</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={teacher.department === 'both' ? 'default' : 'secondary'}>
+                            {teacher.department}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTeacher(teacher);
+                              setShowRateDialog(true);
+                            }}
+                          >
+                            Manage Both Rates
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>
@@ -564,9 +644,8 @@ export default function TeacherPaymentsPage() {
                         variant="outline" 
                         size="sm"
                         onClick={() => {
-                          // Fetch detailed payroll information
-                          fetch(`/api/admin/teacher-payments/payroll-details/${teacher.id}`)
-                            .then(res => res.json())
+                          // Fetch detailed payroll information with proper authentication
+                          apiRequest(`/api/admin/teacher-payments/payroll-details/${teacher.id}`)
                             .then(data => {
                               console.log('Payroll details:', data);
                               toast({
@@ -639,7 +718,7 @@ export default function TeacherPaymentsPage() {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex gap-4 items-center">
-                  <Select defaultValue="all">
+                  <Select defaultValue="all" value={selectedTeacherForHistory} onValueChange={setSelectedTeacherForHistory}>
                     <SelectTrigger className="w-[200px]">
                       <SelectValue placeholder="Select Teacher" />
                     </SelectTrigger>
@@ -655,15 +734,14 @@ export default function TeacherPaymentsPage() {
                   <Button 
                     variant="outline"
                     onClick={() => {
-                      // Fetch payment history for selected teacher
-                      const selectedTeacherId = teachers[0]?.id || 1;
-                      fetch(`/api/admin/teacher-payments/history/${selectedTeacherId}`)
-                        .then(res => res.json())
+                      // Fetch payment history for selected teacher with proper authentication
+                      const teacherId = selectedTeacherForHistory === "all" ? teachers[0]?.id || 1 : parseInt(selectedTeacherForHistory);
+                      apiRequest(`/api/admin/teacher-payments/history/${teacherId}`)
                         .then(data => {
                           console.log('Payment history:', data);
                           toast({
                             title: "Payment History",
-                            description: `Retrieved ${data.payments.length} payment records`,
+                            description: `Retrieved ${data.payments.length} payment records for ${teachers.find(t => t.id === teacherId)?.name || 'teacher'}`,
                           });
                         })
                         .catch(err => {
