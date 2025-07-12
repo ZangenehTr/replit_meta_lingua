@@ -63,8 +63,6 @@ export default function TeacherPaymentsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedPeriod, setSelectedPeriod] = useState('current');
-  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
-  const [showRateDialog, setShowRateDialog] = useState(false);
   const [selectedTeacherForHistory, setSelectedTeacherForHistory] = useState<string>("all");
 
   // Fetch teacher payments data
@@ -108,8 +106,6 @@ export default function TeacherPaymentsPage() {
         description: "Teacher hourly rate has been updated successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/teachers/rates'] });
-      setShowRateDialog(false);
-      setSelectedTeacher(null);
     },
   });
 
@@ -172,7 +168,7 @@ export default function TeacherPaymentsPage() {
 
   // Update rate structure mutation
   const updateRateStructureMutation = useMutation({
-    mutationFn: (rateData: { baseRate: number; bonusPercentage: number }) => 
+    mutationFn: (rateData: { baseRate: number; callernRate: number; effectiveDate: string }) => 
       apiRequest('/api/admin/teacher-payments/update-rate-structure', { 
         method: 'POST',
         body: JSON.stringify(rateData),
@@ -181,7 +177,7 @@ export default function TeacherPaymentsPage() {
     onSuccess: () => {
       toast({
         title: "Rate Structure Updated",
-        description: "Global rate structure has been updated successfully.",
+        description: "Both regular and callern rates have been updated successfully.",
       });
     },
   });
@@ -208,97 +204,47 @@ export default function TeacherPaymentsPage() {
               Automated session-based payment calculation using individual teacher rates
             </p>
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <Label htmlFor="regularRate">Regular Session Hourly Rate (IRR)</Label>
+              <Input
+                id="regularRate"
+                type="number"
+                defaultValue="750000"
+                placeholder="750000"
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">Rate for regular in-person and online sessions</p>
+            </div>
+            <div>
+              <Label htmlFor="callernRate">Callern Service Hourly Rate (IRR)</Label>
+              <Input
+                id="callernRate"
+                type="number"
+                defaultValue="850000"
+                placeholder="850000"
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">Rate for Callern standby and on-demand sessions</p>
+            </div>
+          </div>
+          
           <div className="flex gap-2">
-            <Dialog open={showRateDialog} onOpenChange={setShowRateDialog}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Manage Rates
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Teacher Rate Management</DialogTitle>
-                  <DialogDescription>
-                    Update hourly rates for regular classes and Callern standby
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="teacherSelect">Select Teacher</Label>
-                    <Select 
-                      value={selectedTeacher?.id.toString() || ''} 
-                      onValueChange={(value) => {
-                        const teacher = teachers.find(t => t.id === parseInt(value));
-                        setSelectedTeacher(teacher || null);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a teacher" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {teachers.map((teacher) => (
-                          <SelectItem key={teacher.id} value={teacher.id.toString()}>
-                            {teacher.name} ({teacher.department})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {selectedTeacher && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="regularRate">Regular Classes Rate (IRR/hour)</Label>
-                        <Input
-                          id="regularRate"
-                          type="number"
-                          defaultValue={selectedTeacher.hourlyRate}
-                          placeholder="75000"
-                        />
-                      </div>
-                      
-                      {(selectedTeacher.department === 'callern' || selectedTeacher.department === 'both') && (
-                        <div>
-                          <Label htmlFor="callernRate">Callern Standby Rate (IRR/hour)</Label>
-                          <Input
-                            id="callernRate"
-                            type="number"
-                            defaultValue={selectedTeacher.callernRate || 0}
-                            placeholder="65000"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={() => {
-                        if (selectedTeacher) {
-                          const regularRateInput = document.getElementById('regularRate') as HTMLInputElement;
-                          const callernRateInput = document.getElementById('callernRate') as HTMLInputElement;
-                          const regularRate = parseInt(regularRateInput.value);
-                          const callernRate = callernRateInput ? parseInt(callernRateInput.value) : undefined;
-                          
-                          updateTeacherRateMutation.mutate({
-                            teacherId: selectedTeacher.id,
-                            regularRate,
-                            callernRate
-                          });
-                        }
-                      }}
-                      disabled={updateTeacherRateMutation.isPending}
-                    >
-                      {updateTeacherRateMutation.isPending ? 'Updating...' : 'Update Rate'}
-                    </Button>
-                    <Button variant="outline" onClick={() => setShowRateDialog(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button
+              onClick={() => {
+                const regularRate = (document.getElementById('regularRate') as HTMLInputElement).value;
+                const callernRate = (document.getElementById('callernRate') as HTMLInputElement).value;
+                
+                updateRateStructureMutation.mutate({
+                  baseRate: parseInt(regularRate),
+                  callernRate: parseInt(callernRate),
+                  effectiveDate: new Date().toISOString().split('T')[0]
+                });
+              }}
+              disabled={updateRateStructureMutation.isPending}
+            >
+              {updateRateStructureMutation.isPending ? 'Updating...' : 'Update Both Rates'}
+            </Button>
             
             <Dialog>
               <DialogTrigger asChild>
@@ -435,7 +381,7 @@ export default function TeacherPaymentsPage() {
         <TabsList>
           <TabsTrigger value="payments">Payment Overview</TabsTrigger>
           <TabsTrigger value="sessions">Session Details</TabsTrigger>
-          <TabsTrigger value="rates">Rate Management</TabsTrigger>
+
           <TabsTrigger value="payroll">Payroll Details</TabsTrigger>
           <TabsTrigger value="history">Payment History</TabsTrigger>
           <TabsTrigger value="reports">Payment Reports</TabsTrigger>
@@ -563,62 +509,7 @@ export default function TeacherPaymentsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="rates">
-          <Card>
-            <CardHeader>
-              <CardTitle>Rate Management</CardTitle>
-              <CardDescription>
-                Manage hourly rates for both regular sessions and callern service (both rates displayed)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Teacher</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Regular & Callern Rates</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {teachers?.map((teacher) => (
-                      <TableRow key={teacher.id}>
-                        <TableCell>{teacher.name}</TableCell>
-                        <TableCell>{teacher.email}</TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="font-medium">Regular: {teacher.hourlyRate?.toLocaleString()} IRR</div>
-                            <div className="text-sm text-gray-600">Callern: {teacher.callernRate?.toLocaleString() || 'N/A'} IRR</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={teacher.department === 'both' ? 'default' : 'secondary'}>
-                            {teacher.department}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedTeacher(teacher);
-                              setShowRateDialog(true);
-                            }}
-                          >
-                            Manage Both Rates
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
 
         <TabsContent value="payroll">
           <Card>

@@ -1,0 +1,46 @@
+. Salary Calculation and Breakdown
+Salary Components: Breakdown of salary into different components (base salary, allowances, bonuses, deductions, taxes, etc.).
+
+Hourly/session based Pay: Support for different payment structures, whether based on hours worked or sessions worked     
+Having a system for two course types payments for a teacher: regular in-person or online sessions/hours and callern service hourly/session
+Bonus & Incentives: Calculation of performance bonuses, incentive payments, or other ad-hoc payments.
+
+
+Tax Deductions: Automatic calculation of tax deductions based on the teacher's salary and relevant tax laws.
+
+ Payment History and Receipts
+Payment History: Teachers can view their past payments, with clear breakdowns of each payment made over time.
+
+Payslips: Monthly payslips or receipts that show the salary, bonuses, taxes, deductions, and net pay for each period.
+
+Downloadable Reports: Option for teachers to download or print their payslips in PDF or other formats.
+
+ Attendance and Leave Management
+Leave Requests: Teachers can request leave (sick, annual, personal, etc.), and the system can track approved leave days.
+
+Attendance Tracking: Integration with attendance management systems to automatically adjust payments based on the teacher’s attendance (absence or presence).
+
+Holiday Pay: Handling special pay for holidays worked or compensated time off.
+
+ Notifications and Alerts
+Payment Notifications: Teachers receive alerts when payments are made or when their salary is processed.
+
+Leave Approval Notifications: Notifications when leave requests are approved or rejected.
+
+Upcoming Salary Alerts: Alerts before the salary disbursement date to inform teachers about upcoming payments.
+ Payroll Reporting and Analytics
+Summary Reports: HR administrators can generate reports summarizing payments, taxes, bonuses, and deductions for a given period.
+
+Employee Analytics: Track trends in payments, leave usage, and teacher attendance, which can be helpful for school administrators or HR teams.
+
+Tax Reporting: Reports for tax filing, including tax deductions, with the option to export to formats like CSV or Excel.
+
+ Payment Processing and Integration
+Direct Deposit: Integration with bank systems to ensure payments are directly deposited into teachers' bank accounts.
+
+Payment Gateway Integration: For schools that pay via third-party payment systems, integrating payment gateways for transactions is important (e.g., PayPal, Stripe, etc.).
+
+Multiple Currency Support: If needed, support for multiple currencies, especially if teachers are paid in different regions or countries.    Support for Multiple Payment Schedules
+Flexible Payment Dates: The ability to support different payment schedules (e.g., monthly, bi-weekly, or weekly).
+
+Partial Payments: Ability to make partial payments if necessary (e.g., advance payments).
