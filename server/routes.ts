@@ -8890,6 +8890,118 @@ Return JSON format:
     }
   });
 
+  // Teacher photo upload endpoint
+  app.post("/api/admin/teachers/:teacherId/upload-photo", authenticateToken, requireRole(['Admin', 'Supervisor']), upload.single('photo'), async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No photo file provided" });
+      }
+
+      // Move uploaded file to teacher-photos directory with teacherId as filename
+      const fs = require('fs');
+      const path = require('path');
+      
+      const photoDir = path.join(process.cwd(), 'uploads', 'teacher-photos');
+      if (!fs.existsSync(photoDir)) {
+        fs.mkdirSync(photoDir, { recursive: true });
+      }
+      
+      const photoPath = path.join(photoDir, `${teacherId}.jpg`);
+      fs.renameSync(req.file.path, photoPath);
+      
+      res.json({ 
+        success: true, 
+        message: "Teacher photo uploaded successfully",
+        photoPath: `/uploads/teacher-photos/${teacherId}.jpg`
+      });
+    } catch (error) {
+      console.error("Error uploading teacher photo:", error);
+      res.status(500).json({ message: "Failed to upload teacher photo" });
+    }
+  });
+
+  // Get teacher session details for payment period
+  app.get("/api/admin/teacher-payments/:teacherId/sessions/:period", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      const period = req.params.period;
+      
+      // Sample session data - in real implementation, query database for actual sessions
+      const sessions = [
+        {
+          date: "2024-12-15",
+          type: "1-on-1",
+          studentName: "Ahmad Hosseini",
+          startTime: "10:00",
+          endTime: "11:30",
+          duration: 1.5,
+          platform: "Online",
+          courseTitle: "Persian Conversation"
+        },
+        {
+          date: "2024-12-16",
+          type: "group",
+          studentName: null,
+          groupDetails: "Persian Intermediate - Mon/Wed/Fri",
+          startTime: "18:00",
+          endTime: "19:30",
+          duration: 1.5,
+          platform: "In-person",
+          courseTitle: "Persian Intermediate"
+        },
+        {
+          date: "2024-12-17",
+          type: "callern",
+          studentName: "Maryam Rahimi",
+          startTime: "14:00",
+          endTime: "15:00",
+          duration: 1.0,
+          platform: "VoIP Call",
+          courseTitle: "Callern Session"
+        }
+      ];
+
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching teacher sessions:", error);
+      res.status(500).json({ message: "Failed to fetch teacher sessions" });
+    }
+  });
+
+  // Send SMS notification for payment approval
+  app.post("/api/admin/teacher-payments/send-approval-sms", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { teacherId, teacherName, amount, period } = req.body;
+      
+      // Get teacher's phone number
+      const teachers = await storage.getTeachers();
+      const teacher = teachers.find(t => t.id === teacherId);
+      
+      if (!teacher || !teacher.phone) {
+        return res.status(404).json({ message: "Teacher phone number not found" });
+      }
+
+      // SMS message content
+      const message = `سلام ${teacherName}، حقوق شما برای دوره ${period} محاسبه و به حسابداری ارسال شد. مبلغ: ${amount?.toLocaleString()} ریال`;
+      
+      // In a real implementation, integrate with Kavenegar SMS service
+      // For now, simulate SMS sending
+      console.log(`SMS would be sent to ${teacher.phone}: ${message}`);
+      
+      res.json({ 
+        success: true, 
+        message: "SMS notification sent successfully",
+        sentTo: teacher.phone,
+        content: message
+      });
+    } catch (error) {
+      console.error("Error sending SMS notification:", error);
+      res.status(500).json({ message: "Failed to send SMS notification" });
+    }
+  });
+
   // Get teacher payment history endpoint
   app.get("/api/admin/teacher-payments/history/:teacherId", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {

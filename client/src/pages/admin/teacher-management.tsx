@@ -51,7 +51,10 @@ import {
   Mail,
   Phone,
   BookOpen,
-  Calendar
+  Calendar,
+  User,
+  Camera,
+  Upload
 } from "lucide-react";
 
 const teacherSchema = z.object({
@@ -590,13 +593,67 @@ export function AdminTeacherManagement() {
               <Card key={teacher.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start mb-2">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg">
-                        {teacher.firstName} {teacher.lastName}
-                      </CardTitle>
-                      <Badge variant={teacher.isActive !== false ? "default" : "secondary"}>
-                        {teacher.isActive !== false ? "Active" : "Inactive"}
-                      </Badge>
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                          <img 
+                            src={`/uploads/teacher-photos/${teacher.id}.jpg`}
+                            alt={`${teacher.firstName} ${teacher.lastName}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling.style.display = 'flex';
+                            }}
+                          />
+                          <div className="w-full h-full flex items-center justify-center text-gray-400" style={{display: 'none'}}>
+                            <User className="h-8 w-8" />
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full p-0"
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = 'image/*';
+                            input.onchange = async (e) => {
+                              const file = (e.target as HTMLInputElement).files?.[0];
+                              if (file) {
+                                const formData = new FormData();
+                                formData.append('photo', file);
+                                try {
+                                  await apiRequest(`/api/admin/teachers/${teacher.id}/upload-photo`, {
+                                    method: 'POST',
+                                    body: formData
+                                  });
+                                  toast({
+                                    title: "Photo Uploaded",
+                                    description: `Photo uploaded for ${teacher.firstName} ${teacher.lastName}`,
+                                  });
+                                  refetch(); // Refresh teacher list
+                                } catch (error) {
+                                  toast({
+                                    title: "Upload Failed",
+                                    description: "Failed to upload teacher photo",
+                                    variant: "destructive"
+                                  });
+                                }
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                          <Camera className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <div className="space-y-1">
+                        <CardTitle className="text-lg">
+                          {teacher.firstName} {teacher.lastName}
+                        </CardTitle>
+                        <Badge variant={teacher.isActive !== false ? "default" : "secondary"}>
+                          {teacher.isActive !== false ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Button 

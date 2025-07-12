@@ -49,6 +49,75 @@ interface TeacherPayment {
   department: 'regular' | 'callern' | 'both';
 }
 
+interface TeacherSession {
+  date: string;
+  type: '1-on-1' | 'group' | 'callern';
+  studentName?: string;
+  groupDetails?: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  platform: string;
+  courseTitle: string;
+}
+
+function SessionDetailsSection({ teacherId, period }: { teacherId: number; period: string }) {
+  // Convert period format from "current" to a proper date period
+  const formatPeriod = (period: string) => {
+    if (period === 'current') {
+      const now = new Date();
+      return `${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}`;
+    }
+    return period;
+  };
+
+  const formattedPeriod = formatPeriod(period);
+  
+  const { data: sessions = [], isLoading } = useQuery<TeacherSession[]>({
+    queryKey: ['/api/admin/teacher-payments', teacherId, 'sessions', formattedPeriod],
+    queryFn: () => apiRequest(`/api/admin/teacher-payments/${teacherId}/sessions/${encodeURIComponent(formattedPeriod)}`),
+  });
+
+  const getSessionColor = (type: string) => {
+    switch (type) {
+      case '1-on-1': return 'border-blue-500';
+      case 'group': return 'border-green-500';
+      case 'callern': return 'border-purple-500';
+      default: return 'border-gray-500';
+    }
+  };
+
+  return (
+    <div className="border rounded-lg p-4">
+      <h3 className="font-semibold mb-3">Session Details</h3>
+      {isLoading ? (
+        <div className="text-center py-4">Loading sessions...</div>
+      ) : sessions.length === 0 ? (
+        <div className="text-center py-4 text-gray-500">No sessions found for this period</div>
+      ) : (
+        <div className="space-y-3">
+          {sessions.map((session, index) => (
+            <div key={index} className={`border-l-4 ${getSessionColor(session.type)} pl-4`}>
+              <div className="font-medium">
+                {session.date} - {session.type === '1-on-1' ? '1-on-1 Session' : 
+                                  session.type === 'group' ? 'Group Class' : 'Callern Session'}
+              </div>
+              <div className="text-sm text-gray-600">
+                {session.type === '1-on-1' ? `Student: ${session.studentName}` :
+                 session.type === 'group' ? session.groupDetails :
+                 `Student: ${session.studentName}`}
+              </div>
+              <div className="text-sm text-gray-500">
+                {session.startTime}-{session.endTime} ({session.duration} hrs) - {session.platform}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface Teacher {
   id: number;
   name: string;
@@ -67,9 +136,14 @@ export default function TeacherPaymentsPage() {
   const [selectedTeacherForHistory, setSelectedTeacherForHistory] = useState<string>("all");
 
   // Fetch teacher payments data
-  const { data: payments = [], isLoading } = useQuery({
+  const { data: payments = [], isLoading, error } = useQuery({
     queryKey: ['/api/admin/teacher-payments', selectedPeriod],
   });
+
+  // Debug: Log the data for troubleshooting
+  console.log('Teacher payments data:', payments);
+  console.log('Is loading:', isLoading);
+  console.log('Error:', error);
 
   // Fetch teachers data with their individual rates
   const { data: teachers = [], isLoading: teachersLoading } = useQuery<Teacher[]>({
@@ -413,6 +487,21 @@ export default function TeacherPaymentsPage() {
               <div className="space-y-4">
                 {isLoading ? (
                   <div className="text-center py-4">Loading payment data...</div>
+                ) : error ? (
+                  <div className="text-center py-4 text-red-500">Error loading payments: {error?.message}</div>
+                ) : payments?.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500">
+                    No teacher payments found for {selectedPeriod}. 
+                    <br />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2"
+                      onClick={() => calculatePaymentsMutation.mutate(selectedPeriod)}
+                    >
+                      Calculate Payments for This Period
+                    </Button>
+                  </div>
                 ) : (
                   <Table>
                     <TableHeader>
@@ -457,15 +546,37 @@ export default function TeacherPaymentsPage() {
                                   </DialogHeader>
                                   
                                   <div className="space-y-6">
-                                    {/* Teacher Info */}
-                                    <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                                      <div>
-                                        <Label className="text-xs text-gray-500">Teacher</Label>
-                                        <div className="font-medium">{payment.teacherName}</div>
+                                    {/* Teacher Info with Photo */}
+                                    <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                                      <div className="flex items-center space-x-3">
+                                        <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                                          <img 
+                                            src={`/uploads/teacher-photos/${payment.teacherId}.jpg`}
+                                            alt={payment.teacherName}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                              e.currentTarget.style.display = 'none';
+                                              e.currentTarget.nextElementSibling.style.display = 'flex';
+                                            }}
+                                          />
+                                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs" style={{display: 'none'}}>
+                                            No Photo
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <Label className="text-xs text-gray-500">Teacher</Label>
+                                          <div className="font-medium">{payment.teacherName}</div>
+                                        </div>
                                       </div>
                                       <div>
                                         <Label className="text-xs text-gray-500">Period</Label>
                                         <div className="font-medium">{payment.period}</div>
+                                      </div>
+                                      <div>
+                                        <Label className="text-xs text-gray-500">Payment Status</Label>
+                                        <Badge className={getStatusColor(payment.status)}>
+                                          {payment.status}
+                                        </Badge>
                                       </div>
                                     </div>
 
@@ -485,59 +596,127 @@ export default function TeacherPaymentsPage() {
                                       </div>
                                     </div>
 
+                                    {/* Session Details */}
+                                    <SessionDetailsSection 
+                                      teacherId={payment.teacherId} 
+                                      period={payment.period} 
+                                    />
+
                                     {/* Payment Breakdown */}
                                     <div className="border rounded-lg p-4">
-                                      <h3 className="font-semibold mb-3">Payment Breakdown</h3>
+                                      <h3 className="font-semibold mb-3">Payment Calculation</h3>
                                       <div className="space-y-2">
                                         <div className="flex justify-between">
-                                          <span>Base Pay ({payment.totalHours} hours × {payment.hourlyRate?.toLocaleString()} IRR)</span>
-                                          <span className="font-medium">{payment.basePay?.toLocaleString()} IRR</span>
+                                          <span>Regular Sessions ({payment.totalHours - (payment.callernHours || 0)} hours × {payment.hourlyRate?.toLocaleString()} IRR)</span>
+                                          <span className="font-medium">{((payment.totalHours - (payment.callernHours || 0)) * (payment.hourlyRate || 0))?.toLocaleString()} IRR</span>
                                         </div>
+                                        {payment.callernHours && (
+                                          <div className="flex justify-between">
+                                            <span>Callern Sessions ({payment.callernHours} hours × 850,000 IRR)</span>
+                                            <span className="font-medium">{(payment.callernHours * 850000)?.toLocaleString()} IRR</span>
+                                          </div>
+                                        )}
                                         <div className="flex justify-between text-green-600">
-                                          <span>Bonuses & Incentives</span>
+                                          <span>Performance Bonuses</span>
                                           <span className="font-medium">+{payment.bonuses?.toLocaleString()} IRR</span>
                                         </div>
                                         <div className="flex justify-between text-red-600">
-                                          <span>Deductions & Taxes</span>
+                                          <span>Administrative Deductions</span>
                                           <span className="font-medium">-{payment.deductions?.toLocaleString()} IRR</span>
                                         </div>
                                         <div className="border-t pt-2 flex justify-between text-lg font-bold">
-                                          <span>Final Amount</span>
+                                          <span>Final Payment Amount</span>
                                           <span>{payment.finalAmount?.toLocaleString()} IRR</span>
                                         </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Iranian Tax Compliance */}
-                                    <div className="bg-blue-50 p-4 rounded-lg">
-                                      <h3 className="font-semibold mb-2">Iranian Tax Compliance</h3>
-                                      <div className="text-sm space-y-1">
-                                        <div>✓ 12% Income Tax: {Math.round((payment.basePay || 0) * 0.12)?.toLocaleString()} IRR</div>
-                                        <div>✓ 7% Social Security: {Math.round((payment.basePay || 0) * 0.07)?.toLocaleString()} IRR</div>
-                                        <div>✓ All deductions calculated per Iranian labor law</div>
                                       </div>
                                     </div>
                                   </div>
 
                                   <div className="flex justify-end gap-2 mt-6">
-                                    <Button variant="outline">
-                                      <Edit className="h-4 w-4 mr-2" />
-                                      Edit Payslip
-                                    </Button>
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button variant="outline">
+                                          <Edit className="h-4 w-4 mr-2" />
+                                          Edit Payslip
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent className="max-w-2xl">
+                                        <DialogHeader>
+                                          <DialogTitle>Edit Payslip - {payment.teacherName}</DialogTitle>
+                                          <DialogDescription>
+                                            Modify payment details for this period
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="space-y-4">
+                                          <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                              <Label>Base Pay (IRR)</Label>
+                                              <Input type="number" defaultValue={payment.basePay} />
+                                            </div>
+                                            <div>
+                                              <Label>Bonuses (IRR)</Label>
+                                              <Input type="number" defaultValue={payment.bonuses} />
+                                            </div>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                              <Label>Deductions (IRR)</Label>
+                                              <Input type="number" defaultValue={payment.deductions} />
+                                            </div>
+                                            <div>
+                                              <Label>Total Hours</Label>
+                                              <Input type="number" defaultValue={payment.totalHours} />
+                                            </div>
+                                          </div>
+                                          <div className="flex justify-end gap-2">
+                                            <DialogClose asChild>
+                                              <Button variant="outline">Cancel</Button>
+                                            </DialogClose>
+                                            <Button onClick={() => {
+                                              toast({
+                                                title: "Payslip Updated",
+                                                description: "Payment details have been modified.",
+                                              });
+                                            }}>
+                                              Save Changes
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </DialogContent>
+                                    </Dialog>
                                     <Button 
-                                      onClick={() => {
-                                        // Approve and send to accounting
-                                        approvePaymentMutation.mutate(payment.id);
-                                        sendToAccountingMutation.mutate();
-                                        toast({
-                                          title: "Payslip Approved",
-                                          description: `Payslip for ${payment.teacherName} approved and sent to accounting.`,
-                                        });
+                                      onClick={async () => {
+                                        try {
+                                          // Approve payment
+                                          await approvePaymentMutation.mutateAsync(payment.id);
+                                          
+                                          // Send SMS notification to teacher
+                                          await apiRequest('/api/admin/teacher-payments/send-approval-sms', {
+                                            method: 'POST',
+                                            body: JSON.stringify({
+                                              teacherId: payment.teacherId,
+                                              teacherName: payment.teacherName,
+                                              amount: payment.finalAmount,
+                                              period: payment.period
+                                            })
+                                          });
+                                          
+                                          toast({
+                                            title: "Payment Approved",
+                                            description: `Payslip approved and SMS sent to ${payment.teacherName}`,
+                                          });
+                                        } catch (error) {
+                                          toast({
+                                            title: "Error",
+                                            description: "Failed to approve payment or send SMS",
+                                            variant: "destructive"
+                                          });
+                                        }
                                       }}
                                       disabled={payment.status === 'approved' || approvePaymentMutation.isPending}
                                     >
                                       <CheckCircle className="h-4 w-4 mr-2" />
-                                      {payment.status === 'approved' ? 'Already Approved' : 'Approve & Send to Accounting'}
+                                      {payment.status === 'approved' ? 'Already Approved' : 'Approve & Send SMS'}
                                     </Button>
                                   </div>
                                 </DialogContent>
