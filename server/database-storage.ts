@@ -2726,7 +2726,7 @@ export class DatabaseStorage implements IStorage {
         // Get sessions for this teacher
         const sessionResults = await db.select()
           .from(sessions)
-          .where(eq(sessions.teacherId, teacher.id));
+          .where(eq(sessions.tutorId, teacher.id));
 
         const totalSessions = sessionResults.length;
         const totalMinutes = sessionResults.reduce((sum, session) => sum + (session.duration || 60), 0);
@@ -2800,7 +2800,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const sessions = await db.select()
         .from(sessions)
-        .where(eq(sessions.teacherId, teacherId));
+        .where(eq(sessions.tutorId, teacherId));
       return sessions.length;
     } catch (error) {
       console.error('Error getting teacher session count:', error);
