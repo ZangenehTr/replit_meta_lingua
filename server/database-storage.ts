@@ -952,6 +952,27 @@ export class DatabaseStorage implements IStorage {
   // Branding
   async getBranding(): Promise<InstituteBranding | undefined> {
     const [branding] = await db.select().from(instituteBranding).limit(1);
+    
+    // If no branding exists, create default branding
+    if (!branding) {
+      const defaultBranding = {
+        name: "Meta Lingua Academy",
+        logo: "",
+        primaryColor: "#3B82F6",
+        secondaryColor: "#1E40AF", 
+        accentColor: "#F59E0B",
+        backgroundColor: "#F8FAFC",
+        textColor: "#1F2937",
+        favicon: "/favicon.ico",
+        loginBackgroundImage: "/login-bg.jpg",
+        fontFamily: "Inter",
+        borderRadius: "8px"
+      };
+      
+      const [newBranding] = await db.insert(instituteBranding).values(defaultBranding).returning();
+      return newBranding;
+    }
+    
     return branding;
   }
 

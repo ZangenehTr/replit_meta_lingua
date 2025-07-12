@@ -127,6 +127,63 @@ export default function TeacherPaymentsPage() {
     },
   });
 
+  // Download report mutation
+  const downloadReportMutation = useMutation({
+    mutationFn: () => 
+      apiRequest('/api/admin/teacher-payments/download-report', { 
+        method: 'GET'
+      }),
+    onSuccess: (data) => {
+      // Create and trigger download
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `teacher-payments-${selectedPeriod}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Report Downloaded",
+        description: "Payment report has been downloaded successfully.",
+      });
+    },
+  });
+
+  // Send to accounting mutation
+  const sendToAccountingMutation = useMutation({
+    mutationFn: () => 
+      apiRequest('/api/admin/teacher-payments/send-to-accounting', { 
+        method: 'POST',
+        body: JSON.stringify({ period: selectedPeriod, payments }),
+        headers: { 'Content-Type': 'application/json' }
+      }),
+    onSuccess: (data) => {
+      toast({
+        title: "Sent to Accounting",
+        description: `Payment data sent successfully. Tracking ID: ${data.trackingId}`,
+      });
+    },
+  });
+
+  // Update rate structure mutation
+  const updateRateStructureMutation = useMutation({
+    mutationFn: (rateData: { baseRate: number; bonusPercentage: number }) => 
+      apiRequest('/api/admin/teacher-payments/update-rate-structure', { 
+        method: 'POST',
+        body: JSON.stringify(rateData),
+        headers: { 'Content-Type': 'application/json' }
+      }),
+    onSuccess: () => {
+      toast({
+        title: "Rate Structure Updated",
+        description: "Global rate structure has been updated successfully.",
+      });
+    },
+  });
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
@@ -464,7 +521,18 @@ export default function TeacherPaymentsPage() {
                     <Input type="number" defaultValue="10" />
                   </div>
                 </div>
-                <Button>Update Rate Structure</Button>
+                <Button 
+                  onClick={() => {
+                    const baseRateElement = document.querySelector('input[defaultValue="75000"]') as HTMLInputElement;
+                    const bonusElement = document.querySelector('input[defaultValue="10"]') as HTMLInputElement;
+                    const baseRate = parseInt(baseRateElement?.value || '75000');
+                    const bonusPercentage = parseInt(bonusElement?.value || '10');
+                    updateRateStructureMutation.mutate({ baseRate, bonusPercentage });
+                  }}
+                  disabled={updateRateStructureMutation.isPending}
+                >
+                  {updateRateStructureMutation.isPending ? 'Updating...' : 'Update Rate Structure'}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -481,13 +549,21 @@ export default function TeacherPaymentsPage() {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex gap-2">
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => downloadReportMutation.mutate()}
+                    disabled={downloadReportMutation.isPending}
+                  >
                     <Download className="h-4 w-4 mr-2" />
-                    Download Monthly Report
+                    {downloadReportMutation.isPending ? 'Generating...' : 'Download Monthly Report'}
                   </Button>
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => sendToAccountingMutation.mutate()}
+                    disabled={sendToAccountingMutation.isPending}
+                  >
                     <Send className="h-4 w-4 mr-2" />
-                    Send to Accounting
+                    {sendToAccountingMutation.isPending ? 'Sending...' : 'Send to Accounting'}
                   </Button>
                 </div>
               </div>

@@ -1067,6 +1067,24 @@ export class MemStorage implements IStorage {
   }
 
   async getBranding(): Promise<InstituteBranding | undefined> {
+    // Ensure branding always returns valid data
+    if (!this.branding) {
+      this.branding = {
+        id: 1,
+        name: "Meta Lingua Academy",
+        logo: "",
+        primaryColor: "#3B82F6",
+        secondaryColor: "#1E40AF",
+        accentColor: "#F59E0B",
+        backgroundColor: "#F8FAFC",
+        textColor: "#1F2937",
+        favicon: "/favicon.ico",
+        loginBackgroundImage: "/login-bg.jpg",
+        fontFamily: "Inter",
+        borderRadius: "8px",
+        updatedAt: new Date()
+      };
+    }
     return this.branding;
   }
 
