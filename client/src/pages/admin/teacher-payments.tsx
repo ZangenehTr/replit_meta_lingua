@@ -23,8 +23,11 @@ import {
   TrendingUp,
   Calendar,
   Phone,
-  FileText
+  FileText,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -62,6 +65,8 @@ interface TeacherSession {
 }
 
 function SessionDetailsSection({ teacherId, period }: { teacherId: number; period: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
   // Convert period format from "current" to a proper date period
   const formatPeriod = (period: string) => {
     if (period === 'current') {
@@ -88,33 +93,43 @@ function SessionDetailsSection({ teacherId, period }: { teacherId: number; perio
   };
 
   return (
-    <div className="border rounded-lg p-4">
-      <h3 className="font-semibold mb-3">Session Details</h3>
-      {isLoading ? (
-        <div className="text-center py-4">Loading sessions...</div>
-      ) : sessions.length === 0 ? (
-        <div className="text-center py-4 text-gray-500">No sessions found for this period</div>
-      ) : (
-        <div className="space-y-3">
-          {sessions.map((session, index) => (
-            <div key={index} className={`border-l-4 ${getSessionColor(session.type)} pl-4`}>
-              <div className="font-medium">
-                {session.date} - {session.type === '1-on-1' ? '1-on-1 Session' : 
-                                  session.type === 'group' ? 'Group Class' : 'Callern Session'}
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="border rounded-lg">
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="ghost"
+          className="w-full flex justify-between items-center p-4 h-auto text-left font-semibold hover:bg-gray-50"
+        >
+          <span>Session Details ({sessions.length} sessions)</span>
+          {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="px-4 pb-4">
+        {isLoading ? (
+          <div className="text-center py-4">Loading sessions...</div>
+        ) : sessions.length === 0 ? (
+          <div className="text-center py-4 text-gray-500">No sessions found for this period</div>
+        ) : (
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {sessions.map((session, index) => (
+              <div key={index} className={`border-l-4 ${getSessionColor(session.type)} pl-4 py-2`}>
+                <div className="font-medium">
+                  {session.date} - {session.type === '1-on-1' ? '1-on-1 Session' : 
+                                    session.type === 'group' ? 'Group Class' : 'Callern Session'}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {session.type === '1-on-1' ? `Student: ${session.studentName}` :
+                   session.type === 'group' ? session.groupDetails :
+                   `Student: ${session.studentName}`}
+                </div>
+                <div className="text-sm text-gray-500">
+                  {session.startTime}-{session.endTime} ({session.duration} hrs) - {session.platform}
+                </div>
               </div>
-              <div className="text-sm text-gray-600">
-                {session.type === '1-on-1' ? `Student: ${session.studentName}` :
-                 session.type === 'group' ? session.groupDetails :
-                 `Student: ${session.studentName}`}
-              </div>
-              <div className="text-sm text-gray-500">
-                {session.startTime}-{session.endTime} ({session.duration} hrs) - {session.platform}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+            ))}
+          </div>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
