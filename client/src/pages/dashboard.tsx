@@ -161,10 +161,10 @@ export default function Dashboard() {
               </Tabs>
             </div>
 
-            {/* Mobile-Optimized Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-6 w-full">
-              {/* Main Content Area */}
-              <div className="lg:col-span-1 xl:col-span-2 space-y-3 sm:space-y-4 md:space-y-6">
+            {/* Responsive Content Grid for All Devices */}
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2 xs:gap-3 sm:gap-4 md:gap-5 lg:gap-6 w-full max-w-none">
+              {/* Main Content Area - Responsive Column Spans */}
+              <div className="col-span-1 md:col-span-1 lg:col-span-1 xl:col-span-2 space-y-2 xs:space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6">
                 <RecommendedCourses />
                 <AvailableCourses />
                 <LiveClassroom />
@@ -173,8 +173,8 @@ export default function Dashboard() {
                 <TutorMarketplace />
               </div>
 
-              {/* Sidebar Content */}
-              <div className="space-y-3 sm:space-y-4 md:space-y-6">
+              {/* Sidebar Content - Mobile-First Design */}
+              <div className="col-span-1 space-y-2 xs:space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6">
                 <UpcomingSessions />
                 <RecentMessages />
                 <HomeworkTasks />

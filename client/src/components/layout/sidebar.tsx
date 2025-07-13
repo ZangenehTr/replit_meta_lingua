@@ -74,7 +74,7 @@ export function Sidebar() {
   const navigationItems = user ? getNavigationForRole(user.role, t) : [];
 
   return (
-    <aside className={`w-64 bg-white dark:bg-gray-800 ${isRTL ? 'border-l border-gray-200 dark:border-gray-700' : 'border-r border-gray-200 dark:border-gray-700'} fixed h-full overflow-y-auto hidden md:block ${isRTL ? 'right-0' : 'left-0'}`}>
+    <aside className={`w-64 md:w-72 lg:w-80 bg-white dark:bg-gray-800 ${isRTL ? 'border-l border-gray-200 dark:border-gray-700' : 'border-r border-gray-200 dark:border-gray-700'} fixed h-full overflow-y-auto hidden md:block ${isRTL ? 'right-0' : 'left-0'} z-40`}>
       <div className="p-6">
         <nav className="space-y-2">
           {navigationItems.map((item) => {

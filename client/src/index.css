@@ -101,6 +101,58 @@
       display: flex;
     }
   }
+  
+  /* iPhone 12/13/14 Pro Max Optimization (428px) */
+  @media (max-width: 428px) {
+    .mobile-padding {
+      padding: 0.75rem !important;
+    }
+    
+    .mobile-text-sm {
+      font-size: 0.875rem !important;
+    }
+    
+    .mobile-gap-2 {
+      gap: 0.5rem !important;
+    }
+  }
+  
+  /* iPhone 16 Pro Max Optimization (440px) */
+  @media (min-width: 429px) and (max-width: 440px) {
+    .iphone16-spacing {
+      margin: 0.5rem !important;
+    }
+  }
+  
+  /* Samsung S24 Optimization (360px - 414px) */
+  @media (min-width: 360px) and (max-width: 414px) {
+    .samsung-compact {
+      padding: 0.5rem !important;
+      font-size: 0.8rem !important;
+    }
+  }
+  
+  /* iPad Optimization (768px - 1024px) */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .ipad-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .ipad-sidebar {
+      width: 280px !important;
+    }
+  }
+  
+  /* Desktop Optimization (1025px+) */
+  @media (min-width: 1025px) {
+    .desktop-grid {
+      grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    .desktop-sidebar {
+      width: 320px !important;
+    }
+  }
 }
 
 :root {
