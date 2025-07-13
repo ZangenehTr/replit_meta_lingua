@@ -1048,11 +1048,12 @@ export default function TeacherPaymentsPage() {
                 </div>
               </div>
             </CardContent>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+        </div>
       </div>
-    </div>
-  </AppLayout>
+    </AppLayout>
   );
 }
