@@ -108,49 +108,14 @@ export function AdminDashboard() {
     queryKey: ['/api/admin/class-observations']
   });
 
-  // Admin Overview Stats - using real data
-  const overviewStats = [
-    {
-      title: "Total Users",
-      value: isLoading ? "..." : (stats?.totalUsers || 0).toLocaleString(),
-      change: stats?.userGrowth ? `+${stats.userGrowth}%` : "+0%",
-      trend: stats?.userGrowth > 0 ? "up" : "down",
-      icon: Users
-    },
-    {
-      title: "Total Courses",
-      value: isLoading ? "..." : (stats?.totalCourses || 0).toLocaleString(),
-      change: stats?.enrollmentGrowth ? `+${stats.enrollmentGrowth}%` : "+0%",
-      trend: stats?.enrollmentGrowth > 0 ? "up" : "down",
-      icon: BookOpen
-    },
-    {
-      title: "Monthly Revenue (IRR)",
-      value: isLoading ? "..." : `${(stats?.totalRevenue || 0).toLocaleString()} ریال`,
-      change: stats?.revenueGrowth ? `+${stats.revenueGrowth}%` : "+0%",
-      trend: stats?.revenueGrowth > 0 ? "up" : "down",
-      icon: DollarSign
-    },
-    {
-      title: "Active Students",
-      value: isLoading ? "..." : (stats?.activeStudents || 0).toLocaleString(),
-      change: stats?.completionRate ? `${Math.round(stats.completionRate)}%` : "0%",
-      trend: "up",
-      icon: GraduationCap
-    }
-  ];
-
-  // Sample data for charts (to be replaced with real API data)
-  const chartColors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'];
-
   return (
     <div className={`p-4 sm:p-6 space-y-4 sm:space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Admin Business Intelligence Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Business Intelligence Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base">
-            Critical business metrics and performance indicators
+            Critical business metrics and performance insights
           </p>
         </div>
       </div>
@@ -271,67 +236,26 @@ export function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Registration Analytics & Teacher Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* New Registration Types */}
+      {/* Teacher Performance Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Top Performers */}
         <Card>
           <CardHeader>
-            <CardTitle>New Registrations by Type (This Month)</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-yellow-600" />
+              Top Performing Teachers
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={registrationData?.byType || [
-                    { name: 'In-Person Group', value: 45, color: '#3B82F6' },
-                    { name: 'Online Group', value: 38, color: '#10B981' },
-                    { name: 'One-on-One In-Person', value: 22, color: '#F59E0B' },
-                    { name: 'One-on-One Online', value: 31, color: '#8B5CF6' },
-                    { name: 'Video-Based', value: 18, color: '#EF4444' },
-                    { name: 'Callern Users', value: 12, color: '#06B6D4' }
-                  ]}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {(registrationData?.byType || [
-                    { name: 'In-Person Group', value: 45, color: '#3B82F6' },
-                    { name: 'Online Group', value: 38, color: '#10B981' },
-                    { name: 'One-on-One In-Person', value: 22, color: '#F59E0B' },
-                    { name: 'One-on-One Online', value: 31, color: '#8B5CF6' },
-                    { name: 'Video-Based', value: 18, color: '#EF4444' },
-                    { name: 'Callern Users', value: 12, color: '#06B6D4' }
-                  ]).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Teacher Performance Metrics */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Teacher Performance Overview</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Lowest Attrition */}
-            <div>
-              <h4 className="text-sm font-semibold text-green-600 mb-2 flex items-center">
-                <Award className="h-4 w-4 mr-2" />
-                Lowest Attrition Rate
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-green-600 mb-2">
+                Lowest Attrition Rates
               </h4>
               <div className="space-y-1">
                 {(teacherPerformance?.lowestAttrition || [
-                  { name: 'Sarah Johnson', rate: '2.1%', improvement: '+1.3%' },
-                  { name: 'Ahmad Rezaei', rate: '3.4%', improvement: '+0.8%' },
-                  { name: 'Maria González', rate: '4.2%', improvement: '+2.1%' }
+                  { name: 'Sarah Johnson', rate: '2.1%', improvement: '+0.8%' },
+                  { name: 'Ahmad Hassan', rate: '3.4%', improvement: '+1.2%' },
+                  { name: 'Maria Lopez', rate: '4.7%', improvement: '+0.5%' }
                 ]).map((teacher, index) => (
                   <div key={index} className="flex justify-between items-center">
                     <span className="text-sm">{teacher.name}</span>
@@ -343,35 +267,53 @@ export function AdminDashboard() {
                 ))}
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Highest Retention */}
-            <div>
-              <h4 className="text-sm font-semibold text-blue-600 mb-2 flex items-center">
-                <Star className="h-4 w-4 mr-2" />
-                Highest Retention Rate
+        {/* Retention Champions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+              Student Retention Champions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-blue-600 mb-2">
+                Highest Retention Rates
               </h4>
               <div className="space-y-1">
                 {(teacherPerformance?.highestRetention || [
-                  { name: 'Dr. Emily Chen', rate: '96.8%', streak: '18 months' },
-                  { name: 'Mohammad Ali', rate: '94.5%', streak: '14 months' },
-                  { name: 'Lisa Thompson', rate: '93.2%', streak: '12 months' }
+                  { name: 'Dr. Michael Chen', rate: '94.2%', students: '28 students' },
+                  { name: 'Lisa Thompson', rate: '91.8%', students: '35 students' },
+                  { name: 'Omar Al-Rashid', rate: '89.5%', students: '42 students' }
                 ]).map((teacher, index) => (
                   <div key={index} className="flex justify-between items-center">
                     <span className="text-sm">{teacher.name}</span>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="text-blue-600">{teacher.rate}</Badge>
-                      <span className="text-xs text-muted-foreground">{teacher.streak}</span>
+                      <span className="text-xs text-muted-foreground">{teacher.students}</span>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Lowest Student Scores */}
-            <div>
-              <h4 className="text-sm font-semibold text-red-600 mb-2 flex items-center">
-                <ThumbsDown className="h-4 w-4 mr-2" />
-                Needs Improvement (Student Ratings)
+        {/* Improvement Needed */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ThumbsDown className="h-5 w-5 text-red-600" />
+              Performance Improvement Needed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-red-600 mb-2">
+                Lowest Student Scores
               </h4>
               <div className="space-y-1">
                 {(teacherPerformance?.lowestScores || [
@@ -674,288 +616,6 @@ export function AdminDashboard() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Enhanced Admin Features Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        {/* Student Information System */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => {
-            console.log('Navigating to /admin/students');
-            setLocation('/admin/students');
-          }}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Student Information System
-            </CardTitle>
-            <CardDescription>Complete student profiles & management</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Total Students:</span>
-                <span className="font-bold">{isLoading ? "..." : stats?.totalUsers || 0}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Active This Month:</span>
-                <span className="font-bold">{isLoading ? "..." : stats?.activeStudents || 0}</span>
-              </div>
-              <Progress value={stats?.activeStudents && stats?.totalUsers ? (stats.activeStudents / stats.totalUsers * 100) : 0} className="mt-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Enhanced Course Management & Curriculum */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-primary/20"
-          onClick={() => setLocation('/admin/courses')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Enhanced Course Management
-            </CardTitle>
-            <CardDescription>Advanced course builder, curriculum design & comprehensive management</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Active Courses:</span>
-                <span className="font-bold">{isLoading ? "..." : stats?.totalCourses || 0}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Total Enrollments:</span>
-                <span className="font-bold">{isLoading ? "..." : (stats?.enrollments || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Enhanced Features:</span>
-                <span className="font-bold">All Active</span>
-              </div>
-              <Progress value={stats?.totalCourses ? Math.min(100, (stats.totalCourses / 10) * 100) : 0} className="mt-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Class Scheduling & Management */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setLocation('/admin/classes')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Class Scheduling
-            </CardTitle>
-            <CardDescription>Group classes & automated attendance</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Today's Classes:</span>
-                <span className="font-bold">{isLoading ? "..." : (stats?.todayClasses || 0)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Attendance Rate:</span>
-                <span className="font-bold">{isLoading ? "..." : Math.round(stats?.attendanceRate || 0)}%</span>
-              </div>
-              <Progress value={stats?.attendanceRate || 0} className="mt-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Teacher & Staff Management */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setLocation('/admin/teachers')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5" />
-              Teacher Management
-            </CardTitle>
-            <CardDescription>Payroll, performance & scheduling</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Active Teachers:</span>
-                <span className="font-bold">{isLoading ? "..." : stats?.activeTeachers || 0}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Avg. Rating:</span>
-                <span className="font-bold">{isLoading ? "..." : stats?.avgTeacherRating || 0}/5</span>
-              </div>
-              <Progress value={stats?.avgTeacherRating ? (stats.avgTeacherRating / 5) * 100 : 0} className="mt-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Financial Management */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setLocation('/admin/financial')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Financial Management
-            </CardTitle>
-            <CardDescription>Billing, payouts & marketplace commissions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Total Revenue:</span>
-                <span className="font-bold">{isLoading ? "..." : `${(stats?.totalRevenue || 0).toLocaleString()} ریال`}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Growth Rate:</span>
-                <span className="font-bold">{isLoading ? "..." : `+${stats?.revenueGrowth || 0}%`}</span>
-              </div>
-              <Progress value={stats?.revenueGrowth || 0} className="mt-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Advanced Reporting & Analytics */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setLocation('/admin/financial-reports')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Financial Reports
-            </CardTitle>
-            <CardDescription>Revenue analytics & financial insights</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Revenue Tracked:</span>
-                <span className="font-bold">{isLoading ? "..." : `${(stats?.totalRevenue || 0).toLocaleString()} ریال`}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Success Rate:</span>
-                <span className="font-bold">{isLoading ? "..." : `${Math.round(stats?.completionRate || 0)}%`}</span>
-              </div>
-              <Progress value={stats?.completionRate || 0} className="mt-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* AI Services Management */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setLocation('/admin/ai-management')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bot className="h-5 w-5" />
-              AI Services
-            </CardTitle>
-            <CardDescription>Local AI processing & model management</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Service Status:</span>
-                <span className="font-bold text-green-600">Running</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Processing Mode:</span>
-                <span className="font-bold">Local + Fallback</span>
-              </div>
-              <Progress value={100} className="mt-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Communication Center */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setLocation('/admin/communications')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
-              Communication Center
-            </CardTitle>
-            <CardDescription>SMS, email & in-app notifications</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Messages Sent:</span>
-                <span className="font-bold">{isLoading ? "..." : (systemMetrics?.messagesSent || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Delivery Rate:</span>
-                <span className="font-bold">{isLoading ? "..." : `${Math.round(systemMetrics?.deliveryRate || 0)}%`}</span>
-              </div>
-              <Progress value={systemMetrics?.deliveryRate || 0} className="mt-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quality Assurance */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setLocation('/admin/supervision')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5" />
-              Quality Assurance
-            </CardTitle>
-            <CardDescription>Live session observation & monitoring</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Sessions Monitored:</span>
-                <span className="font-bold">{isLoading ? "..." : (classObservations?.total || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Quality Score:</span>
-                <span className="font-bold">{isLoading ? "..." : `${(systemMetrics?.qualityScore || 0).toFixed(1)}/5`}</span>
-              </div>
-              <Progress value={(systemMetrics?.qualityScore || 0) * 20} className="mt-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* System Configuration */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => setLocation('/admin/system')}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              System Configuration
-            </CardTitle>
-            <CardDescription>White-labeling, roles & permissions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Custom Roles:</span>
-                <span className="font-bold">{isLoading ? "..." : (systemMetrics?.customRoles || 7)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>System Health:</span>
-                <span className="font-bold text-green-600">{isLoading ? "..." : `${(systemMetrics?.uptime || "99.9")}%`}</span>
-              </div>
-              <Progress value={parseFloat(systemMetrics?.uptime || "99.9")} className="mt-2" />
-            </div>
-          </CardContent>
-        </Card>
-
-      </div>
     </div>
   );
 }
