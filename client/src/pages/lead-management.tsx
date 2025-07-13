@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { 
   UserPlus, 
   Phone, 
@@ -24,9 +26,9 @@ import {
   PhoneCall,
   MessageSquare,
   FileText,
-  Headphones
+  Headphones,
+  Plus
 } from "lucide-react";
-import { useLanguage } from "@/hooks/use-language";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Lead } from "@shared/schema";
@@ -43,13 +45,26 @@ interface LeadStats {
 }
 
 export default function LeadManagement() {
-  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showNewLeadForm, setShowNewLeadForm] = useState(false);
+  const [newLeadData, setNewLeadData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
+    source: '',
+    status: 'new',
+    priority: 'medium',
+    interestedLanguage: '',
+    interestedLevel: '',
+    preferredFormat: '',
+    budget: '',
+    notes: ''
+  });
 
   // Debug authentication
   const hasToken = !!localStorage.getItem('auth_token');
@@ -59,6 +74,45 @@ export default function LeadManagement() {
   const { data: leads = [], isLoading, error } = useQuery<Lead[]>({
     queryKey: ["/api/leads"],
     enabled: hasToken // Only run query if user has token
+  });
+
+  // Create lead mutation
+  const createLeadMutation = useMutation({
+    mutationFn: async (leadData: any) => {
+      return apiRequest("/api/leads", {
+        method: "POST",
+        body: leadData
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      setShowNewLeadForm(false);
+      setNewLeadData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: '',
+        source: '',
+        status: 'new',
+        priority: 'medium',
+        interestedLanguage: '',
+        interestedLevel: '',
+        preferredFormat: '',
+        budget: '',
+        notes: ''
+      });
+      toast({
+        title: "Success",
+        description: "Lead created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create lead",
+        variant: "destructive",
+      });
+    }
   });
 
   // VoIP call mutation
@@ -104,6 +158,20 @@ export default function LeadManagement() {
       phoneNumber: lead.phoneNumber,
       contactName: `${lead.firstName} ${lead.lastName}`
     });
+  };
+
+  // Handle create lead
+  const handleCreateLead = () => {
+    if (!newLeadData.firstName || !newLeadData.lastName || !newLeadData.phoneNumber) {
+      toast({
+        title: "Missing Required Fields",
+        description: "Please fill in first name, last name, and phone number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createLeadMutation.mutate(newLeadData);
   };
 
   // Calculate real statistics from database data
@@ -174,14 +242,16 @@ export default function LeadManagement() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "new": return "جدید";
-      case "contacted": return "تماس گرفته شده";
-      case "qualified": return "واجد شرایط";
-      case "converted": return "تبدیل شده";
-      case "lost": return "از دست رفته";
+      case "new": return "New";
+      case "contacted": return "Contacted";
+      case "qualified": return "Qualified";
+      case "converted": return "Converted";
+      case "lost": return "Lost";
       default: return status;
     }
   };
+
+
 
   const OverviewTab = () => (
     <div className="space-y-6">
@@ -191,9 +261,9 @@ export default function LeadManagement() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">کل لیدها</p>
+                <p className="text-sm font-medium text-muted-foreground">Total Leads</p>
                 <p className="text-3xl font-bold">{stats.totalLeads}</p>
-                <p className="text-sm text-blue-600">+{stats.newLeads} جدید</p>
+                <p className="text-sm text-blue-600">+{stats.newLeads} new</p>
               </div>
               <Users className="h-8 w-8 text-blue-600" />
             </div>
@@ -204,7 +274,7 @@ export default function LeadManagement() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">واجد شرایط</p>
+                <p className="text-sm font-medium text-muted-foreground">Qualified</p>
                 <p className="text-3xl font-bold">{stats.qualifiedLeads}</p>
                 <p className="text-sm text-purple-600">{((stats.qualifiedLeads / stats.totalLeads) * 100).toFixed(1)}%</p>
               </div>
@@ -217,9 +287,9 @@ export default function LeadManagement() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">نرخ تبدیل</p>
+                <p className="text-sm font-medium text-muted-foreground">Conversion Rate</p>
                 <p className="text-3xl font-bold">{stats.conversionRate}%</p>
-                <p className="text-sm text-green-600">+2.3% این ماه</p>
+                <p className="text-sm text-green-600">+2.3% this month</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-600" />
             </div>
@@ -230,9 +300,9 @@ export default function LeadManagement() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">پیگیری امروز</p>
+                <p className="text-sm font-medium text-muted-foreground">Follow-ups Today</p>
                 <p className="text-3xl font-bold">{stats.followUpsDue}</p>
-                <p className="text-sm text-orange-600">نیاز به اقدام</p>
+                <p className="text-sm text-orange-600">Action needed</p>
               </div>
               <Clock className="h-8 w-8 text-orange-600" />
             </div>
@@ -482,32 +552,206 @@ export default function LeadManagement() {
   );
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">مدیریت لیدها</h1>
-          <p className="text-muted-foreground">مدیریت مشتریان بالقوه و پیگیری فرآیند فروش</p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => window.open('/callcenter/voip', '_blank')}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Headphones className="h-4 w-4 mr-2" />
-            VoIP Center
-          </Button>
-          <Button variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
-            گزارش لیدها
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6 space-y-6">
+      {/* Modern Header Section */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-6 lg:space-y-0">
+          <div className="space-y-2">
+            <div className="flex items-center space-x-3">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-xl">
+                <Target className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                  Lead Management
+                </h1>
+                <p className="text-slate-600 text-lg">
+                  Manage prospects and track the sales process
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={() => window.open('/callcenter/voip', '_blank')}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <Headphones className="h-4 w-4 mr-2" />
+              VoIP Center
+            </Button>
+            <Dialog open={showNewLeadForm} onOpenChange={setShowNewLeadForm}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md hover:shadow-lg transition-all duration-200">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  New Lead
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Create New Lead</DialogTitle>
+                  <DialogDescription>
+                    Add a new prospect to the system for follow-up and conversion.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name *</Label>
+                    <Input
+                      id="firstName"
+                      value={newLeadData.firstName}
+                      onChange={(e) => setNewLeadData({...newLeadData, firstName: e.target.value})}
+                      placeholder="Enter first name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name *</Label>
+                    <Input
+                      id="lastName"
+                      value={newLeadData.lastName}
+                      onChange={(e) => setNewLeadData({...newLeadData, lastName: e.target.value})}
+                      placeholder="Enter last name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phoneNumber">Phone Number *</Label>
+                    <Input
+                      id="phoneNumber"
+                      value={newLeadData.phoneNumber}
+                      onChange={(e) => setNewLeadData({...newLeadData, phoneNumber: e.target.value})}
+                      placeholder="+98 912 345 6789"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newLeadData.email}
+                      onChange={(e) => setNewLeadData({...newLeadData, email: e.target.value})}
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="source">Lead Source</Label>
+                    <Select value={newLeadData.source} onValueChange={(value) => setNewLeadData({...newLeadData, source: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select source" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="website">Website</SelectItem>
+                        <SelectItem value="social_media">Social Media</SelectItem>
+                        <SelectItem value="referral">Referral</SelectItem>
+                        <SelectItem value="advertisement">Advertisement</SelectItem>
+                        <SelectItem value="walk_in">Walk-in</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="priority">Priority</Label>
+                    <Select value={newLeadData.priority} onValueChange={(value) => setNewLeadData({...newLeadData, priority: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="interestedLanguage">Interested Language</Label>
+                    <Select value={newLeadData.interestedLanguage} onValueChange={(value) => setNewLeadData({...newLeadData, interestedLanguage: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="persian">Persian</SelectItem>
+                        <SelectItem value="english">English</SelectItem>
+                        <SelectItem value="arabic">Arabic</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="interestedLevel">Level</Label>
+                    <Select value={newLeadData.interestedLevel} onValueChange={(value) => setNewLeadData({...newLeadData, interestedLevel: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="preferredFormat">Preferred Format</Label>
+                    <Select value={newLeadData.preferredFormat} onValueChange={(value) => setNewLeadData({...newLeadData, preferredFormat: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="group">Group</SelectItem>
+                        <SelectItem value="individual">Individual</SelectItem>
+                        <SelectItem value="online">Online</SelectItem>
+                        <SelectItem value="in_person">In-Person</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="budget">Budget (IRR)</Label>
+                    <Input
+                      id="budget"
+                      type="number"
+                      value={newLeadData.budget}
+                      onChange={(e) => setNewLeadData({...newLeadData, budget: e.target.value})}
+                      placeholder="2000000"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      value={newLeadData.notes}
+                      onChange={(e) => setNewLeadData({...newLeadData, notes: e.target.value})}
+                      placeholder="Additional notes about the lead..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button variant="outline" onClick={() => setShowNewLeadForm(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleCreateLead}
+                    disabled={createLeadMutation.isPending}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {createLeadMutation.isPending ? "Creating..." : "Create Lead"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" className="border-slate-300 hover:bg-slate-50">
+              <FileText className="h-4 w-4 mr-2" />
+              Lead Report
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="overview">نمای کلی</TabsTrigger>
-          <TabsTrigger value="leads">لیست لیدها</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-2">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-100 rounded-lg">
+            <TabsTrigger value="overview" className="rounded-md">Overview</TabsTrigger>
+            <TabsTrigger value="leads" className="rounded-md">Lead List</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview">
           <OverviewTab />
