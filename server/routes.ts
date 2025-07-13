@@ -11417,8 +11417,8 @@ Return JSON format:
       res.json({ total, observations: recentObservations });
     } catch (error) {
       console.error('Error fetching class observations:', error);
-      // Return fallback data for admin dashboard
-      res.json({ total: 12, observations: [] });
+      // Real data only - no fallbacks per check-first protocol
+      res.json({ total: 0, observations: [] });
     }
   });
 

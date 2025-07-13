@@ -5348,27 +5348,19 @@ export class DatabaseStorage implements IStorage {
 
       byType[5].value = callernUsers[0]?.count || 0;
 
-      // Add fallback data if no real data
-      if (byType.every(type => type.value === 0)) {
-        byType[0].value = 45; // In-Person Group
-        byType[1].value = 38; // Online Group  
-        byType[2].value = 22; // One-on-One In-Person
-        byType[3].value = 31; // One-on-One Online
-        byType[4].value = 18; // Video-Based
-        byType[5].value = 12; // Callern Users
-      }
+      // Real data only - no fallbacks per check-first protocol
 
       return { byType };
     } catch (error) {
       console.error('Error in getRegistrationAnalytics:', error);
       return { 
         byType: [
-          { name: 'In-Person Group', value: 45, color: '#3B82F6' },
-          { name: 'Online Group', value: 38, color: '#10B981' },
-          { name: 'One-on-One In-Person', value: 22, color: '#F59E0B' },
-          { name: 'One-on-One Online', value: 31, color: '#8B5CF6' },
-          { name: 'Video-Based', value: 18, color: '#EF4444' },
-          { name: 'Callern Users', value: 12, color: '#06B6D4' }
+          { name: 'In-Person Group', value: 0, color: '#3B82F6' },
+          { name: 'Online Group', value: 0, color: '#10B981' },
+          { name: 'One-on-One In-Person', value: 0, color: '#F59E0B' },
+          { name: 'One-on-One Online', value: 0, color: '#8B5CF6' },
+          { name: 'Video-Based', value: 0, color: '#EF4444' },
+          { name: 'Callern Users', value: 0, color: '#06B6D4' }
         ]
       };
     }
@@ -5434,30 +5426,7 @@ export class DatabaseStorage implements IStorage {
           .slice(0, 3);
       }
 
-      // Fallback data if no real data
-      if (lowestAttrition.length === 0) {
-        lowestAttrition = [
-          { name: 'Sarah Johnson', rate: '2.1%', improvement: '+1.3%' },
-          { name: 'Ahmad Rezaei', rate: '3.4%', improvement: '+0.8%' },
-          { name: 'Maria González', rate: '4.2%', improvement: '+2.1%' }
-        ];
-      }
-
-      if (highestRetention.length === 0) {
-        highestRetention = [
-          { name: 'Dr. Emily Chen', rate: '96.8%', streak: '18 months' },
-          { name: 'Mohammad Ali', rate: '94.5%', streak: '14 months' },
-          { name: 'Lisa Thompson', rate: '93.2%', streak: '12 months' }
-        ];
-      }
-
-      if (lowestScores.length === 0) {
-        lowestScores = [
-          { name: 'John Smith', score: '3.2/5.0', feedback: 'Communication issues' },
-          { name: 'Hassan Ahmed', score: '3.5/5.0', feedback: 'Late arrivals' },
-          { name: 'Kate Wilson', score: '3.7/5.0', feedback: 'Pace too fast' }
-        ];
-      }
+      // Real data only - no fallbacks per check-first protocol
 
       return {
         lowestAttrition,
@@ -5467,17 +5436,9 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error in getTeacherPerformanceAnalytics:', error);
       return {
-        lowestAttrition: [
-          { name: 'Sarah Johnson', rate: '2.1%', improvement: '+1.3%' },
-          { name: 'Ahmad Rezaei', rate: '3.4%', improvement: '+0.8%' }
-        ],
-        highestRetention: [
-          { name: 'Dr. Emily Chen', rate: '96.8%', streak: '18 months' },
-          { name: 'Mohammad Ali', rate: '94.5%', streak: '14 months' }
-        ],
-        lowestScores: [
-          { name: 'John Smith', score: '3.2/5.0', feedback: 'Communication issues' }
-        ]
+        lowestAttrition: [],
+        highestRetention: [],
+        lowestScores: []
       };
     }
   }
@@ -5495,25 +5456,36 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(sessions, eq(enrollments.courseId, sessions.courseId))
         .where(gte(sessions.sessionDate, sql`current_date - interval '3 months'`));
 
-      const total = totalStudents[0]?.count || 1;
+      const total = totalStudents[0]?.count || 0;
       const active = activeStudents[0]?.count || 0;
-      const overall = total > 0 ? ((active / total) * 100).toFixed(1) : '87.3';
+      const overall = total > 0 ? ((active / total) * 100).toFixed(1) : '0.0';
+
+      // Get retention by course level (real data only)
+      const levelRetention = await db.select({
+        level: courses.level,
+        totalEnrollments: sql<number>`count(${enrollments.id})`,
+        activeEnrollments: sql<number>`count(*) filter (where ${enrollments.status} = 'active')`
+      }).from(courses)
+        .leftJoin(enrollments, eq(courses.id, enrollments.courseId))
+        .groupBy(courses.level);
+
+      const byLevel = levelRetention.map(level => ({
+        level: level.level || 'Unknown',
+        retention: level.totalEnrollments > 0 ? 
+          ((level.activeEnrollments / level.totalEnrollments) * 100) : 0,
+        dropouts: level.totalEnrollments - level.activeEnrollments
+      }));
 
       return {
         overall,
-        newStudents: '92.1',
-        byLevel: [
-          { level: 'Beginner', retention: 89.2, dropouts: 12 },
-          { level: 'Intermediate', retention: 91.5, dropouts: 8 },
-          { level: 'Advanced', retention: 82.7, dropouts: 15 },
-          { level: 'Business', retention: 94.3, dropouts: 4 }
-        ]
+        newStudents: '0.0', // Calculate from real new student data
+        byLevel
       };
     } catch (error) {
       console.error('Error in getStudentRetentionAnalytics:', error);
       return {
-        overall: '87.3',
-        newStudents: '92.1',
+        overall: '0.0',
+        newStudents: '0.0',
         byLevel: []
       };
     }
@@ -5536,7 +5508,7 @@ export class DatabaseStorage implements IStorage {
       const totalEnrolled = completionStats.reduce((sum, course) => sum + course.totalEnrollments, 0);
       const totalCompleted = completionStats.reduce((sum, course) => sum + course.completedEnrollments, 0);
       
-      const average = totalEnrolled > 0 ? ((totalCompleted / totalEnrolled) * 100).toFixed(1) : '78.9';
+      const average = totalEnrolled > 0 ? ((totalCompleted / totalEnrolled) * 100).toFixed(1) : '0.0';
 
       const byCourse = completionStats.map(course => ({
         name: course.courseName,
@@ -5546,26 +5518,18 @@ export class DatabaseStorage implements IStorage {
         students: course.totalStudents
       })).slice(0, 4);
 
-      // Add fallback data if no real data
-      if (byCourse.length === 0) {
-        byCourse.push(
-          { name: 'Persian Basics', completion: 85.4, students: 124 },
-          { name: 'Business English', completion: 91.2, students: 87 },
-          { name: 'IELTS Prep', completion: 72.8, students: 156 },
-          { name: 'Conversation', completion: 68.9, students: 203 }
-        );
-      }
+      // Real data only - no fallbacks per check-first protocol
 
       return {
         average,
-        onTime: '65.2',
+        onTime: '0.0', // Calculate from real completion time data
         byCourse
       };
     } catch (error) {
       console.error('Error in getCourseCompletionAnalytics:', error);
       return {
-        average: '78.9',
-        onTime: '65.2',
+        average: '0.0',
+        onTime: '0.0',
         byCourse: []
       };
     }

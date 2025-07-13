@@ -129,7 +129,7 @@ export function AdminDashboard() {
             <Server className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{systemMetrics?.uptime || '99.8'}%</div>
+            <div className="text-2xl font-bold text-green-600">{systemMetrics?.uptime || '0.0'}%</div>
             <p className="text-xs text-muted-foreground">
               Last 30 days
             </p>
@@ -143,7 +143,7 @@ export function AdminDashboard() {
             <Phone className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{callCenterStats?.responseRate || '94.5'}%</div>
+            <div className="text-2xl font-bold text-blue-600">{callCenterStats?.responseRate || '0.0'}%</div>
             <p className="text-xs text-muted-foreground">
               +2.3% from last week
             </p>
@@ -157,9 +157,9 @@ export function AdminDashboard() {
             <AlertCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{overduePayments?.count || 12}</div>
+            <div className="text-2xl font-bold text-red-600">{overduePayments?.count || 0}</div>
             <p className="text-xs text-red-600">
-              ${overduePayments?.totalAmount || '24,650'} total
+              ${overduePayments?.totalAmount || '0'} total
             </p>
           </CardContent>
         </Card>
@@ -171,7 +171,7 @@ export function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">${revenueData?.monthly || '89,420'}</div>
+            <div className="text-2xl font-bold text-green-600">${revenueData?.monthly || '0'}</div>
             <p className="text-xs text-green-600">
               +15.3% from last month
             </p>
@@ -188,15 +188,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={callCenterStats?.weeklyData || [
-                { day: 'Mon', calls: 45, answered: 42, satisfaction: 4.5 },
-                { day: 'Tue', calls: 52, answered: 49, satisfaction: 4.3 },
-                { day: 'Wed', calls: 38, answered: 37, satisfaction: 4.7 },
-                { day: 'Thu', calls: 63, answered: 58, satisfaction: 4.2 },
-                { day: 'Fri', calls: 55, answered: 53, satisfaction: 4.6 },
-                { day: 'Sat', calls: 41, answered: 39, satisfaction: 4.4 },
-                { day: 'Sun', calls: 28, answered: 27, satisfaction: 4.8 }
-              ]}>
+              <AreaChart data={callCenterStats?.weeklyData || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="day" />
                 <YAxis />
@@ -215,14 +207,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData?.monthlyTrend || [
-                { month: 'Jul', daily: 2850, weekly: 19950, monthly: 78500 },
-                { month: 'Aug', daily: 3100, weekly: 21700, monthly: 85200 },
-                { month: 'Sep', daily: 2950, weekly: 20650, monthly: 81400 },
-                { month: 'Oct', daily: 3350, weekly: 23450, monthly: 92100 },
-                { month: 'Nov', daily: 3650, weekly: 25550, monthly: 101800 },
-                { month: 'Dec', daily: 3200, weekly: 22400, monthly: 89420 }
-              ]}>
+              <LineChart data={revenueData?.monthlyTrend || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
@@ -252,11 +237,7 @@ export function AdminDashboard() {
                 Lowest Attrition Rates
               </h4>
               <div className="space-y-1">
-                {(teacherPerformance?.lowestAttrition || [
-                  { name: 'Sarah Johnson', rate: '2.1%', improvement: '+0.8%' },
-                  { name: 'Ahmad Hassan', rate: '3.4%', improvement: '+1.2%' },
-                  { name: 'Maria Lopez', rate: '4.7%', improvement: '+0.5%' }
-                ]).map((teacher, index) => (
+                {(teacherPerformance?.lowestAttrition || []).map((teacher, index) => (
                   <div key={index} className="flex justify-between items-center">
                     <span className="text-sm">{teacher.name}</span>
                     <div className="flex items-center gap-2">
@@ -284,11 +265,7 @@ export function AdminDashboard() {
                 Highest Retention Rates
               </h4>
               <div className="space-y-1">
-                {(teacherPerformance?.highestRetention || [
-                  { name: 'Dr. Michael Chen', rate: '94.2%', students: '28 students' },
-                  { name: 'Lisa Thompson', rate: '91.8%', students: '35 students' },
-                  { name: 'Omar Al-Rashid', rate: '89.5%', students: '42 students' }
-                ]).map((teacher, index) => (
+                {(teacherPerformance?.highestRetention || []).map((teacher, index) => (
                   <div key={index} className="flex justify-between items-center">
                     <span className="text-sm">{teacher.name}</span>
                     <div className="flex items-center gap-2">
@@ -316,11 +293,7 @@ export function AdminDashboard() {
                 Lowest Student Scores
               </h4>
               <div className="space-y-1">
-                {(teacherPerformance?.lowestScores || [
-                  { name: 'John Smith', score: '3.2/5.0', feedback: 'Communication issues' },
-                  { name: 'Hassan Ahmed', score: '3.5/5.0', feedback: 'Late arrivals' },
-                  { name: 'Kate Wilson', score: '3.7/5.0', feedback: 'Pace too fast' }
-                ]).map((teacher, index) => (
+                {(teacherPerformance?.lowestScores || []).map((teacher, index) => (
                   <div key={index} className="flex justify-between items-center">
                     <span className="text-sm">{teacher.name}</span>
                     <div className="flex items-center gap-2">
@@ -346,11 +319,11 @@ export function AdminDashboard() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{studentRetention?.overall || '87.3'}%</div>
+                  <div className="text-2xl font-bold text-blue-600">{studentRetention?.overall || '0.0'}%</div>
                   <p className="text-xs text-muted-foreground">Overall Retention</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{studentRetention?.newStudents || '92.1'}%</div>
+                  <div className="text-2xl font-bold text-green-600">{studentRetention?.newStudents || '0.0'}%</div>
                   <p className="text-xs text-muted-foreground">New Student (3mo)</p>
                 </div>
               </div>
@@ -376,11 +349,11 @@ export function AdminDashboard() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{courseCompletion?.average || '78.9'}%</div>
+                  <div className="text-2xl font-bold text-purple-600">{courseCompletion?.average || '0.0'}%</div>
                   <p className="text-xs text-muted-foreground">Avg Completion</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">{courseCompletion?.onTime || '65.2'}%</div>
+                  <div className="text-2xl font-bold text-orange-600">{courseCompletion?.onTime || '0.0'}%</div>
                   <p className="text-xs text-muted-foreground">On-Time Completion</p>
                 </div>
               </div>
