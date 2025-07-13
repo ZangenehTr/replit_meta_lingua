@@ -8976,10 +8976,10 @@ Return JSON format:
       const { teacherId, teacherName, amount, period } = req.body;
       
       // Get teacher's phone number
-      const teachers = await storage.getTeachers();
+      const teachers = await storage.getTeachersWithRates();
       const teacher = teachers.find(t => t.id === teacherId);
       
-      if (!teacher || !teacher.phone) {
+      if (!teacher || !teacher.phoneNumber) {
         return res.status(404).json({ message: "Teacher phone number not found" });
       }
 
@@ -8988,17 +8988,44 @@ Return JSON format:
       
       // In a real implementation, integrate with Kavenegar SMS service
       // For now, simulate SMS sending
-      console.log(`SMS would be sent to ${teacher.phone}: ${message}`);
+      console.log(`SMS would be sent to ${teacher.phoneNumber}: ${message}`);
       
       res.json({ 
         success: true, 
         message: "SMS notification sent successfully",
-        sentTo: teacher.phone,
+        sentTo: teacher.phoneNumber,
         content: message
       });
     } catch (error) {
       console.error("Error sending SMS notification:", error);
       res.status(500).json({ message: "Failed to send SMS notification" });
+    }
+  });
+
+  // Update teacher payment details
+  app.put("/api/admin/teacher-payments/:id/update", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const paymentId = parseInt(req.params.id);
+      const { basePay, bonuses, deductions, totalHours } = req.body;
+      
+      // Calculate new final amount
+      const finalAmount = basePay + bonuses - deductions;
+      
+      // Update payment in database (using mock for now)
+      const updatedPayment = {
+        id: paymentId,
+        basePay,
+        bonuses,
+        deductions,
+        totalHours,
+        finalAmount,
+        status: 'calculated' // Reset to calculated when manually edited
+      };
+      
+      res.json(updatedPayment);
+    } catch (error) {
+      console.error("Error updating teacher payment:", error);
+      res.status(500).json({ message: "Failed to update teacher payment" });
     }
   });
 

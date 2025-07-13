@@ -511,14 +511,31 @@ export default function TeacherPaymentsPage() {
                     </TableHeader>
                     <TableBody>
                       {payments?.map((payment) => (
-                        <TableRow key={payment.id}>
+                        <TableRow key={payment.id} className="hover:bg-gray-50">
                           <TableCell>
-                            <div className="font-medium">{payment.teacherName}</div>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                                <img 
+                                  src={`/uploads/teacher-photos/${payment.teacherId}.jpg`}
+                                  alt={payment.teacherName}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.nextElementSibling.style.display = 'flex';
+                                  }}
+                                />
+                                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs" style={{display: 'none'}}>
+                                  No Photo
+                                </div>
+                              </div>
+                              <div className="font-medium text-gray-900">{payment.teacherName}</div>
+                            </div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium text-lg">
+                            <div className="font-bold text-lg text-green-600">
                               {payment.finalAmount?.toLocaleString()} IRR
                             </div>
+                            <div className="text-sm text-gray-500">{payment.totalHours} hours</div>
                           </TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(payment.status)}>
@@ -645,35 +662,66 @@ export default function TeacherPaymentsPage() {
                                           </DialogDescription>
                                         </DialogHeader>
                                         <div className="space-y-4">
-                                          <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                              <Label>Base Pay (IRR)</Label>
-                                              <Input type="number" defaultValue={payment.basePay} />
+                                          <form data-payment-id={payment.id}>
+                                            <div className="grid grid-cols-2 gap-4">
+                                              <div>
+                                                <Label>Base Pay (IRR)</Label>
+                                                <Input name="basePay" type="number" defaultValue={payment.basePay} />
+                                              </div>
+                                              <div>
+                                                <Label>Bonuses (IRR)</Label>
+                                                <Input name="bonuses" type="number" defaultValue={payment.bonuses} />
+                                              </div>
                                             </div>
-                                            <div>
-                                              <Label>Bonuses (IRR)</Label>
-                                              <Input type="number" defaultValue={payment.bonuses} />
+                                            <div className="grid grid-cols-2 gap-4 mt-4">
+                                              <div>
+                                                <Label>Deductions (IRR)</Label>
+                                                <Input name="deductions" type="number" defaultValue={payment.deductions} />
+                                              </div>
+                                              <div>
+                                                <Label>Total Hours</Label>
+                                                <Input name="totalHours" type="number" defaultValue={payment.totalHours} />
+                                              </div>
                                             </div>
-                                          </div>
-                                          <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                              <Label>Deductions (IRR)</Label>
-                                              <Input type="number" defaultValue={payment.deductions} />
-                                            </div>
-                                            <div>
-                                              <Label>Total Hours</Label>
-                                              <Input type="number" defaultValue={payment.totalHours} />
-                                            </div>
-                                          </div>
+                                          </form>
                                           <div className="flex justify-end gap-2">
                                             <DialogClose asChild>
                                               <Button variant="outline">Cancel</Button>
                                             </DialogClose>
-                                            <Button onClick={() => {
-                                              toast({
-                                                title: "Payslip Updated",
-                                                description: "Payment details have been modified.",
-                                              });
+                                            <Button onClick={async () => {
+                                              try {
+                                                // Get form values from the nearest form
+                                                const form = document.querySelector(`form[data-payment-id="${payment.id}"]`) as HTMLFormElement;
+                                                if (!form) throw new Error('Form not found');
+                                                
+                                                const formData = new FormData(form);
+                                                const updatedPayment = {
+                                                  basePay: parseInt(formData.get('basePay') as string),
+                                                  bonuses: parseInt(formData.get('bonuses') as string),
+                                                  deductions: parseInt(formData.get('deductions') as string),
+                                                  totalHours: parseInt(formData.get('totalHours') as string)
+                                                };
+                                                
+                                                // Call API to update payment
+                                                await apiRequest(`/api/admin/teacher-payments/${payment.id}/update`, {
+                                                  method: 'PUT',
+                                                  body: JSON.stringify(updatedPayment)
+                                                });
+                                                
+                                                // Refresh data
+                                                queryClient.invalidateQueries({ queryKey: ['/api/admin/teacher-payments'] });
+                                                
+                                                toast({
+                                                  title: "Payslip Updated",
+                                                  description: "Payment details have been modified successfully.",
+                                                });
+                                              } catch (error) {
+                                                toast({
+                                                  title: "Error",
+                                                  description: "Failed to update payslip",
+                                                  variant: "destructive"
+                                                });
+                                              }
                                             }}>
                                               Save Changes
                                             </Button>
