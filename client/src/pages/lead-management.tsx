@@ -23,10 +23,12 @@ import {
   Target,
   PhoneCall,
   MessageSquare,
-  FileText
+  FileText,
+  Headphones
 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Lead } from "@shared/schema";
 
 interface LeadStats {
@@ -42,6 +44,7 @@ interface LeadStats {
 
 export default function LeadManagement() {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,6 +60,51 @@ export default function LeadManagement() {
     queryKey: ["/api/leads"],
     enabled: hasToken // Only run query if user has token
   });
+
+  // VoIP call mutation
+  const initiateVoIPCall = useMutation({
+    mutationFn: async ({ phoneNumber, contactName }: { phoneNumber: string; contactName: string }) => {
+      return apiRequest("/api/voip/initiate-call", {
+        method: "POST",
+        body: {
+          phoneNumber,
+          contactName,
+          recordCall: true,
+          source: 'lead_management'
+        }
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "VoIP Call Initiated",
+        description: `Call initiated to ${data.contactName}`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Call Failed",
+        description: "Failed to initiate VoIP call. Please check your connection.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle VoIP call
+  const handleVoIPCall = (lead: Lead) => {
+    if (!lead.phoneNumber) {
+      toast({
+        title: "No Phone Number",
+        description: `${lead.firstName} ${lead.lastName} does not have a phone number.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    initiateVoIPCall.mutate({
+      phoneNumber: lead.phoneNumber,
+      contactName: `${lead.firstName} ${lead.lastName}`
+    });
+  };
 
   // Calculate real statistics from database data
   const stats: LeadStats = useMemo(() => {
@@ -402,7 +450,13 @@ export default function LeadManagement() {
                       </td>
                       <td className="p-4">
                         <div className="flex gap-2">
-                          <Button size="sm" variant="ghost" title="تماس تلفنی">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            title="تماس تلفنی"
+                            onClick={() => handleVoIPCall(lead)}
+                            disabled={initiateVoIPCall.isPending}
+                          >
                             <Phone className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="ghost" title="ارسال ایمیل">
@@ -435,6 +489,13 @@ export default function LeadManagement() {
           <p className="text-muted-foreground">مدیریت مشتریان بالقوه و پیگیری فرآیند فروش</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            onClick={() => window.open('/callcenter/voip-center', '_blank')}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Headphones className="h-4 w-4 mr-2" />
+            VoIP Center
+          </Button>
           <Button variant="outline">
             <FileText className="h-4 w-4 mr-2" />
             گزارش لیدها
