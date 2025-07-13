@@ -291,53 +291,7 @@ export default function TeacherPaymentsPage() {
               </div>
             </div>
           </div>
-          {/* Rate Configuration Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Rate Configuration</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <Label htmlFor="regularRate" className="text-sm font-medium text-gray-700">Regular Session Hourly Rate (IRR)</Label>
-                <Input
-                  id="regularRate"
-                  type="number"
-                  defaultValue="750000"
-                  placeholder="750000"
-                  className="mt-2"
-                />
-                <p className="text-xs text-gray-500 mt-1">Rate for regular in-person and online sessions</p>
-              </div>
-              <div>
-                <Label htmlFor="callernRate" className="text-sm font-medium text-gray-700">Callern Service Hourly Rate (IRR)</Label>
-                <Input
-                  id="callernRate"
-                  type="number"
-                  defaultValue="850000"
-                  placeholder="850000"
-                  className="mt-2"
-                />
-                <p className="text-xs text-gray-500 mt-1">Rate for Callern standby and on-demand sessions</p>
-              </div>
-            </div>
-            
-            <div className="flex justify-end">
-              <Button
-                onClick={() => {
-                  const regularRate = (document.getElementById('regularRate') as HTMLInputElement).value;
-                  const callernRate = (document.getElementById('callernRate') as HTMLInputElement).value;
-                  
-                  updateRateStructureMutation.mutate({
-                    baseRate: parseInt(regularRate),
-                    callernRate: parseInt(callernRate),
-                    effectiveDate: new Date().toISOString().split('T')[0]
-                  });
-                }}
-                disabled={updateRateStructureMutation.isPending}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {updateRateStructureMutation.isPending ? 'Updating...' : 'Update Both Rates'}
-              </Button>
-            </div>
-          </div>
+          {/* Payment Calculation Section */}
             
             <Dialog>
               <DialogTrigger asChild>

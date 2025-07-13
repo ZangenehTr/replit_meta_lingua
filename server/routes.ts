@@ -8983,9 +8983,9 @@ Return JSON format:
         return res.status(404).json({ message: "Teacher not found" });
       }
 
-      // Check if teacher has phone number (use phoneNumber or phone field)
-      const phoneNumber = teacher.phoneNumber || teacher.phone;
-      if (!phoneNumber) {
+      // Check if teacher has phone number
+      const phoneNumber = teacher.phoneNumber;
+      if (!phoneNumber || phoneNumber === 'Unknown') {
         return res.status(404).json({ message: "Teacher phone number not found" });
       }
 
@@ -9032,18 +9032,17 @@ Return JSON format:
         isRecalculated: true // Flag to indicate this was manually adjusted
       };
       
-      // In a real implementation, update the database
-      // await storage.updateTeacherPayment(paymentId, updatedPayment);
-      
-      res.json({
-        ...updatedPayment,
-        message: "Payment recalculated successfully",
-        changes: {
-          previousAmount: req.body.previousAmount,
-          newAmount: newFinalAmount,
-          difference: newFinalAmount - (req.body.previousAmount || 0)
-        }
+      // Update payment in database
+      const result = await storage.updateTeacherPayment(paymentId, {
+        ...req.body,
+        totalHours,
+        hourlyRate,
+        basePay: newBasePay,
+        bonuses: bonuses || 0,
+        deductions: deductions || 0
       });
+      
+      res.json(result);
     } catch (error) {
       console.error("Error updating teacher payment:", error);
       res.status(500).json({ message: "Failed to update teacher payment" });

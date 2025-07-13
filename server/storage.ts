@@ -285,6 +285,7 @@ export interface IStorage {
   approveTeacherPayment(paymentId: number): Promise<any>;
   getTeachersWithRates(): Promise<any[]>;
   updateTeacherRates(teacherId: number, regularRate: number, callernRate?: number): Promise<any>;
+  updateTeacherPayment(paymentId: number, updates: any): Promise<any>;
   getTeacherSessionCount(teacherId: number): Promise<number>;
   getTeacherPaymentHistory(teacherId: number, limit: number, offset: number): Promise<any[]>;
   
@@ -2065,6 +2066,38 @@ export class MemStorage implements IStorage {
       callernRate: callernRate,
       updatedAt: new Date().toISOString(),
       message: 'Teacher rates updated successfully'
+    };
+  }
+
+  async updateTeacherPayment(paymentId: number, updates: any): Promise<any> {
+    const { basePay, bonuses, deductions, totalHours, hourlyRate } = updates;
+    
+    // Recalculate everything based on new values
+    const newBasePay = basePay || (totalHours * (hourlyRate || 750000));
+    const newFinalAmount = newBasePay + (bonuses || 0) - (deductions || 0);
+    
+    // Create updated payment record
+    const updatedPayment = {
+      id: paymentId,
+      basePay: newBasePay,
+      bonuses: bonuses || 0,
+      deductions: deductions || 0,
+      totalHours: totalHours,
+      hourlyRate: hourlyRate || 750000,
+      finalAmount: newFinalAmount,
+      status: 'calculated',
+      calculatedAt: new Date().toISOString(),
+      isRecalculated: true
+    };
+    
+    return {
+      ...updatedPayment,
+      message: "Payment recalculated successfully",
+      changes: {
+        previousAmount: updates.previousAmount,
+        newAmount: newFinalAmount,
+        difference: newFinalAmount - (updates.previousAmount || 0)
+      }
     };
   }
 
