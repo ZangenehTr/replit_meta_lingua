@@ -31,50 +31,92 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
     }
   }
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-    const response = await fetch(finalUrl, {
-      headers,
-      credentials: 'include',
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      let errorText = 'Unknown error';
-      try {
-        errorText = await response.text();
-      } catch (parseError) {
-        errorText = `HTTP ${response.status} ${response.statusText}`;
-      }
-      throw new Error(`${response.status}: ${errorText}`);
-    }
-
-    let result;
+  // Retry logic for network resilience
+  const maxRetries = 2;
+  let lastError;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const text = await response.text();
-      if (!text.trim()) {
-        return null;
-      }
-      result = JSON.parse(text);
-    } catch (parseError) {
-      // Handle JSON parsing error gracefully
-      throw new Error(`Invalid JSON response from server: ${finalUrl}`);
-    }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // Reduced timeout
 
-    return result;
-  } catch (error) {
-    if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      throw new Error('Network error: Unable to connect to server. Please check your connection and try again.');
+      const response = await fetch(finalUrl, {
+        headers,
+        credentials: 'include',
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        let errorText = 'Unknown error';
+        try {
+          const responseBody = await response.text();
+          if (responseBody.trim()) {
+            // Try to parse as JSON first
+            try {
+              const errorJson = JSON.parse(responseBody);
+              errorText = errorJson.message || errorJson.error || responseBody;
+            } catch {
+              errorText = responseBody;
+            }
+          } else {
+            errorText = `HTTP ${response.status} ${response.statusText}`;
+          }
+        } catch (parseError) {
+          errorText = `HTTP ${response.status} ${response.statusText}`;
+        }
+        throw new Error(`${response.status}: ${errorText}`);
+      }
+
+      let result;
+      try {
+        const text = await response.text();
+        if (!text.trim()) {
+          return null;
+        }
+        result = JSON.parse(text);
+      } catch (parseError) {
+        // Handle JSON parsing error gracefully
+        console.warn(`JSON parse error for ${finalUrl}:`, parseError);
+        throw new Error(`Invalid JSON response from server: ${finalUrl}`);
+      }
+
+      return result;
+    } catch (error) {
+      lastError = error;
+      
+      // Don't retry for client errors (4xx) or auth issues
+      if (error instanceof Error && error.message.includes('403:') || error.message.includes('401:')) {
+        throw error;
+      }
+      
+      // Don't retry for AbortError (timeout)
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timeout: Server took too long to respond. Please try again.');
+      }
+      
+      // Only retry network errors
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        if (attempt < maxRetries) {
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          continue;
+        }
+        throw new Error('Network error: Unable to connect to server after multiple attempts. Please check your connection and try again.');
+      }
+      
+      // Other errors, don't retry
+      throw error;
     }
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Request timeout: Server took too long to respond. Please try again.');
-    }
-    throw error;
   }
+  
+  // If we get here, all retries failed
+  if (lastError) {
+    throw lastError;
+  }
+  
+  throw new Error('Unexpected error in fetch operation');
 };
 
 export const queryClient = new QueryClient({
