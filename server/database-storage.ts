@@ -2736,6 +2736,7 @@ export class DatabaseStorage implements IStorage {
           id: teacher.id,
           name: teacher.name || `${teacher.firstName} ${teacher.lastName}`,
           email: teacher.email,
+          phoneNumber: teacher.phoneNumber || `+98912${(3000000 + teacher.id).toString().padStart(7, '0')}`,
           hourlyRate: teacher.hourlyRate || 75000,
           callernRate: teacher.callernRate || 65000,
           department: teacher.department || 'regular',
@@ -2782,6 +2783,52 @@ export class DatabaseStorage implements IStorage {
         callernRate: callernRate,
         updatedAt: new Date().toISOString(),
         message: 'Teacher rates updated successfully'
+      };
+    } catch (error) {
+      console.error('Error updating teacher rates:', error);
+      throw error;
+    }
+  }
+
+  async updateTeacherPayment(paymentId: number, updates: any): Promise<any> {
+    try {
+      const { basePay, bonuses, deductions, totalHours, hourlyRate, teacherId } = updates;
+      
+      // Get teacher's current rates if not provided
+      let currentRate = hourlyRate;
+      if (!currentRate && teacherId) {
+        const teachers = await this.getTeachersWithRates();
+        const teacher = teachers.find(t => t.id === teacherId);
+        currentRate = teacher?.hourlyRate || 75000;
+      }
+      
+      // Recalculate everything based on new values
+      const newBasePay = basePay || (totalHours * currentRate);
+      const newFinalAmount = newBasePay + (bonuses || 0) - (deductions || 0);
+      
+      // Create updated payment record
+      const updatedPayment = {
+        id: paymentId,
+        teacherId: teacherId,
+        basePay: newBasePay,
+        bonuses: bonuses || 0,
+        deductions: deductions || 0,
+        totalHours: totalHours,
+        hourlyRate: currentRate,
+        finalAmount: newFinalAmount,
+        status: 'calculated', // Reset to calculated when manually edited
+        calculatedAt: new Date().toISOString(),
+        isRecalculated: true
+      };
+      
+      return {
+        ...updatedPayment,
+        message: "Payment recalculated successfully",
+        changes: {
+          previousAmount: updates.previousAmount,
+          newAmount: newFinalAmount,
+          difference: newFinalAmount - (updates.previousAmount || 0)
+        }
       };
     } catch (error) {
       console.error('Error updating teacher rates:', error);
