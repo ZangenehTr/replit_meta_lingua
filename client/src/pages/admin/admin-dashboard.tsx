@@ -103,6 +103,11 @@ export function AdminDashboard() {
     retryDelay: 1000
   });
 
+  // Fetch class observations data
+  const { data: classObservations } = useQuery({
+    queryKey: ['/api/admin/class-observations']
+  });
+
   // Admin Overview Stats - using real data
   const overviewStats = [
     {
