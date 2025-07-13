@@ -2073,7 +2073,8 @@ export class MemStorage implements IStorage {
     const { basePay, bonuses, deductions, totalHours, hourlyRate } = updates;
     
     // Recalculate everything based on new values
-    const newBasePay = basePay || (totalHours * (hourlyRate || 750000));
+    // If totalHours is provided, prioritize hours-based calculation
+    const newBasePay = totalHours ? (totalHours * (hourlyRate || 750000)) : (basePay || 0);
     const newFinalAmount = newBasePay + (bonuses || 0) - (deductions || 0);
     
     // Create updated payment record

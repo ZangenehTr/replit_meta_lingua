@@ -2803,7 +2803,8 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Recalculate everything based on new values
-      const newBasePay = basePay || (totalHours * currentRate);
+      // If totalHours is provided, prioritize hours-based calculation
+      const newBasePay = totalHours ? (totalHours * currentRate) : (basePay || 0);
       const newFinalAmount = newBasePay + (bonuses || 0) - (deductions || 0);
       
       // Create updated payment record

@@ -9014,8 +9014,9 @@ Return JSON format:
       const paymentId = parseInt(req.params.id);
       const { basePay, bonuses, deductions, totalHours, hourlyRate } = req.body;
       
-      // Recalculate everything based on new values
-      const newBasePay = basePay || (totalHours * (hourlyRate || 750000));
+      // Recalculate everything based on new values  
+      // If totalHours changed, recalculate basePay from hours
+      const newBasePay = totalHours ? (totalHours * (hourlyRate || 750000)) : (basePay || 0);
       const newFinalAmount = newBasePay + (bonuses || 0) - (deductions || 0);
       
       // Create a completely new payslip with recalculated values
