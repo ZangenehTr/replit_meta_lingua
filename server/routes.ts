@@ -11397,6 +11397,29 @@ Return JSON format:
     }
   });
 
+  // Admin Dashboard Stats (Main overview)
+  app.get("/api/admin/dashboard-stats", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const stats = await storage.getAdminDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching admin dashboard stats:', error);
+      res.status(500).json({ message: "Failed to fetch admin dashboard stats" });
+    }
+  });
+
+  // Class Observations for Admin Dashboard
+  app.get("/api/admin/class-observations", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const observations = await storage.getClassObservations({});
+      const total = observations.length;
+      res.json({ total, observations: observations.slice(0, 5) }); // Return total count and recent 5
+    } catch (error) {
+      console.error('Error fetching class observations:', error);
+      res.status(500).json({ message: "Failed to fetch class observations" });
+    }
+  });
+
   // ==================== MODERN COMMUNICATION SYSTEM ====================
 
   // Support Tickets
