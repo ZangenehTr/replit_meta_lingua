@@ -8979,7 +8979,13 @@ Return JSON format:
       const teachers = await storage.getTeachersWithRates();
       const teacher = teachers.find(t => t.id === teacherId);
       
-      if (!teacher || !teacher.phoneNumber) {
+      if (!teacher) {
+        return res.status(404).json({ message: "Teacher not found" });
+      }
+
+      // Check if teacher has phone number (use phoneNumber or phone field)
+      const phoneNumber = teacher.phoneNumber || teacher.phone;
+      if (!phoneNumber) {
         return res.status(404).json({ message: "Teacher phone number not found" });
       }
 
@@ -8988,12 +8994,12 @@ Return JSON format:
       
       // In a real implementation, integrate with Kavenegar SMS service
       // For now, simulate SMS sending
-      console.log(`SMS would be sent to ${teacher.phoneNumber}: ${message}`);
+      console.log(`SMS would be sent to ${phoneNumber}: ${message}`);
       
       res.json({ 
         success: true, 
         message: "SMS notification sent successfully",
-        sentTo: teacher.phoneNumber,
+        sentTo: phoneNumber,
         content: message
       });
     } catch (error) {
@@ -9002,27 +9008,42 @@ Return JSON format:
     }
   });
 
-  // Update teacher payment details
+  // Update teacher payment details with full recalculation
   app.put("/api/admin/teacher-payments/:id/update", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const paymentId = parseInt(req.params.id);
-      const { basePay, bonuses, deductions, totalHours } = req.body;
+      const { basePay, bonuses, deductions, totalHours, hourlyRate } = req.body;
       
-      // Calculate new final amount
-      const finalAmount = basePay + bonuses - deductions;
+      // Recalculate everything based on new values
+      const newBasePay = basePay || (totalHours * (hourlyRate || 750000));
+      const newFinalAmount = newBasePay + (bonuses || 0) - (deductions || 0);
       
-      // Update payment in database (using mock for now)
+      // Create a completely new payslip with recalculated values
       const updatedPayment = {
         id: paymentId,
-        basePay,
-        bonuses,
-        deductions,
-        totalHours,
-        finalAmount,
-        status: 'calculated' // Reset to calculated when manually edited
+        basePay: newBasePay,
+        bonuses: bonuses || 0,
+        deductions: deductions || 0,
+        totalHours: totalHours,
+        hourlyRate: hourlyRate || 750000,
+        finalAmount: newFinalAmount,
+        status: 'calculated', // Reset to calculated when manually edited
+        calculatedAt: new Date().toISOString(),
+        isRecalculated: true // Flag to indicate this was manually adjusted
       };
       
-      res.json(updatedPayment);
+      // In a real implementation, update the database
+      // await storage.updateTeacherPayment(paymentId, updatedPayment);
+      
+      res.json({
+        ...updatedPayment,
+        message: "Payment recalculated successfully",
+        changes: {
+          previousAmount: req.body.previousAmount,
+          newAmount: newFinalAmount,
+          difference: newFinalAmount - (req.body.previousAmount || 0)
+        }
+      });
     } catch (error) {
       console.error("Error updating teacher payment:", error);
       res.status(500).json({ message: "Failed to update teacher payment" });
