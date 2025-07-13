@@ -7,6 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { 
   DollarSign, 
   TrendingUp, 
+  BookOpen,
+  GraduationCap,
   Server,
   Clock,
   AlertCircle,
@@ -85,6 +87,13 @@ export function AdminDashboard() {
 
   const { data: financialKPIs } = useQuery({
     queryKey: ['/api/admin/financial-kpis']
+  });
+
+  // Fetch dashboard stats
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['/api/admin/dashboard-stats'],
+    retry: 3,
+    retryDelay: 1000
   });
 
   // Admin Overview Stats - using real data
