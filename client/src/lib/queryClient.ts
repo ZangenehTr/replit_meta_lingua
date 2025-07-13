@@ -55,10 +55,13 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
 
     let result;
     try {
-      result = await response.json();
+      const text = await response.text();
+      if (!text.trim()) {
+        return null;
+      }
+      result = JSON.parse(text);
     } catch (parseError) {
       // Handle JSON parsing error gracefully
-      const responseText = await response.clone().text();
       throw new Error(`Invalid JSON response from server: ${finalUrl}`);
     }
 
