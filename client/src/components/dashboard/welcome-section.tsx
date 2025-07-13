@@ -7,26 +7,26 @@ export function WelcomeSection() {
   if (!user) return null;
 
   return (
-    <Card className="mb-8 bg-gradient-to-r from-primary to-purple-600 text-white">
-      <CardContent className="p-6">
-        <h2 className="text-2xl font-bold mb-2">
+    <Card className="mb-4 sm:mb-6 md:mb-8 bg-gradient-to-r from-primary to-purple-600 text-white">
+      <CardContent className="p-3 sm:p-4 md:p-6">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2">
           Welcome back, {user.firstName}! 🌟
         </h2>
-        <p className="text-blue-100 mb-4">
+        <p className="text-blue-100 mb-3 sm:mb-4 text-sm sm:text-base">
           Ready to continue your language learning journey?
         </p>
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center justify-between sm:justify-start sm:space-x-4 md:space-x-6">
           <div className="text-center">
-            <div className="text-2xl font-bold">{user.streakDays}</div>
-            <div className="text-sm text-blue-100">Day Streak</div>
+            <div className="text-lg sm:text-xl md:text-2xl font-bold">{user.streakDays || 0}</div>
+            <div className="text-xs sm:text-sm text-blue-100">Day Streak</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold">{user.totalLessons}</div>
-            <div className="text-sm text-blue-100">Lessons</div>
+            <div className="text-lg sm:text-xl md:text-2xl font-bold">{user.totalLessons || 0}</div>
+            <div className="text-xs sm:text-sm text-blue-100">Lessons</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold">{user.credits}</div>
-            <div className="text-sm text-blue-100">Credits</div>
+            <div className="text-lg sm:text-xl md:text-2xl font-bold">{user.credits || 0}</div>
+            <div className="text-xs sm:text-sm text-blue-100">Credits</div>
           </div>
         </div>
       </CardContent>
