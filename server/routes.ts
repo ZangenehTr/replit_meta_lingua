@@ -44,6 +44,32 @@ const audioStorage = multer.diskStorage({
   }
 });
 
+// Configure multer for teacher photo uploads
+const photoStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const photoDir = path.join(process.cwd(), 'uploads', 'teacher-photos');
+    if (!fs.existsSync(photoDir)) {
+      fs.mkdirSync(photoDir, { recursive: true });
+    }
+    cb(null, photoDir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${req.params.teacherId}.jpg`);
+  }
+});
+
+const uploadPhoto = multer({ 
+  storage: photoStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
+    }
+  }
+});
+
 const audioUpload = multer({ 
   storage: audioStorage,
   limits: {
@@ -97,8 +123,9 @@ const requireRole = (roles: string[]) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Serve static audio files
+  // Serve static audio and photo files
   app.use('/uploads/audio', express.static('uploads/audio'));
+  app.use('/uploads/teacher-photos', express.static('uploads/teacher-photos'));
   
   // Simple in-memory store for downloaded models (in production, use database)
   let downloadedModels: string[] = [
@@ -8890,8 +8917,8 @@ Return JSON format:
     }
   });
 
-  // Teacher photo upload endpoint
-  app.post("/api/admin/teachers/:teacherId/upload-photo", authenticateToken, requireRole(['Admin', 'Supervisor']), upload.single('photo'), async (req: any, res) => {
+  // Teacher photo upload endpoint  
+  app.post("/api/admin/teachers/:teacherId/upload-photo", authenticateToken, requireRole(['Admin', 'Supervisor']), uploadPhoto.single('photo'), async (req: any, res) => {
     try {
       const teacherId = parseInt(req.params.teacherId);
       
@@ -8899,18 +8926,6 @@ Return JSON format:
         return res.status(400).json({ message: "No photo file provided" });
       }
 
-      // Move uploaded file to teacher-photos directory with teacherId as filename
-      const fs = require('fs');
-      const path = require('path');
-      
-      const photoDir = path.join(process.cwd(), 'uploads', 'teacher-photos');
-      if (!fs.existsSync(photoDir)) {
-        fs.mkdirSync(photoDir, { recursive: true });
-      }
-      
-      const photoPath = path.join(photoDir, `${teacherId}.jpg`);
-      fs.renameSync(req.file.path, photoPath);
-      
       res.json({ 
         success: true, 
         message: "Teacher photo uploaded successfully",

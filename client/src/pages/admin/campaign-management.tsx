@@ -353,8 +353,26 @@ export default function CampaignManagementPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              Campaign Management
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Manage marketing campaigns across all channels
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowNewCampaignDialog(true)} className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              New Campaign
+            </Button>
+          </div>
+        </div>
+
+        {/* Campaign Overview Section */}
+        <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               360° Campaign Management
