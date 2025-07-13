@@ -11285,6 +11285,118 @@ Return JSON format:
     }
   });
 
+  // ==================== ADMIN BUSINESS INTELLIGENCE ENDPOINTS ====================
+
+  // Call Center Performance Analytics
+  app.get("/api/admin/call-center-performance", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const stats = await storage.getCallCenterPerformanceStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching call center performance:', error);
+      res.status(500).json({ message: "Failed to fetch call center performance" });
+    }
+  });
+
+  // Overdue Payments Analytics
+  app.get("/api/admin/overdue-payments", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const overdueData = await storage.getOverduePaymentsData();
+      res.json(overdueData);
+    } catch (error) {
+      console.error('Error fetching overdue payments:', error);
+      res.status(500).json({ message: "Failed to fetch overdue payments" });
+    }
+  });
+
+  // Revenue Analytics
+  app.get("/api/admin/revenue-analytics", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const revenueData = await storage.getRevenueAnalytics();
+      res.json(revenueData);
+    } catch (error) {
+      console.error('Error fetching revenue analytics:', error);
+      res.status(500).json({ message: "Failed to fetch revenue analytics" });
+    }
+  });
+
+  // Registration Analytics by Type
+  app.get("/api/admin/registration-analytics", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const registrationData = await storage.getRegistrationAnalytics();
+      res.json(registrationData);
+    } catch (error) {
+      console.error('Error fetching registration analytics:', error);
+      res.status(500).json({ message: "Failed to fetch registration analytics" });
+    }
+  });
+
+  // Teacher Performance Analytics
+  app.get("/api/admin/teacher-performance", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const teacherData = await storage.getTeacherPerformanceAnalytics();
+      res.json(teacherData);
+    } catch (error) {
+      console.error('Error fetching teacher performance:', error);
+      res.status(500).json({ message: "Failed to fetch teacher performance" });
+    }
+  });
+
+  // Student Retention Analytics
+  app.get("/api/admin/student-retention", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const retentionData = await storage.getStudentRetentionAnalytics();
+      res.json(retentionData);
+    } catch (error) {
+      console.error('Error fetching student retention:', error);
+      res.status(500).json({ message: "Failed to fetch student retention" });
+    }
+  });
+
+  // Course Completion Analytics
+  app.get("/api/admin/course-completion", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const completionData = await storage.getCourseCompletionAnalytics();
+      res.json(completionData);
+    } catch (error) {
+      console.error('Error fetching course completion:', error);
+      res.status(500).json({ message: "Failed to fetch course completion" });
+    }
+  });
+
+  // Marketing Metrics
+  app.get("/api/admin/marketing-metrics", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const marketingData = await storage.getMarketingMetrics();
+      res.json(marketingData);
+    } catch (error) {
+      console.error('Error fetching marketing metrics:', error);
+      res.status(500).json({ message: "Failed to fetch marketing metrics" });
+    }
+  });
+
+  // Operational Metrics
+  app.get("/api/admin/operational-metrics", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const operationalData = await storage.getOperationalMetrics();
+      res.json(operationalData);
+    } catch (error) {
+      console.error('Error fetching operational metrics:', error);
+      res.status(500).json({ message: "Failed to fetch operational metrics" });
+    }
+  });
+
+  // Financial KPIs
+  app.get("/api/admin/financial-kpis", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const financialData = await storage.getFinancialKPIs();
+      res.json(financialData);
+    } catch (error) {
+      console.error('Error fetching financial KPIs:', error);
+      res.status(500).json({ message: "Failed to fetch financial KPIs" });
+    }
+  });
+
   // ==================== MODERN COMMUNICATION SYSTEM ====================
 
   // Support Tickets
