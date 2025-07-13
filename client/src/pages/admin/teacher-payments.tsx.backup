@@ -474,15 +474,15 @@ export default function TeacherPaymentsPage() {
                       </div>
                     ) : (
                       <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Teacher</TableHead>
-                            <TableHead>Total Pay</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Payslip Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Teacher</TableHead>
+                        <TableHead>Total Pay</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Payslip Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {payments?.map((payment) => (
                         <TableRow key={payment.id} className="hover:bg-blue-50 transition-colors">
                           <TableCell className="py-4">
@@ -808,9 +808,9 @@ export default function TeacherPaymentsPage() {
                           </TableCell>
                         </TableRow>
                       ))}
-                        </TableBody>
-                      </Table>
-                    )}
+                    </TableBody>
+                  </Table>
+                )}
                   </div>
                 </CardContent>
               </Card>
@@ -964,7 +964,6 @@ export default function TeacherPaymentsPage() {
         </TabsContent>
         </Tabs>
       </div>
-    </div>
     </AppLayout>
   );
 }
