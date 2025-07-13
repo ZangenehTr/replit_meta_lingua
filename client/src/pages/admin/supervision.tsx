@@ -143,9 +143,24 @@ export default function Supervision() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Quality Assurance & Supervision</h1>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-teal-50 p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+            Quality Assurance & Supervision
+          </h1>
+          <p className="text-muted-foreground mt-2">Monitor teaching quality and manage evaluations</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setObservationDialogOpen(true)} className="border-green-200 hover:bg-green-50">
+            <Plus className="h-4 w-4 mr-2" />
+            New Observation
+          </Button>
+          <Button variant="outline" onClick={() => setQuestionnaireDialogOpen(true)} className="border-teal-200 hover:bg-teal-50">
+            <Plus className="h-4 w-4 mr-2" />
+            New Questionnaire
+          </Button>
+        </div>
       </div>
 
       {/* Quick Stats */}
