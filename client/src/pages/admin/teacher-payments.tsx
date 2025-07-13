@@ -266,57 +266,78 @@ export default function TeacherPaymentsPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Teacher Payment Management
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              Automated session-based payment calculation using individual teacher rates
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <Label htmlFor="regularRate">Regular Session Hourly Rate (IRR)</Label>
-              <Input
-                id="regularRate"
-                type="number"
-                defaultValue="750000"
-                placeholder="750000"
-                className="mt-1"
-              />
-              <p className="text-xs text-gray-500 mt-1">Rate for regular in-person and online sessions</p>
-            </div>
-            <div>
-              <Label htmlFor="callernRate">Callern Service Hourly Rate (IRR)</Label>
-              <Input
-                id="callernRate"
-                type="number"
-                defaultValue="850000"
-                placeholder="850000"
-                className="mt-1"
-              />
-              <p className="text-xs text-gray-500 mt-1">Rate for Callern standby and on-demand sessions</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Modern Header */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                  Teacher Payment Management
+                </h1>
+                <p className="text-lg text-gray-600 max-w-2xl">
+                  Automated session-based payment calculation with real-time recalculation and comprehensive payslip management
+                </p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-green-700">1,250,000</div>
+                  <div className="text-sm text-green-600 font-medium">IRR Pending</div>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-700">156</div>
+                  <div className="text-sm text-blue-600 font-medium">Sessions</div>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div className="flex gap-2">
-            <Button
-              onClick={() => {
-                const regularRate = (document.getElementById('regularRate') as HTMLInputElement).value;
-                const callernRate = (document.getElementById('callernRate') as HTMLInputElement).value;
-                
-                updateRateStructureMutation.mutate({
-                  baseRate: parseInt(regularRate),
-                  callernRate: parseInt(callernRate),
-                  effectiveDate: new Date().toISOString().split('T')[0]
-                });
-              }}
-              disabled={updateRateStructureMutation.isPending}
-            >
-              {updateRateStructureMutation.isPending ? 'Updating...' : 'Update Both Rates'}
-            </Button>
+          {/* Rate Configuration Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Rate Configuration</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <Label htmlFor="regularRate" className="text-sm font-medium text-gray-700">Regular Session Hourly Rate (IRR)</Label>
+                <Input
+                  id="regularRate"
+                  type="number"
+                  defaultValue="750000"
+                  placeholder="750000"
+                  className="mt-2"
+                />
+                <p className="text-xs text-gray-500 mt-1">Rate for regular in-person and online sessions</p>
+              </div>
+              <div>
+                <Label htmlFor="callernRate" className="text-sm font-medium text-gray-700">Callern Service Hourly Rate (IRR)</Label>
+                <Input
+                  id="callernRate"
+                  type="number"
+                  defaultValue="850000"
+                  placeholder="850000"
+                  className="mt-2"
+                />
+                <p className="text-xs text-gray-500 mt-1">Rate for Callern standby and on-demand sessions</p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end">
+              <Button
+                onClick={() => {
+                  const regularRate = (document.getElementById('regularRate') as HTMLInputElement).value;
+                  const callernRate = (document.getElementById('callernRate') as HTMLInputElement).value;
+                  
+                  updateRateStructureMutation.mutate({
+                    baseRate: parseInt(regularRate),
+                    callernRate: parseInt(callernRate),
+                    effectiveDate: new Date().toISOString().split('T')[0]
+                  });
+                }}
+                disabled={updateRateStructureMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {updateRateStructureMutation.isPending ? 'Updating...' : 'Update Both Rates'}
+              </Button>
+            </div>
+          </div>
             
             <Dialog>
               <DialogTrigger asChild>
@@ -386,100 +407,140 @@ export default function TeacherPaymentsPage() {
           </div>
         </div>
 
-      {/* Payment Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Pending
-            </CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,250,000 IRR</div>
-            <p className="text-xs text-muted-foreground">
-              5 teachers pending
-            </p>
-          </CardContent>
-        </Card>
+          {/* Payment Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-green-800">
+                  Total Pending
+                </CardTitle>
+                <Clock className="h-5 w-5 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-green-700">1,250,000 IRR</div>
+                <p className="text-sm text-green-600 mt-1">
+                  5 teachers pending
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Sessions This Month
-            </CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">156</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last month
-            </p>
-          </CardContent>
-        </Card>
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-blue-800">
+                  Sessions This Month
+                </CardTitle>
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-blue-700">156</div>
+                <p className="text-sm text-blue-600 mt-1">
+                  +12% from last month
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Average Hourly Rate
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">75,000 IRR</div>
-            <p className="text-xs text-muted-foreground">
-              Persian language standard
-            </p>
-          </CardContent>
-        </Card>
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-purple-800">
+                  Average Hourly Rate
+                </CardTitle>
+                <DollarSign className="h-5 w-5 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-purple-700">75,000 IRR</div>
+                <p className="text-sm text-purple-600 mt-1">
+                  Persian language standard
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Payment Issues
-            </CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2</div>
-            <p className="text-xs text-muted-foreground">
-              Requires review
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-orange-800">
+                  Payment Issues
+                </CardTitle>
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-orange-700">2</div>
+                <p className="text-sm text-orange-600 mt-1">
+                  Requires review
+                </p>
+              </CardContent>
+            </Card>
+          </div>
 
-      <Tabs defaultValue="payments" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="payments">Payment Overview</TabsTrigger>
-          <TabsTrigger value="sessions">Session Details</TabsTrigger>
-          <TabsTrigger value="history">Payment History</TabsTrigger>
-          <TabsTrigger value="reports">Payment Reports</TabsTrigger>
-        </TabsList>
+          <Tabs defaultValue="payments" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg">
+              <TabsTrigger value="payments" className="rounded-md">Payment Overview</TabsTrigger>
+              <TabsTrigger value="sessions" className="rounded-md">Session Details</TabsTrigger>
+              <TabsTrigger value="history" className="rounded-md">Payment History</TabsTrigger>
+              <TabsTrigger value="reports" className="rounded-md">Payment Reports</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="payments">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Teacher Payment Overview</CardTitle>
-                  <CardDescription>
-                    Simplified view with payslip management
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <select 
-                    value={selectedPeriod}
-                    onChange={(e) => setSelectedPeriod(e.target.value)}
-                    className="px-3 py-2 border rounded-md"
-                  >
-                    <option value="current">Current Month</option>
-                    <option value="previous">Previous Month</option>
-                    <option value="custom">Custom Period</option>
-                  </select>
-                </div>
-              </div>
-            </CardHeader>
+            <TabsContent value="payments">
+              <Card className="bg-white shadow-sm border border-gray-200 rounded-xl">
+                <CardHeader className="border-b border-gray-100 pb-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle className="text-2xl font-semibold text-gray-900">Teacher Payment Overview</CardTitle>
+                      <CardDescription className="text-lg text-gray-600 mt-1">
+                        Comprehensive payslip management with real-time recalculation
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-3">
+                      <select 
+                        value={selectedPeriod}
+                        onChange={(e) => setSelectedPeriod(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="current">Current Month</option>
+                        <option value="previous">Previous Month</option>
+                        <option value="custom">Custom Period</option>
+                      </select>
+                      
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2">
+                            <Calculator className="h-4 w-4 mr-2" />
+                            Calculate Payments
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Calculate Teacher Payments</DialogTitle>
+                            <DialogDescription>
+                              Select period and click calculate to generate payment calculations for all teachers
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <Label>Period to Calculate</Label>
+                            <Select defaultValue={selectedPeriod}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="current">Current Month</SelectItem>
+                                <SelectItem value="previous">Previous Month</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                onClick={() => calculatePaymentsMutation.mutate(selectedPeriod)}
+                                disabled={calculatePaymentsMutation.isPending}
+                              >
+                                {calculatePaymentsMutation.isPending ? 'Calculating...' : 'Calculate Payments'}
+                              </Button>
+                              <DialogClose asChild>
+                                <Button variant="outline">Cancel</Button>
+                              </DialogClose>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </div>
+                </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {isLoading ? (
@@ -511,10 +572,10 @@ export default function TeacherPaymentsPage() {
                     </TableHeader>
                     <TableBody>
                       {payments?.map((payment) => (
-                        <TableRow key={payment.id} className="hover:bg-gray-50">
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                        <TableRow key={payment.id} className="hover:bg-blue-50 transition-colors">
+                          <TableCell className="py-4">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
                                 <img 
                                   src={`/uploads/teacher-photos/${payment.teacherId}.jpg`}
                                   alt={payment.teacherName}
@@ -524,21 +585,31 @@ export default function TeacherPaymentsPage() {
                                     e.currentTarget.nextElementSibling.style.display = 'flex';
                                   }}
                                 />
-                                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs" style={{display: 'none'}}>
-                                  No Photo
+                                <div className="w-full h-full flex items-center justify-center text-white text-xs font-semibold" style={{display: 'none'}}>
+                                  {payment.teacherName.charAt(0)}
                                 </div>
                               </div>
-                              <div className="font-medium text-gray-900">{payment.teacherName}</div>
+                              <div>
+                                <div className="font-semibold text-gray-900 text-lg">{payment.teacherName}</div>
+                                <div className="text-sm text-gray-500">ID: {payment.teacherId}</div>
+                              </div>
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <div className="font-bold text-lg text-green-600">
-                              {payment.finalAmount?.toLocaleString()} IRR
+                          <TableCell className="py-4">
+                            <div className="text-right">
+                              <div className="font-bold text-2xl text-green-600">
+                                {payment.finalAmount?.toLocaleString()} IRR
+                              </div>
+                              <div className="text-sm text-gray-500 mt-1">
+                                {payment.totalHours} hours • {payment.hourlyRate?.toLocaleString()} IRR/hr
+                              </div>
+                              <div className="text-xs text-gray-400 mt-1">
+                                Base: {payment.basePay?.toLocaleString()} | Bonus: +{payment.bonuses?.toLocaleString()} | Deduct: -{payment.deductions?.toLocaleString()}
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-500">{payment.totalHours} hours</div>
                           </TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(payment.status)}>
+                          <TableCell className="py-4">
+                            <Badge className={`${getStatusColor(payment.status)} px-3 py-1 text-sm font-medium`}>
                               {payment.status}
                             </Badge>
                           </TableCell>
@@ -661,27 +732,69 @@ export default function TeacherPaymentsPage() {
                                             Modify payment details for this period
                                           </DialogDescription>
                                         </DialogHeader>
-                                        <div className="space-y-4">
-                                          <form data-payment-id={payment.id}>
-                                            <div className="grid grid-cols-2 gap-4">
-                                              <div>
-                                                <Label>Base Pay (IRR)</Label>
-                                                <Input name="basePay" type="number" defaultValue={payment.basePay} />
-                                              </div>
-                                              <div>
-                                                <Label>Bonuses (IRR)</Label>
-                                                <Input name="bonuses" type="number" defaultValue={payment.bonuses} />
+                                        <div className="space-y-6">
+                                          {/* Current Payslip Summary */}
+                                          <div className="bg-gray-50 rounded-lg p-4 border">
+                                            <h4 className="font-semibold text-gray-800 mb-2">Current Payslip</h4>
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                              <div>Base Pay: <span className="font-medium">{payment.basePay?.toLocaleString()} IRR</span></div>
+                                              <div>Hours: <span className="font-medium">{payment.totalHours}</span></div>
+                                              <div>Bonuses: <span className="font-medium text-green-600">+{payment.bonuses?.toLocaleString()} IRR</span></div>
+                                              <div>Deductions: <span className="font-medium text-red-600">-{payment.deductions?.toLocaleString()} IRR</span></div>
+                                              <div className="col-span-2 pt-2 border-t">
+                                                <span className="text-lg font-bold">Total: {payment.finalAmount?.toLocaleString()} IRR</span>
                                               </div>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-4 mt-4">
+                                          </div>
+                                          
+                                          <form data-payment-id={payment.id} className="space-y-4">
+                                            <div className="grid grid-cols-2 gap-4">
                                               <div>
-                                                <Label>Deductions (IRR)</Label>
-                                                <Input name="deductions" type="number" defaultValue={payment.deductions} />
+                                                <Label className="text-sm font-medium">Base Pay (IRR)</Label>
+                                                <Input 
+                                                  name="basePay" 
+                                                  type="number" 
+                                                  defaultValue={payment.basePay}
+                                                  className="mt-1"
+                                                />
                                               </div>
                                               <div>
-                                                <Label>Total Hours</Label>
-                                                <Input name="totalHours" type="number" defaultValue={payment.totalHours} />
+                                                <Label className="text-sm font-medium">Bonuses (IRR)</Label>
+                                                <Input 
+                                                  name="bonuses" 
+                                                  type="number" 
+                                                  defaultValue={payment.bonuses}
+                                                  className="mt-1"
+                                                />
                                               </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                              <div>
+                                                <Label className="text-sm font-medium">Deductions (IRR)</Label>
+                                                <Input 
+                                                  name="deductions" 
+                                                  type="number" 
+                                                  defaultValue={payment.deductions}
+                                                  className="mt-1"
+                                                />
+                                              </div>
+                                              <div>
+                                                <Label className="text-sm font-medium">Total Hours</Label>
+                                                <Input 
+                                                  name="totalHours" 
+                                                  type="number" 
+                                                  defaultValue={payment.totalHours}
+                                                  className="mt-1"
+                                                />
+                                              </div>
+                                            </div>
+                                            
+                                            {/* Live Calculation Preview */}
+                                            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                                              <h5 className="font-medium text-blue-800 mb-2">💡 Live Calculation Preview</h5>
+                                              <p className="text-sm text-blue-600">
+                                                Changes will recalculate the total amount and generate a new payslip with updated values.
+                                              </p>
                                             </div>
                                           </form>
                                           <div className="flex justify-end gap-2">
@@ -699,31 +812,44 @@ export default function TeacherPaymentsPage() {
                                                   basePay: parseInt(formData.get('basePay') as string),
                                                   bonuses: parseInt(formData.get('bonuses') as string),
                                                   deductions: parseInt(formData.get('deductions') as string),
-                                                  totalHours: parseInt(formData.get('totalHours') as string)
+                                                  totalHours: parseInt(formData.get('totalHours') as string),
+                                                  hourlyRate: payment.hourlyRate,
+                                                  previousAmount: payment.finalAmount
                                                 };
                                                 
-                                                // Call API to update payment
-                                                await apiRequest(`/api/admin/teacher-payments/${payment.id}/update`, {
+                                                // Call API to update and recalculate payment
+                                                const response = await apiRequest(`/api/admin/teacher-payments/${payment.id}/update`, {
                                                   method: 'PUT',
                                                   body: JSON.stringify(updatedPayment)
                                                 });
                                                 
-                                                // Refresh data
+                                                // Refresh data to show new calculations
                                                 queryClient.invalidateQueries({ queryKey: ['/api/admin/teacher-payments'] });
                                                 
-                                                toast({
-                                                  title: "Payslip Updated",
-                                                  description: "Payment details have been modified successfully.",
-                                                });
+                                                // Show detailed success message with calculation changes
+                                                if (response.changes) {
+                                                  const { newAmount, previousAmount, difference } = response.changes;
+                                                  toast({
+                                                    title: "Payslip Recalculated",
+                                                    description: `Amount changed from ${previousAmount?.toLocaleString()} to ${newAmount?.toLocaleString()} IRR (${difference > 0 ? '+' : ''}${difference?.toLocaleString()} IRR)`,
+                                                  });
+                                                } else {
+                                                  toast({
+                                                    title: "Payslip Updated",
+                                                    description: "Payment details have been recalculated successfully.",
+                                                  });
+                                                }
                                               } catch (error) {
+                                                console.error('Payslip update error:', error);
                                                 toast({
                                                   title: "Error",
-                                                  description: "Failed to update payslip",
+                                                  description: "Failed to update and recalculate payslip",
                                                   variant: "destructive"
                                                 });
                                               }
                                             }}>
-                                              Save Changes
+                                              <Calculator className="h-4 w-4 mr-2" />
+                                              Recalculate & Save
                                             </Button>
                                           </div>
                                         </div>
@@ -926,6 +1052,7 @@ export default function TeacherPaymentsPage() {
         </TabsContent>
       </Tabs>
       </div>
-    </AppLayout>
+    </div>
+  </AppLayout>
   );
 }
