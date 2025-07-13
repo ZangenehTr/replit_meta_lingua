@@ -1,9 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { 
   DollarSign, 
   TrendingUp, 
@@ -21,7 +22,12 @@ import {
   Star,
   TrendingDown,
   Award,
-  ThumbsDown
+  ThumbsDown,
+  BarChart3,
+  Bot,
+  MessageCircle,
+  Settings,
+  FileText
 } from "lucide-react";
 import { 
   LineChart, 
@@ -43,6 +49,7 @@ import {
 export function AdminDashboard() {
   const { t, isRTL } = useLanguage();
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
 
   // Fetch critical business metrics
   const { data: callCenterStats } = useQuery({
