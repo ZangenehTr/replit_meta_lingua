@@ -237,6 +237,13 @@ Preferred communication style: Simple, everyday language.
 - Session details sections are now collapsible with scroll support for large session lists
 - Rate configuration removed from payment interface - rates managed in teacher management system
 
+### VoIP Center Integration (July 13, 2025)
+- **VoIP Center Button Restored**: Added VoIP Center button to main lead management page header
+- **Functional Phone Buttons**: Made phone buttons in leads table trigger actual VoIP calls
+- **Dual VoIP Access**: VoIP Center now accessible from both `/lead-management` and `/callcenter/leads`
+- **Call Integration**: Added proper VoIP call mutation with error handling and toast notifications
+- **Lead Management Enhancement**: Phone buttons now functional with click-to-call capability
+
 ### VoIP Diagnostics Results (Check-First Protocol)
 **Status**: Connection failed - using development simulation mode
 **Server**: 46.100.5.198:5038 (Isabel VoIP Line)
