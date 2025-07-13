@@ -1049,3 +1049,10 @@ export default function TeacherPaymentsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    </AppLayout>
+  );
+}
