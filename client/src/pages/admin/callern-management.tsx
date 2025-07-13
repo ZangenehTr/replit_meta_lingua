@@ -225,36 +225,47 @@ export function CallernManagement() {
   };
 
   return (
-    <div className={`p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 p-4 sm:p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Callern Management</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Callern Management</h1>
+          <p className="text-muted-foreground mt-2">
             Manage teacher availability for on-demand video calls
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className="flex items-center gap-1 border-purple-200">
             <Phone className="h-3 w-3" />
-            {teacherAvailability?.filter(t => t.isOnline)?.length || 0} Online
+            <span className="hidden sm:inline">{teacherAvailability?.filter(t => t.isOnline)?.length || 0} Online</span>
+            <span className="sm:hidden">{teacherAvailability?.filter(t => t.isOnline)?.length || 0}</span>
           </Badge>
-          <Badge variant="outline" className="flex items-center gap-1">
+          <Badge variant="outline" className="flex items-center gap-1 border-indigo-200">
             <Users className="h-3 w-3" />
-            {teacherAvailability?.length || 0} Total Teachers
+            <span className="hidden sm:inline">{teacherAvailability?.length || 0} Total</span>
+            <span className="sm:hidden">{teacherAvailability?.length || 0}</span>
           </Badge>
         </div>
       </div>
 
       <Tabs defaultValue="availability" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="availability">Teacher Availability</TabsTrigger>
-          <TabsTrigger value="packages">Callern Packages</TabsTrigger>
-          <TabsTrigger value="assignments">Duty Assignments</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10">
+          <TabsTrigger value="availability" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Teacher Availability</span>
+            <span className="sm:hidden">Availability</span>
+          </TabsTrigger>
+          <TabsTrigger value="packages" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Callern Packages</span>
+            <span className="sm:hidden">Packages</span>
+          </TabsTrigger>
+          <TabsTrigger value="assignments" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Duty Assignments</span>
+            <span className="sm:hidden">Assignments</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="availability" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {loadingAvailability ? (
               <div className="col-span-3 text-center py-8">Loading teacher availability...</div>
             ) : (

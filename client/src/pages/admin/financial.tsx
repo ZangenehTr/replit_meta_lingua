@@ -185,25 +185,27 @@ export function AdminFinancial() {
   };
 
   return (
-    <div className={`p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 p-4 sm:p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Financial Management</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Financial Management</h1>
+          <p className="text-muted-foreground mt-2">
             Comprehensive billing, payouts, marketplace commissions & Iranian payment integration
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="border-green-200 hover:bg-green-50">
             <Download className="h-4 w-4 mr-2" />
-            {t('exportReport')}
+            <span className="hidden sm:inline">{t('exportReport')}</span>
+            <span className="sm:hidden">Export</span>
           </Button>
           <Dialog>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
                 <Plus className="h-4 w-4 mr-2" />
-                {t('manualTransaction')}
+                <span className="hidden sm:inline">{t('manualTransaction')}</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
@@ -270,9 +272,9 @@ export function AdminFinancial() {
       </div>
 
       {/* Filter Controls */}
-      <div className="flex gap-4 items-center">
+      <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
         <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48 border-green-200">
             <Calendar className="h-4 w-4 mr-2" />
             <SelectValue />
           </SelectTrigger>
@@ -284,7 +286,7 @@ export function AdminFinancial() {
           </SelectContent>
         </Select>
         <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48 border-green-200">
             <Filter className="h-4 w-4 mr-2" />
             <SelectValue />
           </SelectTrigger>
@@ -298,7 +300,7 @@ export function AdminFinancial() {
       </div>
 
       {/* Financial Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {overviewStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
