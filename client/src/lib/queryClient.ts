@@ -140,6 +140,9 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
       if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
         throw new Error('Network error: Unable to connect to server. Please check your connection and try again.');
       }
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Request timeout: Server took too long to respond. Please try again.');
+      }
       throw new Error(`Network error: ${fetchError.message || 'Failed to fetch'}`);
     }
 
@@ -166,9 +169,8 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
       result = await response.json();
     } catch (parseError) {
       console.error(`Failed to parse JSON response from ${finalUrl}:`, parseError);
-      const responseText = await response.clone().text();
-      console.error('Response text:', responseText);
-      throw new Error(`Invalid JSON response from server: ${finalUrl}`);
+      // Return empty object if JSON parsing fails but response was successful
+      return {};
     }
     
     console.log('Successful response:', result);

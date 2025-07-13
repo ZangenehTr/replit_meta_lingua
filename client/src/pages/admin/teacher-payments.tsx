@@ -140,10 +140,7 @@ export default function TeacherPaymentsPage() {
     queryKey: ['/api/admin/teacher-payments', selectedPeriod],
   });
 
-  // Debug: Log the data for troubleshooting
-  console.log('Teacher payments data:', payments);
-  console.log('Is loading:', isLoading);
-  console.log('Error:', error);
+
 
   // Fetch teachers data with their individual rates
   const { data: teachers = [], isLoading: teachersLoading } = useQuery<Teacher[]>({
