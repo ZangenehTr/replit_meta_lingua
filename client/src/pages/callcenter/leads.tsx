@@ -205,7 +205,7 @@ export default function LeadsPage() {
             </div>
             <div className="flex gap-2">
               <Button
-                onClick={() => window.open('/callcenter/voip-center', '_blank')}
+                onClick={() => window.open('/callcenter/voip', '_blank')}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Headphones className="w-4 h-4 mr-2" />
