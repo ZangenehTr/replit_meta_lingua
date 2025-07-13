@@ -65,8 +65,8 @@ export function useAuth() {
       const data = response.data;
       
       // Store both tokens
-      if (data.access_token) {
-        localStorage.setItem("auth_token", data.access_token);
+      if (data.auth_token) {
+        localStorage.setItem("auth_token", data.auth_token);
       }
       if (data.refresh_token) {
         localStorage.setItem("refresh_token", data.refresh_token);
@@ -86,8 +86,8 @@ export function useAuth() {
       const data = response.data;
       
       // Store both tokens
-      if (data.access_token) {
-        localStorage.setItem("auth_token", data.access_token);
+      if (data.auth_token) {
+        localStorage.setItem("auth_token", data.auth_token);
       }
       if (data.refresh_token) {
         localStorage.setItem("refresh_token", data.refresh_token);

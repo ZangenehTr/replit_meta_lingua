@@ -57,9 +57,8 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
     try {
       result = await response.json();
     } catch (parseError) {
-      console.error(`Failed to parse JSON response from ${finalUrl}:`, parseError);
+      // Handle JSON parsing error gracefully
       const responseText = await response.clone().text();
-      console.error('Response text:', responseText);
       throw new Error(`Invalid JSON response from server: ${finalUrl}`);
     }
 
@@ -126,7 +125,7 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
         try {
           requestOptions.body = JSON.stringify(options.body);
         } catch (error) {
-          console.error('Failed to stringify request body:', error);
+          // Handle request body serialization error gracefully
           throw new Error('Invalid request body format');
         }
       }
@@ -136,7 +135,7 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
     try {
       response = await fetch(finalUrl, requestOptions);
     } catch (fetchError: any) {
-      console.error('Fetch error occurred:', fetchError);
+      // Handle fetch error gracefully
       if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
         throw new Error('Network error: Unable to connect to server. Please check your connection and try again.');
       }
@@ -157,7 +156,7 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
       try {
         errorText = await response.text();
       } catch (parseError) {
-        console.error('Failed to parse error response:', parseError);
+        // Handle error response parsing gracefully
         errorText = `HTTP ${response.status} ${response.statusText}`;
       }
       console.log('Error response text:', errorText);
@@ -168,7 +167,7 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
     try {
       result = await response.json();
     } catch (parseError) {
-      console.error(`Failed to parse JSON response from ${finalUrl}:`, parseError);
+      // Handle JSON parsing error gracefully
       // Return empty object if JSON parsing fails but response was successful
       return {};
     }
@@ -176,7 +175,7 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
     console.log('Successful response:', result);
     return result;
   } catch (error) {
-    console.error('apiRequest error:', error);
+    // Handle API request error gracefully
     throw error;
   }
 };

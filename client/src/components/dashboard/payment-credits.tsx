@@ -88,7 +88,7 @@ export function PaymentCredits() {
       }
     },
     onError: (error: any) => {
-      console.error("Payment error:", error);
+      // Handle payment error gracefully
       let errorMessage = "Unable to initiate payment. Please try again.";
       
       if (error.message?.includes("SHETAB_NOT_CONFIGURED")) {

@@ -92,7 +92,8 @@ export function VoIPContactButton({ phoneNumber, contactName, className }: VoIPC
             }
           }
         } catch (error) {
-          console.error('Error monitoring call:', error);
+          // Handle call monitoring error gracefully
+          clearInterval(monitorCall);
         }
       }, 2000);
 
@@ -106,7 +107,7 @@ export function VoIPContactButton({ phoneNumber, contactName, className }: VoIPC
 
     } catch (error) {
       setIsCallActive(false);
-      console.error('VoIP call error:', error);
+      // Handle VoIP call error gracefully
       toast({
         title: "VoIP Call Failed",
         description: error.message || "Unable to connect via Isabel VoIP line. Please check configuration.",
