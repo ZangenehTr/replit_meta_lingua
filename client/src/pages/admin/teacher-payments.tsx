@@ -405,7 +405,6 @@ export default function TeacherPaymentsPage() {
               </DialogContent>
             </Dialog>
           </div>
-        </div>
 
           {/* Payment Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -1050,8 +1049,7 @@ export default function TeacherPaymentsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-          </Tabs>
-        </div>
+        </Tabs>
       </div>
     </AppLayout>
   );
