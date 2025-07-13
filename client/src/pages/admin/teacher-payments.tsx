@@ -651,6 +651,8 @@ export default function TeacherPaymentsPage() {
                                             <div className="grid grid-cols-2 gap-4 text-sm">
                                               <div>Base Pay: <span className="font-medium">{payment.basePay?.toLocaleString()} IRR</span></div>
                                               <div>Hours: <span className="font-medium">{payment.totalHours}</span></div>
+                                              <div>Hourly Rate: <span className="font-medium">{payment.hourlyRate?.toLocaleString()} IRR</span></div>
+                                              <div>Payment Period: <span className="font-medium">{payment.period}</span></div>
                                               <div>Bonuses: <span className="font-medium text-green-600">+{payment.bonuses?.toLocaleString()} IRR</span></div>
                                               <div>Deductions: <span className="font-medium text-red-600">-{payment.deductions?.toLocaleString()} IRR</span></div>
                                               <div className="col-span-2 pt-2 border-t">
