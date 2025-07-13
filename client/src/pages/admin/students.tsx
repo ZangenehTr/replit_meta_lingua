@@ -518,30 +518,30 @@ export function AdminStudents() {
   };
 
   return (
-    <div className={`p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => window.history.back()}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 border-blue-200 hover:bg-blue-50"
           >
             <ChevronLeft className="h-4 w-4" />
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">{t('studentInformationSystem')}</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{t('studentInformationSystem')}</h1>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               Complete student profiles, progress tracking, and parent communication
             </p>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-wrap gap-2 w-full lg:w-auto">
           {/* Sort Dropdown */}
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px] border-blue-200">
               <SelectValue placeholder="Sort by..." />
             </SelectTrigger>
             <SelectContent>
@@ -553,34 +553,34 @@ export function AdminStudents() {
           </Select>
           
           {/* View Mode Toggle */}
-          <div className="flex border rounded-lg overflow-hidden">
+          <div className="flex border rounded-lg overflow-hidden border-blue-200">
             <Button
               variant={viewMode === "cards" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("cards")}
-              className="rounded-none border-0"
+              className="rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
               <Grid3X3 className="h-4 w-4 mr-2" />
-              Cards
+              <span className="hidden sm:inline">Cards</span>
             </Button>
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("list")}
-              className="rounded-none border-0"
+              className="rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
               <List className="h-4 w-4 mr-2" />
-              List
+              <span className="hidden sm:inline">List</span>
             </Button>
           </div>
-          <Button variant="outline" className="w-full sm:w-auto">
+          <Button variant="outline" className="w-full sm:w-auto border-blue-200 hover:bg-blue-50">
             <Download className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Export Data</span>
             <span className="sm:hidden">Export</span>
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                 <Plus className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Add Student</span>
                 <span className="sm:hidden">Add</span>
