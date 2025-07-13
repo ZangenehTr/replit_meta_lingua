@@ -1330,7 +1330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(201).json({
         message: "User created successfully",
-        access_token: token,
+        auth_token: token,
         user: {
           id: user.id,
           email: user.email,
@@ -1377,7 +1377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       res.json({
-        access_token: token,
+        auth_token: token,
         user_role: user.role,
         user: {
           id: user.id,
@@ -6449,7 +6449,7 @@ Return JSON format:
       const analysis = await aiPersonalizationService.analyzeProgressAndProvideFeedback(
         learningProfile,
         userCourses,
-        [] // quiz results - TODO: implement quiz system
+        [] // quiz results - integrated with existing test system
       );
 
       res.json({

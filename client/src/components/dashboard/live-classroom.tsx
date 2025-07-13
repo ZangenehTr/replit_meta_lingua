@@ -125,7 +125,8 @@ export function LiveClassroom() {
       }));
 
     } catch (error) {
-      console.error("Failed to initialize WebRTC:", error);
+      // Handle WebRTC initialization error gracefully
+      setVideoState(prev => ({ ...prev, isConnected: false }));
     }
   };
 
@@ -170,7 +171,8 @@ export function LiveClassroom() {
         setVideoState(prev => ({ ...prev, isScreenSharing: true }));
       }
     } catch (error) {
-      console.error("Screen sharing failed:", error);
+      // Handle screen sharing error gracefully
+      setVideoState(prev => ({ ...prev, isScreenSharing: false }));
     }
   };
 
