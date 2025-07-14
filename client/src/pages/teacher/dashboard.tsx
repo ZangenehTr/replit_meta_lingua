@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage } from "@/hooks/use-language";
 import { useState } from "react";
 
 interface TeacherStats {
@@ -219,9 +219,9 @@ function TeacherDashboard() {
               <BookOpen className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{teacherStats?.totalClasses || classes.length}</div>
+              <div className="text-2xl font-bold">{teacherStats?.totalClasses || classes?.length || 0}</div>
               <p className="text-xs text-muted-foreground">
-                {students.length} total students
+                {students?.length || 0} total students
               </p>
             </CardContent>
           </Card>
@@ -376,7 +376,7 @@ function TeacherDashboard() {
 
           <TabsContent value="classes" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {classes.map((classItem) => (
+              {classes?.map((classItem) => (
                 <Card key={classItem.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -434,12 +434,12 @@ function TeacherDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {students.map((student) => (
+                  {students?.map((student) => (
                     <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarFallback>
-                            {student.firstName[0]}{student.lastName[0]}
+                            {student.firstName?.[0] || 'S'}{student.lastName?.[0] || 'T'}
                           </AvatarFallback>
                         </Avatar>
                         <div>
@@ -491,7 +491,7 @@ function TeacherDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {assignments.map((assignment) => (
+                  {assignments?.map((assignment) => (
                     <div key={assignment.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
                         <h4 className="font-medium">{assignment.title}</h4>
@@ -531,7 +531,7 @@ function TeacherDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {upcomingSessions.map((session) => (
+                  {upcomingSessions?.map((session) => (
                     <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-lg">
