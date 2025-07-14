@@ -223,7 +223,7 @@ export default function GamesManagement() {
     writing: <Edit className="w-4 h-4" />
   };
 
-  const GameForm = () => (
+  const GameForm = React.useMemo(() => (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -464,7 +464,7 @@ export default function GamesManagement() {
         </div>
       </form>
     </Form>
-  );
+  ), [form, createGameMutation.isPending, updateGameMutation.isPending, selectedGame]);
 
   return (
     <div className="container mx-auto px-4 py-8">
