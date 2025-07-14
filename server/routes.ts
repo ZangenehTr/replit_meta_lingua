@@ -7462,7 +7462,103 @@ Return JSON format:
   });
 
   // ============================================
-  // GAMES MANAGEMENT API ROUTES
+  // GAMES API ROUTES (PUBLIC & STUDENT ACCESS)
+  // ============================================
+  
+  // Public games endpoints (for student access)
+  app.get("/api/games", async (req: any, res) => {
+    try {
+      const { ageGroup, skillFocus, level } = req.query;
+      let games;
+      
+      if (ageGroup && ageGroup !== 'all') {
+        games = await storage.getGamesByAgeGroup(ageGroup as string);
+      } else {
+        games = await storage.getAllGames();
+      }
+      
+      // Filter by skill focus if specified
+      if (skillFocus && skillFocus !== 'all') {
+        games = games.filter(game => game.gameType === skillFocus);
+      }
+      
+      res.json(games);
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      res.status(500).json({ message: "Failed to fetch games" });
+    }
+  });
+
+  app.get("/api/games/:gameId", async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const game = await storage.getGameById(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      // Transform to expected format
+      const gameData = {
+        id: game.id,
+        title: game.gameName,
+        description: game.description,
+        gameType: game.gameType,
+        ageGroup: game.ageGroup,
+        difficultyLevel: game.minLevel,
+        skillFocus: game.gameType,
+        estimatedDuration: game.duration,
+        xpReward: game.pointsPerCorrect,
+        thumbnailUrl: game.thumbnailUrl || '/assets/games/default-game.png',
+        totalLevels: game.totalLevels
+      };
+
+      res.json(gameData);
+    } catch (error) {
+      console.error('Error fetching game:', error);
+      res.status(500).json({ message: "Failed to fetch game" });
+    }
+  });
+
+  app.post("/api/games/:gameId/start", authenticateToken, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const game = await storage.getGameById(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      const session = await storage.createGameSession({
+        userId: req.user.id,
+        gameId,
+        levelId: null,
+        score: 0,
+        correctAnswers: 0,
+        wrongAnswers: 0,
+        isCompleted: false,
+        gameState: {}
+      });
+
+      res.json({
+        id: session.id.toString(),
+        gameId: session.gameId,
+        userId: session.userId,
+        currentLevel: 1,
+        score: 0,
+        startTime: new Date().toISOString(),
+        isCompleted: false,
+        timeSpent: 0,
+        xpEarned: 0
+      });
+    } catch (error) {
+      console.error('Error starting game:', error);
+      res.status(500).json({ message: "Failed to start game" });
+    }
+  });
+
+  // ============================================
+  // GAMES MANAGEMENT API ROUTES (ADMIN)
   // ============================================
   
   app.get("/api/admin/games", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
