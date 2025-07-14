@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Navigation } from "@/components/layout/navigation";
+
 import { Sidebar } from "@/components/layout/sidebar";
 import { WelcomeSection } from "@/components/dashboard/welcome-section";
 import { StatsCards } from "@/components/dashboard/stats-cards";
@@ -56,8 +56,6 @@ export default function Dashboard() {
 
   return (
     <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
-      <Navigation />
-      
       {/* Mobile Progress Button - Fixed positioning */}
       <div className="fixed top-20 right-4 z-40 md:hidden">
         <Link href="/progress">

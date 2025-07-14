@@ -9,7 +9,7 @@ import { RecentMessages } from "@/components/dashboard/recent-messages";
 import { HomeworkTasks } from "@/components/dashboard/homework-tasks";
 import { PaymentCredits } from "@/components/dashboard/payment-credits";
 import { Sidebar } from "@/components/layout/sidebar";
-import { Navigation } from "@/components/layout/navigation";
+
 import { useTheme } from "@/hooks/use-theme";
 import AICompanion from "@/components/ai-companion";
 import { Button } from "@/components/ui/button";
@@ -46,8 +46,6 @@ export default function DemoDashboard() {
         <Sidebar user={user} />
         
         <div className="flex-1 flex flex-col">
-          <Navigation user={user} />
-          
           <main className="flex-1 p-6 overflow-auto">
             <div className="max-w-7xl mx-auto space-y-6">
               <WelcomeSection user={user} />

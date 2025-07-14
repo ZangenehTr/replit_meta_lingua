@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Navigation } from "@/components/layout/navigation";
+
 import { Sidebar } from "@/components/layout/sidebar";
 import { useLanguage } from "@/hooks/use-language";
 import { Palette, Upload, Eye, Save } from "lucide-react";
@@ -116,8 +116,6 @@ export default function BrandingManagement() {
 
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${isRTL ? 'rtl' : 'ltr'}`}>
-      <Navigation onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-      
       <div className="flex">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         
