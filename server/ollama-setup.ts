@@ -58,6 +58,22 @@ export class OllamaSetupService {
     const logs: string[] = [];
     
     try {
+      // Check if we're in Replit environment
+      if (process.env.REPLIT_ENVIRONMENT || process.env.REPL_ID || process.env.REPLIT_DEV_DOMAIN) {
+        logs.push('Replit environment detected - Ollama installation not supported');
+        return {
+          success: false,
+          message: 'Ollama installation not supported in Replit environment',
+          logs: [
+            'Replit has permission restrictions that prevent Ollama installation.',
+            'For production deployment, install Ollama on your server using:',
+            'curl -fsSL https://ollama.ai/install.sh | sh',
+            '',
+            'This AI Services interface will work correctly once deployed to a production server.'
+          ]
+        };
+      }
+      
       logs.push('Starting Ollama installation...');
       
       // Detect operating system
