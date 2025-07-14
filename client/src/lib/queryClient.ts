@@ -40,7 +40,11 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
       const controller = new AbortController();
       // Progressive timeout: shorter for first attempts, longer for retries
       const timeout = attempt === 0 ? 8000 : 12000 + (attempt * 3000);
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      const timeoutId = setTimeout(() => {
+        if (!controller.signal.aborted) {
+          controller.abort();
+        }
+      }, timeout);
 
       // Add keepalive for better connection persistence
       const response = await fetch(finalUrl, {
