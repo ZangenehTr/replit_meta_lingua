@@ -7557,6 +7557,51 @@ Return JSON format:
     }
   });
 
+  app.post("/api/games/:gameId/complete", authenticateToken, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const { level, score, timeSpent, xpEarned } = req.body;
+      
+      const game = await storage.getGameById(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      // Update or create game session completion
+      const sessionData = {
+        userId: req.user.id,
+        gameId,
+        levelId: null, // No specific level system yet
+        score: score || 0,
+        correctAnswers: Math.floor((score || 0) / 10), // Approximate
+        wrongAnswers: Math.max(0, 10 - Math.floor((score || 0) / 10)),
+        isCompleted: true,
+        gameState: {
+          timeSpent: timeSpent || 0,
+          xpEarned: xpEarned || 0,
+          completedAt: new Date().toISOString()
+        }
+      };
+
+      const session = await storage.createGameSession(sessionData);
+      
+      res.json({
+        success: true,
+        session: {
+          id: session.id,
+          gameId: session.gameId,
+          score: session.score,
+          xpEarned: xpEarned || 0,
+          timeSpent: timeSpent || 0,
+          isCompleted: true
+        }
+      });
+    } catch (error) {
+      console.error('Error completing game:', error);
+      res.status(500).json({ message: "Failed to complete game" });
+    }
+  });
+
   // ============================================
   // GAMES MANAGEMENT API ROUTES (ADMIN)
   // ============================================

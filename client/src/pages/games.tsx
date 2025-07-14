@@ -99,48 +99,20 @@ export default function GamesPage() {
 
   // Fetch available games
   const { data: games = [], isLoading: gamesLoading } = useQuery({
-    queryKey: ['/api/student/games', selectedAge, selectedSkill, selectedLevel],
+    queryKey: ['/api/games', selectedAge, selectedSkill, selectedLevel],
     queryFn: async () => {
-      const response = await apiRequest(`/api/student/games?ageGroup=${selectedAge}&skillFocus=${selectedSkill}&level=${selectedLevel}`);
+      const response = await apiRequest(`/api/games`);
       return response as Game[];
     }
   });
 
-  // Fetch user progress
-  const { data: progress = [], isLoading: progressLoading } = useQuery({
-    queryKey: ['/api/student/game-progress'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/student/game-progress');
-      return response as GameProgress[];
-    }
-  });
+  // Mock progress and sessions for now (since these endpoints don't exist yet)
+  const progress: GameProgress[] = [];
+  const sessions: GameSession[] = [];
 
-  // Fetch game sessions
-  const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
-    queryKey: ['/api/student/game-sessions'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/student/game-sessions');
-      return response as GameSession[];
-    }
-  });
-
-  // Fetch leaderboard
-  const { data: leaderboard = [], isLoading: leaderboardLoading } = useQuery({
-    queryKey: ['/api/student/leaderboard'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/student/leaderboard');
-      return response as LeaderboardEntry[];
-    }
-  });
-
-  // Fetch achievements
-  const { data: achievements = [], isLoading: achievementsLoading } = useQuery({
-    queryKey: ['/api/student/achievements'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/student/achievements');
-      return response as Achievement[];
-    }
-  });
+  // Mock leaderboard and achievements for now (since these endpoints don't exist yet)  
+  const leaderboard: LeaderboardEntry[] = [];
+  const achievements: Achievement[] = [];
 
   // Fetch user stats
   const { data: userStats, isLoading: statsLoading } = useQuery({

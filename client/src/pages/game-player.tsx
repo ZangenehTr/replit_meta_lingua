@@ -61,28 +61,38 @@ export default function GamePlayer() {
 
   // Fetch game details
   const { data: game, isLoading: gameLoading } = useQuery({
-    queryKey: ['/api/student/games', gameId],
+    queryKey: ['/api/games', gameId],
     queryFn: async () => {
-      const response = await apiRequest(`/api/student/games/${gameId}`);
+      const response = await apiRequest(`/api/games/${gameId}`);
       return response as Game;
     },
     enabled: !!gameId
   });
 
-  // Fetch game questions/content
-  const { data: questions = [], isLoading: questionsLoading } = useQuery({
-    queryKey: ['/api/student/games', gameId, 'questions'],
-    queryFn: async () => {
-      const response = await apiRequest(`/api/student/games/${gameId}/questions`);
-      return response as Question[];
+  // Generate sample questions when game starts (since we don't have actual question API)
+  const questions: Question[] = gameSession ? [
+    {
+      id: 1,
+      question: `Sample ${game?.skillFocus || 'vocabulary'} question for ${game?.title}`,
+      options: ["Option A", "Option B", "Option C", "Option D"],
+      correctAnswer: "Option A",
+      explanation: "This is the correct answer because...",
+      type: 'multiple_choice'
     },
-    enabled: !!gameId && isPlaying
-  });
+    {
+      id: 2,
+      question: `Another ${game?.skillFocus || 'vocabulary'} challenge`,
+      options: ["True", "False"],
+      correctAnswer: "True",
+      explanation: "This statement is true because...",
+      type: 'true_false'
+    }
+  ] : [];
 
   // Start game session
   const startGameMutation = useMutation({
     mutationFn: async (gameId: number) => {
-      const response = await apiRequest(`/api/student/games/${gameId}/start`, {
+      const response = await apiRequest(`/api/games/${gameId}/start`, {
         method: 'POST'
       });
       return response as GameSession;
@@ -105,22 +115,53 @@ export default function GamePlayer() {
     }
   });
 
-  // Submit answer
-  const submitAnswerMutation = useMutation({
-    mutationFn: async ({ questionId, answer }: { questionId: number, answer: string }) => {
-      const response = await apiRequest(`/api/student/games/${gameId}/answer`, {
+  // Complete game mutation
+  const completeGameMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/games/${gameId}/complete`, {
         method: 'POST',
         body: JSON.stringify({
-          sessionId: gameSession?.id,
-          questionId,
-          answer
+          level: 1,
+          score: score,
+          timeSpent: timeElapsed,
+          xpEarned: score
         })
       });
       return response;
     },
+    onSuccess: () => {
+      setShowResults(true);
+      setIsPlaying(false);
+      toast({
+        title: "Game Completed! 🎉",
+        description: `You earned ${score} XP in ${Math.floor(timeElapsed / 60)} minutes!`
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to complete game. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Submit answer (simplified for demo)
+  const submitAnswerMutation = useMutation({
+    mutationFn: async ({ questionId, answer }: { questionId: number, answer: string }) => {
+      // Simulate answer checking
+      const question = questions.find(q => q.id === questionId);
+      const isCorrect = question?.correctAnswer === answer;
+      
+      if (isCorrect) {
+        setScore(prev => prev + (game?.xpReward || 10));
+      }
+      
+      return { correct: isCorrect, explanation: question?.explanation };
+    },
     onSuccess: (result) => {
       if (result.correct) {
-        setScore(prev => prev + (game?.xpReward || 10));
         toast({
           title: "Correct! 🎉",
           description: `+${game?.xpReward || 10} XP`
@@ -132,31 +173,6 @@ export default function GamePlayer() {
           variant: "destructive"
         });
       }
-    }
-  });
-
-  // Complete game session
-  const completeGameMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest(`/api/student/games/${gameId}/complete`, {
-        method: 'POST',
-        body: JSON.stringify({
-          sessionId: gameSession?.id,
-          finalScore: score,
-          timeSpent: timeElapsed,
-          answers: userAnswers
-        })
-      });
-      return response;
-    },
-    onSuccess: (result) => {
-      setShowResults(true);
-      setIsPlaying(false);
-      toast({
-        title: "Game Completed!",
-        description: `You earned ${result.xpEarned} XP!`
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/student/game-progress'] });
     }
   });
 
