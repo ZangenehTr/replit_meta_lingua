@@ -7386,7 +7386,7 @@ Return JSON format:
   // GAMES MANAGEMENT API ROUTES
   // ============================================
   
-  app.get("/api/admin/games", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.get("/api/admin/games", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const games = await storage.getAllGames();
       res.json(games);
@@ -7396,7 +7396,7 @@ Return JSON format:
     }
   });
 
-  app.post("/api/admin/games", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.post("/api/admin/games", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const gameData = req.body;
       const game = await storage.createGame(gameData);
@@ -7407,7 +7407,7 @@ Return JSON format:
     }
   });
 
-  app.put("/api/admin/games/:id", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.put("/api/admin/games/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const gameId = parseInt(req.params.id);
       const gameData = req.body;
@@ -7422,7 +7422,7 @@ Return JSON format:
     }
   });
 
-  app.delete("/api/admin/games/:id", authenticateToken, requireRole(['admin']), async (req: any, res) => {
+  app.delete("/api/admin/games/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const gameId = parseInt(req.params.id);
       const success = await storage.deleteGame(gameId);
