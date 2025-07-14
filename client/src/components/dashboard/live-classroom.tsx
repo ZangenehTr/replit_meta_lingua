@@ -96,13 +96,12 @@ export function LiveClassroom() {
         localVideoRef.current.srcObject = stream;
       }
 
-      // Create peer connection
-      const peerConnection = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" }
-        ]
-      });
+      // Get WebRTC configuration from server
+      const configResponse = await fetch('/api/webrtc-config');
+      const webrtcConfig = await configResponse.json();
+      
+      // Create peer connection with proper STUN/TURN servers
+      const peerConnection = new RTCPeerConnection(webrtcConfig);
 
       peerConnectionRef.current = peerConnection;
       
