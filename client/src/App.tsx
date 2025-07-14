@@ -202,6 +202,11 @@ function Router() {
           <AIServicesManagement />
         </ProtectedRoute>
       </Route>
+      <Route path="/admin/ai-services">
+        <ProtectedRoute>
+          <AIServicesManagement />
+        </ProtectedRoute>
+      </Route>
       <Route path="/admin/games-management">
         <ProtectedRoute>
           <GamesManagement />
