@@ -78,6 +78,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   // Iranian Market Compliance Settings
   { path: "/admin/iranian-compliance", icon: "Settings", label: "Third Party Settings", roles: ["Admin"] },
   
+  // AI Services Management
+  { path: "/admin/ai-services", icon: "Bot", label: "AI Services", roles: ["Admin"] },
+  
   // Communication & Collaboration Tools
   { path: "/admin/communications", icon: "MessageCircle", label: "Communication Center", roles: ["Admin", "Supervisor"] },
   

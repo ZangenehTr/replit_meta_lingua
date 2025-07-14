@@ -24,7 +24,8 @@ import {
   Target,
   Megaphone,
   MessageCircle,
-  Globe
+  Globe,
+  Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,7 @@ const iconMap = {
   Building2,
   Settings,
   Globe,
+  Bot,
   Gamepad2: Home, // Using Home as fallback for Gamepad2
   Play: Video, // Using Video as fallback for Play
   UserCog: Users, // Using Users as fallback for UserCog
