@@ -5,9 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Bot, 
@@ -15,9 +13,7 @@ import {
   CheckCircle, 
   XCircle, 
   Download,
-  Settings,
   Activity,
-  Users,
   AlertTriangle,
   RefreshCw,
   Rocket
@@ -72,366 +68,402 @@ export default function AIServicesManagement() {
   const queryClient = useQueryClient();
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [downloadingModel, setDownloadingModel] = useState<string | null>(null);
+  const [testPrompt, setTestPrompt] = useState<string>("Hello, please introduce yourself in both English and Persian.");
 
-  // Query service status
-  const { data: serviceStatus, isLoading: statusLoading } = useQuery<{
-    isRunning: boolean;
-    isEnabled: boolean;
-  }>({
-    queryKey: ['/api/admin/ai/service-status'],
-    refetchInterval: 5000
+  // Ollama Status Query
+  const { data: ollamaStatus, isLoading: statusLoading } = useQuery({
+    queryKey: ["/api/admin/ollama/status"],
+    refetchInterval: 10000 // Check every 10 seconds
   });
 
-  // Query installed models
-  const { data: installedModels = [], isLoading: modelsLoading } = useQuery<Array<{
-    id: string;
-    name: string;
-    size: string;
-    downloadProgress?: number;
-  }>>({
-    queryKey: ['/api/admin/ai/installed-models'],
-    refetchInterval: downloadingModel ? 2000 : 10000
+  // Installed Models Query
+  const { data: modelsData, isLoading: modelsLoading } = useQuery({
+    queryKey: ["/api/admin/ollama/models"],
+    enabled: ollamaStatus?.isRunning,
+    refetchInterval: 30000
   });
 
-  // Query active model
-  const { data: activeModelData } = useQuery<{
-    modelId: string;
-  }>({
-    queryKey: ['/api/admin/ai/active-model']
-  });
-
-  // Query usage statistics
-  const { data: usageStats } = useQuery<{
-    activeStudents: number;
-    totalConversations: number;
-    avgDuration: number;
-    recentSessions?: Array<{
-      studentName: string;
-      duration: number;
-    }>;
-  }>({
-    queryKey: ['/api/admin/ai/usage-stats']
-  });
-
-  // Start service mutation
-  const startService = useMutation({
-    mutationFn: () => apiRequest('/api/admin/ai/start-service', {
-      method: 'POST'
-    }),
-    onSuccess: () => {
-      toast({ title: "AI service started successfully" });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/ai/service-status'] });
-    },
-    onError: () => {
-      toast({ 
-        title: "Failed to start AI service", 
-        variant: "destructive" 
+  // Install Ollama Mutation
+  const installOllamaMutation = useMutation({
+    mutationFn: () => apiRequest("/api/admin/ollama/install", { method: "POST" }),
+    onSuccess: (data) => {
+      toast({
+        title: "Ollama Installation",
+        description: data.success ? "Ollama installed successfully" : `Installation failed: ${data.message}`,
+        variant: data.success ? "default" : "destructive"
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/status"] });
     }
   });
 
-  // Install model mutation
-  const installModel = useMutation({
-    mutationFn: (modelId: string) => apiRequest('/api/admin/ai/install-model', {
-      method: 'POST',
-      body: JSON.stringify({ modelId })
-    }),
-    onMutate: (modelId) => {
-      setDownloadingModel(modelId);
+  // Start Ollama Service Mutation
+  const startOllamaMutation = useMutation({
+    mutationFn: () => apiRequest("/api/admin/ollama/start", { method: "POST" }),
+    onSuccess: (data) => {
+      toast({
+        title: "Ollama Service",
+        description: data.success ? "Service started successfully" : `Failed to start: ${data.message}`,
+        variant: data.success ? "default" : "destructive"
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/status"] });
+    }
+  });
+
+  // Download Model Mutation
+  const downloadModelMutation = useMutation({
+    mutationFn: (modelName: string) => {
+      setDownloadingModel(modelName);
+      return apiRequest(`/api/admin/ollama/models/${modelName}/download`, { method: "POST" });
     },
-    onSuccess: () => {
-      toast({ title: "Model installation started" });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/ai/installed-models'] });
+    onSuccess: (data, modelName) => {
+      setDownloadingModel(null);
+      toast({
+        title: "Model Download",
+        description: data.success ? `${modelName} downloaded successfully` : `Download failed: ${data.message}`,
+        variant: data.success ? "default" : "destructive"
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
     },
     onError: () => {
-      toast({ 
-        title: "Failed to start model installation", 
-        variant: "destructive" 
-      });
       setDownloadingModel(null);
     }
   });
 
-  // Set active model mutation
-  const setActiveModel = useMutation({
-    mutationFn: (modelId: string) => apiRequest('/api/admin/ai/set-active-model', {
-      method: 'POST',
-      body: JSON.stringify({ modelId })
-    }),
-    onSuccess: () => {
-      toast({ title: "Active model updated" });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/ai/active-model'] });
+  // Remove Model Mutation
+  const removeModelMutation = useMutation({
+    mutationFn: (modelName: string) => apiRequest(`/api/admin/ollama/models/${modelName}`, { method: "DELETE" }),
+    onSuccess: (data, modelName) => {
+      toast({
+        title: "Model Removal",
+        description: data.success ? `${modelName} removed successfully` : `Removal failed: ${data.message}`,
+        variant: data.success ? "default" : "destructive"
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
     }
   });
 
-  // Toggle service mutation
-  const toggleService = useMutation({
-    mutationFn: (enable: boolean) => apiRequest('/api/admin/ai/toggle-service', {
-      method: 'POST',
-      body: JSON.stringify({ enable })
-    }),
-    onSuccess: (_, enable) => {
-      toast({ title: `AI service ${enable ? 'enabled' : 'disabled'}` });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/ai/service-status'] });
+  // Test Generation Mutation
+  const testGenerationMutation = useMutation({
+    mutationFn: ({ prompt, model }: { prompt: string; model: string }) => 
+      apiRequest("/api/admin/ollama/generate", { 
+        method: "POST", 
+        body: { prompt, model } 
+      }),
+    onSuccess: (data) => {
+      toast({
+        title: "AI Test Successful",
+        description: "Model responded correctly. Check console for full response.",
+        variant: "default"
+      });
+      console.log("AI Response:", data.response);
+    },
+    onError: (error) => {
+      toast({
+        title: "AI Test Failed",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   });
 
-  const isModelInstalled = (modelId: string) => {
-    return installedModels.some((m: any) => m.id === modelId);
-  };
-
-  const getModelInstallProgress = (modelId: string) => {
-    const model = installedModels.find((m: any) => m.id === modelId);
-    return model?.downloadProgress || 0;
-  };
+  const availableModels = modelsData?.models || [];
+  const isOllamaReady = ollamaStatus?.isInstalled && ollamaStatus?.isRunning;
 
   return (
     <div className="space-y-6">
-      {/* Service Status Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Server className="w-5 h-5" />
-            AI Service Status
-          </CardTitle>
-          <CardDescription>
-            Manage the AI service that powers student conversations
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Service Status */}
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-4">
-                <div className={`p-2 rounded-full ${
-                  serviceStatus?.isRunning ? 'bg-green-100' : 'bg-red-100'
-                }`}>
-                  {serviceStatus?.isRunning ? (
-                    <CheckCircle className="w-6 h-6 text-green-600" />
-                  ) : (
-                    <XCircle className="w-6 h-6 text-red-600" />
-                  )}
-                </div>
-                <div>
-                  <p className="font-medium">Service Status</p>
-                  <p className="text-sm text-muted-foreground">
-                    {serviceStatus?.isRunning ? 'Running' : 'Stopped'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={serviceStatus?.isEnabled || false}
-                  onCheckedChange={(checked) => toggleService.mutate(checked)}
-                  disabled={toggleService.isPending}
-                />
-                {!serviceStatus?.isRunning && serviceStatus?.isEnabled && (
-                  <Button
-                    size="sm"
-                    onClick={() => startService.mutate()}
-                    disabled={startService.isPending}
-                  >
-                    <Rocket className="w-4 h-4 mr-1" />
-                    Start
-                  </Button>
-                )}
+      {/* Ollama Status Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Ollama Status</CardTitle>
+            <Server className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-2">
+              {statusLoading ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : ollamaStatus?.isInstalled ? (
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              ) : (
+                <XCircle className="h-4 w-4 text-red-600" />
+              )}
+              <span className="text-sm">
+                {statusLoading ? "Checking..." : ollamaStatus?.isInstalled ? "Installed" : "Not Installed"}
+              </span>
+            </div>
+            {ollamaStatus?.installationPath && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Path: {ollamaStatus.installationPath}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Service Status</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-2">
+              {ollamaStatus?.isRunning ? (
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              ) : (
+                <XCircle className="h-4 w-4 text-red-600" />
+              )}
+              <span className="text-sm">
+                {ollamaStatus?.isRunning ? "Running" : "Stopped"}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              URL: {ollamaStatus?.baseUrl || "http://localhost:11434"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Available Models</CardTitle>
+            <Bot className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{availableModels.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {availableModels.length > 0 ? `${availableModels[0]} ready` : "No models installed"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bootstrap Section */}
+      {!ollamaStatus?.isInstalled && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-orange-800">
+              <Rocket className="h-5 w-5" />
+              Bootstrap Ollama AI Services
+            </CardTitle>
+            <CardDescription className="text-orange-700">
+              Install and configure Ollama for local AI processing and Iranian compliance
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-orange-100 p-4 rounded-lg">
+              <h4 className="font-medium text-orange-800 mb-2">Why Ollama?</h4>
+              <ul className="text-sm text-orange-700 space-y-1">
+                <li>• Complete data sovereignty - no external AI dependencies</li>
+                <li>• Persian/Farsi language support for Iranian students</li>
+                <li>• Self-hosted AI processing for privacy and compliance</li>
+                <li>• Cost-effective - no per-request charges</li>
+              </ul>
+            </div>
+            <Button 
+              onClick={() => installOllamaMutation.mutate()}
+              disabled={installOllamaMutation.isPending}
+              className="w-full"
+            >
+              {installOllamaMutation.isPending ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Installing Ollama...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Install Ollama AI Services
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Service Control */}
+      {ollamaStatus?.isInstalled && !ollamaStatus?.isRunning && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="text-blue-800">Start Ollama Service</CardTitle>
+            <CardDescription className="text-blue-700">
+              Ollama is installed but not running. Start the service to enable AI features.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={() => startOllamaMutation.mutate()}
+              disabled={startOllamaMutation.isPending}
+              className="w-full"
+            >
+              {startOllamaMutation.isPending ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Starting Service...
+                </>
+              ) : (
+                <>
+                  <Activity className="h-4 w-4 mr-2" />
+                  Start Ollama Service
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Model Management */}
+      {isOllamaReady && (
+        <Card>
+          <CardHeader>
+            <CardTitle>AI Model Management</CardTitle>
+            <CardDescription>
+              Download and manage AI models for Persian language learning
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Available Models */}
+            <div>
+              <h4 className="font-medium mb-4">Available Models for Download</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {RECOMMENDED_MODELS.map((model) => {
+                  const isInstalled = availableModels.includes(model.id);
+                  const isDownloading = downloadingModel === model.id;
+                  
+                  return (
+                    <Card key={model.id} className={isInstalled ? "border-green-200 bg-green-50" : ""}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="font-medium">{model.name}</h5>
+                          {model.recommended && (
+                            <Badge variant="secondary">Recommended</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{model.description}</p>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                          <span>Size: {model.size}</span>
+                          <span>Languages: {model.languages.join(", ")}</span>
+                        </div>
+                        
+                        {isInstalled ? (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4 text-green-600" />
+                              <span className="text-sm text-green-700">Installed</span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeModelMutation.mutate(model.id)}
+                              disabled={removeModelMutation.isPending}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={() => downloadModelMutation.mutate(model.id)}
+                            disabled={isDownloading || downloadModelMutation.isPending}
+                            className="w-full"
+                            size="sm"
+                          >
+                            {isDownloading ? (
+                              <>
+                                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                Downloading...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="h-4 w-4 mr-2" />
+                                Download {model.size}
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Active Model Selection */}
-            {serviceStatus?.isRunning && (
-              <div className="space-y-2">
-                <Label>Active Model for Student Conversations</Label>
-                <div className="flex gap-2">
-                  <Select
-                    value={activeModelData?.modelId || selectedModel}
-                    onValueChange={setSelectedModel}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select active model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {installedModels.map((model: any) => (
-                        <SelectItem key={model.id} value={model.id}>
-                          {RECOMMENDED_MODELS.find(m => m.id === model.id)?.name || model.id}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {/* Test AI Generation */}
+            {availableModels.length > 0 && (
+              <div className="border-t pt-6">
+                <h4 className="font-medium mb-4">Test AI Generation</h4>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="model-select">Select Model</Label>
+                    <Select value={selectedModel} onValueChange={setSelectedModel}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a model to test" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableModels.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="test-prompt">Test Prompt</Label>
+                    <textarea
+                      id="test-prompt"
+                      className="w-full h-20 p-3 border rounded-md resize-none"
+                      value={testPrompt}
+                      onChange={(e) => setTestPrompt(e.target.value)}
+                      placeholder="Enter a test prompt..."
+                    />
+                  </div>
+                  
                   <Button
-                    onClick={() => setActiveModel.mutate(selectedModel)}
-                    disabled={!selectedModel || setActiveModel.isPending}
+                    onClick={() => testGenerationMutation.mutate({ prompt: testPrompt, model: selectedModel })}
+                    disabled={!selectedModel || testGenerationMutation.isPending}
+                    className="w-full"
                   >
-                    Set Active
+                    {testGenerationMutation.isPending ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Bot className="h-4 w-4 mr-2" />
+                        Test AI Generation
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Available Models */}
-      <Card>
+      {/* Iranian Compliance Information */}
+      <Card className="border-green-200 bg-green-50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bot className="w-5 h-5" />
-            Language Models
-          </CardTitle>
-          <CardDescription>
-            Install and manage AI models for student language learning
-          </CardDescription>
+          <CardTitle className="text-green-800">Iranian Market Compliance</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {RECOMMENDED_MODELS.map((model) => {
-              const installed = isModelInstalled(model.id);
-              const isDownloading = downloadingModel === model.id;
-              const progress = getModelInstallProgress(model.id);
-              const isActive = activeModelData?.modelId === model.id;
-
-              return (
-                <div
-                  key={model.id}
-                  className="p-4 border rounded-lg space-y-3"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{model.name}</h4>
-                        {model.recommended && (
-                          <Badge variant="secondary" className="text-xs">
-                            Recommended
-                          </Badge>
-                        )}
-                        {isActive && (
-                          <Badge className="text-xs">
-                            Active
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {model.description}
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span>Size: {model.size}</span>
-                        <span>Languages: {model.languages.join(", ")}</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      {installed ? (
-                        <Badge variant="outline" className="bg-green-50">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Installed
-                        </Badge>
-                      ) : isDownloading ? (
-                        <Badge variant="outline">
-                          <Download className="w-3 h-3 mr-1 animate-pulse" />
-                          Downloading
-                        </Badge>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => installModel.mutate(model.id)}
-                          disabled={!serviceStatus?.isRunning}
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          Install
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {isDownloading && progress > 0 && (
-                    <Progress value={progress} className="h-2" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Usage Statistics */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5" />
-            Usage Statistics
-          </CardTitle>
-          <CardDescription>
-            Monitor how students are using the AI conversation feature
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Active Students</p>
-              </div>
-              <p className="text-2xl font-bold">
-                {usageStats?.activeStudents || 0}
-              </p>
-              <p className="text-xs text-muted-foreground">Today</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <h5 className="font-medium text-green-800 mb-2">✅ Compliance Features</h5>
+              <ul className="space-y-1 text-green-700">
+                <li>• Complete data sovereignty</li>
+                <li>• No external AI service dependencies</li>
+                <li>• Persian/Farsi language processing</li>
+                <li>• Local model storage and execution</li>
+              </ul>
             </div>
-            
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Bot className="w-4 h-4 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Conversations</p>
-              </div>
-              <p className="text-2xl font-bold">
-                {usageStats?.totalConversations || 0}
-              </p>
-              <p className="text-xs text-muted-foreground">Last 24 hours</p>
-            </div>
-            
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Activity className="w-4 h-4 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Avg. Duration</p>
-              </div>
-              <p className="text-2xl font-bold">
-                {usageStats?.avgDuration || "0"}m
-              </p>
-              <p className="text-xs text-muted-foreground">Per conversation</p>
-            </div>
-          </div>
-
-          {/* Recent Activity Summary */}
-          {usageStats?.recentSessions && (
-            <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm font-medium mb-2">Recent Activity</p>
-              <div className="space-y-1">
-                {usageStats.recentSessions.map((session: any, idx: number) => (
-                  <div key={idx} className="flex justify-between text-xs">
-                    <span>{session.studentName}</span>
-                    <span className="text-muted-foreground">
-                      {session.duration}m conversation
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Configuration Notice */}
-      <Card className="border-amber-200 bg-amber-50">
-        <CardContent className="pt-6">
-          <div className="flex gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Student AI Conversation Feature</p>
-              <p className="text-sm text-muted-foreground">
-                Students can practice conversations by holding the microphone button and speaking. 
-                The AI will respond with voice in their selected language (English/Farsi).
-              </p>
+            <div>
+              <h5 className="font-medium text-green-800 mb-2">🚀 Recommended Setup</h5>
+              <ul className="space-y-1 text-green-700">
+                <li>• Start with Llama 3.2 (3B) model</li>
+                <li>• Download Persian LLM for best results</li>
+                <li>• Test generation before student use</li>
+                <li>• Monitor performance and upgrade as needed</li>
+              </ul>
             </div>
           </div>
         </CardContent>
