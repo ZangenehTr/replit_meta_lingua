@@ -85,22 +85,86 @@ export default function VoIPCenter() {
   const [callDuration, setCallDuration] = useState(0);
   const [isHeadsetConnected, setIsHeadsetConnected] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [audioDevices, setAudioDevices] = useState<{ inputs: MediaDeviceInfo[], outputs: MediaDeviceInfo[] }>({ inputs: [], outputs: [] });
+  const [selectedAudioInput, setSelectedAudioInput] = useState<string>('');
+  const [selectedAudioOutput, setSelectedAudioOutput] = useState<string>('');
+  const [micPermissionGranted, setMicPermissionGranted] = useState(false);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
 
-  // Check headset connection
+  // Enhanced audio device detection and management
   useEffect(() => {
-    const checkAudioDevices = async () => {
+    const requestMicrophonePermission = async () => {
       try {
+        // Request microphone permission first
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setMicPermissionGranted(true);
+        mediaStreamRef.current = stream;
+        
+        // Now enumerate devices (this will show device labels)
         const devices = await navigator.mediaDevices.enumerateDevices();
         const audioInputs = devices.filter(device => device.kind === 'audioinput');
         const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
-        setIsHeadsetConnected(audioInputs.length > 1 || audioOutputs.length > 1);
+        
+        setAudioDevices({ inputs: audioInputs, outputs: audioOutputs });
+        
+        // Check for Bluetooth or external audio devices
+        const hasBluetoothInput = audioInputs.some(device => 
+          device.label.toLowerCase().includes('bluetooth') ||
+          device.label.toLowerCase().includes('airpods') ||
+          device.label.toLowerCase().includes('headset') ||
+          device.label.toLowerCase().includes('headphones') ||
+          device.deviceId !== 'default'
+        );
+        
+        const hasBluetoothOutput = audioOutputs.some(device => 
+          device.label.toLowerCase().includes('bluetooth') ||
+          device.label.toLowerCase().includes('airpods') ||
+          device.label.toLowerCase().includes('headset') ||
+          device.label.toLowerCase().includes('headphones') ||
+          device.deviceId !== 'default'
+        );
+        
+        setIsHeadsetConnected(hasBluetoothInput || hasBluetoothOutput || audioInputs.length > 1);
+        
+        // Auto-select first non-default Bluetooth device
+        const bluetoothInput = audioInputs.find(device => 
+          device.label.toLowerCase().includes('bluetooth') ||
+          device.label.toLowerCase().includes('airpods') ||
+          device.label.toLowerCase().includes('headset')
+        );
+        const bluetoothOutput = audioOutputs.find(device => 
+          device.label.toLowerCase().includes('bluetooth') ||
+          device.label.toLowerCase().includes('airpods') ||
+          device.label.toLowerCase().includes('headset')
+        );
+        
+        if (bluetoothInput) setSelectedAudioInput(bluetoothInput.deviceId);
+        if (bluetoothOutput) setSelectedAudioOutput(bluetoothOutput.deviceId);
+        
       } catch (error) {
-        console.log('Audio device detection failed:', error);
+        console.log('Microphone permission denied or audio device detection failed:', error);
+        setMicPermissionGranted(false);
+        setIsHeadsetConnected(false);
       }
     };
-    checkAudioDevices();
+    
+    requestMicrophonePermission();
+    
+    // Listen for device changes (when Bluetooth devices connect/disconnect)
+    const handleDeviceChange = () => {
+      requestMicrophonePermission();
+    };
+    
+    navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange);
+    
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange);
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
   }, []);
 
   // Data queries
@@ -193,15 +257,36 @@ export default function VoIPCenter() {
     });
   };
 
-  // Handle call initiation
-  const handleCall = (phone: string, name: string) => {
-    if (!isHeadsetConnected) {
+  // Handle call initiation with enhanced audio setup
+  const handleCall = async (phone: string, name: string) => {
+    if (!micPermissionGranted) {
       toast({
-        title: "Headset Required",
-        description: "Please connect a headset before making calls",
+        title: "Microphone Permission Required",
+        description: "Please allow microphone access for VoIP calling",
         variant: "destructive",
       });
       return;
+    }
+    
+    if (!isHeadsetConnected && audioDevices.inputs.length <= 1) {
+      toast({
+        title: "Audio Device Recommended",
+        description: "For best call quality, please connect a Bluetooth headset or use earphones",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Configure audio for the call if specific devices are selected
+    try {
+      if (selectedAudioInput) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: { deviceId: { exact: selectedAudioInput } }
+        });
+        mediaStreamRef.current = stream;
+      }
+    } catch (error) {
+      console.warn('Failed to use selected audio input:', error);
     }
 
     initiateMutation.mutate({ phoneNumber: phone, contactName: name });
@@ -250,9 +335,12 @@ export default function VoIPCenter() {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <Badge variant={isHeadsetConnected ? "default" : "destructive"} className="flex items-center space-x-2">
+            <Badge variant={isHeadsetConnected ? "default" : micPermissionGranted ? "secondary" : "destructive"} className="flex items-center space-x-2">
               <Headphones className="h-3 w-3" />
-              <span>{isHeadsetConnected ? "Headset Connected" : "No Headset"}</span>
+              <span>
+                {isHeadsetConnected ? "Audio Ready" : 
+                 micPermissionGranted ? "Built-in Audio" : "No Audio Access"}
+              </span>
             </Badge>
             <Badge variant={voipStatus?.connected ? "default" : "secondary"} className="flex items-center space-x-2">
               <Circle className={`h-3 w-3 ${voipStatus?.connected ? 'fill-green-500' : 'fill-gray-400'}`} />
@@ -327,20 +415,109 @@ export default function VoIPCenter() {
                   />
                   <Button 
                     onClick={() => handleCall(phoneNumber, "Manual Call")}
-                    disabled={!phoneNumber || !!activeCall || !isHeadsetConnected}
+                    disabled={!phoneNumber || !!activeCall || !micPermissionGranted}
                     className="flex items-center space-x-2"
                   >
                     <PhoneCall className="h-4 w-4" />
                     <span>Call</span>
                   </Button>
                 </div>
-                {!isHeadsetConnected && (
+                {!micPermissionGranted && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
-                      Headset required for VoIP calling. Please connect your headset to laptop.
+                      Microphone access required for VoIP calling. Please allow microphone permission in your browser.
                     </AlertDescription>
                   </Alert>
+                )}
+                
+                {micPermissionGranted && audioDevices.inputs.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium text-gray-700">Audio Configuration</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Microphone Input</label>
+                        <select 
+                          value={selectedAudioInput} 
+                          onChange={(e) => setSelectedAudioInput(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Default</option>
+                          {audioDevices.inputs.map(device => (
+                            <option key={device.deviceId} value={device.deviceId}>
+                              {device.label || 'Unknown Device'}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Audio Output</label>
+                        <select 
+                          value={selectedAudioOutput} 
+                          onChange={(e) => setSelectedAudioOutput(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Default</option>
+                          {audioDevices.outputs.map(device => (
+                            <option key={device.deviceId} value={device.deviceId}>
+                              {device.label || 'Unknown Device'}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex items-center text-xs text-gray-600">
+                      <Circle className={`h-2 w-2 mr-2 ${isHeadsetConnected ? 'fill-green-500' : 'fill-yellow-500'}`} />
+                      <span>
+                        {isHeadsetConnected ? 
+                          'External audio device detected - optimal call quality' : 
+                          'Using built-in audio - consider using Bluetooth headset for better quality'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Audio Device Test Section */}
+                {micPermissionGranted && (
+                  <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-sm font-medium text-gray-700">Audio Device Test</div>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={async () => {
+                          try {
+                            const stream = await navigator.mediaDevices.getUserMedia({
+                              audio: selectedAudioInput ? { deviceId: { exact: selectedAudioInput } } : true
+                            });
+                            toast({
+                              title: "Audio Test Successful",
+                              description: `Microphone ${selectedAudioInput ? 'device' : '(default)'} is working properly`,
+                            });
+                            stream.getTracks().forEach(track => track.stop());
+                          } catch (error) {
+                            toast({
+                              title: "Audio Test Failed",
+                              description: "Selected microphone device is not accessible",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
+                        <Settings className="h-3 w-3 mr-1" />
+                        Test Audio
+                      </Button>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Click "Test Audio" to verify your selected microphone is working before making calls.
+                      {selectedAudioInput && (
+                        <div className="mt-1 font-medium">
+                          Selected: {audioDevices.inputs.find(d => d.deviceId === selectedAudioInput)?.label || 'Unknown Device'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
