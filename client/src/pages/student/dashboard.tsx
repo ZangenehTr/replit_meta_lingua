@@ -253,6 +253,12 @@ function StudentDashboard() {
                 Video Courses
               </Button>
             </Link>
+            <Link href="/games">
+              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-md">
+                <Trophy className="h-4 w-4 mr-2" />
+                Play Games
+              </Button>
+            </Link>
             <Link href="/level-assessment">
               <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
                 <Target className="h-4 w-4 mr-2" />

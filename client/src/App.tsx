@@ -59,6 +59,8 @@ import StudentVideoCourses from "@/pages/student/video-courses";
 import VideoCoursDetail from "@/pages/student/video-course-detail";
 import VideoPlayer from "@/pages/student/video-player";
 import LevelAssessment from "@/pages/level-assessment";
+import GamesPage from "@/pages/games";
+import GamePlayer from "@/pages/game-player";
 
 // Teacher pages
 import TeacherClassesPage from "@/pages/teacher/classes";
@@ -365,6 +367,16 @@ function Router() {
       <Route path="/level-assessment">
         <ProtectedRoute>
           <LevelAssessment />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/games">
+        <ProtectedRoute>
+          <GamesPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/game/:gameId">
+        <ProtectedRoute>
+          <GamePlayer />
         </ProtectedRoute>
       </Route>
       <Route path="/ai-practice">

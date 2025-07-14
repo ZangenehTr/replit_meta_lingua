@@ -10873,15 +10873,32 @@ Return JSON format:
 
   // ===== GAMIFICATION AND GAMES API ENDPOINTS =====
 
-  // Get available games with filtering
+  // Get available games with filtering (age-based filtering for students)
   app.get("/api/student/games", authenticateToken, async (req: any, res) => {
     try {
       const { ageGroup, skillFocus, level } = req.query;
+      
+      // Get user profile to determine age group
+      const userProfile = await storage.getUserProfile(req.user.id);
+      let studentAgeGroup = ageGroup;
+      
+      // If no age group specified, determine from user's date of birth
+      if (!ageGroup && userProfile?.dateOfBirth) {
+        const birthDate = new Date(userProfile.dateOfBirth);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        
+        if (age <= 10) studentAgeGroup = '5-10';
+        else if (age <= 14) studentAgeGroup = '11-14';
+        else if (age <= 20) studentAgeGroup = '15-20';
+        else studentAgeGroup = '21+';
+      }
+      
       const games = await storage.getGamesByFilters({
-        ageGroup: ageGroup === 'all' ? undefined : ageGroup,
+        ageGroup: studentAgeGroup === 'all' ? undefined : studentAgeGroup,
         gameType: skillFocus === 'all' ? undefined : skillFocus,
         level: level === 'all' ? undefined : level,
-        language: 'english'
+        language: 'en'
       });
       res.json(games);
     } catch (error) {
@@ -10898,6 +10915,73 @@ Return JSON format:
     } catch (error) {
       console.error('Error fetching game progress:', error);
       res.status(500).json({ message: "Failed to fetch game progress" });
+    }
+  });
+
+  // Get specific game details for student
+  app.get("/api/student/games/:gameId", authenticateToken, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const game = await storage.getGameById(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      // Transform to expected format
+      const gameData = {
+        id: game.id,
+        title: game.gameName,
+        description: game.description,
+        gameType: game.gameType,
+        ageGroup: game.ageGroup,
+        difficultyLevel: game.minLevel,
+        skillFocus: game.gameType,
+        estimatedDuration: game.duration,
+        xpReward: game.pointsPerCorrect,
+        thumbnailUrl: game.thumbnailUrl || '/assets/games/default-game.png',
+        totalLevels: game.totalLevels
+      };
+
+      res.json(gameData);
+    } catch (error) {
+      console.error('Error fetching game:', error);
+      res.status(500).json({ message: "Failed to fetch game" });
+    }
+  });
+
+  // Get game questions/content
+  app.get("/api/student/games/:gameId/questions", authenticateToken, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const game = await storage.getGameById(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      // Generate questions based on game type and level
+      const questions = await storage.getGameLevels(gameId);
+      
+      // If no questions exist, generate sample questions based on game type
+      if (questions.length === 0) {
+        const sampleQuestions = generateSampleQuestions(game.gameType, game.minLevel);
+        res.json(sampleQuestions);
+      } else {
+        // Transform game levels to questions format
+        const questionData = questions.map((level, index) => ({
+          id: level.id,
+          question: `${game.gameType.charAt(0).toUpperCase() + game.gameType.slice(1)} Challenge ${index + 1}`,
+          options: generateOptionsForGameType(game.gameType),
+          correctAnswer: generateCorrectAnswer(game.gameType),
+          explanation: `This ${game.gameType} exercise helps improve your skills.`,
+          type: 'multiple_choice'
+        }));
+        res.json(questionData);
+      }
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+      res.status(500).json({ message: "Failed to fetch questions" });
     }
   });
 
@@ -10922,12 +11006,198 @@ Return JSON format:
         gameState: {}
       });
 
-      res.json({ session, game });
+      res.json({
+        id: session.id.toString(),
+        gameId: session.gameId,
+        userId: session.userId,
+        currentLevel: 1,
+        score: 0,
+        startTime: new Date().toISOString(),
+        isCompleted: false,
+        timeSpent: 0,
+        xpEarned: 0
+      });
     } catch (error) {
       console.error('Error starting game:', error);
       res.status(500).json({ message: "Failed to start game" });
     }
   });
+
+  // Submit game answer
+  app.post("/api/student/games/:gameId/answer", authenticateToken, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const { sessionId, questionId, answer } = req.body;
+      
+      const game = await storage.getGameById(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      // Simple answer validation - in a real implementation this would check against stored correct answers
+      const isCorrect = validateAnswer(game.gameType, answer);
+      
+      res.json({
+        correct: isCorrect,
+        explanation: isCorrect ? 
+          `Correct! Great ${game.gameType} skills!` : 
+          `Not quite right. Keep practicing your ${game.gameType} skills.`,
+        xpEarned: isCorrect ? game.pointsPerCorrect : 0
+      });
+    } catch (error) {
+      console.error('Error submitting answer:', error);
+      res.status(500).json({ message: "Failed to submit answer" });
+    }
+  });
+
+  // Complete game session
+  app.post("/api/student/games/:gameId/complete", authenticateToken, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const { sessionId, finalScore, timeSpent, answers } = req.body;
+      
+      const game = await storage.getGameById(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      // Update game session
+      const session = await storage.endGameSession(parseInt(sessionId), {
+        score: finalScore,
+        isCompleted: true,
+        endedAt: new Date()
+      });
+
+      // Update user progress
+      await storage.getOrCreateUserGameProgress(req.user.id, gameId);
+
+      res.json({
+        sessionId,
+        xpEarned: finalScore,
+        coinsEarned: Math.floor(finalScore / 10),
+        completed: true,
+        newAchievements: []
+      });
+    } catch (error) {
+      console.error('Error completing game:', error);
+      res.status(500).json({ message: "Failed to complete game" });
+    }
+  });
+
+  // Helper functions for game content generation
+  function generateSampleQuestions(gameType: string, level: string) {
+    const baseQuestions = {
+      vocabulary: [
+        {
+          id: 1,
+          question: "What does 'comprehensive' mean?",
+          options: ["Simple", "Complete and thorough", "Difficult", "Quick"],
+          correctAnswer: "Complete and thorough",
+          type: "multiple_choice"
+        },
+        {
+          id: 2,
+          question: "Choose the synonym for 'abundant':",
+          options: ["Scarce", "Plentiful", "Empty", "Small"],
+          correctAnswer: "Plentiful",
+          type: "multiple_choice"
+        }
+      ],
+      grammar: [
+        {
+          id: 1,
+          question: "Choose the correct form: 'She _____ to school every day.'",
+          options: ["go", "goes", "going", "gone"],
+          correctAnswer: "goes",
+          type: "multiple_choice"
+        },
+        {
+          id: 2,
+          question: "Which sentence is correct?",
+          options: ["I have went there", "I have gone there", "I have go there", "I has gone there"],
+          correctAnswer: "I have gone there",
+          type: "multiple_choice"
+        }
+      ],
+      listening: [
+        {
+          id: 1,
+          question: "What did the speaker say about the weather?",
+          options: ["It's sunny", "It's raining", "It's cloudy", "It's snowing"],
+          correctAnswer: "It's raining",
+          type: "multiple_choice"
+        }
+      ],
+      speaking: [
+        {
+          id: 1,
+          question: "Pronounce this word correctly: 'through'",
+          options: ["threw", "through", "throw", "thought"],
+          correctAnswer: "through",
+          type: "multiple_choice"
+        }
+      ],
+      reading: [
+        {
+          id: 1,
+          question: "What is the main idea of the passage?",
+          options: ["Technology is harmful", "Education is important", "Travel is fun", "Food is necessary"],
+          correctAnswer: "Education is important",
+          type: "multiple_choice"
+        }
+      ],
+      writing: [
+        {
+          id: 1,
+          question: "Choose the best way to start a formal email:",
+          options: ["Hey!", "Dear Sir/Madam,", "What's up?", "Yo!"],
+          correctAnswer: "Dear Sir/Madam,",
+          type: "multiple_choice"
+        }
+      ]
+    };
+
+    return baseQuestions[gameType] || baseQuestions.vocabulary;
+  }
+
+  function generateOptionsForGameType(gameType: string) {
+    const options = {
+      vocabulary: ["Option A", "Option B", "Option C", "Option D"],
+      grammar: ["Choice 1", "Choice 2", "Choice 3", "Choice 4"],
+      listening: ["Answer A", "Answer B", "Answer C", "Answer D"],
+      speaking: ["Response 1", "Response 2", "Response 3", "Response 4"],
+      reading: ["Statement A", "Statement B", "Statement C", "Statement D"],
+      writing: ["Version A", "Version B", "Version C", "Version D"]
+    };
+    return options[gameType] || options.vocabulary;
+  }
+
+  function generateCorrectAnswer(gameType: string) {
+    const answers = {
+      vocabulary: "Option B",
+      grammar: "Choice 2", 
+      listening: "Answer A",
+      speaking: "Response 3",
+      reading: "Statement B",
+      writing: "Version A"
+    };
+    return answers[gameType] || "Option B";
+  }
+
+  function validateAnswer(gameType: string, answer: string) {
+    // Simple validation - in real implementation this would check against database
+    const correctAnswers = {
+      vocabulary: ["Option B", "Complete and thorough", "Plentiful"],
+      grammar: ["Choice 2", "goes", "I have gone there"],
+      listening: ["Answer A", "It's raining"],
+      speaking: ["Response 3", "through"],
+      reading: ["Statement B", "Education is important"],
+      writing: ["Version A", "Dear Sir/Madam,"]
+    };
+    
+    const validAnswers = correctAnswers[gameType] || correctAnswers.vocabulary;
+    return validAnswers.includes(answer);
+  }
 
   // End a game session
   app.put("/api/student/games/sessions/:sessionId/end", authenticateToken, requireRole(['Student']), async (req: any, res) => {
