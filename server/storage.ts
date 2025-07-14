@@ -452,6 +452,11 @@ export interface IStorage {
   deleteRoom(id: number): Promise<boolean>;
   getActiveRooms(): Promise<Room[]>;
   getRoomsByType(type: string): Promise<Room[]>;
+
+  // ===== STUDENT API METHODS =====
+  getStudentAssignments(userId: number): Promise<any[]>;
+  getStudentGoals(userId: number): Promise<any[]>;
+  getStudentHomework(userId: number): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {

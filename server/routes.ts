@@ -4710,6 +4710,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // STUDENT API ENDPOINTS
+  // ============================================
+
+  // Get student courses
+  app.get("/api/student/courses", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const courses = await storage.getUserCourses(req.user.userId);
+      res.json(courses);
+    } catch (error) {
+      console.error('Error fetching student courses:', error);
+      res.status(500).json({ message: "Failed to get courses" });
+    }
+  });
+
+  // Get student assignments
+  app.get("/api/student/assignments", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const assignments = await storage.getStudentAssignments(req.user.userId);
+      res.json(assignments);
+    } catch (error) {
+      console.error('Error fetching student assignments:', error);
+      res.status(500).json({ message: "Failed to get assignments" });
+    }
+  });
+
+  // Get student goals
+  app.get("/api/student/goals", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const goals = await storage.getStudentGoals(req.user.userId);
+      res.json(goals);
+    } catch (error) {
+      console.error('Error fetching student goals:', error);
+      res.status(500).json({ message: "Failed to get goals" });
+    }
+  });
+
+  // Get student homework
+  app.get("/api/students/homework", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const homework = await storage.getStudentHomework(req.user.userId);
+      res.json(homework);
+    } catch (error) {
+      console.error('Error fetching student homework:', error);
+      res.status(500).json({ message: "Failed to get homework" });
+    }
+  });
+
+  // Get upcoming sessions
+  app.get("/api/student/sessions/upcoming", authenticateToken, async (req: any, res) => {
+    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const sessions = await storage.getUpcomingSessions(req.user.userId);
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching upcoming sessions:', error);
+      res.status(500).json({ message: "Failed to get upcoming sessions" });
+    }
+  });
+
   // Session Packages endpoints for private students  
   app.get("/api/student/session-packages", authenticateToken, async (req: any, res) => {
     if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
