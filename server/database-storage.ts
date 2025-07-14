@@ -5626,4 +5626,116 @@ export class DatabaseStorage implements IStorage {
       };
     }
   }
+
+  // ============================================
+  // STUDENT API METHODS 
+  // ============================================
+
+  async getStudentAssignments(userId: number): Promise<any[]> {
+    try {
+      // Get assignments assigned to this student
+      const assignments = await db
+        .select({
+          id: homework.id,
+          title: homework.title,
+          description: homework.description,
+          instructions: homework.instructions,
+          dueDate: homework.dueDate,
+          status: homework.status,
+          courseId: homework.courseId,
+          tutorId: homework.tutorId,
+          maxScore: homework.maxScore,
+          submittedAt: homework.submittedAt,
+          feedback: homework.feedback,
+          score: homework.score,
+          attachments: homework.attachments,
+          courseName: courses.title,
+          courseLevel: courses.level,
+          tutorFirstName: users.firstName,
+          tutorLastName: users.lastName
+        })
+        .from(homework)
+        .leftJoin(courses, eq(homework.courseId, courses.id))
+        .leftJoin(users, eq(homework.tutorId, users.id))
+        .where(eq(homework.studentId, userId))
+        .orderBy(desc(homework.dueDate));
+
+      return assignments.map(assignment => ({
+        ...assignment,
+        course: {
+          title: assignment.courseName || 'Unknown Course',
+          level: assignment.courseLevel || 'Unknown'
+        },
+        tutor: {
+          firstName: assignment.tutorFirstName || 'Unknown',
+          lastName: assignment.tutorLastName || 'Tutor'
+        }
+      }));
+    } catch (error) {
+      console.error('Error fetching student assignments:', error);
+      return [];
+    }
+  }
+
+  async getStudentGoals(userId: number): Promise<any[]> {
+    try {
+      // Get daily goals for the student
+      const goals = await db
+        .select()
+        .from(dailyGoals)
+        .where(eq(dailyGoals.userId, userId))
+        .orderBy(desc(dailyGoals.createdAt));
+
+      return goals;
+    } catch (error) {
+      console.error('Error fetching student goals:', error);
+      return [];
+    }
+  }
+
+  async getStudentHomework(userId: number): Promise<any[]> {
+    try {
+      // Get homework assignments for the student
+      const homeworkResults = await db
+        .select({
+          id: homework.id,
+          title: homework.title,
+          description: homework.description,
+          instructions: homework.instructions,
+          dueDate: homework.dueDate,
+          status: homework.status,
+          courseId: homework.courseId,
+          tutorId: homework.tutorId,
+          maxScore: homework.maxScore,
+          submittedAt: homework.submittedAt,
+          feedback: homework.feedback,
+          score: homework.score,
+          attachments: homework.attachments,
+          courseName: courses.title,
+          courseLevel: courses.level,
+          tutorFirstName: users.firstName,
+          tutorLastName: users.lastName
+        })
+        .from(homework)
+        .leftJoin(courses, eq(homework.courseId, courses.id))
+        .leftJoin(users, eq(homework.tutorId, users.id))
+        .where(eq(homework.studentId, userId))
+        .orderBy(desc(homework.dueDate));
+
+      return homeworkResults.map(hw => ({
+        ...hw,
+        course: {
+          title: hw.courseName || 'Unknown Course',
+          level: hw.courseLevel || 'Unknown'
+        },
+        tutor: {
+          firstName: hw.tutorFirstName || 'Unknown',
+          lastName: hw.tutorLastName || 'Tutor'
+        }
+      }));
+    } catch (error) {
+      console.error('Error fetching student homework:', error);
+      return [];
+    }
+  }
 }
