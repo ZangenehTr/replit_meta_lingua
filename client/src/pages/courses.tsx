@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Navigation } from "@/components/layout/navigation";
+
 import { Sidebar } from "@/components/layout/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -285,8 +285,6 @@ export default function Courses() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
-      
       <div className="flex">
         <Sidebar />
         

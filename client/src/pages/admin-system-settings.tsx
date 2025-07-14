@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Navigation } from "@/components/layout/navigation";
+
 import { Sidebar } from "@/components/layout/sidebar";
 import { useLanguage } from "@/hooks/use-language";
 import { Settings, Shield, MessageSquare, CreditCard, Bot, Users, AlertTriangle, Save } from "lucide-react";
@@ -178,8 +178,6 @@ export default function AdminSystemSettings() {
 
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${isRTL ? 'rtl' : 'ltr'}`}>
-      <Navigation />
-      
       <div className="flex">
         <Sidebar />
         

@@ -1,4 +1,4 @@
-import { Navigation } from "@/components/layout/navigation";
+
 import { Sidebar } from "@/components/layout/sidebar";
 import { WalletSystem } from "@/components/dashboard/wallet-system";
 import { useLanguage } from "@/hooks/use-language";
@@ -9,8 +9,6 @@ export default function WalletPage() {
 
   return (
     <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
-      <Navigation />
-      
       <div className="flex">
         <Sidebar />
         
