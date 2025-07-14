@@ -31,19 +31,24 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
     }
   }
 
-  // Retry logic for network resilience
-  const maxRetries = 2;
+  // Enhanced retry logic with progressive timeout
+  const maxRetries = 3;
   let lastError;
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // Reduced timeout
+      // Progressive timeout: shorter for first attempts, longer for retries
+      const timeout = attempt === 0 ? 8000 : 12000 + (attempt * 3000);
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+      // Add keepalive for better connection persistence
       const response = await fetch(finalUrl, {
         headers,
         credentials: 'include',
         signal: controller.signal,
+        keepalive: true,
+        cache: 'no-cache',
       });
 
       clearTimeout(timeoutId);
@@ -96,14 +101,23 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
         throw new Error('Request timeout: Server took too long to respond. Please try again.');
       }
       
-      // Only retry network errors
-      if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        if (attempt < maxRetries) {
-          // Wait before retry (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-          continue;
-        }
-        throw new Error('Network error: Unable to connect to server after multiple attempts. Please check your connection and try again.');
+      // Enhanced retry logic for various network errors
+      const isNetworkError = (
+        (error instanceof TypeError && error.message === 'Failed to fetch') ||
+        (error instanceof Error && error.message.includes('NetworkError')) ||
+        (error instanceof Error && error.message.includes('fetch'))
+      );
+      
+      if (isNetworkError && attempt < maxRetries) {
+        // Progressive backoff: 500ms, 1.5s, 3s
+        const backoffTime = 500 * Math.pow(2.5, attempt);
+        console.warn(`Network error on attempt ${attempt + 1}/${maxRetries + 1} for ${finalUrl}. Retrying in ${backoffTime}ms...`);
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
+        continue;
+      }
+      
+      if (isNetworkError) {
+        throw new Error(`Network connectivity issue: Unable to reach server after ${maxRetries + 1} attempts. Please check your internet connection and try refreshing the page.`);
       }
       
       // Other errors, don't retry
@@ -123,8 +137,35 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: defaultQueryFn,
-      retry: 1,
+      staleTime: 30000, // 30 seconds
+      retry: (failureCount, error) => {
+        // Don't retry auth errors
+        if (error instanceof Error && (error.message.includes('401') || error.message.includes('403'))) {
+          return false;
+        }
+        // Retry network errors up to 2 times
+        if (error instanceof Error && error.message.includes('Network')) {
+          return failureCount < 2;
+        }
+        // Default retry for other errors
+        return failureCount < 1;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
       refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+    },
+    mutations: {
+      retry: (failureCount, error) => {
+        // Never retry mutations for auth errors
+        if (error instanceof Error && (error.message.includes('401') || error.message.includes('403'))) {
+          return false;
+        }
+        // Only retry network errors for mutations
+        if (error instanceof Error && error.message.includes('Network')) {
+          return failureCount < 1;
+        }
+        return false;
+      },
     },
   },
 });
