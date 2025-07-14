@@ -1,0 +1,39 @@
+{
+  "general": {
+    "error": "خطا",
+    "somethingWentWrong": "خطایی رخ داده است",
+    "tryAgain": "لطفاً دوباره تلاش کنید",
+    "networkError": "خطای شبکه رخ داده",
+    "serverError": "خطای سرور رخ داده",
+    "unauthorizedAccess": "دسترسی غیرمجاز",
+    "permissionDenied": "مجوز رد شد",
+    "resourceNotFound": "منبع پیدا نشد"
+  },
+  "validation": {
+    "required": "این فیلد اجباری است",
+    "invalidEmail": "لطفاً آدرس ایمیل معتبری وارد کنید",
+    "invalidPhone": "لطفاً شماره تلفن معتبری وارد کنید",
+    "passwordTooShort": "رمز عبور باید حداقل ۸ کاراکتر باشد",
+    "passwordsDoNotMatch": "رمزهای عبور مطابقت ندارند",
+    "invalidDate": "لطفاً تاریخ معتبری وارد کنید",
+    "invalidNumber": "لطفاً عدد معتبری وارد کنید",
+    "minLength": "باید حداقل {{min}} کاراکتر باشد",
+    "maxLength": "باید حداکثر {{max}} کاراکتر باشد"
+  },
+  "authentication": {
+    "loginFailed": "ورود ناموفق",
+    "invalidCredentials": "ایمیل یا رمز عبور نامعتبر",
+    "sessionExpired": "جلسه شما منقضی شده است. لطفاً دوباره وارد شوید",
+    "accountLocked": "حساب موقتاً قفل شده است",
+    "registrationFailed": "ثبت‌نام ناموفق",
+    "emailAlreadyExists": "آدرس ایمیل از قبل وجود دارد"
+  },
+  "api": {
+    "connectionFailed": "اتصال به سرور ناموفق",
+    "requestTimeout": "زمان درخواست تمام شد",
+    "invalidResponse": "پاسخ نامعتبر از سرور",
+    "dataLoadFailed": "بارگذاری داده‌ها ناموفق",
+    "saveDataFailed": "ذخیره داده‌ها ناموفق",
+    "deleteDataFailed": "حذف داده‌ها ناموفق"
+  }
+}

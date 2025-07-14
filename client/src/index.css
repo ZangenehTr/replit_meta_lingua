@@ -1,10 +1,77 @@
 /* Persian/Arabic RTL Font Support */
 @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* RTL Support */
+.rtl {
+  direction: rtl;
+}
+
+/* Ensure proper text alignment for RTL languages */
+.rtl .text-left {
+  text-align: right !important;
+}
+
+.rtl .text-right {
+  text-align: left !important;
+}
+
+/* Fix margin and padding for RTL */
+.rtl .ml-auto {
+  margin-left: unset !important;
+  margin-right: auto !important;
+}
+
+.rtl .mr-auto {
+  margin-right: unset !important;
+  margin-left: auto !important;
+}
+
+/* Fix flex alignment for RTL */
+.rtl .justify-start {
+  justify-content: flex-end !important;
+}
+
+.rtl .justify-end {
+  justify-content: flex-start !important;
+}
+
+/* RTL-specific spacing utilities */
+.rtl .space-x-reverse > * + * {
+  margin-left: 0.25rem;
+  margin-right: 0;
+}
+
+.rtl .space-x-1 > * + * {
+  margin-left: 0.25rem;
+  margin-right: 0;
+}
+
+.rtl .space-x-2 > * + * {
+  margin-left: 0.5rem;
+  margin-right: 0;
+}
+
+.rtl .space-x-3 > * + * {
+  margin-left: 0.75rem;
+  margin-right: 0;
+}
+
+.rtl .space-x-4 > * + * {
+  margin-left: 1rem;
+  margin-right: 0;
+}
+
+/* RTL Font support for Persian and Arabic */
+.rtl * {
+  font-family: 'Vazirmatn', 'Noto Sans Arabic', sans-serif;
+}
 
 /* RTL Support */
 [dir="rtl"] {

@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
+import { LanguageProvider } from "@/hooks/useLanguage";
+import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/layout/app-layout";
 
 import NotFound from "@/pages/not-found";
@@ -103,6 +105,7 @@ import AIPracticePage from "@/pages/ai-practice";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading, error } = useAuth();
+  const { t } = useTranslation();
 
   // Show loading state only for initial load
   if (isLoading && !error) {
@@ -110,7 +113,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Loading...</p>
+          <p>{t('status.loading')}</p>
         </div>
       </div>
     );
@@ -569,7 +572,9 @@ function AppWithBranding() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppWithBranding />
+      <LanguageProvider>
+        <AppWithBranding />
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

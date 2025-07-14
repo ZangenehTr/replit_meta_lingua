@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/app-layout";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,7 @@ interface ActiveCall {
 }
 
 export default function VoIPCenter() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeCall, setActiveCall] = useState<ActiveCall | null>(null);
@@ -207,15 +209,15 @@ export default function VoIPCenter() {
         });
         startCallTimer();
         toast({
-          title: "Call Initiated",
-          description: `Calling ${response.contactName} at ${response.phoneNumber}`,
+          title: t('messages.callInitiated'),
+          description: t('messages.callingContact', { name: response.contactName, phone: response.phoneNumber }),
         });
       }
     },
     onError: (error) => {
       toast({
-        title: "Call Failed", 
-        description: error.message || "Unable to initiate call",
+        title: t('messages.callFailed'), 
+        description: error.message || t('messages.unableToInitiateCall'),
         variant: "destructive",
       });
     }
@@ -252,8 +254,8 @@ export default function VoIPCenter() {
     setActiveCall(null);
     setCallDuration(0);
     toast({
-      title: "Call Ended",
-      description: "Call recording saved to student history",
+      title: t('messages.callEnded'),
+      description: t('messages.callRecordingSaved'),
     });
   };
 
@@ -261,8 +263,8 @@ export default function VoIPCenter() {
   const handleCall = async (phone: string, name: string) => {
     if (!micPermissionGranted) {
       toast({
-        title: "Microphone Permission Required",
-        description: "Please allow microphone access for VoIP calling",
+        title: t('messages.microphonePermissionRequired'),
+        description: t('messages.allowMicrophoneAccess'),
         variant: "destructive",
       });
       return;
@@ -270,8 +272,8 @@ export default function VoIPCenter() {
     
     if (!isHeadsetConnected && audioDevices.inputs.length <= 1) {
       toast({
-        title: "Audio Device Recommended",
-        description: "For best call quality, please connect a Bluetooth headset or use earphones",
+        title: t('messages.audioDeviceRecommended'),
+        description: t('messages.connectBluetoothHeadset'),
         variant: "destructive",
       });
       return;
@@ -329,22 +331,22 @@ export default function VoIPCenter() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">VoIP Call Center</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('voip.voipCenter')}</h1>
             <p className="text-muted-foreground">
-              Make and receive calls using Isabel VoIP Line (+9848325)
+              {t('voip.makeReceiveCalls')}
             </p>
           </div>
           <div className="flex items-center space-x-4">
             <Badge variant={isHeadsetConnected ? "default" : micPermissionGranted ? "secondary" : "destructive"} className="flex items-center space-x-2">
               <Headphones className="h-3 w-3" />
               <span>
-                {isHeadsetConnected ? "Audio Ready" : 
-                 micPermissionGranted ? "Built-in Audio" : "No Audio Access"}
+                {isHeadsetConnected ? t('voip.audioReady') : 
+                 micPermissionGranted ? t('voip.builtInAudio') : t('voip.noAudioAccess')}
               </span>
             </Badge>
             <Badge variant={voipStatus?.connected ? "default" : "secondary"} className="flex items-center space-x-2">
               <Circle className={`h-3 w-3 ${voipStatus?.connected ? 'fill-green-500' : 'fill-gray-400'}`} />
-              <span>VoIP {voipStatus?.connected ? 'Connected' : 'Offline'}</span>
+              <span>{voipStatus?.connected ? t('voip.voipConnected') : t('voip.voipOffline')}</span>
             </Badge>
           </div>
         </div>
@@ -377,7 +379,7 @@ export default function VoIPCenter() {
                     onClick={() => endCallMutation.mutate(activeCall.callId)}
                   >
                     <PhoneOff className="h-4 w-4" />
-                    End Call
+                    {t('actions.endCall')}
                   </Button>
                 </div>
               </div>
@@ -387,10 +389,10 @@ export default function VoIPCenter() {
 
         <Tabs defaultValue="dialer" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="dialer">Phone Dialer</TabsTrigger>
-            <TabsTrigger value="students">Student Directory</TabsTrigger>
-            <TabsTrigger value="history">Call History</TabsTrigger>
-            <TabsTrigger value="recordings">Recordings</TabsTrigger>
+            <TabsTrigger value="dialer">{t('voip.phoneDialer')}</TabsTrigger>
+            <TabsTrigger value="students">{t('voip.studentDirectory')}</TabsTrigger>
+            <TabsTrigger value="history">{t('voip.callHistory')}</TabsTrigger>
+            <TabsTrigger value="recordings">{t('voip.recordings')}</TabsTrigger>
           </TabsList>
 
           {/* Phone Dialer Tab */}
@@ -399,16 +401,16 @@ export default function VoIPCenter() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Phone className="h-5 w-5" />
-                  <span>Manual Dialer</span>
+                  <span>{t('voip.manualDialer')}</span>
                 </CardTitle>
                 <CardDescription>
-                  Dial any number using Isabel VoIP Line
+                  {t('voip.dialAnyNumber')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex space-x-2">
                   <Input
-                    placeholder="Enter phone number (e.g., +989123456789)"
+                    placeholder={t('placeholders.enterPhoneNumber')}
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     className="flex-1"
@@ -419,7 +421,7 @@ export default function VoIPCenter() {
                     className="flex items-center space-x-2"
                   >
                     <PhoneCall className="h-4 w-4" />
-                    <span>Call</span>
+                    <span>{t('actions.call')}</span>
                   </Button>
                 </div>
                 {!micPermissionGranted && (
@@ -433,16 +435,16 @@ export default function VoIPCenter() {
                 
                 {micPermissionGranted && audioDevices.inputs.length > 0 && (
                   <div className="space-y-3">
-                    <div className="text-sm font-medium text-gray-700">Audio Configuration</div>
+                    <div className="text-sm font-medium text-gray-700">{t('voip.audioConfiguration')}</div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Microphone Input</label>
+                        <label className="text-xs text-gray-500 mb-1 block">{t('voip.microphoneInput')}</label>
                         <select 
                           value={selectedAudioInput} 
                           onChange={(e) => setSelectedAudioInput(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="">Default</option>
+                          <option value="">{t('voip.default')}</option>
                           {audioDevices.inputs.map(device => (
                             <option key={device.deviceId} value={device.deviceId}>
                               {device.label || 'Unknown Device'}
@@ -451,13 +453,13 @@ export default function VoIPCenter() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Audio Output</label>
+                        <label className="text-xs text-gray-500 mb-1 block">{t('voip.audioOutput')}</label>
                         <select 
                           value={selectedAudioOutput} 
                           onChange={(e) => setSelectedAudioOutput(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="">Default</option>
+                          <option value="">{t('voip.default')}</option>
                           {audioDevices.outputs.map(device => (
                             <option key={device.deviceId} value={device.deviceId}>
                               {device.label || 'Unknown Device'}
@@ -492,7 +494,7 @@ export default function VoIPCenter() {
                               audio: selectedAudioInput ? { deviceId: { exact: selectedAudioInput } } : true
                             });
                             toast({
-                              title: "Audio Test Successful",
+                              title: t('messages.audioTestSuccessful'),
                               description: `Microphone ${selectedAudioInput ? 'device' : '(default)'} is working properly`,
                             });
                             stream.getTracks().forEach(track => track.stop());
@@ -565,7 +567,7 @@ export default function VoIPCenter() {
                         className="flex items-center space-x-1"
                       >
                         <Phone className="h-3 w-3" />
-                        <span>Call</span>
+                        <span>{t('actions.call')}</span>
                       </Button>
                     </div>
                   ))}
