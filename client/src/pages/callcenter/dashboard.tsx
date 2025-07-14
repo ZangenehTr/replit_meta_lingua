@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useState } from "react";
 
 interface CallCenterStats {
@@ -118,6 +119,7 @@ interface AgentPerformance {
 
 function CallCenterDashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -267,7 +269,7 @@ function CallCenterDashboard() {
               <Headphones className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Call Center Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t('callCenter.dashboard')}</h1>
               <p className="text-gray-600 mt-1">
                 Welcome back, {user?.firstName}! Drive conversions and build relationships today.
               </p>
@@ -299,7 +301,7 @@ function CallCenterDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Today's Calls</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('callCenter.todayCalls')}</CardTitle>
               <Phone className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
@@ -318,7 +320,7 @@ function CallCenterDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-orange-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Hot Leads</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('callCenter.hotLeads')}</CardTitle>
               <Target className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
@@ -331,7 +333,7 @@ function CallCenterDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('callCenter.conversionRate')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -347,7 +349,7 @@ function CallCenterDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Revenue Generated</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('callCenter.revenueGenerated')}</CardTitle>
               <DollarSign className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>

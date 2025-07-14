@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useState } from "react";
 
 interface StudentStats {
@@ -110,6 +111,7 @@ interface LearningGoal {
 
 function StudentDashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [selectedTab, setSelectedTab] = useState("overview");
   const queryClient = useQueryClient();
 
@@ -229,10 +231,10 @@ function StudentDashboard() {
               )}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Learning Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t('student.dashboard')}</h1>
               <div className="flex items-center gap-4 mt-1">
                 <p className="text-gray-600">
-                  Level {studentStats?.currentLevel || 'Beginner'} • {studentStats?.totalXP || 0} XP
+                  {t('student.currentLevel')} {studentStats?.currentLevel || 'Beginner'} • {studentStats?.totalXP || 0} XP
                 </p>
                 <Badge className={getMemberTierColor(studentStats?.memberTier || 'bronze')}>
                   {studentStats?.memberTier?.toUpperCase() || 'BRONZE'} Member
@@ -272,7 +274,7 @@ function StudentDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Study Streak</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('student.currentStreak')}</CardTitle>
               <Flame className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
@@ -285,7 +287,7 @@ function StudentDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total XP</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('student.totalXP')}</CardTitle>
               <Trophy className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
@@ -298,7 +300,7 @@ function StudentDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Weekly Goal</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('student.weeklyGoalHours')}</CardTitle>
               <Target className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
@@ -312,7 +314,7 @@ function StudentDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-emerald-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('student.walletBalance')}</CardTitle>
               <CreditCard className="h-4 w-4 text-emerald-600" />
             </CardHeader>
             <CardContent>
@@ -331,10 +333,10 @@ function StudentDashboard() {
         {/* Main Content Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="courses">My Courses</TabsTrigger>
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
+            <TabsTrigger value="overview">{t('dashboard.overview')}</TabsTrigger>
+            <TabsTrigger value="courses">{t('student.courses')}</TabsTrigger>
+            <TabsTrigger value="assignments">{t('student.assignments')}</TabsTrigger>
+            <TabsTrigger value="schedule">{t('student.schedule')}</TabsTrigger>
             <TabsTrigger value="packages">Packages</TabsTrigger>
             <TabsTrigger value="achievements">Achievements</TabsTrigger>
             <TabsTrigger value="goals">Goals</TabsTrigger>
@@ -347,7 +349,7 @@ function StudentDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Video className="h-5 w-5" />
-                    Today's Sessions
+                    {t('dashboard.upcomingTasks')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">

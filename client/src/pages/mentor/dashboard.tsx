@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { useState } from "react";
 
 interface MentorStats {
@@ -109,6 +110,7 @@ interface LearningGoal {
 
 function MentorDashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [selectedTab, setSelectedTab] = useState("overview");
   const queryClient = useQueryClient();
 
@@ -247,7 +249,7 @@ function MentorDashboard() {
               <Heart className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Mentor Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t('mentor.dashboard')}</h1>
               <p className="text-gray-600 mt-1">
                 Welcome back, {user?.firstName}! Guide your mentees to success today.
               </p>

@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { useState } from "react";
 
 interface TeacherStats {
@@ -94,6 +95,7 @@ interface UpcomingSession {
 
 function TeacherDashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [selectedTab, setSelectedTab] = useState("overview");
   const queryClient = useQueryClient();
 
@@ -187,7 +189,7 @@ function TeacherDashboard() {
               <GraduationCap className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Teacher Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t('teacher.dashboard')}</h1>
               <p className="text-gray-600 mt-1">
                 Welcome back, {user?.firstName}! Ready to inspire learning today?
               </p>
@@ -213,7 +215,7 @@ function TeacherDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Classes</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('teacher.totalClasses')}</CardTitle>
               <BookOpen className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
@@ -226,7 +228,7 @@ function TeacherDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed Lessons</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('teacher.completedLessons')}</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -239,7 +241,7 @@ function TeacherDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Teacher Rating</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('teacher.averageRating')}</CardTitle>
               <Star className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
@@ -252,7 +254,7 @@ function TeacherDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Earnings</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('teacher.monthlyEarnings')}</CardTitle>
               <DollarSign className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -269,8 +271,8 @@ function TeacherDashboard() {
         {/* Main Content Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="classes">My Classes</TabsTrigger>
+            <TabsTrigger value="overview">{t('dashboard.overview')}</TabsTrigger>
+            <TabsTrigger value="classes">{t('teacher.classes')}</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="schedule">Schedule</TabsTrigger>

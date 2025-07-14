@@ -532,7 +532,7 @@ export function AdminStudents() {
             Back
           </Button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{t('studentInformationSystem')}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{t('admin.students')}</h1>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               Complete student profiles, progress tracking, and parent communication
             </p>

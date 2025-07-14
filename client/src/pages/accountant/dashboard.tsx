@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { useState } from "react";
 
 interface AccountantStats {
@@ -127,6 +128,7 @@ interface StudentFinancials {
 
 function AccountantDashboard() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -277,7 +279,7 @@ function AccountantDashboard() {
               <Calculator className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Financial Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t('accountant.dashboard')}</h1>
               <p className="text-gray-600 mt-1">
                 Welcome back, {user?.firstName}! Manage finances and ensure compliance today.
               </p>
@@ -303,7 +305,7 @@ function AccountantDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('accountant.monthlyRevenue')}</CardTitle>
               <DollarSign className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -319,7 +321,7 @@ function AccountantDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Students</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('admin.students')}</CardTitle>
               <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
@@ -332,7 +334,7 @@ function AccountantDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-orange-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('accountant.pendingPayments')}</CardTitle>
               <Clock className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
