@@ -50,6 +50,24 @@
     "myProgress": "My Progress",
     "myProfile": "My Profile"
   },
+  "teacher": {
+    "dashboard": "Teacher Dashboard",
+    "totalClasses": "Total Classes",
+    "completedLessons": "Completed Lessons",
+    "averageRating": "Average Rating",
+    "monthlyEarnings": "Monthly Earnings"
+  },
+  "mentor": {
+    "dashboard": "Mentor Dashboard"
+  },
+  "accountant": {
+    "dashboard": "Financial Dashboard",
+    "monthlyRevenue": "Monthly Revenue",
+    "pendingPayments": "Pending Payments"
+  },
+  "admin": {
+    "students": "Students"
+  },
   "forms": {
     "title": "Title",
     "description": "Description",
