@@ -223,9 +223,10 @@ export default function GamesManagement() {
     writing: <Edit className="w-4 h-4" />
   };
 
-  const GameForm = React.useMemo(() => (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+  const GameFormComponent = React.useMemo(() => {
+    return (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -462,9 +463,10 @@ export default function GamesManagement() {
             {createGameMutation.isPending || updateGameMutation.isPending ? 'Saving...' : selectedGame ? 'Update Game' : 'Create Game'}
           </Button>
         </div>
-      </form>
-    </Form>
-  ), [form, createGameMutation.isPending, updateGameMutation.isPending, selectedGame]);
+        </form>
+      </Form>
+    );
+  }, [form, createGameMutation.isPending, updateGameMutation.isPending, selectedGame]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -487,7 +489,7 @@ export default function GamesManagement() {
                 Add a new educational game to the platform
               </DialogDescription>
             </DialogHeader>
-            <GameForm />
+            {GameFormComponent}
           </DialogContent>
         </Dialog>
       </div>
