@@ -234,6 +234,12 @@ Preferred communication style: Simple, everyday language.
 - **Bootstrap Interface**: User-friendly installation process with status monitoring and error handling
 - **Iranian Compliance**: Zero external AI dependencies ensuring complete data sovereignty for Iranian deployment
 
+### Check-First Protocol Implementation (July 14, 2025)
+**PROJECT LEAD CORE INSTRUCTIONS (MANDATORY):**
+1. **Check-First Protocol**: Always run first-check protocol before making any changes to avoid duplications
+2. **Real Data Only**: Never use mock data or fake information - all data must be authentic and database-driven
+3. **Feature Testing**: After any changes, run comprehensive tests to ensure all features and buttons function correctly
+
 ### Recent Fixes (July 13, 2025)
 1. **SMS Notification Fix** - Resolved 404 errors by fixing phone number field references in API calls
 2. **Payslip Recalculation** - Implemented complete recalculation logic that generates new payslips when edits are made
@@ -258,6 +264,12 @@ Preferred communication style: Simple, everyday language.
 - **Dual VoIP Access**: VoIP Center now accessible from both `/lead-management` and `/callcenter/leads`
 - **Call Integration**: Added proper VoIP call mutation with error handling and toast notifications
 - **Lead Management Enhancement**: Phone buttons now functional with click-to-call capability
+
+### Games Management Input Focus Fix (July 14, 2025)
+- **Critical Fix Applied**: Resolved input focus jumping issue in games management system
+- **Root Cause**: GameForm component was being recreated on every render, causing form inputs to lose focus after each keystroke
+- **Solution**: Restructured GameForm as GameFormComponent using React.useMemo() with proper dependencies
+- **Status**: ✅ Complete - All form inputs now maintain focus while typing in both create and edit dialogs
 
 ### Comprehensive Mobile-First Responsive Design Implementation (July 13, 2025)
 **Status**: ✅ Complete - All admin pages fully responsive
