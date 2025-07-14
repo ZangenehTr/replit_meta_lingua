@@ -4203,19 +4203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/leads", authenticateToken, async (req: any, res) => {
-    if (!['Admin', 'callcenter', 'Supervisor'].includes(req.user.role)) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
-    try {
-      const lead = await storage.createLead(req.body);
-      res.status(201).json(lead);
-    } catch (error) {
-      console.error("Failed to create lead:", error);
-      res.status(500).json({ message: "Failed to create lead" });
-    }
-  });
+  // Removed duplicate - using the enhanced lead endpoint below
 
   app.put("/api/leads/:id", authenticateToken, async (req: any, res) => {
     if (!['Admin', 'callcenter', 'Supervisor'].includes(req.user.role)) {
@@ -7735,15 +7723,12 @@ Return JSON format:
         progressHistory: []
       };
       
-      // Generate conversation response
-      const aiResponse = await aiPersonalizationService.generateConversationResponse(
-        transcript,
-        { 
-          language,
-          conversationHistory: []
-        },
-        profile.proficiencyLevel
-      );
+      // Use the aiResponse already generated above (fallback or Ollama)
+      const conversationResponse = {
+        response: aiResponse,
+        confidence: 0.9,
+        suggestions: []
+      };
       
       // Track conversation in database for analytics
       try {
@@ -7758,7 +7743,7 @@ Return JSON format:
         await storage.createMessage({
           senderId: 0, // AI assistant
           receiverId: userId,
-          content: aiResponse.response,
+          content: conversationResponse.response,
           type: 'ai_conversation',
           createdAt: new Date()
         });
@@ -7768,7 +7753,7 @@ Return JSON format:
       
       res.json({
         transcript: transcript,
-        response: aiResponse.response,
+        response: conversationResponse.response,
         audioUrl: null // In production, this would be the URL to the generated audio
       });
     } catch (error) {
@@ -8004,15 +7989,46 @@ Return JSON format:
 
   app.post("/api/leads", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
     try {
+      // Handle name field conversion for database compatibility
+      const { name, ...otherData } = req.body;
+      let firstName = '';
+      let lastName = '';
+      
+      if (name) {
+        const nameParts = name.trim().split(' ');
+        firstName = nameParts[0] || '';
+        lastName = nameParts.slice(1).join(' ') || '';
+      } else if (req.body.firstName && req.body.lastName) {
+        firstName = req.body.firstName;
+        lastName = req.body.lastName;
+      }
+      
+      if (!firstName) {
+        return res.status(400).json({ message: "First name is required" });
+      }
+      
       const leadData = {
-        ...req.body,
-        assignedAgentId: req.user.id
+        firstName,
+        lastName,
+        email: otherData.email,
+        phoneNumber: otherData.phone || otherData.phoneNumber,
+        source: otherData.source || 'website',
+        status: otherData.status || 'new',
+        priority: otherData.priority || 'medium',
+        interestedLanguage: otherData.interestedLanguage,
+        interestedLevel: otherData.interestedLevel,
+        preferredFormat: otherData.preferredFormat,
+        budget: otherData.budget,
+        notes: otherData.notes,
+        assignedAgentId: req.user.id,
+        nextFollowUpDate: otherData.nextFollowUpDate ? new Date(otherData.nextFollowUpDate) : null
       };
+      
       const lead = await storage.createLead(leadData);
       res.status(201).json(lead);
     } catch (error) {
       console.error('Error creating lead:', error);
-      res.status(400).json({ message: "Failed to create lead" });
+      res.status(400).json({ message: "Failed to create lead", error: error.message });
     }
   });
 
