@@ -11437,6 +11437,89 @@ Return JSON format:
     }
   });
 
+  // ==================== OLLAMA AI SERVICES CONFIGURATION ====================
+  
+  // Ollama Setup and Management
+  app.get("/api/admin/ollama/status", authenticateToken, requireRole(['Admin']), async (req, res) => {
+    try {
+      const { ollamaSetup } = await import('./ollama-setup.js');
+      const status = await ollamaSetup.checkOllamaStatus();
+      res.json(status);
+    } catch (error) {
+      console.error('Error checking Ollama status:', error);
+      res.status(500).json({ message: 'Failed to check Ollama status' });
+    }
+  });
+
+  app.post("/api/admin/ollama/install", authenticateToken, requireRole(['Admin']), async (req, res) => {
+    try {
+      const { ollamaSetup } = await import('./ollama-setup.js');
+      const result = await ollamaSetup.installOllama();
+      res.json(result);
+    } catch (error) {
+      console.error('Error installing Ollama:', error);
+      res.status(500).json({ message: 'Failed to install Ollama' });
+    }
+  });
+
+  app.post("/api/admin/ollama/start", authenticateToken, requireRole(['Admin']), async (req, res) => {
+    try {
+      const { ollamaSetup } = await import('./ollama-setup.js');
+      const result = await ollamaSetup.startOllamaService();
+      res.json(result);
+    } catch (error) {
+      console.error('Error starting Ollama service:', error);
+      res.status(500).json({ message: 'Failed to start Ollama service' });
+    }
+  });
+
+  app.get("/api/admin/ollama/models", authenticateToken, requireRole(['Admin']), async (req, res) => {
+    try {
+      const { ollamaSetup } = await import('./ollama-setup.js');
+      const models = await ollamaSetup.getInstalledModels();
+      res.json({ models });
+    } catch (error) {
+      console.error('Error getting Ollama models:', error);
+      res.status(500).json({ message: 'Failed to get models' });
+    }
+  });
+
+  app.post("/api/admin/ollama/models/:modelName/download", authenticateToken, requireRole(['Admin']), async (req, res) => {
+    try {
+      const { modelName } = req.params;
+      const { ollamaSetup } = await import('./ollama-setup.js');
+      const result = await ollamaSetup.downloadModel(modelName);
+      res.json(result);
+    } catch (error) {
+      console.error('Error downloading model:', error);
+      res.status(500).json({ message: 'Failed to download model' });
+    }
+  });
+
+  app.delete("/api/admin/ollama/models/:modelName", authenticateToken, requireRole(['Admin']), async (req, res) => {
+    try {
+      const { modelName } = req.params;
+      const { ollamaSetup } = await import('./ollama-setup.js');
+      const result = await ollamaSetup.removeModel(modelName);
+      res.json(result);
+    } catch (error) {
+      console.error('Error removing model:', error);
+      res.status(500).json({ message: 'Failed to remove model' });
+    }
+  });
+
+  app.post("/api/admin/ollama/generate", authenticateToken, requireRole(['Admin']), async (req, res) => {
+    try {
+      const { prompt, model } = req.body;
+      const { ollamaSetup } = await import('./ollama-setup.js');
+      const response = await ollamaSetup.generateCompletion(prompt, model);
+      res.json({ response });
+    } catch (error) {
+      console.error('Error generating completion:', error);
+      res.status(500).json({ message: 'Failed to generate completion' });
+    }
+  });
+
   // ==================== WEBRTC CONFIGURATION ====================
   
   // WebRTC Configuration Endpoint
