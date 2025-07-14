@@ -1,0 +1,74 @@
+# ⬢  MASTER QA / AUDIT PROMPT  ⬢
+You—Replit AI—have finished building the application.  
+Your next task is to run a **full functional, integration, and UI/UX audit** that proves the product is production-ready.
+
+────────────────────────────────────────────────────────────────
+I. SCOPE & CONSTRAINTS
+────────────────────────────────────────────────────────────────
+1. Cover **all seven user roles** defined in the codebase:
+   • Super-Admin • Admin • Manager • Teacher • Student • Accountant • Guest
+2. Use **real API endpoints** (staging or production as configured);  
+   - **No** mock servers, stubbed data, or hard-coded responses.
+3. Every visible control (button, link, toggle, menu item) must execute
+   without error and exhibit the expected state change or navigation.
+4. UI/UX checks must include:
+   • **Mobile-first rendering** (viewport 375 × 667)  
+   • **Tablet** (768 × 1024)  
+   • **Desktop** (1440 × 900)  
+   Validate layout, breakpoints, and interactive elements in each.
+5. Accessibility: confirm WCAG 2.1 AA colour contrast and keyboard
+   navigability for all forms and dialogs.
+6. When finished, the application must support an **unbroken end-to-end
+   workflow**: every data object has at least one legitimate creation path
+   and can be retrieved, updated, and deleted by the authorised role.
+
+────────────────────────────────────────────────────────────────
+II. TEST STRATEGY
+────────────────────────────────────────────────────────────────
+A. BACK-END VERIFICATION
+   1. Enumerate all REST / GraphQL routes from the code or OpenAPI spec.
+   2. For each route, issue authenticated calls per role and assert:
+      • HTTP status is within the contract  
+      • Schema of the payload matches the type definitions  
+      • Role-based access control (RBAC) is enforced (positive + negative tests).
+   3. Run security linters (OWASP dependency check, secret-scanner) and
+      surface any critical findings.
+
+B. FRONT-END / UI TESTS
+   1. Use Playwright with `--device` emulations for mobile, tablet, desktop.
+   2. For each role:
+      • Login with real credentials obtained from seeded DB or sign-up flow.  
+      • Traverse every route reachable via the sidebar / navbar.  
+      • Click **every** button, link, and icon—confirm no console errors and
+         that the visible state updates match Figma specs.  
+      • Capture screenshots for all breakpoints; fail if layout shifts break the design grid.
+   3. Run Lighthouse in “mobile” and “desktop” modes—flag any score < 90
+      in Performance, Accessibility, Best-Practices, SEO.
+
+C. BUSINESS WORKFLOWS
+   1. Compose end-to-end scenarios that span multiple roles, e.g.  
+      • Teacher issues an invoice → Accountant approves payment → Manager sees status report.  
+      • Student submits assignment → Teacher grades → Admin exports analytics.  
+   2. Validate data persistence by querying the DB directly (read-only) after each step.
+
+D. EDGE-CASE & REGRESSION SUITE
+   1. Inputs at min/max length, invalid formats, XSS strings.  
+   2. Rapid multi-clicks on critical actions (debounce / idempotency).  
+   3. Simulated network latency ± packet loss (Playwright `--offline`,
+      Chromium dev-tools throttling).
+
+────────────────────────────────────────────────────────────────
+III. DELIVERABLES
+────────────────────────────────────────────────────────────────
+1. **Automated test report** (JUnit XML + HTML) with pass/fail for every
+   backend route, UI path, and business scenario.
+2. **Accessibility and Lighthouse scorecards** with remediation notes for
+   any item below threshold.
+3. **Screenshot bundle** (organised by role & viewport) proving responsive integrity.
+4. **Change-log / Patch list** for any bugs fixed during the audit, with
+   commit hashes and references to the failing test case.
+5. **Signed summary**: “All tests green; every data entity has at least one
+   creation entry-point and a complete CRUD cycle by authorised roles.”
+
+Stop only when **100 % of tests pass** and the summary can be signed with
+zero known critical or high-severity issues outstanding.
