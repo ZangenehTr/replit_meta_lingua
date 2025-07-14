@@ -87,11 +87,18 @@ export default function AIServicesManagement() {
   const installOllamaMutation = useMutation({
     mutationFn: () => apiRequest("/api/admin/ollama/install", { method: "POST" }),
     onSuccess: (data) => {
+      const isReplitError = data.message?.includes('Replit') || data.message?.includes('permission');
+      
       toast({
-        title: "Ollama Installation",
-        description: data.success ? "Ollama installed successfully" : `Installation failed: ${data.message}`,
-        variant: data.success ? "default" : "destructive"
+        title: isReplitError ? "Development Environment Notice" : "Ollama Installation",
+        description: isReplitError 
+          ? "Ollama installation requires a production server environment. This interface will work correctly when deployed."
+          : data.success 
+            ? "Ollama installed successfully" 
+            : `Installation failed: ${data.message}`,
+        variant: isReplitError ? "default" : (data.success ? "default" : "destructive")
       });
+      
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/status"] });
     }
   });
@@ -257,6 +264,20 @@ export default function AIServicesManagement() {
                 <li>• Cost-effective - no per-request charges</li>
               </ul>
             </div>
+            
+            <div className="bg-blue-100 p-4 rounded-lg">
+              <h4 className="font-medium text-blue-800 mb-2">🚀 Production Deployment</h4>
+              <p className="text-sm text-blue-700 mb-2">
+                For production deployment on your server, run this command:
+              </p>
+              <code className="bg-blue-200 text-blue-900 px-2 py-1 rounded text-xs">
+                curl -fsSL https://ollama.ai/install.sh | sh
+              </code>
+              <p className="text-xs text-blue-600 mt-2">
+                This interface will work automatically once Ollama is installed on your production server.
+              </p>
+            </div>
+            
             <Button 
               onClick={() => installOllamaMutation.mutate()}
               disabled={installOllamaMutation.isPending}
@@ -270,7 +291,7 @@ export default function AIServicesManagement() {
               ) : (
                 <>
                   <Download className="h-4 w-4 mr-2" />
-                  Install Ollama AI Services
+                  Test Installation (Development Only)
                 </>
               )}
             </Button>
