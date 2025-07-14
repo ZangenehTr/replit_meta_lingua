@@ -613,7 +613,7 @@ export default function GamesManagement() {
               Update game information and settings
             </DialogDescription>
           </DialogHeader>
-          <GameForm />
+          {GameFormComponent}
         </DialogContent>
       </Dialog>
     </div>
