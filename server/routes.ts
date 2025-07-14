@@ -11437,6 +11437,59 @@ Return JSON format:
     }
   });
 
+  // ==================== WEBRTC CONFIGURATION ====================
+  
+  // WebRTC Configuration Endpoint
+  app.get("/api/webrtc-config", (req, res) => {
+    const useCustomTurnServer = process.env.TURN_SERVER_URL && process.env.TURN_USERNAME && process.env.TURN_PASSWORD;
+    
+    if (useCustomTurnServer) {
+      // Self-hosted TURN server configuration
+      res.json({
+        iceServers: [
+          // Free public STUN servers (always include these)
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          
+          // Your self-hosted TURN server
+          {
+            urls: process.env.TURN_SERVER_URL,
+            username: process.env.TURN_USERNAME,
+            credential: process.env.TURN_PASSWORD
+          }
+        ]
+      });
+    } else {
+      // Free public servers configuration (sufficient for most deployments)
+      res.json({
+        iceServers: [
+          // Google's free STUN servers
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun3.l.google.com:19302' },
+          { urls: 'stun:stun4.l.google.com:19302' },
+          
+          // Mozilla's free STUN servers
+          { urls: 'stun:stun.services.mozilla.com' },
+          
+          // OpenRelay free TURN servers (limited but functional)
+          {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          },
+          {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject', 
+            credential: 'openrelayproject'
+          }
+        ]
+      });
+    }
+  });
+
   // ==================== MODERN COMMUNICATION SYSTEM ====================
 
   // Support Tickets
