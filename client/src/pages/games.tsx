@@ -151,22 +151,10 @@ export default function GamesPage() {
     }
   });
 
-  // Start game mutation
-  const startGameMutation = useMutation({
-    mutationFn: async (gameId: number) => {
-      const response = await apiRequest(`/api/student/games/${gameId}/start`, {
-        method: 'POST'
-      });
-      return response;
-    },
-    onSuccess: (data) => {
-      // Redirect to game interface or show game modal
-      console.log('Game started:', data);
-    },
-    onError: (error) => {
-      console.error('Error starting game:', error);
-    }
-  });
+  // Navigate to game player
+  const handlePlayGame = (gameId: number) => {
+    window.location.href = `/game/${gameId}`;
+  };
 
   const skillIcons = {
     vocabulary: <BookOpen className="w-5 h-5" />,
@@ -258,14 +246,12 @@ export default function GamesPage() {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (!startGameMutation.isPending) {
-                startGameMutation.mutate(game.id);
-              }
+              handlePlayGame(game.id);
             }}
-            disabled={startGameMutation.isPending}
             className="w-full"
           >
-            {startGameMutation.isPending ? 'Starting...' : t.startGame}
+            <PlayCircle className="w-4 h-4 mr-2" />
+            Play Game
           </Button>
         </CardContent>
       </Card>
@@ -337,15 +323,13 @@ export default function GamesPage() {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (!startGameMutation.isPending) {
-                startGameMutation.mutate(gameProgress.gameId);
-              }
+              handlePlayGame(gameProgress.gameId);
             }}
-            disabled={startGameMutation.isPending}
             className="w-full"
             variant="outline"
           >
-            {startGameMutation.isPending ? 'Starting...' : 'ادامه بازی'}
+            <PlayCircle className="w-4 h-4 mr-2" />
+            Continue Game
           </Button>
         </CardContent>
       </Card>
