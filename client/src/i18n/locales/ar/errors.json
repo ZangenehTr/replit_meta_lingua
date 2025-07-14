@@ -1,0 +1,39 @@
+{
+  "general": {
+    "error": "خطأ",
+    "somethingWentWrong": "حدث خطأ ما",
+    "tryAgain": "يرجى المحاولة مرة أخرى",
+    "networkError": "حدث خطأ في الشبكة",
+    "serverError": "حدث خطأ في الخادم",
+    "unauthorizedAccess": "وصول غير مصرح به",
+    "permissionDenied": "تم رفض الإذن",
+    "resourceNotFound": "المورد غير موجود"
+  },
+  "validation": {
+    "required": "هذا الحقل مطلوب",
+    "invalidEmail": "يرجى إدخال عنوان بريد إلكتروني صحيح",
+    "invalidPhone": "يرجى إدخال رقم هاتف صحيح",
+    "passwordTooShort": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+    "passwordsDoNotMatch": "كلمات المرور غير متطابقة",
+    "invalidDate": "يرجى إدخال تاريخ صحيح",
+    "invalidNumber": "يرجى إدخال رقم صحيح",
+    "minLength": "يجب أن يكون {{min}} أحرف على الأقل",
+    "maxLength": "يجب ألا يزيد عن {{max}} أحرف"
+  },
+  "authentication": {
+    "loginFailed": "فشل تسجيل الدخول",
+    "invalidCredentials": "بريد إلكتروني أو كلمة مرور غير صحيحة",
+    "sessionExpired": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى",
+    "accountLocked": "الحساب مقفل مؤقتاً",
+    "registrationFailed": "فشل التسجيل",
+    "emailAlreadyExists": "عنوان البريد الإلكتروني موجود بالفعل"
+  },
+  "api": {
+    "connectionFailed": "فشل الاتصال بالخادم",
+    "requestTimeout": "انتهت مهلة الطلب",
+    "invalidResponse": "استجابة غير صحيحة من الخادم",
+    "dataLoadFailed": "فشل تحميل البيانات",
+    "saveDataFailed": "فشل حفظ البيانات",
+    "deleteDataFailed": "فشل حذف البيانات"
+  }
+}

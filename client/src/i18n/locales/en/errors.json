@@ -1,0 +1,39 @@
+{
+  "general": {
+    "error": "Error",
+    "somethingWentWrong": "Something went wrong",
+    "tryAgain": "Please try again",
+    "networkError": "Network error occurred",
+    "serverError": "Server error occurred",
+    "unauthorizedAccess": "Unauthorized access",
+    "permissionDenied": "Permission denied",
+    "resourceNotFound": "Resource not found"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Please enter a valid email address",
+    "invalidPhone": "Please enter a valid phone number",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "invalidDate": "Please enter a valid date",
+    "invalidNumber": "Please enter a valid number",
+    "minLength": "Must be at least {{min}} characters",
+    "maxLength": "Must be no more than {{max}} characters"
+  },
+  "authentication": {
+    "loginFailed": "Login failed",
+    "invalidCredentials": "Invalid email or password",
+    "sessionExpired": "Your session has expired. Please log in again",
+    "accountLocked": "Account is temporarily locked",
+    "registrationFailed": "Registration failed",
+    "emailAlreadyExists": "Email address already exists"
+  },
+  "api": {
+    "connectionFailed": "Failed to connect to server",
+    "requestTimeout": "Request timeout",
+    "invalidResponse": "Invalid response from server",
+    "dataLoadFailed": "Failed to load data",
+    "saveDataFailed": "Failed to save data",
+    "deleteDataFailed": "Failed to delete data"
+  }
+}

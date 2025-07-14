@@ -17,7 +17,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Settings, Home, Menu } from "lucide-react";
 import { Sidebar } from "./sidebar";
+import { LanguageSelector } from "@/components/language-selector";
 import { useState } from "react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -27,6 +29,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { direction } = useLanguage();
 
   const handleLogout = () => {
     // Clear authentication data
@@ -65,7 +68,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${direction === 'rtl' ? 'rtl' : ''}`}>
       {/* Global Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center justify-between px-2 sm:px-4">
@@ -110,8 +113,10 @@ export function AppLayout({ children }: AppLayoutProps) {
             </Button>
           </div>
 
-          {/* User Menu */}
-          <DropdownMenu>
+          {/* Language Selector and User Menu */}
+          <div className="flex items-center space-x-2">
+            <LanguageSelector />
+            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full">
                 <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
@@ -156,6 +161,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
       </header>
 
