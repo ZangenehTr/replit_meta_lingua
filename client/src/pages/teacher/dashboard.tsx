@@ -191,7 +191,7 @@ function TeacherDashboard() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{t('teacher.dashboard')}</h1>
               <p className="text-gray-600 mt-1">
-                Welcome back, {user?.firstName}! Ready to inspire learning today?
+                {t('teacher.welcomeMessage')}
               </p>
             </div>
           </div>
@@ -199,13 +199,13 @@ function TeacherDashboard() {
             <Link href="/teacher/classes/new">
               <Button className="bg-purple-600 hover:bg-purple-700 shadow-md">
                 <Plus className="h-4 w-4 mr-2" />
-                New Class
+                {t('teacher.newClass')}
               </Button>
             </Link>
             <Link href="/teacher/assignments/create">
               <Button variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
                 <ClipboardCheck className="h-4 w-4 mr-2" />
-                Create Assignment
+                {t('teacher.createAssignment')}
               </Button>
             </Link>
           </div>
@@ -221,7 +221,7 @@ function TeacherDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{teacherStats?.totalClasses || classes?.length || 0}</div>
               <p className="text-xs text-muted-foreground">
-                {students?.length || 0} total students
+                {students?.length || 0} {t('teacher.totalStudents').toLowerCase()}
               </p>
             </CardContent>
           </Card>
@@ -234,7 +234,7 @@ function TeacherDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{teacherStats?.completedLessons || 45}</div>
               <p className="text-xs text-muted-foreground">
-                This month
+                {t('teacher.thisMonth')}
               </p>
             </CardContent>
           </Card>

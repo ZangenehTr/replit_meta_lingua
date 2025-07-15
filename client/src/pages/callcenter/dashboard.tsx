@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage } from "@/hooks/use-language";
 import { useState } from "react";
 
 interface CallCenterStats {
@@ -271,7 +271,7 @@ function CallCenterDashboard() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{t('callCenter.dashboard')}</h1>
               <p className="text-gray-600 mt-1">
-                Welcome back, {user?.firstName}! Drive conversions and build relationships today.
+                {t('callCenter.welcomeMessage')}
               </p>
             </div>
           </div>
