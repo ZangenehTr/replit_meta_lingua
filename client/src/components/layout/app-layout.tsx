@@ -19,7 +19,7 @@ import { LogOut, User, Settings, Home, Menu } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { LanguageSelector } from "@/components/language-selector";
 import { useState } from "react";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage } from "@/hooks/use-language";
 
 interface AppLayoutProps {
   children: React.ReactNode;
