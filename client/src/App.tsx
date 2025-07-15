@@ -32,7 +32,7 @@ import { IranianComplianceSettings } from "@/pages/admin/iranian-compliance-sett
 import { FinancialReportsPage } from "@/pages/admin/FinancialReportsPage";
 import AIServicesManagement from "@/pages/admin/AIServicesManagement";
 import GamesManagement from "@/pages/admin/games-management";
-import TeacherPaymentsPage from "@/pages/admin/teacher-payments";
+import AdminTeacherPaymentsPage from "@/pages/admin/teacher-payments";
 import WhiteLabelPage from "@/pages/admin/white-label";
 import SupervisionPage from "@/pages/admin/supervision";
 import SMSSettingsPage from "@/pages/admin/sms-settings";
@@ -71,9 +71,12 @@ import TeacherHomeworkPage from "@/pages/teacher/homework";
 import TeacherStudentsPage from "@/pages/teacher/students";
 import TeacherResourcesPage from "@/pages/teacher/resources";
 import TeacherReportsPage from "@/pages/teacher/reports";
+import TeacherPaymentsPage from "@/pages/teacher/payments";
 import TeacherTestsPage from "@/pages/teacher/tests";
 import TestQuestionsPage from "@/pages/teacher/test-questions";
 import TeacherVideoCourses from "@/pages/teacher/video-courses";
+import TeacherAvailability from "@/pages/teacher/teacher-availability";
+import ClassCommunication from "@/pages/teacher/class-communication";
 
 // Mentor pages
 import MentorStudentsPage from "@/pages/mentor/students";
@@ -221,7 +224,7 @@ function Router() {
       {/* Enterprise Features */}
       <Route path="/admin/teacher-payments">
         <ProtectedRoute>
-          <TeacherPaymentsPage />
+          <AdminTeacherPaymentsPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/white-label">
@@ -424,6 +427,11 @@ function Router() {
           <TeacherReportsPage />
         </ProtectedRoute>
       </Route>
+      <Route path="/teacher/payments">
+        <ProtectedRoute>
+          <TeacherPaymentsPage />
+        </ProtectedRoute>
+      </Route>
       <Route path="/teacher/tests">
         <ProtectedRoute>
           <TeacherTestsPage />
@@ -437,6 +445,16 @@ function Router() {
       <Route path="/teacher/video-courses">
         <ProtectedRoute>
           <TeacherVideoCourses />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/availability">
+        <ProtectedRoute>
+          <TeacherAvailability />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/class/:classId/chat">
+        <ProtectedRoute>
+          <ClassCommunication />
         </ProtectedRoute>
       </Route>
 

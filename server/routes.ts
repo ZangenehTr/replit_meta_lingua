@@ -1789,6 +1789,191 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Teacher Availability endpoints
+  app.get("/api/teacher/availability", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const timeSlots = await storage.getTeacherAvailability(teacherId);
+      res.json(timeSlots);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch teacher availability" });
+    }
+  });
+
+  app.post("/api/teacher/availability", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const timeSlotData = {
+        teacherId,
+        ...req.body
+      };
+      const timeSlot = await storage.createTeacherAvailability(timeSlotData);
+      res.json(timeSlot);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create time slot" });
+    }
+  });
+
+  app.put("/api/teacher/availability/:slotId", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const slotId = parseInt(req.params.slotId);
+      const teacherId = req.user.id;
+      const updates = req.body;
+      
+      // Verify the slot belongs to the teacher
+      const slot = await storage.getTeacherAvailabilitySlot(slotId);
+      if (!slot || slot.teacherId !== teacherId) {
+        return res.status(403).json({ message: "Not authorized to update this slot" });
+      }
+      
+      const updatedSlot = await storage.updateTeacherAvailability(slotId, updates);
+      res.json(updatedSlot);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update time slot" });
+    }
+  });
+
+  app.delete("/api/teacher/availability/:slotId", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const slotId = parseInt(req.params.slotId);
+      const teacherId = req.user.id;
+      
+      // Verify the slot belongs to the teacher
+      const slot = await storage.getTeacherAvailabilitySlot(slotId);
+      if (!slot || slot.teacherId !== teacherId) {
+        return res.status(403).json({ message: "Not authorized to delete this slot" });
+      }
+      
+      await storage.deleteTeacherAvailability(slotId);
+      res.json({ message: "Time slot deleted successfully" });
+    } catch (error) {
+      res.status(400).json({ message: "Failed to delete time slot" });
+    }
+  });
+
+  app.put("/api/teacher/availability/:slotId/toggle", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const slotId = parseInt(req.params.slotId);
+      const teacherId = req.user.id;
+      const { isActive } = req.body;
+      
+      // Verify the slot belongs to the teacher
+      const slot = await storage.getTeacherAvailabilitySlot(slotId);
+      if (!slot || slot.teacherId !== teacherId) {
+        return res.status(403).json({ message: "Not authorized to update this slot" });
+      }
+      
+      const updatedSlot = await storage.updateTeacherAvailability(slotId, { isActive });
+      res.json(updatedSlot);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to toggle time slot status" });
+    }
+  });
+
+  // Teacher Classes endpoints
+  app.get("/api/teacher/classes", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const classes = await storage.getTeacherClasses(teacherId);
+      res.json(classes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch teacher classes" });
+    }
+  });
+
+  app.get("/api/teacher/class/:classId", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const classId = parseInt(req.params.classId);
+      const teacherId = req.user.id;
+      
+      const classInfo = await storage.getTeacherClass(classId, teacherId);
+      if (!classInfo) {
+        return res.status(404).json({ message: "Class not found or not authorized" });
+      }
+      
+      res.json(classInfo);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch class information" });
+    }
+  });
+
+  app.get("/api/teacher/class/:classId/messages", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const classId = parseInt(req.params.classId);
+      const teacherId = req.user.id;
+      
+      // Verify teacher has access to this class
+      const classInfo = await storage.getTeacherClass(classId, teacherId);
+      if (!classInfo) {
+        return res.status(403).json({ message: "Not authorized to access this class" });
+      }
+      
+      const messages = await storage.getClassMessages(classId);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch class messages" });
+    }
+  });
+
+  app.post("/api/teacher/class/:classId/messages", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const classId = parseInt(req.params.classId);
+      const teacherId = req.user.id;
+      const { content, messageType } = req.body;
+      
+      // Verify teacher has access to this class
+      const classInfo = await storage.getTeacherClass(classId, teacherId);
+      if (!classInfo) {
+        return res.status(403).json({ message: "Not authorized to access this class" });
+      }
+      
+      const messageData = {
+        classId,
+        senderId: teacherId,
+        senderName: req.user.firstName + ' ' + req.user.lastName,
+        content,
+        messageType: messageType || 'text',
+        timestamp: new Date().toISOString()
+      };
+      
+      const message = await storage.createClassMessage(messageData);
+      res.json(message);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Admin endpoints for teacher-class assignment
+  app.post("/api/admin/assign-teacher-to-class", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { teacherId, classId } = req.body;
+      
+      // Check if teacher is available for this class schedule
+      const conflict = await storage.checkTeacherScheduleConflict(teacherId, classId);
+      if (conflict) {
+        return res.status(400).json({ 
+          message: "Teacher has schedule conflicts with this class",
+          conflicts: conflict
+        });
+      }
+      
+      const assignment = await storage.assignTeacherToClass(teacherId, classId);
+      res.json(assignment);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to assign teacher to class" });
+    }
+  });
+
+  app.get("/api/admin/available-teachers", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { dayOfWeek, startTime, endTime } = req.query;
+      const availableTeachers = await storage.getAvailableTeachers(dayOfWeek as string, startTime as string, endTime as string);
+      res.json(availableTeachers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch available teachers" });
+    }
+  });
+
   // Courses endpoints
   app.get("/api/courses", authenticateToken, async (req: any, res) => {
     const courses = await storage.getCourses();
