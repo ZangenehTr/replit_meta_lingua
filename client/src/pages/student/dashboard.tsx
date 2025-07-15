@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage } from "@/hooks/use-language";
 import { useState } from "react";
 
 interface StudentStats {
@@ -234,12 +234,15 @@ function StudentDashboard() {
               <h1 className="text-3xl font-bold text-gray-900">{t('student.dashboard')}</h1>
               <div className="flex items-center gap-4 mt-1">
                 <p className="text-gray-600">
-                  {t('student.currentLevel')} {studentStats?.currentLevel || 'Beginner'} • {studentStats?.totalXP || 0} XP
+                  {t('student.currentLevel')}: {studentStats?.currentLevel || 'Beginner'} • {studentStats?.totalXP || 0} XP
                 </p>
                 <Badge className={getMemberTierColor(studentStats?.memberTier || 'bronze')}>
                   {studentStats?.memberTier?.toUpperCase() || 'BRONZE'} Member
                 </Badge>
               </div>
+              <p className="text-gray-600 mt-1">
+                {t('student.welcomeMessage')}
+              </p>
             </div>
           </div>
           <div className="flex gap-3">

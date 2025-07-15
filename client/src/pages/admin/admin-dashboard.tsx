@@ -113,9 +113,9 @@ export function AdminDashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Business Intelligence Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t('admin.dashboard')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base">
-            Critical business metrics and performance insights
+            {t('admin.welcomeMessage')}
           </p>
         </div>
       </div>
@@ -125,7 +125,7 @@ export function AdminDashboard() {
         {/* Server Uptime */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Server Uptime</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin.systemHealth')}</CardTitle>
             <Server className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -167,7 +167,7 @@ export function AdminDashboard() {
         {/* Monthly Revenue */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin.totalRevenue')}</CardTitle>
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>

@@ -110,7 +110,7 @@ interface LearningGoal {
 
 function MentorDashboard() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const [selectedTab, setSelectedTab] = useState("overview");
   const queryClient = useQueryClient();
 
@@ -251,7 +251,7 @@ function MentorDashboard() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{t('mentor.dashboard')}</h1>
               <p className="text-gray-600 mt-1">
-                Welcome back, {user?.firstName}! Guide your mentees to success today.
+                {t('mentor.welcomeMessage')}
               </p>
             </div>
           </div>
@@ -275,7 +275,7 @@ function MentorDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-orange-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Mentees</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('mentor.totalMentees')}</CardTitle>
               <Users className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
@@ -288,7 +288,7 @@ function MentorDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Goals Achieved</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('mentor.goalsAchieved')}</CardTitle>
               <Target className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -301,7 +301,7 @@ function MentorDashboard() {
 
           <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-yellow-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Mentor Rating</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('mentor.averageRating')}</CardTitle>
               <Star className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
