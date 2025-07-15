@@ -84,7 +84,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-0">
+              <SheetContent side={direction === 'rtl' ? 'right' : 'left'} className="w-64 p-0">
                 <Sidebar />
               </SheetContent>
             </Sheet>
@@ -168,12 +168,12 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Main Layout with Sidebar */}
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         {/* Desktop Sidebar - hidden on mobile */}
-        <div className="hidden md:block">
+        <div className={`hidden md:block ${direction === 'rtl' ? 'md:fixed md:right-0 md:top-14 md:h-[calc(100vh-3.5rem)] md:w-64' : 'md:fixed md:left-0 md:top-14 md:h-[calc(100vh-3.5rem)] md:w-64'} md:z-30`}>
           <Sidebar />
         </div>
         
         {/* Main Content - properly spaced for sidebar */}
-        <main className="flex-1 w-full md:ml-64 lg:ml-72 xl:ml-80 p-2 xs:p-3 sm:p-4 md:p-6 lg:p-8 overflow-y-auto">
+        <main className={`flex-1 w-full ${direction === 'rtl' ? 'md:mr-64' : 'md:ml-64'} p-2 xs:p-3 sm:p-4 md:p-6 lg:p-8 overflow-y-auto`}>
           <div className="max-w-full">
             {children}
           </div>

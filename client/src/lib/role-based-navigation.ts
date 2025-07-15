@@ -28,13 +28,14 @@ export const getStudentNavigation = (t: any): NavigationItem[] => [
 
 // Teacher/Tutor navigation
 export const getTeacherNavigation = (t: any): NavigationItem[] => [
-  { path: "/teacher/dashboard", icon: "Home", label: "Dashboard", roles: ["Teacher/Tutor"] },
-  { path: "/teacher/classes", icon: "Users", label: "My Classes", roles: ["Teacher/Tutor"] },
-  { path: "/teacher/schedule", icon: "Calendar", label: "Schedule", roles: ["Teacher/Tutor"] },
-  { path: "/teacher/homework", icon: "ClipboardCheck", label: "Assignments", roles: ["Teacher/Tutor"] },
-  { path: "/teacher/students", icon: "GraduationCap", label: "Students", roles: ["Teacher/Tutor"] },
-  { path: "/teacher/resources", icon: "FileText", label: "Resources", roles: ["Teacher/Tutor"] },
-  { path: "/teacher/reports", icon: "BarChart", label: "Reports", roles: ["Teacher/Tutor"] },
+  { path: "/teacher/dashboard", icon: "Home", label: t('dashboard'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/classes", icon: "Users", label: t('teacher.myClasses'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/schedule", icon: "Calendar", label: t('teacher.schedule'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/homework", icon: "ClipboardCheck", label: t('teacher.assignments'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/students", icon: "GraduationCap", label: t('teacher.students'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/resources", icon: "FileText", label: t('teacher.resources'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/reports", icon: "BarChart", label: t('teacher.reports'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/payments", icon: "DollarSign", label: t('teacher.payments'), roles: ["Teacher/Tutor"] },
 ];
 
 // Institute Management Platform (IMP) navigation - Admin/Supervisor
