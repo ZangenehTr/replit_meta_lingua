@@ -247,7 +247,7 @@ function TeacherDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{teacherStats?.averageRating || 4.8}</div>
               <p className="text-xs text-muted-foreground">
-                Student feedback average
+                {t('teacher.studentFeedbackAverage')}
               </p>
             </CardContent>
           </Card>
@@ -262,7 +262,7 @@ function TeacherDashboard() {
                 {formatCurrency(teacherStats?.monthlyEarnings || 28500000)}
               </div>
               <p className="text-xs text-muted-foreground">
-                Next payment: {teacherStats?.nextPaymentDate || 'January 15th'}
+                {t('teacher.nextPayment')}: {teacherStats?.nextPaymentDate || 'January 15th'}
               </p>
             </CardContent>
           </Card>
@@ -273,9 +273,9 @@ function TeacherDashboard() {
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">{t('dashboard.overview')}</TabsTrigger>
             <TabsTrigger value="classes">{t('teacher.classes')}</TabsTrigger>
-            <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
+            <TabsTrigger value="students">{t('teacher.students')}</TabsTrigger>
+            <TabsTrigger value="assignments">{t('teacher.assignments')}</TabsTrigger>
+            <TabsTrigger value="schedule">{t('teacher.schedule')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -285,7 +285,7 @@ function TeacherDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
-                    Today's Sessions
+                    {t('teacher.todaySessions')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -312,7 +312,7 @@ function TeacherDashboard() {
                               disabled={startSessionMutation.isPending}
                             >
                               <PlayCircle className="h-4 w-4 mr-1" />
-                              Start
+                              {t('teacher.start')}
                             </Button>
                           )}
                         </div>
@@ -320,7 +320,7 @@ function TeacherDashboard() {
                     ))
                   ) : (
                     <p className="text-muted-foreground text-center py-4">
-                      No sessions scheduled for today
+                      {t('teacher.noSessionsToday')}
                     </p>
                   )}
                 </CardContent>
@@ -331,7 +331,7 @@ function TeacherDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ClipboardCheck className="h-5 w-5" />
-                    Assignment Status
+                    {t('teacher.assignmentStatus')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -356,7 +356,7 @@ function TeacherDashboard() {
                     ))
                   ) : (
                     <p className="text-muted-foreground text-center py-4">
-                      No assignments pending
+                      {t('teacher.noAssignmentsPending')}
                     </p>
                   )}
                 </CardContent>
