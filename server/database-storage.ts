@@ -60,7 +60,10 @@ import {
   supportTickets, supportTicketMessages, chatConversations, chatMessages, pushNotifications, notificationDeliveryLogs,
   type SupportTicket, type InsertSupportTicket, type SupportTicketMessage, type InsertSupportTicketMessage,
   type ChatConversation, type InsertChatConversation, type ChatMessage, type InsertChatMessage,
-  type PushNotification, type InsertPushNotification, type NotificationDeliveryLog, type InsertNotificationDeliveryLog
+  type PushNotification, type InsertPushNotification, type NotificationDeliveryLog, type InsertNotificationDeliveryLog,
+  // Teacher availability
+  teacherAvailability,
+  type TeacherAvailability, type InsertTeacherAvailability
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -5706,6 +5709,73 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching student homework:', error);
       return [];
+    }
+  }
+
+  // ===== TEACHER AVAILABILITY MANAGEMENT =====
+
+  async getTeacherAvailability(teacherId: number): Promise<any[]> {
+    try {
+      const availability = await db
+        .select()
+        .from(teacherAvailability)
+        .where(eq(teacherAvailability.teacherId, teacherId))
+        .orderBy(teacherAvailability.dayOfWeek);
+      return availability;
+    } catch (error) {
+      console.error('Error fetching teacher availability:', error);
+      return [];
+    }
+  }
+
+  async createTeacherAvailability(availabilityData: any): Promise<any> {
+    try {
+      const [newAvailability] = await db
+        .insert(teacherAvailability)
+        .values(availabilityData)
+        .returning();
+      return newAvailability;
+    } catch (error) {
+      console.error('Error creating teacher availability:', error);
+      throw new Error('Failed to create time slot');
+    }
+  }
+
+  async getTeacherAvailabilitySlot(slotId: number): Promise<any | undefined> {
+    try {
+      const [slot] = await db
+        .select()
+        .from(teacherAvailability)
+        .where(eq(teacherAvailability.id, slotId));
+      return slot;
+    } catch (error) {
+      console.error('Error fetching teacher availability slot:', error);
+      return undefined;
+    }
+  }
+
+  async updateTeacherAvailability(slotId: number, updates: any): Promise<any> {
+    try {
+      const [updatedSlot] = await db
+        .update(teacherAvailability)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(teacherAvailability.id, slotId))
+        .returning();
+      return updatedSlot;
+    } catch (error) {
+      console.error('Error updating teacher availability:', error);
+      throw new Error('Failed to update time slot');
+    }
+  }
+
+  async deleteTeacherAvailability(slotId: number): Promise<void> {
+    try {
+      await db
+        .delete(teacherAvailability)
+        .where(eq(teacherAvailability.id, slotId));
+    } catch (error) {
+      console.error('Error deleting teacher availability:', error);
+      throw new Error('Failed to delete time slot');
     }
   }
 }

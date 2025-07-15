@@ -2591,3 +2591,25 @@ export type PushNotification = typeof pushNotifications.$inferSelect;
 export type InsertPushNotification = z.infer<typeof insertPushNotificationSchema>;
 export type NotificationDeliveryLog = typeof notificationDeliveryLogs.$inferSelect;
 export type InsertNotificationDeliveryLog = z.infer<typeof insertNotificationDeliveryLogSchema>;
+
+// Teacher Availability Table
+export const teacherAvailability = pgTable("teacher_availability", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").notNull().references(() => users.id),
+  dayOfWeek: text("day_of_week").notNull(), // Monday, Tuesday, etc.
+  startTime: text("start_time").notNull(), // HH:MM format
+  endTime: text("end_time").notNull(), // HH:MM format
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Teacher Availability Schema
+export const insertTeacherAvailabilitySchema = createInsertSchema(teacherAvailability).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type TeacherAvailability = typeof teacherAvailability.$inferSelect;
+export type InsertTeacherAvailability = z.infer<typeof insertTeacherAvailabilitySchema>;

@@ -178,6 +178,13 @@ export interface IStorage {
   getTeacherPerformance(teacherId?: number): Promise<any[]>;
   createTeacherPerformance(performance: any): Promise<any>;
 
+  // Teacher Availability Management
+  getTeacherAvailability(teacherId: number): Promise<any[]>;
+  createTeacherAvailability(availabilityData: any): Promise<any>;
+  getTeacherAvailabilitySlot(slotId: number): Promise<any | undefined>;
+  updateTeacherAvailability(slotId: number, updates: any): Promise<any>;
+  deleteTeacherAvailability(slotId: number): Promise<void>;
+
   // CRM - Attendance
   getAttendance(sessionId?: number, studentId?: number): Promise<AttendanceRecord[]>;
   createAttendance(attendance: InsertAttendanceRecord): Promise<AttendanceRecord>;
