@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Globe } from "lucide-react";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage } from "@/hooks/use-language";
 
 const languages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -16,7 +16,7 @@ const languages = [
 ];
 
 export const LanguageSelector: React.FC = () => {
-  const { language, setLanguage } = useLanguage();
+  const { language, changeLanguage } = useLanguage();
   
   const currentLanguage = languages.find(lang => lang.code === language);
 
@@ -33,7 +33,7 @@ export const LanguageSelector: React.FC = () => {
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
-            onClick={() => setLanguage(lang.code as 'en' | 'fa' | 'ar')}
+            onClick={() => changeLanguage(lang.code)}
             className={`cursor-pointer ${
               language === lang.code ? 'bg-accent' : ''
             }`}

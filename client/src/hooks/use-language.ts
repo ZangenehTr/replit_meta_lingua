@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { translations, type Language } from '@/lib/i18n';
+import enCommon from '@/i18n/locales/en/common.json';
+import faCommon from '@/i18n/locales/fa/common.json';
+import arCommon from '@/i18n/locales/ar/common.json';
 
 export interface LanguageSettings {
   language: string;
@@ -19,7 +22,7 @@ export function useLanguage() {
 
   // Default to English unless user has specifically selected Farsi
   const currentLanguage: Language = (userPreferences?.preferences?.language || localStorage.getItem('appLanguage') || 'en') as Language;
-  const isRTL = currentLanguage === 'fa';
+  const isRTL = currentLanguage === 'fa' || currentLanguage === 'ar';
 
   // Helper function to change language
   const changeLanguage = (newLanguage: string) => {
@@ -30,20 +33,36 @@ export function useLanguage() {
 
   // Create a translation function that returns the key if translation is missing
   const t = (key: string): string => {
-    const translation = translations[currentLanguage];
-    if (!translation) {
-      return key;
-    }
+    // Use complete translations from JSON files
+    const translationMaps = {
+      en: enCommon,
+      fa: faCommon,
+      ar: arCommon
+    };
+    
+    const currentTranslations = translationMaps[currentLanguage] || translationMaps.en;
     
     // Support nested keys like 'dashboard.title'
     const keys = key.split('.');
-    let value: any = translation;
+    let value: any = currentTranslations;
     
     for (const k of keys) {
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
-        // Return the key if translation is not found
+        // Fallback to old translation system if not found in JSON
+        const fallbackTranslation = translations[currentLanguage];
+        if (fallbackTranslation) {
+          let fallbackValue: any = fallbackTranslation;
+          for (const fallbackKey of keys) {
+            if (fallbackValue && typeof fallbackValue === 'object' && fallbackKey in fallbackValue) {
+              fallbackValue = fallbackValue[fallbackKey];
+            } else {
+              return key; // Return the key if translation is not found
+            }
+          }
+          return typeof fallbackValue === 'string' ? fallbackValue : key;
+        }
         return key;
       }
     }
@@ -58,14 +77,23 @@ export function useLanguage() {
     changeLanguage,
     formatDate: (date: string) => {
       const dateObj = new Date(date);
-      return currentLanguage === 'fa' 
-        ? dateObj.toLocaleDateString('fa-IR')
-        : dateObj.toLocaleDateString('en-US');
+      if (currentLanguage === 'fa') {
+        return dateObj.toLocaleDateString('fa-IR');
+      } else if (currentLanguage === 'ar') {
+        return dateObj.toLocaleDateString('ar-SA');
+      } else {
+        return dateObj.toLocaleDateString('en-US');
+      }
     },
     formatNumber: (num: number) => {
-      return currentLanguage === 'fa'
-        ? num.toLocaleString('fa-IR')
-        : num.toLocaleString('en-US');
-    }
+      if (currentLanguage === 'fa') {
+        return num.toLocaleString('fa-IR');
+      } else if (currentLanguage === 'ar') {
+        return num.toLocaleString('ar-SA');
+      } else {
+        return num.toLocaleString('en-US');
+      }
+    },
+    direction: isRTL ? 'rtl' : 'ltr'
   };
 }
