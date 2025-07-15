@@ -167,12 +167,14 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Main Layout with Sidebar */}
       <div className="flex min-h-[calc(100vh-3.5rem)]">
-        {/* Sidebar */}
-        <Sidebar />
+        {/* Desktop Sidebar - hidden on mobile */}
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
         
-        {/* Main Content - responsive spacing for all devices */}
-        <main className="flex-1 ml-0 md:ml-64 lg:ml-72 xl:ml-80 p-2 xs:p-3 sm:p-4 md:p-6 lg:p-8 overflow-y-auto min-h-full w-full max-w-none">
-          <div className="max-w-7xl mx-auto">
+        {/* Main Content - properly spaced for sidebar */}
+        <main className="flex-1 w-full md:ml-64 lg:ml-72 xl:ml-80 p-2 xs:p-3 sm:p-4 md:p-6 lg:p-8 overflow-y-auto">
+          <div className="max-w-full">
             {children}
           </div>
         </main>

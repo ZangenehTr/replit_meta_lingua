@@ -69,7 +69,16 @@
     "newClass": "New Class",
     "createAssignment": "Create Assignment",
     "thisMonth": "This month",
-    "welcomeMessage": "Welcome back! Ready to inspire learning today?"
+    "welcomeMessage": "Welcome back! Ready to inspire learning today?",
+    "todaySessions": "Today's Sessions",
+    "assignmentStatus": "Assignment Status",
+    "noSessionsToday": "No sessions scheduled for today",
+    "noAssignmentsPending": "No assignments pending",
+    "start": "Start",
+    "due": "Due",
+    "submitted": "Submitted",
+    "studentFeedbackAverage": "Student feedback average",
+    "nextPayment": "Next payment"
   },
   "mentor": {
     "dashboard": "Mentor Dashboard",

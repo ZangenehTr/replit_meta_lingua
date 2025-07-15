@@ -112,7 +112,16 @@
     "newClass": "فصل جديد",
     "createAssignment": "إنشاء مهمة",
     "thisMonth": "هذا الشهر",
-    "welcomeMessage": "مرحباً بعودتك! مستعد لإلهام التعلم اليوم؟"
+    "welcomeMessage": "مرحباً بعودتك! مستعد لإلهام التعلم اليوم؟",
+    "todaySessions": "جلسات اليوم",
+    "assignmentStatus": "حالة المهام",
+    "noSessionsToday": "لا توجد جلسات مجدولة لليوم",
+    "noAssignmentsPending": "لا توجد مهام معلقة",
+    "start": "ابدأ",
+    "due": "الموعد النهائي",
+    "submitted": "تم الإرسال",
+    "studentFeedbackAverage": "متوسط تقييم الطلاب",
+    "nextPayment": "الدفعة التالية"
   },
   "mentor": {
     "dashboard": "لوحة قيادة المرشد",

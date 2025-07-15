@@ -112,7 +112,16 @@
     "newClass": "کلاس جدید",
     "createAssignment": "ایجاد تکلیف",
     "thisMonth": "این ماه",
-    "welcomeMessage": "خوش آمدید! آماده الهام‌بخشی برای یادگیری امروز؟"
+    "welcomeMessage": "خوش آمدید! آماده الهام‌بخشی برای یادگیری امروز؟",
+    "todaySessions": "جلسات امروز",
+    "assignmentStatus": "وضعیت تکالیف",
+    "noSessionsToday": "هیچ جلسه‌ای برای امروز برنامه‌ریزی نشده",
+    "noAssignmentsPending": "هیچ تکلیف معلقی وجود ندارد",
+    "start": "شروع",
+    "due": "موعد",
+    "submitted": "ارسال شده",
+    "studentFeedbackAverage": "میانگین بازخورد دانشجویان",
+    "nextPayment": "پرداخت بعدی"
   },
   "mentor": {
     "dashboard": "داشبورد مربی",
