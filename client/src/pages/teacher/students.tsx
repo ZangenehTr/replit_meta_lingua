@@ -47,6 +47,7 @@ export default function TeacherStudentsPage() {
   });
 
   const filteredStudents = students.filter(student => {
+    if (!student || !student.name || !student.email) return false;
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLevel = levelFilter === "all" || student.level === levelFilter;
@@ -56,6 +57,7 @@ export default function TeacherStudentsPage() {
   });
 
   const getInitials = (name: string) => {
+    if (!name) return '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 

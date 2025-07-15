@@ -1790,7 +1790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Teacher Availability endpoints
-  app.get("/api/teacher/availability", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/availability", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       const timeSlots = await storage.getTeacherAvailability(teacherId);
@@ -1800,7 +1800,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/teacher/availability", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.post("/api/teacher/availability", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       const timeSlotData = {
@@ -1814,7 +1814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/teacher/availability/:slotId", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.put("/api/teacher/availability/:slotId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const slotId = parseInt(req.params.slotId);
       const teacherId = req.user.id;
@@ -1833,7 +1833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/teacher/availability/:slotId", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.delete("/api/teacher/availability/:slotId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const slotId = parseInt(req.params.slotId);
       const teacherId = req.user.id;
@@ -1851,7 +1851,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/teacher/availability/:slotId/toggle", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.put("/api/teacher/availability/:slotId/toggle", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const slotId = parseInt(req.params.slotId);
       const teacherId = req.user.id;
@@ -1871,7 +1871,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Teacher Classes endpoints
-  app.get("/api/teacher/classes", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/classes", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       const classes = await storage.getTeacherClasses(teacherId);
@@ -12590,7 +12590,7 @@ Return JSON format:
   // =====================================================
 
   // Teacher Schedule API
-  app.get("/api/teacher/schedule", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/schedule", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       const sessions = await storage.getTeacherSessions(teacherId);
@@ -12626,7 +12626,7 @@ Return JSON format:
   });
 
   // Teacher Students API
-  app.get("/api/teacher/students", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/students", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       
@@ -12670,7 +12670,7 @@ Return JSON format:
   });
 
   // Teacher Resources API
-  app.get("/api/teacher/resources", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/resources", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       
@@ -12739,7 +12739,7 @@ Return JSON format:
   });
 
   // Teacher Resources Upload API
-  app.post("/api/teacher/resources/upload", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.post("/api/teacher/resources/upload", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       // This would handle file upload with multer
       // For now, return success response
@@ -12755,7 +12755,7 @@ Return JSON format:
   });
 
   // Teacher Reports API
-  app.get("/api/teacher/reports", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/reports", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       const { dateRange = 'last3months' } = req.query;
@@ -12805,7 +12805,7 @@ Return JSON format:
   });
 
   // Teacher Detailed Reports API
-  app.get("/api/teacher/detailed-reports", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/detailed-reports", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       const { dateRange = 'last3months' } = req.query;
