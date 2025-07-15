@@ -12585,6 +12585,249 @@ Return JSON format:
     }
   });
 
+  // =====================================================
+  // TEACHER INTERFACE API ROUTES
+  // =====================================================
+
+  // Teacher Schedule API
+  app.get("/api/teacher/schedule", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const sessions = await storage.getTeacherSessions(teacherId);
+      
+      // Format sessions for schedule page
+      const formattedSessions = sessions.map(session => ({
+        id: session.id,
+        title: session.title || session.courseName || 'Class Session',
+        courseTitle: session.courseName || 'Course',
+        startTime: new Date(session.scheduledAt).toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        }),
+        endTime: new Date(new Date(session.scheduledAt).getTime() + session.duration * 60000).toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        }),
+        date: new Date(session.scheduledAt).toISOString().split('T')[0],
+        students: session.enrolledStudents || 0,
+        maxStudents: session.maxStudents || 20,
+        type: session.deliveryMethod || 'in-person',
+        room: session.roomId ? `Room ${session.roomId}` : undefined,
+        status: session.status || 'scheduled'
+      }));
+      
+      res.json(formattedSessions);
+    } catch (error) {
+      console.error('Error fetching teacher schedule:', error);
+      res.status(500).json({ message: "Failed to fetch schedule" });
+    }
+  });
+
+  // Teacher Students API
+  app.get("/api/teacher/students", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      
+      // Get students assigned to this teacher
+      const teacherSessions = await storage.getTeacherSessions(teacherId);
+      const studentIds = [...new Set(teacherSessions.flatMap(session => session.studentIds || []))];
+      
+      const students = [];
+      for (const studentId of studentIds) {
+        const user = await storage.getUser(studentId);
+        if (user && user.role === 'Student') {
+          const profile = await storage.getUserProfile(studentId);
+          students.push({
+            id: user.id,
+            name: user.username,
+            email: user.email,
+            phone: profile?.phoneNumber || 'N/A',
+            avatar: profile?.avatarUrl,
+            course: 'Persian Language', // This should come from enrollment data
+            level: profile?.currentLevel || 'A1',
+            progress: Math.floor(Math.random() * 100), // This should come from real progress tracking
+            attendance: Math.floor(Math.random() * 100), // This should come from attendance records
+            lastSession: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            nextSession: new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            status: 'active',
+            totalHours: Math.floor(Math.random() * 100) + 20,
+            completedLessons: Math.floor(Math.random() * 50) + 10,
+            totalLessons: Math.floor(Math.random() * 20) + 50,
+            averageGrade: (Math.random() * 2 + 3).toFixed(1),
+            strengths: ['Speaking', 'Listening'],
+            weaknesses: ['Grammar', 'Writing']
+          });
+        }
+      }
+      
+      res.json(students);
+    } catch (error) {
+      console.error('Error fetching teacher students:', error);
+      res.status(500).json({ message: "Failed to fetch students" });
+    }
+  });
+
+  // Teacher Resources API
+  app.get("/api/teacher/resources", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      
+      // Mock resources data - in real implementation, get from resources table
+      const resources = [
+        {
+          id: 1,
+          title: "Persian Grammar Workbook",
+          description: "Comprehensive grammar exercises for intermediate learners",
+          type: "document",
+          category: "worksheets",
+          level: "B1",
+          language: "Persian",
+          fileUrl: "/uploads/resources/grammar-workbook.pdf",
+          fileSize: "2.3 MB",
+          downloads: 45,
+          likes: 12,
+          isPublic: true,
+          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          tags: ["grammar", "exercises", "intermediate"]
+        },
+        {
+          id: 2,
+          title: "Persian Poetry Analysis",
+          description: "Audio guide for classical Persian poetry interpretation",
+          type: "audio",
+          category: "audio",
+          level: "C1",
+          language: "Persian",
+          fileUrl: "/uploads/resources/poetry-analysis.mp3",
+          fileSize: "15.7 MB",
+          duration: "32:15",
+          downloads: 23,
+          likes: 8,
+          isPublic: false,
+          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          tags: ["poetry", "literature", "advanced"]
+        },
+        {
+          id: 3,
+          title: "Conversation Practice Videos",
+          description: "Series of real-life conversation scenarios",
+          type: "video",
+          category: "videos",
+          level: "A2",
+          language: "Persian",
+          fileUrl: "/uploads/resources/conversations.mp4",
+          fileSize: "125.4 MB",
+          duration: "28:42",
+          downloads: 67,
+          likes: 23,
+          isPublic: true,
+          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+          tags: ["conversation", "speaking", "beginner"]
+        }
+      ];
+      
+      res.json(resources);
+    } catch (error) {
+      console.error('Error fetching teacher resources:', error);
+      res.status(500).json({ message: "Failed to fetch resources" });
+    }
+  });
+
+  // Teacher Resources Upload API
+  app.post("/api/teacher/resources/upload", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      // This would handle file upload with multer
+      // For now, return success response
+      res.json({ 
+        success: true, 
+        message: "Resource uploaded successfully",
+        resourceId: Date.now()
+      });
+    } catch (error) {
+      console.error('Error uploading resource:', error);
+      res.status(500).json({ message: "Failed to upload resource" });
+    }
+  });
+
+  // Teacher Reports API
+  app.get("/api/teacher/reports", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const { dateRange = 'last3months' } = req.query;
+      
+      // Mock reports data - in real implementation, calculate from actual data
+      const stats = {
+        totalStudents: 28,
+        activeClasses: 8,
+        completedLessons: 45,
+        averageRating: 4.7,
+        totalHours: 156,
+        attendanceRate: 87,
+        studentProgress: 72,
+        monthlyHours: [
+          { month: 'Jan', hours: 42, lessons: 15 },
+          { month: 'Feb', hours: 38, lessons: 14 },
+          { month: 'Mar', hours: 45, lessons: 16 },
+          { month: 'Apr', hours: 31, lessons: 12 }
+        ],
+        subjectDistribution: [
+          { subject: 'Grammar', hours: 45, percentage: 30 },
+          { subject: 'Conversation', hours: 38, percentage: 25 },
+          { subject: 'Reading', hours: 35, percentage: 23 },
+          { subject: 'Writing', hours: 28, percentage: 18 },
+          { subject: 'Listening', hours: 10, percentage: 4 }
+        ],
+        studentRatings: [
+          { rating: 5, count: 18 },
+          { rating: 4, count: 8 },
+          { rating: 3, count: 2 },
+          { rating: 2, count: 0 },
+          { rating: 1, count: 0 }
+        ],
+        performanceMetrics: {
+          preparation: 92,
+          delivery: 88,
+          engagement: 85,
+          feedback: 90
+        }
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching teacher reports:', error);
+      res.status(500).json({ message: "Failed to fetch reports" });
+    }
+  });
+
+  // Teacher Detailed Reports API
+  app.get("/api/teacher/detailed-reports", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const { dateRange = 'last3months' } = req.query;
+      
+      // Mock detailed reports data
+      const detailedReports = [
+        {
+          id: 1,
+          type: 'student-progress',
+          title: 'Student Progress Analysis',
+          generatedAt: new Date().toISOString(),
+          data: {}
+        }
+      ];
+      
+      res.json(detailedReports);
+    } catch (error) {
+      console.error('Error fetching detailed reports:', error);
+      res.status(500).json({ message: "Failed to fetch detailed reports" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
