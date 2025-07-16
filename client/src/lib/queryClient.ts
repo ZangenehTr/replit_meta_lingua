@@ -41,8 +41,13 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
       // Progressive timeout: shorter for first attempts, longer for retries
       const timeout = attempt === 0 ? 8000 : 12000 + (attempt * 3000);
       const timeoutId = setTimeout(() => {
-        if (!controller.signal.aborted) {
-          controller.abort();
+        try {
+          if (!controller.signal.aborted) {
+            controller.abort('Request timeout');
+          }
+        } catch (abortError) {
+          // Silently handle abort errors to prevent runtime error plugin
+          console.debug('Abort signal handling:', abortError);
         }
       }, timeout);
 
@@ -55,7 +60,13 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
         cache: 'no-cache',
       });
 
-      clearTimeout(timeoutId);
+      // Clear timeout on successful response
+      try {
+        clearTimeout(timeoutId);
+      } catch (clearError) {
+        // Ignore timeout clear errors
+        console.debug('Timeout clear error:', clearError);
+      }
 
       if (!response.ok) {
         let errorText = 'Unknown error';
@@ -100,8 +111,14 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
         throw error;
       }
       
-      // Don't retry for AbortError (timeout)
-      if (error instanceof Error && error.name === 'AbortError') {
+      // Don't retry for AbortError (timeout) or signal errors
+      if (error instanceof Error && (
+        error.name === 'AbortError' || 
+        error.message.includes('signal is aborted') ||
+        error.message.includes('abort') ||
+        error.message.includes('The user aborted a request')
+      )) {
+        console.debug('Request aborted:', error);
         throw new Error('Request timeout: Server took too long to respond. Please try again.');
       }
       
