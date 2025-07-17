@@ -5099,6 +5099,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Submit assignment feedback endpoint (uses real database)
+  app.post("/api/teacher/assignments/:assignmentId/feedback", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const { assignmentId } = req.params;
+      const { feedback, score } = req.body;
+      const teacherId = req.user.id;
+
+      // Update homework with feedback and score
+      const updatedAssignment = await storage.updateHomework(parseInt(assignmentId), {
+        feedback,
+        score,
+        status: 'graded',
+        gradedAt: new Date()
+      });
+
+      res.json({ 
+        message: "Feedback submitted successfully", 
+        assignment: updatedAssignment 
+      });
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      res.status(500).json({ message: "Failed to submit feedback" });
+    }
+  });
+
   // Teachers can only view assigned sessions, not create them
   // Session creation is restricted to Admin/Supervisor only
   app.get("/api/teacher/sessions/upcoming", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
