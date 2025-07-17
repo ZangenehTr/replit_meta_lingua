@@ -321,3 +321,17 @@ Preferred communication style: Simple, everyday language.
 ## AI Assistant Name
 
 Note: User previously chose a name for the AI assistant in the application. This needs to be recalled and implemented when mentioned.
+
+### Teacher System Implementation & Workflow Clarification (July 17, 2025)
+- **Fixed Date Picker Issue**: Enhanced assignment creation modal with proper date picker functionality - added type="button", better event handling, disabled past dates, and improved alignment
+- **Teacher Workflow Clarification**: Teachers follow strict workflow where they ONLY set monthly availability (cannot create classes/sessions). Admin/supervisor assigns teachers to classes based on availability
+- **Complete Teacher Methods**: Implemented all missing teacher methods in storage interface and DatabaseStorage class: getTeacherClasses, assignments, resources, attendance tracking, communication
+- **Teacher System Features**: 
+  - Classes assigned by admin (teachers view assigned classes only)
+  - Assignment creation and feedback system with proper date handling
+  - Resource management with file upload capabilities  
+  - Attendance tracking with absentee reports (2+ consecutive absences)
+  - Room equipment visibility for in-person classes
+  - Telegram-like communication between teachers-students and with admin/supervisor
+  - Monthly availability setting (not session creation)
+- **Schedule Session Role**: Removed session creation capability from teachers to maintain proper workflow. Teachers now only manage availability; admin assigns them to classes.
