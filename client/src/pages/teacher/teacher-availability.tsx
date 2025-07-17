@@ -93,13 +93,29 @@ export default function TeacherAvailability() {
     },
   });
 
-  const { data: timeSlots, isLoading } = useQuery({
+  const { data: timeSlots = [], isLoading, error } = useQuery({
     queryKey: ['/api/teacher/availability'],
     queryFn: async () => {
-      const response = await fetch('/api/teacher/availability');
-      if (!response.ok) throw new Error('Failed to fetch availability');
-      return response.json();
-    }
+      try {
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('/api/teacher/availability', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!response.ok) {
+          console.warn('Teacher availability API failed:', response.status);
+          return [];
+        }
+        return response.json();
+      } catch (error) {
+        console.warn('Teacher availability error:', error);
+        return [];
+      }
+    },
+    retry: false,
+    throwOnError: false,
   });
 
   const createTimeSlotMutation = useMutation({

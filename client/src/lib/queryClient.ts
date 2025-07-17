@@ -86,6 +86,15 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
         } catch (parseError) {
           errorText = `HTTP ${response.status} ${response.statusText}`;
         }
+        
+        // Handle auth errors specially to prevent unhandled rejections
+        if (response.status === 401 || response.status === 403) {
+          console.debug('Authentication error, not retrying:', response.status);
+          const authError = new Error(`Authentication error: ${errorText}`);
+          authError.name = 'AuthenticationError';
+          throw authError;
+        }
+        
         throw new Error(`${response.status}: ${errorText}`);
       }
 
@@ -161,7 +170,11 @@ export const queryClient = new QueryClient({
       staleTime: 30000, // 30 seconds
       retry: (failureCount, error) => {
         // Don't retry auth errors
-        if (error instanceof Error && (error.message.includes('401') || error.message.includes('403'))) {
+        if (error instanceof Error && (
+          error.message.includes('401') || 
+          error.message.includes('403') ||
+          error.name === 'AuthenticationError'
+        )) {
           return false;
         }
         // Retry network errors up to 2 times
@@ -171,6 +184,7 @@ export const queryClient = new QueryClient({
         // Default retry for other errors
         return failureCount < 1;
       },
+      throwOnError: false, // Prevent unhandled promise rejections
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
@@ -178,7 +192,11 @@ export const queryClient = new QueryClient({
     mutations: {
       retry: (failureCount, error) => {
         // Never retry mutations for auth errors
-        if (error instanceof Error && (error.message.includes('401') || error.message.includes('403'))) {
+        if (error instanceof Error && (
+          error.message.includes('401') || 
+          error.message.includes('403') ||
+          error.name === 'AuthenticationError'
+        )) {
           return false;
         }
         // Only retry network errors for mutations
@@ -187,6 +205,7 @@ export const queryClient = new QueryClient({
         }
         return false;
       },
+      throwOnError: false, // Also prevent mutation errors from causing runtime errors
     },
   },
 });
