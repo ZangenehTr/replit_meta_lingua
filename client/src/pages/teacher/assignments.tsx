@@ -25,7 +25,10 @@ const assignmentSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters'),
   studentId: z.number().min(1, 'Student is required'),
   courseId: z.number().min(1, 'Course is required'),
-  dueDate: z.date(),
+  dueDate: z.coerce.date().refine(
+    (date) => date > new Date(),
+    "Due date must be in the future"
+  ),
   maxScore: z.number().min(1, 'Max score must be positive'),
   instructions: z.string().optional()
 });
@@ -138,8 +141,8 @@ export default function TeacherAssignmentsPage() {
 
   const handleBackToList = () => {
     setViewAssignmentId(null);
-    // Clear URL parameters
-    window.history.pushState({}, '', '/teacher/assignments');
+    // Clear URL parameters properly
+    window.history.replaceState({}, '', '/teacher/assignments');
     setLocation('/teacher/assignments');
   };
 
@@ -196,9 +199,7 @@ export default function TeacherAssignmentsPage() {
     );
   }
 
-  // Debug: Check current state
-  console.log('Current viewAssignmentId:', viewAssignmentId);
-  console.log('Assignments length:', assignments.length);
+
 
   // Show individual assignment view
   if (viewAssignmentId) {
