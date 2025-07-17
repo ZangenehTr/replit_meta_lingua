@@ -5081,7 +5081,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description,
         studentId,
         courseId,
-        tutorId: teacherId,
+        teacherId: teacherId,
         dueDate: new Date(dueDate),
         maxScore: maxScore || 100,
         instructions,
