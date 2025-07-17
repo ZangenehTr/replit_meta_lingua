@@ -60,6 +60,7 @@ export default function TeacherAssignmentsPage() {
       description: '',
       studentId: 0,
       courseId: 0,
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 1 week from now
       maxScore: 100,
       instructions: ''
     }
@@ -404,6 +405,7 @@ export default function TeacherAssignmentsPage() {
                             <PopoverTrigger asChild>
                               <FormControl>
                                 <Button
+                                  type="button"
                                   variant="outline"
                                   className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
                                 >
@@ -420,8 +422,16 @@ export default function TeacherAssignmentsPage() {
                               <Calendar
                                 mode="single"
                                 selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) => date < new Date()}
+                                onSelect={(date) => {
+                                  if (date) {
+                                    field.onChange(date);
+                                  }
+                                }}
+                                disabled={(date) => {
+                                  const today = new Date();
+                                  today.setHours(0, 0, 0, 0);
+                                  return date < today;
+                                }}
                                 initialFocus
                               />
                             </PopoverContent>
