@@ -5782,56 +5782,86 @@ export class DatabaseStorage implements IStorage {
   // Teacher-specific methods implementation (teachers only set availability, admin assigns them to classes)
   async getTeacherClasses(teacherId: number): Promise<any[]> {
     try {
-      // Fixed SQL query to avoid syntax errors
-      const teacherSessions = await db
-        .select({
-          sessionId: sessions.id,
-          sessionTitle: sessions.title,
-          courseTitle: courses.title,
-          courseId: sessions.courseId,
-          studentId: sessions.studentId,
-          studentFirstName: users.firstName,
-          studentLastName: users.lastName,
-          scheduledAt: sessions.scheduledAt,
-          duration: sessions.duration,
-          status: sessions.status,
-          roomId: sessions.roomId,
-          roomName: rooms.name,
-          sessionUrl: sessions.sessionUrl,
-          notes: sessions.notes,
-          deliveryMode: courses.deliveryMode
-        })
-        .from(sessions)
-        .leftJoin(courses, eq(sessions.courseId, courses.id))
-        .leftJoin(users, eq(sessions.studentId, users.id))
-        .leftJoin(rooms, eq(sessions.roomId, rooms.id))
-        .where(eq(sessions.tutorId, teacherId))
-        .orderBy(desc(sessions.scheduledAt));
+      // Use raw SQL to avoid Drizzle ORM issues
+      const teacherSessions = await db.execute(sql`
+        SELECT * FROM sessions 
+        WHERE tutor_id = ${teacherId} 
+        ORDER BY scheduled_at DESC
+      `);
 
-      return teacherSessions.map(result => ({
-        id: result.sessionId,
-        title: result.sessionTitle || result.courseTitle || 'Language Session',
-        course: result.courseTitle || 'General Language Course',
-        courseId: result.courseId,
-        studentName: result.studentFirstName && result.studentLastName 
-          ? `${result.studentFirstName} ${result.studentLastName}` 
-          : 'Unknown Student',
-        studentId: result.studentId,
-        scheduledAt: result.scheduledAt,
-        duration: result.duration || 60,
-        status: result.status || 'scheduled',
-        roomName: result.roomName || 'Online',
-        roomId: result.roomId,
-        sessionUrl: result.sessionUrl,
-        notes: result.notes,
-        deliveryMode: result.deliveryMode || 'online',
-        // Professional dashboard fields (Preply-style)
-        type: result.deliveryMode || 'online',
-        studentAvatar: null,
-        progress: 75,
-        totalSessions: 20,
-        completedSessions: 15
-      }));
+      // For each session, fetch related data separately to avoid complex joins
+      const enrichedSessions = await Promise.all(
+        teacherSessions.rows.map(async (session: any) => {
+          let courseName = 'General Language Course';
+          let studentName = 'Unknown Student';
+          let roomName = 'Online';
+          let deliveryMode = 'online';
+
+          // Fetch course info if courseId exists
+          if (session.course_id) {
+            try {
+              const courseResult = await db.execute(sql`SELECT * FROM courses WHERE id = ${session.course_id}`);
+              if (courseResult.rows.length > 0) {
+                const course = courseResult.rows[0];
+                courseName = course.title;
+                deliveryMode = course.delivery_mode || 'online';
+              }
+            } catch (err) {
+              console.log('Course fetch error:', err);
+            }
+          }
+
+          // Fetch student info if studentId exists
+          if (session.student_id) {
+            try {
+              const studentResult = await db.execute(sql`SELECT * FROM users WHERE id = ${session.student_id}`);
+              if (studentResult.rows.length > 0) {
+                const student = studentResult.rows[0];
+                studentName = `${student.first_name} ${student.last_name}`;
+              }
+            } catch (err) {
+              console.log('Student fetch error:', err);
+            }
+          }
+
+          // Fetch room info if roomId exists
+          if (session.room_id) {
+            try {
+              const roomResult = await db.execute(sql`SELECT * FROM rooms WHERE id = ${session.room_id}`);
+              if (roomResult.rows.length > 0) {
+                const room = roomResult.rows[0];
+                roomName = room.name;
+              }
+            } catch (err) {
+              console.log('Room fetch error:', err);
+            }
+          }
+
+          return {
+            id: session.id,
+            title: session.title || courseName,
+            course: courseName,
+            courseId: session.course_id,
+            studentName,
+            studentId: session.student_id,
+            scheduledAt: session.scheduled_at,
+            duration: session.duration || 60,
+            status: session.status || 'scheduled',
+            roomName,
+            roomId: session.room_id,
+            sessionUrl: session.session_url,
+            notes: session.notes,
+            deliveryMode,
+            type: deliveryMode,
+            studentAvatar: null,
+            progress: 75,
+            totalSessions: 20,
+            completedSessions: 15
+          };
+        })
+      );
+
+      return enrichedSessions;
     } catch (error) {
       console.error('Error fetching teacher classes:', error);
       return [];
@@ -5870,49 +5900,67 @@ export class DatabaseStorage implements IStorage {
 
   async getTeacherAssignments(teacherId: number): Promise<any[]> {
     try {
-      const assignments = await db
-        .select({
-          assignmentId: homework.id,
-          title: homework.title,
-          description: homework.description,
-          dueDate: homework.dueDate,
-          studentId: homework.studentId,
-          studentFirstName: users.firstName,
-          studentLastName: users.lastName,
-          courseTitle: courses.title,
-          status: homework.status,
-          submittedAt: homework.submittedAt,
-          feedback: homework.feedback,
-          score: homework.score,
-          maxScore: homework.maxScore,
-          createdAt: homework.createdAt
-        })
-        .from(homework)
-        .leftJoin(users, eq(homework.studentId, users.id))
-        .leftJoin(courses, eq(homework.courseId, courses.id))
-        .where(eq(homework.tutorId, teacherId))
-        .orderBy(desc(homework.dueDate));
+      // Use raw SQL to avoid Drizzle ORM issues
+      const assignments = await db.execute(sql`
+        SELECT * FROM homework 
+        WHERE teacher_id = ${teacherId} 
+        ORDER BY due_date DESC NULLS LAST
+      `);
 
-      return assignments.map(result => ({
-        id: result.assignmentId,
-        title: result.title,
-        description: result.description,
-        dueDate: result.dueDate,
-        studentId: result.studentId,
-        studentName: result.studentFirstName && result.studentLastName 
-          ? `${result.studentFirstName} ${result.studentLastName}` 
-          : 'Unknown Student',
-        courseName: result.courseTitle || 'General Course',
-        status: result.status || 'pending',
-        submittedAt: result.submittedAt,
-        feedback: result.feedback,
-        score: result.score,
-        maxScore: result.maxScore,
-        assignedAt: result.createdAt,
-        className: result.courseTitle || 'General Course',
-        submittedCount: result.submittedAt ? 1 : 0,
-        totalStudents: 1
-      }));
+      // For each assignment, fetch related data separately
+      const enrichedAssignments = await Promise.all(
+        assignments.rows.map(async (assignment: any) => {
+          let studentName = 'Unknown Student';
+          let courseName = 'General Course';
+
+          // Fetch student info if studentId exists
+          if (assignment.student_id) {
+            try {
+              const studentResult = await db.execute(sql`SELECT * FROM users WHERE id = ${assignment.student_id}`);
+              if (studentResult.rows.length > 0) {
+                const student = studentResult.rows[0];
+                studentName = `${student.first_name} ${student.last_name}`;
+              }
+            } catch (err) {
+              console.log('Student fetch error:', err);
+            }
+          }
+
+          // Fetch course info if courseId exists
+          if (assignment.course_id) {
+            try {
+              const courseResult = await db.execute(sql`SELECT * FROM courses WHERE id = ${assignment.course_id}`);
+              if (courseResult.rows.length > 0) {
+                const course = courseResult.rows[0];
+                courseName = course.title;
+              }
+            } catch (err) {
+              console.log('Course fetch error:', err);
+            }
+          }
+
+          return {
+            id: assignment.id,
+            title: assignment.title,
+            description: assignment.description,
+            dueDate: assignment.due_date,
+            studentId: assignment.student_id,
+            studentName,
+            courseName,
+            status: assignment.status || 'pending',
+            submittedAt: assignment.submitted_at,
+            feedback: assignment.feedback,
+            score: assignment.score,
+            maxScore: assignment.max_score,
+            assignedAt: assignment.created_at,
+            className: courseName,
+            submittedCount: assignment.submitted_at ? 1 : 0,
+            totalStudents: 1
+          };
+        })
+      );
+
+      return enrichedAssignments;
     } catch (error) {
       console.error('Error fetching teacher assignments:', error);
       return [];
