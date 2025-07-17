@@ -1,0 +1,189 @@
+/* RTL (Right-to-Left) support for Persian and Arabic languages */
+
+/* Apply RTL direction when RTL class is present */
+.rtl {
+  direction: rtl;
+}
+
+.ltr {
+  direction: ltr;
+}
+
+/* Flip margins and paddings for RTL */
+.rtl .ml-auto {
+  margin-left: unset;
+  margin-right: auto;
+}
+
+.rtl .mr-auto {
+  margin-right: unset;
+  margin-left: auto;
+}
+
+.rtl .pl-4 {
+  padding-left: unset;
+  padding-right: 1rem;
+}
+
+.rtl .pr-4 {
+  padding-right: unset;
+  padding-left: 1rem;
+}
+
+/* Text alignment adjustments */
+.rtl .text-left {
+  text-align: right;
+}
+
+.rtl .text-right {
+  text-align: left;
+}
+
+/* Flexbox adjustments */
+.rtl .flex-row-reverse {
+  flex-direction: row-reverse;
+}
+
+.rtl .justify-start {
+  justify-content: flex-end;
+}
+
+.rtl .justify-end {
+  justify-content: flex-start;
+}
+
+/* Border radius adjustments */
+.rtl .rounded-l-md {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+.rtl .rounded-r-md {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: 0.375rem;
+  border-bottom-left-radius: 0.375rem;
+}
+
+/* Language-specific font adjustments */
+.lang-fa {
+  font-family: 'Noto Sans Arabic', 'Vazir', 'Tahoma', sans-serif;
+}
+
+.lang-ar {
+  font-family: 'Noto Sans Arabic', 'Amiri', 'Tahoma', sans-serif;
+}
+
+/* Enhanced typography for Persian/Arabic */
+.lang-fa h1,
+.lang-fa h2,
+.lang-fa h3,
+.lang-fa h4,
+.lang-fa h5,
+.lang-fa h6 {
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.lang-ar h1,
+.lang-ar h2,
+.lang-ar h3,
+.lang-ar h4,
+.lang-ar h5,
+.lang-ar h6 {
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Form input adjustments for RTL */
+.rtl input[type="text"],
+.rtl input[type="email"],
+.rtl input[type="password"],
+.rtl textarea {
+  text-align: right;
+}
+
+/* Dropdown menu positioning for RTL */
+.rtl .dropdown-menu-left {
+  left: auto;
+  right: 0;
+}
+
+.rtl .dropdown-menu-right {
+  right: auto;
+  left: 0;
+}
+
+/* Navigation adjustments */
+.rtl .sidebar {
+  left: auto;
+  right: 0;
+}
+
+.rtl .sidebar-close {
+  right: auto;
+  left: 0.5rem;
+}
+
+/* Icon adjustments for RTL */
+.rtl .icon-flip {
+  transform: scaleX(-1);
+}
+
+/* Calendar and date picker RTL support */
+.rtl .calendar {
+  direction: rtl;
+}
+
+.rtl .date-picker {
+  direction: rtl;
+}
+
+/* Table adjustments for RTL */
+.rtl table {
+  direction: rtl;
+}
+
+.rtl th,
+.rtl td {
+  text-align: right;
+}
+
+/* Button group adjustments */
+.rtl .btn-group .btn:first-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
+.rtl .btn-group .btn:last-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: 0.375rem;
+  border-bottom-left-radius: 0.375rem;
+}
+
+/* Notification and toast adjustments */
+.rtl .toast {
+  left: auto;
+  right: 1rem;
+}
+
+/* Mobile responsive adjustments for RTL */
+@media (max-width: 768px) {
+  .rtl .mobile-menu {
+    left: auto;
+    right: 0;
+  }
+  
+  .rtl .mobile-sidebar {
+    transform: translateX(100%);
+  }
+  
+  .rtl .mobile-sidebar.open {
+    transform: translateX(0);
+  }
+}

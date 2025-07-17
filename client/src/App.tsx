@@ -8,6 +8,7 @@ import { useBranding } from "@/hooks/use-branding";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import { useTranslation } from "react-i18next";
 import { AppLayout } from "@/components/layout/app-layout";
+import { RTLLayout } from "@/components/rtl-layout";
 
 import NotFound from "@/pages/not-found";
 import Auth from "@/pages/auth";
@@ -597,7 +598,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <AppWithBranding />
+        <RTLLayout>
+          <AppWithBranding />
+        </RTLLayout>
       </LanguageProvider>
     </QueryClientProvider>
   );
