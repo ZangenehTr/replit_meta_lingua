@@ -57,9 +57,11 @@ export default function TeacherAssignmentsPage() {
       setViewAssignmentId(null); // Clear when no view parameter
     }
     
-    // Debug logging for button visibility
-    console.log('Current viewAssignmentId:', viewParam ? parseInt(viewParam) : null);
-    console.log('Show create button:', !viewParam);
+    // Debug logging for button visibility (development only)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Current viewAssignmentId:', viewParam ? parseInt(viewParam) : null);
+      console.log('Show create button:', !viewParam);
+    }
   }, [location]);
 
   const form = useForm<AssignmentFormData>({
@@ -305,12 +307,7 @@ export default function TeacherAssignmentsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Debug Info */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mb-4 p-2 bg-yellow-100 text-xs text-yellow-800 rounded">
-            View State Debug: viewAssignmentId = {viewAssignmentId}, Show Create Button = {!viewAssignmentId ? 'YES' : 'NO'}
-          </div>
-        )}
+        {/* Debug Info - Hidden in production */}
         
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
@@ -587,7 +584,7 @@ export default function TeacherAssignmentsPage() {
                         <Eye className="w-3 h-3 mr-1" />
                         View
                       </Button>
-                      {assignment.status === 'submitted' && !assignment.feedback && (
+                      {(assignment.status === 'submitted' || assignment.status === 'assigned') && !assignment.feedback && (
                         <Button 
                           size="sm"
                           onClick={() => {
@@ -597,7 +594,7 @@ export default function TeacherAssignmentsPage() {
                           }}
                         >
                           <Edit className="w-3 h-3 mr-1" />
-                          Grade
+                          {assignment.status === 'submitted' ? 'Grade' : 'Provide Feedback'}
                         </Button>
                       )}
                       {/* Debug: Show grade button logic */}
