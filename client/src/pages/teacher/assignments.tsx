@@ -572,7 +572,18 @@ export default function TeacherAssignmentsPage() {
                     </div>
 
                     <div className="flex space-x-2 mt-4 lg:mt-0 lg:ml-6">
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          console.log('View button clicked for assignment:', assignment.id);
+                          setViewAssignmentId(assignment.id);
+                          const newUrl = new URL(window.location.href);
+                          newUrl.searchParams.set('view', assignment.id.toString());
+                          window.history.pushState({}, '', newUrl.toString());
+                          setLocation(`/teacher/assignments?view=${assignment.id}`);
+                        }}
+                      >
                         <Eye className="w-3 h-3 mr-1" />
                         View
                       </Button>

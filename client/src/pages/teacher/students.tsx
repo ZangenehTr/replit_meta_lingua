@@ -95,10 +95,10 @@ export default function TeacherStudentsPage() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {t('myStudents')}
+              {t('teacher.myStudents')}
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              {t('trackStudentsProgress')}
+              {t('teacher.trackStudentsProgress')}
             </p>
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function TeacherStudentsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('totalStudents')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('teacher.totalStudents')}</p>
                   <p className="text-2xl font-bold">{students.length}</p>
                 </div>
                 <Users className="w-8 h-8 text-blue-600" />
@@ -121,7 +121,7 @@ export default function TeacherStudentsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('activeStudents')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('teacher.activeStudents')}</p>
                   <p className="text-2xl font-bold">
                     {students.filter(s => s.status === 'active').length}
                   </p>
@@ -135,7 +135,7 @@ export default function TeacherStudentsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('avgProgress')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('teacher.avgProgress')}</p>
                   <p className="text-2xl font-bold">
                     {Math.round(students.reduce((acc, s) => acc + s.progress, 0) / students.length || 0)}%
                   </p>
@@ -149,7 +149,7 @@ export default function TeacherStudentsPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('avgAttendance')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('teacher.avgAttendance')}</p>
                   <p className="text-2xl font-bold">
                     {Math.round(students.reduce((acc, s) => acc + s.attendance, 0) / students.length || 0)}%
                   </p>
@@ -168,7 +168,7 @@ export default function TeacherStudentsPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
-                    placeholder={t('searchStudents')}
+                    placeholder={t('teacher.searchStudents')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -177,10 +177,10 @@ export default function TeacherStudentsPage() {
               </div>
               <Select value={levelFilter} onValueChange={setLevelFilter}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder={t('filterByLevel')} />
+                  <SelectValue placeholder={t('teacher.filterByLevel')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('allLevels')}</SelectItem>
+                  <SelectItem value="all">{t('teacher.allLevels')}</SelectItem>
                   <SelectItem value="A1">A1</SelectItem>
                   <SelectItem value="A2">A2</SelectItem>
                   <SelectItem value="B1">B1</SelectItem>
@@ -191,13 +191,13 @@ export default function TeacherStudentsPage() {
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder={t('filterByStatus')} />
+                  <SelectValue placeholder={t('teacher.filterByStatus')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('allStatuses')}</SelectItem>
-                  <SelectItem value="active">{t('active')}</SelectItem>
-                  <SelectItem value="inactive">{t('inactive')}</SelectItem>
-                  <SelectItem value="completed">{t('completed')}</SelectItem>
+                  <SelectItem value="all">{t('teacher.allStatuses')}</SelectItem>
+                  <SelectItem value="active">{t('teacher.active')}</SelectItem>
+                  <SelectItem value="inactive">{t('teacher.inactive')}</SelectItem>
+                  <SelectItem value="completed">{t('teacher.completed')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -209,7 +209,7 @@ export default function TeacherStudentsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              {t('studentsOverview')} ({filteredStudents.length})
+              {t('teacher.studentsOverview')} ({filteredStudents.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -229,7 +229,7 @@ export default function TeacherStudentsPage() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold">{student.name}</h3>
                         <Badge className={getStatusColor(student.status)}>
-                          {t(student.status)}
+                          {t(`teacher.${student.status}`)}
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -238,11 +238,11 @@ export default function TeacherStudentsPage() {
                       <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {t('lastSession')}: {student.lastSession}
+                          {t('teacher.lastSession')}: {student.lastSession}
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {student.totalHours}h {t('total')}
+                          {student.totalHours}h {t('teacher.total')}
                         </span>
                       </div>
                     </div>
@@ -251,7 +251,7 @@ export default function TeacherStudentsPage() {
                   <div className="flex items-center gap-6">
                     <div className="text-center">
                       <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {t('progress')}
+                        {t('teacher.progress')}
                       </div>
                       <div className="flex items-center gap-2">
                         <Progress value={student.progress} className="w-20" />
@@ -261,7 +261,7 @@ export default function TeacherStudentsPage() {
 
                     <div className="text-center">
                       <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {t('attendance')}
+                        {t('teacher.attendance')}
                       </div>
                       <div className="flex items-center gap-2">
                         <div className={`w-3 h-3 rounded-full ${getProgressColor(student.attendance)}`}></div>
@@ -271,7 +271,7 @@ export default function TeacherStudentsPage() {
 
                     <div className="text-center">
                       <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        {t('grade')}
+                        {t('teacher.grade')}
                       </div>
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-500" />
@@ -298,10 +298,10 @@ export default function TeacherStudentsPage() {
                 <div className="text-center py-12">
                   <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    {t('noStudentsFound')}
+                    {t('teacher.noStudentsFound')}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    {searchTerm ? t('tryDifferentSearch') : t('noStudentsAssigned')}
+                    {searchTerm ? t('teacher.tryDifferentSearch') : t('teacher.noStudentsAssigned')}
                   </p>
                 </div>
               )}
