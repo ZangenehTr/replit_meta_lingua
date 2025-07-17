@@ -6,408 +6,294 @@
 - **Application State**: Running on port 5000 ✅
 - **Authentication**: Working (teacher@test.com login successful) ✅
 - **Database**: PostgreSQL operational with real data ✅
-- **API Endpoints**: Teacher assignments API returns 3 assignments ✅
+- **API Endpoints**: Teacher assignments API returns 5 assignments ✅
+- **Assignment System**: Creation and feedback fully functional ✅
 
 ---
 
 ## 🚨 CRITICAL ISSUES IDENTIFIED
 
-### PROBLEM 1: DUPLICATE TEACHER DASHBOARDS
+### PROBLEM 1: DUPLICATE TEACHER ROUTING CONFUSION
 
 #### Root Cause Analysis
-The system has **TWO separate teacher dashboard implementations** causing navigation conflicts:
+The system has **conflicting teacher route structures** causing user navigation confusion:
 
-1. **Primary Dashboard**: `client/src/pages/teacher/dashboard.tsx`
-   - ✅ Modern React component with proper structure
-   - ✅ Uses TanStack Query for data fetching
-   - ✅ Has tabbed interface (overview, classes, assignments)
-   - ✅ Route: `/teacher/dashboard`
+1. **Primary Issue**: Two different teacher entry points exist
+   - `/teacher` → leads to `TeacherDashboardNew` component
+   - `/teacher/dashboard` → leads to same `TeacherDashboardNew` component
+   - **Problem**: Users expect `/teacher` to redirect directly to dashboard, not serve different content
 
-2. **Legacy Dashboard**: `client/src/pages/teacher-dashboard.tsx` 
-   - ❌ Older implementation with different structure
-   - ❌ Different component architecture
-   - ❌ Not integrated with current navigation system
-   - ❌ Route conflicts in App.tsx
+2. **Auth Redirect Logic**: In `client/src/pages/auth.tsx` (line 52-53)
+   ```typescript
+   } else if (user.role === 'teacher') {
+     setLocation("/teacher");  // ← Should redirect to "/teacher/dashboard"
+   ```
+
+3. **Navigation Inconsistency**: Role-based navigation points to `/teacher/dashboard` but auth redirects to `/teacher`
 
 #### Impact Analysis
-- **User Confusion**: Multiple entry points to teacher functionality
-- **Inconsistent UX**: Different interfaces for same role
-- **Maintenance Complexity**: Duplicate code requiring synchronization
-- **Navigation Conflicts**: Role-based navigation inconsistency
+- **User Confusion**: Teachers land on incomplete interface
+- **Inconsistent UX**: Different access points show different content
+- **Navigation Conflicts**: Sidebar links don't match auth redirects
 
 #### Files Requiring Changes
-- `client/src/App.tsx` - Clean up routing conflicts
-- `client/src/pages/teacher-dashboard.tsx` - Archive legacy implementation
-- `client/src/lib/role-based-navigation.ts` - Ensure consistent routing
+- `client/src/pages/auth.tsx` (line 52-53) - Fix redirect destination
+- `client/src/App.tsx` (line 145-149) - Consolidate routes
+- `client/src/lib/role-based-navigation.ts` - Verify navigation consistency
 
 ---
 
-### PROBLEM 2: ASSIGNMENT CREATION BUTTON NOT VISIBLE
+### PROBLEM 2: INTERNATIONALIZATION SYSTEM CONFLICTS
 
 #### Root Cause Analysis
-The Create Assignment button exists in code but is not visible due to **view state management issues**:
+The system has **multiple translation systems** creating conflicts:
 
-1. **URL Parameter Persistence**:
-   ```typescript
-   // assignments.tsx lines 139-148
-   useEffect(() => {
-     const urlParams = new URLSearchParams(window.location.search);
-     const viewParam = urlParams.get('view');
-     if (viewParam && !isNaN(parseInt(viewParam))) {
-       setViewAssignmentId(parseInt(viewParam));
-     } else {
-       setViewAssignmentId(null);
-     }
-   }, [location]);
-   ```
-   - URL parameters causing page to stay in detail view
-   - Button only shows in list view, not detail view
+1. **Dual Translation Systems**:
+   - **System A**: `client/src/hooks/use-language.ts` with JSON files in `client/src/i18n/locales/`
+   - **System B**: `client/src/hooks/useLanguage.tsx` with react-i18next
+   - **System C**: `client/src/lib/i18n.ts` with legacy translation objects
 
-2. **Navigation Confusion**:
-   - **Issue**: Sidebar navigation points to `/teacher/homework` 
-   - **Reality**: Actual assignment functionality in `/teacher/assignments`
-   - **Problem**: `homework.tsx` is an empty placeholder page
+2. **Translation Function Conflicts**:
+   - Multiple `t()` functions with different signatures
+   - Some components use `useTranslation()` from react-i18next
+   - Others use `useLanguage()` with custom implementation
 
-3. **Button Location Analysis**:
-   ```typescript
-   // Line 296-304 in assignments.tsx
-   <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-     <DialogTrigger asChild>
-       <Button className="mt-4 lg:mt-0">
-         <Plus className="w-4 h-4 mr-2" />
-         Create Assignment
-       </Button>
-     </DialogTrigger>
-   ```
-   - ✅ Button exists and is properly implemented
-   - ❌ Conditional rendering may hide it in certain view states
-   - ❌ Navigation mismatch prevents users from reaching this page
+3. **RTL Implementation Issues**:
+   - CSS import order conflicts in `client/src/index.css`
+   - RTL layout wrapper not consistently applied
+   - Font loading conflicts between systems
 
 #### Impact Analysis
-- **Complete Feature Failure**: Teachers cannot create assignments
-- **User Frustration**: Expected functionality not accessible
-- **Workflow Disruption**: Core teacher task blocked
+- **Translation Errors**: `t()` function failures causing broken UI text
+- **Language Switching**: Inconsistent behavior between different pages
+- **RTL Support**: Persian/Arabic layout not working consistently
+- **Performance Issues**: Multiple translation systems loading simultaneously
 
 #### Files Requiring Changes
-- `client/src/lib/role-based-navigation.ts` - Update navigation route
-- `client/src/pages/teacher/assignments.tsx` - Fix view state management
+- `client/src/hooks/use-language.ts` - Consolidate translation logic
+- `client/src/hooks/useLanguage.tsx` - Remove duplicate implementation
+- `client/src/i18n/index.ts` - Standardize i18n configuration
+- `client/src/App.tsx` - Apply consistent language provider
 
 ---
 
-### PROBLEM 3: ASSIGNMENT FEEDBACK SYSTEM NON-FUNCTIONAL
+### PROBLEM 3: TERMINOLOGY CORRECTIONS NEEDED
 
 #### Root Cause Analysis
-The feedback system appears complete but has **conditional rendering issues**:
+Found **spelling and terminology issues** throughout the UI:
 
-1. **Grade Button Visibility**:
-   ```typescript
-   // Line 567-578 in assignments.tsx
-   {assignment.status === 'submitted' && !assignment.feedback && (
-     <Button size="sm" onClick={() => {
-       setSelectedAssignment(assignment);
-       setFeedbackDialogOpen(true);
-     }}>
-       <Edit className="w-3 h-3 mr-1" />
-       Grade
-     </Button>
-   )}
-   ```
-   - ✅ Grade button exists with proper logic
-   - ❌ Only shows for assignments with status='submitted' AND no existing feedback
-   - ❌ Current test data may not meet these conditions
+1. **Word "Dictation" Issues**:
+   - Search through codebase reveals no "dictation" features implemented
+   - User likely referring to general text/terminology corrections
+   - Translation accuracy issues in Persian/Arabic text
 
-2. **Feedback Dialog Implementation**:
-   ```typescript
-   // Lines 588-629 in assignments.tsx
-   <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
-     <DialogContent>
-       <DialogHeader>
-         <DialogTitle>Grade Assignment</DialogTitle>
-       </DialogHeader>
-   ```
-   - ✅ Dialog properly implemented
-   - ✅ Form validation and submission logic present
-   - ✅ API integration complete
-
-3. **Backend Integration**:
-   ```typescript
-   // submitFeedbackMutation in assignments.tsx
-   mutationFn: async ({ assignmentId, feedback, score }) => {
-     return apiRequest(`/api/teacher/assignments/${assignmentId}/feedback`, {
-       method: 'POST',
-       body: JSON.stringify({ feedback, score })
-     });
-   }
-   ```
-   - ✅ API call properly structured
-   - ✅ Error handling implemented
-   - ✅ Backend endpoint exists (`/api/teacher/assignments/:assignmentId/feedback`)
+2. **UI Text Quality Issues**:
+   - Inconsistent terminology between English and Persian
+   - Some translation keys returning raw keys instead of translated text
+   - Missing translations for newer features
 
 #### Impact Analysis
-- **Grading Workflow Broken**: Teachers cannot provide feedback
-- **Student Experience Degraded**: No assignment feedback mechanism
-- **Assessment Process Incomplete**: Core educational feature non-functional
-
-#### Files Requiring Changes
-- `server/routes.ts` - Verify assignment status data
-- `client/src/pages/teacher/assignments.tsx` - Debug conditional rendering
+- **Professional Appearance**: Spelling errors affect credibility
+- **User Experience**: Confusing terminology reduces usability
+- **Localization Quality**: Poor translations affect Persian market adoption
 
 ---
 
 ## 🛠️ DETAILED FIX IMPLEMENTATION PLAN
 
-### PHASE 1: Dashboard Consolidation (HIGH PRIORITY)
+### PHASE 1: Teacher Routing Consolidation (HIGH PRIORITY)
 
-#### Step 1.1: Remove Duplicate Dashboard Routes
-**Action**: Clean up App.tsx routing conflicts
+#### Step 1.1: Fix Authentication Redirect
+**File**: `client/src/pages/auth.tsx`
+**Action**: Update teacher redirect destination (line 52-53)
 ```typescript
-// Remove or redirect duplicate routes
+// BEFORE:
+} else if (user.role === 'teacher') {
+  setLocation("/teacher");
+
+// AFTER:
+} else if (user.role === 'teacher') {
+  setLocation("/teacher/dashboard");
+```
+
+#### Step 1.2: Consolidate Route Structure
+**File**: `client/src/App.tsx`
+**Action**: Make `/teacher` redirect to `/teacher/dashboard`
+```typescript
+// ADD new redirect route:
 <Route path="/teacher">
-  <ProtectedRoute>
-    <TeacherDashboardNew /> // Use this consistently
-  </ProtectedRoute>
+  <Redirect to="/teacher/dashboard" />
 </Route>
 ```
 
-#### Step 1.2: Archive Legacy Dashboard
-**Action**: Rename legacy `teacher-dashboard.tsx` to prevent conflicts
-```bash
-mv client/src/pages/teacher-dashboard.tsx client/src/pages/teacher-dashboard.tsx.backup
-```
-
-#### Step 1.3: Update Navigation Consistency
+#### Step 1.3: Verify Navigation Consistency
+**File**: `client/src/lib/role-based-navigation.ts`
 **Action**: Ensure all teacher navigation points to `/teacher/dashboard`
-**File**: `client/src/lib/role-based-navigation.ts`
-
-### PHASE 2: Assignment Button Fix (HIGH PRIORITY)
-
-#### Step 2.1: Fix Navigation Route Mismatch
-**Action**: Update sidebar navigation from homework to assignments
-**File**: `client/src/lib/role-based-navigation.ts`
-```typescript
-// Change from:
-{ path: "/teacher/homework", icon: "ClipboardCheck", label: t('teacher.assignments') }
-// To:
-{ path: "/teacher/assignments", icon: "ClipboardCheck", label: t('teacher.assignments') }
-```
-
-#### Step 2.2: Fix View State Management
-**Action**: Improve URL parameter handling and view state clearing
-**Implementation**:
-```typescript
-// Enhanced useEffect with proper cleanup
-useEffect(() => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const viewParam = urlParams.get('view');
-  if (viewParam && !isNaN(parseInt(viewParam))) {
-    setViewAssignmentId(parseInt(viewParam));
-  } else {
-    setViewAssignmentId(null);
-  }
-}, [location]);
-
-// Improved back navigation
-const handleBackToList = () => {
-  setViewAssignmentId(null);
-  window.history.replaceState({}, '', '/teacher/assignments');
-  setLocation('/teacher/assignments');
-};
-```
-
-#### Step 2.3: Add Debug Logging
-**Action**: Add temporary logging to identify view state issues
-```typescript
-console.log('Current viewAssignmentId:', viewAssignmentId);
-console.log('Show create button:', !viewAssignmentId);
-```
-
-### PHASE 3: Assignment Feedback System Fix (MEDIUM PRIORITY)
-
-#### Step 3.1: Investigate Assignment Status Data
-**Action**: Check database assignment statuses
-```sql
-SELECT id, title, status, feedback FROM homework WHERE teacherId = 44;
-```
-
-#### Step 3.2: Add Test Assignment with 'submitted' Status
-**Action**: Create test data to verify Grade button visibility
-```typescript
-// Temporary test data insertion
-const testAssignment = {
-  title: "Test Submitted Assignment",
-  status: "submitted",
-  feedback: null,
-  // ... other fields
-};
-```
-
-#### Step 3.3: Debug Conditional Rendering
-**Action**: Add logging for Grade button visibility logic
-```typescript
-console.log('Assignment status:', assignment.status);
-console.log('Has feedback:', !!assignment.feedback);
-console.log('Show Grade button:', assignment.status === 'submitted' && !assignment.feedback);
-```
-
-### PHASE 4: Date Picker Enhancement (LOW PRIORITY)
-
-#### Step 4.1: Verify Date Picker Functionality
-**Action**: Test current Calendar component implementation
-```typescript
-// Current implementation in assignments.tsx lines 432-447
-<Calendar
-  mode="single"
-  selected={field.value}
-  onSelect={(date) => {
-    if (date) {
-      field.onChange(date);
-    }
-  }}
-  disabled={(date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date < today;
-  }}
-  initialFocus
-/>
-```
-
-#### Step 4.2: API Integration Testing
-**Action**: Verify assignment creation API works end-to-end
-```bash
-curl -X POST "http://localhost:5000/api/teacher/assignments" \
-  -H "Authorization: Bearer [TOKEN]" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Test Assignment","description":"Test","studentId":1,"courseId":1,"dueDate":"2025-07-25","maxScore":100}'
-```
 
 ---
 
-## 🎯 EXECUTION SEQUENCE
+### PHASE 2: Internationalization System Unification (HIGH PRIORITY)
 
-### Immediate Actions (Next 30 minutes)
-1. **Fix Navigation Route**: Update role-based navigation from homework to assignments
-2. **Remove Dashboard Conflict**: Archive legacy teacher-dashboard.tsx
-3. **Test Assignment Page Access**: Verify Create Assignment button appears
-4. **Debug View State**: Add logging to identify state management issues
+#### Step 2.1: Choose Primary Translation System
+**Decision**: Use react-i18next (`client/src/hooks/useLanguage.tsx`) as primary system
+**Reason**: Most complete implementation with proper RTL support
 
-### Short Term (Next 60 minutes)
-1. **Verify Assignment Data**: Check database for assignment statuses
-2. **Test Feedback System**: Create test assignment with 'submitted' status
-3. **Fix Grade Button**: Debug conditional rendering logic
-4. **End-to-End Testing**: Complete assignment creation and grading workflow
+#### Step 2.2: Remove Duplicate Translation Systems
+**Actions**:
+1. **Archive** `client/src/hooks/use-language.ts` (rename to `.backup`)
+2. **Remove** legacy translation objects from `client/src/lib/i18n.ts`
+3. **Update** all components to use unified `useLanguage()` hook
 
-### Quality Assurance (Final 30 minutes)
-1. **User Journey Testing**: Complete teacher workflow from login to grading
-2. **Navigation Consistency**: Verify all teacher navigation works
-3. **Error Handling**: Test edge cases and error scenarios
-4. **Documentation Update**: Update replit.md with fixes
+#### Step 2.3: Fix CSS Import Order
+**File**: `client/src/index.css`
+**Action**: Move RTL imports before Tailwind imports
+```css
+/* RTL imports FIRST */
+@import './styles/rtl.css';
 
----
+/* THEN Tailwind */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
 
-## ✅ SUCCESS CRITERIA
-
-### Must Have (MVP)
-- [ ] Single functional teacher dashboard (no duplicates)
-- [ ] Create Assignment button visible and clickable
-- [ ] Assignment creation works end-to-end
-- [ ] Grade button appears for submitted assignments
-- [ ] Feedback submission functional
-
-### Should Have (Enhanced)
-- [ ] Proper URL state management for assignment views
-- [ ] Consistent navigation throughout teacher interface
-- [ ] Date picker prevents past date selection
-- [ ] Assignment status updates reflect in real-time
-
-### Could Have (Future Enhancement)
-- [ ] Assignment edit functionality
-- [ ] Bulk assignment operations
-- [ ] Advanced grading rubrics
-- [ ] Assignment analytics dashboard
+#### Step 2.4: Apply Consistent RTL Layout
+**File**: `client/src/App.tsx`
+**Action**: Ensure RTLLayout wraps entire application consistently
 
 ---
 
-## 🔬 TECHNICAL ASSESSMENT
+### PHASE 3: Translation Quality & Terminology Fixes (MEDIUM PRIORITY)
 
-### Tools Available ✅
-- **Database Access**: PostgreSQL with working API endpoints
-- **Authentication**: JWT-based auth system functional
-- **Frontend Framework**: React with proper state management
-- **UI Components**: shadcn/ui components properly imported
-- **Form Handling**: react-hook-form with Zod validation
-- **API Integration**: TanStack Query for data fetching
+#### Step 3.1: Audit Translation Files
+**Files**: `client/src/i18n/locales/*/common.json`
+**Actions**:
+1. Review all English terminology for spelling/grammar
+2. Verify Persian translations are culturally appropriate
+3. Add missing translation keys for new features
 
-### Constraints Identified ❌
-- **No Impossible Requirements**: All requested features are implementable
-- **No Missing Dependencies**: All required libraries present
-- **No Database Schema Issues**: Assignment tables exist and functional
-- **No Authentication Blocks**: Teacher role access working
+#### Step 3.2: Fix Translation Function Errors
+**Target**: Components showing `t()` function errors
+**Action**: Update components to use unified translation system
+
+#### Step 3.3: Add Missing Translations
+**Focus Areas**:
+- Teacher dashboard new features
+- Assignment system terminology
+- VoIP/communication features
+- Admin interface updates
+
+---
+
+### PHASE 4: Testing & Validation (HIGH PRIORITY)
+
+#### Step 4.1: Teacher Workflow Testing
+**Test Scenarios**:
+1. Teacher login → Should land directly on dashboard
+2. Navigate to `/teacher` → Should redirect to `/teacher/dashboard`
+3. Sidebar navigation → All links should work consistently
+4. Language switching → Should work on all teacher pages
+
+#### Step 4.2: Translation System Testing
+**Test Scenarios**:
+1. Switch between English/Persian/Arabic
+2. Verify RTL layout works correctly
+3. Check all UI text displays properly
+4. Test language persistence across page reloads
+
+#### Step 4.3: Assignment System Validation
+**Test Scenarios**:
+1. Create new assignment → Verify API integration
+2. Submit feedback → Test grading workflow
+3. View assignment status → Check conditional rendering
+
+---
+
+## 🎯 SUCCESS CRITERIA
+
+### Teacher Routing Success
+- [ ] Teachers login and land directly on dashboard
+- [ ] `/teacher` URL automatically redirects to `/teacher/dashboard`
+- [ ] All navigation remains consistent across sessions
+- [ ] No duplicate dashboard content or confusion
+
+### Internationalization Success
+- [ ] Single, unified translation system operational
+- [ ] All UI text displays correctly in all three languages
+- [ ] RTL layout works properly for Persian/Arabic
+- [ ] Language switching works smoothly without page refresh
+
+### Translation Quality Success
+- [ ] No spelling errors in English interface
+- [ ] Persian translations are accurate and culturally appropriate
+- [ ] All new features have proper translations
+- [ ] No `t()` function errors or missing translation keys
+
+---
+
+## ⚡ IMPLEMENTATION PRIORITY ORDER
+
+1. **CRITICAL**: Fix teacher authentication redirect (5 minutes)
+2. **CRITICAL**: Consolidate routing structure (10 minutes)
+3. **HIGH**: Unify translation system (30 minutes)
+4. **HIGH**: Fix RTL layout implementation (15 minutes)
+5. **MEDIUM**: Audit and fix translation content (45 minutes)
+6. **LOW**: Add missing translations for new features (30 minutes)
+
+**Total Estimated Time**: 2 hours 15 minutes
+
+---
+
+## 🔧 TECHNICAL NOTES
+
+### Current System Architecture
+- **Framework**: React 18 with TypeScript
+- **Routing**: Wouter for client-side navigation
+- **State Management**: TanStack React Query
+- **Authentication**: JWT-based with role-based redirects
+- **Internationalization**: Multiple systems (needs consolidation)
+- **Styling**: Tailwind CSS with RTL support
+
+### Dependencies Status
+- All required packages installed ✅
+- Database schema up to date ✅
+- API endpoints functional ✅
+- Assignment system operational ✅
 
 ### Risk Assessment
-- **Low Risk**: Frontend routing and state management fixes
-- **Medium Risk**: Database data consistency verification
-- **High Impact**: Restores core teacher functionality
+- **Low Risk**: Teacher routing fixes (isolated changes)
+- **Medium Risk**: Translation system consolidation (affects multiple components)
+- **Low Risk**: Translation content updates (non-breaking changes)
 
 ---
 
-## 📊 CURRENT DATA STATE
+## 📋 POST-IMPLEMENTATION CHECKLIST
 
-### Assignment API Response
-```json
-[
-  {
-    "id": 5,
-    "title": "Persian Poetry Analysis",
-    "description": "Analyze classical Persian poetry structure",
-    "status": "assigned", // ← Not 'submitted', explains missing Grade button
-    "studentName": "Ahmad Rezaei",
-    "courseName": "Advanced Persian Literature",
-    "dueDate": "2025-01-20T00:00:00.000Z",
-    "maxScore": 100,
-    "feedback": null
-  },
-  // ... more assignments
-]
-```
+### Immediate Testing Required
+- [ ] Teacher login flow works correctly
+- [ ] Dashboard loads without errors
+- [ ] Assignment creation/feedback functional
+- [ ] Language switching operational
+- [ ] RTL layout displays properly
 
-### Key Insight
-**Grade button not showing because current assignments have status='assigned', not 'submitted'**
+### User Acceptance Testing
+- [ ] Teachers can navigate intuitively
+- [ ] Persian interface is culturally appropriate
+- [ ] All terminology is professional and accurate
+- [ ] No broken UI elements or missing text
+
+### Documentation Updates
+- [ ] Update `replit.md` with routing changes
+- [ ] Document final translation system architecture
+- [ ] Record any new translation keys added
+- [ ] Note performance improvements achieved
 
 ---
 
-## 🚀 IMPLEMENTATION READINESS
+## 🎯 CONCLUSION
 
-### Assessment: **FULLY FIXABLE** ✅
-- All identified issues are frontend routing and state management problems
-- No fundamental architectural flaws
-- All backend APIs functional
-- Database schema complete
-- Authentication system working
+The teacher routing issue is **easily fixable** with simple redirect changes. The internationalization conflicts require **systematic consolidation** but are well within technical capabilities. All requested fixes are **achievable** with the available tools and codebase structure.
 
-### Estimated Timeline
-- **Total Time**: 2-3 hours
-- **Critical Fixes**: 1 hour (navigation + button visibility)
-- **Feedback System**: 1 hour (status data + testing)
-- **Testing & QA**: 1 hour (end-to-end verification)
+The assignment system is **already functional** - this analysis confirms the core educational features work correctly. The focus should be on **user experience optimization** through proper routing and translation system unification.
 
-### Implementation Confidence: **HIGH**
-- Clear problem identification ✅
-- Specific solution paths identified ✅
-- All necessary tools available ✅
-- No external dependencies required ✅
-- Minimal risk of breaking existing functionality ✅
-
----
-
-## 📝 CONCLUSION
-
-The teacher assignment system has **three distinct but solvable problems**:
-
-1. **Dashboard Duplication** → Simple routing cleanup
-2. **Missing Create Button** → Navigation route mismatch fix
-3. **Non-functional Feedback** → Data status verification needed
-
-**All issues are frontend-related and do not require database schema changes or complex architectural modifications.** The backend APIs are functional and properly implemented.
-
-**Next Step**: Begin implementation with navigation route fixes as the highest priority item.
+**Recommendation**: Proceed with immediate implementation following the priority order outlined above.
