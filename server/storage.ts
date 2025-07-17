@@ -123,6 +123,24 @@ export interface IStorage {
   getUpcomingSessions(userId: number): Promise<(Session & { tutorName: string, tutorAvatar: string })[]>;
   getAllSessions(): Promise<Session[]>;
   createSession(session: InsertSession): Promise<Session>;
+
+  // Teacher-specific methods (teachers only set availability, admin assigns them to classes)
+  getTeacherClasses(teacherId: number): Promise<any[]>; // Classes assigned by admin
+  getTeacherClass(classId: number, teacherId: number): Promise<any | undefined>;
+  getTeacherAssignments(teacherId: number): Promise<any[]>;
+  createTeacherAssignment(assignment: any): Promise<any>;
+  updateAssignmentFeedback(assignmentId: number, feedback: string, score?: number): Promise<any>;
+  getTeacherResources(teacherId: number): Promise<any[]>;
+  createTeacherResource(resource: any): Promise<any>;
+  deleteTeacherResource(resourceId: number, teacherId: number): Promise<void>;
+  getSessionAttendance(sessionId: number): Promise<any[]>;
+  markAttendance(sessionId: number, studentId: number, status: 'present' | 'absent' | 'late'): Promise<any>;
+  getAbsenteeReport(teacherId: number): Promise<any[]>; // Students absent 2+ consecutive sessions
+  getSessionMessages(sessionId: number): Promise<any[]>;
+  sendSessionMessage(messageData: any): Promise<any>;
+  getClassMessages(classId: number): Promise<any[]>;
+  createClassMessage(messageData: any): Promise<any>;
+  getRoomEquipment(roomId: number): Promise<any>;
   updateSessionStatus(id: number, status: string): Promise<Session | undefined>;
 
   // Messages
