@@ -141,17 +141,22 @@ export function CreateAssignmentModal({ children }: CreateAssignmentModalProps) 
                   <Button
                     variant="outline"
                     className="w-full justify-start text-left font-normal"
+                    type="button"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {dueDate ? format(dueDate, "PPP") : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={dueDate}
-                    onSelect={setDueDate}
+                    onSelect={(date) => {
+                      setDueDate(date);
+                    }}
+                    disabled={(date) => date < new Date()}
                     initialFocus
+                    className="rounded-md border"
                   />
                 </PopoverContent>
               </Popover>
