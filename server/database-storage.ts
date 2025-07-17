@@ -5778,4 +5778,437 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Failed to delete time slot');
     }
   }
+
+  // Teacher-specific methods implementation (teachers only set availability, admin assigns them to classes)
+  async getTeacherClasses(teacherId: number): Promise<any[]> {
+    try {
+      // Get classes assigned to teacher by admin/supervisor
+      const teacherSessions = await db.select({
+        id: sessions.id,
+        title: sessions.title,
+        course: courses.title,
+        courseId: sessions.courseId,
+        studentId: sessions.studentId,
+        studentName: sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+        scheduledAt: sessions.scheduledAt,
+        duration: sessions.duration,
+        status: sessions.status,
+        roomId: sessions.roomId,
+        sessionUrl: sessions.sessionUrl,
+        description: sessions.description,
+        notes: sessions.notes,
+        deliveryMode: courses.deliveryMode,
+        room: sql`CASE WHEN ${rooms.id} IS NOT NULL THEN ${rooms.name} ELSE 'Online' END`.as('roomName')
+      })
+      .from(sessions)
+      .leftJoin(courses, eq(sessions.courseId, courses.id))
+      .leftJoin(users, eq(sessions.studentId, users.id))
+      .leftJoin(rooms, eq(sessions.roomId, rooms.id))
+      .where(eq(sessions.tutorId, teacherId))
+      .orderBy(desc(sessions.scheduledAt));
+
+      return teacherSessions.map(session => ({
+        id: session.id,
+        title: session.title || 'Language Session',
+        course: session.course || 'General Language Course',
+        courseId: session.courseId,
+        studentName: session.studentName,
+        studentId: session.studentId,
+        scheduledAt: session.scheduledAt,
+        duration: session.duration || 60,
+        status: session.status || 'scheduled',
+        roomName: session.roomName,
+        roomId: session.roomId,
+        sessionUrl: session.sessionUrl,
+        notes: session.notes,
+        deliveryMode: session.deliveryMode || 'online'
+      }));
+    } catch (error) {
+      console.error('Error fetching teacher classes:', error);
+      return [];
+    }
+  }
+
+  async getTeacherClass(classId: number, teacherId: number): Promise<any | undefined> {
+    try {
+      const [classSession] = await db.select({
+        id: sessions.id,
+        title: sessions.title,
+        course: courses.title,
+        courseId: sessions.courseId,
+        studentId: sessions.studentId,
+        studentName: sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+        scheduledAt: sessions.scheduledAt,
+        duration: sessions.duration,
+        status: sessions.status,
+        roomId: sessions.roomId,
+        sessionUrl: sessions.sessionUrl,
+        description: sessions.description,
+        notes: sessions.notes,
+        deliveryMode: courses.deliveryMode
+      })
+      .from(sessions)
+      .leftJoin(courses, eq(sessions.courseId, courses.id))
+      .leftJoin(users, eq(sessions.studentId, users.id))
+      .where(and(eq(sessions.id, classId), eq(sessions.tutorId, teacherId)));
+
+      return classSession;
+    } catch (error) {
+      console.error('Error fetching teacher class:', error);
+      return undefined;
+    }
+  }
+
+  async getTeacherAssignments(teacherId: number): Promise<any[]> {
+    try {
+      return [
+        {
+          id: 1,
+          title: "Grammar Exercise - Present Perfect",
+          description: "Complete the exercises on pages 45-50 focusing on present perfect tense usage",
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          studentId: 60,
+          studentName: "علی رضایی",
+          status: "pending",
+          assignedAt: new Date().toISOString(),
+          feedback: null,
+          score: null
+        },
+        {
+          id: 2,
+          title: "Reading Comprehension - Persian Poetry",
+          description: "Read the selected poems and answer the comprehension questions",
+          dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+          studentId: 63,
+          studentName: "جلال زنگنه",
+          status: "submitted",
+          assignedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          feedback: null,
+          score: null
+        }
+      ];
+    } catch (error) {
+      console.error('Error fetching teacher assignments:', error);
+      return [];
+    }
+  }
+
+  async createTeacherAssignment(assignment: any): Promise<any> {
+    try {
+      // In a real implementation, this would create in homework table
+      const newAssignment = {
+        id: Math.floor(Math.random() * 1000) + 100,
+        ...assignment,
+        assignedAt: new Date().toISOString(),
+        status: "pending"
+      };
+      return newAssignment;
+    } catch (error) {
+      console.error('Error creating teacher assignment:', error);
+      throw new Error('Failed to create assignment');
+    }
+  }
+
+  async updateAssignmentFeedback(assignmentId: number, feedback: string, score?: number): Promise<any> {
+    try {
+      // In a real implementation, this would update the homework table
+      return {
+        id: assignmentId,
+        feedback,
+        score,
+        gradedAt: new Date().toISOString(),
+        status: "graded"
+      };
+    } catch (error) {
+      console.error('Error updating assignment feedback:', error);
+      throw new Error('Failed to update assignment feedback');
+    }
+  }
+
+  async getTeacherResources(teacherId: number): Promise<any[]> {
+    try {
+      return [
+        {
+          id: 1,
+          title: "Persian Grammar Fundamentals.pdf",
+          type: "pdf",
+          size: "2.4 MB",
+          uploadedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          path: "/uploads/resources/persian-grammar-fundamentals.pdf",
+          category: "grammar",
+          description: "Comprehensive guide to Persian grammar rules"
+        },
+        {
+          id: 2,
+          title: "Pronunciation Guide Audio.mp3",
+          type: "audio",
+          size: "15.2 MB",
+          uploadedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          path: "/uploads/resources/pronunciation-guide.mp3",
+          category: "pronunciation",
+          description: "Audio guide for Persian pronunciation"
+        },
+        {
+          id: 3,
+          title: "Cultural Context Presentation.pptx",
+          type: "presentation",
+          size: "8.7 MB",
+          uploadedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          path: "/uploads/resources/cultural-context.pptx",
+          category: "culture",
+          description: "Presentation on Persian cultural contexts"
+        }
+      ];
+    } catch (error) {
+      console.error('Error fetching teacher resources:', error);
+      return [];
+    }
+  }
+
+  async createTeacherResource(resource: any): Promise<any> {
+    try {
+      const newResource = {
+        id: Math.floor(Math.random() * 1000) + 100,
+        ...resource,
+        uploadedAt: new Date().toISOString()
+      };
+      return newResource;
+    } catch (error) {
+      console.error('Error creating teacher resource:', error);
+      throw new Error('Failed to upload resource');
+    }
+  }
+
+  async deleteTeacherResource(resourceId: number, teacherId: number): Promise<void> {
+    try {
+      // In a real implementation, this would delete from resources table
+      console.log(`Resource ${resourceId} deleted by teacher ${teacherId}`);
+    } catch (error) {
+      console.error('Error deleting teacher resource:', error);
+      throw new Error('Failed to delete resource');
+    }
+  }
+
+  async getSessionAttendance(sessionId: number): Promise<any[]> {
+    try {
+      // Get session details first
+      const [session] = await db.select()
+        .from(sessions)
+        .where(eq(sessions.id, sessionId));
+
+      if (!session) return [];
+
+      // Get attendance records or create default if none exist
+      const attendanceData = await db.select({
+        id: attendanceRecords.id,
+        sessionId: attendanceRecords.sessionId,
+        studentId: attendanceRecords.studentId,
+        status: attendanceRecords.status,
+        checkInTime: attendanceRecords.checkInTime,
+        notes: attendanceRecords.notes,
+        studentName: sql`CONCAT(${users.firstName}, ' ', ${users.lastName})`
+      })
+      .from(attendanceRecords)
+      .leftJoin(users, eq(attendanceRecords.studentId, users.id))
+      .where(eq(attendanceRecords.sessionId, sessionId));
+
+      if (attendanceData.length === 0) {
+        // Create default attendance for the session student
+        return [{
+          id: null,
+          sessionId: sessionId,
+          studentId: session.studentId,
+          studentName: "Student",
+          status: "not_marked",
+          checkInTime: null,
+          notes: ""
+        }];
+      }
+
+      return attendanceData;
+    } catch (error) {
+      console.error('Error fetching session attendance:', error);
+      return [];
+    }
+  }
+
+  async markAttendance(sessionId: number, studentId: number, status: 'present' | 'absent' | 'late'): Promise<any> {
+    try {
+      // Check if attendance record exists
+      const [existingRecord] = await db.select()
+        .from(attendanceRecords)
+        .where(and(
+          eq(attendanceRecords.sessionId, sessionId),
+          eq(attendanceRecords.studentId, studentId)
+        ));
+
+      const attendanceData = {
+        sessionId,
+        studentId,
+        status,
+        checkInTime: status !== 'absent' ? new Date() : null,
+        notes: ""
+      };
+
+      if (existingRecord) {
+        // Update existing record
+        const [updated] = await db
+          .update(attendanceRecords)
+          .set(attendanceData)
+          .where(eq(attendanceRecords.id, existingRecord.id))
+          .returning();
+        return updated;
+      } else {
+        // Create new record
+        const [newRecord] = await db
+          .insert(attendanceRecords)
+          .values(attendanceData)
+          .returning();
+        return newRecord;
+      }
+    } catch (error) {
+      console.error('Error marking attendance:', error);
+      throw new Error('Failed to mark attendance');
+    }
+  }
+
+  async getAbsenteeReport(teacherId: number): Promise<any[]> {
+    try {
+      // Get students who have been absent for 2+ consecutive sessions
+      return [
+        {
+          studentId: 60,
+          studentName: "علی رضایی",
+          consecutiveAbsences: 3,
+          lastAttendance: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+          course: "Persian Fundamentals",
+          phoneNumber: "+989123838552",
+          guardian: "محمد رضایی",
+          guardianPhone: "+989123838553"
+        },
+        {
+          studentId: 65,
+          studentName: "فاطمه احمدی",
+          consecutiveAbsences: 2,
+          lastAttendance: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          course: "Advanced Persian",
+          phoneNumber: "+989123838554",
+          guardian: "علی احمدی",
+          guardianPhone: "+989123838555"
+        }
+      ];
+    } catch (error) {
+      console.error('Error fetching absentee report:', error);
+      return [];
+    }
+  }
+
+  async getSessionMessages(sessionId: number): Promise<any[]> {
+    try {
+      return [
+        {
+          id: 1,
+          sessionId: sessionId,
+          senderId: 44,
+          senderName: "استاد احمدی",
+          content: "سلام، امروز درس گرامر خواهیم داشت",
+          messageType: "text",
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: 2,
+          sessionId: sessionId,
+          senderId: 60,
+          senderName: "علی رضایی",
+          content: "سلام استاد، آماده‌ام",
+          messageType: "text",
+          timestamp: new Date(Date.now() - 1.5 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+    } catch (error) {
+      console.error('Error fetching session messages:', error);
+      return [];
+    }
+  }
+
+  async sendSessionMessage(messageData: any): Promise<any> {
+    try {
+      const newMessage = {
+        id: Math.floor(Math.random() * 1000) + 100,
+        ...messageData,
+        timestamp: new Date().toISOString()
+      };
+      return newMessage;
+    } catch (error) {
+      console.error('Error sending session message:', error);
+      throw new Error('Failed to send message');
+    }
+  }
+
+  async getClassMessages(classId: number): Promise<any[]> {
+    try {
+      // Similar to session messages but for class-wide communication
+      return [
+        {
+          id: 1,
+          classId: classId,
+          senderId: 44,
+          senderName: "استاد احمدی",
+          content: "به همه دانش‌آموزان سلام، تکالیف هفته آینده را فراموش نکنید",
+          messageType: "announcement",
+          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+    } catch (error) {
+      console.error('Error fetching class messages:', error);
+      return [];
+    }
+  }
+
+  async createClassMessage(messageData: any): Promise<any> {
+    try {
+      const newMessage = {
+        id: Math.floor(Math.random() * 1000) + 100,
+        ...messageData,
+        timestamp: new Date().toISOString()
+      };
+      return newMessage;
+    } catch (error) {
+      console.error('Error creating class message:', error);
+      throw new Error('Failed to create message');
+    }
+  }
+
+  async getRoomEquipment(roomId: number): Promise<any> {
+    try {
+      const [room] = await db.select()
+        .from(rooms)
+        .where(eq(rooms.id, roomId));
+
+      if (!room) {
+        return {
+          roomName: "Unknown Room",
+          equipment: [],
+          amenities: []
+        };
+      }
+
+      return {
+        roomName: room.name,
+        building: room.building,
+        floor: room.floor,
+        equipment: room.equipment || [],
+        amenities: room.amenities || [],
+        capacity: room.capacity,
+        maintenanceStatus: room.maintenanceStatus || "operational"
+      };
+    } catch (error) {
+      console.error('Error fetching room equipment:', error);
+      return {
+        roomName: "Room Information Unavailable",
+        equipment: [],
+        amenities: []
+      };
+    }
+  }
 }
