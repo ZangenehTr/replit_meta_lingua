@@ -143,9 +143,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/teacher">
-        <ProtectedRoute>
-          <TeacherDashboardNew />
-        </ProtectedRoute>
+        <Redirect to="/teacher/dashboard" />
       </Route>
       <Route path="/analytics">
         <ProtectedRoute>

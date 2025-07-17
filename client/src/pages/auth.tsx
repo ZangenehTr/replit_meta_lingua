@@ -50,7 +50,7 @@ export default function Auth() {
       if (user.role === 'admin') {
         setLocation("/admin");
       } else if (user.role === 'teacher') {
-        setLocation("/teacher");
+        setLocation("/teacher/dashboard");
       } else {
         setLocation("/dashboard");
       }
