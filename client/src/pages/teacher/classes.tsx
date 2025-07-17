@@ -129,7 +129,7 @@ export default function TeacherClassesPage() {
                       <div>
                         <h3 className="font-semibold">{cls.title}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-300">
-                          Completed on {format(new Date(cls.endDate), 'MMM d, yyyy')}
+                          Completed on {cls.endDate ? format(new Date(cls.endDate), 'MMM d, yyyy') : 'Date unavailable'}
                         </p>
                       </div>
                       <div className="flex gap-2">

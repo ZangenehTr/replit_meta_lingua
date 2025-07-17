@@ -56,6 +56,10 @@ export default function TeacherAssignmentsPage() {
     } else {
       setViewAssignmentId(null); // Clear when no view parameter
     }
+    
+    // Debug logging for button visibility
+    console.log('Current viewAssignmentId:', viewParam ? parseInt(viewParam) : null);
+    console.log('Show create button:', !viewParam);
   }, [location]);
 
   const form = useForm<AssignmentFormData>({
@@ -140,6 +144,7 @@ export default function TeacherAssignmentsPage() {
   };
 
   const handleBackToList = () => {
+    console.log('Back to list clicked, clearing view state');
     setViewAssignmentId(null);
     // Clear URL parameters properly
     window.history.replaceState({}, '', '/teacher/assignments');
@@ -300,6 +305,13 @@ export default function TeacherAssignmentsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Debug Info */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mb-4 p-2 bg-yellow-100 text-xs text-yellow-800 rounded">
+            View State Debug: viewAssignmentId = {viewAssignmentId}, Show Create Button = {!viewAssignmentId ? 'YES' : 'NO'}
+          </div>
+        )}
+        
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div>
@@ -568,6 +580,7 @@ export default function TeacherAssignmentsPage() {
                         <Button 
                           size="sm"
                           onClick={() => {
+                            console.log('Grade button clicked for assignment:', assignment.id);
                             setSelectedAssignment(assignment);
                             setFeedbackDialogOpen(true);
                           }}
@@ -575,6 +588,12 @@ export default function TeacherAssignmentsPage() {
                           <Edit className="w-3 h-3 mr-1" />
                           Grade
                         </Button>
+                      )}
+                      {/* Debug: Show grade button logic */}
+                      {process.env.NODE_ENV === 'development' && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Status: {assignment.status}, Feedback: {assignment.feedback ? 'Yes' : 'No'}
+                        </div>
                       )}
                     </div>
                   </div>
