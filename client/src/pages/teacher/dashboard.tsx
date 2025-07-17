@@ -1,567 +1,389 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppLayout } from "@/components/layout/app-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
-import { 
-  Users, 
-  Calendar, 
-  BookOpen, 
-  ClipboardCheck, 
-  GraduationCap, 
-  TrendingUp, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle,
-  Video,
-  MessageSquare,
-  Award,
-  DollarSign,
-  Phone,
-  FileText,
-  BarChart3,
-  Settings,
-  Star,
-  Target,
-  PlayCircle,
-  PauseCircle,
-  Plus
-} from "lucide-react";
-import { Link } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
-import { useLanguage } from "@/hooks/use-language";
-import { useState } from "react";
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Calendar, Users, BookOpen, DollarSign, Clock, Star, MessageCircle, Video, FileText, ChevronRight, Play, PauseCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-interface TeacherStats {
-  totalClasses: number;
-  totalStudents: number;
-  completedLessons: number;
-  pendingAssignments: number;
-  averageRating: number;
-  monthlyEarnings: number;
-  attendanceRate: number;
-  nextPaymentDate: string;
-}
+export default function TeacherDashboard() {
+  const [activeTab, setActiveTab] = useState('overview');
 
-interface TeacherClass {
-  id: number;
-  name: string;
-  studentCount: number;
-  level: string;
-  language: string;
-  nextSession?: {
-    date: string;
-    time: string;
-  };
-  progress: number;
-  status: 'active' | 'completed' | 'scheduled';
-}
-
-interface Student {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  level: string;
-  progress: number;
-  lastSessionDate?: string;
-  attendanceRate: number;
-  status: 'active' | 'inactive' | 'completed';
-}
-
-interface Assignment {
-  id: number;
-  title: string;
-  dueDate: string;
-  className: string;
-  submittedCount: number;
-  totalStudents: number;
-  status: 'pending' | 'graded' | 'overdue';
-}
-
-interface UpcomingSession {
-  id: number;
-  title: string;
-  time: string;
-  duration: number;
-  studentCount: number;
-  type: 'group' | 'individual';
-  status: 'scheduled' | 'ongoing' | 'completed';
-}
-
-function TeacherDashboard() {
-  const { user } = useAuth();
-  const { t } = useLanguage();
-  const [selectedTab, setSelectedTab] = useState("overview");
-  const queryClient = useQueryClient();
-
-  // Teacher theme colors
-  const themeColors = {
-    primary: "bg-purple-600",
-    primaryHover: "hover:bg-purple-700",
-    light: "bg-purple-50",
-    border: "border-purple-200",
-    text: "text-purple-800",
-    accent: "bg-purple-100 text-purple-800"
-  };
-
-  // Data queries
-  const { data: teacherStats } = useQuery<TeacherStats>({
-    queryKey: ["/api/teacher/stats"],
+  // Fetch teacher dashboard stats
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/teacher/dashboard-stats']
   });
 
-  const { data: classes = [] } = useQuery<TeacherClass[]>({
-    queryKey: ["/api/teacher/classes"],
+  // Fetch teacher classes
+  const { data: classes, isLoading: classesLoading } = useQuery({
+    queryKey: ['/api/teacher/classes']
   });
 
-  const { data: students = [] } = useQuery<Student[]>({
-    queryKey: ["/api/teacher/students"],
+  // Fetch upcoming sessions
+  const { data: upcomingSessions, isLoading: sessionsLoading } = useQuery({
+    queryKey: ['/api/teacher/sessions/upcoming']
   });
 
-  const { data: assignments = [] } = useQuery<Assignment[]>({
-    queryKey: ["/api/teacher/assignments"],
+  // Fetch assignments
+  const { data: assignments, isLoading: assignmentsLoading } = useQuery({
+    queryKey: ['/api/teacher/assignments']
   });
 
-  const { data: upcomingSessions = [] } = useQuery<UpcomingSession[]>({
-    queryKey: ["/api/teacher/sessions/upcoming"],
-  });
-
-  // Mutation for starting sessions
-  const startSessionMutation = useMutation({
-    mutationFn: async (sessionId: number) => {
-      const response = await fetch(`/api/teacher/sessions/${sessionId}/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      if (!response.ok) throw new Error('Failed to start session');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/teacher/sessions/upcoming"] });
-    }
-  });
-
-  // Helper functions
-  const getProgressColor = (progress: number) => {
-    if (progress >= 80) return 'text-green-600';
-    if (progress >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const getLevelColor = (level: string) => {
-    switch (level.toLowerCase()) {
-      case 'beginner': return 'bg-blue-100 text-blue-800';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'advanced': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  if (statsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fa-IR', {
       style: 'currency',
       currency: 'IRR',
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
+  const getServiceIcon = (type: string) => {
+    switch (type) {
+      case 'in-person':
+        return '🏢';
+      case 'online':
+        return '💻';
+      case 'callern':
+        return '📞';
+      default:
+        return '💻';
+    }
+  };
+
   return (
-    <AppLayout>
-      <div className="space-y-6">
-        {/* Professional Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl shadow-lg">
-              <GraduationCap className="h-8 w-8 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Teacher Dashboard</h1>
+              <p className="text-gray-600">Manage your classes, assignments, and student progress</p>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t('teacher.dashboard')}</h1>
-              <p className="text-gray-600 mt-1">
-                {t('teacher.welcomeMessage')}
-              </p>
+            <div className="mt-4 lg:mt-0 flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Star className="w-5 h-5 text-yellow-500" />
+                <span className="font-semibold text-gray-900">{stats?.overview?.rating || 4.8}</span>
+                <span className="text-gray-600">({stats?.overview?.totalReviews || 156} reviews)</span>
+              </div>
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                Active Teacher
+              </Badge>
             </div>
-          </div>
-          <div className="flex gap-3">
-            <Link href="/teacher/classes/new">
-              <Button className="bg-purple-600 hover:bg-purple-700 shadow-md">
-                <Plus className="h-4 w-4 mr-2" />
-                {t('teacher.newClass')}
-              </Button>
-            </Link>
-            <Link href="/teacher/assignments/create">
-              <Button variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
-                <ClipboardCheck className="h-4 w-4 mr-2" />
-                {t('teacher.createAssignment')}
-              </Button>
-            </Link>
           </div>
         </div>
+      </div>
 
-        {/* Key Performance Indicators */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('teacher.totalClasses')}</CardTitle>
-              <BookOpen className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{teacherStats?.totalClasses || classes?.length || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {students?.length || 0} {t('teacher.totalStudents').toLowerCase()}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('teacher.completedLessons')}</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{teacherStats?.completedLessons || 45}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('teacher.thisMonth')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('teacher.averageRating')}</CardTitle>
-              <Star className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{teacherStats?.averageRating || 4.8}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('teacher.studentFeedbackAverage')}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('teacher.monthlyEarnings')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(teacherStats?.monthlyEarnings || 28500000)}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100">Total Classes</p>
+                  <p className="text-3xl font-bold">{stats?.overview?.totalClasses || 0}</p>
+                </div>
+                <BookOpen className="w-12 h-12 text-blue-200" />
               </div>
-              <p className="text-xs text-muted-foreground">
-                {t('teacher.nextPayment')}: {teacherStats?.nextPaymentDate || 'January 15th'}
-              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100">Students</p>
+                  <p className="text-3xl font-bold">{stats?.overview?.totalStudents || 0}</p>
+                </div>
+                <Users className="w-12 h-12 text-green-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100">Monthly Earnings</p>
+                  <p className="text-2xl font-bold">{formatCurrency(stats?.overview?.monthlyEarnings || 0)}</p>
+                </div>
+                <DollarSign className="w-12 h-12 text-purple-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100">Upcoming Classes</p>
+                  <p className="text-3xl font-bold">{stats?.overview?.upcomingClasses || 0}</p>
+                </div>
+                <Clock className="w-12 h-12 text-orange-200" />
+              </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">{t('dashboard.overview')}</TabsTrigger>
-            <TabsTrigger value="classes">{t('teacher.classes')}</TabsTrigger>
-            <TabsTrigger value="students">{t('teacher.students')}</TabsTrigger>
-            <TabsTrigger value="assignments">{t('teacher.assignments')}</TabsTrigger>
-            <TabsTrigger value="schedule">{t('teacher.schedule')}</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:grid-cols-5">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="classes">Classes</TabsTrigger>
+            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="schedule">Schedule</TabsTrigger>
+            <TabsTrigger value="availability">Availability</TabsTrigger>
           </TabsList>
 
+          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Upcoming Sessions */}
+              {/* Today's Schedule */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    {t('teacher.todaySessions')}
+                  <CardTitle className="flex items-center">
+                    <Calendar className="w-5 h-5 mr-2" />
+                    Today's Schedule
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {upcomingSessions.length > 0 ? (
-                    upcomingSessions.slice(0, 3).map((session) => (
-                      <div key={session.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <h4 className="font-medium">{session.title}</h4>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="h-4 w-4" />
-                            {session.time} • {session.duration} min
-                            <Users className="h-4 w-4 ml-2" />
-                            {session.studentCount} students
-                          </div>
+                <CardContent>
+                  {upcomingSessions?.slice(0, 3).map((session: any) => (
+                    <div key={session.id} className="flex items-center justify-between py-3 border-b last:border-b-0">
+                      <div className="flex items-center space-x-3">
+                        <div className="text-2xl">{getServiceIcon(session.type)}</div>
+                        <div>
+                          <p className="font-medium">{session.title}</p>
+                          <p className="text-sm text-gray-600">{session.studentName}</p>
+                          <p className="text-sm text-blue-600">
+                            {new Date(session.scheduledAt).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={session.status === 'scheduled' ? 'default' : 'secondary'}>
-                            {session.status}
+                      </div>
+                      <Button size="sm" variant="outline">
+                        <Video className="w-4 h-4 mr-1" />
+                        Join
+                      </Button>
+                    </div>
+                  )) || (
+                    <p className="text-gray-500 text-center py-8">No classes scheduled for today</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Recent Activity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {stats?.recentActivity?.map((activity: any, index: number) => (
+                      <div key={index} className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <BookOpen className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{activity.title}</p>
+                          <p className="text-xs text-gray-600">with {activity.student}</p>
+                        </div>
+                        <Badge variant={activity.status === 'completed' ? 'default' : 'secondary'}>
+                          {activity.status}
+                        </Badge>
+                      </div>
+                    )) || (
+                      <p className="text-gray-500 text-center py-4">No recent activity</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Classes Tab */}
+          <TabsContent value="classes" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>My Classes</CardTitle>
+                <p className="text-sm text-gray-600">Classes assigned to you by administrators</p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {classes?.map((classItem: any) => (
+                    <Card key={classItem.id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="text-2xl mb-2">{getServiceIcon(classItem.type)}</div>
+                          <Badge variant={classItem.status === 'scheduled' ? 'default' : 'secondary'}>
+                            {classItem.status}
                           </Badge>
-                          {session.status === 'scheduled' && (
-                            <Button
-                              size="sm"
-                              onClick={() => startSessionMutation.mutate(session.id)}
-                              disabled={startSessionMutation.isPending}
-                            >
-                              <PlayCircle className="h-4 w-4 mr-1" />
-                              {t('teacher.start')}
+                        </div>
+                        <h3 className="font-semibold mb-2">{classItem.title}</h3>
+                        <p className="text-sm text-gray-600 mb-2">{classItem.course}</p>
+                        <div className="flex items-center space-x-2 mb-3">
+                          <Avatar className="w-6 h-6">
+                            <AvatarImage src={classItem.studentAvatar} />
+                            <AvatarFallback>{classItem.studentName?.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm">{classItem.studentName}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                          <span>{new Date(classItem.scheduledAt).toLocaleDateString()}</span>
+                          <span>{classItem.duration} min</span>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <MessageCircle className="w-3 h-3 mr-1" />
+                            Chat
+                          </Button>
+                          {classItem.type === 'online' && (
+                            <Button size="sm" className="flex-1">
+                              <Video className="w-3 h-3 mr-1" />
+                              Join
                             </Button>
                           )}
                         </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground text-center py-4">
-                      {t('teacher.noSessionsToday')}
-                    </p>
+                      </CardContent>
+                    </Card>
+                  )) || (
+                    <div className="col-span-full text-center py-8 text-gray-500">
+                      No classes assigned yet. Contact your administrator for class assignments.
+                    </div>
                   )}
-                </CardContent>
-              </Card>
-
-              {/* Recent Assignments */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ClipboardCheck className="h-5 w-5" />
-                    {t('teacher.assignmentStatus')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {assignments.length > 0 ? (
-                    assignments.slice(0, 3).map((assignment) => (
-                      <div key={assignment.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <h4 className="font-medium">{assignment.title}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {assignment.className} • Due: {new Date(assignment.dueDate).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">
-                            {assignment.submittedCount}/{assignment.totalStudents}
-                          </span>
-                          <Badge className={getStatusColor(assignment.status)}>
-                            {assignment.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground text-center py-4">
-                      {t('teacher.noAssignmentsPending')}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Performance Alerts */}
-            {teacherStats?.attendanceRate && teacherStats.attendanceRate < 80 && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Class attendance is below 80%. Consider engaging students with interactive activities.
-                </AlertDescription>
-              </Alert>
-            )}
-          </TabsContent>
-
-          <TabsContent value="classes" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {classes?.map((classItem) => (
-                <Card key={classItem.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{classItem.name}</CardTitle>
-                      <Badge className={getLevelColor(classItem.level)}>
-                        {classItem.level}
-                      </Badge>
-                    </div>
-                    <CardDescription>
-                      {classItem.studentCount} students • {classItem.language}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Course Progress</span>
-                        <span>{classItem.progress}%</span>
-                      </div>
-                      <Progress value={classItem.progress} className="h-2" />
-                    </div>
-                    
-                    {classItem.nextSession && (
-                      <div className="text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          Next: {classItem.nextSession.date} at {classItem.nextSession.time}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2">
-                      <Link href={`/teacher/classes/${classItem.id}`}>
-                        <Button size="sm" variant="outline" className="flex-1">
-                          <Video className="h-4 w-4 mr-1" />
-                          Enter Class
-                        </Button>
-                      </Link>
-                      <Button size="sm" variant="outline">
-                        <MessageSquare className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="students" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Student Management</CardTitle>
-                <CardDescription>
-                  Monitor student progress and engagement across all your classes
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {students?.map((student) => (
-                    <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarFallback>
-                            {student.firstName?.[0] || 'S'}{student.lastName?.[0] || 'T'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h4 className="font-medium">
-                            {student.firstName} {student.lastName}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            {student.email} • {student.level}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-center">
-                          <div className="text-sm font-medium">{student.progress}%</div>
-                          <div className="text-xs text-muted-foreground">Progress</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-sm font-medium">{student.attendanceRate}%</div>
-                          <div className="text-xs text-muted-foreground">Attendance</div>
-                        </div>
-                        <Badge className={getStatusColor(student.status)}>
-                          {student.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="assignments" className="space-y-4">
+          {/* Assignments Tab */}
+          <TabsContent value="assignments" className="space-y-6">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Assignment Management</CardTitle>
-                    <CardDescription>
-                      Create, track, and grade student assignments
-                    </CardDescription>
-                  </div>
-                  <Link href="/teacher/assignments/create">
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Assignment
-                    </Button>
-                  </Link>
-                </div>
+                <CardTitle>Student Assignments</CardTitle>
+                <p className="text-sm text-gray-600">Create and manage assignments for your students</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {assignments?.map((assignment) => (
-                    <div key={assignment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">{assignment.title}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {assignment.className} • Due: {new Date(assignment.dueDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-center">
-                          <div className="text-sm font-medium">
-                            {assignment.submittedCount}/{assignment.totalStudents}
+                  {assignments?.map((assignment: any) => (
+                    <Card key={assignment.id} className="border border-gray-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="font-semibold mb-1">{assignment.title}</h3>
+                            <p className="text-sm text-gray-600 mb-2">{assignment.description}</p>
+                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              <span>Student: {assignment.studentName}</span>
+                              <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+                              <span>Course: {assignment.courseName}</span>
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground">Submitted</div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={
+                              assignment.status === 'submitted' ? 'default' :
+                              assignment.status === 'graded' ? 'secondary' : 'outline'
+                            }>
+                              {assignment.status}
+                            </Badge>
+                            <Button size="sm" variant="outline">
+                              <FileText className="w-3 h-3 mr-1" />
+                              View
+                            </Button>
+                          </div>
                         </div>
-                        <Badge className={getStatusColor(assignment.status)}>
-                          {assignment.status}
-                        </Badge>
-                        <Button size="sm" variant="outline">
-                          <FileText className="h-4 w-4 mr-1" />
-                          Review
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                      </CardContent>
+                    </Card>
+                  )) || (
+                    <p className="text-center py-8 text-gray-500">No assignments created yet</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="schedule" className="space-y-4">
+          {/* Schedule Tab */}
+          <TabsContent value="schedule" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Weekly Schedule</CardTitle>
-                <CardDescription>
-                  Your teaching schedule and upcoming sessions
-                </CardDescription>
+                <p className="text-sm text-gray-600">Your class schedule for this week</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {upcomingSessions?.map((session) => (
-                    <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-lg">
-                          <Video className="h-5 w-5 text-purple-600" />
-                        </div>
+                  {upcomingSessions?.map((session: any) => (
+                    <div key={session.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <div className="text-2xl">{getServiceIcon(session.type)}</div>
                         <div>
-                          <h4 className="font-medium">{session.title}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {session.time} • {session.duration} minutes • {session.studentCount} students
+                          <h3 className="font-semibold">{session.title}</h3>
+                          <p className="text-sm text-gray-600">{session.studentName}</p>
+                          <p className="text-sm text-blue-600">
+                            {new Date(session.scheduledAt).toLocaleString()}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className={session.type === 'group' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}>
-                          {session.type}
-                        </Badge>
-                        <Badge className={getStatusColor(session.status)}>
-                          {session.status}
-                        </Badge>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline">{session.duration} min</Badge>
+                        <Button size="sm">
+                          {session.type === 'online' ? (
+                            <>
+                              <Video className="w-3 h-3 mr-1" />
+                              Join
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-3 h-3 mr-1" />
+                              Start
+                            </>
+                          )}
+                        </Button>
                       </div>
                     </div>
-                  ))}
+                  )) || (
+                    <p className="text-center py-8 text-gray-500">No upcoming sessions</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Availability Tab */}
+          <TabsContent value="availability" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Monthly Availability</CardTitle>
+                <p className="text-sm text-gray-600">Set your available time slots for administrators to assign classes</p>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Availability Management</h3>
+                  <p className="text-gray-600 mb-4">
+                    Teachers can only set monthly availability slots.<br />
+                    Administrators will assign classes based on your availability.
+                  </p>
+                  <Button>
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Set Monthly Availability
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
+    </div>
   );
 }
-
-export default TeacherDashboard;

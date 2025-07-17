@@ -6,9 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Clock, Users, Video, MapPin, Plus, Edit, Trash2 } from "lucide-react";
+import { Calendar, Clock, Users, Video, MapPin, Plus, Edit, Trash2, Info } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
 
 interface ClassSession {
@@ -26,7 +25,6 @@ interface ClassSession {
 }
 
 export default function TeacherSchedulePage() {
-  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -39,8 +37,9 @@ export default function TeacherSchedulePage() {
     isActive: true
   });
 
-  const { data: sessions = [], isLoading } = useQuery<ClassSession[]>({
-    queryKey: ["/api/teacher/schedule"],
+  // Only fetch assigned classes (not create sessions)
+  const { data: classes = [], isLoading } = useQuery<ClassSession[]>({
+    queryKey: ["/api/teacher/classes"],
   });
 
   const { data: availability = [], isLoading: availabilityLoading } = useQuery({

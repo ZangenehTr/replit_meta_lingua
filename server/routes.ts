@@ -5059,67 +5059,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create assignment endpoint
-  app.post("/api/teacher/assignments", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'Teacher/Tutor') {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
+  // Get teacher assignments endpoint (uses real database)
+  app.get("/api/teacher/assignments", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
-      const { title, description, course, dueDate, maxPoints, instructions } = req.body;
+      const teacherId = req.user.id;
+      const assignments = await storage.getTeacherAssignments(teacherId);
+      res.json(assignments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch teacher assignments" });
+    }
+  });
+
+  // Create assignment endpoint (uses real database)
+  app.post("/api/teacher/assignments", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const { title, description, studentId, courseId, dueDate, maxScore, instructions } = req.body;
+      const teacherId = req.user.id;
       
-      const assignment = {
-        id: Date.now(),
+      const assignmentData = {
         title,
         description,
-        course,
-        dueDate,
-        maxPoints: maxPoints || 100,
+        studentId,
+        courseId,
+        tutorId: teacherId,
+        dueDate: new Date(dueDate),
+        maxScore: maxScore || 100,
         instructions,
-        teacherId: req.user.userId,
-        status: "active",
-        createdAt: new Date().toISOString()
+        status: 'assigned'
       };
 
+      const assignment = await storage.createHomework(assignmentData);
       res.status(201).json({ 
         message: "Assignment created successfully", 
         assignment 
       });
     } catch (error) {
+      console.error('Error creating assignment:', error);
       res.status(500).json({ message: "Failed to create assignment" });
     }
   });
 
-  // Schedule session endpoint
-  app.post("/api/teacher/sessions", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'Teacher/Tutor') {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
+  // Teachers can only view assigned sessions, not create them
+  // Session creation is restricted to Admin/Supervisor only
+  app.get("/api/teacher/sessions/upcoming", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
-      const { title, course, scheduledAt, duration, description, materials, objectives } = req.body;
+      const teacherId = req.user.id;
+      const classes = await storage.getTeacherClasses(teacherId);
       
-      const session = {
-        id: Date.now(),
-        title,
-        course,
-        scheduledAt,
-        duration,
-        description,
-        materials,
-        objectives,
-        teacherId: req.user.userId,
-        status: "scheduled",
-        roomId: `room-${Date.now()}`,
-        createdAt: new Date().toISOString()
-      };
-
-      res.status(201).json({ 
-        message: "Session scheduled successfully", 
-        session 
+      // Filter for upcoming sessions only
+      const now = new Date();
+      const upcomingSessions = classes.filter(session => {
+        const sessionDate = new Date(session.scheduledAt);
+        return sessionDate > now && session.status === 'scheduled';
       });
+
+      res.json(upcomingSessions);
     } catch (error) {
-      res.status(500).json({ message: "Failed to schedule session" });
+      res.status(500).json({ message: "Failed to fetch upcoming sessions" });
+    }
+  });
+
+  // Teacher dashboard stats endpoint
+  app.get("/api/teacher/dashboard-stats", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const stats = await storage.getTeacherDashboardStats(teacherId);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch teacher dashboard stats" });
     }
   });
 
