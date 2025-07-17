@@ -5782,9 +5782,25 @@ export class DatabaseStorage implements IStorage {
   // Teacher-specific methods implementation (teachers only set availability, admin assigns them to classes)
   async getTeacherClasses(teacherId: number): Promise<any[]> {
     try {
-      // Simplified query to avoid complex object selection issues
+      // Fixed SQL query to avoid syntax errors
       const teacherSessions = await db
-        .select()
+        .select({
+          sessionId: sessions.id,
+          sessionTitle: sessions.title,
+          courseTitle: courses.title,
+          courseId: sessions.courseId,
+          studentId: sessions.studentId,
+          studentFirstName: users.firstName,
+          studentLastName: users.lastName,
+          scheduledAt: sessions.scheduledAt,
+          duration: sessions.duration,
+          status: sessions.status,
+          roomId: sessions.roomId,
+          roomName: rooms.name,
+          sessionUrl: sessions.sessionUrl,
+          notes: sessions.notes,
+          deliveryMode: courses.deliveryMode
+        })
         .from(sessions)
         .leftJoin(courses, eq(sessions.courseId, courses.id))
         .leftJoin(users, eq(sessions.studentId, users.id))
@@ -5792,35 +5808,30 @@ export class DatabaseStorage implements IStorage {
         .where(eq(sessions.tutorId, teacherId))
         .orderBy(desc(sessions.scheduledAt));
 
-      return teacherSessions.map(result => {
-        const session = result.sessions;
-        const course = result.courses;
-        const student = result.users;
-        const room = result.rooms;
-
-        return {
-          id: session.id,
-          title: session.title || course?.title || 'Language Session',
-          course: course?.title || 'General Language Course',
-          courseId: session.courseId,
-          studentName: student ? `${student.firstName} ${student.lastName}` : 'Unknown Student',
-          studentId: session.studentId,
-          scheduledAt: session.scheduledAt,
-          duration: session.duration || 60,
-          status: session.status || 'scheduled',
-          roomName: room?.name || 'Online',
-          roomId: session.roomId,
-          sessionUrl: session.sessionUrl,
-          notes: session.notes,
-          deliveryMode: course?.deliveryMode || 'online',
-          // Professional dashboard fields (Preply-style)
-          type: course?.deliveryMode || 'online',
-          studentAvatar: student?.avatar || null,
-          progress: 75, // Mock progress - will be real in production
-          totalSessions: 20,
-          completedSessions: 15
-        };
-      });
+      return teacherSessions.map(result => ({
+        id: result.sessionId,
+        title: result.sessionTitle || result.courseTitle || 'Language Session',
+        course: result.courseTitle || 'General Language Course',
+        courseId: result.courseId,
+        studentName: result.studentFirstName && result.studentLastName 
+          ? `${result.studentFirstName} ${result.studentLastName}` 
+          : 'Unknown Student',
+        studentId: result.studentId,
+        scheduledAt: result.scheduledAt,
+        duration: result.duration || 60,
+        status: result.status || 'scheduled',
+        roomName: result.roomName || 'Online',
+        roomId: result.roomId,
+        sessionUrl: result.sessionUrl,
+        notes: result.notes,
+        deliveryMode: result.deliveryMode || 'online',
+        // Professional dashboard fields (Preply-style)
+        type: result.deliveryMode || 'online',
+        studentAvatar: null,
+        progress: 75,
+        totalSessions: 20,
+        completedSessions: 15
+      }));
     } catch (error) {
       console.error('Error fetching teacher classes:', error);
       return [];
@@ -5860,38 +5871,48 @@ export class DatabaseStorage implements IStorage {
   async getTeacherAssignments(teacherId: number): Promise<any[]> {
     try {
       const assignments = await db
-        .select()
+        .select({
+          assignmentId: homework.id,
+          title: homework.title,
+          description: homework.description,
+          dueDate: homework.dueDate,
+          studentId: homework.studentId,
+          studentFirstName: users.firstName,
+          studentLastName: users.lastName,
+          courseTitle: courses.title,
+          status: homework.status,
+          submittedAt: homework.submittedAt,
+          feedback: homework.feedback,
+          score: homework.score,
+          maxScore: homework.maxScore,
+          createdAt: homework.createdAt
+        })
         .from(homework)
         .leftJoin(users, eq(homework.studentId, users.id))
         .leftJoin(courses, eq(homework.courseId, courses.id))
         .where(eq(homework.tutorId, teacherId))
         .orderBy(desc(homework.dueDate));
 
-      return assignments.map(result => {
-        const assignment = result.homework;
-        const student = result.users;
-        const course = result.courses;
-
-        return {
-          id: assignment.id,
-          title: assignment.title,
-          description: assignment.description,
-          dueDate: assignment.dueDate,
-          studentId: assignment.studentId,
-          studentName: student ? `${student.firstName} ${student.lastName}` : 'Unknown Student',
-          courseName: course?.title || 'General Course',
-          status: assignment.status || 'pending',
-          submittedAt: assignment.submittedAt,
-          feedback: assignment.feedback,
-          score: assignment.score,
-          maxScore: assignment.maxScore,
-          assignedAt: assignment.createdAt,
-          // Professional dashboard fields
-          className: course?.title || 'General Course',
-          submittedCount: assignment.submittedAt ? 1 : 0,
-          totalStudents: 1
-        };
-      });
+      return assignments.map(result => ({
+        id: result.assignmentId,
+        title: result.title,
+        description: result.description,
+        dueDate: result.dueDate,
+        studentId: result.studentId,
+        studentName: result.studentFirstName && result.studentLastName 
+          ? `${result.studentFirstName} ${result.studentLastName}` 
+          : 'Unknown Student',
+        courseName: result.courseTitle || 'General Course',
+        status: result.status || 'pending',
+        submittedAt: result.submittedAt,
+        feedback: result.feedback,
+        score: result.score,
+        maxScore: result.maxScore,
+        assignedAt: result.createdAt,
+        className: result.courseTitle || 'General Course',
+        submittedCount: result.submittedAt ? 1 : 0,
+        totalStudents: 1
+      }));
     } catch (error) {
       console.error('Error fetching teacher assignments:', error);
       return [];
@@ -5986,16 +6007,28 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateHomework(homeworkId: number, updates: Partial<any>): Promise<any> {
+    try {
+      const [updatedHomework] = await db
+        .update(homework)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(homework.id, homeworkId))
+        .returning();
+      return updatedHomework;
+    } catch (error) {
+      console.error('Error updating homework:', error);
+      throw new Error('Failed to update homework');
+    }
+  }
+
   async updateAssignmentFeedback(assignmentId: number, feedback: string, score?: number): Promise<any> {
     try {
-      // In a real implementation, this would update the homework table
-      return {
-        id: assignmentId,
+      return await this.updateHomework(assignmentId, {
         feedback,
         score,
-        gradedAt: new Date().toISOString(),
-        status: "graded"
-      };
+        status: 'graded',
+        gradedAt: new Date()
+      });
     } catch (error) {
       console.error('Error updating assignment feedback:', error);
       throw new Error('Failed to update assignment feedback');
