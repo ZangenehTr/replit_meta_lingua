@@ -15,7 +15,7 @@ import Dashboard from "@/pages/dashboard";
 import DemoDashboard from "@/pages/demo-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import ManagerDashboard from "@/pages/manager-dashboard";
-import TeacherDashboard from "@/pages/teacher-dashboard";
+
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import GamificationProgress from "@/pages/gamification-progress";
 import UserProfile from "@/pages/user-profile";
@@ -68,6 +68,7 @@ import GamePlayer from "@/pages/game-player";
 import TeacherClassesPage from "@/pages/teacher/classes";
 import TeacherSchedulePage from "@/pages/teacher/schedule";
 import TeacherHomeworkPage from "@/pages/teacher/homework";
+import TeacherAssignmentsPage from "@/pages/teacher/assignments";
 import TeacherStudentsPage from "@/pages/teacher/students";
 import TeacherResourcesPage from "@/pages/teacher/resources";
 import TeacherReportsPage from "@/pages/teacher/reports";
@@ -142,7 +143,7 @@ function Router() {
       </Route>
       <Route path="/teacher">
         <ProtectedRoute>
-          <TeacherDashboard />
+          <TeacherDashboardNew />
         </ProtectedRoute>
       </Route>
       <Route path="/analytics">
@@ -410,6 +411,11 @@ function Router() {
       <Route path="/teacher/homework">
         <ProtectedRoute>
           <TeacherHomeworkPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/assignments">
+        <ProtectedRoute>
+          <TeacherAssignmentsPage />
         </ProtectedRoute>
       </Route>
       <Route path="/teacher/students">
