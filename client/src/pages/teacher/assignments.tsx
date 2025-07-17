@@ -48,8 +48,10 @@ export default function TeacherAssignmentsPage() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const viewParam = urlParams.get('view');
-    if (viewParam) {
+    if (viewParam && !isNaN(parseInt(viewParam))) {
       setViewAssignmentId(parseInt(viewParam));
+    } else {
+      setViewAssignmentId(null); // Clear when no view parameter
     }
   }, [location]);
 
@@ -136,6 +138,8 @@ export default function TeacherAssignmentsPage() {
 
   const handleBackToList = () => {
     setViewAssignmentId(null);
+    // Clear URL parameters
+    window.history.pushState({}, '', '/teacher/assignments');
     setLocation('/teacher/assignments');
   };
 
@@ -191,6 +195,10 @@ export default function TeacherAssignmentsPage() {
       </div>
     );
   }
+
+  // Debug: Check current state
+  console.log('Current viewAssignmentId:', viewAssignmentId);
+  console.log('Assignments length:', assignments.length);
 
   // Show individual assignment view
   if (viewAssignmentId) {
