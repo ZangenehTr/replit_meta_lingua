@@ -62,8 +62,9 @@ import {
   type ChatConversation, type InsertChatConversation, type ChatMessage, type InsertChatMessage,
   type PushNotification, type InsertPushNotification, type NotificationDeliveryLog, type InsertNotificationDeliveryLog,
   // Teacher availability
-  teacherAvailability,
-  type TeacherAvailability, type InsertTeacherAvailability
+  teacherAvailability, teacherAvailabilityPeriods,
+  type TeacherAvailability, type InsertTeacherAvailability,
+  type TeacherAvailabilityPeriod, type InsertTeacherAvailabilityPeriod
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -5776,6 +5777,73 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting teacher availability:', error);
       throw new Error('Failed to delete time slot');
+    }
+  }
+
+  // Enhanced Teacher Availability Periods Methods
+  async getTeacherAvailabilityPeriods(teacherId: number): Promise<TeacherAvailabilityPeriod[]> {
+    try {
+      const periods = await db
+        .select()
+        .from(teacherAvailabilityPeriods)
+        .where(eq(teacherAvailabilityPeriods.teacherId, teacherId))
+        .orderBy(teacherAvailabilityPeriods.periodStartDate);
+      return periods;
+    } catch (error) {
+      console.error('Error fetching teacher availability periods:', error);
+      return [];
+    }
+  }
+
+  async createTeacherAvailabilityPeriod(periodData: InsertTeacherAvailabilityPeriod): Promise<TeacherAvailabilityPeriod> {
+    try {
+      const [newPeriod] = await db
+        .insert(teacherAvailabilityPeriods)
+        .values(periodData)
+        .returning();
+      return newPeriod;
+    } catch (error) {
+      console.error('Error creating teacher availability period:', error);
+      throw new Error('Failed to create availability period');
+    }
+  }
+
+  async updateTeacherAvailabilityPeriod(periodId: number, updates: Partial<TeacherAvailabilityPeriod>): Promise<TeacherAvailabilityPeriod> {
+    try {
+      const [updatedPeriod] = await db
+        .update(teacherAvailabilityPeriods)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(teacherAvailabilityPeriods.id, periodId))
+        .returning();
+      return updatedPeriod;
+    } catch (error) {
+      console.error('Error updating teacher availability period:', error);
+      throw new Error('Failed to update availability period');
+    }
+  }
+
+  async deleteTeacherAvailabilityPeriod(periodId: number): Promise<void> {
+    await db.delete(teacherAvailabilityPeriods).where(eq(teacherAvailabilityPeriods.id, periodId));
+  }
+
+  async getTeacherAvailabilityPeriodsInRange(teacherId: number, startDate: Date, endDate: Date): Promise<TeacherAvailabilityPeriod[]> {
+    try {
+      const periods = await db
+        .select()
+        .from(teacherAvailabilityPeriods)
+        .where(
+          and(
+            eq(teacherAvailabilityPeriods.teacherId, teacherId),
+            gte(teacherAvailabilityPeriods.periodStartDate, startDate),
+            lte(teacherAvailabilityPeriods.periodEndDate, endDate),
+            eq(teacherAvailabilityPeriods.isActive, true)
+          )
+        )
+        .orderBy(teacherAvailabilityPeriods.periodStartDate);
+      return periods;
+    } catch (error) {
+      console.error('Error fetching teacher availability periods in range:', error);
+      return [];
     }
   }
 

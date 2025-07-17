@@ -2592,7 +2592,7 @@ export type InsertPushNotification = z.infer<typeof insertPushNotificationSchema
 export type NotificationDeliveryLog = typeof notificationDeliveryLogs.$inferSelect;
 export type InsertNotificationDeliveryLog = z.infer<typeof insertNotificationDeliveryLogSchema>;
 
-// Teacher Availability Table
+// Teacher Availability Table (Legacy - kept for backward compatibility)
 export const teacherAvailability = pgTable("teacher_availability", {
   id: serial("id").primaryKey(),
   teacherId: integer("teacher_id").notNull().references(() => users.id),
@@ -2604,7 +2604,24 @@ export const teacherAvailability = pgTable("teacher_availability", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// Teacher Availability Schema
+// Enhanced Teacher Availability Periods Table
+export const teacherAvailabilityPeriods = pgTable("teacher_availability_periods", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").notNull().references(() => users.id),
+  periodStartDate: timestamp("period_start_date").notNull(),
+  periodEndDate: timestamp("period_end_date").notNull(),
+  dayOfWeek: text("day_of_week").notNull(), // Monday, Tuesday, etc.
+  timeDivision: text("time_division").notNull(), // morning, afternoon, evening, full-day
+  classFormat: text("class_format").notNull(), // online, in-person, hybrid
+  specificHours: text("specific_hours"), // JSON string for specific time slots
+  isActive: boolean("is_active").default(true),
+  supervisorNotified: boolean("supervisor_notified").default(false),
+  adminNotified: boolean("admin_notified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Teacher Availability Schema (Legacy)
 export const insertTeacherAvailabilitySchema = createInsertSchema(teacherAvailability).omit({
   id: true,
   createdAt: true,
@@ -2613,3 +2630,13 @@ export const insertTeacherAvailabilitySchema = createInsertSchema(teacherAvailab
 
 export type TeacherAvailability = typeof teacherAvailability.$inferSelect;
 export type InsertTeacherAvailability = z.infer<typeof insertTeacherAvailabilitySchema>;
+
+// Enhanced Teacher Availability Periods Schema
+export const insertTeacherAvailabilityPeriodSchema = createInsertSchema(teacherAvailabilityPeriods).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type TeacherAvailabilityPeriod = typeof teacherAvailabilityPeriods.$inferSelect;
+export type InsertTeacherAvailabilityPeriod = z.infer<typeof insertTeacherAvailabilityPeriodSchema>;

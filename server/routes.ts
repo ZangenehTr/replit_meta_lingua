@@ -1789,7 +1789,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Teacher Availability endpoints
+  // Teacher Availability endpoints (Legacy)
   app.get("/api/teacher/availability", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
@@ -1811,6 +1811,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(timeSlot);
     } catch (error) {
       res.status(400).json({ message: "Failed to create time slot" });
+    }
+  });
+
+  // Enhanced Teacher Availability Periods endpoints
+  app.get("/api/teacher/availability-periods", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const periods = await storage.getTeacherAvailabilityPeriods(teacherId);
+      res.json(periods);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch teacher availability periods" });
+    }
+  });
+
+  app.post("/api/teacher/availability-periods", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const periodData = {
+        teacherId,
+        ...req.body
+      };
+      const period = await storage.createTeacherAvailabilityPeriod(periodData);
+      res.json(period);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create availability period" });
+    }
+  });
+
+  app.put("/api/teacher/availability-periods/:periodId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const periodId = parseInt(req.params.periodId);
+      const teacherId = req.user.id;
+      const updates = req.body;
+      
+      // Verify the period belongs to the teacher
+      const periods = await storage.getTeacherAvailabilityPeriods(teacherId);
+      const period = periods.find(p => p.id === periodId);
+      if (!period) {
+        return res.status(403).json({ message: "Not authorized to update this period" });
+      }
+      
+      const updatedPeriod = await storage.updateTeacherAvailabilityPeriod(periodId, updates);
+      res.json(updatedPeriod);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update availability period" });
+    }
+  });
+
+  app.delete("/api/teacher/availability-periods/:periodId", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const periodId = parseInt(req.params.periodId);
+      const teacherId = req.user.id;
+      
+      // Verify the period belongs to the teacher
+      const periods = await storage.getTeacherAvailabilityPeriods(teacherId);
+      const period = periods.find(p => p.id === periodId);
+      if (!period) {
+        return res.status(403).json({ message: "Not authorized to delete this period" });
+      }
+      
+      await storage.deleteTeacherAvailabilityPeriod(periodId);
+      res.json({ message: "Availability period deleted successfully" });
+    } catch (error) {
+      res.status(400).json({ message: "Failed to delete availability period" });
     }
   });
 

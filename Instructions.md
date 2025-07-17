@@ -6,486 +6,402 @@
 - **Application State**: Running on port 5000 ✅
 - **Authentication**: Working (teacher@test.com login successful) ✅
 - **Database**: PostgreSQL operational with real data ✅
-- **API Endpoints**: Teacher assignments API returns 10 assignments ✅
+- **API Endpoints**: Teacher assignments API returns 11 assignments ✅
 - **Assignment System**: Basic functionality operational ✅
 
 ---
 
 ## 🚨 CRITICAL ISSUES IDENTIFIED & ROOT CAUSE ANALYSIS
 
-### PROBLEM 1: ASSIGNMENT SYSTEM BUGS
+### PROBLEM 1: ASSIGNMENT CREATION DATE PICKER ISSUES
 
-#### Issue 1.1: Date Picker Locked to One Week
+#### Issue 1.1: Date Picker Cannot Be Changed
 **Root Cause Analysis**:
-- **Location**: `client/src/pages/teacher/assignments.tsx` (FormField for dueDate)
-- **Problem**: No custom date picker component implementation found
-- **Current Implementation**: Uses default browser date input with no range restrictions
-- **Likely Issue**: Browser-specific date input behavior or form validation constraints
-
-**Evidence Found**:
+- **Location**: `client/src/pages/teacher/assignments.tsx` lines 421-463
+- **Current Implementation**: Uses shadcn Calendar component with Popover
+- **Problem**: Date picker is properly implemented but may have validation conflicts
+- **Evidence Found**:
 ```typescript
-// In assignments.tsx form:
-<FormField
-  control={form.control}
-  name="dueDate"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Due Date</FormLabel>
-      <FormControl>
-        <Input type="date" {...field} />  // ← No min/max restrictions
-      </FormControl>
-    </FormItem>
-  )}
+// Current implementation in assignments.tsx:
+<Calendar
+  mode="single"
+  selected={field.value}
+  onSelect={(date) => {
+    if (date) {
+      field.onChange(date);
+    }
+  }}
+  disabled={(date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today; // Only prevents past dates
+  }}
+  initialFocus
 />
 ```
 
-**Missing Components**: No `ios-date-picker.tsx` or custom date picker implementation found despite reference
+**Likely Issues**:
+1. Form validation schema conflicts
+2. Date format conversion issues
+3. Browser date handling inconsistencies
+4. React Hook Form field synchronization
 
-#### Issue 1.2: View Button Non-Functional
+#### Issue 1.2: Missing Required Imports
+**Root Cause**: Missing imports for date functionality
+- Missing: `import { format } from "date-fns"`
+- Missing: `import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"`
+- Missing: `import { CalendarIcon } from "lucide-react"`
+
+---
+
+### PROBLEM 2: FEEDBACK BUTTON DISAPPEARED
+
+#### Issue 2.1: Feedback Button Logic Error
 **Root Cause Analysis**:
-- **Location**: `client/src/pages/teacher/assignments.tsx` (lines 210-225)
-- **Problem**: View assignment functionality exists but URL parameter handling is broken
-- **Issue**: `viewAssignmentId` state management conflicts with URL routing
+- **Location**: `client/src/pages/teacher/assignments.tsx` lines 590-602
+- **Current Logic**: 
+```typescript
+{assignment.status === 'submitted' && !assignment.feedback && (
+  <Button size="sm" onClick={...}>
+    <Edit className="w-3 h-3 mr-1" />
+    Grade
+  </Button>
+)}
+```
+
+**Problem**: Button only shows when `status === 'submitted'` AND `!assignment.feedback`
+**Evidence**: Debug info shows `Status: assigned, Feedback: No` - button won't show for "assigned" status
+
+**Database Investigation**:
+- Assignments API returns assignments with `status: 'assigned'` 
+- Need assignments with `status: 'submitted'` to show feedback button
+- Missing student submission workflow
+
+---
+
+### PROBLEM 3: SCHEDULE PAGE ERROR
+
+#### Issue 3.1: Translation Function Not Imported
+**Root Cause Analysis**:
+- **Location**: `client/src/pages/teacher/schedule.tsx` line 31
+- **Error**: `ReferenceError: t is not defined`
+- **Problem**: Missing `useLanguage` hook import and usage
 
 **Evidence Found**:
 ```typescript
-// URL parameter handling exists but flawed:
-const urlParams = new URLSearchParams(window.location.search);
-const viewParam = urlParams.get('view');
-if (viewParam && !isNaN(parseInt(viewParam))) {
-  setViewAssignmentId(parseInt(viewParam));  // ← State management issue
-}
+// Current imports - MISSING useLanguage
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+// Missing: import { useLanguage } from "@/hooks/use-language";
 ```
 
-**Current Behavior**: View functionality implemented but URL parameter parsing conflicts with state management
+**Missing Implementation**:
+- No `const { t } = useLanguage();` declaration
+- Schedule page tries to use `t()` function without import
 
 ---
 
-### PROBLEM 2: STUDENT DISPLAY ISSUE
+### PROBLEM 4: DEBUG MESSAGE ON ASSIGNMENTS PAGE
 
-#### Root Cause Analysis
-**API Endpoint**: `/api/teacher/students` returns data successfully
-**Component**: `client/src/pages/teacher/students.tsx` properly implemented
-**Likely Issue**: Translation system conflicts affecting display
-
-**Evidence Found**:
+#### Issue 4.1: Development Debug Info Visible
+**Root Cause Analysis**:
+- **Location**: `client/src/pages/teacher/assignments.tsx` lines 309-313
+- **Current Code**:
 ```typescript
-// Students component uses translation system:
-const { t } = useLanguage();  // ← Translation dependency
-
-// Filter logic looks correct:
-const filteredStudents = students.filter(student => {
-  if (!student || !student.name || !student.email) return false;
-  // ... filtering logic appears sound
-});
+{process.env.NODE_ENV === 'development' && (
+  <div className="mb-4 p-2 bg-yellow-100 text-xs text-yellow-800 rounded">
+    View State Debug: viewAssignmentId = {viewAssignmentId}, Show Create Button = {!viewAssignmentId ? 'YES' : 'NO'}
+  </div>
+)}
 ```
 
-**Hypothesis**: Students data exists but translation function failures prevent proper rendering
+**Problem**: Debug info is intentionally visible in development mode
+**Solution**: Remove or conditionally hide debug information
 
 ---
 
-### PROBLEM 3: MISSING REAL-TIME PAYMENT WORKFLOW
+### PROBLEM 5: TEACHER AVAILABILITY SYSTEM REDESIGN
 
-#### Root Cause Analysis
-**Current Implementation**: Static payment system exists in `client/src/pages/teacher/payments.tsx`
-**Missing Components**:
-1. **Attendance-based payment triggers**: No connection between class completion and payment creation
-2. **Supervisor approval workflow**: Admin approval system exists but not connected to teacher payments
-3. **SMS notifications**: Kavenegar integration exists but not connected to payment approvals
+#### Issue 5.1: Current System Inadequate
+**Root Cause Analysis**:
+- **Current Schema**: `shared/schema.ts` lines with `teacherAvailability` table
+- **Current Fields**: Only `dayOfWeek`, `startTime`, `endTime`, `isActive`
+- **Missing Requirements**:
+  - Start date / End date for availability periods
+  - Morning/Afternoon division
+  - Online/In-person selection
+  - Monthly/Term-based availability
+  - Supervisor/Admin notification system
 
-**Evidence Found**:
-```typescript
-// Payment system exists but is static:
-const { data: payslips } = useQuery({
-  queryKey: ['/api/teacher/payslips'],
-  // Returns static data, no real-time updates
-});
-
-// SMS system exists in admin but not teacher payments:
-// server/routes.ts has Kavenegar SMS endpoints
-// admin/teacher-payments.tsx has SMS approval functionality
+**Database Schema Investigation**:
+```sql
+-- Current inadequate schema:
+CREATE TABLE teacher_availability (
+  id SERIAL PRIMARY KEY,
+  teacher_id INTEGER NOT NULL,
+  day_of_week TEXT NOT NULL,  -- Only day, no date range
+  start_time TEXT NOT NULL,   -- No morning/afternoon division
+  end_time TEXT NOT NULL,     -- No class format specification
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
-**Missing Implementation**: Real-time workflow connecting class completion → payment creation → supervisor approval → SMS notification
+**Required New Schema**:
+```sql
+-- Enhanced schema needed:
+CREATE TABLE teacher_availability_periods (
+  id SERIAL PRIMARY KEY,
+  teacher_id INTEGER NOT NULL,
+  period_start_date DATE NOT NULL,
+  period_end_date DATE NOT NULL,
+  day_of_week TEXT NOT NULL,
+  time_division TEXT NOT NULL CHECK (time_division IN ('morning', 'afternoon', 'evening', 'full-day')),
+  class_format TEXT NOT NULL CHECK (class_format IN ('online', 'in-person', 'hybrid')),
+  specific_hours JSONB, -- Store specific time slots
+  is_active BOOLEAN DEFAULT true,
+  supervisor_notified BOOLEAN DEFAULT false,
+  admin_notified BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+```
 
 ---
 
-### PROBLEM 4: RTL LAYOUT & SPACING ISSUES
+## 🔧 COMPREHENSIVE FIX PLAN
 
-#### Root Cause Analysis
-**Translation System Conflicts**: Three different translation systems causing conflicts
+### Phase 1: Critical Bug Fixes (Immediate)
 
-**Systems Found**:
-1. **System A**: `client/src/hooks/use-language.ts` with JSON files
-2. **System B**: `client/src/hooks/useLanguage.tsx` with react-i18next  
-3. **System C**: Legacy translations in `client/src/lib/i18n.ts`
-
-**RTL Implementation Status**:
-- `client/src/components/rtl-layout.tsx` ✅ Properly implemented
-- `client/src/styles/rtl.css` ✅ Comprehensive RTL styles
-- `client/src/index.css` ⚠️ CSS import order issues
-
-**Evidence Found**:
-```css
-/* Current CSS import order in index.css causes conflicts: */
-@import url('https://fonts.googleapis.com/css2?family=Almarai...'); 
-@import './styles/rtl.css';  /* ← Should be AFTER Tailwind */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-```
-
-**Sidebar Position Issue**: RTL layout properly implemented but text direction conflicts with sidebar positioning
-
----
-
-## 🛠️ COMPREHENSIVE FIX IMPLEMENTATION PLAN
-
-### PHASE 1: ASSIGNMENT SYSTEM FIXES (HIGH PRIORITY)
-
-#### Fix 1.1: Date Picker Implementation
-**Action Required**: Implement proper date picker component
-**Files to Modify**:
+#### 1.1 Fix Assignment Date Picker
+**Files to modify**:
 - `client/src/pages/teacher/assignments.tsx`
-- Create custom date picker with proper range controls
 
-**Implementation**:
-```typescript
-// Replace Input type="date" with proper date picker:
-<Popover>
-  <PopoverTrigger asChild>
-    <Button variant="outline" className="w-full justify-start text-left">
-      <CalendarIcon className="mr-2 h-4 w-4" />
-      {field.value ? format(field.value, "PPP") : "Select due date"}
-    </Button>
-  </PopoverTrigger>
-  <PopoverContent className="w-auto p-0" align="start">
-    <Calendar
-      mode="single"
-      selected={field.value}
-      onSelect={field.onChange}
-      disabled={(date) => date < new Date()}  // ← Prevent past dates
-      initialFocus
-    />
-  </PopoverContent>
-</Popover>
-```
+**Actions**:
+1. Add missing imports for date functionality
+2. Fix form validation schema
+3. Enhance date picker with proper error handling
+4. Add date format validation
 
-#### Fix 1.2: View Assignment Functionality
-**Action Required**: Fix URL parameter handling and state management
-**Problem**: Conflict between URL params and React state
+#### 1.2 Fix Schedule Page Translation Error
+**Files to modify**:
+- `client/src/pages/teacher/schedule.tsx`
 
-**Implementation**:
-```typescript
-// Fix URL parameter handling:
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const viewId = params.get('view');
-  if (viewId && !isNaN(parseInt(viewId))) {
-    setViewAssignmentId(parseInt(viewId));
-  }
-}, [location]); // ← Add location dependency
+**Actions**:
+1. Add missing `useLanguage` import
+2. Add `const { t } = useLanguage();` declaration
+3. Test all translation strings
 
-// Fix back navigation:
-const handleBackToList = () => {
-  setViewAssignmentId(null);
-  const url = new URL(window.location.href);
-  url.searchParams.delete('view');
-  window.history.pushState({}, '', url.toString());
-};
-```
+#### 1.3 Fix Feedback Button Logic
+**Files to modify**:
+- `client/src/pages/teacher/assignments.tsx`
 
----
+**Actions**:
+1. Update button visibility logic
+2. Add development assignment status changes
+3. Create test assignments with "submitted" status
 
-### PHASE 2: STUDENT DISPLAY FIX (HIGH PRIORITY)
+#### 1.4 Remove Debug Messages
+**Files to modify**:
+- `client/src/pages/teacher/assignments.tsx`
 
-#### Root Cause: Translation System Conflicts
-**Action Required**: Unify translation systems to fix student display
+**Actions**:
+1. Remove or conditionally hide debug div
+2. Clean up console.log statements
 
-**Implementation Steps**:
-1. **Choose Primary System**: Use `client/src/hooks/use-language.ts` (most complete)
-2. **Remove Duplicates**: Archive `useLanguage.tsx` and legacy translations
-3. **Fix Component Dependencies**: Update all components to use unified system
+### Phase 2: Teacher Availability System Redesign (Major)
 
-**Files to Modify**:
-- `client/src/pages/teacher/students.tsx` - Update translation hook
-- All components using `useLanguage()` vs `use-language.ts`
+#### 2.1 Database Schema Enhancement
+**Files to modify**:
+- `shared/schema.ts`
+- `server/database-storage.ts`
+- Create new migration script
 
----
+**Actions**:
+1. Create new `teacher_availability_periods` table
+2. Add morning/afternoon/evening time divisions
+3. Add online/in-person/hybrid format options
+4. Add date range support (start_date, end_date)
+5. Add supervisor/admin notification tracking
 
-### PHASE 3: REAL-TIME PAYMENT WORKFLOW IMPLEMENTATION (HIGH PRIORITY)
+#### 2.2 API Endpoints Enhancement
+**Files to modify**:
+- `server/routes.ts`
 
-#### Missing Component 1: Attendance-Based Payment Triggers
-**Action Required**: Create real-time payment creation system
+**Actions**:
+1. Update `/api/teacher/availability` endpoints
+2. Add period-based availability management
+3. Add supervisor/admin notification endpoints
+4. Add conflict checking for availability periods
 
-**New API Endpoints Needed**:
-```typescript
-// When teacher marks attendance:
-POST /api/teacher/sessions/:sessionId/complete
-// Creates unapproved payment entry
+#### 2.3 Frontend Availability Management
+**Files to modify**:
+- `client/src/pages/teacher/teacher-availability.tsx`
+- Create new availability components
 
-// New payment status workflow:
-GET /api/teacher/payments/pending  // Unapproved payments
-GET /api/teacher/payments/approved // Approved payments
-```
+**Actions**:
+1. Complete UI redesign with period selection
+2. Add morning/afternoon/evening time slots
+3. Add online/in-person selection
+4. Add date range picker (start/end dates)
+5. Add supervisor/admin notification system
 
-#### Missing Component 2: Supervisor Approval Integration
-**Action Required**: Connect existing admin approval system to teacher view
+### Phase 3: Enhanced Features (Future)
 
-**Implementation**:
-```typescript
-// Real-time payment status updates:
-const { data: payments } = useQuery({
-  queryKey: ['/api/teacher/payments/live'],
-  refetchInterval: 5000, // ← Real-time updates every 5 seconds
-});
+#### 3.1 Real-Time Availability Updates
+**Files to create**:
+- `client/src/components/teacher/availability-period-manager.tsx`
+- `client/src/components/teacher/time-slot-selector.tsx`
 
-// Payment status categories:
-// - "pending": Class completed, awaiting supervisor approval
-// - "approved": Supervisor approved, payment processed
-// - "paid": Payment completed and sent to teacher
-```
+#### 3.2 Supervisor Notification System
+**Files to modify**:
+- `server/routes.ts` (add notification endpoints)
+- `server/storage.ts` (add notification methods)
 
-#### Missing Component 3: SMS Notification Integration
-**Action Required**: Connect existing Kavenegar SMS system to teacher payments
-
-**Files to Modify**:
-- `server/routes.ts` - Add teacher payment SMS endpoints
-- Integrate existing SMS logic from admin payment approval
+#### 3.3 Calendar Integration
+**Files to create**:
+- `client/src/components/teacher/availability-calendar.tsx`
 
 ---
 
-### PHASE 4: RTL LAYOUT & SPACING FIXES (MEDIUM PRIORITY)
+## 🎯 IMPLEMENTATION PRIORITY
 
-#### Fix 4.1: CSS Import Order
-**Action Required**: Reorder CSS imports to fix RTL conflicts
+### IMMEDIATE (Fix Now)
+1. ✅ Fix schedule page translation error (5 minutes)
+2. ✅ Fix assignment date picker (15 minutes)
+3. ✅ Fix feedback button logic (10 minutes)
+4. ✅ Remove debug messages (5 minutes)
 
-**File**: `client/src/index.css`
-**Implementation**:
-```css
-/* CORRECT ORDER: */
-/* 1. Font imports FIRST */
-@import url('https://fonts.googleapis.com/css2?family=Almarai...');
+### HIGH PRIORITY (Next 30 minutes)
+5. ✅ Design new availability database schema
+6. ✅ Create database migration script
+7. ✅ Update API endpoints for new schema
 
-/* 2. Tailwind imports */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+### MEDIUM PRIORITY (Next 30 minutes)
+8. ✅ Redesign availability management UI
+9. ✅ Add period-based availability system
+10. ✅ Add morning/afternoon division
 
-/* 3. RTL styles LAST (override Tailwind) */
-@import './styles/rtl.css';
-```
-
-#### Fix 4.2: Translation System Unification
-**Action Required**: Remove duplicate translation systems causing text rendering issues
-
-**Unified Translation System**:
-```typescript
-// Single translation hook throughout application:
-import { useLanguage } from '@/hooks/use-language';
-
-// Consistent text rendering with proper RTL support:
-const { t, isRTL, language } = useLanguage();
-```
-
-#### Fix 4.3: Sidebar RTL Positioning
-**Action Required**: Fix sidebar position conflicts in RTL mode
-
-**Files to Modify**:
-- `client/src/components/layout/sidebar.tsx`
-- `client/src/styles/rtl.css`
-
-**Implementation**:
-```css
-/* Enhanced RTL sidebar positioning: */
-.rtl .sidebar {
-  left: auto;
-  right: 0;
-  transform: translateX(0);
-}
-
-.rtl .main-content {
-  margin-left: 0;
-  margin-right: 256px; /* Sidebar width */
-}
-```
+### FUTURE ENHANCEMENTS
+11. Add supervisor notification system
+12. Add calendar integration
+13. Add conflict detection system
 
 ---
 
-## 🔧 TECHNICAL IMPLEMENTATION DETAILS
+## 🔍 ASSESSMENT: FEASIBILITY & TOOLS
 
-### New Components Required
+### ✅ FEASIBLE WITH CURRENT TOOLS
+- Fix all 4 immediate bugs
+- Database schema modifications
+- API endpoint updates
+- Frontend UI redesign
+- Basic availability period management
 
-#### 1. Custom Date Picker Component
-**File**: `client/src/components/ui/assignment-date-picker.tsx`
-**Features**:
-- Prevent past date selection
-- Proper Persian calendar support
-- RTL layout compatibility
+### ✅ AVAILABLE TOOLS & CAPABILITIES
+- Database access with Drizzle ORM
+- PostgreSQL schema modification
+- React/TypeScript frontend updates
+- API endpoint creation/modification
+- Form validation with Zod
+- Date picker components (shadcn)
 
-#### 2. Real-Time Payment Status Component  
-**File**: `client/src/components/teacher/payment-status.tsx`
-**Features**:
-- Live payment status updates
-- Visual indicators for pending/approved/paid
-- SMS notification status
+### ⚠️ POTENTIAL CHALLENGES
+- Database migration complexity (manageable)
+- Testing availability conflicts (need careful logic)
+- Persian calendar integration (future enhancement)
+- SMS notification system (requires external service)
 
-#### 3. Enhanced Assignment View Modal
-**File**: `client/src/components/teacher/assignment-view-modal.tsx`
-**Features**:
-- Proper URL parameter handling
-- Assignment detail display
-- Feedback submission interface
-
-### New API Endpoints Required
-
-#### 1. Session Completion Tracking
-```typescript
-POST /api/teacher/sessions/:sessionId/complete
-Body: { attendanceData: StudentAttendance[] }
-Response: { paymentCreated: boolean, paymentId: number }
-```
-
-#### 2. Real-Time Payment Status
-```typescript
-GET /api/teacher/payments/live
-Response: {
-  pending: Payment[],
-  approved: Payment[],
-  paid: Payment[]
-}
-```
-
-#### 3. Teacher SMS Notifications
-```typescript
-POST /api/teacher/payments/:paymentId/request-approval
-Response: { smsStatus: string, supervisorNotified: boolean }
-```
-
-### Database Schema Updates Required
-
-#### New Tables:
-1. **session_completions**: Track when teachers mark classes as complete
-2. **payment_status_history**: Track payment status changes over time
-3. **teacher_notifications**: Store SMS notification history
-
-#### Enhanced Existing Tables:
-- **teacher_payments**: Add real-time status tracking
-- **sessions**: Add completion status and attendance data
+### 🚫 NOT POSSIBLE WITHOUT ADDITIONAL SERVICES
+- Real-time push notifications (needs WebSocket or SSE)
+- SMS notifications to supervisors (needs SMS service credentials)
+- Email notifications (needs email service setup)
 
 ---
 
-## 🎯 SUCCESS CRITERIA & TESTING PLAN
+## 📋 STEP-BY-STEP EXECUTION PLAN
 
-### Assignment System Success
-- [ ] Date picker allows full date range selection (not limited to one week)
-- [ ] View assignment button opens detailed assignment view correctly
-- [ ] Assignment creation works without date restrictions
-- [ ] All assignment CRUD operations function properly
+### Step 1: Fix Critical Bugs (15 minutes)
+1. Add missing imports to schedule.tsx
+2. Fix date picker in assignments.tsx
+3. Update feedback button logic
+4. Remove debug messages
 
-### Student Display Success  
-- [ ] All 3 students display correctly in teacher students page
-- [ ] Student filtering and search functionality works
-- [ ] Student progress and attendance data shows accurately
-- [ ] No translation errors or missing text
+### Step 2: Database Schema Updates (20 minutes)
+1. Create new availability schema
+2. Write migration script
+3. Update storage interface
+4. Test database operations
 
-### Real-Time Payment Workflow Success
-- [ ] When teacher completes a class, unapproved payment appears immediately
-- [ ] Supervisor can approve payments from admin interface
-- [ ] Teacher receives SMS notification when payment approved
-- [ ] Payment status updates in real-time without page refresh
-- [ ] Payment history shows complete workflow progression
+### Step 3: API Endpoint Updates (15 minutes)
+1. Update availability endpoints
+2. Add period management
+3. Add format selection
+4. Test API responses
 
-### RTL Layout & Spacing Success
-- [ ] All text displays properly without spacing issues
-- [ ] Persian/Arabic text renders correctly with appropriate fonts
-- [ ] Sidebar positioning works correctly in RTL mode
-- [ ] Language switching works smoothly between LTR/RTL
-- [ ] No CSS conflicts or layout breaking
+### Step 4: Frontend Redesign (25 minutes)
+1. Redesign availability page
+2. Add period selection UI
+3. Add time division options
+4. Add format selection
+5. Test complete workflow
 
----
-
-## ⚡ IMPLEMENTATION PRIORITY & TIMELINE
-
-### Immediate Fixes (Day 1 - 2 hours)
-1. **Date Picker Fix** (30 minutes) - Implement proper date range selection
-2. **View Assignment Fix** (30 minutes) - Fix URL parameter handling
-3. **Translation System Unification** (60 minutes) - Consolidate to single system
-
-### Core Functionality (Day 2 - 4 hours)  
-1. **Student Display Fix** (60 minutes) - Fix translation conflicts
-2. **CSS Import Order Fix** (30 minutes) - Reorder imports for RTL
-3. **Real-Time Payment Infrastructure** (150 minutes) - Build API endpoints
-
-### Advanced Features (Day 3 - 3 hours)
-1. **Supervisor Approval Integration** (90 minutes) - Connect existing approval system
-2. **SMS Notification Integration** (60 minutes) - Connect Kavenegar to teacher payments
-3. **UI Polish & Testing** (30 minutes) - Final refinements
-
-**Total Estimated Time**: 9 hours over 3 days
+### Step 5: Integration Testing (5 minutes)
+1. Test end-to-end availability management
+2. Verify data persistence
+3. Test supervisor notification preparation
 
 ---
 
-## 🚨 POTENTIAL BLOCKING ISSUES & SOLUTIONS
+## 📊 SUCCESS METRICS
 
-### Issue 1: Date Picker Browser Compatibility
-**Problem**: Different browsers handle date inputs differently
-**Solution**: Implement custom date picker using react-day-picker library
-**Fallback**: Provide text input with date validation
+### Immediate Fixes
+- ✅ Assignment date picker fully functional
+- ✅ Schedule page loads without errors
+- ✅ Feedback button appears for submitted assignments
+- ✅ No debug messages in production
 
-### Issue 2: Real-Time Updates Performance
-**Problem**: Frequent polling may impact performance
-**Solution**: Implement WebSocket connections for real-time updates
-**Fallback**: Use React Query with smart refetch intervals
-
-### Issue 3: SMS Integration Dependencies
-**Problem**: Kavenegar SMS service may have rate limits
-**Solution**: Implement SMS queue with retry logic
-**Fallback**: Email notifications as backup communication method
-
-### Issue 4: Translation System Migration Complexity
-**Problem**: Components may break during translation system unification
-**Solution**: Gradual migration with fallback translation support
-**Fallback**: Maintain both systems temporarily during transition
+### Availability System
+- ✅ Teachers can set availability periods (start/end dates)
+- ✅ Morning/afternoon/evening time divisions work
+- ✅ Online/in-person selection functional
+- ✅ Data persists correctly in database
+- ✅ Supervisors can view teacher availability
 
 ---
 
-## 📋 DETAILED FILE MODIFICATION CHECKLIST
+## 🔄 POST-IMPLEMENTATION VALIDATION
 
-### Files Requiring Major Changes
-- [ ] `client/src/pages/teacher/assignments.tsx` - Date picker & view functionality
-- [ ] `client/src/pages/teacher/students.tsx` - Translation system updates
-- [ ] `client/src/pages/teacher/payments.tsx` - Real-time payment workflow
-- [ ] `client/src/hooks/use-language.ts` - Unified translation system
-- [ ] `client/src/index.css` - CSS import order fixes
-- [ ] `server/routes.ts` - New payment workflow API endpoints
+### Testing Checklist
+1. **Assignment System**:
+   - [ ] Date picker allows future date selection
+   - [ ] Assignments can be created successfully
+   - [ ] Feedback button appears for submitted assignments
+   - [ ] No debug messages visible
 
-### New Files to Create
-- [ ] `client/src/components/ui/assignment-date-picker.tsx`
-- [ ] `client/src/components/teacher/payment-status.tsx`
-- [ ] `client/src/components/teacher/assignment-view-modal.tsx`
-- [ ] `server/payment-workflow.ts` - Real-time payment logic
+2. **Schedule Page**:
+   - [ ] Page loads without translation errors
+   - [ ] All UI elements render correctly
+   - [ ] Navigation works properly
 
-### Files to Archive/Remove
-- [ ] `client/src/hooks/useLanguage.tsx` - Archive duplicate translation system
-- [ ] Legacy translation objects in `client/src/lib/i18n.ts`
+3. **Availability System**:
+   - [ ] Period-based availability creation
+   - [ ] Morning/afternoon division selection
+   - [ ] Online/in-person format selection
+   - [ ] Date range validation
+   - [ ] Data persistence verification
+
+### Performance Validation
+- [ ] Page load times under 2 seconds
+- [ ] API response times under 500ms
+- [ ] Database queries optimized
+- [ ] No memory leaks in React components
 
 ---
 
-## 🎯 ASSESSMENT CONCLUSION
+## 🎯 CONCLUSION
 
-**Feasibility**: All identified issues are **technically solvable** with the existing codebase and tools available.
+All identified issues are **FULLY SOLVABLE** with current tools and codebase access. The plan provides a clear path from immediate bug fixes to comprehensive availability system redesign. The implementation should take approximately 80 minutes total, with critical bugs fixed in the first 15 minutes.
 
-**Complexity Level**: 
-- **Assignment fixes**: Low complexity (UI/state management)
-- **Student display**: Medium complexity (translation system conflicts)
-- **Payment workflow**: High complexity (requires new real-time infrastructure)
-- **RTL fixes**: Low complexity (CSS ordering and configuration)
-
-**No Impossible Tasks**: All requested features can be implemented with the current technology stack and database schema.
-
-**Recommended Approach**: Implement fixes in priority order, starting with immediate user experience issues (date picker, view button) and building toward the comprehensive real-time payment workflow.
-
-**User Expectations**: All issues reported are valid and fixable. The "dictation" issue refers to general text quality problems caused by translation system conflicts, not missing dictation features.
-
-**Next Steps**: Proceed with implementation following the priority timeline outlined above.
+**Ready to execute immediately.** ✅
