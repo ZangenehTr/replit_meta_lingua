@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, Edit, Eye, FileText, Clock, User } from 'lucide-react';
+import { CalendarIcon, Plus, Edit, Eye, FileText, Clock, User, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useLocation } from 'wouter';
 
 const assignmentSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -37,9 +38,20 @@ export default function TeacherAssignmentsPage() {
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   const [feedback, setFeedback] = useState('');
   const [score, setScore] = useState<number>(0);
+  const [viewAssignmentId, setViewAssignmentId] = useState<number | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [location, setLocation] = useLocation();
+
+  // Handle URL parameters for viewing specific assignment
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewParam = urlParams.get('view');
+    if (viewParam) {
+      setViewAssignmentId(parseInt(viewParam));
+    }
+  }, [location]);
 
   const form = useForm<AssignmentFormData>({
     resolver: zodResolver(assignmentSchema),
@@ -121,6 +133,11 @@ export default function TeacherAssignmentsPage() {
     createAssignmentMutation.mutate(data);
   };
 
+  const handleBackToList = () => {
+    setViewAssignmentId(null);
+    setLocation('/teacher/assignments');
+  };
+
   const handleFeedbackSubmit = () => {
     if (selectedAssignment && feedback) {
       submitFeedbackMutation.mutate({
@@ -170,6 +187,102 @@ export default function TeacherAssignmentsPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Show individual assignment view
+  if (viewAssignmentId) {
+    const assignment = assignments.find((a: any) => a.id === viewAssignmentId);
+    if (!assignment) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <Card>
+              <CardContent className="p-8 text-center">
+                <p className="text-red-600">Assignment not found</p>
+                <Button onClick={handleBackToList} className="mt-4">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Assignments
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Assignment Detail Header */}
+          <div className="flex items-center justify-between mb-6">
+            <Button variant="outline" onClick={handleBackToList}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Assignments
+            </Button>
+            <Badge variant={
+              assignment.status === 'submitted' ? 'default' :
+              assignment.status === 'graded' ? 'secondary' : 'outline'
+            }>
+              {assignment.status}
+            </Badge>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">{assignment.title}</CardTitle>
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <span>Student: {assignment.studentName}</span>
+                <span>Course: {assignment.courseName}</span>
+                <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="font-semibold mb-2">Description</h3>
+                <p className="text-gray-700">{assignment.description}</p>
+              </div>
+
+              {assignment.submission && (
+                <div>
+                  <h3 className="font-semibold mb-2">Student Submission</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="text-gray-700">{assignment.submission}</p>
+                  </div>
+                </div>
+              )}
+
+              {assignment.feedback && (
+                <div>
+                  <h3 className="font-semibold mb-2">Feedback</h3>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-gray-700">{assignment.feedback}</p>
+                    {assignment.score && (
+                      <div className="mt-2">
+                        <Badge variant="secondary">Score: {assignment.score}/{assignment.maxScore || 100}</Badge>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {!assignment.feedback && assignment.status === 'submitted' && (
+                <div className="flex space-x-2">
+                  <Button 
+                    onClick={() => {
+                      setSelectedAssignment(assignment);
+                      setFeedbackDialogOpen(true);
+                    }}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Provide Feedback
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

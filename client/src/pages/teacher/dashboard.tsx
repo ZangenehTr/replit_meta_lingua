@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Users, BookOpen, DollarSign, Clock, Star, MessageCircle, Video, FileText, ChevronRight, Play, PauseCircle } from 'lucide-react';
+import { Calendar, Users, BookOpen, DollarSign, Clock, Star, MessageCircle, Video, FileText, ChevronRight, Play, PauseCircle, Settings, Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useLocation } from 'wouter';
+import { useToast } from '@/hooks/use-toast';
 
 export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   // Fetch teacher dashboard stats
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -58,6 +62,45 @@ export default function TeacherDashboard() {
       default:
         return '💻';
     }
+  };
+
+  const handleJoinClass = (classItem: any) => {
+    if (classItem.deliveryMode === 'online') {
+      // Open online classroom or video call
+      window.open(classItem.sessionUrl || `https://meet.jit.si/class-${classItem.id}`, '_blank');
+      toast({
+        title: 'Joining Class',
+        description: `Connecting to ${classItem.title}`
+      });
+    } else if (classItem.deliveryMode === 'callern') {
+      // Initiate VoIP call
+      toast({
+        title: 'Initiating Call',
+        description: 'Starting voice call with student'
+      });
+    } else {
+      // In-person class
+      toast({
+        title: 'Class Location',
+        description: `Room: ${classItem.roomName || 'TBA'}`
+      });
+    }
+  };
+
+  const handleClassChat = (classId: number) => {
+    setLocation(`/teacher/class/${classId}/chat`);
+  };
+
+  const handleViewAssignment = (assignmentId: number) => {
+    setLocation(`/teacher/assignments?view=${assignmentId}`);
+  };
+
+  const handleSetAvailability = () => {
+    setLocation('/teacher/availability');
+  };
+
+  const handleViewSchedule = () => {
+    setLocation('/teacher/schedule');
   };
 
   return (
@@ -173,7 +216,11 @@ export default function TeacherDashboard() {
                           </p>
                         </div>
                       </div>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleJoinClass(session)}
+                      >
                         <Video className="w-4 h-4 mr-1" />
                         Join
                       </Button>
@@ -245,12 +292,21 @@ export default function TeacherDashboard() {
                           <span>{classItem.duration} min</span>
                         </div>
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" className="flex-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => handleClassChat(classItem.id)}
+                          >
                             <MessageCircle className="w-3 h-3 mr-1" />
                             Chat
                           </Button>
                           {classItem.type === 'online' && (
-                            <Button size="sm" className="flex-1">
+                            <Button 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => handleJoinClass(classItem)}
+                            >
                               <Video className="w-3 h-3 mr-1" />
                               Join
                             </Button>
@@ -297,7 +353,11 @@ export default function TeacherDashboard() {
                             }>
                               {assignment.status}
                             </Badge>
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleViewAssignment(assignment.id)}
+                            >
                               <FileText className="w-3 h-3 mr-1" />
                               View
                             </Button>
@@ -336,7 +396,10 @@ export default function TeacherDashboard() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge variant="outline">{session.duration} min</Badge>
-                        <Button size="sm">
+                        <Button 
+                          size="sm"
+                          onClick={() => handleJoinClass(session)}
+                        >
                           {session.type === 'online' ? (
                             <>
                               <Video className="w-3 h-3 mr-1" />
@@ -374,8 +437,8 @@ export default function TeacherDashboard() {
                     Teachers can only set monthly availability slots.<br />
                     Administrators will assign classes based on your availability.
                   </p>
-                  <Button>
-                    <Calendar className="w-4 h-4 mr-2" />
+                  <Button onClick={handleSetAvailability}>
+                    <Settings className="w-4 h-4 mr-2" />
                     Set Monthly Availability
                   </Button>
                 </div>
