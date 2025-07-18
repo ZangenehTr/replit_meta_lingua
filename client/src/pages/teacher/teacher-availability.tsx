@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,7 +22,13 @@ import { useLanguage } from '@/hooks/use-language';
 
 const availabilityPeriodSchema = z.object({
   periodStartDate: z.date().refine(
-    (date) => date >= new Date(new Date().setHours(0, 0, 0, 0)),
+    (date) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const inputDate = new Date(date);
+      inputDate.setHours(0, 0, 0, 0);
+      return inputDate >= today;
+    },
     "Start date cannot be in the past"
   ),
   periodEndDate: z.date(),
@@ -266,8 +272,10 @@ export default function TeacherAvailabilityPage() {
                       mode="single"
                       selected={field.value}
                       onSelect={(date) => {
+                        console.log('Start date selected:', date);
                         if (date) {
                           field.onChange(date);
+                          form.clearErrors('periodStartDate');
                         }
                       }}
                       disabled={(date) => {
@@ -312,8 +320,10 @@ export default function TeacherAvailabilityPage() {
                       mode="single"
                       selected={field.value}
                       onSelect={(date) => {
+                        console.log('End date selected:', date);
                         if (date) {
                           field.onChange(date);
+                          form.clearErrors('periodEndDate');
                         }
                       }}
                       disabled={(date) => {
@@ -472,6 +482,9 @@ export default function TeacherAvailabilityPage() {
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Create Availability Period</DialogTitle>
+                  <DialogDescription>
+                    Set your availability period to inform supervisors when you're available for teaching assignments.
+                  </DialogDescription>
                 </DialogHeader>
                 <AvailabilityForm 
                   form={form} 
@@ -592,6 +605,9 @@ export default function TeacherAvailabilityPage() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Availability Period</DialogTitle>
+              <DialogDescription>
+                Update your availability period details and settings.
+              </DialogDescription>
             </DialogHeader>
             <AvailabilityForm 
               form={editForm} 
