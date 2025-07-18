@@ -111,7 +111,7 @@ export default function TeacherSchedulePage() {
 
   const getSessionsForDate = (date: Date) => {
     const dateString = date.toISOString().split('T')[0];
-    return sessions.filter(session => session.date === dateString);
+    return classes.filter(session => session.date === dateString);
   };
 
   const weekDays = getWeekDays();

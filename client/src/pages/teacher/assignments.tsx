@@ -59,8 +59,7 @@ export default function TeacherAssignmentsPage() {
     
     // Debug logging for button visibility (development only)
     if (process.env.NODE_ENV === 'development') {
-      console.log('Current viewAssignmentId:', viewParam ? parseInt(viewParam) : null);
-      console.log('Show create button:', !viewParam);
+
     }
   }, [location]);
 
@@ -146,7 +145,6 @@ export default function TeacherAssignmentsPage() {
   };
 
   const handleBackToList = () => {
-    console.log('Back to list clicked, clearing view state');
     setViewAssignmentId(null);
     // Clear URL parameters properly
     window.history.replaceState({}, '', '/teacher/assignments');
@@ -573,7 +571,6 @@ export default function TeacherAssignmentsPage() {
                         size="sm" 
                         variant="outline"
                         onClick={() => {
-                          console.log('View button clicked for assignment:', assignment.id);
                           setViewAssignmentId(assignment.id);
                           const newUrl = new URL(window.location.href);
                           newUrl.searchParams.set('view', assignment.id.toString());
@@ -588,7 +585,6 @@ export default function TeacherAssignmentsPage() {
                         <Button 
                           size="sm"
                           onClick={() => {
-                            console.log('Grade button clicked for assignment:', assignment.id);
                             setSelectedAssignment(assignment);
                             setFeedbackDialogOpen(true);
                           }}
@@ -597,12 +593,7 @@ export default function TeacherAssignmentsPage() {
                           {assignment.status === 'submitted' ? 'Grade' : 'Provide Feedback'}
                         </Button>
                       )}
-                      {/* Debug: Show grade button logic */}
-                      {process.env.NODE_ENV === 'development' && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          Status: {assignment.status}, Feedback: {assignment.feedback ? 'Yes' : 'No'}
-                        </div>
-                      )}
+
                     </div>
                   </div>
                 </CardContent>

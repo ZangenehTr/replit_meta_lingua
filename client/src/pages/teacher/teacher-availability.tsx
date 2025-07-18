@@ -21,11 +21,11 @@ import { apiRequest } from '@/lib/queryClient';
 import { useLanguage } from '@/hooks/use-language';
 
 const availabilityPeriodSchema = z.object({
-  periodStartDate: z.coerce.date().refine(
-    (date) => date >= new Date(),
+  periodStartDate: z.date().refine(
+    (date) => date >= new Date(new Date().setHours(0, 0, 0, 0)),
     "Start date cannot be in the past"
   ),
-  periodEndDate: z.coerce.date(),
+  periodEndDate: z.date(),
   dayOfWeek: z.string().min(1, 'Day of week is required'),
   timeDivision: z.string().min(1, 'Time division is required'),
   classFormat: z.string().min(1, 'Class format is required'),
@@ -265,8 +265,16 @@ export default function TeacherAvailabilityPage() {
                     <Calendar
                       mode="single"
                       selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => date < new Date()}
+                      onSelect={(date) => {
+                        if (date) {
+                          field.onChange(date);
+                        }
+                      }}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
@@ -303,8 +311,16 @@ export default function TeacherAvailabilityPage() {
                     <Calendar
                       mode="single"
                       selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => date < new Date()}
+                      onSelect={(date) => {
+                        if (date) {
+                          field.onChange(date);
+                        }
+                      }}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
