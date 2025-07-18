@@ -31,13 +31,7 @@ export default function TeacherSchedulePage() {
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [newAvailability, setNewAvailability] = useState({
-    dayOfWeek: '',
-    startTime: '',
-    endTime: '',
-    isActive: true
-  });
+
 
   // Only fetch assigned classes (not create sessions)
   const { data: classes = [], isLoading } = useQuery<ClassSession[]>({
@@ -48,55 +42,7 @@ export default function TeacherSchedulePage() {
     queryKey: ["/api/teacher/availability"],
   });
 
-  const addAvailabilityMutation = useMutation({
-    mutationFn: async (availabilityData: any) => {
-      const response = await fetch('/api/teacher/availability', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify(availabilityData)
-      });
-      if (!response.ok) {
-        throw new Error('Failed to add availability');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Availability added successfully"
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/teacher/availability"] });
-      setShowAddDialog(false);
-      setNewAvailability({
-        dayOfWeek: '',
-        startTime: '',
-        endTime: '',
-        isActive: true
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
 
-  const handleAddAvailability = () => {
-    if (!newAvailability.dayOfWeek || !newAvailability.startTime || !newAvailability.endTime) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-    addAvailabilityMutation.mutate(newAvailability);
-  };
 
   const getWeekDays = () => {
     const startOfWeek = new Date(selectedDate);
@@ -154,78 +100,7 @@ export default function TeacherSchedulePage() {
             >
               {t('month')}
             </Button>
-            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-              <DialogTrigger asChild>
-                <Button className="ml-4">
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t('addAvailability')}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>{t('addAvailability')}</DialogTitle>
-                  <DialogDescription>
-                    Add your teaching availability for students to book sessions.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="dayOfWeek" className="text-right">
-                      Day
-                    </Label>
-                    <Select value={newAvailability.dayOfWeek} onValueChange={(value) => 
-                      setNewAvailability(prev => ({ ...prev, dayOfWeek: value }))
-                    }>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select day" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Monday">Monday</SelectItem>
-                        <SelectItem value="Tuesday">Tuesday</SelectItem>
-                        <SelectItem value="Wednesday">Wednesday</SelectItem>
-                        <SelectItem value="Thursday">Thursday</SelectItem>
-                        <SelectItem value="Friday">Friday</SelectItem>
-                        <SelectItem value="Saturday">Saturday</SelectItem>
-                        <SelectItem value="Sunday">Sunday</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="startTime" className="text-right">
-                      Start Time
-                    </Label>
-                    <Input
-                      id="startTime"
-                      type="time"
-                      value={newAvailability.startTime}
-                      onChange={(e) => setNewAvailability(prev => ({ ...prev, startTime: e.target.value }))}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="endTime" className="text-right">
-                      End Time
-                    </Label>
-                    <Input
-                      id="endTime"
-                      type="time"
-                      value={newAvailability.endTime}
-                      onChange={(e) => setNewAvailability(prev => ({ ...prev, endTime: e.target.value }))}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button 
-                    type="submit" 
-                    onClick={handleAddAvailability}
-                    disabled={addAvailabilityMutation.isPending}
-                  >
-                    {addAvailabilityMutation.isPending ? 'Adding...' : 'Add Availability'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+
           </div>
         </div>
 
