@@ -217,91 +217,88 @@ export default function TeacherStudentMatchingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Teacher-Student Matching System
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             Match students with teachers based on schedule availability, language, level, and preferences
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card>
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Students Needing Teachers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-blue-100">Students Needing Teachers</CardTitle>
+              <Users className="h-5 w-5 text-blue-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{students.length}</div>
-              <p className="text-xs text-muted-foreground">Awaiting assignment</p>
+              <div className="text-3xl font-bold">{students.length}</div>
+              <p className="text-xs text-blue-100">Awaiting assignment</p>
             </CardContent>
           </Card>
-
-          <Card>
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Available Teachers</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-green-100">Available Teachers</CardTitle>
+              <UserPlus className="h-5 w-5 text-green-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{teachers.length}</div>
-              <p className="text-xs text-muted-foreground">Have capacity</p>
+              <div className="text-3xl font-bold">{teachers.length}</div>
+              <p className="text-xs text-green-100">Have capacity</p>
             </CardContent>
           </Card>
-
-          <Card>
+          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Private Classes</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-purple-100">Private Classes</CardTitle>
+              <Target className="h-5 w-5 text-purple-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {students.filter((s: Student) => s.preferredClassType === 'private').length}
+              <div className="text-3xl font-bold">
+                {students.filter((s: Student) => s.preferredClassType === 'private' || s.preferredClassType === 'both').length}
               </div>
-              <p className="text-xs text-muted-foreground">Students prefer 1-on-1</p>
+              <p className="text-xs text-purple-100">Students prefer 1-on-1</p>
             </CardContent>
           </Card>
-
-          <Card>
+          <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Online Classes</CardTitle>
-              <Video className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-indigo-100">Online Classes</CardTitle>
+              <Video className="h-5 w-5 text-indigo-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {students.filter((s: Student) => s.preferredMode === 'online').length}
+              <div className="text-3xl font-bold">
+                {students.filter((s: Student) => s.preferredMode === 'online' || s.preferredMode === 'both').length}
               </div>
-              <p className="text-xs text-muted-foreground">Prefer virtual</p>
+              <p className="text-xs text-indigo-100">Prefer virtual</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Search and Filters */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Filter className="h-5 w-5" />
+        {/* Filters */}
+        <Card className="mb-8 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-lg">
+            <CardTitle className="flex items-center text-gray-800">
+              <Filter className="h-5 w-5 mr-2 text-blue-600" />
               Filters
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search students..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
+                  className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
               <Select value={filterLevel} onValueChange={setFilterLevel}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Levels" />
+                <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500">
+                  <SelectValue placeholder="Select Level" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Levels</SelectItem>
@@ -311,8 +308,8 @@ export default function TeacherStudentMatchingPage() {
                 </SelectContent>
               </Select>
               <Select value={filterLanguage} onValueChange={setFilterLanguage}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Languages" />
+                <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500">
+                  <SelectValue placeholder="Select Language" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Languages</SelectItem>
@@ -322,8 +319,8 @@ export default function TeacherStudentMatchingPage() {
                 </SelectContent>
               </Select>
               <Select value={filterClassType} onValueChange={setFilterClassType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Class Type" />
+                <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500">
+                  <SelectValue placeholder="Select Type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
@@ -332,8 +329,8 @@ export default function TeacherStudentMatchingPage() {
                 </SelectContent>
               </Select>
               <Select value={filterMode} onValueChange={setFilterMode}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Mode" />
+                <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500">
+                  <SelectValue placeholder="Select Mode" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Modes</SelectItem>
@@ -346,65 +343,82 @@ export default function TeacherStudentMatchingPage() {
         </Card>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {/* Students List */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Students Needing Teachers</h2>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Students Needing Teachers</h2>
+              <Badge variant="secondary" className="text-sm">
+                {filteredStudents.length} students
+              </Badge>
+            </div>
             {studentsLoading ? (
-              <div className="text-center py-8">Loading students...</div>
+              <Card className="shadow-lg">
+                <CardContent className="text-center py-12">
+                  <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading students...</p>
+                </CardContent>
+              </Card>
             ) : filteredStudents.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-8">
-                  <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No students found matching criteria</p>
+              <Card className="shadow-lg border-dashed border-2 border-gray-300">
+                <CardContent className="text-center py-12">
+                  <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">No students found</h3>
+                  <p className="text-gray-500">Try adjusting your search filters to find more students</p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                 {filteredStudents.map((student: Student) => (
                   <Card 
                     key={student.id}
-                    className={`cursor-pointer transition-all ${
-                      selectedStudent?.id === student.id ? 'ring-2 ring-primary' : 'hover:shadow-md'
+                    className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                      selectedStudent?.id === student.id 
+                        ? 'ring-2 ring-blue-500 shadow-lg bg-blue-50/50' 
+                        : 'hover:shadow-md border-gray-200'
                     }`}
                     onClick={() => setSelectedStudent(student)}
                   >
-                    <CardContent className="p-4">
+                    <CardContent className="p-6">
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <Avatar>
-                            <AvatarFallback>
+                        <div className="flex items-center space-x-4">
+                          <Avatar className="h-12 w-12">
+                            <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-semibold">
                               {student.firstName[0]}{student.lastName[0]}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <h3 className="font-medium">
+                            <h3 className="font-semibold text-lg text-gray-900">
                               {student.firstName} {student.lastName}
                             </h3>
-                            <p className="text-sm text-gray-600">{student.email}</p>
-                            <div className="flex items-center gap-2 mt-2">
-                              <Badge variant="secondary">
+                            <p className="text-sm text-gray-600 mb-3">{student.email}</p>
+                            <div className="flex flex-wrap gap-2">
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                                 <BookOpen className="h-3 w-3 mr-1" />
                                 {student.level}
                               </Badge>
-                              <Badge variant="outline">
+                              <Badge variant="outline" className="border-green-200 text-green-700">
                                 {student.language}
                               </Badge>
                               <Badge variant={student.preferredClassType === 'private' ? 'default' : 'secondary'}>
                                 {student.preferredClassType}
                               </Badge>
-                              <Badge variant="outline">
-                                {student.preferredMode === 'online' ? <Video className="h-3 w-3" /> : <Home className="h-3 w-3" />}
+                              <Badge variant="outline" className="border-purple-200 text-purple-700">
+                                {student.preferredMode === 'online' ? <Video className="h-3 w-3 mr-1" /> : <Home className="h-3 w-3 mr-1" />}
+                                {student.preferredMode}
                               </Badge>
                             </div>
                           </div>
                         </div>
+                        {selectedStudent?.id === student.id && (
+                          <CheckCircle className="h-6 w-6 text-blue-500" />
+                        )}
                       </div>
                       {student.timeSlots && student.timeSlots.length > 0 && (
-                        <div className="mt-3">
-                          <p className="text-sm font-medium mb-1">Available Times:</p>
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                          <p className="text-sm font-medium text-gray-700 mb-1">Available Times:</p>
                           <p className="text-xs text-gray-600">
-                            {student.timeSlots.length} time slots across week
+                            {student.timeSlots.length} time slots available across the week
                           </p>
                         </div>
                       )}
@@ -416,21 +430,39 @@ export default function TeacherStudentMatchingPage() {
           </div>
 
           {/* Compatible Teachers */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">
-              {selectedStudent ? 'Compatible Teachers' : 'Select a Student'}
-            </h2>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {selectedStudent ? 'Select a Teacher' : 'Select a Student'}
+              </h2>
+              {selectedStudent && (
+                <Button 
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                  disabled={!selectedTeacher}
+                  onClick={() => setMatchDialogOpen(true)}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Match Selected
+                </Button>
+              )}
+            </div>
             {!selectedStudent ? (
-              <Card>
+              <Card className="shadow-lg border-dashed border-2 border-gray-300">
                 <CardContent className="text-center py-16">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">Select a student to see compatible teachers</p>
+                  <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Choose a student first</h3>
+                  <p className="text-gray-500">Select a student from the left to see compatible teachers</p>
                 </CardContent>
               </Card>
             ) : teachersLoading ? (
-              <div className="text-center py-8">Loading teachers...</div>
+              <Card className="shadow-lg">
+                <CardContent className="text-center py-12">
+                  <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-gray-600">Finding compatible teachers...</p>
+                </CardContent>
+              </Card>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                 {getCompatibleTeachers(selectedStudent)
                   .sort((a, b) => getMatchPercentage(selectedStudent, b) - getMatchPercentage(selectedStudent, a))
                   .map((teacher: Teacher) => {
@@ -439,65 +471,79 @@ export default function TeacherStudentMatchingPage() {
                     return (
                       <Card 
                         key={teacher.id}
-                        className={`cursor-pointer transition-all ${
-                          selectedTeacher?.id === teacher.id ? 'ring-2 ring-primary' : 'hover:shadow-md'
+                        className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                          selectedTeacher?.id === teacher.id 
+                            ? 'ring-2 ring-green-500 shadow-lg bg-green-50/50' 
+                            : 'hover:shadow-md border-gray-200'
                         }`}
                         onClick={() => setSelectedTeacher(teacher)}
                       >
-                        <CardContent className="p-4">
+                        <CardContent className="p-6">
                           <div className="flex items-start justify-between">
-                            <div className="flex items-center space-x-3">
-                              <Avatar>
-                                <AvatarFallback>
+                            <div className="flex items-center space-x-4">
+                              <Avatar className="h-12 w-12">
+                                <AvatarFallback className="bg-gradient-to-br from-green-400 to-green-600 text-white font-semibold">
                                   {teacher.firstName[0]}{teacher.lastName[0]}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <h3 className="font-medium">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-semibold text-lg text-gray-900">
                                     {teacher.firstName} {teacher.lastName}
                                   </h3>
                                   <Badge 
                                     variant={matchPercentage >= 80 ? "default" : matchPercentage >= 50 ? "secondary" : "outline"}
+                                    className={`${
+                                      matchPercentage >= 80 ? 'bg-green-500 text-white' : 
+                                      matchPercentage >= 50 ? 'bg-yellow-500 text-white' : 
+                                      'bg-gray-200 text-gray-700'
+                                    }`}
                                   >
-                                    {matchPercentage}% Schedule Match
+                                    {matchPercentage}% Match
                                   </Badge>
                                 </div>
-                                <p className="text-sm text-gray-600">{teacher.email}</p>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-sm">
+                                <p className="text-sm text-gray-600 mb-3">{teacher.email}</p>
+                                <div className="flex items-center gap-4">
+                                  <span className="text-sm text-gray-700">
                                     <Users className="h-3 w-3 inline mr-1" />
                                     {teacher.currentStudents}/{teacher.maxStudents} students
                                   </span>
                                   <span className="text-sm text-gray-600">
-                                    ¥{teacher.hourlyRate}/hour
+                                    ${teacher.hourlyRate}/hour
                                   </span>
                                 </div>
                               </div>
                             </div>
+                            {selectedTeacher?.id === teacher.id && (
+                              <CheckCircle className="h-6 w-6 text-green-500" />
+                            )}
                           </div>
-                          <div className="mt-3">
-                            <div className="flex flex-wrap gap-1 mb-2">
-                              {teacher.languages.map((lang, idx) => (
+                          <div className="mt-4">
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {teacher.languages?.map((lang, idx) => (
                                 <Badge 
                                   key={idx} 
                                   variant={lang === selectedStudent.language ? "default" : "outline"} 
-                                  className="text-xs"
+                                  className={`text-xs ${
+                                    lang === selectedStudent.language ? 'bg-blue-500 text-white' : 'border-gray-300'
+                                  }`}
                                 >
                                   {lang}
                                 </Badge>
                               ))}
-                              {teacher.classTypes.map((type, idx) => (
-                                <Badge key={idx} variant="secondary" className="text-xs">
+                              {teacher.classTypes?.map((type, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs bg-purple-100 text-purple-700">
                                   {type}
                                 </Badge>
                               ))}
                             </div>
                             {matchingSlots.length > 0 && (
-                              <p className="text-xs text-green-600">
-                                <Clock className="h-3 w-3 inline mr-1" />
-                                {matchingSlots.length} matching time slots
-                              </p>
+                              <div className="p-2 bg-green-50 rounded-lg">
+                                <p className="text-xs text-green-700 font-medium">
+                                  <Clock className="h-3 w-3 inline mr-1" />
+                                  {matchingSlots.length} matching time slots available
+                                </p>
+                              </div>
                             )}
                           </div>
                         </CardContent>
@@ -511,16 +557,6 @@ export default function TeacherStudentMatchingPage() {
 
         {/* Match Dialog */}
         <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              className="fixed bottom-8 right-8"
-              size="lg"
-              disabled={!selectedStudent || !selectedTeacher}
-            >
-              <UserPlus className="h-5 w-5 mr-2" />
-              Match Selected
-            </Button>
-          </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Confirm Teacher-Student Match</DialogTitle>
