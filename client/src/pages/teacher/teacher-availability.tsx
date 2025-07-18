@@ -436,29 +436,12 @@ export default function TeacherAvailabilityPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Availability Management</h1>
             <p className="text-gray-600">Set your teaching availability periods to inform supervisors and admins</p>
           </div>
-          {/* Only show header button when there are existing periods */}
+          {/* Show header button only when there are existing periods */}
           {availabilityPeriods.length > 0 && (
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="mt-4 lg:mt-0">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add New Period
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Create Availability Period</DialogTitle>
-                  <DialogDescription>
-                    Set your availability period to inform supervisors when you're available for teaching assignments.
-                  </DialogDescription>
-                </DialogHeader>
-                <AvailabilityForm 
-                  form={form} 
-                  onSubmit={onCreatePeriod} 
-                  isLoading={createPeriodMutation.isPending}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button className="mt-4 lg:mt-0" onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Period
+            </Button>
           )}
         </div>
 
@@ -565,6 +548,23 @@ export default function TeacherAvailabilityPage() {
             ))
           )}
         </div>
+
+        {/* Create Dialog - Available regardless of existing periods */}
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Create Availability Period</DialogTitle>
+              <DialogDescription>
+                Set your availability period to inform supervisors when you're available for teaching assignments.
+              </DialogDescription>
+            </DialogHeader>
+            <AvailabilityForm 
+              form={form} 
+              onSubmit={onCreatePeriod} 
+              isLoading={createPeriodMutation.isPending}
+            />
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>

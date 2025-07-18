@@ -18,12 +18,25 @@ const RTL_LANGUAGES = ['fa', 'ar'];
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { i18n, t } = useTranslation();
-  const language = (i18n.language as Language) || 'en';
+  
+  // Force English if no explicit language is set, and clear any cached Persian language
+  const storedLanguage = localStorage.getItem('i18nextLng');
+  const language = (storedLanguage as Language) || 'en';
+  
+  // Initialize to English if not explicitly set to another language
+  React.useEffect(() => {
+    if (!storedLanguage || storedLanguage === 'fa') {
+      console.log('Initializing language to English (clearing cached Persian)');
+      i18n.changeLanguage('en');
+      localStorage.setItem('i18nextLng', 'en');
+    }
+  }, [i18n, storedLanguage]);
   
   const direction: Direction = RTL_LANGUAGES.includes(language) ? 'rtl' : 'ltr';
   const isRTL = direction === 'rtl';
 
   const setLanguage = (lang: Language) => {
+    console.log(`Setting language to: ${lang}`);
     i18n.changeLanguage(lang);
     localStorage.setItem('i18nextLng', lang);
   };
@@ -33,11 +46,16 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     document.documentElement.setAttribute('dir', direction);
     document.documentElement.setAttribute('lang', language);
     
-    // Add RTL class to body for CSS styling
+    // Add RTL class to body for CSS styling - ONLY for RTL languages
+    // Remove any existing direction classes first
+    document.body.classList.remove('rtl', 'ltr');
+    
     if (isRTL) {
       document.body.classList.add('rtl');
+      console.log(`Applied RTL for language: ${language}`);
     } else {
-      document.body.classList.remove('rtl');
+      document.body.classList.add('ltr');
+      console.log(`Applied LTR for language: ${language}`);
     }
   }, [language, direction, isRTL]);
 
