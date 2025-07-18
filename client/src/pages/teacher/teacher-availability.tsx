@@ -460,25 +460,29 @@ export default function TeacherAvailabilityPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Availability Management</h1>
             <p className="text-gray-600">Set your teaching availability periods to inform supervisors and admins</p>
           </div>
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="mt-4 lg:mt-0">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Availability Period
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Create Availability Period</DialogTitle>
-              </DialogHeader>
-              <AvailabilityForm 
-                form={form} 
-                onSubmit={onCreatePeriod} 
-                isLoading={createPeriodMutation.isPending}
-              />
-            </DialogContent>
-          </Dialog>
+          {/* Only show header button when there are existing periods */}
+          {availabilityPeriods.length > 0 && (
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="mt-4 lg:mt-0">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New Period
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Create Availability Period</DialogTitle>
+                </DialogHeader>
+                <AvailabilityForm 
+                  form={form} 
+                  onSubmit={onCreatePeriod} 
+                  isLoading={createPeriodMutation.isPending}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
+
 
         {/* Availability Periods List */}
         <div className="space-y-6">
@@ -490,7 +494,7 @@ export default function TeacherAvailabilityPage() {
                 <p className="text-gray-600 mb-4">Create your first availability period to let supervisors know when you're available</p>
                 <Button onClick={() => setCreateDialogOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Availability Period
+                  Add Your First Period
                 </Button>
               </CardContent>
             </Card>
