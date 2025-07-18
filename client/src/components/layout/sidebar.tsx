@@ -76,7 +76,7 @@ export function Sidebar() {
   const navigationItems = user ? getNavigationForRole(user.role, t) : [];
 
   return (
-    <aside className={`w-64 md:w-64 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 ${isRTL ? 'border-l border-gray-200 dark:border-gray-700' : 'border-r border-gray-200 dark:border-gray-700'} fixed top-14 h-[calc(100vh-3.5rem)] overflow-y-auto ${isRTL ? 'right-0' : 'left-0'} z-30`}>
+    <aside className="w-64 md:w-64 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 fixed top-14 left-0 h-[calc(100vh-3.5rem)] overflow-y-auto z-30">
       <div className="p-6">
         <nav className="space-y-2">
           {navigationItems.map((item) => {
@@ -93,7 +93,7 @@ export function Sidebar() {
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                  <Icon className="h-4 w-4 mr-3" />
                   <span>{item.label}</span>
                   {item.badge && (
                     <Badge className="ml-auto" variant="secondary">

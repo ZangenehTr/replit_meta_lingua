@@ -1830,11 +1830,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const teacherId = req.user.id;
       const periodData = {
         teacherId,
-        ...req.body
+        ...req.body,
+        // Convert ISO date strings to proper Date objects
+        periodStartDate: new Date(req.body.periodStartDate),
+        periodEndDate: new Date(req.body.periodEndDate)
       };
       const period = await storage.createTeacherAvailabilityPeriod(periodData);
       res.json(period);
     } catch (error) {
+      console.error('Error creating availability period:', error);
       res.status(400).json({ message: "Failed to create availability period" });
     }
   });
@@ -1843,7 +1847,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const periodId = parseInt(req.params.periodId);
       const teacherId = req.user.id;
-      const updates = req.body;
+      const updates = {
+        ...req.body,
+        // Convert ISO date strings to proper Date objects if they exist
+        ...(req.body.periodStartDate && { periodStartDate: new Date(req.body.periodStartDate) }),
+        ...(req.body.periodEndDate && { periodEndDate: new Date(req.body.periodEndDate) })
+      };
       
       // Verify the period belongs to the teacher
       const periods = await storage.getTeacherAvailabilityPeriods(teacherId);
@@ -1855,6 +1864,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedPeriod = await storage.updateTeacherAvailabilityPeriod(periodId, updates);
       res.json(updatedPeriod);
     } catch (error) {
+      console.error('Error updating availability period:', error);
       res.status(400).json({ message: "Failed to update availability period" });
     }
   });
