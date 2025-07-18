@@ -2041,10 +2041,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/available-teachers", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const { dayOfWeek, startTime, endTime } = req.query;
+      console.log('Available teachers request:', { dayOfWeek, startTime, endTime });
+      
       const availableTeachers = await storage.getAvailableTeachers(dayOfWeek as string, startTime as string, endTime as string);
+      
+      console.log('Found available teachers:', availableTeachers.length);
       res.json(availableTeachers);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch available teachers" });
+      console.error('Error in available teachers endpoint:', error);
+      res.status(500).json({ message: "Failed to fetch available teachers", error: error.message });
     }
   });
 

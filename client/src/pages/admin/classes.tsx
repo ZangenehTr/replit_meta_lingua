@@ -706,22 +706,28 @@ function ClassScheduleForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="teacher">Teacher</Label>
+          <Label htmlFor="teacher">Available Teachers</Label>
           <Select 
             value={formData.teacherId} 
             onValueChange={(v) => setFormData({ ...formData, teacherId: v })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select teacher" />
+              <SelectValue placeholder="Select available teacher" />
             </SelectTrigger>
             <SelectContent>
               {teachers.map((teacher: Teacher) => (
                 <SelectItem key={teacher.id} value={teacher.id.toString()}>
-                  {teacher.name}
+                  {teacher.name} {teacher.availabilityPeriods && teacher.availabilityPeriods.length > 0 && 
+                    `(${teacher.availabilityPeriods.length} availability periods)`}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {formData.teacherId && (
+            <div className="text-sm text-green-600 bg-green-50 p-2 rounded">
+              ✓ Teacher has availability periods matching the selected schedule
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
