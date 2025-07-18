@@ -8,14 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+// Removed Calendar and Popover imports - now using native HTML5 date inputs
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, Edit, Trash2, Clock, Calendar as CalendarLucide, Globe, MapPin, Bell, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Clock, Calendar as CalendarLucide, Globe, MapPin, Bell, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useLanguage } from '@/hooks/use-language';
@@ -240,7 +239,9 @@ export default function TeacherAvailabilityPage() {
     { value: 'hybrid', label: 'Hybrid (Online + In-Person)' }
   ];
 
-  const AvailabilityForm = ({ form, onSubmit, isLoading }: any) => (
+  const AvailabilityForm = ({ form, onSubmit, isLoading }: any) => {
+    console.log('AvailabilityForm rendered with form values:', form.getValues());
+    return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -250,43 +251,25 @@ export default function TeacherAvailabilityPage() {
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Start Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick start date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={(date) => {
-                        console.log('Start date selected:', date);
-                        if (date) {
-                          field.onChange(date);
-                          form.clearErrors('periodStartDate');
-                        }
-                      }}
-                      disabled={(date) => {
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        return date < today;
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <FormControl>
+                  <Input
+                    type="date"
+                    value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      console.log('=== NATIVE DATE INPUT START ===');
+                      console.log('Input value:', e.target.value);
+                      if (e.target.value) {
+                        const newDate = new Date(e.target.value);
+                        console.log('Parsed date:', newDate);
+                        field.onChange(newDate);
+                        form.clearErrors('periodStartDate');
+                        console.log('Form updated successfully');
+                      }
+                    }}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -298,43 +281,25 @@ export default function TeacherAvailabilityPage() {
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>End Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className={`w-full pl-3 text-left font-normal ${!field.value && "text-muted-foreground"}`}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick end date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={(date) => {
-                        console.log('End date selected:', date);
-                        if (date) {
-                          field.onChange(date);
-                          form.clearErrors('periodEndDate');
-                        }
-                      }}
-                      disabled={(date) => {
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        return date < today;
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <FormControl>
+                  <Input
+                    type="date"
+                    value={field.value ? field.value.toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      console.log('=== NATIVE DATE INPUT END ===');
+                      console.log('Input value:', e.target.value);
+                      if (e.target.value) {
+                        const newDate = new Date(e.target.value);
+                        console.log('Parsed date:', newDate);
+                        field.onChange(newDate);
+                        form.clearErrors('periodEndDate');
+                        console.log('Form updated successfully');
+                      }
+                    }}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -446,7 +411,8 @@ export default function TeacherAvailabilityPage() {
         </div>
       </form>
     </Form>
-  );
+    );
+  };
 
   if (isLoading) {
     return (
