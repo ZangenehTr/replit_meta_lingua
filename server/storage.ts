@@ -482,6 +482,11 @@ export interface IStorage {
   getStudentAssignments(userId: number): Promise<any[]>;
   getStudentGoals(userId: number): Promise<any[]>;
   getStudentHomework(userId: number): Promise<any[]>;
+
+  // ===== SUPERVISION METHODS =====
+  getRecentSupervisionObservations(supervisorId?: number): Promise<any[]>;
+  getTeacherPerformanceData(supervisorId?: number): Promise<any[]>;
+  getSupervisionStats(): Promise<any>;
 }
 
 export class MemStorage implements IStorage {

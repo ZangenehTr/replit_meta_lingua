@@ -11934,6 +11934,41 @@ Return JSON format:
 
   // ===== QUALITY ASSURANCE API ENDPOINTS =====
 
+  // Recent Observations
+  app.get("/api/supervision/recent-observations", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const supervisorId = req.user.role === 'Supervisor' ? req.user.id : undefined;
+      const observations = await storage.getRecentSupervisionObservations(supervisorId);
+      res.json(observations);
+    } catch (error) {
+      console.error('Error fetching recent observations:', error);
+      res.status(500).json({ message: "Failed to fetch recent observations" });
+    }
+  });
+
+  // Teacher Performance Data
+  app.get("/api/supervision/teacher-performance", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const supervisorId = req.user.role === 'Supervisor' ? req.user.id : undefined;
+      const performance = await storage.getTeacherPerformanceData(supervisorId);
+      res.json(performance);
+    } catch (error) {
+      console.error('Error fetching teacher performance:', error);
+      res.status(500).json({ message: "Failed to fetch teacher performance" });
+    }
+  });
+
+  // Supervision Statistics
+  app.get("/api/supervision/stats", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const stats = await storage.getSupervisionStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching supervision stats:', error);
+      res.status(500).json({ message: "Failed to fetch supervision stats" });
+    }
+  });
+
   // Live Class Sessions
   app.get("/api/supervision/live-sessions", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
