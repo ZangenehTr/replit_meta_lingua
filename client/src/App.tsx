@@ -50,6 +50,7 @@ import TeacherDashboardNew from "@/pages/teacher/dashboard";
 import AccountantDashboard from "@/pages/accountant/dashboard";
 import MentorDashboard from "@/pages/mentor/dashboard";
 import StudentDashboard from "@/pages/student/dashboard";
+import SupervisorDashboard from "@/pages/supervisor/supervisor-dashboard";
 
 // Student pages
 import TutorsPage from "@/pages/student/tutors";
@@ -460,6 +461,13 @@ function Router() {
       <Route path="/teacher/class/:classId/chat">
         <ProtectedRoute>
           <ClassCommunication />
+        </ProtectedRoute>
+      </Route>
+
+      {/* Supervisor Routes */}
+      <Route path="/supervisor/dashboard">
+        <ProtectedRoute>
+          <SupervisorDashboard />
         </ProtectedRoute>
       </Route>
 

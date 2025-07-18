@@ -32,8 +32,11 @@ export default function Dashboard() {
   const { user } = useAuth();
   
   // Redirect users to their role-specific dashboards
-  if (user?.role === 'Admin' || user?.role === 'Supervisor') {
+  if (user?.role === 'Admin') {
     return <Redirect to="/admin" />;
+  }
+  if (user?.role === 'Supervisor') {
+    return <Redirect to="/supervisor/dashboard" />;
   }
   if (user?.role === 'Teacher/Tutor') {
     return <Redirect to="/teacher" />;

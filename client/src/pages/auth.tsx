@@ -51,6 +51,14 @@ export default function Auth() {
         setLocation("/admin");
       } else if (user.role === 'teacher') {
         setLocation("/teacher/dashboard");
+      } else if (user.role === 'supervisor') {
+        setLocation("/supervisor/dashboard");
+      } else if (user.role === 'mentor') {
+        setLocation("/mentor/dashboard");
+      } else if (user.role === 'accountant') {
+        setLocation("/accountant");
+      } else if (user.role === 'call-center-agent') {
+        setLocation("/callcenter");
       } else {
         setLocation("/dashboard");
       }
