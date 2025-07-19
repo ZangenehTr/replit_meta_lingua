@@ -52,10 +52,10 @@ import {
   type AiVocabularyTracking, type InsertAiVocabularyTracking, type AiGrammarTracking, type InsertAiGrammarTracking,
   type AiPronunciationAnalysis, type InsertAiPronunciationAnalysis,
   // Quality Assurance types
-  liveClassSessions, teacherRetentionData, studentQuestionnaires, questionnaireResponses, supervisionObservations,
+  liveClassSessions, teacherRetentionData, studentQuestionnaires, questionnaireResponses, supervisionObservations, scheduledObservations,
   type LiveClassSession, type InsertLiveClassSession, type TeacherRetentionData, type InsertTeacherRetentionData,
   type StudentQuestionnaire, type InsertStudentQuestionnaire, type QuestionnaireResponse, type InsertQuestionnaireResponse,
-  type SupervisionObservation, type InsertSupervisionObservation,
+  type SupervisionObservation, type InsertSupervisionObservation, type ScheduledObservation, type InsertScheduledObservation,
   // Communication system types
   supportTickets, supportTicketMessages, chatConversations, chatMessages, pushNotifications, notificationDeliveryLogs,
   type SupportTicket, type InsertSupportTicket, type SupportTicketMessage, type InsertSupportTicketMessage,
@@ -6749,5 +6749,182 @@ export class DatabaseStorage implements IStorage {
       ))
       .returning();
     return updated;
+  }
+
+  // ===== SCHEDULED OBSERVATIONS METHODS =====
+
+  async getScheduledObservations(supervisorId?: number): Promise<ScheduledObservation[]> {
+    try {
+      const query = db.select().from(scheduledObservations);
+      
+      if (supervisorId) {
+        return await query.where(eq(scheduledObservations.supervisorId, supervisorId));
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error('Error fetching scheduled observations:', error);
+      return [];
+    }
+  }
+
+  async createScheduledObservation(data: InsertScheduledObservation): Promise<ScheduledObservation> {
+    try {
+      const [observation] = await db.insert(scheduledObservations)
+        .values({
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+      return observation;
+    } catch (error) {
+      console.error('Error creating scheduled observation:', error);
+      throw error;
+    }
+  }
+
+  async updateScheduledObservation(id: number, data: Partial<ScheduledObservation>): Promise<ScheduledObservation> {
+    try {
+      const [updated] = await db.update(scheduledObservations)
+        .set({
+          ...data,
+          updatedAt: new Date()
+        })
+        .where(eq(scheduledObservations.id, id))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating scheduled observation:', error);
+      throw error;
+    }
+  }
+
+  async deleteScheduledObservation(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(scheduledObservations)
+        .where(eq(scheduledObservations.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting scheduled observation:', error);
+      return false;
+    }
+  }
+
+  async getTeacherScheduledObservations(teacherId: number): Promise<ScheduledObservation[]> {
+    try {
+      return await db.select()
+        .from(scheduledObservations)
+        .where(eq(scheduledObservations.teacherId, teacherId))
+        .orderBy(desc(scheduledObservations.scheduledDate));
+    } catch (error) {
+      console.error('Error fetching teacher scheduled observations:', error);
+      return [];
+    }
+  }
+
+  async getPendingObservations(supervisorId?: number): Promise<ScheduledObservation[]> {
+    try {
+      const query = db.select()
+        .from(scheduledObservations)
+        .where(
+          and(
+            or(
+              eq(scheduledObservations.status, 'scheduled'),
+              eq(scheduledObservations.status, 'in_progress')
+            ),
+            gte(scheduledObservations.scheduledDate, new Date())
+          )
+        )
+        .orderBy(scheduledObservations.scheduledDate);
+      
+      if (supervisorId) {
+        return await query.where(eq(scheduledObservations.supervisorId, supervisorId));
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error('Error fetching pending observations:', error);
+      return [];
+    }
+  }
+
+  async getOverdueObservations(supervisorId?: number): Promise<ScheduledObservation[]> {
+    try {
+      const query = db.select()
+        .from(scheduledObservations)
+        .where(
+          and(
+            eq(scheduledObservations.status, 'scheduled'),
+            lt(scheduledObservations.scheduledDate, new Date())
+          )
+        )
+        .orderBy(scheduledObservations.scheduledDate);
+      
+      if (supervisorId) {
+        return await query.where(eq(scheduledObservations.supervisorId, supervisorId));
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error('Error fetching overdue observations:', error);
+      return [];
+    }
+  }
+
+  async getTeacherClassesForObservation(teacherId: number): Promise<any[]> {
+    try {
+      // Get real teacher classes with enhanced information for observation selection
+      const teacherSessions = await db.execute(sql`
+        SELECT 
+          s.id,
+          s.title,
+          s.course_id,
+          s.student_id,
+          s.scheduled_at,
+          s.duration,
+          s.status,
+          s.room_id,
+          s.session_url,
+          s.notes,
+          c.title as course_name,
+          c.delivery_mode,
+          u.first_name as student_first_name,
+          u.last_name as student_last_name,
+          r.name as room_name
+        FROM sessions s
+        LEFT JOIN courses c ON s.course_id = c.id
+        LEFT JOIN users u ON s.student_id = u.id
+        LEFT JOIN rooms r ON s.room_id = r.id
+        WHERE s.tutor_id = ${teacherId}
+          AND s.scheduled_at >= NOW() - INTERVAL '7 days'
+        ORDER BY s.scheduled_at ASC
+      `);
+
+      // Transform to match observation selection requirements
+      return teacherSessions.rows.map((session: any) => ({
+        id: session.id,
+        title: session.title || session.course_name || 'Language Class',
+        courseName: session.course_name || 'General Language Course',
+        courseId: session.course_id,
+        studentName: session.student_first_name && session.student_last_name 
+          ? `${session.student_first_name} ${session.student_last_name}` 
+          : 'Student',
+        studentId: session.student_id,
+        scheduledAt: session.scheduled_at,
+        duration: session.duration || 60,
+        status: session.status || 'scheduled',
+        roomName: session.room_name || (session.delivery_mode === 'online' ? 'Online' : 'Classroom'),
+        roomId: session.room_id,
+        sessionUrl: session.session_url,
+        deliveryMode: session.delivery_mode || 'online',
+        observationStatus: 'available', // Can be observed
+        isObservable: true,
+        lastObservation: null // TODO: Check if recently observed
+      }));
+    } catch (error) {
+      console.error('Error fetching teacher classes for observation:', error);
+      return [];
+    }
   }
 }

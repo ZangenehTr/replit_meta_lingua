@@ -12241,6 +12241,152 @@ Meta Lingua Academy`;
     }
   });
 
+  // ===== SCHEDULED OBSERVATIONS API ENDPOINTS =====
+
+  // Get all scheduled observations (filtered by supervisor)
+  app.get("/api/supervision/scheduled-observations", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const supervisorId = req.user.role === 'Supervisor' ? req.user.id : undefined;
+      const observations = await storage.getScheduledObservations(supervisorId);
+      res.json(observations);
+    } catch (error) {
+      console.error('Error fetching scheduled observations:', error);
+      res.status(500).json({ message: "Failed to fetch scheduled observations" });
+    }
+  });
+
+  // Create new scheduled observation with SMS notification
+  app.post("/api/supervision/scheduled-observations", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const observationData = {
+        ...req.body,
+        supervisorId: req.user.id
+      };
+      
+      const observation = await storage.createScheduledObservation(observationData);
+      
+      // Send SMS notification to teacher
+      try {
+        const teacher = await storage.getUser(observationData.teacherId);
+        if (teacher?.phoneNumber) {
+          const { kavenegarService } = await import('./kavenegar-service');
+          
+          const supervisorName = `${req.user.firstName} ${req.user.lastName}`;
+          const scheduledDate = new Date(observationData.scheduledDate).toLocaleDateString('fa-IR');
+          const scheduledTime = new Date(observationData.scheduledDate).toLocaleTimeString('fa-IR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+          
+          const smsMessage = `🎯 Class Observation Scheduled
+
+Dear ${teacher.firstName},
+
+A supervisor has scheduled an observation for your class:
+
+📅 Date: ${scheduledDate}
+⏰ Time: ${scheduledTime}
+👥 Type: ${observationData.observationType}
+📋 Priority: ${observationData.priority}
+
+Please ensure your class is ready for quality assessment.
+
+Supervisor: ${supervisorName}
+Meta Lingua Academy`;
+
+          const smsResult = await kavenegarService.sendSimpleSMS(teacher.phoneNumber, smsMessage);
+          
+          if (smsResult.success) {
+            // Update observation with notification status
+            await storage.updateScheduledObservation(observation.id, {
+              teacherNotified: true,
+              notificationSentAt: new Date()
+            });
+            console.log(`SMS notification sent to teacher ${teacher.firstName}: ${smsResult.messageId}`);
+          } else {
+            console.error(`Failed to send SMS to teacher ${teacher.firstName}: ${smsResult.error}`);
+          }
+        }
+      } catch (smsError) {
+        console.error('Error sending teacher notification SMS:', smsError);
+        // Don't fail the observation creation if SMS fails
+      }
+      
+      res.status(201).json(observation);
+    } catch (error) {
+      console.error('Error creating scheduled observation:', error);
+      res.status(400).json({ 
+        message: "Failed to create scheduled observation", 
+        error: error.message 
+      });
+    }
+  });
+
+  // Update scheduled observation
+  app.put("/api/supervision/scheduled-observations/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const observationId = parseInt(req.params.id);
+      const updateData = req.body;
+      const observation = await storage.updateScheduledObservation(observationId, updateData);
+      res.json(observation);
+    } catch (error) {
+      console.error('Error updating scheduled observation:', error);
+      res.status(400).json({ message: "Failed to update scheduled observation" });
+    }
+  });
+
+  // Delete scheduled observation
+  app.delete("/api/supervision/scheduled-observations/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const observationId = parseInt(req.params.id);
+      const success = await storage.deleteScheduledObservation(observationId);
+      if (success) {
+        res.json({ message: "Scheduled observation deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Scheduled observation not found" });
+      }
+    } catch (error) {
+      console.error('Error deleting scheduled observation:', error);
+      res.status(400).json({ message: "Failed to delete scheduled observation" });
+    }
+  });
+
+  // Get teacher's classes available for observation
+  app.get("/api/supervision/teacher-classes/:teacherId", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      const classes = await storage.getTeacherClassesForObservation(teacherId);
+      res.json(classes);
+    } catch (error) {
+      console.error('Error fetching teacher classes:', error);
+      res.status(500).json({ message: "Failed to fetch teacher classes" });
+    }
+  });
+
+  // Get pending observations for dashboard to-do list
+  app.get("/api/supervision/pending-observations", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const supervisorId = req.user.role === 'Supervisor' ? req.user.id : undefined;
+      const observations = await storage.getPendingObservations(supervisorId);
+      res.json(observations);
+    } catch (error) {
+      console.error('Error fetching pending observations:', error);
+      res.status(500).json({ message: "Failed to fetch pending observations" });
+    }
+  });
+
+  // Get overdue observations
+  app.get("/api/supervision/overdue-observations", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const supervisorId = req.user.role === 'Supervisor' ? req.user.id : undefined;
+      const observations = await storage.getOverdueObservations(supervisorId);
+      res.json(observations);
+    } catch (error) {
+      console.error('Error fetching overdue observations:', error);
+      res.status(500).json({ message: "Failed to fetch overdue observations" });
+    }
+  });
+
   // ==================== ADMIN BUSINESS INTELLIGENCE ENDPOINTS ====================
 
   // Call Center Performance Analytics

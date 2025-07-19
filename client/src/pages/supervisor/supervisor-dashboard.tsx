@@ -28,6 +28,7 @@ import {
   BookOpen,
   Star
 } from "lucide-react";
+import ScheduleObservationReview from "@/components/supervision/ScheduleObservationReview";
 
 interface SupervisorStats {
   totalTeachers: number;
@@ -266,10 +267,11 @@ export default function SupervisorDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="teachers">Teacher Performance</TabsTrigger>
             <TabsTrigger value="quality">Quality Assurance</TabsTrigger>
+            <TabsTrigger value="schedule">Schedule Review</TabsTrigger>
             <TabsTrigger value="management">Management Tools</TabsTrigger>
           </TabsList>
 
@@ -453,6 +455,10 @@ export default function SupervisorDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="schedule" className="space-y-6">
+            <ScheduleObservationReview />
           </TabsContent>
         </Tabs>
       </div>
