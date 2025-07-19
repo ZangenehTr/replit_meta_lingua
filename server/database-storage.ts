@@ -7053,35 +7053,56 @@ export class DatabaseStorage implements IStorage {
 
   async getPendingObservations(supervisorId?: number): Promise<any[]> {
     try {
-      const query = db.select({
-        id: scheduledObservations.id,
-        teacherId: scheduledObservations.teacherId,
-        teacherName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
-        className: scheduledObservations.className,
-        scheduledDate: scheduledObservations.scheduledDate,
-        scheduledTime: scheduledObservations.scheduledTime,
-        observationType: scheduledObservations.observationType,
-        priority: scheduledObservations.priority,
-        status: scheduledObservations.status
-      })
+      // Simple approach: get raw observations and then fetch teacher names separately
+      const baseQuery = db
+        .select()
         .from(scheduledObservations)
-        .leftJoin(users, eq(scheduledObservations.teacherId, users.id))
         .where(
           and(
             or(
               eq(scheduledObservations.status, 'scheduled'),
               eq(scheduledObservations.status, 'in_progress')
             ),
-            gte(scheduledObservations.scheduledDate, new Date())
+            gte(scheduledObservations.scheduledDate, new Date()),
+            ...(supervisorId ? [eq(scheduledObservations.supervisorId, supervisorId)] : [])
           )
         )
         .orderBy(scheduledObservations.scheduledDate);
       
-      if (supervisorId) {
-        return await query.where(eq(scheduledObservations.supervisorId, supervisorId));
+      const observations = await baseQuery;
+      
+      // Fetch teacher names separately and merge
+      const result = [];
+      for (const obs of observations) {
+        try {
+          const teacher = await db
+            .select({
+              firstName: users.firstName,
+              lastName: users.lastName
+            })
+            .from(users)
+            .where(eq(users.id, obs.teacherId))
+            .limit(1);
+
+          const teacherName = teacher.length > 0 && teacher[0].firstName && teacher[0].lastName 
+            ? `${teacher[0].firstName} ${teacher[0].lastName}` 
+            : 'Unknown Teacher';
+
+          result.push({
+            ...obs,
+            teacherName
+          });
+        } catch (err) {
+          // If teacher lookup fails, use unknown teacher
+          result.push({
+            ...obs,
+            teacherName: 'Unknown Teacher'
+          });
+        }
       }
       
-      return await query;
+      return result;
+      
     } catch (error) {
       console.error('Error fetching pending observations:', error);
       return [];

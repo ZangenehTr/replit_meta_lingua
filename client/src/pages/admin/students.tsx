@@ -41,7 +41,8 @@ import {
   ChevronLeft,
   Grid3X3,
   List,
-  MoreHorizontal
+  MoreHorizontal,
+  X
 } from "lucide-react";
 
 export function AdminStudents() {
@@ -171,6 +172,19 @@ export function AdminStudents() {
     }
   };
 
+  // Handle removing course from new student
+  const handleRemoveCourse = (courseTitle: string) => {
+    setNewStudentData(prev => ({
+      ...prev,
+      courses: prev.courses.filter(c => c !== courseTitle)
+    }));
+  };
+
+  // Handle adding new student
+  const handleAddStudent = () => {
+    createStudentMutation.mutate(newStudentData);
+  };
+
   // Handle course selection for editing student
   const handleEditCourseSelection = (courseId: number, selected: boolean) => {
     setEditingStudent(prev => {
@@ -210,6 +224,7 @@ export function AdminStudents() {
 
   // Ensure courses is an array to prevent errors
   const coursesList = Array.isArray(courses) ? courses : [];
+  const availableCourses = coursesList;
 
 
 
