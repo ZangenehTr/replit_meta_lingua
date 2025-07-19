@@ -292,119 +292,170 @@ export default function TeacherPaymentsPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Modern Header */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  Teacher Payment Management
-                </h1>
-                <p className="text-lg text-gray-600 max-w-2xl">
+          {/* Enhanced Header Section */}
+          <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-lg border border-gray-200/50 backdrop-blur-sm p-8 mb-10">
+            <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <DollarSign className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                      Teacher Payment Management
+                    </h1>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-gray-500 font-medium">Live System Active</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-lg text-gray-600 max-w-2xl leading-relaxed">
                   Automated session-based payment calculation with real-time recalculation and comprehensive payslip management
                 </p>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-green-700">1,250,000</div>
-                  <div className="text-sm text-green-600 font-medium">IRR Pending</div>
+              
+              {/* Quick Stats Summary */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white text-center shadow-lg min-w-[140px]">
+                  <div className="text-3xl font-bold mb-1">1,250,000</div>
+                  <div className="text-green-100 font-medium text-sm">IRR Pending</div>
+                  <div className="text-xs text-green-200 mt-1">5 Teachers</div>
                 </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-700">156</div>
-                  <div className="text-sm text-blue-600 font-medium">Sessions</div>
+                <div className="bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl p-6 text-white text-center shadow-lg min-w-[140px]">
+                  <div className="text-3xl font-bold mb-1">156</div>
+                  <div className="text-blue-100 font-medium text-sm">Sessions</div>
+                  <div className="text-xs text-blue-200 mt-1">This Month</div>
                 </div>
               </div>
             </div>
           </div>
 
-
-          {/* Payment Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-green-800">
+          {/* Enhanced Payment Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <Card className="group hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 border-0 shadow-lg hover:scale-105">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-semibold text-green-800">
                   Total Pending
                 </CardTitle>
-                <Clock className="h-5 w-5 text-green-600" />
+                <div className="p-2 bg-green-500/10 rounded-xl">
+                  <Clock className="h-5 w-5 text-green-600" />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-green-700">1,250,000 IRR</div>
-                <p className="text-sm text-green-600 mt-1">
+              <CardContent className="pt-0">
+                <div className="text-2xl font-bold text-green-700 mb-1">1,250,000</div>
+                <div className="text-lg font-medium text-green-700 mb-2">IRR</div>
+                <p className="text-xs text-green-600 font-medium">
                   5 teachers pending
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-blue-800">
+            <Card className="group hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100 border-0 shadow-lg hover:scale-105">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-semibold text-blue-800">
                   Sessions This Month
                 </CardTitle>
-                <CheckCircle className="h-5 w-5 text-blue-600" />
+                <div className="p-2 bg-blue-500/10 rounded-xl">
+                  <CheckCircle className="h-5 w-5 text-blue-600" />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-blue-700">156</div>
-                <p className="text-sm text-blue-600 mt-1">
+              <CardContent className="pt-0">
+                <div className="text-3xl font-bold text-blue-700 mb-2">156</div>
+                <p className="text-xs text-blue-600 font-medium">
                   +12% from last month
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-purple-800">
+            <Card className="group hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100 border-0 shadow-lg hover:scale-105">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-semibold text-purple-800">
                   Average Hourly Rate
                 </CardTitle>
-                <DollarSign className="h-5 w-5 text-purple-600" />
+                <div className="p-2 bg-purple-500/10 rounded-xl">
+                  <DollarSign className="h-5 w-5 text-purple-600" />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-purple-700">75,000 IRR</div>
-                <p className="text-sm text-purple-600 mt-1">
+              <CardContent className="pt-0">
+                <div className="text-2xl font-bold text-purple-700 mb-1">75,000</div>
+                <div className="text-lg font-medium text-purple-700 mb-2">IRR</div>
+                <p className="text-xs text-purple-600 font-medium">
                   Persian language standard
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-orange-800">
+            <Card className="group hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 border-0 shadow-lg hover:scale-105">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-semibold text-orange-800">
                   Payment Issues
                 </CardTitle>
-                <AlertCircle className="h-5 w-5 text-orange-600" />
+                <div className="p-2 bg-orange-500/10 rounded-xl">
+                  <AlertCircle className="h-5 w-5 text-orange-600" />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-orange-700">2</div>
-                <p className="text-sm text-orange-600 mt-1">
+              <CardContent className="pt-0">
+                <div className="text-3xl font-bold text-orange-700 mb-2">2</div>
+                <p className="text-xs text-orange-600 font-medium">
                   Requires review
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          <Tabs defaultValue="payments" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg">
-              <TabsTrigger value="payments" className="rounded-md">Payment Overview</TabsTrigger>
-              <TabsTrigger value="sessions" className="rounded-md">Session Details</TabsTrigger>
-              <TabsTrigger value="history" className="rounded-md">Payment History</TabsTrigger>
-              <TabsTrigger value="reports" className="rounded-md">Payment Reports</TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="payments" className="space-y-8">
+            <div className="flex justify-center mb-8">
+              <TabsList className="grid w-full max-w-4xl grid-cols-4 bg-white shadow-lg border border-gray-200 p-2 rounded-2xl">
+                <TabsTrigger value="payments" className="rounded-xl py-3 px-4 text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    Payment Overview
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger value="sessions" className="rounded-xl py-3 px-4 text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Session Details
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger value="history" className="rounded-xl py-3 px-4 text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Payment History
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger value="reports" className="rounded-xl py-3 px-4 text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Payment Reports
+                  </div>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="payments">
-              <Card className="bg-white shadow-sm border border-gray-200 rounded-xl">
-                <CardHeader className="border-b border-gray-100 pb-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-2xl font-semibold text-gray-900">Teacher Payment Overview</CardTitle>
-                      <CardDescription className="text-lg text-gray-600 mt-1">
+              <Card className="bg-white shadow-xl border-0 rounded-2xl overflow-hidden backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 p-8">
+                  <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                          <Users className="h-5 w-5 text-white" />
+                        </div>
+                        <CardTitle className="text-3xl font-bold text-gray-900">Teacher Payment Overview</CardTitle>
+                      </div>
+                      <CardDescription className="text-lg text-gray-600">
                         Comprehensive payslip management with real-time recalculation
                       </CardDescription>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-4">
                       <select 
                         value={selectedPeriod}
                         onChange={(e) => setSelectedPeriod(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="px-6 py-3 border-2 border-gray-200 rounded-xl bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium shadow-sm hover:border-gray-300 transition-colors"
                       >
                         <option value="current">Current Month</option>
                         <option value="previous">Previous Month</option>
@@ -413,8 +464,8 @@ export default function TeacherPaymentsPage() {
                       
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2">
-                            <Calculator className="h-4 w-4 mr-2" />
+                          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+                            <Calculator className="h-5 w-5 mr-2" />
                             Calculate Payments
                           </Button>
                         </DialogTrigger>
