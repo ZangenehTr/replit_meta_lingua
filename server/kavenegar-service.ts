@@ -349,6 +349,57 @@ export class KavenegarService {
     const message = `Payment confirmed! ${amount.toLocaleString()} IRR received for ${courseName}. Thank you for choosing Meta Lingua.`;
     return await this.sendSimpleSMS(receptor, message);
   }
+
+  /**
+   * Send teacher attention alert SMS
+   */
+  async sendTeacherAttentionAlert(
+    teacherPhone: string, 
+    teacherName: string, 
+    issue: string
+  ): Promise<SMSResult> {
+    const message = `Dear ${teacherName}, this is a gentle reminder regarding ${issue}. Please check your dashboard for details or contact your supervisor. Meta Lingua Academy`;
+    return await this.sendSimpleSMS(teacherPhone, message);
+  }
+
+  /**
+   * Send student attention alert SMS  
+   */
+  async sendStudentAttentionAlert(
+    studentPhone: string, 
+    studentName: string,
+    issue: string,
+    teacherName: string
+  ): Promise<SMSResult> {
+    const message = `Dear ${studentName}, we noticed ${issue}. Please contact ${teacherName} or check your dashboard for support. We're here to help! Meta Lingua Academy`;
+    return await this.sendSimpleSMS(studentPhone, message);
+  }
+
+  /**
+   * Send homework reminder SMS
+   */
+  async sendHomeworkReminder(
+    studentPhone: string,
+    studentName: string,
+    assignmentTitle: string,
+    dueDate: string
+  ): Promise<SMSResult> {
+    const message = `Hi ${studentName}, reminder: "${assignmentTitle}" is due ${dueDate}. Please submit your work via the student portal. Meta Lingua Academy`;
+    return await this.sendSimpleSMS(studentPhone, message);
+  }
+
+  /**
+   * Send attendance follow-up SMS
+   */
+  async sendAttendanceFollowUp(
+    studentPhone: string,
+    studentName: string,
+    missedSessions: number,
+    teacherName: string
+  ): Promise<SMSResult> {
+    const message = `Dear ${studentName}, you've missed ${missedSessions} recent sessions. ${teacherName} is ready to help you catch up. Contact us today! Meta Lingua Academy`;
+    return await this.sendSimpleSMS(studentPhone, message);
+  }
 }
 
 export const kavenegarService = new KavenegarService();
