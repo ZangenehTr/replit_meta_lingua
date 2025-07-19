@@ -72,6 +72,19 @@ export default function ScheduleObservationReview() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Check for teacher parameter in URL and auto-select teacher
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const teacherParam = urlParams.get('teacher');
+    if (teacherParam) {
+      const teacherId = parseInt(teacherParam);
+      if (!isNaN(teacherId)) {
+        setSelectedTeacher(teacherId);
+        console.log('Teacher pre-selected from URL:', teacherId);
+      }
+    }
+  }, []);
+
   // Fetch all teachers
   const { data: teachers = [], isLoading: teachersLoading } = useQuery({
     queryKey: ['/api/teachers/list'],
