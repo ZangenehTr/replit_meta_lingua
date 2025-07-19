@@ -2390,6 +2390,9 @@ export const supervisionObservations = pgTable("supervision_observations", {
   improvementPlanDeadline: date("improvement_plan_deadline"),
   followUpCompleted: boolean("follow_up_completed").default(false),
   followUpCompletedAt: timestamp("follow_up_completed_at"),
+  // Link to scheduled observation
+  scheduledObservationId: integer("scheduled_observation_id").references(() => scheduledObservations.id),
+  observationStatus: varchar("observation_status", { length: 20 }).default("completed"),
 });
 
 // Teacher observation responses for bidirectional communication
@@ -2402,6 +2405,24 @@ export const teacherObservationResponses = pgTable("teacher_observation_response
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   supervisorReviewed: boolean("supervisor_reviewed").default(false),
   supervisorReviewedAt: timestamp("supervisor_reviewed_at"),
+});
+
+// Scheduled Observations - Future observations planned by supervisors
+export const scheduledObservations = pgTable("scheduled_observations", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  supervisorId: integer("supervisor_id").references(() => users.id).notNull(),
+  sessionId: integer("session_id").references(() => sessions.id),
+  classId: integer("class_id").references(() => sessions.id), // Specific class instance
+  observationType: varchar("observation_type", { length: 50 }).notNull(), // 'live_in_person', 'live_online', 'recorded'
+  scheduledDate: timestamp("scheduled_date").notNull(),
+  status: varchar("status", { length: 20 }).default("scheduled"), // 'scheduled', 'in_progress', 'completed', 'cancelled'
+  priority: varchar("priority", { length: 10 }).default("normal"), // 'low', 'normal', 'high', 'urgent'
+  notes: text("notes"),
+  teacherNotified: boolean("teacher_notified").default(false),
+  notificationSentAt: timestamp("notification_sent_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Insert schemas for quality assurance
@@ -2443,6 +2464,14 @@ export const insertTeacherObservationResponseSchema = createInsertSchema(teacher
   submittedAt: true,
   supervisorReviewed: true,
   supervisorReviewedAt: true
+});
+
+export const insertScheduledObservationSchema = createInsertSchema(scheduledObservations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  teacherNotified: true,
+  notificationSentAt: true
 });
 
 // Types for quality assurance
@@ -2666,3 +2695,5 @@ export type SupervisionObservation = typeof supervisionObservations.$inferSelect
 export type InsertSupervisionObservation = z.infer<typeof insertSupervisionObservationSchema>;
 export type TeacherObservationResponse = typeof teacherObservationResponses.$inferSelect;
 export type InsertTeacherObservationResponse = z.infer<typeof insertTeacherObservationResponseSchema>;
+export type ScheduledObservation = typeof scheduledObservations.$inferSelect;
+export type InsertScheduledObservation = z.infer<typeof insertScheduledObservationSchema>;
