@@ -82,6 +82,12 @@ export default function ScheduleObservationReview() {
   const { data: teacherClasses = [], isLoading: classesLoading } = useQuery({
     queryKey: [`/api/supervision/teacher-classes/${selectedTeacher}`],
     enabled: !!selectedTeacher,
+    onSuccess: (data) => {
+      console.log('Teacher classes loaded:', data);
+    },
+    onError: (error) => {
+      console.error('Error loading teacher classes:', error);
+    },
   });
 
   // Fetch scheduled observations
@@ -138,6 +144,7 @@ export default function ScheduleObservationReview() {
 
   // Handle teacher selection
   const handleTeacherSelect = (teacherId: number) => {
+    console.log('Teacher selected:', teacherId);
     setSelectedTeacher(teacherId);
     setSelectedClass(null);
   };
@@ -292,6 +299,7 @@ export default function ScheduleObservationReview() {
               </div>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="text-xs text-gray-500 mb-2">Found {teacherClasses.length} classes for this teacher</div>
                 {teacherClasses.map((classItem: TeacherClass) => (
                   <div
                     key={classItem.id}
