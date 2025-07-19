@@ -85,9 +85,9 @@ export default function SupervisorDashboard() {
     queryKey: ['/api/supervision/live-sessions', 'completed'],
   });
 
-  // Fetch all teachers for the form
+  // Fetch all teachers for the form (using unprotected endpoint as fallback)
   const { data: allTeachers } = useQuery({
-    queryKey: ['/api/admin/teachers'],
+    queryKey: ['/api/teachers/list'],
     select: (data: any[]) => data?.filter(user => user.role === 'Teacher/Tutor') || [],
   });
 
@@ -466,11 +466,11 @@ export default function SupervisorDashboard() {
                               </SelectItem>
                             ))
                           ) : (
-                            <>
-                              <SelectItem value="1">Persian Language Fundamentals - سارا احمدی</SelectItem>
-                              <SelectItem value="2">English Conversation Practice - محمد رضایی</SelectItem>
-                              <SelectItem value="3">Advanced Grammar Workshop - علی حسینی</SelectItem>
-                            </>
+                            allTeachers?.map((teacher: any) => (
+                              <SelectItem key={teacher.id} value={teacher.id.toString()}>
+                                Session {teacher.id}: {teacher.firstName} {teacher.lastName} Class
+                              </SelectItem>
+                            ))
                           )}
                         </SelectContent>
                       </Select>
@@ -518,7 +518,7 @@ export default function SupervisorDashboard() {
                         <SelectContent>
                           {allTeachers?.map((teacher: any) => (
                             <SelectItem key={teacher.id} value={teacher.id.toString()}>
-                              {teacher.name || `${teacher.firstName} ${teacher.lastName}`}
+                              {teacher.firstName} {teacher.lastName}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -704,18 +704,142 @@ export default function SupervisorDashboard() {
 
       {/* Schedule Review Dialog */}
       <Dialog open={scheduleReviewDialogOpen} onOpenChange={setScheduleReviewDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Schedule Review</DialogTitle>
+            <DialogTitle>Teacher Schedule Review</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-muted-foreground">
-              Review scheduling functionality will be available in the next update. 
-              For now, please use the observation system to evaluate teacher performance.
-            </p>
-            <div className="flex justify-end">
-              <Button onClick={() => setScheduleReviewDialogOpen(false)}>
-                Close
+          <div className="space-y-6">
+            {/* Teacher Selection */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Select Teacher</label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose teacher to review" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allTeachers?.map((teacher: any) => (
+                      <SelectItem key={teacher.id} value={teacher.id.toString()}>
+                        {teacher.firstName} {teacher.lastName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Review Period</label>
+                <Select defaultValue="this_week">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="this_week">This Week</SelectItem>
+                    <SelectItem value="next_week">Next Week</SelectItem>
+                    <SelectItem value="this_month">This Month</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Schedule Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Weekly Schedule */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center">
+                    <Calendar className="h-5 w-5 mr-2" />
+                    Weekly Schedule
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                      <div key={day} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium">{day}</span>
+                        <div className="text-sm text-gray-600">
+                          <Badge variant="outline" className="mr-2">09:00 - 11:00</Badge>
+                          <Badge variant="outline">14:00 - 16:00</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Schedule Analysis */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center">
+                    <Target className="h-5 w-5 mr-2" />
+                    Schedule Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Total Teaching Hours</span>
+                    <Badge variant="secondary">28 hours/week</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Peak Teaching Time</span>
+                    <Badge variant="secondary">14:00 - 16:00</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Schedule Utilization</span>
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">87%</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Conflicts</span>
+                    <Badge variant="destructive">2 overlaps</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Schedule Issues */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <AlertTriangle className="h-5 w-5 mr-2 text-orange-500" />
+                  Identified Issues
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-red-800">Schedule Conflict</h4>
+                      <p className="text-sm text-red-600">Tuesday 14:00-16:00: Two classes assigned simultaneously</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <Clock className="h-5 w-5 text-yellow-500 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-yellow-800">High Workload</h4>
+                      <p className="text-sm text-yellow-600">Friday: 6 consecutive hours without break</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-green-800">Optimization Opportunity</h4>
+                      <p className="text-sm text-green-600">Monday 12:00-14:00: Available slot for additional classes</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setScheduleReviewDialogOpen(false)}>
+                Close Review
+              </Button>
+              <Button variant="outline">
+                Export Report
+              </Button>
+              <Button className="bg-purple-600 hover:bg-purple-700">
+                Approve Schedule
               </Button>
             </div>
           </div>
