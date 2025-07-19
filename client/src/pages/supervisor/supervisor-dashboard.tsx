@@ -443,7 +443,7 @@ export default function SupervisorDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-100">Pending Reviews</p>
-                  <p className="text-3xl font-bold">{stats?.pendingObservations || 3}</p>
+                  <p className="text-3xl font-bold">{pendingObservations.length || 0}</p>
                 </div>
                 <ClipboardCheck className="h-8 w-8 text-purple-200" />
               </div>
