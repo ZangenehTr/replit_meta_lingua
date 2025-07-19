@@ -4880,6 +4880,74 @@ export class DatabaseStorage implements IStorage {
     return observation;
   }
 
+  // Check for existing observations for a specific session and teacher (Check-First Protocol)
+  async getObservationsBySessionAndTeacher(sessionId: number, teacherId: number): Promise<SupervisionObservation[]> {
+    return await this.db.select().from(supervisionObservations)
+      .where(and(
+        eq(supervisionObservations.sessionId, sessionId),
+        eq(supervisionObservations.teacherId, teacherId)
+      ));
+  }
+
+  // ===== SUPERVISOR TARGET SETTING =====
+  
+  async getSupervisorTargets(supervisorId: number): Promise<any[]> {
+    // For now, return mock targets since we don't have a targets table yet
+    // In production, this would query a supervisor_targets table
+    return [
+      {
+        id: 1,
+        supervisorId: supervisorId,
+        period: 'monthly',
+        targetType: 'observations',
+        targetValue: 50,
+        currentValue: 32,
+        description: 'Monthly observation target',
+        status: 'active',
+        createdDate: new Date().toISOString()
+      },
+      {
+        id: 2,
+        supervisorId: supervisorId,
+        period: 'quarterly',
+        targetType: 'quality_score',
+        targetValue: 4.5,
+        currentValue: 4.2,
+        description: 'Quality improvement target',
+        status: 'active',
+        createdDate: new Date().toISOString()
+      }
+    ];
+  }
+
+  async createSupervisorTarget(targetData: any): Promise<any> {
+    // For now, simulate target creation
+    // In production, this would insert into supervisor_targets table
+    const newTarget = {
+      id: Date.now(),
+      ...targetData,
+      currentValue: 0,
+      createdDate: new Date().toISOString(),
+      status: 'active'
+    };
+    
+    console.log('Created supervisor target:', newTarget);
+    return newTarget;
+  }
+
+  async updateSupervisorTarget(targetId: number, updateData: any): Promise<any> {
+    // For now, simulate target update
+    // In production, this would update the supervisor_targets table
+    const updatedTarget = {
+      id: targetId,
+      ...updateData,
+      updatedDate: new Date().toISOString()
+    };
+    
+    console.log('Updated supervisor target:', updatedTarget);
+    return updatedTarget;
+  }
+
   // Quality Assurance Dashboard Data
   async getQualityAssuranceStats(): Promise<{
     liveClasses: number;

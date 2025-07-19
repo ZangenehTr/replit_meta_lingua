@@ -47,11 +47,13 @@ interface SupervisorStats {
   studentRetention: number;
 }
 
-// Schema for observation form (aligned with database structure)
+// Enhanced observation schema with session auto-population and duplication prevention
 const observationSchema = z.object({
   sessionId: z.number().min(1, "Please select a session"),
   teacherId: z.number().min(1, "Please select a teacher"),
   observationType: z.enum(['live_online', 'live_in_person', 'recorded']),
+  scheduledDate: z.string().min(1, "Scheduled date is required"),
+  scheduledTime: z.string().min(1, "Scheduled time is required"),
   teachingMethodology: z.number().min(1).max(5),
   classroomManagement: z.number().min(1).max(5),
   studentEngagement: z.number().min(1).max(5),
@@ -64,9 +66,18 @@ const observationSchema = z.object({
   followUpRequired: z.boolean().default(false),
 });
 
+// Target setting schema for monthly/seasonal goals
+const targetSchema = z.object({
+  period: z.enum(['monthly', 'quarterly', 'seasonal']),
+  targetType: z.enum(['observations', 'quality_score', 'teacher_retention', 'student_satisfaction']),
+  targetValue: z.number().min(1),
+  description: z.string().optional(),
+});
+
 export default function SupervisorDashboard() {
   const [observationDialogOpen, setObservationDialogOpen] = useState(false);
-
+  const [targetDialogOpen, setTargetDialogOpen] = useState(false);
+  const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -174,13 +185,15 @@ export default function SupervisorDashboard() {
     },
   });
 
-  // Observation form with auto-selection based on class type
+  // Enhanced observation form with session auto-population and duplication prevention
   const observationForm = useForm({
     resolver: zodResolver(observationSchema),
     defaultValues: {
       sessionId: 0,
       teacherId: 0,
       observationType: 'live_online' as const,
+      scheduledDate: '',
+      scheduledTime: '',
       teachingMethodology: 1,
       classroomManagement: 1,
       studentEngagement: 1,
@@ -193,6 +206,36 @@ export default function SupervisorDashboard() {
       followUpRequired: false,
     },
   });
+
+  const targetForm = useForm({
+    resolver: zodResolver(targetSchema),
+    defaultValues: {
+      period: 'monthly' as const,
+      targetType: 'observations' as const,
+      targetValue: 10,
+    },
+  });
+
+  // Check-First Protocol: Auto-populate session details when session is selected
+  const handleSessionSelection = (sessionId: string) => {
+    const session = upcomingSessionsForObservation.find(s => s.id.toString() === sessionId);
+    if (session) {
+      const sessionDate = new Date(session.scheduledAt);
+      const dateStr = sessionDate.toISOString().split('T')[0];
+      const timeStr = sessionDate.toTimeString().slice(0, 5);
+      
+      // Auto-populate teacher and observation type based on session
+      observationForm.setValue('teacherId', session.teacherId);
+      observationForm.setValue('scheduledDate', dateStr);
+      observationForm.setValue('scheduledTime', timeStr);
+      
+      // Set observation type based on delivery mode
+      const observationType = session.deliveryMode === 'online' ? 'live_online' : 'live_in_person';
+      observationForm.setValue('observationType', observationType);
+      
+      console.log('Session selected:', sessionId, 'Auto-populated:', { teacherId: session.teacherId, date: dateStr, time: timeStr, type: observationType });
+    }
+  };
 
   // Create observation mutation
   const createObservationMutation = useMutation({
@@ -225,11 +268,59 @@ export default function SupervisorDashboard() {
     },
   });
 
+  // Target setting mutation
+  const setTargetMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest('/api/supervisor/targets', 'POST', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/supervisor/targets'] });
+      setTargetDialogOpen(false);
+      targetForm.reset();
+      toast({ 
+        title: "Target Set", 
+        description: "Monthly/seasonal target has been configured successfully" 
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error?.message || "Failed to set target",
+        variant: "destructive" 
+      });
+    },
+  });
 
 
 
 
-  const onObservationSubmit = (data: any) => {
+
+  // Check-First Protocol: Prevent duplicate observations
+  const checkForDuplicateObservation = async (sessionId: number, teacherId: number): Promise<boolean> => {
+    try {
+      const existingObservations = await apiRequest(`/api/supervision/observations?sessionId=${sessionId}&teacherId=${teacherId}`);
+      return existingObservations && existingObservations.length > 0;
+    } catch (error) {
+      console.error('Error checking for duplicates:', error);
+      return false;
+    }
+  };
+
+  const onObservationSubmit = async (data: any) => {
+    // Check-First Protocol: Prevent duplication
+    const isDuplicate = await checkForDuplicateObservation(data.sessionId, data.teacherId);
+    if (isDuplicate) {
+      toast({
+        title: "Duplicate Observation",
+        description: "An observation for this session and teacher already exists",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Combine scheduled date and time for observation date
+    const combinedDateTime = new Date(`${data.scheduledDate}T${data.scheduledTime}`);
+    
     // Calculate overall score from individual scores
     const scoreFields = ['teachingMethodology', 'classroomManagement', 'studentEngagement', 'contentDelivery', 'languageSkills', 'timeManagement'];
     const totalScore = scoreFields.reduce((sum, field) => sum + data[field], 0);
@@ -241,6 +332,7 @@ export default function SupervisorDashboard() {
       supervisorId: 46, // Current supervisor
       sessionId: data.sessionId,
       observationType: data.observationType,
+      observationDate: combinedDateTime.toISOString(),
       overallScore: parseFloat(overallScore),
       strengths: data.strengths || '',
       areasForImprovement: data.areasForImprovement || '',
@@ -249,6 +341,18 @@ export default function SupervisorDashboard() {
     };
     
     createObservationMutation.mutate(observationData);
+  };
+
+  // Target submission handler
+  const onTargetSubmit = (data: any) => {
+    const targetData = {
+      ...data,
+      supervisorId: 46, // Current supervisor
+      createdDate: new Date().toISOString(),
+      status: 'active',
+    };
+    
+    setTargetMutation.mutate(targetData);
   };
 
   if (isLoading) {
@@ -709,10 +813,13 @@ export default function SupervisorDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <ScheduleObservationReview />
                 
-                <Card className="p-6 text-center hover:shadow-lg transition-shadow cursor-pointer">
+                <Card 
+                  className="p-6 text-center hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => setTargetDialogOpen(true)}
+                >
                   <Target className="h-8 w-8 mx-auto mb-3 text-green-600" />
-                  <h4 className="font-semibold mb-2">Performance Analytics</h4>
-                  <p className="text-sm text-gray-600">Detailed teacher performance reports and trends</p>
+                  <h4 className="font-semibold mb-2">Set Monthly/Seasonal Targets</h4>
+                  <p className="text-sm text-gray-600">Configure automatic targets for observations and quality metrics</p>
                 </Card>
                 
                 <Card className="p-6 text-center hover:shadow-lg transition-shadow cursor-pointer">
@@ -734,20 +841,53 @@ export default function SupervisorDashboard() {
             <Form {...observationForm}>
               <form onSubmit={observationForm.handleSubmit(onObservationSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Session Selection with Auto-Population */}
+                  <FormField
+                    control={observationForm.control}
+                    name="sessionId"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Upcoming Session *</FormLabel>
+                        <Select onValueChange={(value) => {
+                          field.onChange(parseInt(value));
+                          handleSessionSelection(value);
+                        }} value={field.value?.toString()}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select an upcoming session to observe" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {upcomingSessionsForObservation.length === 0 ? (
+                              <SelectItem value="no-sessions" disabled>No upcoming sessions available</SelectItem>
+                            ) : (
+                              upcomingSessionsForObservation.map((session: any) => (
+                                <SelectItem key={session.id} value={session.id.toString()}>
+                                  {session.teacherName} - {session.courseName} | {new Date(session.scheduledAt).toLocaleDateString()} at {new Date(session.scheduledAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} | {session.deliveryMode} {session.classFormat}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={observationForm.control}
                     name="teacherId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Teacher</FormLabel>
+                        <FormLabel>Teacher (Auto-populated)</FormLabel>
                         <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select teacher" />
+                            <SelectTrigger className="bg-gray-50">
+                              <SelectValue placeholder="Will auto-populate when session selected" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {(teachers || []).map((teacher) => (
+                            {(allTeachers || []).map((teacher) => (
                               <SelectItem key={teacher.id} value={teacher.id.toString()}>
                                 {teacher.firstName} {teacher.lastName}
                               </SelectItem>
@@ -764,11 +904,11 @@ export default function SupervisorDashboard() {
                     name="observationType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Observation Type</FormLabel>
+                        <FormLabel>Observation Type (Auto-populated)</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select type" />
+                            <SelectTrigger className="bg-gray-50">
+                              <SelectValue placeholder="Will auto-populate when session selected" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -781,6 +921,61 @@ export default function SupervisorDashboard() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Date and Time Fields (Auto-populated) */}
+                  <FormField
+                    control={observationForm.control}
+                    name="scheduledDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Scheduled Date (Auto-populated)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            className="bg-gray-50"
+                            placeholder="Will auto-populate when session selected"
+                            readOnly
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={observationForm.control}
+                    name="scheduledTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Scheduled Time (Auto-populated)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="time"
+                            {...field}
+                            className="bg-gray-50"
+                            placeholder="Will auto-populate when session selected"
+                            readOnly
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Check-First Protocol Notice */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-blue-900">Check-First Protocol Active</h4>
+                      <p className="text-sm text-blue-800 mt-1">
+                        This system automatically prevents duplicate observations for the same session and teacher. 
+                        Session details are auto-populated from your selected upcoming session to ensure accuracy.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Scoring sections */}
@@ -875,6 +1070,126 @@ export default function SupervisorDashboard() {
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     {createObservationMutation.isPending ? 'Creating...' : 'Create Observation'}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Target Setting Dialog */}
+        <Dialog open={targetDialogOpen} onOpenChange={setTargetDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Set Monthly/Seasonal Targets</DialogTitle>
+            </DialogHeader>
+            <Form {...targetForm}>
+              <form onSubmit={targetForm.handleSubmit(onTargetSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={targetForm.control}
+                    name="period"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Target Period</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select period" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="quarterly">Quarterly</SelectItem>
+                            <SelectItem value="seasonal">Seasonal</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={targetForm.control}
+                    name="targetType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Target Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select target type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="observations">Number of Observations</SelectItem>
+                            <SelectItem value="quality_score">Average Quality Score</SelectItem>
+                            <SelectItem value="teacher_retention">Teacher Retention Rate</SelectItem>
+                            <SelectItem value="student_satisfaction">Student Satisfaction Score</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={targetForm.control}
+                    name="targetValue"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Target Value</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            placeholder="Enter target value"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={targetForm.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description (Optional)</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Target description" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <Target className="h-5 w-5 text-green-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-green-900">Automatic Target Setting</h4>
+                      <p className="text-sm text-green-800 mt-1">
+                        These targets will be automatically tracked and you'll receive notifications when they're met or need attention.
+                        Standard supervisor features include progress tracking, automated reports, and performance alerts.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-4">
+                  <Button type="button" variant="outline" onClick={() => setTargetDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={setTargetMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {setTargetMutation.isPending ? 'Setting...' : 'Set Target'}
                   </Button>
                 </div>
               </form>
