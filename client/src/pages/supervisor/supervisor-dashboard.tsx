@@ -632,127 +632,55 @@ export default function SupervisorDashboard() {
           </TabsContent>
 
           <TabsContent value="teachers" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Teachers Needing Attention */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <AlertCircle className="h-5 w-5 mr-2 text-red-600" />
-                    Teachers Needing Attention
-                  </CardTitle>
-                  <CardDescription>
-                    Active teachers requiring observation or intervention
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {teachersNeedingAttention.length === 0 ? (
-                    <div className="text-center py-6 text-gray-500">
-                      <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-400" />
-                      <p className="text-sm">All teachers are up to date</p>
-                    </div>
-                  ) : (
-                    teachersNeedingAttention.map((teacher: any) => (
-                      <div key={teacher.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
-                        <div className="flex items-center space-x-3">
-                          <UserMinus className="h-5 w-5 text-red-500" />
-                          <div>
-                            <div className="font-medium text-gray-900">{teacher.name}</div>
-                            <div className="text-sm text-gray-600">
-                              {teacher.reason} • {teacher.daysWithoutObservation} days ago
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {teacher.activeClasses} active classes
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => sendTeacherAlert.mutate({ 
-                              teacherId: teacher.id, 
-                              issue: teacher.reason 
-                            })}
-                            disabled={sendTeacherAlert.isPending}
-                          >
-                            <MessageSquare className="h-4 w-4 mr-1" />
-                            SMS
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              // Auto-populate observation form
-                              observationForm.setValue('teacherId', teacher.id);
-                              setObservationDialogOpen(true);
-                            }}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Observe
-                          </Button>
+            {/* Teacher Performance Analytics Only */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {teacherPerformance?.length > 0 ? (
+                teacherPerformance.map((teacher: any) => (
+                  <Card key={teacher.teacherId} className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium">{teacher.teacherName}</CardTitle>
+                      <CardDescription className="text-xs">
+                        Performance Overview
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">Rating</span>
+                        <div className="flex items-center space-x-1">
+                          <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                          <span className="text-sm font-semibold">{(teacher.averageRating || 0).toFixed(1)}</span>
                         </div>
                       </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Students Needing Attention */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <AlertTriangle className="h-5 w-5 mr-2 text-orange-600" />
-                    Students Needing Attention
-                  </CardTitle>
-                  <CardDescription>
-                    Students with attendance or homework issues
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {studentsNeedingAttention.length === 0 ? (
-                    <div className="text-center py-6 text-gray-500">
-                      <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-400" />
-                      <p className="text-sm">All students are doing well</p>
-                    </div>
-                  ) : (
-                    studentsNeedingAttention.map((student: any) => (
-                      <div key={student.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
-                        <div className="flex items-center space-x-3">
-                          <AlertTriangle className="h-5 w-5 text-orange-500" />
-                          <div>
-                            <div className="font-medium text-gray-900">{student.name}</div>
-                            <div className="text-sm text-gray-600 capitalize">
-                              {student.issue} issue • {student.course}
-                            </div>
-                            {student.consecutiveAbsences > 0 && (
-                              <div className="text-xs text-red-600">
-                                {student.consecutiveAbsences} consecutive absences
-                              </div>
-                            )}
-                            {student.missedHomeworks > 0 && (
-                              <div className="text-xs text-orange-600">
-                                {student.missedHomeworks} missed homeworks
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => sendStudentAlert.mutate({ 
-                            studentId: student.id, 
-                            issue: `${student.issue} concerns`,
-                            teacherName: student.teacher 
-                          })}
-                          disabled={sendStudentAlert.isPending}
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">Sessions</span>
+                        <span className="text-sm font-semibold">{teacher.totalSessions}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">Last Observation</span>
+                        <span className="text-xs">{teacher.lastObservation || 'Never'}</span>
+                      </div>
+                      <div className="pt-2 border-t">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="w-full text-xs"
+                          onClick={() => {
+                            observationForm.setValue('teacherId', teacher.teacherId);
+                            setObservationDialogOpen(true);
+                          }}
                         >
-                          <MessageSquare className="h-4 w-4 mr-1" />
-                          SMS Alert
+                          Schedule Observation
                         </Button>
                       </div>
-                    ))
-                  )}
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-8">
+                  <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No teacher performance data available</p>
+                </div>
+              )}
             </div>
           </TabsContent>
 
