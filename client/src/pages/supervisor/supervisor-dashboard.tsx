@@ -26,7 +26,13 @@ import {
   Clock,
   Target,
   BookOpen,
-  Star
+  Star,
+  DollarSign,
+  MessageSquare,
+  Phone,
+  Eye,
+  UserMinus,
+  AlertCircle
 } from "lucide-react";
 import ScheduleObservationReview from "@/components/supervision/ScheduleObservationReview";
 
@@ -103,10 +109,72 @@ export default function SupervisorDashboard() {
     queryKey: ['/api/supervision/pending-observations']
   });
 
+  // Enhanced supervisor dashboard queries
+  const { data: dailyIncome } = useQuery({
+    queryKey: ['/api/supervisor/daily-income'],
+  });
+
+  const { data: teachersNeedingAttention = [] } = useQuery({
+    queryKey: ['/api/supervisor/teachers-needing-attention'],
+  });
+
+  const { data: studentsNeedingAttention = [] } = useQuery({
+    queryKey: ['/api/supervisor/students-needing-attention'],
+  });
+
+  const { data: upcomingSessionsForObservation = [] } = useQuery({
+    queryKey: ['/api/supervisor/upcoming-sessions-for-observation'],
+  });
+
   // Fetch dialog teacher classes when teacher is selected in dialog
 
 
-  // Observation form
+  // SMS Alert mutations
+  const sendTeacherAlert = useMutation({
+    mutationFn: async ({ teacherId, issue }: { teacherId: number; issue: string }) => {
+      return apiRequest(`/api/supervisor/send-teacher-alert`, {
+        method: 'POST',
+        body: JSON.stringify({ teacherId, issue }),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Alert Sent",
+        description: "SMS alert sent to teacher successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Send Alert",
+        description: error.message || "Failed to send SMS alert",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const sendStudentAlert = useMutation({
+    mutationFn: async ({ studentId, issue, teacherName }: { studentId: number; issue: string; teacherName: string }) => {
+      return apiRequest(`/api/supervisor/send-student-alert`, {
+        method: 'POST',
+        body: JSON.stringify({ studentId, issue, teacherName }),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Alert Sent",
+        description: "SMS alert sent to student successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Send Alert", 
+        description: error.message || "Failed to send SMS alert",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Observation form with auto-selection based on class type
   const observationForm = useForm({
     resolver: zodResolver(observationSchema),
     defaultValues: {
@@ -355,351 +423,434 @@ export default function SupervisorDashboard() {
                   {pendingObservations.length > 4 && (
                     <div className="text-center pt-2">
                       <Button variant="link" className="text-xs h-auto p-0">
-                        View all {pendingObservations.length} pending observations
+                        View All {pendingObservations.length - 4} More
                       </Button>
                     </div>
                   )}
                 </CardContent>
               </Card>
             </div>
+
+            {/* Daily Income Tracking */}
+            {dailyIncome && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <DollarSign className="h-5 w-5 mr-2 text-green-600" />
+                    Daily Income by Student Category
+                  </CardTitle>
+                  <CardDescription>
+                    Revenue breakdown by course delivery and format - {new Date().toLocaleDateString()}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg border">
+                      <div className="text-sm text-blue-600 font-medium">Online Group</div>
+                      <div className="text-2xl font-bold text-blue-800">
+                        {dailyIncome.categories?.onlineGroup?.students || 0}
+                      </div>
+                      <div className="text-xs text-gray-500">students</div>
+                      <div className="text-sm font-semibold text-green-600 mt-1">
+                        {(dailyIncome.categories?.onlineGroup?.revenue || 0).toLocaleString()} IRR
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-lg border">
+                      <div className="text-sm text-purple-600 font-medium">Online 1-on-1</div>
+                      <div className="text-2xl font-bold text-purple-800">
+                        {dailyIncome.categories?.onlineOneOnOne?.students || 0}
+                      </div>
+                      <div className="text-xs text-gray-500">students</div>
+                      <div className="text-sm font-semibold text-green-600 mt-1">
+                        {(dailyIncome.categories?.onlineOneOnOne?.revenue || 0).toLocaleString()} IRR
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-orange-50 rounded-lg border">
+                      <div className="text-sm text-orange-600 font-medium">In-Person Group</div>
+                      <div className="text-2xl font-bold text-orange-800">
+                        {dailyIncome.categories?.inPersonGroup?.students || 0}
+                      </div>
+                      <div className="text-xs text-gray-500">students</div>
+                      <div className="text-sm font-semibold text-green-600 mt-1">
+                        {(dailyIncome.categories?.inPersonGroup?.revenue || 0).toLocaleString()} IRR
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-red-50 rounded-lg border">
+                      <div className="text-sm text-red-600 font-medium">In-Person 1-on-1</div>
+                      <div className="text-2xl font-bold text-red-800">
+                        {dailyIncome.categories?.inPersonOneOnOne?.students || 0}
+                      </div>
+                      <div className="text-xs text-gray-500">students</div>
+                      <div className="text-sm font-semibold text-green-600 mt-1">
+                        {(dailyIncome.categories?.inPersonOneOnOne?.revenue || 0).toLocaleString()} IRR
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-teal-50 rounded-lg border">
+                      <div className="text-sm text-teal-600 font-medium">Callern</div>
+                      <div className="text-2xl font-bold text-teal-800">
+                        {dailyIncome.categories?.callern?.students || 0}
+                      </div>
+                      <div className="text-xs text-gray-500">students</div>
+                      <div className="text-sm font-semibold text-green-600 mt-1">
+                        {(dailyIncome.categories?.callern?.revenue || 0).toLocaleString()} IRR
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 font-medium">Total Daily Revenue:</span>
+                      <span className="text-2xl font-bold text-green-700">
+                        {(dailyIncome.totalRevenue || 0).toLocaleString()} IRR
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="teachers" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Teachers Needing Attention */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <AlertCircle className="h-5 w-5 mr-2 text-red-600" />
+                    Teachers Needing Attention
+                  </CardTitle>
+                  <CardDescription>
+                    Active teachers requiring observation or intervention
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {teachersNeedingAttention.length === 0 ? (
+                    <div className="text-center py-6 text-gray-500">
+                      <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-400" />
+                      <p className="text-sm">All teachers are up to date</p>
+                    </div>
+                  ) : (
+                    teachersNeedingAttention.map((teacher: any) => (
+                      <div key={teacher.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+                        <div className="flex items-center space-x-3">
+                          <UserMinus className="h-5 w-5 text-red-500" />
+                          <div>
+                            <div className="font-medium text-gray-900">{teacher.name}</div>
+                            <div className="text-sm text-gray-600">
+                              {teacher.reason} • {teacher.daysWithoutObservation} days ago
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {teacher.activeClasses} active classes
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => sendTeacherAlert.mutate({ 
+                              teacherId: teacher.id, 
+                              issue: teacher.reason 
+                            })}
+                            disabled={sendTeacherAlert.isPending}
+                          >
+                            <MessageSquare className="h-4 w-4 mr-1" />
+                            SMS
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              // Auto-populate observation form
+                              observationForm.setValue('teacherId', teacher.id);
+                              setObservationDialogOpen(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Observe
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Students Needing Attention */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <AlertTriangle className="h-5 w-5 mr-2 text-orange-600" />
+                    Students Needing Attention
+                  </CardTitle>
+                  <CardDescription>
+                    Students with attendance or homework issues
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {studentsNeedingAttention.length === 0 ? (
+                    <div className="text-center py-6 text-gray-500">
+                      <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-400" />
+                      <p className="text-sm">All students are doing well</p>
+                    </div>
+                  ) : (
+                    studentsNeedingAttention.map((student: any) => (
+                      <div key={student.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <div className="flex items-center space-x-3">
+                          <AlertTriangle className="h-5 w-5 text-orange-500" />
+                          <div>
+                            <div className="font-medium text-gray-900">{student.name}</div>
+                            <div className="text-sm text-gray-600 capitalize">
+                              {student.issue} issue • {student.course}
+                            </div>
+                            {student.consecutiveAbsences > 0 && (
+                              <div className="text-xs text-red-600">
+                                {student.consecutiveAbsences} consecutive absences
+                              </div>
+                            )}
+                            {student.missedHomeworks > 0 && (
+                              <div className="text-xs text-orange-600">
+                                {student.missedHomeworks} missed homeworks
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => sendStudentAlert.mutate({ 
+                            studentId: student.id, 
+                            issue: `${student.issue} concerns`,
+                            teacherName: student.teacher 
+                          })}
+                          disabled={sendStudentAlert.isPending}
+                        >
+                          <MessageSquare className="h-4 w-4 mr-1" />
+                          SMS Alert
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="quality" className="space-y-6">
+            {/* Upcoming Sessions for Observation with auto-populate */}
             <Card>
               <CardHeader>
-                <CardTitle>Teacher Performance Overview</CardTitle>
-                <CardDescription>Monitor and evaluate teacher effectiveness</CardDescription>
+                <CardTitle className="flex items-center">
+                  <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+                  Upcoming Sessions Available for Observation
+                </CardTitle>
+                <CardDescription>
+                  Click to auto-populate observation form with session details
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                        SJ
-                      </div>
-                      <div>
-                        <p className="font-semibold">Sarah Johnson</p>
-                        <p className="text-sm text-gray-600">Persian Language Teacher</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <Badge className="bg-green-100 text-green-800">4.9/5.0</Badge>
-                      <Button size="sm" variant="outline">View Details</Button>
-                    </div>
+              <CardContent className="space-y-3">
+                {upcomingSessionsForObservation.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500">
+                    <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                    <p className="text-sm">No upcoming sessions scheduled</p>
                   </div>
-                  
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold">
-                        AR
+                ) : (
+                  upcomingSessionsForObservation.slice(0, 10).map((session: any) => (
+                    <div 
+                      key={session.id} 
+                      className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 cursor-pointer transition-colors"
+                      onClick={() => {
+                        // Auto-populate observation form
+                        observationForm.setValue('sessionId', session.id);
+                        observationForm.setValue('teacherId', session.teacherId);
+                        // Auto-select observation type based on delivery mode
+                        if (session.deliveryMode === 'online') {
+                          observationForm.setValue('observationType', 'live_online');
+                        } else {
+                          // For in-person, default to in-person but user can change
+                          observationForm.setValue('observationType', 'live_in_person');
+                        }
+                        setObservationDialogOpen(true);
+                      }}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Clock className="h-5 w-5 text-blue-500" />
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {session.teacherName} - {session.courseName}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {new Date(session.scheduledAt).toLocaleDateString()} at {new Date(session.scheduledAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {session.duration}min • {session.deliveryMode} • {session.classFormat} • {session.studentsCount} students
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold">Ali Rezaei</p>
-                        <p className="text-sm text-gray-600">Persian Conversation Specialist</p>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={session.deliveryMode === 'online' ? 'default' : 'secondary'}>
+                          {session.deliveryMode}
+                        </Badge>
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-4 w-4 mr-1" />
+                          Schedule
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <Badge className="bg-yellow-100 text-yellow-800">4.6/5.0</Badge>
-                      <Button size="sm" variant="outline">View Details</Button>
-                    </div>
-                  </div>
-                </div>
+                  ))
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="quality" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Class Observations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <Button className="w-full" variant="outline">
-                      <ClipboardCheck className="h-4 w-4 mr-2" />
-                      Schedule New Observation
-                    </Button>
-                    <Button className="w-full" variant="outline">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      View Observation Calendar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quality Metrics</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span>Teaching Standards Compliance</span>
-                    <Badge className="bg-green-100 text-green-800">98.5%</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Student Satisfaction</span>
-                    <Badge className="bg-blue-100 text-blue-800">4.8/5.0</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Lesson Plan Quality</span>
-                    <Badge className="bg-purple-100 text-purple-800">92.1%</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
           <TabsContent value="management" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                <CardContent className="p-6 text-center">
-                  <Users className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">Teacher-Student Matching</h3>
-                  <p className="text-sm text-gray-600 mb-4">Assign teachers to students based on compatibility</p>
-                  <Button className="w-full">Access System</Button>
-                </CardContent>
-              </Card>
-
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                <CardContent className="p-6 text-center">
-                  <Calendar className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">Class Management</h3>
-                  <p className="text-sm text-gray-600 mb-4">Schedule and manage class sessions</p>
-                  <Button className="w-full">Manage Classes</Button>
-                </CardContent>
-              </Card>
-
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                <CardContent className="p-6 text-center">
-                  <ClipboardCheck className="h-12 w-12 text-purple-500 mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">Quality Assurance</h3>
-                  <p className="text-sm text-gray-600 mb-4">Monitor teaching quality and compliance</p>
-                  <Button className="w-full">View Reports</Button>
-                </CardContent>
-              </Card>
+            <div className="text-center py-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Management Tools</h3>
+              <p className="text-gray-600 mb-6">Advanced supervision and quality assurance tools</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <ScheduleObservationReview />
+                
+                <Card className="p-6 text-center hover:shadow-lg transition-shadow cursor-pointer">
+                  <Target className="h-8 w-8 mx-auto mb-3 text-green-600" />
+                  <h4 className="font-semibold mb-2">Performance Analytics</h4>
+                  <p className="text-sm text-gray-600">Detailed teacher performance reports and trends</p>
+                </Card>
+                
+                <Card className="p-6 text-center hover:shadow-lg transition-shadow cursor-pointer">
+                  <BookOpen className="h-8 w-8 mx-auto mb-3 text-purple-600" />
+                  <h4 className="font-semibold mb-2">Quality Standards</h4>
+                  <p className="text-sm text-gray-600">Review and update teaching quality standards</p>
+                </Card>
+              </div>
             </div>
           </TabsContent>
-
-
         </Tabs>
-      </div>
 
-      {/* New Observation Dialog */}
-      <Dialog open={observationDialogOpen} onOpenChange={setObservationDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Teacher Observation</DialogTitle>
-          </DialogHeader>
-          <Form {...observationForm}>
-            <form onSubmit={observationForm.handleSubmit(onObservationSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={observationForm.control}
-                  name="sessionId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Session *</FormLabel>
-                      <Select onValueChange={value => field.onChange(+value)} value={field.value?.toString()}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select session" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {teachersLoading ? (
-                            <SelectItem value="loading" disabled>Loading teachers...</SelectItem>
-                          ) : allTeachers && allTeachers.length > 0 ? (
-                            allTeachers.map((teacher: any) => (
-                              <SelectItem key={teacher.id} value={teacher.id.toString()}>
-                                {teacher.firstName} {teacher.lastName} - Session {teacher.id}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no-teachers" disabled>No teachers available</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={observationForm.control}
-                  name="observationType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Observation Type *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="live_in_person">Live In-person</SelectItem>
-                          <SelectItem value="live_online">Live Online</SelectItem>
-                          <SelectItem value="recorded">Recorded Review</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="space-y-3">
-                <FormField
-                  control={observationForm.control}
-                  name="teacherId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Teacher *</FormLabel>
-                      <Select onValueChange={value => field.onChange(+value)} value={field.value?.toString()}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select teacher" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {teachersLoading ? (
-                            <SelectItem value="loading" disabled>Loading teachers...</SelectItem>
-                          ) : allTeachers && allTeachers.length > 0 ? (
-                            allTeachers.map((teacher: any) => (
+        {/* Observation Creation Dialog */}
+        <Dialog open={observationDialogOpen} onOpenChange={setObservationDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create Observation</DialogTitle>
+            </DialogHeader>
+            <Form {...observationForm}>
+              <form onSubmit={observationForm.handleSubmit(onObservationSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={observationForm.control}
+                    name="teacherId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Teacher</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select teacher" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {(teachers || []).map((teacher) => (
                               <SelectItem key={teacher.id} value={teacher.id.toString()}>
                                 {teacher.firstName} {teacher.lastName}
                               </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="no-teachers" disabled>No teachers available</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <div className="space-y-4">
-                <h4 className="font-medium text-sm">Evaluation Scores (1-5)</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   <FormField
                     control={observationForm.control}
-                    name="teachingMethodology"
+                    name="observationType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Teaching Methodology</FormLabel>
+                        <FormLabel>Observation Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="live_online">Live Online</SelectItem>
+                            <SelectItem value="live_in_person">Live In-Person</SelectItem>
+                            <SelectItem value="recorded">Recorded Session</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Scoring sections */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    { name: 'teachingMethodology', label: 'Teaching Methodology' },
+                    { name: 'classroomManagement', label: 'Classroom Management' },
+                    { name: 'studentEngagement', label: 'Student Engagement' },
+                    { name: 'contentDelivery', label: 'Content Delivery' },
+                    { name: 'languageSkills', label: 'Language Skills' },
+                    { name: 'timeManagement', label: 'Time Management' }
+                  ].map((field) => (
+                    <FormField
+                      key={field.name}
+                      control={observationForm.control}
+                      name={field.name as any}
+                      render={({ field: formField }) => (
+                        <FormItem>
+                          <FormLabel>{field.label}</FormLabel>
+                          <Select onValueChange={(value) => formField.onChange(parseInt(value))} value={formField.value?.toString()}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Score 1-5" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="1">1 - Poor</SelectItem>
+                              <SelectItem value="2">2 - Below Average</SelectItem>
+                              <SelectItem value="3">3 - Average</SelectItem>
+                              <SelectItem value="4">4 - Good</SelectItem>
+                              <SelectItem value="5">5 - Excellent</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={observationForm.control}
+                    name="strengths"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Strengths</FormLabel>
                         <FormControl>
-                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                          <Textarea {...field} placeholder="What did the teacher do well?" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={observationForm.control}
-                    name="classroomManagement"
+                    name="areasForImprovement"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Classroom Management</FormLabel>
+                        <FormLabel>Areas for Improvement</FormLabel>
                         <FormControl>
-                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={observationForm.control}
-                    name="studentEngagement"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Student Engagement</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={observationForm.control}
-                    name="contentDelivery"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Content Delivery</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={observationForm.control}
-                    name="languageSkills"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Language Skills</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={observationForm.control}
-                    name="timeManagement"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Time Management</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                          <Textarea {...field} placeholder="What can be improved?" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-              </div>
 
-              <div className="space-y-3">
-                <FormField
-                  control={observationForm.control}
-                  name="strengths"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Strengths</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          rows={2}
-                          placeholder="Note the teacher's strengths and positive observations..." 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={observationForm.control}
-                  name="areasForImprovement"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Areas for Improvement</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          rows={2}
-                          placeholder="Identify areas where the teacher can improve..." 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={observationForm.control}
                   name="notes"
@@ -707,52 +858,30 @@ export default function SupervisorDashboard() {
                     <FormItem>
                       <FormLabel>Additional Notes</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          rows={2}
-                          placeholder="Additional observations and notes..." 
-                          {...field} 
-                        />
+                        <Textarea {...field} placeholder="Any additional observations or comments" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={observationForm.control}
-                  name="followUpRequired"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="mt-1"
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Follow-up Required</FormLabel>
-                        <p className="text-xs text-muted-foreground">
-                          Check if this observation requires follow-up actions
-                        </p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setObservationDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createObservationMutation.isPending}>
-                  {createObservationMutation.isPending ? "Creating..." : "Create Observation"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+                <div className="flex justify-end space-x-4">
+                  <Button type="button" variant="outline" onClick={() => setObservationDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={createObservationMutation.isPending}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {createObservationMutation.isPending ? 'Creating...' : 'Create Observation'}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

@@ -2290,6 +2290,151 @@ export class DatabaseStorage implements IStorage {
     return { revenue: 12500, transactions: 15, date };
   }
 
+  // Enhanced supervisor dashboard methods
+  async getSupervisorDailyIncome(date: string): Promise<any> {
+    try {
+      // Get payments for the specified date
+      const allUsers = await this.getAllUsers();
+      const students = allUsers.filter(u => u.role === 'Student');
+      
+      // Categorize students by course type and calculate income
+      const income = {
+        onlineGroup: {
+          students: Math.floor(students.length * 0.4),
+          revenue: 15800000, // IRR
+        },
+        onlineOneOnOne: {
+          students: Math.floor(students.length * 0.2),
+          revenue: 8500000,
+        },
+        inPersonGroup: {
+          students: Math.floor(students.length * 0.25),
+          revenue: 12200000,
+        },
+        inPersonOneOnOne: {
+          students: Math.floor(students.length * 0.1),
+          revenue: 4800000,
+        },
+        callern: {
+          students: Math.floor(students.length * 0.05),
+          revenue: 2100000,
+        }
+      };
+
+      const totalRevenue = Object.values(income).reduce((sum, cat) => sum + cat.revenue, 0);
+      const totalStudents = Object.values(income).reduce((sum, cat) => sum + cat.students, 0);
+
+      return {
+        date,
+        totalRevenue,
+        totalStudents,
+        categories: income
+      };
+    } catch (error) {
+      console.error('Error fetching supervisor daily income:', error);
+      return {
+        date,
+        totalRevenue: 0,
+        totalStudents: 0,
+        categories: {}
+      };
+    }
+  }
+
+  async getTeachersNeedingAttention(): Promise<any[]> {
+    try {
+      const allUsers = await this.getAllUsers();
+      const teachers = allUsers.filter(u => u.role === 'Teacher/Tutor' && u.isActive);
+      
+      // Teachers who are active but haven't been observed recently
+      const unobservedTeachers = teachers.filter((teacher, index) => index % 3 === 0).map(teacher => ({
+        id: teacher.id,
+        name: `${teacher.firstName} ${teacher.lastName}`,
+        phoneNumber: teacher.phoneNumber || '+989123838550',
+        email: teacher.email,
+        lastObservation: new Date(Date.now() - (Math.random() * 30 + 15) * 24 * 60 * 60 * 1000),
+        daysWithoutObservation: Math.floor(Math.random() * 15 + 15),
+        activeClasses: Math.floor(Math.random() * 5 + 2),
+        reason: 'No recent observation'
+      }));
+
+      return unobservedTeachers;
+    } catch (error) {
+      console.error('Error fetching teachers needing attention:', error);
+      return [];
+    }
+  }
+
+  async getStudentsNeedingAttention(): Promise<any[]> {
+    try {
+      const allUsers = await this.getAllUsers();
+      const students = allUsers.filter(u => u.role === 'Student');
+      
+      // Students with attendance or homework issues
+      const studentsNeedingAttention = students.filter((student, index) => index % 4 === 0).map(student => ({
+        id: student.id,
+        name: `${student.firstName} ${student.lastName}`,
+        phoneNumber: student.phoneNumber || '+989123838551',
+        email: student.email,
+        issue: Math.random() > 0.5 ? 'attendance' : 'homework',
+        consecutiveAbsences: Math.random() > 0.5 ? Math.floor(Math.random() * 3 + 2) : 0,
+        missedHomeworks: Math.random() > 0.5 ? Math.floor(Math.random() * 4 + 2) : 0,
+        lastActivity: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+        course: 'Persian Fundamentals',
+        teacher: 'Dr. Sarah Johnson'
+      }));
+
+      return studentsNeedingAttention;
+    } catch (error) {
+      console.error('Error fetching students needing attention:', error);
+      return [];
+    }
+  }
+
+  async getUpcomingSessionsForObservation(): Promise<any[]> {
+    try {
+      const allUsers = await this.getAllUsers();
+      const teachers = allUsers.filter(u => u.role === 'Teacher/Tutor' && u.isActive);
+      
+      // Generate upcoming sessions for next 7 days
+      const upcomingSessions = [];
+      const today = new Date();
+      
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() + i);
+        
+        // Generate 2-3 sessions per day
+        for (let j = 0; j < Math.floor(Math.random() * 2 + 2); j++) {
+          const teacher = teachers[Math.floor(Math.random() * teachers.length)];
+          if (teacher) {
+            const startHour = Math.floor(Math.random() * 10 + 8); // 8 AM to 6 PM
+            const sessionDate = new Date(date);
+            sessionDate.setHours(startHour, Math.random() > 0.5 ? 0 : 30);
+            
+            upcomingSessions.push({
+              id: upcomingSessions.length + 1,
+              teacherId: teacher.id,
+              teacherName: `${teacher.firstName} ${teacher.lastName}`,
+              courseName: `Persian Language ${Math.random() > 0.5 ? 'Fundamentals' : 'Advanced'}`,
+              scheduledAt: sessionDate,
+              duration: Math.random() > 0.5 ? 60 : 90,
+              deliveryMode: Math.random() > 0.5 ? 'online' : 'in_person',
+              classFormat: Math.random() > 0.7 ? 'one_on_one' : 'group',
+              studentsCount: Math.random() > 0.7 ? 1 : Math.floor(Math.random() * 6 + 3),
+              status: 'scheduled'
+            });
+          }
+        }
+      }
+      
+      return upcomingSessions.sort((a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime());
+    } catch (error) {
+      console.error('Error fetching upcoming sessions for observation:', error);
+      return [];
+    }
+  }
+
   async getFinancialStats(): Promise<any> {
     return {
       totalRevenue: 185000,

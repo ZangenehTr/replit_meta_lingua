@@ -8667,6 +8667,123 @@ Return JSON format:
     }
   });
 
+  // Enhanced supervisor dashboard endpoints
+  app.get("/api/supervisor/daily-income", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const { date } = req.query;
+      const targetDate = date || new Date().toISOString().split('T')[0];
+      const dailyIncome = await storage.getSupervisorDailyIncome(targetDate);
+      res.json(dailyIncome);
+    } catch (error) {
+      console.error('Error fetching supervisor daily income:', error);
+      res.status(500).json({ message: "Failed to fetch daily income" });
+    }
+  });
+
+  app.get("/api/supervisor/teachers-needing-attention", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const teachers = await storage.getTeachersNeedingAttention();
+      res.json(teachers);
+    } catch (error) {
+      console.error('Error fetching teachers needing attention:', error);
+      res.status(500).json({ message: "Failed to fetch teachers needing attention" });
+    }
+  });
+
+  app.get("/api/supervisor/students-needing-attention", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const students = await storage.getStudentsNeedingAttention();
+      res.json(students);
+    } catch (error) {
+      console.error('Error fetching students needing attention:', error);
+      res.status(500).json({ message: "Failed to fetch students needing attention" });
+    }
+  });
+
+  app.get("/api/supervisor/upcoming-sessions-for-observation", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const sessions = await storage.getUpcomingSessionsForObservation();
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching upcoming sessions for observation:', error);
+      res.status(500).json({ message: "Failed to fetch upcoming sessions" });
+    }
+  });
+
+  // SMS alert endpoints
+  app.post("/api/supervisor/send-teacher-alert", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const { teacherId, issue } = req.body;
+      const teacher = await storage.getUser(teacherId);
+      
+      if (!teacher || !teacher.phoneNumber) {
+        return res.status(400).json({ message: "Teacher not found or no phone number" });
+      }
+
+      const { kavenegarService } = await import('./kavenegar-service');
+      const teacherName = `${teacher.firstName} ${teacher.lastName}`;
+      
+      const result = await kavenegarService.sendTeacherAttentionAlert(
+        teacher.phoneNumber,
+        teacherName,
+        issue
+      );
+
+      if (result.success) {
+        res.json({ 
+          success: true, 
+          message: `Alert sent to ${teacherName}`,
+          messageId: result.messageId 
+        });
+      } else {
+        res.status(400).json({ 
+          success: false, 
+          message: result.error || "Failed to send alert" 
+        });
+      }
+    } catch (error) {
+      console.error('Error sending teacher alert:', error);
+      res.status(500).json({ message: "Failed to send teacher alert" });
+    }
+  });
+
+  app.post("/api/supervisor/send-student-alert", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const { studentId, issue, teacherName } = req.body;
+      const student = await storage.getUser(studentId);
+      
+      if (!student || !student.phoneNumber) {
+        return res.status(400).json({ message: "Student not found or no phone number" });
+      }
+
+      const { kavenegarService } = await import('./kavenegar-service');
+      const studentName = `${student.firstName} ${student.lastName}`;
+      
+      const result = await kavenegarService.sendStudentAttentionAlert(
+        student.phoneNumber,
+        studentName,
+        issue,
+        teacherName || 'your teacher'
+      );
+
+      if (result.success) {
+        res.json({ 
+          success: true, 
+          message: `Alert sent to ${studentName}`,
+          messageId: result.messageId 
+        });
+      } else {
+        res.status(400).json({ 
+          success: false, 
+          message: result.error || "Failed to send alert" 
+        });
+      }
+    } catch (error) {
+      console.error('Error sending student alert:', error);
+      res.status(500).json({ message: "Failed to send student alert" });
+    }
+  });
+
   // Call Center Dashboard Stats
   app.get("/api/call-center/dashboard-stats", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
     try {
