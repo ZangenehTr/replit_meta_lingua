@@ -34,7 +34,7 @@ import {
   UserMinus,
   AlertCircle
 } from "lucide-react";
-import ScheduleObservationReview from "@/components/supervision/ScheduleObservationReview";
+
 
 interface SupervisorStats {
   totalTeachers: number;
@@ -77,6 +77,8 @@ const targetSchema = z.object({
 export default function SupervisorDashboard() {
   const [observationDialogOpen, setObservationDialogOpen] = useState(false);
   const [targetDialogOpen, setTargetDialogOpen] = useState(false);
+  const [teachersAttentionDialogOpen, setTeachersAttentionDialogOpen] = useState(false);
+  const [studentsAttentionDialogOpen, setStudentsAttentionDialogOpen] = useState(false);
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
@@ -394,7 +396,7 @@ export default function SupervisorDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -419,14 +421,17 @@ export default function SupervisorDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+          <Card 
+            className="bg-gradient-to-br from-red-500 to-red-600 text-white cursor-pointer hover:from-red-600 hover:to-red-700 transition-all"
+            onClick={() => setTeachersAttentionDialogOpen(true)}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100">Quality Score</p>
-                  <p className="text-3xl font-bold">{stats?.qualityScore || 98.5}%</p>
+                  <p className="text-red-100">Teachers Needing Attention</p>
+                  <p className="text-3xl font-bold">{teachersNeedingAttention?.length || 0}</p>
                 </div>
-                <Star className="h-8 w-8 text-orange-200" />
+                <UserMinus className="h-8 w-8 text-red-200" />
               </div>
             </CardContent>
           </Card>
@@ -442,15 +447,28 @@ export default function SupervisorDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          <Card 
+            className="bg-gradient-to-br from-amber-500 to-amber-600 text-white cursor-pointer hover:from-amber-600 hover:to-amber-700 transition-all"
+            onClick={() => setStudentsAttentionDialogOpen(true)}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-amber-100">Students Needing Attention</p>
+                  <p className="text-3xl font-bold">{studentsNeedingAttention?.length || 0}</p>
+                </div>
+                <AlertCircle className="h-8 w-8 text-amber-200" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="teachers">Teacher Performance</TabsTrigger>
-            <TabsTrigger value="quality">Quality Assurance</TabsTrigger>
-            <TabsTrigger value="management">Management Tools</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -738,98 +756,7 @@ export default function SupervisorDashboard() {
             </div>
           </TabsContent>
 
-          <TabsContent value="quality" className="space-y-6">
-            {/* Upcoming Sessions for Observation with auto-populate */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-blue-600" />
-                  Upcoming Sessions Available for Observation
-                </CardTitle>
-                <CardDescription>
-                  Click to auto-populate observation form with session details
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {upcomingSessionsForObservation.length === 0 ? (
-                  <div className="text-center py-6 text-gray-500">
-                    <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                    <p className="text-sm">No upcoming sessions scheduled</p>
-                  </div>
-                ) : (
-                  upcomingSessionsForObservation.slice(0, 10).map((session: any) => (
-                    <div 
-                      key={session.id} 
-                      className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 cursor-pointer transition-colors"
-                      onClick={() => {
-                        // Auto-populate observation form
-                        observationForm.setValue('sessionId', session.id);
-                        observationForm.setValue('teacherId', session.teacherId);
-                        // Auto-select observation type based on delivery mode
-                        if (session.deliveryMode === 'online') {
-                          observationForm.setValue('observationType', 'live_online');
-                        } else {
-                          // For in-person, default to in-person but user can change
-                          observationForm.setValue('observationType', 'live_in_person');
-                        }
-                        setObservationDialogOpen(true);
-                      }}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Clock className="h-5 w-5 text-blue-500" />
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {session.teacherName} - {session.courseName}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {new Date(session.scheduledAt).toLocaleDateString()} at {new Date(session.scheduledAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {session.duration}min • {session.deliveryMode} • {session.classFormat} • {session.studentsCount} students
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant={session.deliveryMode === 'online' ? 'default' : 'secondary'}>
-                          {session.deliveryMode}
-                        </Badge>
-                        <Button size="sm" variant="outline">
-                          <Eye className="h-4 w-4 mr-1" />
-                          Schedule
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
-          <TabsContent value="management" className="space-y-6">
-            <div className="text-center py-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Management Tools</h3>
-              <p className="text-gray-600 mb-6">Advanced supervision and quality assurance tools</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <ScheduleObservationReview />
-                
-                <Card 
-                  className="p-6 text-center hover:shadow-lg transition-shadow cursor-pointer"
-                  onClick={() => setTargetDialogOpen(true)}
-                >
-                  <Target className="h-8 w-8 mx-auto mb-3 text-green-600" />
-                  <h4 className="font-semibold mb-2">Set Monthly/Seasonal Targets</h4>
-                  <p className="text-sm text-gray-600">Configure automatic targets for observations and quality metrics</p>
-                </Card>
-                
-                <Card className="p-6 text-center hover:shadow-lg transition-shadow cursor-pointer">
-                  <BookOpen className="h-8 w-8 mx-auto mb-3 text-purple-600" />
-                  <h4 className="font-semibold mb-2">Quality Standards</h4>
-                  <p className="text-sm text-gray-600">Review and update teaching quality standards</p>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
         </Tabs>
 
         {/* Observation Creation Dialog */}
@@ -1194,6 +1121,151 @@ export default function SupervisorDashboard() {
                 </div>
               </form>
             </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Teachers Attention Dialog */}
+        <Dialog open={teachersAttentionDialogOpen} onOpenChange={setTeachersAttentionDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <UserMinus className="h-5 w-5 mr-2 text-red-600" />
+                Teachers Needing Attention ({teachersNeedingAttention?.length || 0})
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {teachersNeedingAttention?.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <UserCheck className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium">All teachers are up to date!</p>
+                  <p className="text-sm">No teachers currently need attention</p>
+                </div>
+              ) : (
+                teachersNeedingAttention?.map((teacher: any) => (
+                  <Card key={teacher.id} className="border-red-200 bg-red-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <UserMinus className="h-5 w-5 text-red-500" />
+                          <div>
+                            <div className="font-medium text-gray-900">{teacher.name}</div>
+                            <div className="text-sm text-gray-600">
+                              {teacher.reason} • Last observed: {teacher.lastObservation || 'Never'}
+                            </div>
+                            {teacher.rating && (
+                              <div className="text-xs text-orange-600">
+                                Current rating: {teacher.rating}/5.0
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setTeachersAttentionDialogOpen(false);
+                              // Navigate to schedule review - this would need routing implementation
+                              window.location.href = '/admin/schedule-review';
+                            }}
+                          >
+                            <Calendar className="h-4 w-4 mr-1" />
+                            Schedule Review
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => sendTeacherAlert.mutate({ 
+                              teacherId: teacher.id, 
+                              reason: teacher.reason 
+                            })}
+                            disabled={sendTeacherAlert.isPending}
+                          >
+                            <MessageSquare className="h-4 w-4 mr-1" />
+                            SMS Alert
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Students Attention Dialog */}
+        <Dialog open={studentsAttentionDialogOpen} onOpenChange={setStudentsAttentionDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <AlertCircle className="h-5 w-5 mr-2 text-amber-600" />
+                Students Needing Attention ({studentsNeedingAttention?.length || 0})
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {studentsNeedingAttention?.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <CheckCircle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium">All students are doing well!</p>
+                  <p className="text-sm">No students currently need attention</p>
+                </div>
+              ) : (
+                studentsNeedingAttention?.map((student: any) => (
+                  <Card key={student.id} className="border-amber-200 bg-amber-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <AlertCircle className="h-5 w-5 text-amber-500" />
+                          <div>
+                            <div className="font-medium text-gray-900">{student.name}</div>
+                            <div className="text-sm text-gray-600 capitalize">
+                              {student.issue} issue • {student.course}
+                            </div>
+                            {student.consecutiveAbsences > 0 && (
+                              <div className="text-xs text-red-600">
+                                {student.consecutiveAbsences} consecutive absences
+                              </div>
+                            )}
+                            {student.missedHomeworks > 0 && (
+                              <div className="text-xs text-orange-600">
+                                {student.missedHomeworks} missed homeworks
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              // Navigate to student profile or contact
+                              window.location.href = `/admin/students/${student.id}`;
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View Profile
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => sendStudentAlert.mutate({ 
+                              studentId: student.id, 
+                              issue: `${student.issue} concerns`,
+                              teacherName: student.teacher 
+                            })}
+                            disabled={sendStudentAlert.isPending}
+                          >
+                            <MessageSquare className="h-4 w-4 mr-1" />
+                            SMS Alert
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       </div>
