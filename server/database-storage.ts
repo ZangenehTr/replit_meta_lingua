@@ -2343,22 +2343,74 @@ export class DatabaseStorage implements IStorage {
 
   async getTeachersNeedingAttention(): Promise<any[]> {
     try {
-      const allUsers = await this.getAllUsers();
-      const teachers = allUsers.filter(u => u.role === 'Teacher/Tutor' && u.isActive);
-      
-      // Teachers who are active but haven't been observed recently
-      const unobservedTeachers = teachers.filter((teacher, index) => index % 3 === 0).map(teacher => ({
-        id: teacher.id,
-        name: `${teacher.firstName} ${teacher.lastName}`,
-        phoneNumber: teacher.phoneNumber || '+989123838550',
-        email: teacher.email,
-        lastObservation: new Date(Date.now() - (Math.random() * 30 + 15) * 24 * 60 * 60 * 1000),
-        daysWithoutObservation: Math.floor(Math.random() * 15 + 15),
-        activeClasses: Math.floor(Math.random() * 5 + 2),
-        reason: 'No recent observation'
-      }));
+      // Query real teachers from the database
+      const realTeachers = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          phoneNumber: users.phoneNumber
+        })
+        .from(users)
+        .where(and(
+          eq(users.role, 'Teacher/Tutor'),
+          eq(users.isActive, true)
+        ));
 
-      return unobservedTeachers;
+      const teachersNeedingAttention = [];
+      
+      for (const teacher of realTeachers) {
+        try {
+          // Check for real supervision observations
+          const recentObservations = await db
+            .select({
+              id: supervisionObservations.id,
+              createdAt: supervisionObservations.createdAt
+            })
+            .from(supervisionObservations)
+            .where(eq(supervisionObservations.teacherId, teacher.id))
+            .orderBy(desc(supervisionObservations.createdAt))
+            .limit(1);
+
+          // Check for active classes/sessions
+          const activeSessions = await db
+            .select({
+              count: sql<number>`COUNT(*)`
+            })
+            .from(sessions)
+            .where(and(
+              eq(sessions.instructorId, teacher.id),
+              eq(sessions.status, 'active')
+            ));
+
+          const lastObservationDate = recentObservations[0]?.createdAt;
+          const daysSinceLastObservation = lastObservationDate 
+            ? Math.floor((Date.now() - new Date(lastObservationDate).getTime()) / (1000 * 60 * 60 * 24))
+            : 365; // No observation ever
+
+          const activeClasses = activeSessions[0]?.count || 0;
+
+          // Include teachers who need attention (no observation in 30+ days, or have active classes but no recent observations)
+          if (daysSinceLastObservation > 30 || (activeClasses > 0 && daysSinceLastObservation > 14)) {
+            teachersNeedingAttention.push({
+              id: teacher.id,
+              name: `${teacher.firstName} ${teacher.lastName}`,
+              phoneNumber: teacher.phoneNumber || null,
+              email: teacher.email,
+              lastObservation: lastObservationDate ? new Date(lastObservationDate) : null,
+              daysWithoutObservation: daysSinceLastObservation,
+              activeClasses,
+              reason: daysSinceLastObservation > 30 ? 'No recent observation' : 'Overdue for routine observation'
+            });
+          }
+        } catch (err) {
+          console.error(`Error processing teacher ${teacher.id}:`, err);
+          // Skip this teacher if there's an error
+        }
+      }
+
+      return teachersNeedingAttention;
     } catch (error) {
       console.error('Error fetching teachers needing attention:', error);
       return [];
@@ -2367,24 +2419,86 @@ export class DatabaseStorage implements IStorage {
 
   async getStudentsNeedingAttention(): Promise<any[]> {
     try {
-      const allUsers = await this.getAllUsers();
-      const students = allUsers.filter(u => u.role === 'Student');
-      
-      // Students with attendance or homework issues
-      const studentsNeedingAttention = students.filter((student, index) => index % 4 === 0).map(student => ({
-        id: student.id,
-        name: `${student.firstName} ${student.lastName}`,
-        phoneNumber: student.phoneNumber || '+989123838551',
-        email: student.email,
-        issue: Math.random() > 0.5 ? 'attendance' : 'homework',
-        consecutiveAbsences: Math.random() > 0.5 ? Math.floor(Math.random() * 3 + 2) : 0,
-        missedHomeworks: Math.random() > 0.5 ? Math.floor(Math.random() * 4 + 2) : 0,
-        lastActivity: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-        course: 'Persian Fundamentals',
-        teacher: 'Dr. Sarah Johnson'
-      }));
+      // Query real students from the database who actually need attention
+      const realStudents = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          phoneNumber: users.phoneNumber
+        })
+        .from(users)
+        .where(eq(users.role, 'Student'))
+        .limit(10); // Reasonable limit for dashboard display
 
-      return studentsNeedingAttention;
+      // Get real attendance/homework issues from the database
+      const studentsWithIssues = [];
+      
+      for (const student of realStudents) {
+        try {
+          // Check real homework submissions
+          const homeworkStats = await db
+            .select({
+              total: sql<number>`COUNT(*)`,
+              submitted: sql<number>`SUM(CASE WHEN ${homework.status} = 'submitted' THEN 1 ELSE 0 END)`
+            })
+            .from(homework)
+            .where(eq(homework.studentId, student.id));
+
+          // Check real session attendance  
+          const sessionStats = await db
+            .select({
+              total: sql<number>`COUNT(*)`,
+              attended: sql<number>`SUM(CASE WHEN ${sessions.attendanceStatus} = 'present' THEN 1 ELSE 0 END)`
+            })
+            .from(sessions)
+            .where(eq(sessions.studentId, student.id));
+
+          const homeworkTotal = homeworkStats[0]?.total || 0;
+          const homeworkSubmitted = homeworkStats[0]?.submitted || 0;
+          const sessionTotal = sessionStats[0]?.total || 0;
+          const sessionAttended = sessionStats[0]?.attended || 0;
+
+          const missedHomeworks = homeworkTotal - homeworkSubmitted;
+          const missedSessions = sessionTotal - sessionAttended;
+
+          // Only include students with actual issues
+          if (missedHomeworks > 0 || missedSessions > 1) {
+            // Get the student's current course enrollment
+            const enrollment = await db
+              .select({
+                courseTitle: courses.title,
+                teacherName: sql<string>`CONCAT(teacher.firstName, ' ', teacher.lastName)`
+              })
+              .from(enrollments)
+              .leftJoin(courses, eq(enrollments.courseId, courses.id))
+              .leftJoin(users.as('teacher'), eq(courses.instructorId, users.id))
+              .where(eq(enrollments.studentId, student.id))
+              .limit(1);
+
+            const issue = missedSessions > missedHomeworks ? 'attendance' : 'homework';
+
+            studentsWithIssues.push({
+              id: student.id,
+              name: `${student.firstName} ${student.lastName}`,
+              phoneNumber: student.phoneNumber || null,
+              email: student.email,
+              issue,
+              consecutiveAbsences: missedSessions,
+              missedHomeworks,
+              lastActivity: new Date(),
+              course: enrollment[0]?.courseTitle || 'No active course',
+              teacher: enrollment[0]?.teacherName || 'No assigned teacher'
+            });
+          }
+        } catch (err) {
+          console.error(`Error processing student ${student.id}:`, err);
+          // Skip this student if there's an error
+        }
+      }
+
+      return studentsWithIssues;
     } catch (error) {
       console.error('Error fetching students needing attention:', error);
       return [];
