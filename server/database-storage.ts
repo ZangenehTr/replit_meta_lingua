@@ -2290,36 +2290,75 @@ export class DatabaseStorage implements IStorage {
     return { revenue: 12500, transactions: 15, date };
   }
 
-  // Enhanced supervisor dashboard methods
+  // Enhanced supervisor dashboard methods - REAL DATA ONLY
   async getSupervisorDailyIncome(date: string): Promise<any> {
     try {
-      // Get payments for the specified date
-      const allUsers = await this.getAllUsers();
-      const students = allUsers.filter(u => u.role === 'Student');
-      
-      // Categorize students by course type and calculate income
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+
+      // Query real session data from database for the specific date
+      const realSessions = await db
+        .select({
+          id: sessions.id,
+          studentId: sessions.studentId,
+          deliveryMode: sessions.deliveryMode,
+          classFormat: sessions.classFormat,
+          price: sessions.price,
+          createdAt: sessions.createdAt
+        })
+        .from(sessions)
+        .where(and(
+          gte(sessions.createdAt, startOfDay.toISOString()),
+          lte(sessions.createdAt, endOfDay.toISOString()),
+          eq(sessions.status, 'completed')
+        ));
+
+      // Calculate real revenue by category from actual sessions
       const income = {
-        onlineGroup: {
-          students: Math.floor(students.length * 0.4),
-          revenue: 15800000, // IRR
-        },
-        onlineOneOnOne: {
-          students: Math.floor(students.length * 0.2),
-          revenue: 8500000,
-        },
-        inPersonGroup: {
-          students: Math.floor(students.length * 0.25),
-          revenue: 12200000,
-        },
-        inPersonOneOnOne: {
-          students: Math.floor(students.length * 0.1),
-          revenue: 4800000,
-        },
-        callern: {
-          students: Math.floor(students.length * 0.05),
-          revenue: 2100000,
-        }
+        onlineGroup: { students: 0, revenue: 0 },
+        onlineOneOnOne: { students: 0, revenue: 0 },
+        inPersonGroup: { students: 0, revenue: 0 },
+        inPersonOneOnOne: { students: 0, revenue: 0 },
+        callern: { students: 0, revenue: 0 }
       };
+
+      const studentSets = {
+        onlineGroup: new Set(),
+        onlineOneOnOne: new Set(),
+        inPersonGroup: new Set(),
+        inPersonOneOnOne: new Set(),
+        callern: new Set()
+      };
+
+      for (const session of realSessions) {
+        const price = session.price || 0;
+        const studentId = session.studentId;
+        
+        if (session.deliveryMode === 'online' && session.classFormat === 'group') {
+          income.onlineGroup.revenue += price;
+          studentSets.onlineGroup.add(studentId);
+        } else if (session.deliveryMode === 'online' && session.classFormat === 'one_on_one') {
+          income.onlineOneOnOne.revenue += price;
+          studentSets.onlineOneOnOne.add(studentId);
+        } else if (session.deliveryMode === 'in_person' && session.classFormat === 'group') {
+          income.inPersonGroup.revenue += price;
+          studentSets.inPersonGroup.add(studentId);
+        } else if (session.deliveryMode === 'in_person' && session.classFormat === 'one_on_one') {
+          income.inPersonOneOnOne.revenue += price;
+          studentSets.inPersonOneOnOne.add(studentId);
+        } else if (session.deliveryMode === 'callern') {
+          income.callern.revenue += price;
+          studentSets.callern.add(studentId);
+        }
+      }
+
+      // Set unique student counts for each category
+      income.onlineGroup.students = studentSets.onlineGroup.size;
+      income.onlineOneOnOne.students = studentSets.onlineOneOnOne.size;
+      income.inPersonGroup.students = studentSets.inPersonGroup.size;
+      income.inPersonOneOnOne.students = studentSets.inPersonOneOnOne.size;
+      income.callern.students = studentSets.callern.size;
 
       const totalRevenue = Object.values(income).reduce((sum, cat) => sum + cat.revenue, 0);
       const totalStudents = Object.values(income).reduce((sum, cat) => sum + cat.students, 0);
@@ -2336,7 +2375,13 @@ export class DatabaseStorage implements IStorage {
         date,
         totalRevenue: 0,
         totalStudents: 0,
-        categories: {}
+        categories: {
+          onlineGroup: { students: 0, revenue: 0 },
+          onlineOneOnOne: { students: 0, revenue: 0 },
+          inPersonGroup: { students: 0, revenue: 0 },
+          inPersonOneOnOne: { students: 0, revenue: 0 },
+          callern: { students: 0, revenue: 0 }
+        }
       };
     }
   }
@@ -2469,11 +2514,11 @@ export class DatabaseStorage implements IStorage {
             const enrollment = await db
               .select({
                 courseTitle: courses.title,
-                teacherName: sql<string>`CONCAT(teacher.first_name, ' ', teacher.last_name)`
+                teacherName: sql<string>`CONCAT(users.firstName, ' ', users.lastName)`
               })
               .from(enrollments)
               .leftJoin(courses, eq(enrollments.courseId, courses.id))
-              .leftJoin(sql`${users} AS teacher`, eq(courses.instructorId, sql`teacher.id`))
+              .leftJoin(users, eq(courses.instructorId, users.id))
               .where(eq(enrollments.studentId, student.id))
               .limit(1);
 
