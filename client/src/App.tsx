@@ -51,6 +51,7 @@ import AccountantDashboard from "@/pages/accountant/dashboard";
 import MentorDashboard from "@/pages/mentor/dashboard";
 import StudentDashboard from "@/pages/student/dashboard";
 import SupervisorDashboard from "@/pages/supervisor/supervisor-dashboard";
+import ScheduleObservationReview from "@/components/supervision/ScheduleObservationReview";
 
 // Student pages
 import TutorsPage from "@/pages/student/tutors";
@@ -474,6 +475,11 @@ function Router() {
       <Route path="/supervisor/dashboard">
         <ProtectedRoute>
           <SupervisorDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/supervisor/schedule-review">
+        <ProtectedRoute>
+          <ScheduleObservationReview />
         </ProtectedRoute>
       </Route>
 

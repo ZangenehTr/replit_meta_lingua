@@ -60,9 +60,8 @@ const observationSchema = z.object({
 
 export default function SupervisorDashboard() {
   const [observationDialogOpen, setObservationDialogOpen] = useState(false);
-  const [scheduleReviewDialogOpen, setScheduleReviewDialogOpen] = useState(false);
-  const [dialogSelectedTeacher, setDialogSelectedTeacher] = useState<number | null>(null);
-  const [selectedClassIds, setSelectedClassIds] = useState<number[]>([]);
+
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -105,10 +104,7 @@ export default function SupervisorDashboard() {
   });
 
   // Fetch dialog teacher classes when teacher is selected in dialog
-  const { data: dialogTeacherClasses = [] } = useQuery({
-    queryKey: [`/api/supervision/teacher-classes/${dialogSelectedTeacher}`],
-    enabled: !!dialogSelectedTeacher,
-  });
+
 
   // Observation form
   const observationForm = useForm({
@@ -161,66 +157,9 @@ export default function SupervisorDashboard() {
     },
   });
 
-  // Approve selected classes mutation
-  const approveClassesMutation = useMutation({
-    mutationFn: async (data: { teacherId: number; classIds: number[]; approvalNotes?: string }) => {
-      const result = await apiRequest('/api/supervision/approve-classes', 'POST', data);
-      return result;
-    },
-    onSuccess: () => {
-      setScheduleReviewDialogOpen(false);
-      setDialogSelectedTeacher(null);
-      setSelectedClassIds([]);
-      queryClient.invalidateQueries({ queryKey: ['/api/supervision/teacher-performance'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/supervision/pending-observations'] });
-      toast({
-        title: "Success",
-        description: "Selected classes approved for observation",
-      });
-    },
-    onError: (error) => {
-      console.error('Class approval failed:', error);
-      toast({
-        title: "Error", 
-        description: "Failed to approve classes. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
 
-  const handleClassSelection = (classId: number) => {
-    setSelectedClassIds(prev => 
-      prev.includes(classId) 
-        ? prev.filter(id => id !== classId)
-        : [...prev, classId]
-    );
-  };
 
-  const handleApproveSelectedClasses = () => {
-    if (!dialogSelectedTeacher) {
-      toast({
-        title: "Error",
-        description: "Please select a teacher first",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    if (selectedClassIds.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one class to approve",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    approveClassesMutation.mutate({
-      teacherId: dialogSelectedTeacher,
-      classIds: selectedClassIds,
-      approvalNotes: `Approved ${selectedClassIds.length} classes for observation`,
-    });
-  };
 
   const onObservationSubmit = (data: any) => {
     // Calculate overall score from individual scores
@@ -278,13 +217,7 @@ export default function SupervisorDashboard() {
               <ClipboardCheck className="h-4 w-4 mr-2" />
               New Observation
             </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setScheduleReviewDialogOpen(true)}
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Schedule Review
-            </Button>
+
           </div>
         </div>
 
@@ -341,11 +274,10 @@ export default function SupervisorDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="teachers">Teacher Performance</TabsTrigger>
             <TabsTrigger value="quality">Quality Assurance</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule Review</TabsTrigger>
             <TabsTrigger value="management">Management Tools</TabsTrigger>
           </TabsList>
 
@@ -549,9 +481,7 @@ export default function SupervisorDashboard() {
             </div>
           </TabsContent>
 
-          <TabsContent value="schedule" className="space-y-6">
-            <ScheduleObservationReview />
-          </TabsContent>
+
         </Tabs>
       </div>
 
@@ -821,241 +751,6 @@ export default function SupervisorDashboard() {
               </div>
             </form>
           </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Schedule Review Dialog */}
-      <Dialog open={scheduleReviewDialogOpen} onOpenChange={setScheduleReviewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Teacher Schedule Review</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6">
-            {/* Teacher Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Select Teacher</label>
-                <Select onValueChange={(value) => setDialogSelectedTeacher(Number(value))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose teacher to review" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allTeachers?.map((teacher: any) => (
-                      <SelectItem key={teacher.id} value={teacher.id.toString()}>
-                        {teacher.firstName} {teacher.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Review Period</label>
-                <Select defaultValue="this_week">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="this_week">This Week</SelectItem>
-                    <SelectItem value="next_week">Next Week</SelectItem>
-                    <SelectItem value="this_month">This Month</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Schedule Overview */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Weekly Schedule */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center">
-                    <Calendar className="h-5 w-5 mr-2" />
-                    Real Teacher Classes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {!dialogSelectedTeacher ? (
-                      <div className="text-center py-4 text-gray-500">
-                        Select a teacher to view their real classes
-                      </div>
-                    ) : dialogTeacherClasses.length === 0 ? (
-                      <div className="text-center py-4 text-gray-500">
-                        No classes found for this teacher
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="text-sm text-gray-600 mb-2">
-                          Found {dialogTeacherClasses.length} real classes - select classes to approve for observation:
-                        </div>
-                        {dialogTeacherClasses.map((classItem: any) => (
-                          <div key={classItem.id} className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                            selectedClassIds.includes(classItem.id) 
-                              ? 'bg-purple-50 border-purple-300 border-2' 
-                              : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
-                          }`}
-                          onClick={() => handleClassSelection(classItem.id)}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 flex-1">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedClassIds.includes(classItem.id)}
-                                  onChange={() => handleClassSelection(classItem.id)}
-                                  className="rounded border-gray-300"
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                                <div>
-                                  <div className="font-medium text-sm">{classItem.title}</div>
-                                  <div className="text-xs text-gray-600">{classItem.courseName}</div>
-                                  <div className="text-xs text-gray-500">Student: {classItem.studentName}</div>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <Badge variant="outline" className="text-xs">
-                                  {new Date(classItem.scheduledAt).toLocaleDateString()} {new Date(classItem.scheduledAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                </Badge>
-                                <div className="text-xs text-gray-500 mt-1">
-                                  {classItem.duration}min • {classItem.deliveryMode}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        {selectedClassIds.length > 0 && (
-                          <div className="text-sm text-purple-600 mt-2 font-medium bg-purple-50 p-2 rounded">
-                            ✓ {selectedClassIds.length} class(es) selected for observation approval
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Schedule Analysis */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center">
-                    <Target className="h-5 w-5 mr-2" />
-                    Observation Insights
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {!dialogSelectedTeacher ? (
-                    <div className="text-center py-4 text-gray-500">
-                      Select a teacher to view analysis
-                    </div>
-                  ) : dialogTeacherClasses.length === 0 ? (
-                    <div className="text-center py-4 text-gray-500">
-                      No analysis data available
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Total Classes</span>
-                        <Badge variant="secondary">{dialogTeacherClasses.length} classes</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Class Status</span>
-                        <Badge variant="secondary">{dialogTeacherClasses[0]?.status}</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Delivery Mode</span>
-                        <Badge variant="secondary">{dialogTeacherClasses[0]?.deliveryMode}</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Observable Classes</span>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          {dialogTeacherClasses.filter((c: any) => c.isObservable).length} observable
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Group Classes</span>
-                        <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                          {dialogTeacherClasses.filter((c: any) => c.isGroupClass).length} group sessions
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Observation Coverage</span>
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                          {Math.round((dialogTeacherClasses.filter((c: any) => c.lastObservation).length / dialogTeacherClasses.length) * 100) || 0}%
-                        </Badge>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Schedule Issues */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center">
-                  <AlertTriangle className="h-5 w-5 mr-2 text-orange-500" />
-                  Schedule Analysis
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {recentObservations && recentObservations.length > 0 ? (
-                    recentObservations.slice(0, 3).map((obs: any, index: number) => (
-                      <div key={obs.id} className={`flex items-start space-x-3 p-3 rounded-lg border ${
-                        index === 0 ? 'bg-green-50 border-green-200' :
-                        index === 1 ? 'bg-yellow-50 border-yellow-200' :
-                        'bg-blue-50 border-blue-200'
-                      }`}>
-                        {index === 0 ? <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" /> :
-                         index === 1 ? <Clock className="h-5 w-5 text-yellow-500 mt-0.5" /> :
-                         <Target className="h-5 w-5 text-blue-500 mt-0.5" />}
-                        <div>
-                          <h4 className={`font-medium ${
-                            index === 0 ? 'text-green-800' :
-                            index === 1 ? 'text-yellow-800' :
-                            'text-blue-800'
-                          }`}>
-                            {index === 0 ? 'Recent Observation' :
-                             index === 1 ? 'Schedule Recommendation' :
-                             'Performance Insight'}
-                          </h4>
-                          <p className={`text-sm ${
-                            index === 0 ? 'text-green-600' :
-                            index === 1 ? 'text-yellow-600' :
-                            'text-blue-600'
-                          }`}>
-                            {index === 0 ? `${obs.teacherName}: Overall score ${obs.overallScore}/5.0` :
-                             index === 1 ? `${obs.teacherName}: Consider adjusting teaching methodology` :
-                             `${obs.teacherName}: Strengths in ${obs.strengths?.split(',')[0] || 'teaching'}`}
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 text-gray-500">
-                      No schedule analysis available. Create teacher observations to see insights.
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setScheduleReviewDialogOpen(false)}>
-                Close Review
-              </Button>
-              <Button variant="outline">
-                Export Report
-              </Button>
-              <Button 
-                className="bg-purple-600 hover:bg-purple-700"
-                onClick={handleApproveSelectedClasses}
-                disabled={!dialogSelectedTeacher || selectedClassIds.length === 0 || approveClassesMutation.isPending}
-              >
-                {approveClassesMutation.isPending ? "Approving..." : `Approve ${selectedClassIds.length} Classes for Observation`}
-              </Button>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
     </div>
