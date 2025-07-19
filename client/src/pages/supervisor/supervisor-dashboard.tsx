@@ -40,23 +40,21 @@ interface SupervisorStats {
   studentRetention: number;
 }
 
-// Schema for observation form
+// Schema for observation form (aligned with database structure)
 const observationSchema = z.object({
-  sessionId: z.number(),
-  teacherId: z.number(),
+  sessionId: z.number().min(1, "Please select a session"),
+  teacherId: z.number().min(1, "Please select a teacher"),
   observationType: z.enum(['live_online', 'live_in_person', 'recorded']),
-  scores: z.object({
-    teachingMethodology: z.number().min(1).max(5),
-    classroomManagement: z.number().min(1).max(5),
-    studentEngagement: z.number().min(1).max(5),
-    contentDelivery: z.number().min(1).max(5),
-    languageSkills: z.number().min(1).max(5),
-    timeManagement: z.number().min(1).max(5),
-    technologyUse: z.number().min(1).max(5).optional(),
-  }),
+  teachingMethodology: z.number().min(1).max(5),
+  classroomManagement: z.number().min(1).max(5),
+  studentEngagement: z.number().min(1).max(5),
+  contentDelivery: z.number().min(1).max(5),
+  languageSkills: z.number().min(1).max(5),
+  timeManagement: z.number().min(1).max(5),
   strengths: z.string().optional(),
   areasForImprovement: z.string().optional(),
-  actionItems: z.string().optional(),
+  notes: z.string().optional(),
+  followUpRequired: z.boolean().default(false),
 });
 
 export default function SupervisorDashboard() {
@@ -87,25 +85,29 @@ export default function SupervisorDashboard() {
     queryKey: ['/api/supervision/live-sessions', 'completed'],
   });
 
+  // Fetch all teachers for the form
+  const { data: allTeachers } = useQuery({
+    queryKey: ['/api/admin/teachers'],
+    select: (data: any[]) => data?.filter(user => user.role === 'Teacher/Tutor') || [],
+  });
+
   // Observation form
   const observationForm = useForm({
     resolver: zodResolver(observationSchema),
     defaultValues: {
       sessionId: 0,
       teacherId: 0,
-      observationType: '',
-      scores: {
-        teachingMethodology: 0,
-        classroomManagement: 0,
-        studentEngagement: 0,
-        contentDelivery: 0,
-        languageSkills: 0,
-        timeManagement: 0,
-        technologyUse: 0,
-      },
+      observationType: 'live_online' as const,
+      teachingMethodology: 1,
+      classroomManagement: 1,
+      studentEngagement: 1,
+      contentDelivery: 1,
+      languageSkills: 1,
+      timeManagement: 1,
       strengths: '',
       areasForImprovement: '',
-      actionItems: '',
+      notes: '',
+      followUpRequired: false,
     },
   });
 
@@ -126,19 +128,25 @@ export default function SupervisorDashboard() {
   });
 
   const onObservationSubmit = (data: any) => {
-    // Automatically set teacherId based on sessionId for this demo
-    const teacherMap: { [key: number]: number } = {
-      1: 50, // سارا احمدی
-      2: 51, // محمد رضایی  
-      3: 52, // علی حسینی
+    // Calculate overall score from individual scores
+    const scoreFields = ['teachingMethodology', 'classroomManagement', 'studentEngagement', 'contentDelivery', 'languageSkills', 'timeManagement'];
+    const totalScore = scoreFields.reduce((sum, field) => sum + data[field], 0);
+    const overallScore = (totalScore / scoreFields.length).toFixed(2);
+    
+    // Transform data to match database schema
+    const observationData = {
+      teacherId: data.teacherId,
+      supervisorId: 46, // Current supervisor
+      sessionId: data.sessionId,
+      observationType: data.observationType,
+      overallScore: parseFloat(overallScore),
+      strengths: data.strengths || '',
+      areasForImprovement: data.areasForImprovement || '',
+      notes: data.notes || '',
+      followUpRequired: data.followUpRequired || false,
     };
     
-    const overallScore = Object.values(data.scores).reduce((sum: number, score: any) => sum + score, 0) / Object.keys(data.scores).length;
-    createObservationMutation.mutate({
-      ...data,
-      teacherId: teacherMap[data.sessionId] || 50,
-      overallScore: Math.round(overallScore * 100) / 100,
-    });
+    createObservationMutation.mutate(observationData);
   };
 
   if (isLoading) {
@@ -495,11 +503,38 @@ export default function SupervisorDashboard() {
               </div>
               
               <div className="space-y-3">
+                <FormField
+                  control={observationForm.control}
+                  name="teacherId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Teacher *</FormLabel>
+                      <Select onValueChange={value => field.onChange(+value)} value={field.value?.toString()}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select teacher" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {allTeachers?.map((teacher: any) => (
+                            <SelectItem key={teacher.id} value={teacher.id.toString()}>
+                              {teacher.name || `${teacher.firstName} ${teacher.lastName}`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="space-y-4">
                 <h4 className="font-medium text-sm">Evaluation Scores (1-5)</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   <FormField
                     control={observationForm.control}
-                    name="scores.teachingMethodology"
+                    name="teachingMethodology"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Teaching Methodology</FormLabel>
@@ -512,7 +547,7 @@ export default function SupervisorDashboard() {
                   />
                   <FormField
                     control={observationForm.control}
-                    name="scores.classroomManagement"
+                    name="classroomManagement"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Classroom Management</FormLabel>
@@ -525,7 +560,7 @@ export default function SupervisorDashboard() {
                   />
                   <FormField
                     control={observationForm.control}
-                    name="scores.studentEngagement"
+                    name="studentEngagement"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Student Engagement</FormLabel>
@@ -538,7 +573,7 @@ export default function SupervisorDashboard() {
                   />
                   <FormField
                     control={observationForm.control}
-                    name="scores.contentDelivery"
+                    name="contentDelivery"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Content Delivery</FormLabel>
@@ -551,7 +586,7 @@ export default function SupervisorDashboard() {
                   />
                   <FormField
                     control={observationForm.control}
-                    name="scores.languageSkills"
+                    name="languageSkills"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Language Skills</FormLabel>
@@ -564,7 +599,7 @@ export default function SupervisorDashboard() {
                   />
                   <FormField
                     control={observationForm.control}
-                    name="scores.timeManagement"
+                    name="timeManagement"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Time Management</FormLabel>
@@ -615,18 +650,40 @@ export default function SupervisorDashboard() {
                 />
                 <FormField
                   control={observationForm.control}
-                  name="actionItems"
+                  name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Action Items</FormLabel>
+                      <FormLabel>Additional Notes</FormLabel>
                       <FormControl>
                         <Textarea 
                           rows={2}
-                          placeholder="Specific action items and recommendations..." 
+                          placeholder="Additional observations and notes..." 
                           {...field} 
                         />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={observationForm.control}
+                  name="followUpRequired"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="mt-1"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Follow-up Required</FormLabel>
+                        <p className="text-xs text-muted-foreground">
+                          Check if this observation requires follow-up actions
+                        </p>
+                      </div>
                     </FormItem>
                   )}
                 />
