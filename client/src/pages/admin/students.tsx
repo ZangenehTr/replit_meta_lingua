@@ -478,6 +478,38 @@ export function AdminStudents() {
     }
   };
 
+  const handleSaveEdit = async () => {
+    if (!editingStudent) return;
+    
+    try {
+      const response = await apiRequest(`/api/students/${editingStudent.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editStudentData)
+      });
+
+      if (response) {
+        toast({
+          title: "Success",
+          description: "Student has been updated successfully.",
+        });
+        
+        queryClient.invalidateQueries({ queryKey: ['/api/students/list'] });
+        setIsEditDialogOpen(false);
+        setEditingStudent(null);
+      }
+    } catch (error) {
+      console.error('Error updating student:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to update student. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const studentData = students || [];
 
   const filteredAndSortedStudents = (Array.isArray(studentData) ? studentData : []).filter(student => {
