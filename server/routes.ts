@@ -12387,13 +12387,13 @@ Meta Lingua Academy`;
     }
   });
 
-  // Approve teacher schedule
-  app.post("/api/supervision/approve-schedule", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+  // Approve selected classes for observation
+  app.post("/api/supervision/approve-classes", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      const { teacherId, approvalNotes } = req.body;
+      const { teacherId, classIds, approvalNotes } = req.body;
       
-      if (!teacherId) {
-        return res.status(400).json({ message: "Teacher ID is required" });
+      if (!teacherId || !classIds || !Array.isArray(classIds) || classIds.length === 0) {
+        return res.status(400).json({ message: "Teacher ID and class IDs are required" });
       }
 
       // Get teacher info
@@ -12402,17 +12402,31 @@ Meta Lingua Academy`;
         return res.status(404).json({ message: "Teacher not found" });
       }
 
-      // Get teacher's classes for context
-      const teacherClasses = await storage.getTeacherClassesForObservation(teacherId);
+      // Get the selected classes details
+      const selectedClasses = await storage.getTeacherClassesForObservation(teacherId);
+      const approvedClasses = selectedClasses.filter(cls => classIds.includes(cls.id));
       
-      // Log the schedule approval action
-      const approvalData = {
-        teacherId: teacherId,
-        supervisorId: req.user.id,
-        approvalDate: new Date(),
-        notes: approvalNotes || `Schedule approved for ${teacher.firstName} ${teacher.lastName} with ${teacherClasses.length} classes`,
-        classCount: teacherClasses.length
-      };
+      if (approvedClasses.length === 0) {
+        return res.status(404).json({ message: "No valid classes found to approve" });
+      }
+
+      // Create scheduled observations for each approved class
+      const scheduledObservations = [];
+      for (const classItem of approvedClasses) {
+        const observationData = {
+          teacherId: teacherId,
+          supervisorId: req.user.id,
+          sessionId: classItem.id,
+          observationType: 'live_' + classItem.deliveryMode,
+          priority: 'normal',
+          scheduledDate: new Date(classItem.scheduledAt),
+          notes: approvalNotes || `Class approved for observation: ${classItem.title}`,
+          teacherNotified: false
+        };
+        
+        const observation = await storage.createScheduledObservation(observationData);
+        scheduledObservations.push(observation);
+      }
 
       // Send SMS notification to teacher if they have a phone number
       try {
@@ -12420,17 +12434,20 @@ Meta Lingua Academy`;
           const { kavenegarService } = await import('./kavenegar-service');
           
           const supervisorName = `${req.user.firstName} ${req.user.lastName}`;
-          const smsMessage = `✅ Schedule Approved
+          const classNames = approvedClasses.map(cls => cls.title).join(', ');
+          
+          const smsMessage = `📋 Classes Approved for Observation
 
 Dear ${teacher.firstName},
 
-Your teaching schedule has been approved by supervisor ${supervisorName}.
+${approvedClasses.length} of your classes have been approved for observation by supervisor ${supervisorName}:
 
-📋 Approved Classes: ${teacherClasses.length}
+Classes: ${classNames}
+
 📅 Approval Date: ${new Date().toLocaleDateString('fa-IR')}
-📝 Status: Confirmed
+📝 Status: Scheduled for observation
 
-You can now proceed with your scheduled classes. Thank you for your professionalism.
+Please prepare these classes for quality assessment. You will receive individual notifications before each observation.
 
 Best regards,
 Meta Lingua Academy`;
@@ -12438,25 +12455,26 @@ Meta Lingua Academy`;
           const smsResult = await kavenegarService.sendSimpleSMS(teacher.phoneNumber, smsMessage);
           
           if (smsResult.success) {
-            console.log(`Schedule approval SMS sent to teacher ${teacher.firstName}: ${smsResult.messageId}`);
+            console.log(`Class approval SMS sent to teacher ${teacher.firstName}: ${smsResult.messageId}`);
           } else {
-            console.error(`Failed to send schedule approval SMS to teacher ${teacher.firstName}: ${smsResult.error}`);
+            console.error(`Failed to send class approval SMS to teacher ${teacher.firstName}: ${smsResult.error}`);
           }
         }
       } catch (smsError) {
-        console.error('Error sending schedule approval SMS:', smsError);
+        console.error('Error sending class approval SMS:', smsError);
         // Don't fail the approval if SMS fails
       }
 
       res.status(200).json({ 
-        message: "Teacher schedule approved successfully",
-        approval: approvalData,
-        classCount: teacherClasses.length
+        message: "Classes approved for observation successfully",
+        approvedClasses: approvedClasses.length,
+        scheduledObservations: scheduledObservations,
+        classNames: approvedClasses.map(cls => cls.title)
       });
     } catch (error) {
-      console.error('Error approving teacher schedule:', error);
+      console.error('Error approving classes for observation:', error);
       res.status(500).json({ 
-        message: "Failed to approve teacher schedule", 
+        message: "Failed to approve classes for observation", 
         error: error.message 
       });
     }
