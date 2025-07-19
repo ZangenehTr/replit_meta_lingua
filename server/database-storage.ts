@@ -6983,33 +6983,29 @@ export class DatabaseStorage implements IStorage {
 
   async createScheduledObservation(data: InsertScheduledObservation): Promise<ScheduledObservation> {
     try {
-      // Ensure all date fields are proper Date objects
-      const scheduledDate = typeof data.scheduledDate === 'string' 
-        ? new Date(data.scheduledDate) 
-        : data.scheduledDate;
+      // Use SQL query with properly formatted values
+      const scheduledDate = new Date(data.scheduledDate).toISOString();
+      const now = new Date().toISOString();
       
-      const notificationSentAt = data.notificationSentAt 
-        ? (typeof data.notificationSentAt === 'string' ? new Date(data.notificationSentAt) : data.notificationSentAt)
-        : undefined;
+      const result = await db.execute(sql`
+        INSERT INTO scheduled_observations (
+          teacher_id, supervisor_id, session_id, class_id, observation_type,
+          scheduled_date, status, priority, notes, teacher_notified,
+          created_at, updated_at
+        ) VALUES (
+          ${data.teacherId}, ${data.supervisorId}, ${data.sessionId || null}, 
+          ${data.classId || null}, ${data.observationType}, ${scheduledDate},
+          ${data.status || 'scheduled'}, ${data.priority || 'normal'}, 
+          ${data.notes || null}, ${data.teacherNotified || false},
+          ${now}, ${now}
+        ) RETURNING *
+      `);
       
-      const [observation] = await db.insert(scheduledObservations)
-        .values({
-          teacherId: data.teacherId,
-          supervisorId: data.supervisorId,
-          sessionId: data.sessionId,
-          classId: data.classId,
-          observationType: data.observationType,
-          scheduledDate,
-          status: data.status || "scheduled",
-          priority: data.priority || "normal",
-          notes: data.notes,
-          teacherNotified: data.teacherNotified || false,
-          notificationSentAt,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        })
-        .returning();
-      return observation;
+      if (result.rows && result.rows.length > 0) {
+        return result.rows[0] as ScheduledObservation;
+      }
+      
+      throw new Error('Failed to create observation');
     } catch (error) {
       console.error('Error creating scheduled observation:', error);
       throw error;
