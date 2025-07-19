@@ -12147,11 +12147,17 @@ Return JSON format:
 
   app.post("/api/supervision/observations", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
+      console.log('POST /api/supervision/observations - User:', req.user);
+      console.log('POST /api/supervision/observations - Body:', req.body);
+      
       const observationData = {
         ...req.body,
         supervisorId: req.user.id
       };
+      console.log('Final observation data:', observationData);
+      
       const observation = await storage.createSupervisionObservation(observationData);
+      console.log('Created observation:', observation);
       
       // Send SMS notification to teacher
       try {
@@ -12200,7 +12206,12 @@ Meta Lingua Academy`;
       res.status(201).json(observation);
     } catch (error) {
       console.error('Error creating supervision observation:', error);
-      res.status(400).json({ message: "Failed to create supervision observation" });
+      console.error('Error details:', error.stack);
+      res.status(400).json({ 
+        message: "Failed to create supervision observation", 
+        error: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
     }
   });
 

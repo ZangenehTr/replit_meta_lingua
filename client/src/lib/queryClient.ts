@@ -262,12 +262,23 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
       response = await fetch(finalUrl, requestOptions);
     } catch (fetchError: any) {
       // Handle fetch error gracefully
+      console.error('Fetch error details:', fetchError);
+      
       if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
         throw new Error('Network error: Unable to connect to server. Please check your connection and try again.');
       }
       if (fetchError.name === 'AbortError') {
         throw new Error('Request timeout: Server took too long to respond. Please try again.');
       }
+      
+      // Additional error handling for common network issues
+      if (fetchError.message.includes('ECONNREFUSED')) {
+        throw new Error('Connection refused: Server is not responding. Please try again later.');
+      }
+      if (fetchError.message.includes('NetworkError')) {
+        throw new Error('Network error: Please check your internet connection.');
+      }
+      
       throw new Error(`Network error: ${fetchError.message || 'Failed to fetch'}`);
     }
 
