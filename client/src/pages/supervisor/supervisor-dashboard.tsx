@@ -155,6 +155,47 @@ export default function SupervisorDashboard() {
     },
   });
 
+  // Approve schedule mutation
+  const approveScheduleMutation = useMutation({
+    mutationFn: async (data: { teacherId: number; approvalNotes?: string }) => {
+      const result = await apiRequest('/api/supervision/approve-schedule', 'POST', data);
+      return result;
+    },
+    onSuccess: () => {
+      setScheduleReviewDialogOpen(false);
+      setDialogSelectedTeacher(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/supervision/teacher-performance'] });
+      toast({
+        title: "Success",
+        description: "Teacher schedule approved successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Schedule approval failed:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to approve schedule. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleApproveSchedule = () => {
+    if (!dialogSelectedTeacher) {
+      toast({
+        title: "Error",
+        description: "Please select a teacher first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    approveScheduleMutation.mutate({
+      teacherId: dialogSelectedTeacher,
+      approvalNotes: `Schedule approved for teacher with ${dialogTeacherClasses.length} classes`,
+    });
+  };
+
   const onObservationSubmit = (data: any) => {
     // Calculate overall score from individual scores
     const scoreFields = ['teachingMethodology', 'classroomManagement', 'studentEngagement', 'contentDelivery', 'languageSkills', 'timeManagement'];
@@ -936,8 +977,12 @@ export default function SupervisorDashboard() {
               <Button variant="outline">
                 Export Report
               </Button>
-              <Button className="bg-purple-600 hover:bg-purple-700">
-                Approve Schedule
+              <Button 
+                className="bg-purple-600 hover:bg-purple-700"
+                onClick={handleApproveSchedule}
+                disabled={!dialogSelectedTeacher || approveScheduleMutation.isPending}
+              >
+                {approveScheduleMutation.isPending ? "Approving..." : "Approve Schedule"}
               </Button>
             </div>
           </div>
