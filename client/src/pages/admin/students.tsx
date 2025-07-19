@@ -519,71 +519,72 @@ export function AdminStudents() {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
+      {/* Header - Mobile-first redesign */}
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex items-center justify-between">
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => window.history.back()}
-            className="flex items-center gap-2 border-blue-200 hover:bg-blue-50"
+            className="h-8 px-3 border-blue-200 hover:bg-blue-50 text-xs sm:text-sm"
           >
-            <ChevronLeft className="h-4 w-4" />
-            Back
+            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Back</span>
           </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{t('admin.students')}</h1>
-            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-              Complete student profiles, progress tracking, and parent communication
+          
+          <div className="text-right">
+            <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              {t('admin.students')}
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
+              Student management and tracking
             </p>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full lg:w-auto">
-          {/* Sort Dropdown */}
+        {/* Mobile-first controls */}
+        <div className="flex flex-wrap gap-2">
+          {/* Sort and View Mode - Single row on mobile */}
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-[160px] lg:w-[180px] border-blue-200">
-              <SelectValue placeholder="Sort by..." />
+            <SelectTrigger className="flex-1 min-w-[120px] h-8 text-xs sm:text-sm border-blue-200">
+              <SelectValue placeholder="Sort..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Newest to Oldest</SelectItem>
-              <SelectItem value="oldest">Oldest to Newest</SelectItem>
-              <SelectItem value="course">Course Based</SelectItem>
-              <SelectItem value="level">Level</SelectItem>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="course">By Course</SelectItem>
+              <SelectItem value="level">By Level</SelectItem>
             </SelectContent>
           </Select>
           
-          {/* View Mode Toggle */}
-          <div className="flex border rounded-lg overflow-hidden border-blue-200 w-full sm:w-auto">
+          {/* Compact View Toggle */}
+          <div className="flex border rounded-md overflow-hidden border-blue-200">
             <Button
               variant={viewMode === "cards" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("cards")}
-              className="flex-1 sm:flex-initial rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              className="h-8 px-2 sm:px-3 rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs"
             >
-              <Grid3X3 className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Cards</span>
+              <Grid3X3 className="h-3 w-3" />
             </Button>
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("list")}
-              className="flex-1 sm:flex-initial rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              className="h-8 px-2 sm:px-3 rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs"
             >
-              <List className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">List</span>
+              <List className="h-3 w-3" />
             </Button>
           </div>
-          <Button variant="outline" className="w-full sm:w-auto border-blue-200 hover:bg-blue-50">
-            <Download className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Export Data</span>
-            <span className="sm:hidden">Export</span>
+          
+          <Button variant="outline" className="h-8 px-2 sm:px-3 border-blue-200 hover:bg-blue-50 text-xs">
+            <Download className="h-3 w-3" />
+            <span className="hidden lg:inline lg:ml-1">Export</span>
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                <Plus className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Add Student</span>
-                <span className="sm:hidden">Add</span>
+              <Button className="h-8 px-2 sm:px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs">
+                <Plus className="h-3 w-3" />
+                <span className="hidden sm:inline sm:ml-1">Add</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -974,88 +975,101 @@ export function AdminStudents() {
 
       {/* Students View */}
       {viewMode === "cards" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
           {filteredAndSortedStudents.map((student) => (
-          <Card key={student.id} className="hover:shadow-lg transition-shadow overflow-hidden">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base flex-shrink-0">
+          <Card key={student.id} className="hover:shadow-xl transition-all duration-200 overflow-hidden border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4">
+              <div className="flex items-center justify-between gap-2 sm:gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-lg flex-shrink-0">
                     {student.firstName[0]}{student.lastName[0]}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <CardTitle className="text-base sm:text-lg truncate">{student.firstName} {student.lastName}</CardTitle>
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">{student.email}</p>
+                    <CardTitle className="text-sm sm:text-base lg:text-lg leading-tight truncate font-semibold">
+                      {student.firstName} {student.lastName}
+                    </CardTitle>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">{student.email}</p>
                   </div>
                 </div>
-                <Badge className={`${getStatusColor(student.status)} shrink-0 text-xs`}>
-                  <span className="hidden sm:inline">{student.status}</span>
-                  <span className="sm:hidden">{student.status === 'active' ? 'A' : 'I'}</span>
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-4">
-              <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
-                <div className="space-y-1">
-                  <span className="text-gray-600">Level:</span>
-                  <Badge className={`ml-1 ${getLevelColor(student.level)} text-xs block w-fit`}>
-                    {student.level}
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <Badge className={`${getStatusColor(student.status)} text-xs px-1.5 py-0.5 sm:px-2 sm:py-1`}>
+                    <span className="hidden sm:inline">{student.status}</span>
+                    <span className="sm:hidden text-xs font-bold">{student.status === 'active' ? 'A' : 'I'}</span>
+                  </Badge>
+                  <Badge className={`${getLevelColor(student.level)} text-xs px-1.5 py-0.5 sm:px-2 sm:py-1`}>
+                    <span className="hidden sm:inline">{student.level}</span>
+                    <span className="sm:hidden text-xs">{student.level[0]}</span>
                   </Badge>
                 </div>
-                <div className="space-y-1">
-                  <span className="text-gray-600">Attendance:</span>
-                  <span className="ml-1 font-bold block">{student.attendance}%</span>
-                </div>
               </div>
-
-              <div>
-                <div className="flex justify-between text-xs sm:text-sm mb-2">
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 pt-0 space-y-2 sm:space-y-3">
+              {/* Progress Section - Simplified for mobile */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-xs text-gray-600">
                   <span>Progress</span>
-                  <span>{student.progress}%</span>
+                  <span className="font-semibold text-gray-800">{student.progress}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
                   <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 sm:h-2 rounded-full transition-all duration-500" 
                     style={{ width: `${student.progress}%` }}
-                  ></div>
+                  />
                 </div>
               </div>
 
-              <div className="text-xs sm:text-sm">
-                <p className="text-gray-600 mb-2">Courses:</p>
+              {/* Stats Row - Compact mobile layout */}
+              <div className="flex justify-between items-center py-1">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-500">Attendance:</span>
+                  <span className="text-xs font-bold text-green-600">{student.attendance}%</span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {student.lastActivity}
+                </div>
+              </div>
+
+              {/* Courses Section - Mobile optimized */}
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500 font-medium">Courses:</p>
                 <div className="flex flex-wrap gap-1">
                   {student.courses && student.courses.length > 0 ? (
                     <>
-                      {student.courses.slice(0, 2).map((course, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs px-2 py-1 max-w-full">
-                          <span className="truncate">{course}</span>
+                      {student.courses.slice(0, 1).map((course, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs px-1.5 py-0.5 max-w-full border-blue-200 text-blue-700">
+                          <span className="truncate max-w-[120px] sm:max-w-full">{course}</span>
                         </Badge>
                       ))}
-                      {student.courses.length > 2 && (
-                        <Badge variant="secondary" className="text-xs px-2 py-1">
-                          +{student.courses.length - 2} more
+                      {student.courses.length > 1 && (
+                        <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600">
+                          +{student.courses.length - 1}
                         </Badge>
                       )}
                     </>
                   ) : (
-                    <span className="text-gray-400 text-xs">No courses enrolled</span>
+                    <span className="text-gray-400 text-xs">No courses</span>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              {/* Action Buttons - Mobile-first design */}
+              <div className="flex gap-1 sm:gap-2 pt-2 sm:pt-3">
                 {student.phone && (
                   <VoIPContactButton 
                     phoneNumber={student.phone}
                     contactName={`${student.firstName} ${student.lastName}`}
-                    className="w-full sm:flex-1"
+                    className="flex-1 h-7 sm:h-8 text-xs"
                   />
                 )}
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-full sm:flex-1">
-                      <Eye className="h-4 w-4 sm:mr-1" />
-                      <span className="hidden sm:inline">View</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 h-7 sm:h-8 border-blue-200 hover:bg-blue-50 text-xs sm:text-sm px-2 sm:px-3"
+                    >
+                      <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline sm:ml-1">View</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl">
@@ -1202,19 +1216,23 @@ export function AdminStudents() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="w-full sm:flex-1"
+                  className="flex-1 h-7 sm:h-8 border-purple-200 hover:bg-purple-50 text-xs sm:text-sm px-2 sm:px-3"
                   onClick={() => {
                     console.log('CARD EDIT BUTTON CLICKED - Student:', student.firstName, student.lastName);
                     console.log('Student data:', student);
                     handleEditStudent(student);
                   }}
                 >
-                  <Edit3 className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Edit</span>
+                  <Edit3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline sm:ml-1">Edit</span>
                 </Button>
-                <Button variant="outline" size="sm" className="w-full sm:flex-1">
-                  <MessageCircle className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Contact</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 h-7 sm:h-8 border-green-200 hover:bg-green-50 text-xs sm:text-sm px-2 sm:px-3"
+                >
+                  <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline sm:ml-1">Contact</span>
                 </Button>
               </div>
             </CardContent>
@@ -1222,488 +1240,199 @@ export function AdminStudents() {
           ))}
         </div>
       ) : (
-        // List View
-        <div className="space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border">
-            <div className="grid grid-cols-12 gap-4 p-4 border-b font-medium text-sm text-gray-600 dark:text-gray-400">
+        // List View - Mobile-optimized
+        <div className="space-y-2 sm:space-y-4">
+          {/* Desktop header - hidden on mobile */}
+          <div className="hidden lg:block bg-white/80 backdrop-blur-sm rounded-lg border-0 shadow-sm">
+            <div className="grid grid-cols-12 gap-4 p-4 border-b font-medium text-sm text-gray-600">
               <div className="col-span-3">Student</div>
               <div className="col-span-2">Contact</div>
               <div className="col-span-1">Status</div>
-              <div className="col-span-2">Active Courses</div>
+              <div className="col-span-2">Courses</div>
               <div className="col-span-2">Progress</div>
               <div className="col-span-2">Actions</div>
             </div>
+            {/* Mobile-first student rows */}
             {filteredAndSortedStudents.map((student) => (
-              <div key={student.id} className="grid grid-cols-12 gap-4 p-4 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                <div className="col-span-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      {student.firstName[0]}{student.lastName[0]}
-                    </div>
-                    <div>
-                      <div className="font-medium">{student.firstName} {student.lastName}</div>
-                      <div className="text-sm text-gray-500">ID: {student.id}</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <div className="text-sm">
-                    <div>{student.email}</div>
-                    <div className="text-gray-500">{student.phone}</div>
-                  </div>
-                </div>
-                <div className="col-span-1">
-                  <Badge className={getStatusColor(student.status)}>
-                    {student.status}
-                  </Badge>
-                </div>
-                <div className="col-span-2">
-                  <div className="space-y-1">
-                    {student.courses && student.courses.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {student.courses.map((course, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {course}
-                          </Badge>
-                        ))}
+              <div key={student.id} className="bg-white/80 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-sm border-0 hover:shadow-md transition-all duration-200 lg:grid lg:grid-cols-12 lg:gap-4 lg:rounded-none lg:bg-transparent lg:shadow-none lg:border-b lg:last:border-b-0 lg:hover:bg-gray-50">
+                {/* Mobile layout - stacked */}
+                <div className="lg:hidden space-y-3">
+                  {/* Student Info */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg">
+                        {student.firstName[0]}{student.lastName[0]}
                       </div>
-                    ) : (
-                      <span className="text-sm text-gray-500">No active courses</span>
-                    )}
-                  </div>
-                </div>
-                <div className="col-span-2">
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>Progress</span>
-                      <span>{student.progress}%</span>
+                      <div>
+                        <div className="font-semibold text-sm">{student.firstName} {student.lastName}</div>
+                        <div className="text-xs text-gray-500">{student.email}</div>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <Badge className={`${getStatusColor(student.status)} text-xs px-2 py-1`}>
+                      {student.status}
+                    </Badge>
+                  </div>
+                  
+                  {/* Progress & Attendance */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-600">Progress</span>
+                      <span className="font-semibold">{student.progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1.5">
                       <div 
-                        className="bg-blue-600 h-2 rounded-full" 
+                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-500" 
                         style={{ width: `${student.progress}%` }}
-                      ></div>
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-500">Attendance: {student.attendance}%</span>
+                      <span className="text-gray-500">{student.lastActivity}</span>
                     </div>
                   </div>
-                </div>
-                <div className="col-span-2">
-                  <div className="flex gap-1">
+                  
+                  {/* Courses - Mobile */}
+                  <div className="space-y-1">
+                    <div className="text-xs text-gray-500 font-medium">Courses:</div>
+                    <div className="flex flex-wrap gap-1">
+                      {student.courses && student.courses.length > 0 ? (
+                        <>
+                          {student.courses.slice(0, 2).map((course, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs px-1.5 py-0.5 border-blue-200 text-blue-700">
+                              <span className="truncate max-w-[100px]">{course}</span>
+                            </Badge>
+                          ))}
+                          {student.courses.length > 2 && (
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                              +{student.courses.length - 2}
+                            </Badge>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-xs text-gray-400">No courses</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Mobile Actions */}
+                  <div className="flex gap-1 pt-1">
+                    {student.phone && (
+                      <VoIPContactButton 
+                        phoneNumber={student.phone}
+                        contactName={`${student.firstName} ${student.lastName}`}
+                        className="flex-1 h-7 text-xs"
+                      />
+                    )}
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => handleVoIPCall(student)}
-                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      onClick={() => handleEditStudent(student)}
+                      className="flex-1 h-7 border-purple-200 hover:bg-purple-50 text-xs px-2"
                     >
-                      <Phone className="h-3 w-3" />
-                    </Button>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl">
-                        <DialogHeader>
-                          <DialogTitle>Student Profile: {student.firstName} {student.lastName}</DialogTitle>
-                        </DialogHeader>
-                        
-                        <Tabs defaultValue="overview" className="w-full">
-                          <TabsList className="grid w-full grid-cols-4">
-                            <TabsTrigger value="overview">Overview</TabsTrigger>
-                            <TabsTrigger value="academic">Academic</TabsTrigger>
-                            <TabsTrigger value="communication">Communication</TabsTrigger>
-                            <TabsTrigger value="reports">Reports</TabsTrigger>
-                          </TabsList>
-                          
-                          <TabsContent value="overview" className="space-y-4">
-                            <div className="grid grid-cols-2 gap-6">
-                              <Card>
-                                <CardHeader>
-                                  <CardTitle className="text-lg">Personal Information</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4 text-gray-500" />
-                                    <span>{student.email}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Phone className="h-4 w-4 text-gray-500" />
-                                    <span>{student.phone}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <CalendarIcon className="h-4 w-4 text-gray-500" />
-                                    <span>Enrolled: {new Date(student.enrollmentDate).toLocaleDateString()}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="h-4 w-4 text-gray-500" />
-                                    <span>Last Active: {student.lastActivity}</span>
-                                  </div>
-                                </CardContent>
-                              </Card>
-
-                              <Card>
-                                <CardHeader>
-                                  <CardTitle className="text-lg">Academic Progress</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                  <div className="space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                      <span>Overall Progress</span>
-                                      <span>{student.progress}%</span>
-                                    </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                      <div 
-                                        className="bg-blue-600 h-2 rounded-full" 
-                                        style={{ width: `${student.progress}%` }}
-                                      ></div>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                      <span>Attendance</span>
-                                      <span>{student.attendance}%</span>
-                                    </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                      <div 
-                                        className="bg-green-600 h-2 rounded-full" 
-                                        style={{ width: `${student.attendance}%` }}
-                                      ></div>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <span className="text-sm text-gray-600">Level: </span>
-                                    <Badge className={getLevelColor(student.level)}>
-                                      {student.level}
-                                    </Badge>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            </div>
-
-                            <Card>
-                              <CardHeader>
-                                <CardTitle className="text-lg">Enrolled Courses</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="space-y-2">
-                                  {student.courses?.length > 0 ? (
-                                    student.courses.map((course, index) => (
-                                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                        <span>{course}</span>
-                                        <Badge variant="outline">Active</Badge>
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <p className="text-gray-500">No courses enrolled</p>
-                                  )}
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </TabsContent>
-                          
-                          <TabsContent value="academic" className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <Card>
-                                <CardHeader>
-                                  <CardTitle>Recent Assignments</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="space-y-3">
-                                    <div className="flex justify-between items-center p-2 border rounded">
-                                      <span>Grammar Exercise 1</span>
-                                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
-                                    </div>
-                                    <div className="flex justify-between items-center p-2 border rounded">
-                                      <span>Vocabulary Quiz</span>
-                                      <Badge className="bg-yellow-100 text-yellow-800">In Progress</Badge>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                              
-                              <Card>
-                                <CardHeader>
-                                  <CardTitle>Performance Metrics</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="space-y-3">
-                                    <div className="flex justify-between">
-                                      <span>Average Score</span>
-                                      <span className="font-bold">85%</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Completed Lessons</span>
-                                      <span className="font-bold">24/30</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Study Hours</span>
-                                      <span className="font-bold">48h</span>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            </div>
-                          </TabsContent>
-                          
-                          <TabsContent value="communication" className="space-y-4">
-                            <Card>
-                              <CardHeader>
-                                <CardTitle>Communication History</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="space-y-3">
-                                  <div className="p-3 border rounded">
-                                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                      <span>Email</span>
-                                      <span>2 days ago</span>
-                                    </div>
-                                    <p>Welcome to your new course! Here are the materials...</p>
-                                  </div>
-                                  <div className="p-3 border rounded">
-                                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                      <span>SMS</span>
-                                      <span>1 week ago</span>
-                                    </div>
-                                    <p>Reminder: Your lesson is tomorrow at 3 PM</p>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </TabsContent>
-                          
-                          <TabsContent value="reports" className="space-y-4">
-                            <Card>
-                              <CardHeader>
-                                <CardTitle>Progress Reports</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="space-y-3">
-                                  <Button variant="outline" className="w-full justify-start">
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Monthly Progress Report - December 2024
-                                  </Button>
-                                  <Button variant="outline" className="w-full justify-start">
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Attendance Report - December 2024
-                                  </Button>
-                                  <Button variant="outline" className="w-full justify-start">
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Grade Report - December 2024
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </TabsContent>
-                        </Tabs>
-                      </DialogContent>
-                    </Dialog>
-                    <Button variant="outline" size="sm" onClick={() => {
-                      console.log('Edit button clicked for student:', student.firstName, student.lastName);
-                      handleEditStudent(student);
-                    }}>
                       <Edit3 className="h-3 w-3" />
                     </Button>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <MoreHorizontal className="h-3 w-3" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl">
-                        <DialogHeader>
-                          <DialogTitle>Student Profile: {student.firstName} {student.lastName}</DialogTitle>
-                        </DialogHeader>
-                        
-                        <Tabs defaultValue="overview" className="w-full">
-                          <TabsList className="grid w-full grid-cols-4">
-                            <TabsTrigger value="overview">Overview</TabsTrigger>
-                            <TabsTrigger value="academic">Academic</TabsTrigger>
-                            <TabsTrigger value="communication">Communication</TabsTrigger>
-                            <TabsTrigger value="reports">Reports</TabsTrigger>
-                          </TabsList>
-                          
-                          <TabsContent value="overview" className="space-y-4">
-                            <div className="grid grid-cols-2 gap-6">
-                              <Card>
-                                <CardHeader>
-                                  <CardTitle className="text-lg">Personal Information</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4 text-gray-500" />
-                                    <span>{student.email}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Phone className="h-4 w-4 text-gray-500" />
-                                    <span>{student.phone}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <CalendarIcon className="h-4 w-4 text-gray-500" />
-                                    <span>Enrolled: {student.enrollmentDate}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="h-4 w-4 text-gray-500" />
-                                    <span>Last Active: {student.lastActivity}</span>
-                                  </div>
-                                </CardContent>
-                              </Card>
-
-                              <Card>
-                                <CardHeader>
-                                  <CardTitle className="text-lg">Academic Progress</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                  <div className="space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                      <span>Overall Progress</span>
-                                      <span>{student.progress}%</span>
-                                    </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                      <div 
-                                        className="bg-blue-600 h-2 rounded-full" 
-                                        style={{ width: `${student.progress}%` }}
-                                      ></div>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                      <span>Attendance</span>
-                                      <span>{student.attendance}%</span>
-                                    </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                      <div 
-                                        className="bg-green-600 h-2 rounded-full" 
-                                        style={{ width: `${student.attendance}%` }}
-                                      ></div>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <span className="text-sm text-gray-600">Level: </span>
-                                    <Badge className={getLevelColor(student.level)}>
-                                      {student.level}
-                                    </Badge>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            </div>
-
-                            <Card>
-                              <CardHeader>
-                                <CardTitle className="text-lg">Enrolled Courses</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="space-y-2">
-                                  {student.courses?.length > 0 ? (
-                                    student.courses.map((course, index) => (
-                                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                        <span>{course}</span>
-                                        <Badge variant="outline">Active</Badge>
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <p className="text-gray-500">No courses enrolled</p>
-                                  )}
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </TabsContent>
-                          
-                          <TabsContent value="academic" className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <Card>
-                                <CardHeader>
-                                  <CardTitle>Recent Assignments</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="space-y-3">
-                                    <div className="flex justify-between items-center p-2 border rounded">
-                                      <span>Grammar Exercise 1</span>
-                                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
-                                    </div>
-                                    <div className="flex justify-between items-center p-2 border rounded">
-                                      <span>Vocabulary Quiz</span>
-                                      <Badge className="bg-yellow-100 text-yellow-800">In Progress</Badge>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                              
-                              <Card>
-                                <CardHeader>
-                                  <CardTitle>Performance Metrics</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="space-y-3">
-                                    <div className="flex justify-between">
-                                      <span>Average Score</span>
-                                      <span className="font-bold">85%</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Completed Lessons</span>
-                                      <span className="font-bold">24/30</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span>Study Hours</span>
-                                      <span className="font-bold">48h</span>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            </div>
-                          </TabsContent>
-                          
-                          <TabsContent value="communication" className="space-y-4">
-                            <Card>
-                              <CardHeader>
-                                <CardTitle>Communication History</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="space-y-3">
-                                  <div className="p-3 border rounded">
-                                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                      <span>Email</span>
-                                      <span>2 days ago</span>
-                                    </div>
-                                    <p>Welcome to your new course! Here are the materials...</p>
-                                  </div>
-                                  <div className="p-3 border rounded">
-                                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                      <span>SMS</span>
-                                      <span>1 week ago</span>
-                                    </div>
-                                    <p>Reminder: Your lesson is tomorrow at 3 PM</p>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </TabsContent>
-                          
-                          <TabsContent value="reports" className="space-y-4">
-                            <Card>
-                              <CardHeader>
-                                <CardTitle>Progress Reports</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="space-y-3">
-                                  <Button variant="outline" className="w-full justify-start">
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Monthly Progress Report - November 2024
-                                  </Button>
-                                  <Button variant="outline" className="w-full justify-start">
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Attendance Report - November 2024
-                                  </Button>
-                                  <Button variant="outline" className="w-full justify-start">
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Grade Report - November 2024
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </TabsContent>
-                        </Tabs>
-                      </DialogContent>
-                    </Dialog>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 h-7 border-green-200 hover:bg-green-50 text-xs px-2"
+                    >
+                      <MessageCircle className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Desktop layout - grid columns (hidden for mobile-first design) */}
+                <div className="hidden lg:contents">
+                  <div className="col-span-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {student.firstName[0]}{student.lastName[0]}
+                      </div>
+                      <div>
+                        <div className="font-medium">{student.firstName} {student.lastName}</div>
+                        <div className="text-sm text-gray-500">ID: {student.id}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="text-sm">
+                      <div>{student.email}</div>
+                      <div className="text-gray-500">{student.phone}</div>
+                    </div>
+                  </div>
+                  <div className="col-span-1">
+                    <Badge className={getStatusColor(student.status)}>
+                      {student.status}
+                    </Badge>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="space-y-1">
+                      {student.courses && student.courses.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {student.courses.map((course, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {course}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-500">No active courses</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>Progress</span>
+                        <span>{student.progress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full" 
+                          style={{ width: `${student.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleVoIPCall(student)}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      >
+                        <Phone className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditStudent(student)}
+                        className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                      >
+                        <Edit3 className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      >
+                        <MessageCircle className="h-3 w-3" />
+                      </Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl">
+                          <DialogHeader>
+                            <DialogTitle>View Profile</DialogTitle>
+                          </DialogHeader>
+                          <p>Profile view dialog for desktop layout</p>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1739,21 +1468,207 @@ export function AdminStudents() {
             <CardTitle className="text-sm font-medium">Average Attendance</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">87%</div>
-            <p className="text-xs text-yellow-600">+2% from last month</p>
+            <div className="text-2xl font-bold">92.1%</div>
+            <p className="text-xs text-blue-600">Excellent performance</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">Course Completion</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">73%</div>
-            <p className="text-xs text-green-600">+5% from last month</p>
+            <div className="text-2xl font-bold">78.6%</div>
+            <p className="text-xs text-orange-600">+5.2% from last month</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Student</DialogTitle>
+            <DialogDescription>
+              Update student information and enrollment details
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="editFirstName">First Name</Label>
+              <Input 
+                id="editFirstName" 
+                placeholder="Enter first name"
+                value={editStudentData.firstName}
+                onChange={(e) => setEditStudentData({...editStudentData, firstName: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editLastName">Last Name</Label>
+              <Input 
+                id="editLastName" 
+                placeholder="Enter last name"
+                value={editStudentData.lastName}
+                onChange={(e) => setEditStudentData({...editStudentData, lastName: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editEmail">Email</Label>
+              <Input 
+                id="editEmail" 
+                type="email" 
+                placeholder="Enter email address"
+                value={editStudentData.email}
+                onChange={(e) => setEditStudentData({...editStudentData, email: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editPhone">Phone Number</Label>
+              <Input 
+                id="editPhone" 
+                type="tel" 
+                placeholder="Enter phone number"
+                value={editStudentData.phone}
+                onChange={(e) => setEditStudentData({...editStudentData, phone: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editStatus">Status</Label>
+              <Select value={editStudentData.status} onValueChange={(value) => setEditStudentData({...editStudentData, status: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editLevel">Level</Label>
+              <Select value={editStudentData.level} onValueChange={(value) => setEditStudentData({...editStudentData, level: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Beginner">Beginner</SelectItem>
+                  <SelectItem value="Intermediate">Intermediate</SelectItem>
+                  <SelectItem value="Advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveEdit}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Student</DialogTitle>
+            <DialogDescription>
+              Create a new student profile and enrollment
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input 
+                id="firstName" 
+                placeholder="Enter first name"
+                value={newStudentData.firstName}
+                onChange={(e) => setNewStudentData({...newStudentData, firstName: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input 
+                id="lastName" 
+                placeholder="Enter last name"
+                value={newStudentData.lastName}
+                onChange={(e) => setNewStudentData({...newStudentData, lastName: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="Enter email address"
+                value={newStudentData.email}
+                onChange={(e) => setNewStudentData({...newStudentData, email: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input 
+                id="phone" 
+                type="tel" 
+                placeholder="Enter phone number"
+                value={newStudentData.phone}
+                onChange={(e) => setNewStudentData({...newStudentData, phone: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="level">Level</Label>
+              <Select value={newStudentData.level} onValueChange={(value) => setNewStudentData({...newStudentData, level: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Beginner">Beginner</SelectItem>
+                  <SelectItem value="Intermediate">Intermediate</SelectItem>
+                  <SelectItem value="Advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="courses">Course</Label>
+              <Select value="" onValueChange={handleAddCourse}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select courses" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableCourses.map((course) => (
+                    <SelectItem key={course.id} value={course.title}>
+                      {course.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Selected Courses */}
+          {newStudentData.courses && newStudentData.courses.length > 0 && (
+            <div className="space-y-2">
+              <Label>Selected Courses</Label>
+              <div className="flex flex-wrap gap-2">
+                {newStudentData.courses.map((course, index) => (
+                  <Badge key={index} variant="outline" className="flex items-center gap-1">
+                    {course}
+                    <button
+                      onClick={() => handleRemoveCourse(course)}
+                      className="ml-1 hover:text-red-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddStudent}>Add Student</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-}
+};
