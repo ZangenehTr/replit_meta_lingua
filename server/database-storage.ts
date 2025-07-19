@@ -6874,13 +6874,13 @@ export class DatabaseStorage implements IStorage {
 
   async getTeacherClassesForObservation(teacherId: number): Promise<any[]> {
     try {
-      // Get real teacher classes with enhanced information for observation selection
+      // Get consolidated teacher classes - group sessions by course, time, and delivery
+      // This prevents duplicate entries for group classes with multiple students
       const teacherSessions = await db.execute(sql`
         SELECT 
-          s.id,
-          s.title,
+          MIN(s.id) as id,
+          COALESCE(s.title, c.title) as title,
           s.course_id,
-          s.student_id,
           s.scheduled_at,
           s.duration,
           s.status,
@@ -6888,32 +6888,46 @@ export class DatabaseStorage implements IStorage {
           s.notes,
           c.title as course_name,
           c.delivery_mode,
-          u.first_name as student_first_name,
-          u.last_name as student_last_name
+          c.class_format,
+          COUNT(s.student_id) as student_count,
+          GROUP_CONCAT(
+            CASE 
+              WHEN u.first_name IS NOT NULL AND u.last_name IS NOT NULL 
+              THEN CONCAT(u.first_name, ' ', u.last_name)
+              ELSE 'Student'
+            END 
+            SEPARATOR ', '
+          ) as student_names,
+          GROUP_CONCAT(s.id SEPARATOR ',') as session_ids
         FROM sessions s
         LEFT JOIN courses c ON s.course_id = c.id
         LEFT JOIN users u ON s.student_id = u.id
         WHERE s.tutor_id = ${teacherId}
           AND s.scheduled_at >= NOW() - INTERVAL '7 days'
+        GROUP BY s.course_id, s.scheduled_at, s.duration, c.delivery_mode, c.class_format
         ORDER BY s.scheduled_at ASC
       `);
 
       // Transform to match observation selection requirements
       return teacherSessions.rows.map((session: any) => ({
         id: session.id,
+        sessionIds: session.session_ids ? session.session_ids.split(',').map(Number) : [session.id],
         title: session.title || session.course_name || 'Language Class',
         courseName: session.course_name || 'General Language Course',
         courseId: session.course_id,
-        studentName: session.student_first_name && session.student_last_name 
-          ? `${session.student_first_name} ${session.student_last_name}` 
-          : 'Student',
-        studentId: session.student_id,
+        studentName: session.student_count > 1 
+          ? `${session.student_count} students` 
+          : session.student_names || 'Student',
+        studentNames: session.student_names || 'Student',
+        studentCount: session.student_count || 1,
+        isGroupClass: session.student_count > 1,
         scheduledAt: session.scheduled_at,
         duration: session.duration || 60,
         status: session.status || 'scheduled',
         roomName: session.delivery_mode === 'online' ? 'Online' : 'Classroom',
         sessionUrl: session.session_url,
         deliveryMode: session.delivery_mode || 'online',
+        classFormat: session.class_format || 'individual',
         observationStatus: 'available', // Can be observed
         isObservable: true,
         lastObservation: null // TODO: Check if recently observed

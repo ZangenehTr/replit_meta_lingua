@@ -12411,16 +12411,19 @@ Meta Lingua Academy`;
       }
 
       // Create scheduled observations for each approved class
+      // Handle both individual and group classes with sessionIds array
       const scheduledObservations = [];
       for (const classItem of approvedClasses) {
+        // For group classes, create observation for the primary session
+        // The sessionIds array contains all related sessions for this consolidated class
         const observationData = {
           teacherId: teacherId,
           supervisorId: req.user.id,
-          sessionId: classItem.id,
+          sessionId: classItem.id, // Primary session ID
           observationType: 'live_' + classItem.deliveryMode,
-          priority: 'normal',
+          priority: classItem.isGroupClass ? 'high' : 'normal', // Group classes get higher priority
           scheduledDate: new Date(classItem.scheduledAt),
-          notes: approvalNotes || `Class approved for observation: ${classItem.title}`,
+          notes: approvalNotes || `${classItem.isGroupClass ? 'Group class' : 'Class'} approved for observation: ${classItem.title} (${classItem.studentName})`,
           teacherNotified: false
         };
         
