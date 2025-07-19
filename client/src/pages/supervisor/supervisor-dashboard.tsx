@@ -1164,9 +1164,11 @@ export default function SupervisorDashboard() {
                             size="sm"
                             variant="outline"
                             onClick={() => {
+                              // Pre-populate observation form with selected teacher
+                              observationForm.setValue('teacherId', teacher.id);
+                              setSelectedTeacherId(teacher.id);
                               setTeachersAttentionDialogOpen(false);
-                              // Navigate to schedule review - this would need routing implementation
-                              window.location.href = '/admin/schedule-review';
+                              setObservationDialogOpen(true);
                             }}
                           >
                             <Calendar className="h-4 w-4 mr-1" />
