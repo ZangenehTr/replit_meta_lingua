@@ -33,8 +33,7 @@ import {
   Phone,
   Eye,
   UserMinus,
-  AlertCircle,
-  BarChart33
+  AlertCircle
 } from "lucide-react";
 
 
@@ -553,7 +552,7 @@ export default function SupervisorDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <BarChart3 className="h-5 w-5 mr-2 text-indigo-600" />
+                    <TrendingUp className="h-5 w-5 mr-2 text-indigo-600" />
                     Iranian Market KPIs
                   </CardTitle>
                   <CardDescription>Local market performance indicators</CardDescription>
