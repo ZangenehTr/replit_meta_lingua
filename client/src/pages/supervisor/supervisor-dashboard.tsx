@@ -61,6 +61,7 @@ const observationSchema = z.object({
 export default function SupervisorDashboard() {
   const [observationDialogOpen, setObservationDialogOpen] = useState(false);
   const [scheduleReviewDialogOpen, setScheduleReviewDialogOpen] = useState(false);
+  const [dialogSelectedTeacher, setDialogSelectedTeacher] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -95,6 +96,12 @@ export default function SupervisorDashboard() {
       console.log('Filtered teachers:', filtered);
       return filtered;
     },
+  });
+
+  // Fetch dialog teacher classes when teacher is selected in dialog
+  const { data: dialogTeacherClasses = [] } = useQuery({
+    queryKey: [`/api/supervision/teacher-classes/${dialogSelectedTeacher}`],
+    enabled: !!dialogSelectedTeacher,
   });
 
   // Observation form
@@ -743,7 +750,7 @@ export default function SupervisorDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Select Teacher</label>
-                <Select>
+                <Select onValueChange={(value) => setDialogSelectedTeacher(Number(value))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Choose teacher to review" />
                   </SelectTrigger>
@@ -778,33 +785,43 @@ export default function SupervisorDashboard() {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center">
                     <Calendar className="h-5 w-5 mr-2" />
-                    Weekly Schedule
+                    Real Teacher Classes
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {teacherPerformance && teacherPerformance.length > 0 ? (
-                      ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => {
-                        const hasClasses = index < 5; // Weekdays have classes
-                        return (
-                          <div key={day} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <span className="font-medium">{day}</span>
-                            <div className="text-sm text-gray-600">
-                              {hasClasses ? (
-                                <>
-                                  <Badge variant="outline" className="mr-2">09:00 - 11:00</Badge>
-                                  <Badge variant="outline">14:00 - 16:00</Badge>
-                                </>
-                              ) : (
-                                <Badge variant="secondary">No classes</Badge>
-                              )}
+                    {!dialogSelectedTeacher ? (
+                      <div className="text-center py-4 text-gray-500">
+                        Select a teacher to view their real classes
+                      </div>
+                    ) : dialogTeacherClasses.length === 0 ? (
+                      <div className="text-center py-4 text-gray-500">
+                        No classes found for this teacher
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="text-sm text-gray-600 mb-2">
+                          Found {dialogTeacherClasses.length} real classes for this teacher:
+                        </div>
+                        {dialogTeacherClasses.map((classItem: any) => (
+                          <div key={classItem.id} className="p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-medium text-sm">{classItem.title}</div>
+                                <div className="text-xs text-gray-600">{classItem.courseName}</div>
+                                <div className="text-xs text-gray-500">Student: {classItem.studentName}</div>
+                              </div>
+                              <div className="text-right">
+                                <Badge variant="outline" className="text-xs">
+                                  {new Date(classItem.scheduledAt).toLocaleDateString()} {new Date(classItem.scheduledAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </Badge>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {classItem.duration}min • {classItem.deliveryMode}
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        );
-                      })
-                    ) : (
-                      <div className="text-center py-4 text-gray-500">
-                        Select a teacher to view their schedule
+                        ))}
                       </div>
                     )}
                   </div>
@@ -820,33 +837,41 @@ export default function SupervisorDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {teacherPerformance && teacherPerformance.length > 0 ? (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Total Teaching Hours</span>
-                        <Badge variant="secondary">{teacherPerformance[0]?.completedLessons || 0} hours/week</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Peak Teaching Time</span>
-                        <Badge variant="secondary">14:00 - 16:00</Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Schedule Utilization</span>
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          {Math.round((teacherPerformance[0]?.rating || 0) * 20)}%
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Performance Rating</span>
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                          {teacherPerformance[0]?.rating || 0}/5.0
-                        </Badge>
-                      </div>
-                    </>
-                  ) : (
+                  {!dialogSelectedTeacher ? (
                     <div className="text-center py-4 text-gray-500">
                       Select a teacher to view analysis
                     </div>
+                  ) : dialogTeacherClasses.length === 0 ? (
+                    <div className="text-center py-4 text-gray-500">
+                      No analysis data available
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Total Classes</span>
+                        <Badge variant="secondary">{dialogTeacherClasses.length} classes</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Class Status</span>
+                        <Badge variant="secondary">{dialogTeacherClasses[0]?.status}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Delivery Mode</span>
+                        <Badge variant="secondary">{dialogTeacherClasses[0]?.deliveryMode}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Observable Classes</span>
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          {dialogTeacherClasses.filter((c: any) => c.isObservable).length} observable
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Total Duration</span>
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                          {dialogTeacherClasses.reduce((total: number, c: any) => total + c.duration, 0)} minutes
+                        </Badge>
+                      </div>
+                    </>
                   )}
                 </CardContent>
               </Card>
