@@ -492,14 +492,24 @@ export default function SupervisorDashboard() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 rounded-lg bg-green-50">
-                      <div className="text-2xl font-bold text-green-700">
-                        {businessIntelligence?.monthlyRevenue?.toLocaleString() || '0'}
-                      </div>
-                      <div className="text-xs text-green-600">IRR Monthly Revenue</div>
-                      {businessIntelligence?.revenueGrowth > 0 && (
-                        <div className="text-xs text-green-500">
-                          +{businessIntelligence.revenueGrowth}% from last month
-                        </div>
+                      {businessIntelligence?.monthlyRevenue > 0 ? (
+                        <>
+                          <div className="text-2xl font-bold text-green-700">
+                            {businessIntelligence.monthlyRevenue.toLocaleString()}
+                          </div>
+                          <div className="text-xs text-green-600">IRR Monthly Revenue</div>
+                          {businessIntelligence.revenueGrowth > 0 && (
+                            <div className="text-xs text-green-500">
+                              +{businessIntelligence.revenueGrowth}% from last month
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-2xl font-bold text-gray-400">No Data</div>
+                          <div className="text-xs text-gray-500">IRR Monthly Revenue</div>
+                          <div className="text-xs text-orange-500">No payments recorded</div>
+                        </>
                       )}
                     </div>
                     
@@ -561,8 +571,10 @@ export default function SupervisorDashboard() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Revenue per Student</span>
-                      <span className="font-semibold">
-                        {businessIntelligence?.avgRevenuePerStudent?.toLocaleString() || '0'} IRR
+                      <span className={`font-semibold ${businessIntelligence?.avgRevenuePerStudent > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {businessIntelligence?.avgRevenuePerStudent > 0 
+                          ? `${businessIntelligence.avgRevenuePerStudent.toLocaleString()} IRR`
+                          : 'No payments'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">

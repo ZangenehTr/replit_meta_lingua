@@ -2633,26 +2633,35 @@ export class DatabaseStorage implements IStorage {
       const sessionCompleted = completedSessions.count || 0;
       const activeUserCount = activeUsers.count || 0;
       
-      // Iranian language institute typical KPIs
-      const monthlyRevenue = studentCount * 850000; // Average 850K IRR per student
-      const revenueGrowth = Math.round(12 + Math.random() * 8); // 12-20% typical growth
-      const avgRevenuePerStudent = studentCount > 0 ? Math.round(monthlyRevenue / studentCount) : 850000;
+      // Get REAL payment data from database - NO ESTIMATES
+      const [realPaymentData] = await db
+        .select({ 
+          totalRevenue: sql<number>`COALESCE(SUM(amount), 0)`,
+          paymentCount: sql<number>`COUNT(*)`
+        })
+        .from(payments);
+
+      const monthlyRevenue = realPaymentData.totalRevenue || 0;
+      const revenueGrowth = 0; // No historical data available yet
+      const avgRevenuePerStudent = studentCount > 0 && monthlyRevenue > 0 
+        ? Math.round(monthlyRevenue / studentCount) 
+        : 0;
       
-      // Engagement metrics based on real data
-      const studentEngagementRate = activeUserCount > 0 && studentCount > 0 
+      // Engagement metrics based on real data only
+      const studentEngagementRate = studentCount > 0 
         ? Math.round((Math.min(activeUserCount, studentCount) / studentCount) * 100) 
-        : 85; // Default high engagement for Persian institutes
+        : 0;
       
       const sessionCompletionRate = sessionTotal > 0 
         ? Math.round((sessionCompleted / sessionTotal) * 100)
-        : 92; // Typical Persian language completion rate
+        : 0;
       
-      // Teacher quality from real observations
-      const teacherQualityScore = observationData.avgScore || 4.6; // High quality typical in Persian institutes
+      // Teacher quality from real observations only
+      const teacherQualityScore = observationData.avgScore || 0;
       const observationsCompleted = observationData.totalObservations || 0;
       
-      // Weekly activity estimation
-      const weeklyActiveStudents = Math.round(studentCount * 0.75); // 75% weekly active rate
+      // Weekly activity - real data only
+      const weeklyActiveStudents = activeUserCount; // Use actual active users
       const monthlyCompletedSessions = sessionCompleted;
       
       return {
@@ -2678,20 +2687,20 @@ export class DatabaseStorage implements IStorage {
       };
     } catch (error) {
       console.error('Error fetching enhanced supervisor stats:', error);
-      // Iranian market fallback with realistic values
+      // Fallback with ZERO fake data - all real or zero
       return {
-        monthlyRevenue: 25500000, // 30 students × 850K IRR
-        revenueGrowth: 15,
-        avgRevenuePerStudent: 850000,
-        activeStudents: 23,
-        totalStudents: 30,
-        studentEngagementRate: 87,
-        sessionCompletionRate: 92,
-        teacherQualityScore: 4.6,
-        observationsCompleted: 8,
-        weeklyActiveStudents: 23,
-        monthlyCompletedSessions: 156,
-        qualityTrend: 'improving'
+        monthlyRevenue: 0,
+        revenueGrowth: 0,
+        avgRevenuePerStudent: 0,
+        activeStudents: 0,
+        totalStudents: 0,
+        studentEngagementRate: 0,
+        sessionCompletionRate: 0,
+        teacherQualityScore: 0,
+        observationsCompleted: 0,
+        weeklyActiveStudents: 0,
+        monthlyCompletedSessions: 0,
+        qualityTrend: 'no_data'
       };
     }
   }
