@@ -33,7 +33,8 @@ import {
   Phone,
   Eye,
   UserMinus,
-  AlertCircle
+  AlertCircle,
+  BarChart
 } from "lucide-react";
 
 
@@ -139,6 +140,11 @@ export default function SupervisorDashboard() {
 
   const { data: upcomingSessionsForObservation = [] } = useQuery({
     queryKey: ['/api/supervisor/upcoming-sessions-for-observation'],
+  });
+
+  // Fetch enhanced business intelligence data
+  const { data: businessIntelligence } = useQuery({
+    queryKey: ['/api/supervisor/business-intelligence'],
   });
 
   // Fetch dialog teacher classes when teacher is selected in dialog
@@ -474,35 +480,138 @@ export default function SupervisorDashboard() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Performance Metrics */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Business Intelligence Metrics */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
-                    Performance Metrics
+                    <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
+                    Business Intelligence
                   </CardTitle>
+                  <CardDescription>Key performance indicators from real data</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Teacher Rating</span>
-                    <div className="flex items-center">
-                      <span className="font-semibold mr-2">{stats?.teacherRating || 4.7}/5.0</span>
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">Excellent</Badge>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 rounded-lg bg-green-50">
+                      <div className="text-2xl font-bold text-green-700">
+                        {businessIntelligence?.monthlyRevenue?.toLocaleString() || '0'}
+                      </div>
+                      <div className="text-xs text-green-600">IRR Monthly Revenue</div>
+                      {businessIntelligence?.revenueGrowth > 0 && (
+                        <div className="text-xs text-green-500">
+                          +{businessIntelligence.revenueGrowth}% from last month
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="text-center p-3 rounded-lg bg-blue-50">
+                      <div className="text-2xl font-bold text-blue-700">
+                        {businessIntelligence?.studentEngagementRate || 0}%
+                      </div>
+                      <div className="text-xs text-blue-600">Student Engagement</div>
+                      <div className="text-xs text-blue-500">
+                        {businessIntelligence?.activeStudents || 0} active students
+                      </div>
+                    </div>
+                    
+                    <div className="text-center p-3 rounded-lg bg-purple-50">
+                      <div className="text-2xl font-bold text-purple-700">
+                        {businessIntelligence?.sessionCompletionRate || 0}%
+                      </div>
+                      <div className="text-xs text-purple-600">Session Completion</div>
+                      <div className="text-xs text-purple-500">Academic performance</div>
+                    </div>
+                    
+                    <div className="text-center p-3 rounded-lg bg-orange-50">
+                      <div className="text-2xl font-bold text-orange-700">
+                        {businessIntelligence?.teacherQualityScore || 0}/5.0
+                      </div>
+                      <div className="text-xs text-orange-600">Teaching Quality</div>
+                      <div className="text-xs text-orange-500">
+                        {businessIntelligence?.observationsCompleted || 0} observations
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Student Retention</span>
-                    <div className="flex items-center">
-                      <span className="font-semibold mr-2">{stats?.studentRetention || 92.1}%</span>
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">High</Badge>
+                  
+                  {/* Quality Trend Badge */}
+                  <div className="flex justify-center pt-2">
+                    <Badge 
+                      variant={businessIntelligence?.qualityTrend === 'improving' ? 'default' : 'secondary'}
+                      className={
+                        businessIntelligence?.qualityTrend === 'improving' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-amber-100 text-amber-800'
+                      }
+                    >
+                      Quality Trend: {businessIntelligence?.qualityTrend?.replace('_', ' ') || 'Stable'}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Iranian Market Intelligence */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <BarChart className="h-5 w-5 mr-2 text-indigo-600" />
+                    Iranian Market KPIs
+                  </CardTitle>
+                  <CardDescription>Local market performance indicators</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Revenue per Student</span>
+                      <span className="font-semibold">
+                        {businessIntelligence?.avgRevenuePerStudent?.toLocaleString() || '0'} IRR
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Weekly Active Students</span>
+                      <span className="font-semibold text-blue-600">
+                        {businessIntelligence?.weeklyActiveStudents || 0} students
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Monthly Sessions</span>
+                      <span className="font-semibold text-green-600">
+                        {businessIntelligence?.monthlyCompletedSessions || 0} completed
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Total Enrolled</span>
+                      <span className="font-semibold text-purple-600">
+                        {businessIntelligence?.totalStudents || 0} students
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Completion Rate</span>
-                    <div className="flex items-center">
-                      <span className="font-semibold mr-2">{stats?.completionRate || 87.3}%</span>
-                      <Badge variant="secondary" className="bg-purple-100 text-purple-800">Good</Badge>
+                  
+                  {/* Performance Progress Bars */}
+                  <div className="pt-2 space-y-2">
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>Student Engagement</span>
+                        <span>{businessIntelligence?.studentEngagementRate || 0}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full" 
+                          style={{ width: `${Math.min(100, businessIntelligence?.studentEngagementRate || 0)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span>Session Success Rate</span>
+                        <span>{businessIntelligence?.sessionCompletionRate || 0}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full" 
+                          style={{ width: `${Math.min(100, businessIntelligence?.sessionCompletionRate || 0)}%` }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

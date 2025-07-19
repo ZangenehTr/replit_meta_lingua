@@ -8710,6 +8710,17 @@ Return JSON format:
     }
   });
 
+  // Enhanced business intelligence endpoint
+  app.get("/api/supervisor/business-intelligence", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const intelligenceData = await storage.getEnhancedSupervisorStats();
+      res.json(intelligenceData);
+    } catch (error) {
+      console.error('Error fetching business intelligence data:', error);
+      res.status(500).json({ message: "Failed to fetch business intelligence data" });
+    }
+  });
+
   // SMS alert endpoints
   app.post("/api/supervisor/send-teacher-alert", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
     try {
