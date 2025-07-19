@@ -161,7 +161,7 @@ export function AdminStudents() {
 
   // Handle course selection for editing student
   const handleEditCourseSelection = (courseId: number, selected: boolean) => {
-    console.log(`Course selection changed: Course ${courseId}, Selected: ${selected}`);
+
     
     setEditingStudent(prev => {
       if (!prev) return prev;
@@ -181,7 +181,7 @@ export function AdminStudents() {
         updatedCourses = currentSelectedCourses.filter(id => id !== courseId);
       }
       
-      console.log('Updated selected courses:', updatedCourses);
+
       
       return {
         ...prev,
@@ -203,11 +203,7 @@ export function AdminStudents() {
   // Ensure courses is an array to prevent errors
   const coursesList = Array.isArray(courses) ? courses : [];
 
-  console.log('AdminStudents component rendered');
-  console.log('Students data:', students);
-  console.log('Available courses in component:', coursesList);
-  console.log('Course titles:', coursesList.map(c => c.title));
-  console.log('Is loading:', isLoading);
+
 
   // Create student mutation
   const createStudentMutation = useMutation({
