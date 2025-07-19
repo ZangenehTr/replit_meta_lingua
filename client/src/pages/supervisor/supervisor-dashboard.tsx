@@ -938,7 +938,7 @@ export default function SupervisorDashboard() {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center">
                     <Target className="h-5 w-5 mr-2" />
-                    Schedule Analysis
+                    Observation Insights
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -971,9 +971,15 @@ export default function SupervisorDashboard() {
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Total Duration</span>
+                        <span className="text-gray-600">Group Classes</span>
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                          {dialogTeacherClasses.filter((c: any) => c.isGroupClass).length} group sessions
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Observation Coverage</span>
                         <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                          {dialogTeacherClasses.reduce((total: number, c: any) => total + c.duration, 0)} minutes
+                          {Math.round((dialogTeacherClasses.filter((c: any) => c.lastObservation).length / dialogTeacherClasses.length) * 100) || 0}%
                         </Badge>
                       </div>
                     </>
