@@ -62,6 +62,7 @@ export default function SupervisorDashboard() {
   const [observationDialogOpen, setObservationDialogOpen] = useState(false);
   const [scheduleReviewDialogOpen, setScheduleReviewDialogOpen] = useState(false);
   const [dialogSelectedTeacher, setDialogSelectedTeacher] = useState<number | null>(null);
+  const [selectedClassIds, setSelectedClassIds] = useState<number[]>([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -96,6 +97,11 @@ export default function SupervisorDashboard() {
       console.log('Filtered teachers:', filtered);
       return filtered;
     },
+  });
+
+  // Fetch pending observations for to-do list
+  const { data: pendingObservations = [] } = useQuery({
+    queryKey: ['/api/supervision/pending-observations']
   });
 
   // Fetch dialog teacher classes when teacher is selected in dialog
@@ -155,32 +161,42 @@ export default function SupervisorDashboard() {
     },
   });
 
-  // Approve schedule mutation
-  const approveScheduleMutation = useMutation({
-    mutationFn: async (data: { teacherId: number; approvalNotes?: string }) => {
-      const result = await apiRequest('/api/supervision/approve-schedule', 'POST', data);
+  // Approve selected classes mutation
+  const approveClassesMutation = useMutation({
+    mutationFn: async (data: { teacherId: number; classIds: number[]; approvalNotes?: string }) => {
+      const result = await apiRequest('/api/supervision/approve-classes', 'POST', data);
       return result;
     },
     onSuccess: () => {
       setScheduleReviewDialogOpen(false);
       setDialogSelectedTeacher(null);
+      setSelectedClassIds([]);
       queryClient.invalidateQueries({ queryKey: ['/api/supervision/teacher-performance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/supervision/pending-observations'] });
       toast({
         title: "Success",
-        description: "Teacher schedule approved successfully",
+        description: "Selected classes approved for observation",
       });
     },
     onError: (error) => {
-      console.error('Schedule approval failed:', error);
+      console.error('Class approval failed:', error);
       toast({
         title: "Error", 
-        description: "Failed to approve schedule. Please try again.",
+        description: "Failed to approve classes. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const handleApproveSchedule = () => {
+  const handleClassSelection = (classId: number) => {
+    setSelectedClassIds(prev => 
+      prev.includes(classId) 
+        ? prev.filter(id => id !== classId)
+        : [...prev, classId]
+    );
+  };
+
+  const handleApproveSelectedClasses = () => {
     if (!dialogSelectedTeacher) {
       toast({
         title: "Error",
@@ -190,9 +206,19 @@ export default function SupervisorDashboard() {
       return;
     }
 
-    approveScheduleMutation.mutate({
+    if (selectedClassIds.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one class to approve",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    approveClassesMutation.mutate({
       teacherId: dialogSelectedTeacher,
-      approvalNotes: `Schedule approved for teacher with ${dialogTeacherClasses.length} classes`,
+      classIds: selectedClassIds,
+      approvalNotes: `Approved ${selectedClassIds.length} classes for observation`,
     });
   };
 
@@ -358,31 +384,49 @@ export default function SupervisorDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Recent Activities */}
+              {/* Pending Observations To-Do */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Clock className="h-5 w-5 mr-2 text-blue-600" />
-                    Recent Activities
+                    <ClipboardCheck className="h-5 w-5 mr-2 text-orange-600" />
+                    To-Do Observations
                   </CardTitle>
+                  <CardDescription>
+                    Approved classes scheduled for observation
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-sm">Completed observation: Sarah Johnson (Persian A2)</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    <span className="text-sm">Pending review: Ali Rezaei (Persian B1)</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <UserCheck className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm">New teacher evaluation scheduled</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <BookOpen className="h-4 w-4 text-purple-500" />
-                    <span className="text-sm">Curriculum review meeting tomorrow</span>
-                  </div>
+                  {pendingObservations.length === 0 ? (
+                    <div className="text-center py-4 text-gray-500">
+                      <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                      <p className="text-sm">No pending observations</p>
+                      <p className="text-xs text-gray-400">Approve classes from Schedule Review to see them here</p>
+                    </div>
+                  ) : (
+                    pendingObservations.slice(0, 4).map((observation: any) => (
+                      <div key={observation.id} className="flex items-center space-x-3 p-2 rounded hover:bg-gray-50">
+                        <AlertTriangle className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">
+                            {observation.teacherName} - {observation.className}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(observation.scheduledDate).toLocaleDateString()} • {observation.observationType}
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {observation.priority}
+                        </Badge>
+                      </div>
+                    ))
+                  )}
+                  {pendingObservations.length > 4 && (
+                    <div className="text-center pt-2">
+                      <Button variant="link" className="text-xs h-auto p-0">
+                        View all {pendingObservations.length} pending observations
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -842,15 +886,30 @@ export default function SupervisorDashboard() {
                     ) : (
                       <div className="space-y-3">
                         <div className="text-sm text-gray-600 mb-2">
-                          Found {dialogTeacherClasses.length} real classes for this teacher:
+                          Found {dialogTeacherClasses.length} real classes - select classes to approve for observation:
                         </div>
                         {dialogTeacherClasses.map((classItem: any) => (
-                          <div key={classItem.id} className="p-3 bg-gray-50 rounded-lg">
+                          <div key={classItem.id} className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                            selectedClassIds.includes(classItem.id) 
+                              ? 'bg-purple-50 border-purple-300 border-2' 
+                              : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
+                          }`}
+                          onClick={() => handleClassSelection(classItem.id)}
+                          >
                             <div className="flex items-center justify-between">
-                              <div>
-                                <div className="font-medium text-sm">{classItem.title}</div>
-                                <div className="text-xs text-gray-600">{classItem.courseName}</div>
-                                <div className="text-xs text-gray-500">Student: {classItem.studentName}</div>
+                              <div className="flex items-center gap-2 flex-1">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedClassIds.includes(classItem.id)}
+                                  onChange={() => handleClassSelection(classItem.id)}
+                                  className="rounded border-gray-300"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                                <div>
+                                  <div className="font-medium text-sm">{classItem.title}</div>
+                                  <div className="text-xs text-gray-600">{classItem.courseName}</div>
+                                  <div className="text-xs text-gray-500">Student: {classItem.studentName}</div>
+                                </div>
                               </div>
                               <div className="text-right">
                                 <Badge variant="outline" className="text-xs">
@@ -863,6 +922,11 @@ export default function SupervisorDashboard() {
                             </div>
                           </div>
                         ))}
+                        {selectedClassIds.length > 0 && (
+                          <div className="text-sm text-purple-600 mt-2 font-medium bg-purple-50 p-2 rounded">
+                            ✓ {selectedClassIds.length} class(es) selected for observation approval
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -979,10 +1043,10 @@ export default function SupervisorDashboard() {
               </Button>
               <Button 
                 className="bg-purple-600 hover:bg-purple-700"
-                onClick={handleApproveSchedule}
-                disabled={!dialogSelectedTeacher || approveScheduleMutation.isPending}
+                onClick={handleApproveSelectedClasses}
+                disabled={!dialogSelectedTeacher || selectedClassIds.length === 0 || approveClassesMutation.isPending}
               >
-                {approveScheduleMutation.isPending ? "Approving..." : "Approve Schedule"}
+                {approveClassesMutation.isPending ? "Approving..." : `Approve ${selectedClassIds.length} Classes for Observation`}
               </Button>
             </div>
           </div>
