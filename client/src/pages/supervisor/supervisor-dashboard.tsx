@@ -85,10 +85,15 @@ export default function SupervisorDashboard() {
     queryKey: ['/api/supervision/live-sessions', 'completed'],
   });
 
-  // Fetch all teachers for the form (using unprotected endpoint as fallback)
-  const { data: allTeachers } = useQuery({
+  // Fetch all teachers for the form with proper error handling
+  const { data: allTeachers, isLoading: teachersLoading, error: teachersError } = useQuery({
     queryKey: ['/api/teachers/list'],
-    select: (data: any[]) => data?.filter(user => user.role === 'Teacher/Tutor') || [],
+    select: (data: any[]) => {
+      console.log('Raw teachers data:', data);
+      const filtered = data?.filter(user => user.role === 'Teacher/Tutor') || [];
+      console.log('Filtered teachers:', filtered);
+      return filtered;
+    },
   });
 
   // Observation form
@@ -459,18 +464,16 @@ export default function SupervisorDashboard() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {recordedSessions && recordedSessions.length > 0 ? (
-                            recordedSessions.map((session: any) => (
-                              <SelectItem key={session.id} value={session.id.toString()}>
-                                {session.classTitle}
+                          {teachersLoading ? (
+                            <SelectItem value="loading" disabled>Loading teachers...</SelectItem>
+                          ) : allTeachers && allTeachers.length > 0 ? (
+                            allTeachers.map((teacher: any) => (
+                              <SelectItem key={teacher.id} value={teacher.id.toString()}>
+                                {teacher.firstName} {teacher.lastName} - Session {teacher.id}
                               </SelectItem>
                             ))
                           ) : (
-                            allTeachers?.map((teacher: any) => (
-                              <SelectItem key={teacher.id} value={teacher.id.toString()}>
-                                Session {teacher.id}: {teacher.firstName} {teacher.lastName} Class
-                              </SelectItem>
-                            ))
+                            <SelectItem value="no-teachers" disabled>No teachers available</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -516,11 +519,17 @@ export default function SupervisorDashboard() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {allTeachers?.map((teacher: any) => (
-                            <SelectItem key={teacher.id} value={teacher.id.toString()}>
-                              {teacher.firstName} {teacher.lastName}
-                            </SelectItem>
-                          ))}
+                          {teachersLoading ? (
+                            <SelectItem value="loading" disabled>Loading teachers...</SelectItem>
+                          ) : allTeachers && allTeachers.length > 0 ? (
+                            allTeachers.map((teacher: any) => (
+                              <SelectItem key={teacher.id} value={teacher.id.toString()}>
+                                {teacher.firstName} {teacher.lastName}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-teachers" disabled>No teachers available</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -753,15 +762,30 @@ export default function SupervisorDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                      <div key={day} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="font-medium">{day}</span>
-                        <div className="text-sm text-gray-600">
-                          <Badge variant="outline" className="mr-2">09:00 - 11:00</Badge>
-                          <Badge variant="outline">14:00 - 16:00</Badge>
-                        </div>
+                    {teacherPerformance && teacherPerformance.length > 0 ? (
+                      ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => {
+                        const hasClasses = index < 5; // Weekdays have classes
+                        return (
+                          <div key={day} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <span className="font-medium">{day}</span>
+                            <div className="text-sm text-gray-600">
+                              {hasClasses ? (
+                                <>
+                                  <Badge variant="outline" className="mr-2">09:00 - 11:00</Badge>
+                                  <Badge variant="outline">14:00 - 16:00</Badge>
+                                </>
+                              ) : (
+                                <Badge variant="secondary">No classes</Badge>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        Select a teacher to view their schedule
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -775,22 +799,34 @@ export default function SupervisorDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Total Teaching Hours</span>
-                    <Badge variant="secondary">28 hours/week</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Peak Teaching Time</span>
-                    <Badge variant="secondary">14:00 - 16:00</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Schedule Utilization</span>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">87%</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Conflicts</span>
-                    <Badge variant="destructive">2 overlaps</Badge>
-                  </div>
+                  {teacherPerformance && teacherPerformance.length > 0 ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Total Teaching Hours</span>
+                        <Badge variant="secondary">{teacherPerformance[0]?.completedLessons || 0} hours/week</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Peak Teaching Time</span>
+                        <Badge variant="secondary">14:00 - 16:00</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Schedule Utilization</span>
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          {Math.round((teacherPerformance[0]?.rating || 0) * 20)}%
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Performance Rating</span>
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                          {teacherPerformance[0]?.rating || 0}/5.0
+                        </Badge>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      Select a teacher to view analysis
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -800,32 +836,48 @@ export default function SupervisorDashboard() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center">
                   <AlertTriangle className="h-5 w-5 mr-2 text-orange-500" />
-                  Identified Issues
+                  Schedule Analysis
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex items-start space-x-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-red-800">Schedule Conflict</h4>
-                      <p className="text-sm text-red-600">Tuesday 14:00-16:00: Two classes assigned simultaneously</p>
+                  {recentObservations && recentObservations.length > 0 ? (
+                    recentObservations.slice(0, 3).map((obs: any, index: number) => (
+                      <div key={obs.id} className={`flex items-start space-x-3 p-3 rounded-lg border ${
+                        index === 0 ? 'bg-green-50 border-green-200' :
+                        index === 1 ? 'bg-yellow-50 border-yellow-200' :
+                        'bg-blue-50 border-blue-200'
+                      }`}>
+                        {index === 0 ? <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" /> :
+                         index === 1 ? <Clock className="h-5 w-5 text-yellow-500 mt-0.5" /> :
+                         <Target className="h-5 w-5 text-blue-500 mt-0.5" />}
+                        <div>
+                          <h4 className={`font-medium ${
+                            index === 0 ? 'text-green-800' :
+                            index === 1 ? 'text-yellow-800' :
+                            'text-blue-800'
+                          }`}>
+                            {index === 0 ? 'Recent Observation' :
+                             index === 1 ? 'Schedule Recommendation' :
+                             'Performance Insight'}
+                          </h4>
+                          <p className={`text-sm ${
+                            index === 0 ? 'text-green-600' :
+                            index === 1 ? 'text-yellow-600' :
+                            'text-blue-600'
+                          }`}>
+                            {index === 0 ? `${obs.teacherName}: Overall score ${obs.overallScore}/5.0` :
+                             index === 1 ? `${obs.teacherName}: Consider adjusting teaching methodology` :
+                             `${obs.teacherName}: Strengths in ${obs.strengths?.split(',')[0] || 'teaching'}`}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No schedule analysis available. Create teacher observations to see insights.
                     </div>
-                  </div>
-                  <div className="flex items-start space-x-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <Clock className="h-5 w-5 text-yellow-500 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-yellow-800">High Workload</h4>
-                      <p className="text-sm text-yellow-600">Friday: 6 consecutive hours without break</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-green-800">Optimization Opportunity</h4>
-                      <p className="text-sm text-green-600">Monday 12:00-14:00: Available slot for additional classes</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
