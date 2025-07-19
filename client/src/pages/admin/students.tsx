@@ -538,10 +538,10 @@ export function AdminStudents() {
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 w-full lg:w-auto">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full lg:w-auto">
           {/* Sort Dropdown */}
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-[180px] border-blue-200">
+            <SelectTrigger className="w-full sm:w-[160px] lg:w-[180px] border-blue-200">
               <SelectValue placeholder="Sort by..." />
             </SelectTrigger>
             <SelectContent>
@@ -553,28 +553,28 @@ export function AdminStudents() {
           </Select>
           
           {/* View Mode Toggle */}
-          <div className="flex border rounded-lg overflow-hidden border-blue-200">
+          <div className="flex border rounded-lg overflow-hidden border-blue-200 w-full sm:w-auto">
             <Button
               variant={viewMode === "cards" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("cards")}
-              className="rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              className="flex-1 sm:flex-initial rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
-              <Grid3X3 className="h-4 w-4 mr-2" />
+              <Grid3X3 className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Cards</span>
             </Button>
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("list")}
-              className="rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              className="flex-1 sm:flex-initial rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
-              <List className="h-4 w-4 mr-2" />
+              <List className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">List</span>
             </Button>
           </div>
           <Button variant="outline" className="w-full sm:w-auto border-blue-200 hover:bg-blue-50">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Export Data</span>
             <span className="sm:hidden">Export</span>
           </Button>
@@ -949,18 +949,18 @@ export function AdminStudents() {
       </Dialog>
 
       {/* Search and Filters */}
-      <div className="flex gap-4 items-center">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Search students by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <Filter className="h-4 w-4 mr-2" />
             <SelectValue />
           </SelectTrigger>
@@ -974,80 +974,88 @@ export function AdminStudents() {
 
       {/* Students View */}
       {viewMode === "cards" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {filteredAndSortedStudents.map((student) => (
-          <Card key={student.id} className="hover:shadow-lg transition-shadow">
+          <Card key={student.id} className="hover:shadow-lg transition-shadow overflow-hidden">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base flex-shrink-0">
                     {student.firstName[0]}{student.lastName[0]}
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">{student.firstName} {student.lastName}</CardTitle>
-                    <p className="text-sm text-gray-600">{student.email}</p>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-base sm:text-lg truncate">{student.firstName} {student.lastName}</CardTitle>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">{student.email}</p>
                   </div>
                 </div>
-                <Badge className={getStatusColor(student.status)}>
-                  {student.status}
+                <Badge className={`${getStatusColor(student.status)} shrink-0 text-xs`}>
+                  <span className="hidden sm:inline">{student.status}</span>
+                  <span className="sm:hidden">{student.status === 'active' ? 'A' : 'I'}</span>
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
+            <CardContent className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+                <div className="space-y-1">
                   <span className="text-gray-600">Level:</span>
-                  <Badge className={`ml-2 ${getLevelColor(student.level)}`}>
+                  <Badge className={`ml-1 ${getLevelColor(student.level)} text-xs block w-fit`}>
                     {student.level}
                   </Badge>
                 </div>
-                <div>
+                <div className="space-y-1">
                   <span className="text-gray-600">Attendance:</span>
-                  <span className="ml-2 font-bold">{student.attendance}%</span>
+                  <span className="ml-1 font-bold block">{student.attendance}%</span>
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between text-sm mb-1">
+                <div className="flex justify-between text-xs sm:text-sm mb-2">
                   <span>Progress</span>
                   <span>{student.progress}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className="bg-blue-600 h-2 rounded-full" 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
                     style={{ width: `${student.progress}%` }}
                   ></div>
                 </div>
               </div>
 
-              <div className="text-sm">
-                <p className="text-gray-600">Courses:</p>
-                <div className="flex flex-wrap gap-1 mt-1">
+              <div className="text-xs sm:text-sm">
+                <p className="text-gray-600 mb-2">Courses:</p>
+                <div className="flex flex-wrap gap-1">
                   {student.courses && student.courses.length > 0 ? (
-                    student.courses.map((course, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs">
-                        {course}
-                      </Badge>
-                    ))
+                    <>
+                      {student.courses.slice(0, 2).map((course, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs px-2 py-1 max-w-full">
+                          <span className="truncate">{course}</span>
+                        </Badge>
+                      ))}
+                      {student.courses.length > 2 && (
+                        <Badge variant="secondary" className="text-xs px-2 py-1">
+                          +{student.courses.length - 2} more
+                        </Badge>
+                      )}
+                    </>
                   ) : (
                     <span className="text-gray-400 text-xs">No courses enrolled</span>
                   )}
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
                 {student.phone && (
                   <VoIPContactButton 
                     phoneNumber={student.phone}
                     contactName={`${student.firstName} ${student.lastName}`}
-                    className="flex-1"
+                    className="w-full sm:flex-1"
                   />
                 )}
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
+                    <Button variant="outline" size="sm" className="w-full sm:flex-1">
+                      <Eye className="h-4 w-4 sm:mr-1" />
+                      <span className="hidden sm:inline">View</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl">
@@ -1194,18 +1202,19 @@ export function AdminStudents() {
                 <Button 
                   variant="outline" 
                   size="sm"
+                  className="w-full sm:flex-1"
                   onClick={() => {
                     console.log('CARD EDIT BUTTON CLICKED - Student:', student.firstName, student.lastName);
                     console.log('Student data:', student);
                     handleEditStudent(student);
                   }}
                 >
-                  <Edit3 className="h-4 w-4 mr-1" />
-                  Edit
+                  <Edit3 className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Edit</span>
                 </Button>
-                <Button variant="outline" size="sm">
-                  <MessageCircle className="h-4 w-4 mr-1" />
-                  Contact
+                <Button variant="outline" size="sm" className="w-full sm:flex-1">
+                  <MessageCircle className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Contact</span>
                 </Button>
               </div>
             </CardContent>
