@@ -12127,6 +12127,51 @@ Return JSON format:
         supervisorId: req.user.id
       };
       const observation = await storage.createSupervisionObservation(observationData);
+      
+      // Send SMS notification to teacher
+      try {
+        const teacher = await storage.getUser(observationData.teacherId);
+        if (teacher?.phoneNumber) {
+          const { kavenegarService } = await import('./kavenegar-service');
+          
+          const supervisorName = `${req.user.firstName} ${req.user.lastName}`;
+          const overallScore = observationData.overallScore || 0;
+          const observationType = observationData.observationType;
+          
+          const smsMessage = `🎯 Teacher Observation Report
+
+Dear ${teacher.firstName},
+
+You have received a new observation report from ${supervisorName}.
+
+📊 Overall Score: ${overallScore}/5.0
+📝 Type: ${observationType}
+✅ Strengths noted
+📈 Action items provided
+
+Please log in to review your complete evaluation report and feedback.
+
+Best regards,
+Meta Lingua Academy`;
+
+          const smsResult = await kavenegarService.sendSimpleSMS(teacher.phoneNumber, smsMessage);
+          
+          if (smsResult.success) {
+            // Update observation with notification status
+            await storage.updateSupervisionObservation(observation.id, {
+              teacherNotified: true,
+              notificationSentAt: new Date()
+            });
+            console.log(`SMS notification sent to teacher ${teacher.firstName}: ${smsResult.messageId}`);
+          } else {
+            console.error(`Failed to send SMS to teacher ${teacher.firstName}: ${smsResult.error}`);
+          }
+        }
+      } catch (smsError) {
+        console.error('Error sending teacher notification SMS:', smsError);
+        // Don't fail the observation creation if SMS fails
+      }
+      
       res.status(201).json(observation);
     } catch (error) {
       console.error('Error creating supervision observation:', error);
@@ -12430,6 +12475,135 @@ Return JSON format:
           }
         ]
       });
+    }
+  });
+
+  // ==================== TEACHER OBSERVATION WORKFLOW ====================
+  
+  // Get teacher's observations
+  app.get("/api/teacher/observations", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const observations = await storage.getTeacherObservations(teacherId);
+      res.json(observations);
+    } catch (error) {
+      console.error('Error fetching teacher observations:', error);
+      res.status(500).json({ message: "Failed to fetch observations" });
+    }
+  });
+
+  // Get unacknowledged observations for notifications
+  app.get("/api/teacher/observations/unacknowledged", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      const observations = await storage.getUnacknowledgedObservations(teacherId);
+      res.json(observations);
+    } catch (error) {
+      console.error('Error fetching unacknowledged observations:', error);
+      res.status(500).json({ message: "Failed to fetch unacknowledged observations" });
+    }
+  });
+
+  // Acknowledge observation
+  app.post("/api/teacher/observations/:id/acknowledge", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const observationId = parseInt(req.params.id);
+      const teacherId = req.user.id;
+      await storage.acknowledgeObservation(observationId, teacherId);
+      
+      // Send SMS confirmation to teacher
+      try {
+        const teacher = await storage.getUser(teacherId);
+        if (teacher?.phoneNumber) {
+          const { kavenegarService } = await import('./kavenegar-service');
+          await kavenegarService.sendObservationAcknowledgmentConfirmation(
+            teacher.phoneNumber,
+            teacher.firstName
+          );
+          console.log(`SMS acknowledgment confirmation sent to teacher ${teacher.firstName}`);
+        }
+      } catch (smsError) {
+        console.error('Error sending acknowledgment SMS:', smsError);
+      }
+      
+      res.json({ success: true, message: "Observation acknowledged successfully" });
+    } catch (error) {
+      console.error('Error acknowledging observation:', error);
+      res.status(500).json({ message: "Failed to acknowledge observation" });
+    }
+  });
+
+  // Submit teacher response to observation
+  app.post("/api/teacher/observations/:id/respond", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const observationId = parseInt(req.params.id);
+      const teacherId = req.user.id;
+      const { responseType, content } = req.body;
+      
+      if (!responseType || !content) {
+        return res.status(400).json({ message: "Response type and content are required" });
+      }
+
+      const response = await storage.createTeacherObservationResponse({
+        observationId,
+        teacherId,
+        responseType,
+        content
+      });
+      
+      // Send SMS confirmation to teacher
+      try {
+        const teacher = await storage.getUser(teacherId);
+        if (teacher?.phoneNumber) {
+          const { kavenegarService } = await import('./kavenegar-service');
+          const message = `Dear ${teacher.firstName}, your observation response has been submitted successfully. Your supervisor will review it shortly. Thank you for your engagement. Meta Lingua Academy`;
+          await kavenegarService.sendSimpleSMS(teacher.phoneNumber, message);
+          console.log(`SMS response confirmation sent to teacher ${teacher.firstName}`);
+        }
+      } catch (smsError) {
+        console.error('Error sending response confirmation SMS:', smsError);
+      }
+      
+      res.status(201).json({ success: true, response, message: "Response submitted successfully" });
+    } catch (error) {
+      console.error('Error submitting teacher response:', error);
+      res.status(500).json({ message: "Failed to submit response" });
+    }
+  });
+
+  // Get responses for an observation (for supervisors)
+  app.get("/api/supervision/observations/:id/responses", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const observationId = parseInt(req.params.id);
+      const responses = await storage.getObservationResponses(observationId);
+      res.json(responses);
+    } catch (error) {
+      console.error('Error fetching observation responses:', error);
+      res.status(500).json({ message: "Failed to fetch responses" });
+    }
+  });
+
+  // Update teacher improvement plan
+  app.put("/api/teacher/observations/:id/improvement-plan", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const observationId = parseInt(req.params.id);
+      const teacherId = req.user.id;
+      const { improvementPlan, deadline } = req.body;
+      
+      const updates = {
+        teacherImprovementPlan: improvementPlan,
+        improvementPlanDeadline: deadline ? new Date(deadline) : null
+      };
+      
+      const updated = await storage.updateObservationResponse(observationId, teacherId, updates);
+      if (!updated) {
+        return res.status(404).json({ message: "Observation not found or unauthorized" });
+      }
+      
+      res.json({ success: true, observation: updated, message: "Improvement plan updated successfully" });
+    } catch (error) {
+      console.error('Error updating improvement plan:', error);
+      res.status(500).json({ message: "Failed to update improvement plan" });
     }
   });
 

@@ -64,7 +64,10 @@ import {
   // Teacher availability
   teacherAvailability, teacherAvailabilityPeriods,
   type TeacherAvailability, type InsertTeacherAvailability,
-  type TeacherAvailabilityPeriod, type InsertTeacherAvailabilityPeriod
+  type TeacherAvailabilityPeriod, type InsertTeacherAvailabilityPeriod,
+  // Teacher observation responses
+  teacherObservationResponses,
+  type TeacherObservationResponse, type InsertTeacherObservationResponse
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -6693,5 +6696,58 @@ export class DatabaseStorage implements IStorage {
         retentionTrend: 'improving'
       };
     }
+  }
+
+  // ===== TEACHER OBSERVATION WORKFLOW METHODS =====
+  
+  async getTeacherObservations(teacherId: number): Promise<SupervisionObservation[]> {
+    return await db.select().from(supervisionObservations)
+      .where(eq(supervisionObservations.teacherId, teacherId))
+      .orderBy(desc(supervisionObservations.createdAt));
+  }
+
+  async getUnacknowledgedObservations(teacherId: number): Promise<SupervisionObservation[]> {
+    return await db.select().from(supervisionObservations)
+      .where(and(
+        eq(supervisionObservations.teacherId, teacherId),
+        eq(supervisionObservations.teacherAcknowledged, false)
+      ))
+      .orderBy(desc(supervisionObservations.createdAt));
+  }
+
+  async acknowledgeObservation(observationId: number, teacherId: number): Promise<void> {
+    await db.update(supervisionObservations)
+      .set({ 
+        teacherAcknowledged: true, 
+        teacherAcknowledgedAt: new Date() 
+      })
+      .where(and(
+        eq(supervisionObservations.id, observationId),
+        eq(supervisionObservations.teacherId, teacherId)
+      ));
+  }
+
+  async createTeacherObservationResponse(response: InsertTeacherObservationResponse): Promise<TeacherObservationResponse> {
+    const [newResponse] = await db.insert(teacherObservationResponses)
+      .values(response)
+      .returning();
+    return newResponse;
+  }
+
+  async getObservationResponses(observationId: number): Promise<TeacherObservationResponse[]> {
+    return await db.select().from(teacherObservationResponses)
+      .where(eq(teacherObservationResponses.observationId, observationId))
+      .orderBy(desc(teacherObservationResponses.submittedAt));
+  }
+
+  async updateObservationResponse(observationId: number, teacherId: number, updates: Partial<SupervisionObservation>): Promise<SupervisionObservation | undefined> {
+    const [updated] = await db.update(supervisionObservations)
+      .set(updates)
+      .where(and(
+        eq(supervisionObservations.id, observationId),
+        eq(supervisionObservations.teacherId, teacherId)
+      ))
+      .returning();
+    return updated;
   }
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Users, BookOpen, DollarSign, Clock, Star, MessageCircle, Video, FileText, ChevronRight, Play, PauseCircle, Settings, Eye } from 'lucide-react';
+import { Calendar, Users, BookOpen, DollarSign, Clock, Star, MessageCircle, Video, FileText, ChevronRight, Play, PauseCircle, Settings, Eye, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +32,11 @@ export default function TeacherDashboard() {
   // Fetch assignments
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ['/api/teacher/assignments']
+  });
+
+  // Fetch unacknowledged observations for notification badge
+  const { data: unacknowledgedObservations } = useQuery({
+    queryKey: ['/api/teacher/observations', 'unacknowledged']
   });
 
   if (statsLoading) {
@@ -101,6 +106,10 @@ export default function TeacherDashboard() {
 
   const handleViewSchedule = () => {
     setLocation('/teacher/schedule');
+  };
+
+  const handleViewObservations = () => {
+    setLocation('/teacher/observations');
   };
 
   return (
@@ -181,12 +190,20 @@ export default function TeacherDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="classes">Classes</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="schedule">Schedule</TabsTrigger>
             <TabsTrigger value="availability">Availability</TabsTrigger>
+            <TabsTrigger value="observations" className="relative">
+              Observations
+              {unacknowledgedObservations?.length > 0 && (
+                <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs">
+                  {unacknowledgedObservations.length}
+                </Badge>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -441,6 +458,43 @@ export default function TeacherDashboard() {
                     <Settings className="w-4 h-4 mr-2" />
                     Set Monthly Availability
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Observations Tab */}
+          <TabsContent value="observations" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Eye className="w-5 h-5 mr-2" />
+                  Teaching Observations
+                </CardTitle>
+                <p className="text-sm text-gray-600">
+                  View and respond to your classroom observation reports
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Eye className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Observation Management</h3>
+                  <p className="text-gray-600 mb-4">
+                    Review feedback from supervisors about your teaching performance.<br />
+                    Acknowledge observations and submit improvement plans when needed.
+                  </p>
+                  <div className="flex justify-center space-x-4">
+                    <Button onClick={handleViewObservations}>
+                      <Eye className="w-4 h-4 mr-2" />
+                      View All Observations
+                    </Button>
+                    {unacknowledgedObservations?.length > 0 && (
+                      <Button variant="outline" className="border-red-200 text-red-700">
+                        <AlertCircle className="w-4 h-4 mr-2" />
+                        {unacknowledgedObservations.length} Unacknowledged
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
