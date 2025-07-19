@@ -6983,9 +6983,28 @@ export class DatabaseStorage implements IStorage {
 
   async createScheduledObservation(data: InsertScheduledObservation): Promise<ScheduledObservation> {
     try {
+      // Ensure all date fields are proper Date objects
+      const scheduledDate = typeof data.scheduledDate === 'string' 
+        ? new Date(data.scheduledDate) 
+        : data.scheduledDate;
+      
+      const notificationSentAt = data.notificationSentAt 
+        ? (typeof data.notificationSentAt === 'string' ? new Date(data.notificationSentAt) : data.notificationSentAt)
+        : undefined;
+      
       const [observation] = await db.insert(scheduledObservations)
         .values({
-          ...data,
+          teacherId: data.teacherId,
+          supervisorId: data.supervisorId,
+          sessionId: data.sessionId,
+          classId: data.classId,
+          observationType: data.observationType,
+          scheduledDate,
+          status: data.status || "scheduled",
+          priority: data.priority || "normal",
+          notes: data.notes,
+          teacherNotified: data.teacherNotified || false,
+          notificationSentAt,
           createdAt: new Date(),
           updatedAt: new Date()
         })
