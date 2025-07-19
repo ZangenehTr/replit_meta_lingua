@@ -118,17 +118,32 @@ export default function SupervisorDashboard() {
 
   // Create observation mutation
   const createObservationMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/supervision/observations', 'POST', data),
+    mutationFn: async (data: any) => {
+      try {
+        const result = await apiRequest('/api/supervision/observations', 'POST', data);
+        console.log('Observation creation result:', result);
+        return result;
+      } catch (error) {
+        console.error('Observation creation error:', error);
+        throw error;
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/supervision/observations'] });
       queryClient.invalidateQueries({ queryKey: ['/api/supervision/recent-observations'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/supervision/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/supervisor/dashboard-stats'] });
       setObservationDialogOpen(false);
       observationForm.reset();
       toast({ title: "Success", description: "Observation created successfully" });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to create observation", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Mutation error:', error);
+      const errorMessage = error?.message || "Failed to create observation";
+      toast({ 
+        title: "Error", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     },
   });
 
