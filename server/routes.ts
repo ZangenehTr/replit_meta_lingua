@@ -8784,6 +8784,82 @@ Return JSON format:
     }
   });
 
+  // Target setting endpoints for monthly/seasonal goals
+  app.get("/api/supervisor/targets", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const supervisorId = req.user.id;
+      const targets = await storage.getSupervisorTargets(supervisorId);
+      res.json(targets);
+    } catch (error) {
+      console.error('Error fetching supervisor targets:', error);
+      res.status(500).json({ message: "Failed to fetch targets" });
+    }
+  });
+
+  app.post("/api/supervisor/targets", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const targetData = {
+        ...req.body,
+        supervisorId: req.user.id,
+        createdDate: new Date().toISOString(),
+        status: 'active',
+      };
+      
+      const target = await storage.createSupervisorTarget(targetData);
+      
+      res.json({ 
+        success: true, 
+        target,
+        message: "Target set successfully"
+      });
+    } catch (error) {
+      console.error('Error creating supervisor target:', error);
+      res.status(500).json({ message: "Failed to create target" });
+    }
+  });
+
+  app.put("/api/supervisor/targets/:id", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const targetId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const target = await storage.updateSupervisorTarget(targetId, updateData);
+      
+      res.json({ 
+        success: true, 
+        target,
+        message: "Target updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating supervisor target:', error);
+      res.status(500).json({ message: "Failed to update target" });
+    }
+  });
+
+  // Enhanced observation duplication check endpoint
+  app.get("/api/supervision/observations", authenticateToken, requireRole(['Supervisor', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId, teacherId } = req.query;
+      
+      if (sessionId && teacherId) {
+        // Check for existing observations for this session and teacher
+        const existingObservations = await storage.getObservationsBySessionAndTeacher(
+          parseInt(sessionId as string), 
+          parseInt(teacherId as string)
+        );
+        return res.json(existingObservations);
+      }
+      
+      // Default: return all observations for the supervisor
+      const supervisorId = req.user.id;
+      const observations = await storage.getSupervisionObservations(supervisorId);
+      res.json(observations);
+    } catch (error) {
+      console.error('Error fetching observations:', error);
+      res.status(500).json({ message: "Failed to fetch observations" });
+    }
+  });
+
   // Call Center Dashboard Stats
   app.get("/api/call-center/dashboard-stats", authenticateToken, requireRole(['Call Center Agent', 'Admin']), async (req: any, res) => {
     try {
