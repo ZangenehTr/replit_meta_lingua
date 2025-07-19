@@ -90,6 +90,23 @@ export default function SupervisorDashboard() {
   // Observation form
   const observationForm = useForm({
     resolver: zodResolver(observationSchema),
+    defaultValues: {
+      sessionId: 0,
+      teacherId: 0,
+      observationType: '',
+      scores: {
+        teachingMethodology: 0,
+        classroomManagement: 0,
+        studentEngagement: 0,
+        contentDelivery: 0,
+        languageSkills: 0,
+        timeManagement: 0,
+        technologyUse: 0,
+      },
+      strengths: '',
+      areasForImprovement: '',
+      actionItems: '',
+    },
   });
 
   // Create observation mutation
@@ -109,9 +126,17 @@ export default function SupervisorDashboard() {
   });
 
   const onObservationSubmit = (data: any) => {
+    // Automatically set teacherId based on sessionId for this demo
+    const teacherMap: { [key: number]: number } = {
+      1: 50, // سارا احمدی
+      2: 51, // محمد رضایی  
+      3: 52, // علی حسینی
+    };
+    
     const overallScore = Object.values(data.scores).reduce((sum: number, score: any) => sum + score, 0) / Object.keys(data.scores).length;
     createObservationMutation.mutate({
       ...data,
+      teacherId: teacherMap[data.sessionId] || 50,
       overallScore: Math.round(overallScore * 100) / 100,
     });
   };
@@ -406,31 +431,39 @@ export default function SupervisorDashboard() {
 
       {/* New Observation Dialog */}
       <Dialog open={observationDialogOpen} onOpenChange={setObservationDialogOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Teacher Observation</DialogTitle>
           </DialogHeader>
           <Form {...observationForm}>
             <form onSubmit={observationForm.handleSubmit(onObservationSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={observationForm.control}
                   name="sessionId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Session</FormLabel>
-                      <Select onValueChange={value => field.onChange(+value)}>
+                      <FormLabel>Session *</FormLabel>
+                      <Select onValueChange={value => field.onChange(+value)} value={field.value?.toString()}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select session" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {recordedSessions?.map((session: any) => (
-                            <SelectItem key={session.id} value={session.id.toString()}>
-                              {session.classTitle}
-                            </SelectItem>
-                          ))}
+                          {recordedSessions && recordedSessions.length > 0 ? (
+                            recordedSessions.map((session: any) => (
+                              <SelectItem key={session.id} value={session.id.toString()}>
+                                {session.classTitle}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <>
+                              <SelectItem value="1">Persian Language Fundamentals - سارا احمدی</SelectItem>
+                              <SelectItem value="2">English Conversation Practice - محمد رضایی</SelectItem>
+                              <SelectItem value="3">Advanced Grammar Workshop - علی حسینی</SelectItem>
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -442,8 +475,8 @@ export default function SupervisorDashboard() {
                   name="observationType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Observation Type</FormLabel>
-                      <Select onValueChange={field.onChange}>
+                      <FormLabel>Observation Type *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select type" />
@@ -461,88 +494,91 @@ export default function SupervisorDashboard() {
                 />
               </div>
               
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={observationForm.control}
-                  name="scores.teachingMethodology"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Teaching Methodology</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={observationForm.control}
-                  name="scores.classroomManagement"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Classroom Management</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={observationForm.control}
-                  name="scores.studentEngagement"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Student Engagement</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={observationForm.control}
-                  name="scores.contentDelivery"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Content Delivery</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={observationForm.control}
-                  name="scores.languageSkills"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Language Skills</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={observationForm.control}
-                  name="scores.timeManagement"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Time Management</FormLabel>
-                      <FormControl>
-                        <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Evaluation Scores (1-5)</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <FormField
+                    control={observationForm.control}
+                    name="scores.teachingMethodology"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Teaching Methodology</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={observationForm.control}
+                    name="scores.classroomManagement"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Classroom Management</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={observationForm.control}
+                    name="scores.studentEngagement"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Student Engagement</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={observationForm.control}
+                    name="scores.contentDelivery"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Content Delivery</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={observationForm.control}
+                    name="scores.languageSkills"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Language Skills</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={observationForm.control}
+                    name="scores.timeManagement"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Time Management</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-3">
                 <FormField
                   control={observationForm.control}
                   name="strengths"
@@ -550,7 +586,11 @@ export default function SupervisorDashboard() {
                     <FormItem>
                       <FormLabel>Strengths</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Note the teacher's strengths and positive observations..." {...field} />
+                        <Textarea 
+                          rows={2}
+                          placeholder="Note the teacher's strengths and positive observations..." 
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -563,7 +603,11 @@ export default function SupervisorDashboard() {
                     <FormItem>
                       <FormLabel>Areas for Improvement</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Identify areas where the teacher can improve..." {...field} />
+                        <Textarea 
+                          rows={2}
+                          placeholder="Identify areas where the teacher can improve..." 
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -576,7 +620,11 @@ export default function SupervisorDashboard() {
                     <FormItem>
                       <FormLabel>Action Items</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Specific action items and recommendations..." {...field} />
+                        <Textarea 
+                          rows={2}
+                          placeholder="Specific action items and recommendations..." 
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -584,7 +632,7 @@ export default function SupervisorDashboard() {
                 />
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setObservationDialogOpen(false)}>
                   Cancel
                 </Button>
