@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import { 
   Users, 
   GraduationCap, 
@@ -83,6 +84,7 @@ export default function SupervisorDashboard() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
 
   const { data: stats, isLoading } = useQuery<SupervisorStats>({
     queryKey: ["/api/supervisor/dashboard-stats"],
@@ -1167,8 +1169,9 @@ export default function SupervisorDashboard() {
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              // Navigate to student profile or contact
-                              window.location.href = `/admin/students/${student.id}`;
+                              // Navigate to admin students page 
+                              setStudentsAttentionDialogOpen(false);
+                              setLocation("/admin/students");
                             }}
                           >
                             <Eye className="h-4 w-4 mr-1" />
