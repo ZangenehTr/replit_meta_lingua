@@ -286,6 +286,47 @@ export class KavenegarService {
   }
 
   /**
+   * Send teacher observation notification SMS
+   */
+  async sendTeacherObservationNotification(
+    teacherPhone: string, 
+    teacherName: string, 
+    observationType: string,
+    overallScore?: string
+  ): Promise<SMSResult> {
+    const message = overallScore 
+      ? `Dear ${teacherName}, your ${observationType} evaluation has been completed with a score of ${overallScore}/5. Please check your dashboard to review feedback and respond. Meta Lingua Academy`
+      : `Dear ${teacherName}, a new ${observationType} has been scheduled. Please check your dashboard for details. Meta Lingua Academy`;
+    
+    return await this.sendSimpleSMS(teacherPhone, message);
+  }
+
+  /**
+   * Send teacher observation follow-up reminder SMS
+   */
+  async sendTeacherObservationReminder(
+    teacherPhone: string, 
+    teacherName: string,
+    daysOverdue: number
+  ): Promise<SMSResult> {
+    const message = `Dear ${teacherName}, you have a pending observation response that is ${daysOverdue} days overdue. Please respond via your dashboard. Meta Lingua Academy`;
+    
+    return await this.sendSimpleSMS(teacherPhone, message);
+  }
+
+  /**
+   * Send observation acknowledgment confirmation SMS
+   */
+  async sendObservationAcknowledgmentConfirmation(
+    teacherPhone: string, 
+    teacherName: string
+  ): Promise<SMSResult> {
+    const message = `Dear ${teacherName}, thank you for acknowledging your observation feedback. Your response has been recorded. Meta Lingua Academy`;
+    
+    return await this.sendSimpleSMS(teacherPhone, message);
+  }
+
+  /**
    * Send enrollment notification
    */
   async sendEnrollmentNotification(receptor: string, studentName: string, courseName: string): Promise<SMSResult> {

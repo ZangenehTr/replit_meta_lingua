@@ -80,6 +80,7 @@ import TestQuestionsPage from "@/pages/teacher/test-questions";
 import TeacherVideoCourses from "@/pages/teacher/video-courses";
 import TeacherAvailability from "@/pages/teacher/teacher-availability";
 import ClassCommunication from "@/pages/teacher/class-communication";
+import TeacherObservationsPage from "@/pages/teacher/observations";
 
 // Mentor pages
 import MentorStudentsPage from "@/pages/mentor/students";
@@ -461,6 +462,11 @@ function Router() {
       <Route path="/teacher/class/:classId/chat">
         <ProtectedRoute>
           <ClassCommunication />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/observations">
+        <ProtectedRoute>
+          <TeacherObservationsPage />
         </ProtectedRoute>
       </Route>
 

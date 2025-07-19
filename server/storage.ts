@@ -53,7 +53,11 @@ import {
   // Callern types
   callernPackages, studentCallernPackages, teacherCallernAvailability, callernCallHistory,
   type CallernPackage, type InsertCallernPackage, type StudentCallernPackage, type InsertStudentCallernPackage,
-  type TeacherCallernAvailability, type InsertTeacherCallernAvailability, type CallernCallHistory, type InsertCallernCallHistory
+  type TeacherCallernAvailability, type InsertTeacherCallernAvailability, type CallernCallHistory, type InsertCallernCallHistory,
+  // Supervision observation types
+  supervisionObservations, teacherObservationResponses,
+  type SupervisionObservation, type InsertSupervisionObservation,
+  type TeacherObservationResponse, type InsertTeacherObservationResponse
 } from "@shared/schema";
 
 export interface IStorage {
@@ -487,6 +491,14 @@ export interface IStorage {
   getRecentSupervisionObservations(supervisorId?: number): Promise<any[]>;
   getTeacherPerformanceData(supervisorId?: number): Promise<any[]>;
   getSupervisionStats(): Promise<any>;
+  
+  // Teacher observation workflow methods
+  getTeacherObservations(teacherId: number): Promise<SupervisionObservation[]>;
+  getUnacknowledgedObservations(teacherId: number): Promise<SupervisionObservation[]>;
+  acknowledgeObservation(observationId: number, teacherId: number): Promise<void>;
+  createTeacherObservationResponse(response: InsertTeacherObservationResponse): Promise<TeacherObservationResponse>;
+  getObservationResponses(observationId: number): Promise<TeacherObservationResponse[]>;
+  updateObservationResponse(observationId: number, teacherId: number, updates: Partial<SupervisionObservation>): Promise<SupervisionObservation | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -2223,6 +2235,40 @@ export class MemStorage implements IStorage {
       status: "deploying",
       progress: 45
     };
+  }
+
+  // Teacher observation workflow methods (stub implementations)
+  async getTeacherObservations(teacherId: number): Promise<SupervisionObservation[]> {
+    return [];
+  }
+
+  async getUnacknowledgedObservations(teacherId: number): Promise<SupervisionObservation[]> {
+    return [];
+  }
+
+  async acknowledgeObservation(observationId: number, teacherId: number): Promise<void> {
+    // Stub implementation
+  }
+
+  async createTeacherObservationResponse(response: InsertTeacherObservationResponse): Promise<TeacherObservationResponse> {
+    return {
+      id: 1,
+      observationId: response.observationId,
+      teacherId: response.teacherId,
+      responseType: response.responseType,
+      content: response.content,
+      submittedAt: new Date(),
+      supervisorReviewed: false,
+      supervisorReviewedAt: null
+    };
+  }
+
+  async getObservationResponses(observationId: number): Promise<TeacherObservationResponse[]> {
+    return [];
+  }
+
+  async updateObservationResponse(observationId: number, teacherId: number, updates: Partial<SupervisionObservation>): Promise<SupervisionObservation | undefined> {
+    return undefined;
   }
 }
 

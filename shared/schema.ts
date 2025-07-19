@@ -2368,32 +2368,40 @@ export const questionnaireResponses = pgTable("questionnaire_responses", {
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 });
 
-// Supervision observation forms
+// Supervision observation forms (aligned with existing database schema)
 export const supervisionObservations = pgTable("supervision_observations", {
   id: serial("id").primaryKey(),
-  sessionId: integer("session_id").references(() => liveClassSessions.id).notNull(),
-  supervisorId: integer("supervisor_id").references(() => users.id).notNull(),
-  teacherId: integer("teacher_id").references(() => users.id).notNull(),
-  observationType: text("observation_type").notNull(), // live_online, live_in_person, recorded
-  joinTime: timestamp("join_time"),
-  observationDuration: integer("observation_duration"), // in minutes
-  scores: jsonb("scores").$type<{
-    teachingMethodology: number;
-    classroomManagement: number;
-    studentEngagement: number;
-    contentDelivery: number;
-    languageSkills: number;
-    timeManagement: number;
-    technologyUse?: number;
-  }>().notNull(),
-  overallScore: decimal("overall_score", { precision: 3, scale: 2 }).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id),
+  supervisorId: integer("supervisor_id").references(() => users.id),
+  sessionId: integer("session_id"),
+  observationType: varchar("observation_type"),
+  overallScore: decimal("overall_score", { precision: 10, scale: 2 }),
   strengths: text("strengths"),
   areasForImprovement: text("areas_for_improvement"),
-  actionItems: text("action_items"),
-  followUpRequired: boolean("follow_up_required").default(false),
-  teacherNotified: boolean("teacher_notified").default(false),
-  notificationSentAt: timestamp("notification_sent_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  followUpRequired: boolean("follow_up_required"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  // Teacher response workflow fields
+  teacherAcknowledged: boolean("teacher_acknowledged").default(false),
+  teacherAcknowledgedAt: timestamp("teacher_acknowledged_at"),
+  teacherResponse: text("teacher_response"),
+  teacherImprovementPlan: text("teacher_improvement_plan"),
+  improvementPlanDeadline: date("improvement_plan_deadline"),
+  followUpCompleted: boolean("follow_up_completed").default(false),
+  followUpCompletedAt: timestamp("follow_up_completed_at"),
+});
+
+// Teacher observation responses for bidirectional communication
+export const teacherObservationResponses = pgTable("teacher_observation_responses", {
+  id: serial("id").primaryKey(),
+  observationId: integer("observation_id").references(() => supervisionObservations.id, { onDelete: 'cascade' }).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  responseType: text("response_type").notNull(), // 'acknowledgment', 'improvement_plan', 'progress_update'
+  content: text("content").notNull(),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  supervisorReviewed: boolean("supervisor_reviewed").default(false),
+  supervisorReviewedAt: timestamp("supervisor_reviewed_at"),
 });
 
 // Insert schemas for quality assurance
@@ -2422,7 +2430,19 @@ export const insertQuestionnaireResponseSchema = createInsertSchema(questionnair
 
 export const insertSupervisionObservationSchema = createInsertSchema(supervisionObservations).omit({
   id: true,
-  createdAt: true
+  createdAt: true,
+  updatedAt: true,
+  teacherAcknowledged: true,
+  teacherAcknowledgedAt: true,
+  followUpCompleted: true,
+  followUpCompletedAt: true
+});
+
+export const insertTeacherObservationResponseSchema = createInsertSchema(teacherObservationResponses).omit({
+  id: true,
+  submittedAt: true,
+  supervisorReviewed: true,
+  supervisorReviewedAt: true
 });
 
 // Types for quality assurance
@@ -2640,3 +2660,9 @@ export const insertTeacherAvailabilityPeriodSchema = createInsertSchema(teacherA
 
 export type TeacherAvailabilityPeriod = typeof teacherAvailabilityPeriods.$inferSelect;
 export type InsertTeacherAvailabilityPeriod = z.infer<typeof insertTeacherAvailabilityPeriodSchema>;
+
+// Supervision observation types
+export type SupervisionObservation = typeof supervisionObservations.$inferSelect;
+export type InsertSupervisionObservation = z.infer<typeof insertSupervisionObservationSchema>;
+export type TeacherObservationResponse = typeof teacherObservationResponses.$inferSelect;
+export type InsertTeacherObservationResponse = z.infer<typeof insertTeacherObservationResponseSchema>;
