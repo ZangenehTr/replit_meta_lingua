@@ -103,19 +103,25 @@ export default function ScheduleObservationReview() {
     },
   });
 
-  // Fetch scheduled observations
-  const { data: scheduledObservations = [] } = useQuery<ScheduledObservation[]>({
+  // Fetch scheduled observations with auto-refresh
+  const { data: scheduledObservations = [], isLoading: scheduledLoading } = useQuery<ScheduledObservation[]>({
     queryKey: ['/api/supervision/scheduled-observations'],
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    staleTime: 10000, // Consider data stale after 10 seconds
   });
 
   // Fetch pending observations for to-do list
-  const { data: pendingObservations = [] } = useQuery<ScheduledObservation[]>({
+  const { data: pendingObservations = [], isLoading: pendingLoading } = useQuery<ScheduledObservation[]>({
     queryKey: ['/api/supervision/pending-observations'],
+    refetchInterval: 30000,
+    staleTime: 10000,
   });
 
   // Fetch overdue observations
-  const { data: overdueObservations = [] } = useQuery<ScheduledObservation[]>({
+  const { data: overdueObservations = [], isLoading: overdueLoading } = useQuery<ScheduledObservation[]>({
     queryKey: ['/api/supervision/overdue-observations'],
+    refetchInterval: 30000,
+    staleTime: 10000,
   });
 
   // Form for scheduling observation
@@ -135,21 +141,32 @@ export default function ScheduleObservationReview() {
     mutationFn: async (data: any) => {
       return await apiRequest('/api/supervision/scheduled-observations', 'POST', data);
     },
-    onSuccess: () => {
+    onSuccess: (newObservation) => {
       toast({
         title: "Observation Scheduled",
-        description: "The teacher has been notified via SMS.",
+        description: `Observation created successfully. Teacher notification ${newObservation.teacherNotified ? 'sent' : 'pending'}.`,
       });
       setObservationDialogOpen(false);
       observationForm.reset();
       setSelectedClass(null);
+      
+      // Force refresh all observation-related queries
       queryClient.invalidateQueries({ queryKey: ['/api/supervision/scheduled-observations'] });
       queryClient.invalidateQueries({ queryKey: ['/api/supervision/pending-observations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/supervision/overdue-observations'] });
+      
+      // Also refresh teacher classes to update observation status
+      if (selectedTeacher) {
+        queryClient.invalidateQueries({ queryKey: [`/api/supervision/teacher-classes/${selectedTeacher}`] });
+      }
+      
+      console.log('Observation created successfully:', newObservation);
     },
     onError: (error: any) => {
+      console.error('Failed to create observation:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to schedule observation",
+        title: "Error Creating Observation",
+        description: error.message || "Failed to schedule observation. Please try again.",
         variant: "destructive",
       });
     },
@@ -205,8 +222,16 @@ export default function ScheduleObservationReview() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingObservations.length}</div>
-            <p className="text-xs text-muted-foreground">Scheduled for this week</p>
+            <div className="text-2xl font-bold">
+              {pendingLoading ? (
+                <span className="animate-pulse bg-gray-200 rounded px-2 py-1">-</span>
+              ) : (
+                pendingObservations.length
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Scheduled for this week {pendingLoading && <span className="animate-pulse">• Updating...</span>}
+            </p>
           </CardContent>
         </Card>
 
@@ -238,8 +263,16 @@ export default function ScheduleObservationReview() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{scheduledObservations.length}</div>
-            <p className="text-xs text-muted-foreground">All observations</p>
+            <div className="text-2xl font-bold">
+              {scheduledLoading ? (
+                <span className="animate-pulse bg-gray-200 rounded px-2 py-1">-</span>
+              ) : (
+                scheduledObservations.length
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              All observations {scheduledLoading && <span className="animate-pulse">• Updating...</span>}
+            </p>
           </CardContent>
         </Card>
       </div>
