@@ -2486,19 +2486,19 @@ export class DatabaseStorage implements IStorage {
           const homeworkStats = await db
             .select({
               total: sql<number>`COUNT(*)`,
-              submitted: sql<number>`SUM(CASE WHEN ${homework.status} = 'submitted' THEN 1 ELSE 0 END)`
+              submitted: sql<number>`SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END)`
             })
             .from(homework)
-            .where(eq(homework.studentId, student.id));
+            .where(eq(homework.student_id, student.id));
 
-          // Check real session attendance  
+          // Check real session attendance (using status as proxy for attendance)
           const sessionStats = await db
             .select({
               total: sql<number>`COUNT(*)`,
-              attended: sql<number>`SUM(CASE WHEN ${sessions.attendanceStatus} = 'present' THEN 1 ELSE 0 END)`
+              attended: sql<number>`SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END)`
             })
             .from(sessions)
-            .where(eq(sessions.studentId, student.id));
+            .where(eq(sessions.student_id, student.id));
 
           const homeworkTotal = homeworkStats[0]?.total || 0;
           const homeworkSubmitted = homeworkStats[0]?.submitted || 0;
@@ -2514,12 +2514,12 @@ export class DatabaseStorage implements IStorage {
             const enrollment = await db
               .select({
                 courseTitle: courses.title,
-                teacherName: sql<string>`CONCAT(users.firstName, ' ', users.lastName)`
+                teacherName: sql<string>`CONCAT(users.first_name, ' ', users.last_name)`
               })
               .from(enrollments)
-              .leftJoin(courses, eq(enrollments.courseId, courses.id))
-              .leftJoin(users, eq(courses.instructorId, users.id))
-              .where(eq(enrollments.studentId, student.id))
+              .leftJoin(courses, eq(enrollments.course_id, courses.id))
+              .leftJoin(users, eq(courses.instructor_id, users.id))
+              .where(eq(enrollments.user_id, student.id))
               .limit(1);
 
             const issue = missedSessions > missedHomeworks ? 'attendance' : 'homework';
