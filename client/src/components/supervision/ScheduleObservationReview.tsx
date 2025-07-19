@@ -8,11 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import BulkClassApproval from "./BulkClassApproval";
 import { 
   Users, 
   Calendar,
@@ -22,7 +24,8 @@ import {
   Eye,
   BookOpen,
   MapPin,
-  Video
+  Video,
+  CheckSquare
 } from "lucide-react";
 
 // Schema for scheduled observation
@@ -176,8 +179,22 @@ export default function ScheduleObservationReview() {
 
   return (
     <div className="space-y-6">
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Main Navigation Tabs */}
+      <Tabs defaultValue="individual" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="individual" className="flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Individual Scheduling
+          </TabsTrigger>
+          <TabsTrigger value="bulk" className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4" />
+            Bulk Approval
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="individual" className="space-y-6">
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Observations</CardTitle>
@@ -548,6 +565,12 @@ export default function ScheduleObservationReview() {
           </Form>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="bulk" className="space-y-6">
+          <BulkClassApproval />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
