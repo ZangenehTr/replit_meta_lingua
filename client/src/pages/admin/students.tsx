@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SimpleDateInput } from "@/components/ui/simple-date-input";
@@ -55,6 +55,15 @@ export function AdminStudents() {
   const [sortBy, setSortBy] = useState("newest"); // "newest", "oldest", "course", "level"
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [editStudentData, setEditStudentData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    status: 'active',
+    level: 'Beginner',
+    courses: [] as string[]
+  });
   const [newStudentData, setNewStudentData] = useState({
     firstName: "",
     lastName: "",
