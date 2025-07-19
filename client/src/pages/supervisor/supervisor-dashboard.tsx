@@ -228,7 +228,7 @@ export default function SupervisorDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100">Total Teachers</p>
-                  <p className="text-3xl font-bold">{stats?.totalTeachers || 15}</p>
+                  <p className="text-3xl font-bold">{stats?.totalTeachers || 0}</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-200" />
               </div>
@@ -240,7 +240,7 @@ export default function SupervisorDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100">Total Students</p>
-                  <p className="text-3xl font-bold">{stats?.totalStudents || 142}</p>
+                  <p className="text-3xl font-bold">{stats?.totalStudents || 0}</p>
                 </div>
                 <GraduationCap className="h-8 w-8 text-green-200" />
               </div>

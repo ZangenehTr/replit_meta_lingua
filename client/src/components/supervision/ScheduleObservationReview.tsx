@@ -8,13 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import BulkClassApproval from "./BulkClassApproval";
 import { 
   Users, 
   Calendar,
@@ -24,8 +22,7 @@ import {
   Eye,
   BookOpen,
   MapPin,
-  Video,
-  CheckSquare
+  Video
 } from "lucide-react";
 
 // Schema for scheduled observation
@@ -152,14 +149,22 @@ export default function ScheduleObservationReview() {
     setSelectedClass(null);
   };
 
-  // Handle class selection for observation
+  // Handle class selection for observation with smart type selection
   const handleClassSelect = (classItem: TeacherClass) => {
     setSelectedClass(classItem);
     // Pre-fill form with class details
     observationForm.setValue('teacherId', selectedTeacher!);
     observationForm.setValue('sessionId', classItem.id);
     observationForm.setValue('classId', classItem.id);
-    observationForm.setValue('observationType', classItem.deliveryMode === 'online' ? 'live_online' : 'live_in_person');
+    
+    // Smart observation type selection based on class delivery mode
+    if (classItem.deliveryMode === 'online') {
+      // Online classes default to online observation only
+      observationForm.setValue('observationType', 'live_online');
+    } else {
+      // In-person classes default to in-person but allow choice
+      observationForm.setValue('observationType', 'live_in_person');
+    }
     
     // Set default scheduled date to class time
     const classDate = new Date(classItem.scheduledAt);
@@ -179,22 +184,8 @@ export default function ScheduleObservationReview() {
 
   return (
     <div className="space-y-6">
-      {/* Main Navigation Tabs */}
-      <Tabs defaultValue="individual" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="individual" className="flex items-center gap-2">
-            <Eye className="h-4 w-4" />
-            Individual Scheduling
-          </TabsTrigger>
-          <TabsTrigger value="bulk" className="flex items-center gap-2">
-            <CheckSquare className="h-4 w-4" />
-            Bulk Approval
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="individual" className="space-y-6">
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Observations</CardTitle>
@@ -470,7 +461,14 @@ export default function ScheduleObservationReview() {
                 name="observationType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Observation Type</FormLabel>
+                    <FormLabel>
+                      Observation Type
+                      {selectedClass?.deliveryMode === 'online' && (
+                        <span className="text-xs text-blue-600 ml-2">
+                          (Auto-selected for online class)
+                        </span>
+                      )}
+                    </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -478,8 +476,16 @@ export default function ScheduleObservationReview() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="live_in_person">Live In-Person</SelectItem>
-                        <SelectItem value="live_online">Live Online</SelectItem>
+                        {selectedClass?.deliveryMode === 'online' ? (
+                          // Online classes: only online observation option
+                          <SelectItem value="live_online">Live Online</SelectItem>
+                        ) : (
+                          // In-person classes: both options available
+                          <>
+                            <SelectItem value="live_in_person">Live In-Person</SelectItem>
+                            <SelectItem value="live_online">Live Online</SelectItem>
+                          </>
+                        )}
                         <SelectItem value="recorded">Recorded Review</SelectItem>
                       </SelectContent>
                     </Select>
@@ -565,12 +571,6 @@ export default function ScheduleObservationReview() {
           </Form>
         </DialogContent>
       </Dialog>
-        </TabsContent>
-
-        <TabsContent value="bulk" className="space-y-6">
-          <BulkClassApproval />
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
