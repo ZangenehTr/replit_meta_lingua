@@ -77,6 +77,7 @@ export function AdminStudents() {
     guardianPhone: "",
     profileImage: null,
     notes: "",
+    courses: [] as string[],
     selectedCourses: [],
     totalFee: 0
   });
@@ -159,10 +160,19 @@ export function AdminStudents() {
     });
   };
 
+  // Handle adding course to new student
+  const handleAddCourse = (courseTitle: string) => {
+    const course = coursesList.find((c: any) => c.title === courseTitle);
+    if (course && !newStudentData.courses.includes(courseTitle)) {
+      setNewStudentData(prev => ({
+        ...prev,
+        courses: [...prev.courses, courseTitle]
+      }));
+    }
+  };
+
   // Handle course selection for editing student
   const handleEditCourseSelection = (courseId: number, selected: boolean) => {
-
-    
     setEditingStudent(prev => {
       if (!prev) return prev;
       
@@ -180,8 +190,6 @@ export function AdminStudents() {
         // Remove course if selected
         updatedCourses = currentSelectedCourses.filter(id => id !== courseId);
       }
-      
-
       
       return {
         ...prev,

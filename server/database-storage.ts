@@ -7051,10 +7051,21 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getPendingObservations(supervisorId?: number): Promise<ScheduledObservation[]> {
+  async getPendingObservations(supervisorId?: number): Promise<any[]> {
     try {
-      const query = db.select()
+      const query = db.select({
+        id: scheduledObservations.id,
+        teacherId: scheduledObservations.teacherId,
+        teacherName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+        className: scheduledObservations.className,
+        scheduledDate: scheduledObservations.scheduledDate,
+        scheduledTime: scheduledObservations.scheduledTime,
+        observationType: scheduledObservations.observationType,
+        priority: scheduledObservations.priority,
+        status: scheduledObservations.status
+      })
         .from(scheduledObservations)
+        .leftJoin(users, eq(scheduledObservations.teacherId, users.id))
         .where(
           and(
             or(
