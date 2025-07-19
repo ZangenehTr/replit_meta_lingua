@@ -91,6 +91,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   // Quality Assurance & Supervision
   { path: "/admin/supervision", icon: "Eye", label: "Quality Assurance", roles: ["Supervisor", "Admin"] },
   
+  // Schedule Review System
+  { path: "/supervisor/schedule-review", icon: "Calendar", label: "Schedule Review", roles: ["Supervisor", "Admin"] },
+  
   // Enterprise Features
   { path: "/admin/teacher-payments", icon: "DollarSign", label: "Teacher Payments", roles: ["Admin", "Accountant"] },
   { path: "/admin/white-label", icon: "Building2", label: "White-Label Management", roles: ["Admin"] },
