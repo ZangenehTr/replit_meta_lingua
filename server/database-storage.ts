@@ -6884,18 +6884,15 @@ export class DatabaseStorage implements IStorage {
           s.scheduled_at,
           s.duration,
           s.status,
-          s.room_id,
           s.session_url,
           s.notes,
           c.title as course_name,
           c.delivery_mode,
           u.first_name as student_first_name,
-          u.last_name as student_last_name,
-          r.name as room_name
+          u.last_name as student_last_name
         FROM sessions s
         LEFT JOIN courses c ON s.course_id = c.id
         LEFT JOIN users u ON s.student_id = u.id
-        LEFT JOIN rooms r ON s.room_id = r.id
         WHERE s.tutor_id = ${teacherId}
           AND s.scheduled_at >= NOW() - INTERVAL '7 days'
         ORDER BY s.scheduled_at ASC
@@ -6914,8 +6911,7 @@ export class DatabaseStorage implements IStorage {
         scheduledAt: session.scheduled_at,
         duration: session.duration || 60,
         status: session.status || 'scheduled',
-        roomName: session.room_name || (session.delivery_mode === 'online' ? 'Online' : 'Classroom'),
-        roomId: session.room_id,
+        roomName: session.delivery_mode === 'online' ? 'Online' : 'Classroom',
         sessionUrl: session.session_url,
         deliveryMode: session.delivery_mode || 'online',
         observationStatus: 'available', // Can be observed

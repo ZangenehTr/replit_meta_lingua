@@ -80,7 +80,7 @@ export default function ScheduleObservationReview() {
 
   // Fetch teacher classes when teacher is selected
   const { data: teacherClasses = [], isLoading: classesLoading } = useQuery({
-    queryKey: ['/api/supervision/teacher-classes', selectedTeacher],
+    queryKey: [`/api/supervision/teacher-classes/${selectedTeacher}`],
     enabled: !!selectedTeacher,
   });
 
