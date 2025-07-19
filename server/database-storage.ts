@@ -6874,13 +6874,14 @@ export class DatabaseStorage implements IStorage {
 
   async getTeacherClassesForObservation(teacherId: number): Promise<any[]> {
     try {
-      // Get consolidated teacher classes - group sessions by course, time, and delivery
-      // This prevents duplicate entries for group classes with multiple students
+      // Get all teacher sessions first, then group them programmatically 
+      // to avoid PostgreSQL syntax issues
       const teacherSessions = await db.execute(sql`
         SELECT 
-          MIN(s.id) as id,
-          COALESCE(s.title, c.title) as title,
+          s.id,
+          s.title,
           s.course_id,
+          s.student_id,
           s.scheduled_at,
           s.duration,
           s.status,
@@ -6889,49 +6890,71 @@ export class DatabaseStorage implements IStorage {
           c.title as course_name,
           c.delivery_mode,
           c.class_format,
-          COUNT(s.student_id) as student_count,
-          GROUP_CONCAT(
-            CASE 
-              WHEN u.first_name IS NOT NULL AND u.last_name IS NOT NULL 
-              THEN CONCAT(u.first_name, ' ', u.last_name)
-              ELSE 'Student'
-            END 
-            SEPARATOR ', '
-          ) as student_names,
-          GROUP_CONCAT(s.id SEPARATOR ',') as session_ids
+          u.first_name as student_first_name,
+          u.last_name as student_last_name
         FROM sessions s
         LEFT JOIN courses c ON s.course_id = c.id
         LEFT JOIN users u ON s.student_id = u.id
         WHERE s.tutor_id = ${teacherId}
           AND s.scheduled_at >= NOW() - INTERVAL '7 days'
-        GROUP BY s.course_id, s.scheduled_at, s.duration, c.delivery_mode, c.class_format
         ORDER BY s.scheduled_at ASC
       `);
 
-      // Transform to match observation selection requirements
-      return teacherSessions.rows.map((session: any) => ({
-        id: session.id,
-        sessionIds: session.session_ids ? session.session_ids.split(',').map(Number) : [session.id],
-        title: session.title || session.course_name || 'Language Class',
-        courseName: session.course_name || 'General Language Course',
-        courseId: session.course_id,
-        studentName: session.student_count > 1 
-          ? `${session.student_count} students` 
-          : session.student_names || 'Student',
-        studentNames: session.student_names || 'Student',
-        studentCount: session.student_count || 1,
-        isGroupClass: session.student_count > 1,
-        scheduledAt: session.scheduled_at,
-        duration: session.duration || 60,
-        status: session.status || 'scheduled',
-        roomName: session.delivery_mode === 'online' ? 'Online' : 'Classroom',
-        sessionUrl: session.session_url,
-        deliveryMode: session.delivery_mode || 'online',
-        classFormat: session.class_format || 'individual',
-        observationStatus: 'available', // Can be observed
-        isObservable: true,
-        lastObservation: null // TODO: Check if recently observed
-      }));
+      // Group sessions by course, time, and delivery mode to consolidate group classes
+      const groupedSessions = new Map();
+      
+      teacherSessions.rows.forEach((session: any) => {
+        const groupKey = `${session.course_id}-${session.scheduled_at}-${session.duration}-${session.delivery_mode}`;
+        
+        if (!groupedSessions.has(groupKey)) {
+          groupedSessions.set(groupKey, {
+            sessions: [],
+            students: []
+          });
+        }
+        
+        const group = groupedSessions.get(groupKey);
+        group.sessions.push(session);
+        
+        const studentName = session.student_first_name && session.student_last_name 
+          ? `${session.student_first_name} ${session.student_last_name}` 
+          : 'Student';
+        group.students.push(studentName);
+      });
+
+      // Transform grouped sessions to observation format
+      const observationClasses = [];
+      
+      for (const [groupKey, group] of groupedSessions) {
+        const firstSession = group.sessions[0];
+        const uniqueStudents = [...new Set(group.students)];
+        
+        observationClasses.push({
+          id: firstSession.id,
+          sessionIds: group.sessions.map((s: any) => s.id),
+          title: firstSession.title || firstSession.course_name || 'Language Class',
+          courseName: firstSession.course_name || 'General Language Course',
+          courseId: firstSession.course_id,
+          studentName: uniqueStudents.length > 1 
+            ? `${uniqueStudents.length} students` 
+            : uniqueStudents[0] || 'Student',
+          studentNames: uniqueStudents.join(', '),
+          studentCount: uniqueStudents.length,
+          isGroupClass: uniqueStudents.length > 1,
+          scheduledAt: firstSession.scheduled_at,
+          duration: firstSession.duration || 60,
+          status: firstSession.status || 'scheduled',
+          roomName: firstSession.delivery_mode === 'online' ? 'Online' : 'Classroom',
+          sessionUrl: firstSession.session_url,
+          deliveryMode: firstSession.delivery_mode || 'online',
+          classFormat: firstSession.class_format || 'individual',
+          observationStatus: 'available',
+          isObservable: true,
+          lastObservation: null
+        });
+      }
+
+      return observationClasses;
     } catch (error) {
       console.error('Error fetching teacher classes for observation:', error);
       return [];
