@@ -12387,6 +12387,81 @@ Meta Lingua Academy`;
     }
   });
 
+  // Approve teacher schedule
+  app.post("/api/supervision/approve-schedule", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { teacherId, approvalNotes } = req.body;
+      
+      if (!teacherId) {
+        return res.status(400).json({ message: "Teacher ID is required" });
+      }
+
+      // Get teacher info
+      const teacher = await storage.getUser(teacherId);
+      if (!teacher) {
+        return res.status(404).json({ message: "Teacher not found" });
+      }
+
+      // Get teacher's classes for context
+      const teacherClasses = await storage.getTeacherClassesForObservation(teacherId);
+      
+      // Log the schedule approval action
+      const approvalData = {
+        teacherId: teacherId,
+        supervisorId: req.user.id,
+        approvalDate: new Date(),
+        notes: approvalNotes || `Schedule approved for ${teacher.firstName} ${teacher.lastName} with ${teacherClasses.length} classes`,
+        classCount: teacherClasses.length
+      };
+
+      // Send SMS notification to teacher if they have a phone number
+      try {
+        if (teacher.phoneNumber) {
+          const { kavenegarService } = await import('./kavenegar-service');
+          
+          const supervisorName = `${req.user.firstName} ${req.user.lastName}`;
+          const smsMessage = `✅ Schedule Approved
+
+Dear ${teacher.firstName},
+
+Your teaching schedule has been approved by supervisor ${supervisorName}.
+
+📋 Approved Classes: ${teacherClasses.length}
+📅 Approval Date: ${new Date().toLocaleDateString('fa-IR')}
+📝 Status: Confirmed
+
+You can now proceed with your scheduled classes. Thank you for your professionalism.
+
+Best regards,
+Meta Lingua Academy`;
+
+          const smsResult = await kavenegarService.sendSimpleSMS(teacher.phoneNumber, smsMessage);
+          
+          if (smsResult.success) {
+            console.log(`Schedule approval SMS sent to teacher ${teacher.firstName}: ${smsResult.messageId}`);
+          } else {
+            console.error(`Failed to send schedule approval SMS to teacher ${teacher.firstName}: ${smsResult.error}`);
+          }
+        }
+      } catch (smsError) {
+        console.error('Error sending schedule approval SMS:', smsError);
+        // Don't fail the approval if SMS fails
+      }
+
+      res.status(200).json({ 
+        message: "Teacher schedule approved successfully",
+        approval: approvalData,
+        classCount: teacherClasses.length
+      });
+    } catch (error) {
+      console.error('Error approving teacher schedule:', error);
+      res.status(500).json({ 
+        message: "Failed to approve teacher schedule", 
+        error: error.message 
+      });
+    }
+  });
+
   // ==================== ADMIN BUSINESS INTELLIGENCE ENDPOINTS ====================
 
   // Call Center Performance Analytics
