@@ -2469,11 +2469,11 @@ export class DatabaseStorage implements IStorage {
             const enrollment = await db
               .select({
                 courseTitle: courses.title,
-                teacherName: sql<string>`CONCAT(teacher.firstName, ' ', teacher.lastName)`
+                teacherName: sql<string>`CONCAT(teacher.first_name, ' ', teacher.last_name)`
               })
               .from(enrollments)
               .leftJoin(courses, eq(enrollments.courseId, courses.id))
-              .leftJoin(users.as('teacher'), eq(courses.instructorId, users.id))
+              .leftJoin(sql`${users} AS teacher`, eq(courses.instructorId, sql`teacher.id`))
               .where(eq(enrollments.studentId, student.id))
               .limit(1);
 
