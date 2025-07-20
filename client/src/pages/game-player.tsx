@@ -69,25 +69,15 @@ export default function GamePlayer() {
     enabled: !!gameId
   });
 
-  // Generate sample questions when game starts (since we don't have actual question API)
-  const questions: Question[] = gameSession ? [
-    {
-      id: 1,
-      question: `Sample ${game?.skillFocus || 'vocabulary'} question for ${game?.title}`,
-      options: ["Option A", "Option B", "Option C", "Option D"],
-      correctAnswer: "Option A",
-      explanation: "This is the correct answer because...",
-      type: 'multiple_choice'
+  // Fetch game questions from API
+  const { data: questions = [], isLoading: questionsLoading } = useQuery({
+    queryKey: ['/api/games', gameId, 'questions'],
+    queryFn: async () => {
+      const response = await apiRequest(`/api/games/${gameId}/questions`);
+      return response as Question[];
     },
-    {
-      id: 2,
-      question: `Another ${game?.skillFocus || 'vocabulary'} challenge`,
-      options: ["True", "False"],
-      correctAnswer: "True",
-      explanation: "This statement is true because...",
-      type: 'true_false'
-    }
-  ] : [];
+    enabled: !!gameId && !!gameSession
+  });
 
   // Start game session
   const startGameMutation = useMutation({

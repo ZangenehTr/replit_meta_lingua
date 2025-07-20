@@ -8,7 +8,7 @@ import { useLanguage } from '@/hooks/use-language';
 import { useQuery } from '@tanstack/react-query';
 
 export function MobileGamificationWidget() {
-  const { currentLanguage, isRTL } = useLanguage();
+  const { language: currentLanguage, isRTL } = useLanguage();
 
   // Fetch real user statistics  
   const { data: userStatsData, isLoading } = useQuery({
@@ -20,9 +20,9 @@ export function MobileGamificationWidget() {
     xp: userStatsData.totalXp || 0,
     nextLevelXp: (userStatsData.level || 1) * 500, // Calculate next level XP
     streakDays: userStatsData.currentStreak || 0,
-    completedChallenges: 3, // This could be from achievements data
-    totalChallenges: 5, // This could be from achievements data
-    rank: 4 // This could be from leaderboard data
+    completedChallenges: userStatsData.completedChallenges || 0,
+    totalChallenges: userStatsData.totalChallenges || 0,
+    rank: userStatsData.leaderboardRank || 0
   } : {
     level: 1,
     xp: 0,

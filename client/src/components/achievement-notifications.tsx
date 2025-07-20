@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trophy, Star, Zap, X } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
+import { useQuery } from '@tanstack/react-query';
 
 interface Achievement {
   id: number;
@@ -16,45 +17,32 @@ interface Achievement {
 }
 
 export function AchievementNotifications() {
-  const { currentLanguage, isRTL } = useLanguage();
-  const [notifications, setNotifications] = useState<Achievement[]>([]);
+  const { language, isRTL, t } = useLanguage();
+  const [dismissedNotifications, setDismissedNotifications] = useState<number[]>([]);
+
+  // Fetch recent achievements from API
+  const { data: recentAchievements = [] } = useQuery<Achievement[]>({
+    queryKey: ['/api/gamification/recent-achievements'],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
 
   useEffect(() => {
-    // Check localStorage for dismissed notifications
-    const dismissedNotifications = JSON.parse(localStorage.getItem('dismissedAchievements') || '[]');
-    
-    // Simulate new achievements - only show if not previously dismissed
-    const newAchievements: Achievement[] = [
-      {
-        id: 1,
-        title: currentLanguage === 'fa' ? 'هفت روز پیاپی!' : '7 Day Streak!',
-        description: currentLanguage === 'fa' ? 'شما ۷ روز پیاپی درس خوانده‌اید' : 'You studied for 7 consecutive days',
-        type: 'streak',
-        xpReward: 100,
-        icon: '🔥',
-        isNew: true
-      },
-      {
-        id: 2,
-        title: currentLanguage === 'fa' ? 'استاد واژگان' : 'Vocabulary Master',
-        description: currentLanguage === 'fa' ? '۱۰۰ کلمه جدید یاد گرفتید' : 'Learned 100 new words',
-        type: 'skill',
-        xpReward: 150,
-        icon: '📚',
-        isNew: true
-      }
-    ].filter(achievement => !dismissedNotifications.includes(achievement.id));
+    // Load dismissed notifications from localStorage
+    const dismissed = JSON.parse(localStorage.getItem('dismissedAchievements') || '[]');
+    setDismissedNotifications(dismissed);
+  }, []);
 
-    setNotifications(newAchievements);
-  }, [currentLanguage]);
+  // Filter out dismissed achievements
+  const notifications = recentAchievements.filter(
+    achievement => achievement.isNew && !dismissedNotifications.includes(achievement.id)
+  );
 
   const dismissNotification = (id: number) => {
-    // Remove from current notifications
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
+    // Update dismissed notifications
+    const updatedDismissed = [...dismissedNotifications, id];
+    setDismissedNotifications(updatedDismissed);
     
     // Save to localStorage so it doesn't appear again
-    const dismissedNotifications = JSON.parse(localStorage.getItem('dismissedAchievements') || '[]');
-    const updatedDismissed = [...dismissedNotifications, id];
     localStorage.setItem('dismissedAchievements', JSON.stringify(updatedDismissed));
   };
 

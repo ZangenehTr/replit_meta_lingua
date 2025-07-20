@@ -24,17 +24,16 @@ interface User {
   createdAt: string;
 }
 
-const ROLES = [
-  { value: 'Admin', label: 'Admin', color: 'bg-red-100 text-red-800' },
-  { value: 'Teacher', label: 'Teacher', color: 'bg-blue-100 text-blue-800' },
-  { value: 'Student', label: 'Student', color: 'bg-green-100 text-green-800' },
-  { value: 'Mentor', label: 'Mentor', color: 'bg-purple-100 text-purple-800' },
-  { value: 'Supervisor', label: 'Supervisor', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'Call Center Agent', label: 'Call Center Agent', color: 'bg-orange-100 text-orange-800' },
-  { value: 'Accountant', label: 'Accountant', color: 'bg-teal-100 text-teal-800' },
-];
-
 export default function UserManagement() {
+  // Fetch roles dynamically from API
+  const { data: ROLES = [] } = useQuery({
+    queryKey: ['/api/admin/user-roles'],
+    select: (data: any[]) => data.map(role => ({
+      value: role.name,
+      label: role.name,
+      color: role.colorClass || 'bg-gray-100 text-gray-800'
+    }))
+  });
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');

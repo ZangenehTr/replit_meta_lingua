@@ -52,7 +52,7 @@ interface SupervisorStats {
 const observationSchema = z.object({
   sessionId: z.number().min(1, "Please select a session"),
   teacherId: z.number().min(1, "Please select a teacher"),
-  observationType: z.enum(['live_online', 'live_in_person', 'recorded']),
+  observationType: z.string(), // Will be validated against API data
   scheduledDate: z.string().min(1, "Scheduled date is required"),
   scheduledTime: z.string().min(1, "Scheduled time is required"),
   teachingMethodology: z.number().min(1).max(5),
