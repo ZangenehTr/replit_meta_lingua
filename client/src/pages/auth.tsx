@@ -86,7 +86,10 @@ export default function Auth() {
   const handleLogin = async (data: LoginFormData) => {
     setAuthError("");
     try {
-      await login(data);
+      await login({
+        email: data.email,
+        password: data.password
+      });
       // Login doesn't return user directly, we need to wait for the user query to refetch
       // The redirect will happen in a useEffect that watches for user changes
     } catch (error: any) {
@@ -97,7 +100,13 @@ export default function Auth() {
   const handleRegister = async (data: RegisterFormData) => {
     setAuthError("");
     try {
-      await registerUser({ ...data, role: "student" });
+      await registerUser({ 
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: "student" 
+      });
       setLocation("/dashboard");
     } catch (error: any) {
       setAuthError(error.message || "Registration failed. Please try again.");

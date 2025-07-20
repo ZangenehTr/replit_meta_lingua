@@ -591,9 +591,41 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/">
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
+        {(() => {
+          const { user, isLoading } = useAuth();
+          
+          if (isLoading) {
+            return (
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p>Loading...</p>
+                </div>
+              </div>
+            );
+          }
+          
+          if (!user) {
+            return <Redirect to="/auth" />;
+          }
+          
+          // Redirect authenticated users based on their role
+          if (user.role === 'Admin') {
+            return <Redirect to="/admin" />;
+          } else if (user.role === 'Teacher/Tutor') {
+            return <Redirect to="/teacher/dashboard" />;
+          } else if (user.role === 'Supervisor') {
+            return <Redirect to="/supervisor/dashboard" />;
+          } else if (user.role === 'Mentor') {
+            return <Redirect to="/mentor/dashboard" />;
+          } else if (user.role === 'Accountant') {
+            return <Redirect to="/accountant" />;
+          } else if (user.role === 'Call Center Agent') {
+            return <Redirect to="/callcenter" />;
+          } else {
+            return <Redirect to="/dashboard" />;
+          }
+        })()}
       </Route>
       <Route component={NotFound} />
     </Switch>
