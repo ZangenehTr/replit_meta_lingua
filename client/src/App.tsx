@@ -12,6 +12,7 @@ import { RTLLayout } from "@/components/rtl-layout";
 
 import NotFound from "@/pages/not-found";
 import Auth from "@/pages/auth";
+import SimpleAuth from "@/pages/simple-auth";
 import Dashboard from "@/pages/dashboard";
 import DemoDashboard from "@/pages/demo-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -139,6 +140,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={Auth} />
+      <Route path="/simple-auth" component={SimpleAuth} />
       <Route path="/demo" component={DemoDashboard} />
       <Route path="/manager">
         <ProtectedRoute>
@@ -606,7 +608,7 @@ function Router() {
           }
           
           if (!user) {
-            return <Redirect to="/auth" />;
+            return <Redirect to="/simple-auth" />;
           }
           
           // Redirect authenticated users based on their role
