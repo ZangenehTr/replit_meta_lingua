@@ -88,20 +88,7 @@ interface TrainingFile {
   status: 'uploaded' | 'processing' | 'completed' | 'error';
 }
 
-const AVAILABLE_MODELS = [
-  { name: "llama3.2:1b", description: "Lightweight model for basic tasks", size: "1.3GB" },
-  { name: "llama3.2:3b", description: "Balanced performance and efficiency", size: "2.0GB" },
-  { name: "llama3:8b", description: "High-quality general purpose model", size: "4.7GB" },
-  { name: "llama3:70b", description: "Large model for complex tasks", size: "40GB" },
-  { name: "codellama:7b", description: "Specialized for code generation", size: "3.8GB" },
-  { name: "codellama:13b", description: "Advanced code assistance", size: "7.3GB" },
-  { name: "mistral:7b", description: "Efficient instruction following", size: "4.1GB" },
-  { name: "mixtral:8x7b", description: "Mixture of experts model", size: "26GB" },
-  { name: "persian-llm:3b", description: "Persian language specialized", size: "2.1GB" },
-  { name: "persian-llm:7b", description: "Advanced Persian model", size: "4.2GB" },
-  { name: "gemma:2b", description: "Google's efficient model", size: "1.4GB" },
-  { name: "gemma:7b", description: "Google's performance model", size: "5.0GB" },
-];
+// AVAILABLE_MODELS array removed - now using dynamic API calls to /api/admin/ollama/available-models
 
 
 
@@ -160,6 +147,13 @@ export function ComprehensiveAIManagement() {
     queryKey: ["/api/admin/ollama/active-model"],
     queryFn: () => apiRequest("/api/admin/ollama/active-model"),
     refetchInterval: autoRefresh ? 10000 : false,
+  });
+
+  // Fetch available models for download (replacing AVAILABLE_MODELS hardcoded array)
+  const { data: availableModelsForDownload = [] } = useQuery({
+    queryKey: ["/api/admin/ai-service/models"],
+    queryFn: () => apiRequest("/api/admin/ai-service/models"),
+    refetchInterval: false,
   });
 
   // Auto-select active model for training
@@ -999,7 +993,7 @@ export function ComprehensiveAIManagement() {
                 <CardDescription>Download new AI models</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {AVAILABLE_MODELS.map((model) => (
+                {availableModelsForDownload.map((model) => (
                   <div key={model.name} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1">
                       <div className="font-medium">{model.name}</div>

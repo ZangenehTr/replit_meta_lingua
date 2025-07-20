@@ -134,7 +134,7 @@ export class IsabelVoipService extends EventEmitter {
       console.log('Isabel VoIP server not connected - using development simulation for test call');
     }
 
-    const callId = `isabel_${Date.now()}_${Date.now().toString(36)}`;
+    const callId = `isabel_${Date.now()}_${performance.now().toString(36).replace('.', '')}`;
     
     const call: VoipCall = {
       callId,
