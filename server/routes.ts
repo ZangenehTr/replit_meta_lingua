@@ -1281,7 +1281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('User roles:', users.map(u => ({ email: u.email, role: u.role })));
       
       const students = [];
-      const studentUsers = users.filter(u => u.role === 'student');
+      const studentUsers = filterStudents(users);
       
       for (const student of studentUsers) {
         try {
@@ -1323,7 +1323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             guardianPhone: student.guardianPhone || profile?.guardianPhone || '',
             notes: student.notes || profile?.notes || '',
             progress: userCourses.length > 0 ? Math.round(userCourses.reduce((sum, c) => sum + (c.progress || 0), 0) / userCourses.length) : 0,
-            attendance: userCourses.length > 0 ? Math.min(100, Math.max(0, Math.round(Math.random() * 25 + 75))) : 0,
+            attendance: calculateAttendanceRate(userCourses.length, userCourses.length),
             courses: userCourses.map(c => c.title),
             enrollmentDate: student.createdAt,
             lastActivity: '2 days ago',
@@ -8699,7 +8699,7 @@ Return JSON format:
       const mentorSessions = await storage.getUserSessions(mentorId);
       
       // Filter students for this mentor (students who have sessions with this mentor)
-      const students = allUsers.filter(u => u.role === 'Student');
+      const students = filterStudents(allUsers);
       
       // Calculate statistics with Iranian data standards
       const stats = {
@@ -8734,8 +8734,8 @@ Return JSON format:
     try {
       // Get ALL real data from database - NO MOCK DATA
       const allUsers = await storage.getAllUsers();
-      const students = allUsers.filter(u => u.role === 'Student');
-      const teachers = allUsers.filter(u => u.role === 'Teacher/Tutor' || u.role === 'instructor');
+      const students = filterStudents(allUsers);
+      const teachers = filterTeachers(allUsers);
       const observations = await storage.getSupervisionObservations();
       const recentObservations = observations.slice(0, 5);
       
@@ -10462,7 +10462,7 @@ Return JSON format:
       
       // Get teachers with availability
       const teachersWithStats = allTeachers
-        .filter(u => u.role === 'Teacher/Tutor')
+        .filter(u => filterTeachers([u]).length > 0)
         .map(teacher => {
           const currentStudents = studentCountByTeacher[teacher.id]?.size || 0;
           const maxStudents = teacher.maxStudents || 20;
@@ -10508,7 +10508,7 @@ Return JSON format:
       
       // Return only students without teachers
       const studentsForTeacher = allStudents
-        .filter(u => u.role === 'Student' && !studentsWithTeachers.has(u.id))
+        .filter(u => filterStudents([u]).length > 0 && !studentsWithTeachers.has(u.id))
         .map(student => ({
           id: student.id,
           firstName: student.firstName,

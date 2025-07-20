@@ -2532,20 +2532,20 @@ export class DatabaseStorage implements IStorage {
 
   async getTeachersNeedingAttention(): Promise<any[]> {
     try {
-      // Query real teachers from the database
-      const realTeachers = await db
+      // Query real teachers from the database using consolidated filtering
+      const allUsers = await db
         .select({
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
           email: users.email,
-          phoneNumber: users.phoneNumber
+          phoneNumber: users.phoneNumber,
+          role: users.role,
+          isActive: users.isActive
         })
-        .from(users)
-        .where(and(
-          eq(users.role, 'Teacher/Tutor'),
-          eq(users.isActive, true)
-        ));
+        .from(users);
+      
+      const realTeachers = filterActiveTeachers(allUsers);
 
       const teachersNeedingAttention = [];
       
@@ -2569,7 +2569,7 @@ export class DatabaseStorage implements IStorage {
             })
             .from(sessions)
             .where(and(
-              eq(sessions.tutor_id, teacher.id),
+              eq(sessions.tutorId, teacher.id),
               eq(sessions.status, 'scheduled')
             ));
 
@@ -2608,18 +2608,19 @@ export class DatabaseStorage implements IStorage {
 
   async getStudentsNeedingAttention(): Promise<any[]> {
     try {
-      // Query real students from the database who actually need attention
-      const realStudents = await db
+      // Query real students from the database who actually need attention using consolidated filtering
+      const allUsers = await db
         .select({
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
           email: users.email,
-          phoneNumber: users.phoneNumber
+          phoneNumber: users.phoneNumber,
+          role: users.role
         })
-        .from(users)
-        .where(eq(users.role, 'Student'))
-        .limit(10); // Reasonable limit for dashboard display
+        .from(users);
+      
+      const realStudents = filterStudents(allUsers).slice(0, 10); // Reasonable limit for dashboard display
 
       // Get real attendance/homework issues from the database
       const studentsWithIssues = [];
@@ -2633,7 +2634,7 @@ export class DatabaseStorage implements IStorage {
               submitted: sql<number>`SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END)`
             })
             .from(homework)
-            .where(eq(homework.student_id, student.id));
+            .where(eq(homework.studentId, student.id));
 
           // Check real session attendance (using status as proxy for attendance)
           const sessionStats = await db
@@ -2642,7 +2643,7 @@ export class DatabaseStorage implements IStorage {
               attended: sql<number>`SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END)`
             })
             .from(sessions)
-            .where(eq(sessions.student_id, student.id));
+            .where(eq(sessions.userId, student.id));
 
           const homeworkTotal = homeworkStats[0]?.total || 0;
           const homeworkSubmitted = homeworkStats[0]?.submitted || 0;
