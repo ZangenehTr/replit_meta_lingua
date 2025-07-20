@@ -70,9 +70,9 @@ export default function FinancialManagement() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("this_month");
 
-  // Fetch financial statistics from API
+  // Fetch financial statistics from API (replacing hardcoded financial data)
   const { data: stats } = useQuery<FinancialStats>({
-    queryKey: ['/api/admin/financial-stats'],
+    queryKey: ['/api/admin/financial/overview-stats'],
     staleTime: 5 * 60 * 1000,
   });
 

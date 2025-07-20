@@ -51,17 +51,17 @@ export function AdminDashboard() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
-  // Fetch critical business metrics
+  // Fetch critical business metrics (replacing hardcoded dashboard data)
   const { data: callCenterStats } = useQuery({
-    queryKey: ['/api/admin/call-center-performance']
+    queryKey: ['/api/callcenter/performance-stats']
   });
 
   const { data: systemMetrics } = useQuery({
-    queryKey: ['/api/system/metrics']
+    queryKey: ['/api/admin/system/configuration']
   });
 
   const { data: overduePayments } = useQuery({
-    queryKey: ['/api/admin/overdue-payments']
+    queryKey: ['/api/admin/financial/overview-stats']
   });
 
   const { data: revenueData } = useQuery({

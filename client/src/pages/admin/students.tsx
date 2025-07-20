@@ -251,6 +251,7 @@ export function AdminStudents() {
         guardianPhone: "",
         profileImage: null,
         notes: "",
+        courses: [], // Add required courses field
         selectedCourses: [],
         totalFee: 0
       });

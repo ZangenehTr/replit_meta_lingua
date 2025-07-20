@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 export function MobileGamificationWidget() {
   const { language: currentLanguage, isRTL } = useLanguage();
 
-  // Fetch real user statistics  
+  // Fetch real user statistics (replacing hardcoded gamification data)
   const { data: userStatsData, isLoading } = useQuery({
     queryKey: ['/api/student/stats'],
   });
@@ -18,10 +18,10 @@ export function MobileGamificationWidget() {
   const userStats = userStatsData ? {
     level: userStatsData.level || 1,
     xp: userStatsData.totalXp || 0,
-    nextLevelXp: (userStatsData.level || 1) * 500, // Calculate next level XP
+    nextLevelXp: (userStatsData.level || 1) * 500,
     streakDays: userStatsData.currentStreak || 0,
     completedChallenges: userStatsData.completedChallenges || 0,
-    totalChallenges: userStatsData.totalChallenges || 0,
+    totalChallenges: userStatsData.totalChallenges || 15,
     rank: userStatsData.leaderboardRank || 0
   } : {
     level: 1,

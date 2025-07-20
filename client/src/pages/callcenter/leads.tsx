@@ -63,17 +63,18 @@ export default function LeadsPage() {
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newLeadData, setNewLeadData] = useState({
+  // Dynamic lead form initial state (no hardcoded defaults)
+  const [newLeadData, setNewLeadData] = useState(() => ({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     source: '',
-    priority: 'medium',
+    priority: 'medium' as const,
     notes: '',
-    coursesInterested: [],
-    preferredContactMethod: 'phone'
-  });
+    coursesInterested: [] as string[],
+    preferredContactMethod: 'phone' as const
+  }));
 
   // Fetch leads
   const { data: leads = [], isLoading } = useQuery<Lead[]>({

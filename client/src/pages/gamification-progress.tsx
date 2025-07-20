@@ -70,94 +70,15 @@ export default function GamificationProgress() {
     perfectQuizzes: 0
   };
 
-  const achievements: Achievement[] = [
-    {
-      id: 1,
-      name: currentLanguage === 'fa' ? 'شروع سفر' : 'Journey Begins',
-      description: currentLanguage === 'fa' ? 'اولین درس را تمام کنید' : 'Complete your first lesson',
-      icon: 'Star',
-      type: 'milestone',
-      requirement: 1,
-      points: 50,
-      rarity: 'common',
-      isUnlocked: true,
-      unlockedAt: '2024-01-15',
-      progress: 100
-    },
-    {
-      id: 2,
-      name: currentLanguage === 'fa' ? 'آتش پیاپی' : 'Fire Streak',
-      description: currentLanguage === 'fa' ? '۷ روز متوالی درس بخوانید' : 'Study for 7 consecutive days',
-      icon: 'Flame',
-      type: 'streak',
-      requirement: 7,
-      points: 100,
-      rarity: 'rare',
-      isUnlocked: true,
-      unlockedAt: '2024-01-22',
-      progress: 100
-    },
-    {
-      id: 3,
-      name: currentLanguage === 'fa' ? 'استاد کوئیز' : 'Quiz Master',
-      description: currentLanguage === 'fa' ? '۱۰ کوئیز با نمره کامل' : 'Get perfect score on 10 quizzes',
-      icon: 'Trophy',
-      type: 'skill',
-      requirement: 10,
-      points: 200,
-      rarity: 'epic',
-      isUnlocked: false,
-      progress: 80
-    },
-    {
-      id: 4,
-      name: currentLanguage === 'fa' ? 'شاه زبان' : 'Language King',
-      description: currentLanguage === 'fa' ? '۵ دوره کامل کنید' : 'Complete 5 full courses',
-      icon: 'Crown',
-      type: 'milestone',
-      requirement: 5,
-      points: 500,
-      rarity: 'legendary',
-      isUnlocked: false,
-      progress: 60
-    },
-    {
-      id: 5,
-      name: currentLanguage === 'fa' ? 'دانش‌آموز سخت‌کوش' : 'Dedicated Scholar',
-      description: currentLanguage === 'fa' ? '۱۰۰ ساعت مطالعه' : 'Study for 100 hours total',
-      icon: 'BookOpen',
-      type: 'progress',
-      requirement: 6000, // minutes
-      points: 300,
-      rarity: 'epic',
-      isUnlocked: false,
-      progress: 21 // 1260/6000 * 100
-    }
-  ];
+  // Fetch achievements data from API (replacing hardcoded achievements array)
+  const { data: achievements = [], isLoading: achievementsLoading } = useQuery<Achievement[]>({
+    queryKey: ["/api/gamification/recent-achievements"],
+  });
 
-  const dailyGoals: DailyGoal[] = [
-    {
-      id: 1,
-      goalType: 'lessons',
-      targetValue: 3,
-      currentValue: 2,
-      isCompleted: false
-    },
-    {
-      id: 2,
-      goalType: 'minutes',
-      targetValue: 30,
-      currentValue: 25,
-      isCompleted: false
-    },
-    {
-      id: 3,
-      goalType: 'xp',
-      targetValue: 200,
-      currentValue: 150,
-      isCompleted: false
-    }
-  ];
+  // Fetch daily goals from API (replacing hardcoded dailyGoals array)
+  const { data: dailyGoals = [], isLoading: goalsLoading } = useQuery<DailyGoal[]>({
+    queryKey: ["/api/gamification/daily-goals"],
+  });
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {

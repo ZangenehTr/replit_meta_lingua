@@ -140,6 +140,12 @@ export default function TeacherPaymentsPage() {
     queryKey: ['/api/admin/teacher-payments', selectedPeriod],
   });
 
+  // Fetch payslip summary statistics (replacing hardcoded header values)
+  const { data: payslipStats } = useQuery({
+    queryKey: ["/api/admin/teacher-payments", "stats"],
+    queryFn: () => apiRequest("/api/admin/teacher-payments/stats"),
+  });
+
 
 
   // Fetch teachers data with their individual rates
@@ -281,11 +287,11 @@ export default function TeacherPaymentsPage() {
               </div>
               <div className="flex items-center space-x-4">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-green-700">1,250,000</div>
+                  <div className="text-2xl font-bold text-green-700">{payslipStats?.totalPendingAmount?.toLocaleString() || '0'}</div>
                   <div className="text-sm text-green-600 font-medium">IRR Pending</div>
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-700">156</div>
+                  <div className="text-2xl font-bold text-blue-700">{payslipStats?.totalSessions || 0}</div>
                   <div className="text-sm text-blue-600 font-medium">Sessions</div>
                 </div>
               </div>
@@ -1050,9 +1056,7 @@ export default function TeacherPaymentsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+      </Tabs>
     </AppLayout>
   );
 }
