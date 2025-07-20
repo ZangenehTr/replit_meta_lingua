@@ -7245,13 +7245,23 @@ export class DatabaseStorage implements IStorage {
 
   async getScheduledObservations(supervisorId?: number): Promise<ScheduledObservation[]> {
     try {
-      const query = db.select().from(scheduledObservations);
+      // CRITICAL: Sync with getPendingObservations - show only future scheduled observations
+      const baseQuery = db
+        .select()
+        .from(scheduledObservations)
+        .where(
+          and(
+            or(
+              eq(scheduledObservations.status, 'scheduled'),
+              eq(scheduledObservations.status, 'in_progress')
+            ),
+            gte(scheduledObservations.scheduledDate, new Date()),
+            ...(supervisorId ? [eq(scheduledObservations.supervisorId, supervisorId)] : [])
+          )
+        )
+        .orderBy(scheduledObservations.scheduledDate);
       
-      if (supervisorId) {
-        return await query.where(eq(scheduledObservations.supervisorId, supervisorId));
-      }
-      
-      return await query;
+      return await baseQuery;
     } catch (error) {
       console.error('Error fetching scheduled observations:', error);
       return [];
