@@ -119,9 +119,13 @@ export default function SupervisorDashboard() {
     },
   });
 
-  // Fetch pending observations for to-do list
+  // Fetch pending observations for to-do list with real-time updates
   const { data: pendingObservations = [] } = useQuery({
-    queryKey: ['/api/supervision/pending-observations']
+    queryKey: ['/api/supervision/pending-observations'],
+    refetchInterval: 10000, // Refetch every 10 seconds for real-time updates
+    staleTime: 5000, // Consider data stale after 5 seconds
+    refetchOnWindowFocus: true, // Refetch when window gets focus
+    refetchOnMount: true // Always refetch on component mount
   });
 
   // Enhanced supervisor dashboard queries
@@ -259,9 +263,16 @@ export default function SupervisorDashboard() {
       }
     },
     onSuccess: () => {
+      // Invalidate all observation-related queries for real-time updates
       queryClient.invalidateQueries({ queryKey: ['/api/supervision/observations'] });
       queryClient.invalidateQueries({ queryKey: ['/api/supervision/recent-observations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/supervision/pending-observations'] }); // Fixed: Add pending observations
       queryClient.invalidateQueries({ queryKey: ['/api/supervisor/dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/supervisor/upcoming-sessions-for-observation'] });
+      
+      // Immediate refetch for pending observations to ensure real-time update
+      queryClient.refetchQueries({ queryKey: ['/api/supervision/pending-observations'] });
+      
       setObservationDialogOpen(false);
       observationForm.reset();
       toast({ title: "Success", description: "Observation created successfully" });
