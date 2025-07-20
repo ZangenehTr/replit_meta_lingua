@@ -1,8 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { translations, type Language } from '@/lib/i18n';
-import enCommon from '@/i18n/locales/en/common.json';
-import faCommon from '@/i18n/locales/fa/common.json';
-import arCommon from '@/i18n/locales/ar/common.json';
+// DEPRECATED: This file is being replaced by useLanguage.tsx
+// Use import { useLanguage } from "@/hooks/useLanguage"; instead
 
 export interface LanguageSettings {
   language: string;

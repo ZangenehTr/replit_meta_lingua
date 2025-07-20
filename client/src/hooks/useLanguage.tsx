@@ -19,18 +19,17 @@ const RTL_LANGUAGES = ['fa', 'ar'];
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { i18n, t } = useTranslation();
   
-  // Force English if no explicit language is set, and clear any cached Persian language
+  // Get current language from i18n
   const storedLanguage = localStorage.getItem('i18nextLng');
-  const language = (storedLanguage as Language) || 'en';
+  const language = (i18n.language as Language) || 'en';
   
-  // Initialize to English if not explicitly set to another language
+  // Initialize language detection with fallback
   React.useEffect(() => {
-    if (!storedLanguage || storedLanguage === 'fa') {
-      console.log('Initializing language to English (clearing cached Persian)');
+    if (!i18n.language || i18n.language === 'dev') {
       i18n.changeLanguage('en');
       localStorage.setItem('i18nextLng', 'en');
     }
-  }, [i18n, storedLanguage]);
+  }, [i18n]);
   
   const direction: Direction = RTL_LANGUAGES.includes(language) ? 'rtl' : 'ltr';
   const isRTL = direction === 'rtl';
@@ -39,6 +38,14 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log(`Setting language to: ${lang}`);
     i18n.changeLanguage(lang);
     localStorage.setItem('i18nextLng', lang);
+    
+    // Update document attributes immediately
+    document.documentElement.setAttribute('dir', RTL_LANGUAGES.includes(lang) ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('lang', lang);
+    
+    // Update body classes
+    document.body.classList.remove('rtl', 'ltr');
+    document.body.classList.add(RTL_LANGUAGES.includes(lang) ? 'rtl' : 'ltr');
   };
 
   useEffect(() => {
@@ -57,6 +64,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       document.body.classList.add('ltr');
       console.log(`Applied LTR for language: ${language}`);
     }
+    
+    // Apply language-specific CSS class
+    document.body.classList.remove('lang-en', 'lang-fa', 'lang-ar');
+    document.body.classList.add(`lang-${language}`);
   }, [language, direction, isRTL]);
 
   return (

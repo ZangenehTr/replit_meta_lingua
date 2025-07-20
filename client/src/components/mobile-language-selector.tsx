@@ -6,11 +6,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useLanguage } from "@/hooks/use-language";
-import { getTextDirection } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export function MobileLanguageSelector() {
-  const { currentLanguage, setLanguage } = useLanguage();
+  const { language, setLanguage, isRTL } = useLanguage();
 
   const languages = [
     { code: 'en' as const, name: 'English', flag: '🇺🇸' },
@@ -18,7 +17,7 @@ export function MobileLanguageSelector() {
     { code: 'ar' as const, name: 'العربية', flag: '🇸🇦' },
   ];
 
-  const currentLang = languages.find(lang => lang.code === currentLanguage);
+  const currentLang = languages.find(lang => lang.code === language);
 
   return (
     <DropdownMenu>
@@ -32,12 +31,12 @@ export function MobileLanguageSelector() {
           <DropdownMenuItem
             key={lang.code}
             onClick={() => setLanguage(lang.code)}
-            className={`flex items-center gap-2 ${getTextDirection(lang.code) === 'rtl' ? 'flex-row-reverse' : ''} ${
-              currentLanguage === lang.code ? 'bg-muted' : ''
+            className={`flex items-center gap-2 ${(lang.code === 'fa' || lang.code === 'ar') ? 'flex-row-reverse' : ''} ${
+              language === lang.code ? 'bg-muted' : ''
             }`}
           >
             <span className="text-lg">{lang.flag}</span>
-            <span className={`font-medium ${getTextDirection(lang.code) === 'rtl' ? 'font-arabic' : ''}`}>
+            <span className={`font-medium ${(lang.code === 'fa' || lang.code === 'ar') ? 'font-arabic' : ''}`}>
               {lang.name}
             </span>
           </DropdownMenuItem>
