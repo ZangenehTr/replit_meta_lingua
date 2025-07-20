@@ -327,6 +327,100 @@ export function AdminCourses() {
     setEditingCourse(null);
   };
 
+  // Course module and lesson management handlers
+  const handleAddModule = async () => {
+    // For demo purposes, use the first course or a default course ID
+    const courseId = selectedCourse?.id || 1;
+    
+    try {
+      const moduleData = {
+        name: "New Module",
+        description: "Module description",
+        duration: "1 week",
+        order: 1
+      };
+      
+      const response = await fetch(`/api/admin/courses/${courseId}/modules`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(moduleData)
+      });
+      
+      if (response.ok) {
+        console.log('Module added successfully');
+        // Refresh course data or update state
+      }
+    } catch (error) {
+      console.error('Error adding module:', error);
+    }
+  };
+
+  const handleAddLesson = async (moduleId: number) => {
+    // For demo purposes, use the first course or a default course ID
+    const courseId = selectedCourse?.id || 1;
+    
+    try {
+      const lessonData = {
+        teacherId: 1, // Get from current user or selection
+        title: "New Lesson",
+        description: "Lesson description",
+        videoUrl: "",
+        duration: 30,
+        orderIndex: 1,
+        language: "Persian",
+        level: "Beginner",
+        skillFocus: "Grammar",
+        isPublished: false
+      };
+      
+      const response = await fetch(`/api/admin/courses/${courseId}/modules/${moduleId}/lessons`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(lessonData)
+      });
+      
+      if (response.ok) {
+        console.log('Lesson added successfully');
+        // Refresh course data or update state
+      }
+    } catch (error) {
+      console.error('Error adding lesson:', error);
+    }
+  };
+
+  const handleSaveAsDraft = () => {
+    console.log('Saving course as draft...');
+    // Keep course unpublished
+  };
+
+  const handlePublishCourse = async () => {
+    // For demo purposes, use the first course or a default course ID
+    const courseId = selectedCourse?.id || 1;
+    
+    try {
+      const response = await fetch(`/api/admin/courses/${courseId}/publish`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+      
+      if (response.ok) {
+        console.log('Course published successfully');
+        // Refresh course data or update state
+      }
+    } catch (error) {
+      console.error('Error publishing course:', error);
+    }
+  };
+
   return (
     <div className={`p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
@@ -554,7 +648,7 @@ export function AdminCourses() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <Label className="text-lg font-semibold">Course Modules & Lessons</Label>
-                      <Button size="sm">
+                      <Button size="sm" onClick={() => handleAddModule()}>
                         <Plus className="h-4 w-4 mr-2" />
                         Add Module
                       </Button>
@@ -590,7 +684,7 @@ export function AdminCourses() {
                       <div className="border-t pt-4">
                         <div className="flex justify-between items-center mb-3">
                           <Label className="font-medium">Lessons in this Module</Label>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => handleAddLesson(1)}>
                             <Plus className="h-4 w-4 mr-2" />
                             Add Lesson
                           </Button>
@@ -1081,8 +1175,8 @@ export function AdminCourses() {
                 </Tabs>
               </div>
               <div className="flex justify-end gap-3 mt-4 pt-4 border-t">
-                <Button variant="outline">Save as Draft</Button>
-                <Button>Publish Course</Button>
+                <Button variant="outline" onClick={() => handleSaveAsDraft()}>Save as Draft</Button>
+                <Button onClick={() => handlePublishCourse()}>Publish Course</Button>
               </div>
             </DialogContent>
           </Dialog>
