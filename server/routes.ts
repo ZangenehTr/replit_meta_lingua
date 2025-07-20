@@ -2022,6 +2022,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { teacherId, classId } = req.body;
       
+      // CRITICAL: Check if teacher is active before assignment
+      const teacher = await storage.getUser(teacherId);
+      if (!teacher || !teacher.isActive) {
+        return res.status(400).json({ 
+          message: "Cannot assign inactive teacher to class. Please activate teacher first.",
+          teacherStatus: teacher?.isActive ? 'active' : 'inactive'
+        });
+      }
+      
       // Check if teacher is available for this class schedule
       const conflict = await storage.checkTeacherScheduleConflict(teacherId, classId);
       if (conflict) {

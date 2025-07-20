@@ -6430,7 +6430,14 @@ export class DatabaseStorage implements IStorage {
   // Teacher-specific methods implementation (teachers only set availability, admin assigns them to classes)
   async getTeacherClasses(teacherId: number): Promise<any[]> {
     try {
-      // Use raw SQL to avoid Drizzle ORM issues
+      // CRITICAL: First check if teacher is active before showing any classes
+      const teacher = await this.getUser(teacherId);
+      if (!teacher || !teacher.isActive) {
+        console.log(`Teacher ${teacherId} is inactive or not found. Returning empty classes list.`);
+        return []; // Inactive teachers should have NO active classes
+      }
+
+      // Use raw SQL to avoid Drizzle ORM issues - only for ACTIVE teachers
       const teacherSessions = await db.execute(sql`
         SELECT * FROM sessions 
         WHERE tutor_id = ${teacherId} 
@@ -7404,8 +7411,15 @@ export class DatabaseStorage implements IStorage {
 
   async getTeacherClassesForObservation(teacherId: number): Promise<any[]> {
     try {
+      // CRITICAL: First check if teacher is active before showing any classes for observation
+      const teacher = await this.getUser(teacherId);
+      if (!teacher || !teacher.isActive) {
+        console.log(`Teacher ${teacherId} is inactive or not found. No classes available for observation.`);
+        return []; // Inactive teachers should have NO classes available for observation
+      }
+
       // Get all teacher sessions first, then group them programmatically 
-      // to avoid PostgreSQL syntax issues
+      // to avoid PostgreSQL syntax issues - only for ACTIVE teachers
       const teacherSessions = await db.execute(sql`
         SELECT 
           s.id,
