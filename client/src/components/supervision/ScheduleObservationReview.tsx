@@ -103,25 +103,31 @@ export default function ScheduleObservationReview() {
     },
   });
 
-  // Fetch scheduled observations with auto-refresh
+  // Fetch scheduled observations with real-time updates (synchronized with pending observations)
   const { data: scheduledObservations = [], isLoading: scheduledLoading } = useQuery<ScheduledObservation[]>({
     queryKey: ['/api/supervision/scheduled-observations'],
-    refetchInterval: 30000, // Auto-refresh every 30 seconds
-    staleTime: 10000, // Consider data stale after 10 seconds
+    refetchInterval: 10000, // Refetch every 10 seconds for real-time updates (same as pending observations)
+    staleTime: 5000, // Consider data stale after 5 seconds (same as pending observations)
+    refetchOnWindowFocus: true, // Refetch when window gets focus
+    refetchOnMount: true // Always refetch on component mount
   });
 
-  // Fetch pending observations for to-do list
+  // Fetch pending observations for to-do list with real-time updates
   const { data: pendingObservations = [], isLoading: pendingLoading } = useQuery<ScheduledObservation[]>({
     queryKey: ['/api/supervision/pending-observations'],
-    refetchInterval: 30000,
-    staleTime: 10000,
+    refetchInterval: 10000, // Refetch every 10 seconds for real-time updates (synchronized)
+    staleTime: 5000, // Consider data stale after 5 seconds
+    refetchOnWindowFocus: true, // Refetch when window gets focus
+    refetchOnMount: true // Always refetch on component mount
   });
 
-  // Fetch overdue observations
+  // Fetch overdue observations with real-time updates
   const { data: overdueObservations = [], isLoading: overdueLoading } = useQuery<ScheduledObservation[]>({
     queryKey: ['/api/supervision/overdue-observations'],
-    refetchInterval: 30000,
-    staleTime: 10000,
+    refetchInterval: 10000, // Refetch every 10 seconds for real-time updates (synchronized)
+    staleTime: 5000, // Consider data stale after 5 seconds
+    refetchOnWindowFocus: true, // Refetch when window gets focus
+    refetchOnMount: true // Always refetch on component mount
   });
 
   // Form for scheduling observation
