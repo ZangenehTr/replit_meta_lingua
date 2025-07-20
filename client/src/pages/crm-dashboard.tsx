@@ -55,20 +55,24 @@ export default function CRMDashboard() {
     queryKey: ["/api/sessions/live"]
   });
 
-  // Calculate real statistics from actual data
+  // Calculate real statistics from actual data - no fallback values
+  const students = users.filter(u => u.role === "student" || u.role === "Student");
+  const teachers = users.filter(u => u.role === "teacher" || u.role === "Teacher/Tutor");
+  const activeStudents = students.filter(u => u.isActive);
+  
   const stats = {
-    totalStudents: users.filter(u => u.role === "student").length || 145,
-    activeStudents: users.filter(u => u.role === "student").length || 132,
-    totalTeachers: users.filter(u => u.role === "teacher").length || 28,
-    activeCourses: courses.length || 15,
-    liveSessions: sessions.length || 3,
-    monthlyRevenue: 45680000,
-    attendanceRate: 94.2,
-    completionRate: 87.5
+    totalStudents: students.length,
+    activeStudents: activeStudents.length,
+    totalTeachers: teachers.length,
+    activeCourses: courses.length,
+    liveSessions: sessions.length,
+    monthlyRevenue: 0, // Real revenue calculation needed from API
+    attendanceRate: 0, // Real calculation needed
+    completionRate: 0 // Real calculation needed
   };
 
-  const recentStudents = users.filter(u => u.role === "student").slice(0, 5);
-  const recentTeachers = users.filter(u => u.role === "teacher").slice(0, 3);
+  const recentStudents = students.slice(0, 5);
+  const recentTeachers = teachers.slice(0, 3);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان';

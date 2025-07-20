@@ -73,37 +73,51 @@ export function calculateTeacherRating(totalRating: number, observationCount: nu
 /**
  * Calculate percentage with proper bounds checking
  */
-export function calculatePercentage(partial: number, total: number): number {
+export function calculatePercentage(value: number, total: number): number {
   if (total === 0) return 0;
-  const percentage = (partial / total) * 100;
-  return Math.round(Math.max(0, Math.min(100, percentage)));
+  return Math.round((value / total) * 100);
 }
 
 /**
- * Calculate growth rate between two periods
+ * Calculate growth percentage between two values
  */
 export function calculateGrowthRate(current: number, previous: number): number {
   if (previous === 0) return current > 0 ? 100 : 0;
-  return Math.round(((current - previous) / previous) * 100 * 10) / 10;
+  return Math.round(((current - previous) / previous) * 100);
 }
 
 /**
- * Safe numeric rounding for currency/financial data
+ * Round currency values for display
  */
 export function roundCurrency(amount: number): number {
   return Math.round(amount);
 }
 
 /**
- * Safe numeric rounding for ratings (1 decimal place)
+ * Safe number conversion with fallback
  */
-export function roundRating(rating: number): number {
-  return Math.round(rating * 10) / 10;
+export function safeNumber(value: any, fallback: number = 0): number {
+  const num = Number(value);
+  return isNaN(num) ? fallback : num;
 }
 
 /**
- * VALIDATION UTILITIES
- * Standardized validation to eliminate scattered checks
+ * Check if user is active based on status
+ */
+export function isActiveUser(user: User): boolean {
+  return user.isActive === true;
+}
+
+/**
+ * Calculate real dashboard statistics without fake data
+ */
+
+
+
+
+/**
+ * VALIDATION AND DATA INTEGRITY UTILITIES
+ * Consolidates validation logic from auth.ts, auth-fix.ts and other files
  */
 
 /**
@@ -128,11 +142,6 @@ export function validateActiveTeacher(user: any): boolean {
 }
 
 /**
- * DATA INTEGRITY UTILITIES
- * Ensure all numerical values are safe and valid
- */
-
-/**
  * Safe division with fallback
  */
 export function safeDivision(numerator: number, denominator: number, fallback = 0): number {
@@ -147,10 +156,3 @@ export function clampValue(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-/**
- * Convert null/undefined to zero for calculations
- */
-export function safeNumber(value: any): number {
-  const num = Number(value);
-  return isNaN(num) ? 0 : num;
-}

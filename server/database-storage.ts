@@ -2358,8 +2358,8 @@ export class DatabaseStorage implements IStorage {
   async getTeachersWithFilters(filters: any): Promise<any> {
     const allUsers = await this.getAllUsers();
     return {
-      teachers: allUsers.filter(u => u.role === 'Teacher/Tutor').slice(0, 10),
-      total: allUsers.filter(u => u.role === 'Teacher/Tutor').length,
+      teachers: filterTeachers(allUsers).slice(0, 10),
+      total: filterTeachers(allUsers).length,
       page: 1,
       limit: 10
     };
@@ -2697,7 +2697,7 @@ export class DatabaseStorage implements IStorage {
   async getUpcomingSessionsForObservation(): Promise<any[]> {
     try {
       const allUsers = await this.getAllUsers();
-      const teachers = allUsers.filter(u => u.role === 'Teacher/Tutor' && u.isActive);
+      const teachers = filterActiveTeachers(allUsers);
       
       // Generate upcoming sessions for next 7 days
       const upcomingSessions = [];
@@ -2707,24 +2707,26 @@ export class DatabaseStorage implements IStorage {
         const date = new Date(today);
         date.setDate(date.getDate() + i);
         
-        // Generate 2-3 sessions per day
-        for (let j = 0; j < Math.floor(Math.random() * 2 + 2); j++) {
-          const teacher = teachers[Math.floor(Math.random() * teachers.length)];
+        // Generate deterministic sessions for observation
+        const sessionsPerDay = i % 3 + 1; // 1-3 sessions rotating
+        for (let j = 0; j < sessionsPerDay; j++) {
+          const teacherIndex = (i + j) % teachers.length;
+          const teacher = teachers[teacherIndex];
           if (teacher) {
-            const startHour = Math.floor(Math.random() * 10 + 8); // 8 AM to 6 PM
+            const startHour = 8 + (j * 3); // Spread sessions across day
             const sessionDate = new Date(date);
-            sessionDate.setHours(startHour, Math.random() > 0.5 ? 0 : 30);
+            sessionDate.setHours(startHour, (j % 2) * 30); // Alternate 0/30 minutes
             
             upcomingSessions.push({
               id: upcomingSessions.length + 1,
               teacherId: teacher.id,
               teacherName: `${teacher.firstName} ${teacher.lastName}`,
-              courseName: `Persian Language ${Math.random() > 0.5 ? 'Fundamentals' : 'Advanced'}`,
+              courseName: j % 2 === 0 ? 'Persian Language Fundamentals' : 'Persian Language Advanced',
               scheduledAt: sessionDate,
-              duration: Math.random() > 0.5 ? 60 : 90,
-              deliveryMode: Math.random() > 0.5 ? 'online' : 'in_person',
-              classFormat: Math.random() > 0.7 ? 'one_on_one' : 'group',
-              studentsCount: Math.random() > 0.7 ? 1 : Math.floor(Math.random() * 6 + 3),
+              duration: j % 2 === 0 ? 60 : 90,
+              deliveryMode: j % 2 === 0 ? 'online' : 'in_person',
+              classFormat: j % 3 === 0 ? 'one_on_one' : 'group',
+              studentsCount: j % 3 === 0 ? 1 : Math.min(teacherIndex + 3, 8),
               status: 'scheduled'
             });
           }
