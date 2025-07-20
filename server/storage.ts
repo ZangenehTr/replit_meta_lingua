@@ -102,6 +102,8 @@ export interface IStorage {
   addCourseModule(courseId: number, moduleData: any): Promise<any>;
   addCourseLesson(courseId: number, moduleId: number, lessonData: any): Promise<VideoLesson>;
   publishCourse(courseId: number): Promise<Course | undefined>;
+  getCourseModules(courseId: number): Promise<any[]>;
+  getModuleLessons(moduleId: number): Promise<VideoLesson[]>;
 
   // Callern Management
   createCallernPackage(packageData: any): Promise<any>;

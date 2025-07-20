@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { useLanguage } from "@/hooks/use-language";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Phone, 
   Users, 
@@ -65,13 +66,9 @@ export function CallernManagement() {
   // Update teacher availability mutation
   const updateAvailabilityMutation = useMutation({
     mutationFn: async ({ teacherId, updates }: { teacherId: number; updates: any }) => {
-      const response = await fetch(`/api/admin/callern/teacher-availability/${teacherId}`, {
+      return await apiRequest(`/api/admin/callern/teacher-availability/${teacherId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify(updates)
+        body: updates
       });
 
       if (!response.ok) {
@@ -99,36 +96,10 @@ export function CallernManagement() {
   // Add teacher to Callern mutation
   const addTeacherMutation = useMutation({
     mutationFn: async (teacherData: any) => {
-      const response = await fetch('/api/admin/callern/teacher-availability', {
+      return await apiRequest('/api/admin/callern/teacher-availability', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify(teacherData)
+        body: teacherData
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        
-        // Try to parse JSON error response
-        try {
-          const errorData = JSON.parse(errorText);
-          if (response.status === 409) {
-            // Schedule conflict - throw the actual conflict details
-            throw new Error(errorData.conflictDetails || errorData.message || 'Teacher has existing commitments during selected hours');
-          }
-          throw new Error(errorData.message || 'Failed to add teacher to Callern');
-        } catch (parseError) {
-          // If not JSON, handle HTML response (authentication issue)
-          if (errorText.includes('<!DOCTYPE html>')) {
-            throw new Error('Authentication failed. Please log in again.');
-          }
-          throw new Error('Failed to add teacher to Callern');
-        }
-      }
-
-      return response.json();
     },
     onSuccess: () => {
       toast({

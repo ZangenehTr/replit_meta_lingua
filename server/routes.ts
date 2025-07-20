@@ -3450,6 +3450,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get course modules
+  app.get("/api/admin/courses/:courseId/modules", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const modules = await storage.getCourseModules(courseId);
+      res.json(modules);
+    } catch (error) {
+      console.error('Error fetching modules:', error);
+      res.status(500).json({ message: "Failed to fetch modules" });
+    }
+  });
+
+  // Get course module lessons
+  app.get("/api/admin/courses/:courseId/modules/:moduleId/lessons", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const moduleId = parseInt(req.params.moduleId);
+      const lessons = await storage.getModuleLessons(moduleId);
+      res.json(lessons);
+    } catch (error) {
+      console.error('Error fetching lessons:', error);
+      res.status(500).json({ message: "Failed to fetch lessons" });
+    }
+  });
+
   // Delete course
   app.delete("/api/admin/courses/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
