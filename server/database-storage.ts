@@ -7490,4 +7490,66 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  // Course module and lesson management methods
+  async addCourseModule(courseId: number, moduleData: any): Promise<any> {
+    // Since there's no dedicated modules table, we'll create a virtual module
+    // using the moduleId in videoLessons table for grouping
+    const moduleId = Math.floor(Math.random() * 1000000); // Generate unique module ID
+    
+    return {
+      id: moduleId,
+      courseId,
+      name: moduleData.name,
+      description: moduleData.description,
+      duration: moduleData.duration,
+      order: moduleData.order,
+      createdAt: new Date()
+    };
+  }
+
+  async addCourseLesson(courseId: number, moduleId: number, lessonData: any): Promise<VideoLesson> {
+    try {
+      const [newLesson] = await db
+        .insert(videoLessons)
+        .values({
+          courseId,
+          moduleId,
+          teacherId: lessonData.teacherId,
+          title: lessonData.title,
+          description: lessonData.description,
+          videoUrl: lessonData.videoUrl,
+          duration: lessonData.duration,
+          orderIndex: lessonData.orderIndex,
+          language: lessonData.language,
+          level: lessonData.level,
+          skillFocus: lessonData.skillFocus,
+          isPublished: lessonData.isPublished || false
+        })
+        .returning();
+      
+      return newLesson;
+    } catch (error) {
+      console.error('Error adding course lesson:', error);
+      throw error;
+    }
+  }
+
+  async publishCourse(courseId: number): Promise<Course | undefined> {
+    try {
+      const [updatedCourse] = await db
+        .update(courses)
+        .set({ 
+          isActive: true,
+          updatedAt: new Date()
+        })
+        .where(eq(courses.id, courseId))
+        .returning();
+      
+      return updatedCourse;
+    } catch (error) {
+      console.error('Error publishing course:', error);
+      throw error;
+    }
+  }
 }

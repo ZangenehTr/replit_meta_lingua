@@ -97,6 +97,11 @@ export interface IStorage {
   getCourseEnrollments(courseId: number): Promise<any[]>;
   enrollInCourse(enrollment: InsertEnrollment): Promise<Enrollment>;
   unenrollFromCourse(userId: number, courseId: number): Promise<void>;
+  
+  // Course modules and lessons
+  addCourseModule(courseId: number, moduleData: any): Promise<any>;
+  addCourseLesson(courseId: number, moduleId: number, lessonData: any): Promise<VideoLesson>;
+  publishCourse(courseId: number): Promise<Course | undefined>;
 
   // Callern Management
   createCallernPackage(packageData: any): Promise<any>;
@@ -2269,6 +2274,53 @@ export class MemStorage implements IStorage {
 
   async updateObservationResponse(observationId: number, teacherId: number, updates: Partial<SupervisionObservation>): Promise<SupervisionObservation | undefined> {
     return undefined;
+  }
+
+  // Course module and lesson management methods
+  async addCourseModule(courseId: number, moduleData: any): Promise<any> {
+    const moduleId = Math.floor(Math.random() * 1000000);
+    
+    return {
+      id: moduleId,
+      courseId,
+      name: moduleData.name,
+      description: moduleData.description,
+      duration: moduleData.duration,
+      order: moduleData.order,
+      createdAt: new Date()
+    };
+  }
+
+  async addCourseLesson(courseId: number, moduleId: number, lessonData: any): Promise<any> {
+    const lessonId = Math.floor(Math.random() * 1000000);
+    
+    return {
+      id: lessonId,
+      courseId,
+      moduleId,
+      teacherId: lessonData.teacherId,
+      title: lessonData.title,
+      description: lessonData.description,
+      videoUrl: lessonData.videoUrl,
+      duration: lessonData.duration,
+      orderIndex: lessonData.orderIndex,
+      language: lessonData.language,
+      level: lessonData.level,
+      skillFocus: lessonData.skillFocus,
+      isPublished: lessonData.isPublished || false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  }
+
+  async publishCourse(courseId: number): Promise<Course | undefined> {
+    const course = this.courses.get(courseId);
+    if (!course) return undefined;
+    
+    const updatedCourse = { ...course, isActive: true, updatedAt: new Date() };
+    this.courses.set(courseId, updatedCourse);
+    
+    return updatedCourse;
   }
 }
 

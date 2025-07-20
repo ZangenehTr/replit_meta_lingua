@@ -3378,6 +3378,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add module to course
+  app.post("/api/admin/courses/:id/modules", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const { name, description, duration, order } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "Module name is required" });
+      }
+      
+      const newModule = await storage.addCourseModule(courseId, {
+        name,
+        description: description || '',
+        duration: duration || 1,
+        order: order || 1
+      });
+      
+      res.status(201).json({ message: "Module added successfully", module: newModule });
+    } catch (error) {
+      console.error('Error adding module:', error);
+      res.status(500).json({ message: "Failed to add module" });
+    }
+  });
+
+  // Add lesson to module
+  app.post("/api/admin/courses/:courseId/modules/:moduleId/lessons", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const moduleId = parseInt(req.params.moduleId);
+      const { title, description, videoUrl, duration, orderIndex, skillFocus } = req.body;
+      
+      if (!title || !videoUrl) {
+        return res.status(400).json({ message: "Title and video URL are required" });
+      }
+      
+      const newLesson = await storage.addCourseLesson(courseId, moduleId, {
+        title,
+        description: description || '',
+        videoUrl,
+        duration: duration || 300,
+        orderIndex: orderIndex || 1,
+        skillFocus: skillFocus || 'general',
+        teacherId: req.user.id,
+        language: 'fa',
+        level: 'beginner',
+        isPublished: false
+      });
+      
+      res.status(201).json({ message: "Lesson added successfully", lesson: newLesson });
+    } catch (error) {
+      console.error('Error adding lesson:', error);
+      res.status(500).json({ message: "Failed to add lesson" });
+    }
+  });
+
+  // Publish course
+  app.post("/api/admin/courses/:id/publish", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      
+      const publishedCourse = await storage.publishCourse(courseId);
+      if (!publishedCourse) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      res.json({ message: "Course published successfully", course: publishedCourse });
+    } catch (error) {
+      console.error('Error publishing course:', error);
+      res.status(500).json({ message: "Failed to publish course" });
+    }
+  });
+
   // Delete course
   app.delete("/api/admin/courses/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
