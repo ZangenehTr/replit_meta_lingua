@@ -70,12 +70,6 @@ export function CallernManagement() {
         method: 'PUT',
         body: updates
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update teacher availability');
-      }
-
-      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -208,13 +202,13 @@ export function CallernManagement() {
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="flex items-center gap-1 border-purple-200">
             <Phone className="h-3 w-3" />
-            <span className="hidden sm:inline">{teacherAvailability?.filter(t => t.isOnline)?.length || 0} Online</span>
-            <span className="sm:hidden">{teacherAvailability?.filter(t => t.isOnline)?.length || 0}</span>
+            <span className="hidden sm:inline">{Array.isArray(teacherAvailability) ? teacherAvailability.filter(t => t.isOnline)?.length : 0} Online</span>
+            <span className="sm:hidden">{Array.isArray(teacherAvailability) ? teacherAvailability.filter(t => t.isOnline)?.length : 0}</span>
           </Badge>
           <Badge variant="outline" className="flex items-center gap-1 border-indigo-200">
             <Users className="h-3 w-3" />
-            <span className="hidden sm:inline">{teacherAvailability?.length || 0} Total</span>
-            <span className="sm:hidden">{teacherAvailability?.length || 0}</span>
+            <span className="hidden sm:inline">{Array.isArray(teacherAvailability) ? teacherAvailability.length : 0} Total</span>
+            <span className="sm:hidden">{Array.isArray(teacherAvailability) ? teacherAvailability.length : 0}</span>
           </Badge>
         </div>
       </div>
@@ -240,7 +234,7 @@ export function CallernManagement() {
             {loadingAvailability ? (
               <div className="col-span-3 text-center py-8">Loading teacher availability...</div>
             ) : (
-              teacherAvailability?.map((teacher) => (
+              Array.isArray(teacherAvailability) ? teacherAvailability?.map((teacher) => (
                 <Card key={teacher.id} className="hover:shadow-md transition-shadow">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
@@ -305,7 +299,9 @@ export function CallernManagement() {
                     </Button>
                   </CardContent>
                 </Card>
-              ))
+              )) : (
+                <div className="col-span-3 text-center py-8 text-muted-foreground">No teacher availability data.</div>
+              )
             )}
           </div>
           
@@ -337,7 +333,7 @@ export function CallernManagement() {
                           <SelectValue placeholder="Choose a teacher" />
                         </SelectTrigger>
                         <SelectContent>
-                          {availableTeachers?.map((teacher) => (
+                          {Array.isArray(availableTeachers) && availableTeachers?.map((teacher) => (
                             <SelectItem key={teacher.id} value={teacher.id.toString()}>
                               {teacher.firstName} {teacher.lastName}
                             </SelectItem>
@@ -420,7 +416,7 @@ export function CallernManagement() {
             {loadingPackages ? (
               <div className="col-span-3 text-center py-8">Loading Callern packages...</div>
             ) : (
-              callernPackages?.map((pkg) => (
+              Array.isArray(callernPackages) && callernPackages?.map((pkg) => (
                 <Card key={pkg.id}>
                   <CardHeader>
                     <CardTitle className="text-lg">{pkg.packageName}</CardTitle>
