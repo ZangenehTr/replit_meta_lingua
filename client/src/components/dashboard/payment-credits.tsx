@@ -24,43 +24,13 @@ interface Payment {
   cardNumber?: string;
 }
 
-const CREDIT_PACKAGES = [
-  { 
-    amount: 25000, 
-    credits: 10, 
-    title: "Starter Package", 
-    description: "Perfect for beginners",
-    pricePerCredit: 2500
-  },
-  { 
-    amount: 50000, 
-    credits: 25, 
-    title: "Popular Package", 
-    description: "Most popular choice", 
-    popular: true,
-    pricePerCredit: 2000
-  },
-  { 
-    amount: 100000, 
-    credits: 55, 
-    title: "Premium Package", 
-    description: "Best value for money",
-    pricePerCredit: 1818
-  },
-  { 
-    amount: 200000, 
-    credits: 120, 
-    title: "Professional Package", 
-    description: "For serious learners",
-    pricePerCredit: 1667
-  },
-];
+// Fetch credit packages from API instead of hardcoding
 
 export function PaymentCredits() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedPackage, setSelectedPackage] = useState(CREDIT_PACKAGES[1]);
+  const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [customCredits, setCustomCredits] = useState("");
   const [paymentMode, setPaymentMode] = useState<"package" | "custom">("package");
@@ -70,9 +40,18 @@ export function PaymentCredits() {
     queryKey: ["/api/payments"],
   });
 
+  // Fetch credit packages from API
+  const { data: CREDIT_PACKAGES = [] } = useQuery({
+    queryKey: ["/api/admin/credit-packages"],
+    select: (data: any[]) => data || []
+  });
+
   const shetabPaymentMutation = useMutation({
     mutationFn: async (paymentData: { amount: number; creditsPurchase: number; description?: string }) => {
-      const response = await apiRequest("POST", "/api/payments/shetab/initiate", paymentData);
+      const response = await apiRequest("/api/payments/shetab/initiate", {
+        method: "POST", 
+        body: JSON.stringify(paymentData)
+      });
       return response;
     },
     onSuccess: (data) => {

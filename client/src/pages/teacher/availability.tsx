@@ -12,15 +12,7 @@ import { Calendar, Clock, Plus, Edit, Trash2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
-const daysOfWeek = [
-  { value: 'monday', label: 'Monday' },
-  { value: 'tuesday', label: 'Tuesday' },
-  { value: 'wednesday', label: 'Wednesday' },
-  { value: 'thursday', label: 'Thursday' },
-  { value: 'friday', label: 'Friday' },
-  { value: 'saturday', label: 'Saturday' },
-  { value: 'sunday', label: 'Sunday' }
-];
+// Fetch days of week from API instead of hardcoding
 
 export default function TeacherAvailabilityPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -35,6 +27,12 @@ export default function TeacherAvailabilityPage() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch days of week from API
+  const { data: daysOfWeek = [] } = useQuery({
+    queryKey: ['/api/admin/days-of-week'],
+    select: (data: any[]) => data || []
+  });
 
   // Fetch teacher availability
   const { data: availability = [], isLoading } = useQuery({

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Target, Zap, BookOpen, Users, MessageCircle } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
+import { useQuery } from '@tanstack/react-query';
 
 interface DailyChallenge {
   id: number;
@@ -43,46 +44,17 @@ const getDifficultyColor = (difficulty: string) => {
 };
 
 export function DailyChallenges() {
-  const { currentLanguage, isRTL } = useLanguage();
+  const { language: currentLanguage, isRTL } = useLanguage();
 
-  const challenges: DailyChallenge[] = [
-    {
-      id: 1,
-      title: currentLanguage === 'fa' ? 'مرور واژگان روزانه' : 'Daily Vocabulary Review',
-      description: currentLanguage === 'fa' ? '۲۰ کلمه جدید یاد بگیرید' : 'Learn 20 new words',
-      type: 'vocabulary',
-      target: 20,
-      current: 12,
-      reward: { xp: 50, credits: 2 },
-      timeLeft: currentLanguage === 'fa' ? '۶ ساعت باقی مانده' : '6 hours left',
-      difficulty: 'easy',
-      isCompleted: false
-    },
-    {
-      id: 2,
-      title: currentLanguage === 'fa' ? 'تمرین مکالمه' : 'Conversation Practice',
-      description: currentLanguage === 'fa' ? '۱۵ دقیقه با یک توتور صحبت کنید' : 'Speak with a tutor for 15 minutes',
-      type: 'conversation',
-      target: 15,
-      current: 8,
-      reward: { xp: 100, credits: 5 },
-      timeLeft: currentLanguage === 'fa' ? '۴ ساعت باقی مانده' : '4 hours left',
-      difficulty: 'medium',
-      isCompleted: false
-    },
-    {
-      id: 3,
-      title: currentLanguage === 'fa' ? 'تمرین گرامر' : 'Grammar Exercise',
-      description: currentLanguage === 'fa' ? '۳ تمرین گرامر را تکمیل کنید' : 'Complete 3 grammar exercises',
-      type: 'grammar',
-      target: 3,
-      current: 3,
-      reward: { xp: 75, credits: 3 },
-      timeLeft: currentLanguage === 'fa' ? 'تکمیل شده' : 'Completed',
-      difficulty: 'medium',
-      isCompleted: true
-    }
-  ];
+  // Fetch daily challenges from API instead of hardcoding
+  const { data: challenges = [], isLoading: challengesLoading } = useQuery({
+    queryKey: ['/api/gamification/daily-challenges'],
+    select: (data: DailyChallenge[]) => data || []
+  });
+
+  if (challengesLoading) {
+    return <div className="animate-pulse bg-gray-100 h-32 rounded-lg"></div>;
+  }
 
   return (
     <div className={`space-y-4 ${isRTL ? 'rtl' : 'ltr'}`}>

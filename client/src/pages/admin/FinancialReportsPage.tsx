@@ -33,9 +33,14 @@ interface FinancialSummary {
   };
 }
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+// Fetch chart colors from API configuration
 
 export function FinancialReportsPage() {
+  // Fetch chart colors from API
+  const { data: COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'] } = useQuery({
+    queryKey: ['/api/admin/financial/chart-colors'],
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() - 30);

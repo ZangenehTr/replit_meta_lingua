@@ -39,41 +39,15 @@ export function AdminFinancial() {
     queryKey: ['/api/admin/financial', { range: dateRange, type: filterType }],
   });
 
-  // Financial Overview Stats
-  const overviewStats = [
-    {
-      title: t('totalRevenue'),
-      value: "$452,890",
-      change: "+18.2%",
-      trend: "up",
-      icon: DollarSign,
-      description: t('thisMonth')
-    },
-    {
-      title: t('pendingPayments'),
-      value: "$23,450",
-      change: "-5.3%",
-      trend: "down",
-      icon: Clock,
-      description: t('outstanding')
-    },
-    {
-      title: t('teacherPayouts'),
-      value: "$156,780",
-      change: "+12.1%",
-      trend: "up",
-      icon: Users,
-      description: t('thisMonth')
-    },
-    {
-      title: t('platformCommission'),
-      value: "$89,340",
-      change: "+15.7%",
-      trend: "up",
-      icon: Building,
-      description: t('netEarnings')
-    }
-  ];
+  // Fetch financial overview stats from API
+  const { data: overviewStats = [] } = useQuery({
+    queryKey: ['/api/admin/financial/overview-stats', { range: dateRange }],
+    select: (data: any[]) => data?.map(stat => ({
+      ...stat,
+      title: t(stat.titleKey || stat.title),
+      description: t(stat.descriptionKey || stat.description)
+    })) || []
+  });
 
   // Recent Transactions
   const transactions = [

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 
 // Simple language detection for Lexi - SINGLE LANGUAGE DISPLAY
 const getCurrentLanguage = () => {
@@ -51,40 +52,22 @@ export default function AICompanion({ isVisible, onToggle, studentLevel, current
   const [inputMessage, setInputMessage] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [companionStats, setCompanionStats] = useState({
-    conversations: 15,
-    helpfulTips: 23,
-    encouragements: 8
+  // Fetch real companion stats from API
+  const { data: companionStats } = useQuery({
+    queryKey: ['/api/ai/companion-stats'],
+    select: (data: any) => data || {
+      conversations: 0,
+      helpfulTips: 0,
+      encouragements: 0
+    }
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const currentLanguage = getCurrentLanguage();
 
-  // Simple translation function for single-language display
-  const t = (key: string): string => {
-    const translations: any = {
-      fa: {
-        typing: "در حال نوشتن...",
-        send: "ارسال",
-        placeholder: "پیام خود را بنویسید...",
-        help: "کمک",
-        practice: "تمرین",
-        culture: "فرهنگ",
-        tips: "نکات"
-      },
-      en: {
-        typing: "Typing...",
-        send: "Send",
-        placeholder: "Type your message...",
-        help: "Help",
-        practice: "Practice",
-        culture: "Culture",
-        tips: "Tips"
-      }
-    };
-    return translations[currentLanguage]?.[key] || key;
-  };
+  // Use comprehensive i18n system instead of hardcoded translations
+  const { t } = useLanguage();
 
   // PRD-compliant responses - SINGLE LANGUAGE ONLY
   const getPersonalizedResponse = (message: string, currentLang: string) => {
