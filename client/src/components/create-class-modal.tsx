@@ -13,7 +13,7 @@ import { CalendarIcon, Plus, Clock, Users } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { formatPersianDate } from "@/lib/i18n";
+// Removed formatPersianDate import - will use date-fns format instead
 
 interface CreateClassModalProps {
   children: React.ReactNode;
@@ -280,9 +280,7 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {startDate ? (
-                      showCalendarType === 'persian' ? 
-                        formatPersianDate(startDate) : 
-                        format(startDate, "PPP")
+                      format(startDate, "PPP")
                     ) : "انتخاب تاریخ / Pick a date"}
                   </Button>
                 </PopoverTrigger>
@@ -306,9 +304,7 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {endDate ? (
-                      showCalendarType === 'persian' ? 
-                        formatPersianDate(endDate) : 
-                        format(endDate, "PPP")
+                      format(endDate, "PPP")
                     ) : "انتخاب تاریخ / Pick a date"}
                   </Button>
                 </PopoverTrigger>

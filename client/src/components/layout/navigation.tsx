@@ -18,18 +18,17 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
-import { useLanguage } from "@/hooks/use-language";
-import { Language } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Badge } from "@/components/ui/badge";
 import { MobileNav } from "./mobile-nav";
 
 export function Navigation() {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
-  const { currentLanguage, setLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
 
-  const handleLanguageChange = (language: string) => {
-    setLanguage(language as Language);
+  const handleLanguageChange = (newLanguage: string) => {
+    setLanguage(newLanguage as 'en' | 'fa' | 'ar');
   };
 
   if (!user) return null;
@@ -63,7 +62,7 @@ export function Navigation() {
             {/* Language Selector - Hidden on mobile */}
             <div className="hidden sm:block">
               <Select
-                value={currentLanguage}
+                value={language}
                 onValueChange={handleLanguageChange}
               >
                 <SelectTrigger className="w-20 border-none shadow-none">

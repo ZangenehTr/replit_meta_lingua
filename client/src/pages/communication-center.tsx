@@ -27,7 +27,7 @@ import {
   BarChart3,
   Settings
 } from "lucide-react";
-import { useTranslation } from "@/lib/i18n";
+import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 

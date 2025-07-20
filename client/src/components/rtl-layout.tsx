@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLanguage } from '@/hooks/use-language';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface RTLLayoutProps {
   children: React.ReactNode;
