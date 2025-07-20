@@ -506,6 +506,7 @@ export interface IStorage {
   createTeacherObservationResponse(response: InsertTeacherObservationResponse): Promise<TeacherObservationResponse>;
   getObservationResponses(observationId: number): Promise<TeacherObservationResponse[]>;
   updateObservationResponse(observationId: number, teacherId: number, updates: Partial<SupervisionObservation>): Promise<SupervisionObservation | undefined>;
+  getTotalUsers(): Promise<number>;
 }
 
 export class MemStorage implements IStorage {
@@ -2323,6 +2324,10 @@ export class MemStorage implements IStorage {
     this.courses.set(courseId, updatedCourse);
     
     return updatedCourse;
+  }
+
+  async getTotalUsers(): Promise<number> {
+    return Promise.resolve(this.users.size);
   }
 }
 

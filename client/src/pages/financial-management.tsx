@@ -70,31 +70,25 @@ export default function FinancialManagement() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("this_month");
 
-  // Mock data - in real implementation, this would come from API
-  const stats: FinancialStats = {
-    totalRevenue: 45680000,
-    monthlyRevenue: 8950000,
-    revenueGrowth: 12.5,
-    totalStudents: 342,
-    averageRevenuePerStudent: 133568,
-    pendingPayments: 12450000,
-    overduePayments: 2340000,
-    cashFlow: 6610000
-  };
+  // Fetch financial statistics from API
+  const { data: stats } = useQuery<FinancialStats>({
+    queryKey: ['/api/admin/financial-stats'],
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Fetch transactions data
   const { data: transactionsData, isLoading: transactionsLoading } = useQuery({
     queryKey: ['/api/admin/transactions', { search: searchTerm, status: statusFilter, date: dateFilter }],
   });
 
-  const transactions: Transaction[] = transactionsData || [];
+  const transactions: Transaction[] = Array.isArray(transactionsData) ? transactionsData : [];
 
   // Fetch invoices data
   const { data: invoicesData, isLoading: invoicesLoading } = useQuery({
     queryKey: ['/api/admin/invoices', { search: searchTerm, status: statusFilter }],
   });
 
-  const invoices: Invoice[] = invoicesData || [];
+  const invoices: Invoice[] = Array.isArray(invoicesData) ? invoicesData : [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -120,10 +114,10 @@ export default function FinancialManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">درآمد کل</p>
-                <p className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</p>
+                <p className="text-2xl font-bold">{stats ? formatCurrency(stats.totalRevenue) : '0 تومان'}</p>
                 <p className="text-sm text-green-600 flex items-center">
                   <TrendingUp className="h-3 w-3 mr-1" />
-                  +{stats.revenueGrowth}% این ماه
+                  +{stats?.revenueGrowth || 0}% این ماه
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-green-600" />
@@ -136,8 +130,8 @@ export default function FinancialManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">درآمد ماهانه</p>
-                <p className="text-2xl font-bold">{formatCurrency(stats.monthlyRevenue)}</p>
-                <p className="text-sm text-blue-600">از {stats.totalStudents} دانش‌آموز</p>
+                <p className="text-2xl font-bold">{stats ? formatCurrency(stats.monthlyRevenue) : '0 تومان'}</p>
+                <p className="text-sm text-blue-600">از {stats?.totalStudents || 0} دانش‌آموز</p>
               </div>
               <Calendar className="h-8 w-8 text-blue-600" />
             </div>
@@ -149,7 +143,7 @@ export default function FinancialManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">میانگین درآمد</p>
-                <p className="text-2xl font-bold">{formatCurrency(stats.averageRevenuePerStudent)}</p>
+                <p className="text-2xl font-bold">{stats ? formatCurrency(stats.averageRevenuePerStudent) : '0 تومان'}</p>
                 <p className="text-sm text-purple-600">به ازای هر دانش‌آموز</p>
               </div>
               <Users className="h-8 w-8 text-purple-600" />
@@ -162,7 +156,7 @@ export default function FinancialManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">جریان نقدی</p>
-                <p className="text-2xl font-bold">{formatCurrency(stats.cashFlow)}</p>
+                <p className="text-2xl font-bold">{stats ? formatCurrency(stats.cashFlow) : '0 تومان'}</p>
                 <p className="text-sm text-orange-600">خالص این ماه</p>
               </div>
               <TrendingUp className="h-8 w-8 text-orange-600" />
@@ -179,7 +173,7 @@ export default function FinancialManagement() {
               <Clock className="h-8 w-8 text-yellow-600" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">پرداخت‌های معلق</p>
-                <p className="text-2xl font-bold">{formatCurrency(stats.pendingPayments)}</p>
+                <p className="text-2xl font-bold">{stats ? formatCurrency(stats.pendingPayments) : '0 تومان'}</p>
                 <p className="text-sm text-yellow-600">نیاز به پیگیری</p>
               </div>
             </div>
@@ -192,7 +186,7 @@ export default function FinancialManagement() {
               <AlertTriangle className="h-8 w-8 text-red-600" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">پرداخت‌های معوقه</p>
-                <p className="text-2xl font-bold">{formatCurrency(stats.overduePayments)}</p>
+                <p className="text-2xl font-bold">{stats ? formatCurrency(stats.overduePayments) : '0 تومان'}</p>
                 <p className="text-sm text-red-600">فوری</p>
               </div>
             </div>

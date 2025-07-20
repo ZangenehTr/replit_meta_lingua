@@ -3942,6 +3942,17 @@ export class DatabaseStorage implements IStorage {
     return newPackage;
   }
 
+  // Total Users Count for system configuration
+  async getTotalUsers(): Promise<number> {
+    try {
+      const result = await db.select().from(users);
+      return result.length;
+    } catch (error) {
+      console.error('Error getting total users:', error);
+      return 0;
+    }
+  }
+
   async getOnlineCallernTeachers() {
     const teachers = await db.select({
       id: users.id,
