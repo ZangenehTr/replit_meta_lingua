@@ -32,7 +32,7 @@ import {
   type CoursePayment, type InsertCoursePayment, type AiTrainingData, type InsertAiTrainingData,
   type AiKnowledgeBase, type InsertAiKnowledgeBase, type SkillAssessment, type InsertSkillAssessment,
   type LearningActivity, type InsertLearningActivity, type ProgressSnapshot, type InsertProgressSnapshot,
-  type Lead, type InsertLead, type Transaction, type InsertTransaction,
+  type Lead, type InsertLead,
   type CommunicationLog, type InsertCommunicationLog, type MentorAssignment, type InsertMentorAssignment,
   type MentoringSession, type InsertMentoringSession,
   type CallernPackage, type InsertCallernPackage, type StudentCallernPackage, type InsertStudentCallernPackage,
@@ -2627,14 +2627,14 @@ export class DatabaseStorage implements IStorage {
       
       for (const student of realStudents) {
         try {
-          // Check real homework submissions
+          // Check real homework submissions (using userId field)
           const homeworkStats = await db
             .select({
               total: sql<number>`COUNT(*)`,
               submitted: sql<number>`SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END)`
             })
             .from(homework)
-            .where(eq(homework.studentId, student.id));
+            .where(eq(homework.userId, student.id));
 
           // Check real session attendance (using status as proxy for attendance)
           const sessionStats = await db
@@ -2659,7 +2659,7 @@ export class DatabaseStorage implements IStorage {
             const enrollment = await db
               .select({
                 courseTitle: courses.title,
-                teacherName: sql<string>`CONCAT(users.first_name, ' ', users.last_name)`
+                teacherName: sql<string>`CONCAT(users.first_name, ' ', COALESCE(users.last_name, ''))`
               })
               .from(enrollments)
               .leftJoin(courses, eq(enrollments.course_id, courses.id))
