@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/hooks/use-language";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,115 +43,8 @@ export default function Courses() {
     queryKey: ["/api/courses"],
   });
 
-  // Sample data for demonstration - in production this would come from the API
-  const sampleCourses: Course[] = [
-    // Online Group Courses
-    {
-      id: 1,
-      title: "Persian Language Fundamentals - Group",
-      description: "Master the basics of Persian language with native instructors in a group setting",
-      thumbnail: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=200&fit=crop",
-      deliveryMode: "online",
-      classFormat: "group",
-      targetLanguage: "persian",
-      targetLevel: ["beginner"],
-      maxStudents: 8,
-      currentStudents: 5,
-      price: 25000,
-      weekdays: ["monday", "wednesday", "friday"],
-      startTime: "18:00",
-      endTime: "19:30",
-      instructorName: "Dr. Sarah Johnson",
-      duration: "8 weeks",
-      isActive: true
-    },
-    {
-      id: 2,
-      title: "English Conversation Group",
-      description: "Improve your English speaking skills in an interactive group environment",
-      thumbnail: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300&h=200&fit=crop",
-      deliveryMode: "online",
-      classFormat: "group",
-      targetLanguage: "english",
-      targetLevel: ["intermediate"],
-      maxStudents: 10,
-      currentStudents: 7,
-      price: 30000,
-      weekdays: ["tuesday", "thursday"],
-      startTime: "19:00",
-      endTime: "20:30",
-      instructorName: "Michael Smith",
-      duration: "10 weeks",
-      isActive: true
-    },
-    // Online One-on-One Courses
-    {
-      id: 3,
-      title: "Personalized German Tutoring",
-      description: "One-on-one German lessons tailored to your learning pace and goals",
-      thumbnail: "https://images.unsplash.com/photo-1516062423079-7ca13cdc7f5a?w=300&h=200&fit=crop",
-      deliveryMode: "online",
-      classFormat: "one_on_one",
-      targetLanguage: "german",
-      targetLevel: ["beginner", "intermediate"],
-      price: 45000,
-      instructorName: "Prof. Anna Mueller",
-      duration: "Flexible",
-      isActive: true
-    },
-    // In-Person Group Courses
-    {
-      id: 4,
-      title: "Arabic Language Workshop",
-      description: "Immersive Arabic learning experience in our modern classrooms",
-      thumbnail: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=300&h=200&fit=crop",
-      deliveryMode: "in_person",
-      classFormat: "group",
-      targetLanguage: "arabic",
-      targetLevel: ["beginner"],
-      maxStudents: 12,
-      currentStudents: 8,
-      price: 35000,
-      weekdays: ["saturday", "monday"],
-      startTime: "16:00",
-      endTime: "17:30",
-      instructorName: "Ahmed Al-Rashid",
-      duration: "12 weeks",
-      isActive: true
-    },
-    // In-Person One-on-One
-    {
-      id: 5,
-      title: "Private French Lessons",
-      description: "Intensive one-on-one French training at our Tehran center",
-      thumbnail: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=300&h=200&fit=crop",
-      deliveryMode: "in_person",
-      classFormat: "one_on_one",
-      targetLanguage: "french",
-      targetLevel: ["intermediate", "advanced"],
-      price: 50000,
-      instructorName: "Marie Dubois",
-      duration: "Flexible",
-      isActive: true
-    },
-    // Self-Paced Courses
-    {
-      id: 6,
-      title: "Spanish Self-Study Course",
-      description: "Learn Spanish at your own pace with interactive lessons and exercises",
-      thumbnail: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=300&h=200&fit=crop",
-      deliveryMode: "self_paced",
-      classFormat: "self_paced",
-      targetLanguage: "spanish",
-      targetLevel: ["beginner"],
-      price: 15000,
-      instructorName: "AI-Powered System",
-      duration: "Unlimited access",
-      isActive: true
-    }
-  ];
-
-  const courses = allCourses || sampleCourses;
+  // Use real courses from API, fallback to empty array if not available
+  const courses = allCourses || [];
 
   const handleEnroll = async (courseId: number) => {
     try {

@@ -93,9 +93,15 @@ export default function AnalyticsDashboard() {
     queryKey: ['/api/analytics', timeRange, courseFilter],
   });
 
-  // Chart colors for Persian/Iranian theme
-  const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'];
-  const iranianColors = ['#00D084', '#0099FF', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+  // Fetch colors from API configuration
+  const { data: colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'] } = useQuery({
+    queryKey: ['/api/admin/analytics/chart-colors'],
+    staleTime: 10 * 60 * 1000
+  });
+  const { data: iranianColors = ['#00D084', '#0099FF', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'] } = useQuery({
+    queryKey: ['/api/admin/analytics/iranian-colors'],
+    staleTime: 10 * 60 * 1000
+  });
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fa-IR', {

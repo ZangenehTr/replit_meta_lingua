@@ -34,13 +34,19 @@ export function AIManagementPage() {
   
   const { toast } = useToast();
 
+  // Fetch AI service status from API
   const { data: ollamaStatus, isLoading, refetch } = useQuery<OllamaStatus>({
-    queryKey: ["/api/test/ollama-status"],
-    queryFn: () => apiRequest("/api/test/ollama-status"),
+    queryKey: ["/api/admin/ai-service/status"],
     refetchInterval: 10000,
   });
 
-  const availableModels = ollamaStatus?.models || [];
+  // Fetch available AI models
+  const { data: modelsList, isLoading: modelsLoading } = useQuery({
+    queryKey: ["/api/admin/ai-service/models"],
+    staleTime: 5 * 60 * 1000
+  });
+
+  const availableModels = modelsList || ollamaStatus?.models || [];
 
   const testModel = async () => {
     if (!testPrompt.trim()) {

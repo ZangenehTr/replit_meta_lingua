@@ -36,12 +36,16 @@ interface TeachingStats {
   };
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
-
 export default function TeacherReportsPage() {
   const { t } = useLanguage();
   const [dateRange, setDateRange] = useState("last3months");
   const [reportType, setReportType] = useState("overview");
+
+  // Fetch chart colors from API
+  const { data: COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'] } = useQuery({
+    queryKey: ['/api/admin/analytics/chart-colors'],
+    staleTime: 10 * 60 * 1000
+  });
 
   const { data: stats, isLoading } = useQuery<TeachingStats>({
     queryKey: ["/api/teacher/reports", dateRange],
