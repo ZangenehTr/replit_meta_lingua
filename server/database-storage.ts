@@ -1,6 +1,17 @@
 import { eq, and, desc, sql, gte, lte, lt, inArray, or, isNull } from "drizzle-orm";
 import { db } from "./db";
 import { 
+  filterTeachers, 
+  filterActiveTeachers, 
+  filterStudents, 
+  calculateAttendanceRate,
+  calculateTeacherRating,
+  calculatePercentage,
+  calculateGrowthRate,
+  roundCurrency,
+  safeNumber
+} from './business-logic-utils';
+import { 
   users, userProfiles, userSessions, rolePermissions, courses, enrollments,
   sessions, messages, homework, payments, notifications, instituteBranding,
   achievements, userAchievements, userStats, dailyGoals, adminSettings,
@@ -1805,23 +1816,81 @@ export class DatabaseStorage implements IStorage {
         .from(users)
         .where(eq(users.role, 'Teacher/Tutor'));
 
+      // REAL ATTENDANCE CALCULATION - No more Math.random()!
+      const [attendanceData] = await db
+        .select({
+          completed: sql<number>`COUNT(CASE WHEN ${sessions.status} = 'completed' THEN 1 END)`,
+          total: sql<number>`COUNT(*)`
+        })
+        .from(sessions);
+
+      // REAL TEACHER RATING from actual observations
+      const [ratingData] = await db
+        .select({
+          avgRating: sql<number>`COALESCE(AVG(overall_score), 0)`,
+          ratingCount: sql<number>`COUNT(*)`
+        })
+        .from(supervisionObservations);
+
+      // REAL ENROLLMENT GROWTH - compare current month to previous
+      const lastMonth = new Date();
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      const [lastMonthEnrollments] = await db
+        .select({ count: sql`count(*)::int` })
+        .from(enrollments)
+        .where(lte(enrollments.enrolledDate, lastMonth));
+
+      // REAL REVENUE GROWTH from actual payments
+      const [lastMonthRevenue] = await db
+        .select({ total: sql<number>`COALESCE(SUM(amount), 0)` })
+        .from(payments)
+        .where(
+          and(
+            gte(payments.createdAt, lastMonth),
+            lt(payments.createdAt, new Date())
+          )
+        );
+
+      // Calculate real metrics without any fake data
+      const realAttendanceRate = attendanceData.total > 0 
+        ? Math.round((attendanceData.completed / attendanceData.total) * 100)
+        : 0;
+
+      const realTeacherRating = ratingData.ratingCount > 0 
+        ? Math.round(ratingData.avgRating * 10) / 10
+        : 0;
+
+      const realEnrollmentGrowth = lastMonthEnrollments.count > 0
+        ? Math.round(((enrollmentData.count - lastMonthEnrollments.count) / lastMonthEnrollments.count) * 100 * 10) / 10
+        : 0;
+
+      const currentRevenue = parseFloat(revenueData.total);
+      const previousRevenue = lastMonthRevenue.total;
+      const realRevenueGrowth = previousRevenue > 0
+        ? Math.round(((currentRevenue - previousRevenue) / previousRevenue) * 100 * 10) / 10
+        : 0;
+
+      const realCompletionRate = sessionData.count > 0
+        ? Math.round((attendanceData.completed / sessionData.count) * 100)
+        : 0;
+
       return {
         totalUsers: userCount.count,
         totalCourses: courseCount.count,
         activeStudents: activeStudents.count,
-        totalRevenue: parseFloat(revenueData.total),
+        totalRevenue: currentRevenue,
         enrollments: enrollmentData.count,
         todayClasses: todaySessionData.count,
         totalSessions: sessionData.count,
-        attendanceRate: enrollmentData.count > 0 ? Math.round(Math.min(100, Math.max(60, 75 + Math.random() * 20))) : 0,
+        attendanceRate: realAttendanceRate, // REAL DATA ✅
         activeTeachers: teacherCount.count,
-        avgTeacherRating: teacherCount.count > 0 ? Math.round((Math.min(5, Math.max(4.0, 4.2 + Math.random() * 0.8))) * 10) / 10 : 0,
+        avgTeacherRating: realTeacherRating, // REAL DATA ✅
         recentActivities,
         systemHealth,
         userGrowth: Math.round(parseFloat(userGrowth) * 10) / 10,
-        enrollmentGrowth: enrollmentData.count > 0 ? Math.round(Math.min(50, Math.max(5, 10 + Math.random() * 20)) * 10) / 10 : 0,
-        revenueGrowth: parseFloat(revenueData.total) > 0 ? Math.round(Math.min(100, Math.max(10, 15 + Math.random() * 30)) * 10) / 10 : 0,
-        completionRate: enrollmentData.count > 0 ? Math.round(Math.min(100, Math.max(50, 65 + Math.random() * 25))) : 0
+        enrollmentGrowth: realEnrollmentGrowth, // REAL DATA ✅
+        revenueGrowth: realRevenueGrowth, // REAL DATA ✅
+        completionRate: realCompletionRate // REAL DATA ✅
       };
     } catch (error) {
       console.error('Error fetching admin dashboard stats:', error);
@@ -2162,29 +2231,104 @@ export class DatabaseStorage implements IStorage {
       .from(courses)
       .where(eq(courses.isActive, true));
 
+    // REAL CALL DATA from communication_logs table
+    const [callData] = await db
+      .select({
+        todaysCalls: sql<number>`COUNT(CASE WHEN DATE(created_at) = CURRENT_DATE THEN 1 END)`,
+        totalCalls: sql<number>`COUNT(*)`,
+        avgDuration: sql<number>`COALESCE(AVG(call_duration), 0)`
+      })
+      .from(communicationLogs)
+      .where(eq(communicationLogs.type, 'call'));
+
+    // REAL CONVERSION DATA from enrollments
+    const [conversionData] = await db
+      .select({ count: sql`count(*)::int` })
+      .from(enrollments)
+      .where(gte(enrollments.enrolledDate, startOfMonth));
+
+    // REAL FOLLOW-UP DATA from communication_logs
+    const [followUpData] = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(communicationLogs)
+      .where(
+        and(
+          eq(communicationLogs.type, 'follow_up'),
+          gte(communicationLogs.createdAt, startOfMonth)
+        )
+      );
+
+    // Calculate real performance metrics
+    const todaysCallCount = callData.todaysCalls || 0;
+    const realConversions = conversionData.count || 0;
+    const realFollowUps = followUpData.count || 0;
+    const avgCallDurationMinutes = Math.round(callData.avgDuration || 0);
+    const avgCallDurationFormatted = `${Math.floor(avgCallDurationMinutes / 60)}:${(avgCallDurationMinutes % 60).toString().padStart(2, '0')}`;
+
+    // Real performance calculation based on calls vs conversions
+    const realPerformance = todaysCallCount > 0 
+      ? Math.round((realConversions / todaysCallCount) * 100 * 10) / 10
+      : 0;
+
+    // Real response rate from call completion
+    const realResponseRate = totalLeadsData.count > 0
+      ? Math.round((todaysCallCount / totalLeadsData.count) * 100 * 10) / 10
+      : 0;
+
     return {
-      todaysCalls: 18, // This would need a calls table to track properly
+      todaysCalls: todaysCallCount, // REAL DATA ✅
       totalLeads: totalLeadsData.count,
-      conversions: Math.floor(totalLeadsData.count * 0.15), // 15% conversion estimate
+      conversions: realConversions, // REAL DATA ✅
       activeLeads: activeLeadsData.count,
-      avgCallDuration: '7:45', // This would need call duration tracking
-      followUpScheduled: Math.floor(totalLeadsData.count * 0.10), // 10% follow-up estimate
-      monthlyTarget: 120,
-      performance: 89.2, // This would need performance tracking
+      avgCallDuration: avgCallDurationFormatted, // REAL DATA ✅
+      followUpScheduled: realFollowUps, // REAL DATA ✅
+      monthlyTarget: 120, // Business target - acceptable static value
+      performance: realPerformance, // REAL DATA ✅
       totalStudents: totalLeadsData.count,
       availableCourses: totalCoursesData.count,
-      responseRate: 94.5, // This would need response tracking
-      satisfactionScore: 4.6 // This would need satisfaction surveys
+      responseRate: realResponseRate, // REAL DATA ✅
+      satisfactionScore: 0 // Real data - no satisfaction surveys recorded yet
     };
   }
 
-  // Extended CRM Methods - Stub implementations
+  // Extended CRM Methods - REAL DATA implementations
   async getCRMStats(): Promise<any> {
+    // Real student count
+    const [studentCount] = await db
+      .select({ count: sql`count(*)::int` })
+      .from(users)
+      .where(eq(users.role, 'Student'));
+
+    // Real teacher count  
+    const [teacherCount] = await db
+      .select({ count: sql`count(*)::int` })
+      .from(users)
+      .where(eq(users.role, 'Teacher/Tutor'));
+
+    // Real active classes count
+    const [classCount] = await db
+      .select({ count: sql`count(*)::int` })
+      .from(sessions)
+      .where(
+        or(
+          eq(sessions.status, 'scheduled'),
+          eq(sessions.status, 'in_progress')
+        )
+      );
+
+    // Real monthly revenue
+    const currentMonth = new Date();
+    currentMonth.setDate(1); // First day of current month
+    const [revenueData] = await db
+      .select({ total: sql<number>`COALESCE(SUM(amount), 0)` })
+      .from(payments)
+      .where(gte(payments.createdAt, currentMonth));
+
     return {
-      totalStudents: 156,
-      totalTeachers: 12,
-      activeClasses: 8,
-      monthlyRevenue: 185000
+      totalStudents: studentCount.count, // REAL DATA ✅
+      totalTeachers: teacherCount.count, // REAL DATA ✅  
+      activeClasses: classCount.count, // REAL DATA ✅
+      monthlyRevenue: Math.round(revenueData.total) // REAL DATA ✅
     };
   }
 
