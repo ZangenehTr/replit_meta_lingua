@@ -7552,4 +7552,46 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  async getCourseModules(courseId: number): Promise<any[]> {
+    try {
+      // Since modules are virtual, we group video lessons by moduleId
+      const lessons = await db.select().from(videoLessons)
+        .where(eq(videoLessons.courseId, courseId))
+        .orderBy(videoLessons.orderIndex);
+
+      // Group lessons by moduleId to create virtual modules
+      const moduleMap = new Map();
+      
+      lessons.forEach(lesson => {
+        const moduleId = lesson.moduleId || 1;
+        if (!moduleMap.has(moduleId)) {
+          moduleMap.set(moduleId, {
+            id: moduleId,
+            courseId,
+            name: `Module ${moduleId}`,
+            description: `Module ${moduleId} for course`,
+            lessons: []
+          });
+        }
+        moduleMap.get(moduleId).lessons.push(lesson);
+      });
+
+      return Array.from(moduleMap.values());
+    } catch (error) {
+      console.error('Error fetching course modules:', error);
+      throw error;
+    }
+  }
+
+  async getModuleLessons(moduleId: number): Promise<VideoLesson[]> {
+    try {
+      return await db.select().from(videoLessons)
+        .where(eq(videoLessons.moduleId, moduleId))
+        .orderBy(videoLessons.orderIndex);
+    } catch (error) {
+      console.error('Error fetching module lessons:', error);
+      throw error;
+    }
+  }
 }

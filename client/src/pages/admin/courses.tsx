@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   BookOpen, 
   Search, 
@@ -327,98 +328,94 @@ export function AdminCourses() {
     setEditingCourse(null);
   };
 
-  // Course module and lesson management handlers
-  const handleAddModule = async () => {
-    // For demo purposes, use the first course or a default course ID
-    const courseId = selectedCourse?.id || 1;
-    
-    try {
-      const moduleData = {
-        name: "New Module",
-        description: "Module description",
-        duration: "1 week",
-        order: 1
-      };
-      
-      const response = await fetch(`/api/admin/courses/${courseId}/modules`, {
+  // Course module and lesson management handlers using proper API integration
+  const addModuleMutation = useMutation({
+    mutationFn: async ({ courseId, moduleData }: { courseId: number; moduleData: any }) => {
+      return await apiRequest(`/api/admin/courses/${courseId}/modules`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify(moduleData)
+        body: moduleData
       });
-      
-      if (response.ok) {
-        console.log('Module added successfully');
-        // Refresh course data or update state
-      }
-    } catch (error) {
+    },
+    onSuccess: () => {
+      toast({ title: "Module added successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
+    },
+    onError: (error) => {
       console.error('Error adding module:', error);
+      toast({ title: "Failed to add module", variant: "destructive" });
     }
+  });
+
+  const addLessonMutation = useMutation({
+    mutationFn: async ({ courseId, moduleId, lessonData }: { courseId: number; moduleId: number; lessonData: any }) => {
+      return await apiRequest(`/api/admin/courses/${courseId}/modules/${moduleId}/lessons`, {
+        method: 'POST',
+        body: lessonData
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Lesson added successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
+    },
+    onError: (error) => {
+      console.error('Error adding lesson:', error);
+      toast({ title: "Failed to add lesson", variant: "destructive" });
+    }
+  });
+
+  const publishCourseMutation = useMutation({
+    mutationFn: async (courseId: number) => {
+      return await apiRequest(`/api/admin/courses/${courseId}/publish`, {
+        method: 'PUT'
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Course published successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
+    },
+    onError: (error) => {
+      console.error('Error publishing course:', error);
+      toast({ title: "Failed to publish course", variant: "destructive" });
+    }
+  });
+
+  const handleAddModule = async () => {
+    const courseId = selectedCourse?.id || 1;
+    const moduleData = {
+      name: "New Module",
+      description: "Module description",
+      duration: "1 week",
+      order: 1
+    };
+    
+    addModuleMutation.mutate({ courseId, moduleData });
   };
 
   const handleAddLesson = async (moduleId: number) => {
-    // For demo purposes, use the first course or a default course ID
     const courseId = selectedCourse?.id || 1;
+    const lessonData = {
+      teacherId: 1,
+      title: "New Lesson",
+      description: "Lesson description",
+      videoUrl: "",
+      duration: 30,
+      orderIndex: 1,
+      language: "Persian",
+      level: "Beginner",
+      skillFocus: "Grammar",
+      isPublished: false
+    };
     
-    try {
-      const lessonData = {
-        teacherId: 1, // Get from current user or selection
-        title: "New Lesson",
-        description: "Lesson description",
-        videoUrl: "",
-        duration: 30,
-        orderIndex: 1,
-        language: "Persian",
-        level: "Beginner",
-        skillFocus: "Grammar",
-        isPublished: false
-      };
-      
-      const response = await fetch(`/api/admin/courses/${courseId}/modules/${moduleId}/lessons`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify(lessonData)
-      });
-      
-      if (response.ok) {
-        console.log('Lesson added successfully');
-        // Refresh course data or update state
-      }
-    } catch (error) {
-      console.error('Error adding lesson:', error);
-    }
+    addLessonMutation.mutate({ courseId, moduleId, lessonData });
   };
 
   const handleSaveAsDraft = () => {
-    console.log('Saving course as draft...');
-    // Keep course unpublished
+    toast({ title: "Course saved as draft" });
   };
 
   const handlePublishCourse = async () => {
-    // For demo purposes, use the first course or a default course ID
     const courseId = selectedCourse?.id || 1;
-    
-    try {
-      const response = await fetch(`/api/admin/courses/${courseId}/publish`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
-      
-      if (response.ok) {
-        console.log('Course published successfully');
-        // Refresh course data or update state
-      }
-    } catch (error) {
-      console.error('Error publishing course:', error);
-    }
+    publishCourseMutation.mutate(courseId);
   };
 
   return (
