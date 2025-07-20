@@ -1,5 +1,6 @@
 // DEPRECATED: This file is being replaced by useLanguage.tsx
 // Use import { useLanguage } from "@/hooks/useLanguage"; instead
+import { useQuery } from '@tanstack/react-query';
 
 export interface LanguageSettings {
   language: string;
