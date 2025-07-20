@@ -32,6 +32,14 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import mammoth from "mammoth";
+import { 
+  filterTeachers, 
+  filterActiveTeachers, 
+  filterStudents,
+  ACTIVE_OBSERVATION_STATUSES,
+  isActiveObservation,
+  validateActiveTeacher
+} from './business-logic-utils';
 
 // Configure multer for audio uploads
 const audioStorage = multer.diskStorage({
@@ -1171,7 +1179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/teachers/list", async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
-      const teachers = users.filter(u => u.role === 'Teacher/Tutor' || u.role === 'instructor').map(teacher => {
+      const teachers = filterTeachers(users).map(teacher => {
         // Parse preferences if they exist
         let preferences: any = {};
         if (teacher.preferences && typeof teacher.preferences === 'object') {
@@ -3755,8 +3763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/teachers", authenticateToken, async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
-      const teachers = users
-        .filter(u => u.role === 'Teacher/Tutor')
+      const teachers = filterTeachers(users)
         .map(teacher => ({
           id: teacher.id,
           name: `${teacher.firstName} ${teacher.lastName}`,
