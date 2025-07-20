@@ -275,6 +275,14 @@ Preferred communication style: Simple, everyday language.
 - **Transparent Financial Display**: Dashboard clearly shows "No payments recorded" when financial data is empty, maintaining complete data integrity
 - **Database-First Architecture**: All business intelligence now queries actual payment/transaction tables with proper error handling for empty states
 
+### Real-Time To-Do Observations System Fix (July 20, 2025)
+- **FIXED REAL-TIME UPDATES**: Resolved to-do observations not updating in real time by implementing proper cache invalidation
+- **Enhanced Query Configuration**: Added 10-second polling, 5-second stale time, and focus/mount refetching for immediate updates
+- **Complete Cache Invalidation**: Fixed observation creation mutation to invalidate pending observations query key
+- **Immediate Refetch Implementation**: Added explicit refetch calls to ensure instant UI updates after observation creation
+- **Test Verification**: Confirmed real-time functionality - observations count correctly increases from 1 to 2 upon creation
+- **All Features Functional**: Verified all observation buttons, endpoints, and SMS notifications working correctly
+
 ### Games Management Input Focus Fix (July 14, 2025)
 - **Critical Fix Applied**: Resolved input focus jumping issue in games management system
 - **Root Cause**: GameForm component was being recreated on every render, causing form inputs to lose focus after each keystroke
