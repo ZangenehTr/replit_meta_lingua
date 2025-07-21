@@ -92,7 +92,7 @@ function isTimeOverlap(slot1: any, slot2: any): boolean {
 
 export default function TeacherStudentMatchingPage() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("one-on-one"); // "one-on-one" or "group-classes" or "callern-pool"
+  const [activeTab, setActiveTab] = useState("one-on-one"); // "one-on-one" or "group-classes"
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterLanguage, setFilterLanguage] = useState("all");
@@ -115,7 +115,7 @@ export default function TeacherStudentMatchingPage() {
   });
 
   // Fetch group classes awaiting teacher assignment
-  const { data: groupClasses = [], isLoading: groupClassesLoading } = useQuery({
+  const { data: groupClasses = [], isLoading: groupClassesLoading } = useQuery<any[]>({
     queryKey: ['/api/admin/group-classes/awaiting-teachers'],
   });
 
@@ -129,14 +129,7 @@ export default function TeacherStudentMatchingPage() {
     queryKey: ['/api/admin/courses'],
   });
 
-  // Fetch Callern teachers and performance data  
-  const { data: callernTeachers = [], isLoading: callernTeachersLoading } = useQuery({
-    queryKey: ['/api/admin/callern/available-teachers'],
-  });
 
-  const { data: callernPerformance = [], isLoading: callernPerformanceLoading } = useQuery({
-    queryKey: ['/api/admin/callern/performance'],
-  });
 
   // Create teacher assignment mutation
   const createAssignmentMutation = useMutation({
@@ -424,10 +417,9 @@ export default function TeacherStudentMatchingPage() {
         <Card className="shadow-lg border-gray-200 mb-8">
           <CardContent className="p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="one-on-one">One-on-One Students</TabsTrigger>
                 <TabsTrigger value="group-classes">Group Classes</TabsTrigger>
-                <TabsTrigger value="callern-pool">Callern Teacher Pool</TabsTrigger>
               </TabsList>
               
               {/* Tab Content */}
@@ -600,113 +592,7 @@ export default function TeacherStudentMatchingPage() {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="callern-pool" className="space-y-6">
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    {/* Callern Teacher Pool */}
-                    <Card className="shadow-lg">
-                      <CardHeader className="bg-gradient-to-r from-orange-50 to-red-50">
-                        <CardTitle className="flex items-center text-orange-900">
-                          <Video className="h-5 w-5 mr-2" />
-                          Callern Teacher Pool ({callernTeachers.length})
-                        </CardTitle>
-                        <CardDescription>Teachers assigned to on-demand Callern service</CardDescription>
-                      </CardHeader>
-                      <CardContent className="p-4 max-h-96 overflow-y-auto">
-                        {callernTeachersLoading ? (
-                          <div className="text-center py-8 text-gray-500">Loading Callern teachers...</div>
-                        ) : callernTeachers.length === 0 ? (
-                          <div className="text-center py-8 text-gray-500">No teachers in Callern pool</div>
-                        ) : (
-                          <div className="space-y-3">
-                            {callernTeachers.map((teacher: any) => (
-                              <div key={teacher.id} className="p-3 border rounded-lg hover:bg-gray-50">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <div className="font-medium">{teacher.firstName} {teacher.lastName}</div>
-                                    <div className="text-sm text-gray-500">{teacher.email}</div>
-                                    <div className="flex gap-2 mt-1">
-                                      <Badge variant={teacher.isOnlineNow ? 'default' : 'secondary'}>
-                                        {teacher.isOnlineNow ? 'Online' : 'Offline'}
-                                      </Badge>
-                                      <Badge variant="outline">Callern Pool</Badge>
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-1">
-                                      Calls: {teacher.totalCallsHandled || 0} • Avg: {teacher.averageCallDuration || 0}min • Rating: {teacher.rating || 4.5}
-                                    </div>
-                                  </div>
-                                  <Button 
-                                    size="sm" 
-                                    variant={teacher.isAssignedToCallern ? "destructive" : "default"}
-                                  >
-                                    {teacher.isAssignedToCallern ? 'Remove' : 'Add to Pool'}
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Callern Performance Dashboard */}
-                    <Card className="shadow-lg">
-                      <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50">
-                        <CardTitle className="flex items-center text-indigo-900">
-                          <Target className="h-5 w-5 mr-2" />
-                          Callern Performance Metrics
-                        </CardTitle>
-                        <CardDescription>Real-time performance tracking and analytics</CardDescription>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        {callernPerformanceLoading ? (
-                          <div className="text-center py-8 text-gray-500">Loading performance data...</div>
-                        ) : !callernPerformance || Object.keys(callernPerformance).length === 0 ? (
-                          <div className="text-center py-8 text-gray-500">No performance data available</div>
-                        ) : (
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="p-3 bg-blue-50 rounded-lg">
-                                <div className="text-2xl font-bold text-blue-900">{callernPerformance.totalCalls || 0}</div>
-                                <div className="text-sm text-blue-600">Total Calls</div>
-                              </div>
-                              <div className="p-3 bg-green-50 rounded-lg">
-                                <div className="text-2xl font-bold text-green-900">{callernPerformance.totalMinutes || 0}</div>
-                                <div className="text-sm text-green-600">Total Minutes</div>
-                              </div>
-                              <div className="p-3 bg-purple-50 rounded-lg">
-                                <div className="text-2xl font-bold text-purple-900">{callernPerformance.averageCallDuration || 0}</div>
-                                <div className="text-sm text-purple-600">Avg Duration</div>
-                              </div>
-                              <div className="p-3 bg-orange-50 rounded-lg">
-                                <div className="text-2xl font-bold text-orange-900">{callernPerformance.teacherPerformance?.length || 0}</div>
-                                <div className="text-sm text-orange-600">Active Teachers</div>
-                              </div>
-                            </div>
-                            
-                            {callernPerformance.teacherPerformance && callernPerformance.teacherPerformance.length > 0 && (
-                              <div className="space-y-3">
-                                <h4 className="font-medium text-gray-900">Top Performers</h4>
-                                {callernPerformance.teacherPerformance.slice(0, 3).map((teacher: any, index: number) => (
-                                  <div key={teacher.teacherId} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                    <div>
-                                      <div className="font-medium">{teacher.teacherName}</div>
-                                      <div className="text-sm text-gray-500">
-                                        {teacher.callsHandled} calls • {teacher.totalMinutes}min • {teacher.averageRating}★
-                                      </div>
-                                    </div>
-                                    <Badge variant={index === 0 ? 'default' : 'secondary'}>
-                                      #{index + 1}
-                                    </Badge>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
+
               </div>
             </Tabs>
           </CardContent>
