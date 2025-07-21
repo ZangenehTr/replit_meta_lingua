@@ -16,6 +16,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { 
   Users, 
   Search, 
@@ -48,6 +49,7 @@ import {
 export function AdminStudents() {
   const { t, isRTL } = useLanguage();
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -187,8 +189,8 @@ export function AdminStudents() {
           description: `Opening chat with ${student.firstName} ${student.lastName}`,
         });
         
-        // Could redirect to communication center with conversation ID
-        // window.location.href = `/communication?conversation=${conversation.id}`;
+        // Navigate to communication center with conversation ID
+        setLocation(`/admin/communications?conversation=${conversation.conversation.id}`);
         console.log('Communication initiated:', conversation);
       } else {
         throw new Error('Failed to create conversation');
