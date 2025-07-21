@@ -3307,6 +3307,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/messages", authenticateToken, async (req: any, res) => {
     try {
+      // Fix 2: Validate message content is not empty
+      if (!req.body.content || req.body.content.trim().length === 0) {
+        return res.status(400).json({ message: "Message content cannot be empty" });
+      }
+
       const messageData = insertMessageSchema.parse({
         ...req.body,
         senderId: req.user.id
@@ -14319,11 +14324,19 @@ Meta Lingua Academy`;
 
   app.post("/api/chat/conversations/:conversationId/messages", authenticateToken, async (req, res) => {
     try {
+      // Fix 2: Validate message content is not empty
+      if (!req.body.message || req.body.message.trim().length === 0) {
+        return res.status(400).json({ message: "Message content cannot be empty" });
+      }
+
       const messageData = {
         ...req.body,
         conversationId: parseInt(req.params.conversationId),
-        senderId: req.user.id
+        senderId: req.user.id,  // Fix 1: Ensure correct user ID from JWT token
+        senderName: req.user.firstName + ' ' + req.user.lastName
       };
+      
+      console.log('Creating message with user ID:', req.user.id, 'email:', req.user.email);
       const message = await storage.createChatMessage(messageData);
       res.status(201).json(message);
     } catch (error) {

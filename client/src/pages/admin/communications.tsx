@@ -685,12 +685,14 @@ export default function AdminCommunicationsPage() {
                               No messages yet. Start the conversation!
                             </div>
                           ) : (
-                            messagesData.map((message) => (
+                            messagesData
+                              .filter(message => message.message && message.message.trim().length > 0) // Fix 2: Filter empty messages
+                              .map((message) => (
                               <div 
                                 key={message.id}
-                                className={`flex items-start gap-3 ${message.isOwnMessage ? 'justify-end' : ''}`}
+                                className={`flex items-start gap-3 ${user && message.senderId === user.id ? 'justify-end' : ''}`}
                               >
-                                {!message.isOwnMessage && (
+                                {!(user && message.senderId === user.id) && (
                                   <Avatar className="h-8 w-8">
                                     <AvatarFallback>
                                       {message.senderName?.charAt(0) || 'U'}
@@ -698,18 +700,18 @@ export default function AdminCommunicationsPage() {
                                   </Avatar>
                                 )}
                                 <div className={`rounded-lg p-3 max-w-[70%] ${
-                                  message.isOwnMessage 
+                                  (user && message.senderId === user.id)
                                     ? 'bg-blue-500 text-white' 
                                     : 'bg-gray-100 dark:bg-gray-800'
                                 }`}>
                                   <p className="text-sm">{message.message}</p>
                                   <p className={`text-xs mt-1 ${
-                                    message.isOwnMessage ? 'text-blue-100' : 'text-gray-500'
+                                    (user && message.senderId === user.id) ? 'text-blue-100' : 'text-gray-500'
                                   }`}>
                                     {message.sentAt ? new Date(message.sentAt).toLocaleTimeString() : 'Just now'}
                                   </p>
                                 </div>
-                                {message.isOwnMessage && (
+                                {(user && message.senderId === user.id) && (
                                   <Avatar className="h-8 w-8">
                                     <AvatarFallback>ME</AvatarFallback>
                                   </Avatar>
