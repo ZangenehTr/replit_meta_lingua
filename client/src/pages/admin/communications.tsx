@@ -142,21 +142,29 @@ export default function AdminCommunicationsPage() {
     queryKey: ['/api/push-notifications'],
   });
 
-  // Real API calls for conversation messages with enhanced refresh
+  // Real API calls for conversation messages with aggressive refresh
   const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useQuery({
     queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'],
     enabled: !!selectedConversation,
-    refetchInterval: 3000, // Refresh every 3 seconds for real-time updates
-    staleTime: 0, // Always treat data as stale to ensure fresh updates
+    refetchInterval: 1000, // More aggressive refresh - every 1 second
+    staleTime: 0, // Always treat data as stale
+    gcTime: 0, // No caching
     refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    refetchOnMount: 'always' as const,
   });
 
   const ticketsData = (tickets as SupportTicket[]) || [];
   const conversationsData = (conversations as ChatConversation[]) || [];
   const notificationsData = (notifications as PushNotification[]) || [];
-  // Get current user for message ownership detection
+  // Get current user for message ownership detection with debug logging
   const { user } = useAuth();
+  
+  // Debug current user state
+  console.log('Communications: Current user from useAuth:', { 
+    id: user?.id, 
+    email: user?.email,
+    role: user?.role 
+  });
   
   const messagesData = ((messages as Array<{
     id: number;
@@ -166,10 +174,14 @@ export default function AdminCommunicationsPage() {
     senderId: number;
     sentAt: string;
     isOwnMessage?: boolean;
-  }>) || []).map(msg => ({
-    ...msg,
-    isOwnMessage: msg.senderId === user?.id // Properly determine if message is from current user
-  }));
+  }>) || []).map(msg => {
+    const isOwn = user && msg.senderId === user.id;
+    console.log(`Message ${msg.id}: senderId=${msg.senderId}, currentUserId=${user?.id}, isOwn=${isOwn}`);
+    return {
+      ...msg,
+      isOwnMessage: isOwn
+    };
+  });
 
   // Parse URL parameters and auto-select conversation
   useEffect(() => {
@@ -239,18 +251,33 @@ export default function AdminCommunicationsPage() {
 
       return response;
     },
-    onSuccess: async () => {
+    onSuccess: async (response) => {
+      console.log('Message sent successfully:', response);
+      console.log('Current user ID:', user?.id);
+      console.log('User email:', user?.email);
+      
       // Clear form first
       setChatInput("");
       setSendNotification(false);
       setCustomNotificationText("New message from admin");
       
-      // Multiple invalidation strategies for reliable refresh
-      await queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'] });
+      // Aggressive cache invalidation
+      queryClient.removeQueries({ queryKey: ['/api/chat/conversations'] });
+      queryClient.removeQueries({ queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'] });
       
-      // Force immediate refetch
-      await refetchMessages();
+      // Force multiple refetches with delays
+      setTimeout(() => {
+        console.log('Refetching messages after 100ms');
+        refetchMessages();
+      }, 100);
+      setTimeout(() => {
+        console.log('Refetching messages after 500ms');
+        refetchMessages();
+      }, 500);
+      setTimeout(() => {
+        console.log('Refetching messages after 1000ms');
+        refetchMessages();
+      }, 1000);
       
       // Success feedback
       toast({ title: "Message sent successfully" });
@@ -589,7 +616,7 @@ export default function AdminCommunicationsPage() {
 
           {/* Internal Chat Tab */}
           <TabsContent value="chat" className="space-y-4 md:space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 md:gap-6">
               {/* Mobile-First Conversations List */}
               <Card className="lg:h-auto">
                 <CardHeader className="pb-3">
