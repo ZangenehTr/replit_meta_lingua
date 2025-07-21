@@ -58,6 +58,12 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
         signal: controller.signal,
         keepalive: true,
         cache: 'no-cache',
+      }).catch(fetchError => {
+        // Handle fetch errors to prevent unhandled promise rejections
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Request timeout');
+        }
+        throw fetchError;
       });
 
       // Clear timeout on successful response
