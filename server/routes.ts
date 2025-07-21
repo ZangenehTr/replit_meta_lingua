@@ -4878,33 +4878,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create conversation between admin and student
       const conversationData = {
         title: `Contact with ${studentName}`,
-        participants: [userId, studentId],
+        participants: [userId.toString(), studentId.toString()], // Convert to string array
         type: 'direct' as const,
         isActive: true,
-        createdBy: userId,
-        createdAt: new Date(),
         lastMessageAt: new Date(),
         lastMessage: `Started conversation with ${studentName}`
       };
       
       const conversation = await storage.createChatConversation(conversationData);
       
-      // Log communication attempt
-      const communicationLog = {
-        userId: studentId,
-        agentId: userId,
-        type: 'internal_message' as const,
-        content: `Started internal conversation with admin`,
-        timestamp: new Date(),
-        channel: 'internal_chat',
-        successful: true,
-        metadata: {
-          conversationId: conversation.id,
-          subject: subject
-        }
-      };
-      
-      await storage.createCommunicationLog(communicationLog);
+      // Log communication attempt (remove this problematic section for now)
+      console.log('Conversation created successfully:', conversation.id);
       
       res.status(201).json({ 
         success: true, 
