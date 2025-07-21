@@ -45,7 +45,28 @@ const courseSchema = z.object({
   price: z.coerce.number().min(0, "Price must be non-negative"),
   maxStudents: z.coerce.number().optional(),
   isActive: z.boolean().default(true),
-  isFeatured: z.boolean().default(false)
+  isFeatured: z.boolean().default(false),
+  // Scheduling fields - required for regular courses, optional for Callern
+  weekdays: z.array(z.string()).optional(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  firstSessionDate: z.string().optional(),
+  // Callern-specific fields
+  accessPeriodMonths: z.coerce.number().optional(), // For Callern courses: access period in months
+  callernAvailable24h: z.boolean().optional() // For Callern courses: 24/7 availability
+}).refine((data) => {
+  // For non-Callern courses, require scheduling fields
+  if (data.deliveryMode !== 'callern') {
+    return data.weekdays && data.weekdays.length > 0 && data.startTime && data.endTime;
+  }
+  // For Callern courses, require access period
+  if (data.deliveryMode === 'callern') {
+    return data.accessPeriodMonths && data.accessPeriodMonths > 0;
+  }
+  return true;
+}, {
+  message: "Regular courses require weekdays and time settings. Callern courses require access period.",
+  path: ['weekdays']
 });
 
 // Create Course Dialog Component
@@ -69,7 +90,13 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
       price: 0,
       maxStudents: 30,
       isActive: true,
-      isFeatured: false
+      isFeatured: false,
+      weekdays: [],
+      startTime: "",
+      endTime: "",
+      firstSessionDate: "",
+      accessPeriodMonths: 2,
+      callernAvailable24h: true
     }
   });
 
@@ -428,6 +455,156 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 )}
               />
             </div>
+
+            {/* Scheduling Section - Conditional based on delivery mode */}
+            {form.watch('deliveryMode') !== 'callern' && (
+              <div className="space-y-4 border-t pt-6">
+                <h3 className="text-lg font-semibold">Class Schedule Settings</h3>
+                <p className="text-sm text-muted-foreground">
+                  Set the days and times when this course will be held
+                </p>
+                
+                {/* Weekdays Selection */}
+                <FormField
+                  control={form.control}
+                  name="weekdays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Class Days</FormLabel>
+                      <div className="grid grid-cols-4 gap-2">
+                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                          <div key={day} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={day}
+                              checked={field.value?.includes(day.toLowerCase()) || false}
+                              onChange={(e) => {
+                                const currentDays = field.value || [];
+                                if (e.target.checked) {
+                                  field.onChange([...currentDays, day.toLowerCase()]);
+                                } else {
+                                  field.onChange(currentDays.filter(d => d !== day.toLowerCase()));
+                                }
+                              }}
+                              className="h-4 w-4 rounded border-gray-300"
+                            />
+                            <label htmlFor={day} className="text-sm font-medium">
+                              {day.substring(0, 3)}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Time Settings */}
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="endTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="firstSessionDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Session Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Callern Access Period Settings */}
+            {form.watch('deliveryMode') === 'callern' && (
+              <div className="space-y-4 border-t pt-6">
+                <h3 className="text-lg font-semibold">Callern Access Settings</h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure 24/7 access period for this Callern course
+                </p>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="accessPeriodMonths"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Access Period (Months)</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select access period" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="1">1 Month</SelectItem>
+                            <SelectItem value="2">2 Months</SelectItem>
+                            <SelectItem value="3">3 Months</SelectItem>
+                            <SelectItem value="6">6 Months</SelectItem>
+                            <SelectItem value="12">12 Months</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="callernAvailable24h"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            24/7 Availability
+                          </FormLabel>
+                          <p className="text-sm text-muted-foreground">
+                            Students can access this course anytime
+                          </p>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
             
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>

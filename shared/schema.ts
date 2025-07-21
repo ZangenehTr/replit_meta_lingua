@@ -121,6 +121,10 @@ export const courses = pgTable("courses", {
   autoRecord: boolean("auto_record").default(false),
   recordingAvailable: boolean("recording_available").default(false),
   
+  // Callern-specific fields for 24/7 access courses
+  accessPeriodMonths: integer("access_period_months"), // For Callern courses: access period in months
+  callernAvailable24h: boolean("callern_available_24h").default(true), // For Callern courses: 24/7 availability
+  
   category: text("category").notNull(),
   tags: text("tags").array(),
   prerequisites: text("prerequisites").array(),
