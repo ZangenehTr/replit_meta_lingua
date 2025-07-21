@@ -321,31 +321,31 @@ export default function AdminCommunicationsPage() {
         </div>
 
         {/* Mobile-First Statistics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mb-4 md:mb-6 lg:mb-8">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-4 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Open Tickets</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">Open Tickets</p>
+                  <p className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
                     {ticketsData.filter(t => t.status === 'open').length}
                   </p>
                 </div>
-                <HeadphonesIcon className="h-8 w-8 text-orange-500" />
+                <HeadphonesIcon className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-4 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Chats</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">Active Chats</p>
+                  <p className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
                     {conversationsData.filter(c => c.unreadCount > 0).length}
                   </p>
                 </div>
-                <MessageSquare className="h-8 w-8 text-blue-500" />
+                <MessageSquare className="h-6 w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
@@ -379,23 +379,23 @@ export default function AdminCommunicationsPage() {
 
         {/* Mobile-First Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 md:gap-0">
-            <TabsTrigger value="tickets" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 md:gap-0 bg-white dark:bg-gray-800 p-1 rounded-lg shadow-sm">
+            <TabsTrigger value="tickets" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
               <HeadphonesIcon className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Support</span>
-              <span className="sm:hidden">Tickets</span>
+              <span className="hidden sm:inline">Support Tickets</span>
+              <span className="sm:hidden">Support</span>
             </TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3">
+            <TabsTrigger value="chat" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
               <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Chat</span>
+              <span className="hidden sm:inline">Live Chat</span>
               <span className="sm:hidden">Chat</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3">
+            <TabsTrigger value="notifications" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
               <Bell className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Notifications</span>
-              <span className="sm:hidden">Push</span>
+              <span className="hidden sm:inline">Push Notifications</span>
+              <span className="sm:hidden">Notify</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3">
+            <TabsTrigger value="analytics" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
               <Globe className="h-3 w-3 md:h-4 md:w-4" />
               <span className="hidden sm:inline">Analytics</span>
               <span className="sm:hidden">Data</span>
@@ -422,7 +422,7 @@ export default function AdminCommunicationsPage() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Tickets List */}
               <Card>
                 <CardHeader>
@@ -462,11 +462,7 @@ export default function AdminCommunicationsPage() {
                             <div className="flex items-center justify-between text-xs text-gray-500">
                               <span>by {ticket.studentName}</span>
                               <span>
-                                {ticket.createdAt ? (
-                                  typeof ticket.createdAt === 'string' 
-                                    ? new Date(ticket.createdAt).toLocaleDateString()
-                                    : ticket.createdAt.toLocaleDateString()
-                                ) : 'Unknown'}
+                                {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : 'Unknown'}
                               </span>
                             </div>
                           </div>
@@ -518,11 +514,7 @@ export default function AdminCommunicationsPage() {
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-sm font-medium">{message.senderName}</span>
                                   <span className="text-xs text-gray-500">
-                                    {message.sentAt ? (
-                                      typeof message.sentAt === 'string' 
-                                        ? new Date(message.sentAt).toLocaleString()
-                                        : message.sentAt.toLocaleString()
-                                    ) : 'Just now'}
+                                    {message.sentAt ? new Date(message.sentAt).toLocaleString() : 'Just now'}
                                   </span>
                                 </div>
                                 <p className="text-sm">{message.message}</p>
@@ -629,11 +621,7 @@ export default function AdminCommunicationsPage() {
                                   {conversation.lastMessage}
                                 </p>
                                 <p className="text-xs text-gray-400">
-                                  {conversation.lastMessageAt ? (
-                                    typeof conversation.lastMessageAt === 'string' 
-                                      ? new Date(conversation.lastMessageAt).toLocaleTimeString()
-                                      : conversation.lastMessageAt.toLocaleTimeString()
-                                  ) : 'No messages'}
+                                  {conversation.lastMessageAt ? new Date(conversation.lastMessageAt).toLocaleTimeString() : 'No messages'}
                                 </p>
                               </div>
                             </div>
@@ -695,11 +683,7 @@ export default function AdminCommunicationsPage() {
                                   <p className={`text-xs mt-1 ${
                                     message.isOwnMessage ? 'text-blue-100' : 'text-gray-500'
                                   }`}>
-                                    {message.sentAt ? (
-                                      typeof message.sentAt === 'string' 
-                                        ? new Date(message.sentAt).toLocaleTimeString()
-                                        : message.sentAt.toLocaleTimeString()
-                                    ) : 'Just now'}
+                                    {message.sentAt ? new Date(message.sentAt).toLocaleTimeString() : 'Just now'}
                                   </p>
                                 </div>
                                 {message.isOwnMessage && (
@@ -719,35 +703,46 @@ export default function AdminCommunicationsPage() {
                     </ScrollArea>
                     
                     <div className="space-y-3">
-                      {/* Notification Options */}
-                      <div className="flex flex-col sm:flex-row gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <div className="flex items-center space-x-2">
+                      {/* Enhanced Notification Options - Mobile-First */}
+                      <div className="flex flex-col gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Bell className="h-4 w-4 text-blue-500" />
+                            <Label htmlFor="sendNotif" className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                              Send Custom Notification
+                            </Label>
+                          </div>
                           <Checkbox 
                             id="sendNotif"
                             checked={sendNotification}
                             onCheckedChange={(checked) => setSendNotification(checked as boolean)}
+                            className="data-[state=checked]:bg-blue-500 border-blue-400"
                           />
-                          <Label htmlFor="sendNotif" className="text-sm font-medium">
-                            Send notification with message
-                          </Label>
                         </div>
-                        {sendNotification && (
+                        <div className="space-y-2">
                           <Input
-                            placeholder="Custom notification text..."
+                            placeholder={sendNotification ? "Enter your custom notification message..." : "Check the box above to send a notification with your message"}
                             value={customNotificationText}
                             onChange={(e) => setCustomNotificationText(e.target.value)}
-                            className="flex-1 text-sm"
+                            className="w-full text-sm bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-600 focus:border-blue-500"
+                            disabled={!sendNotification}
                           />
-                        )}
+                          {sendNotification && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                              <MessageSquare className="h-3 w-3" />
+                              This notification will be sent via SMS and push notification
+                            </p>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Message Input */}
-                      <div className="flex gap-2">
+                      {/* Enhanced Message Input - Mobile-First */}
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <Input
-                          placeholder="Type a message..."
+                          placeholder="Type your message here..."
                           value={chatInput}
                           onChange={(e) => setChatInput(e.target.value)}
-                          className="flex-1"
+                          className="flex-1 min-h-[44px] text-sm md:text-base" 
                           onKeyPress={(e) => {
                             if (e.key === 'Enter' && chatInput.trim() && selectedConversation) {
                               sendMessageMutation.mutate({
@@ -771,8 +766,8 @@ export default function AdminCommunicationsPage() {
                             }
                           }}
                           disabled={!chatInput.trim() || !selectedConversation || sendMessageMutation.isPending}
-                          size="sm"
-                          className="shrink-0"
+                          size="default"
+                          className="shrink-0 min-h-[44px] px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium"
                         >
                           {sendMessageMutation.isPending ? (
                             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
