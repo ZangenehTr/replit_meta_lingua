@@ -454,7 +454,7 @@ export function AdminCourses() {
   // Fetch courses data
   const { data: courses, isLoading, isError, error } = useQuery({
     queryKey: ['/api/admin/courses', { search: searchTerm, category: filterCategory }],
-    enabled: !!user && user.role === 'Admin',
+    enabled: !!user && ['Admin', 'Supervisor'].includes(user.role),
     retry: (failureCount, error: any) => {
       if (error?.status === 401 || error?.status === 403) {
         console.error('Authentication error, not retrying:', error?.status);
