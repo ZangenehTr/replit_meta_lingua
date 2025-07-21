@@ -267,6 +267,17 @@ Preferred communication style: Simple, everyday language.
 - **Call Integration**: Added proper VoIP call mutation with error handling and toast notifications
 - **Lead Management Enhancement**: Phone buttons now functional with click-to-call capability
 
+### Callern Management Access Control Fix (July 21, 2025)
+- **CRITICAL BUG FIX**: Fixed teacher dropdown not showing in "Add Teacher to Callern" dialog
+- **Root Cause**: Users accessing Callern management with supervisor role instead of Admin role
+- **Authentication Issue**: Callern endpoints (/api/admin/callern/*) require Admin role, but supervisors were accessing the page
+- **Role-Based Access Control**: Added frontend role validation to prevent non-admin access to Callern management
+- **Error Handling**: Enhanced API error logging and user feedback for authentication issues
+- **Database Verification**: Confirmed 9 active teachers available for Callern assignment:
+  - Akbar asghari, Test Teacher, sasasas asasasas, john doe, wwwww wwwwew
+  - زهرا کریمی (Zahra Karimi), سارا احمدی (Sara Ahmadi), محمد رضایی (Mohammad Rezaei)
+- **Access Requirements**: Only Admin users can access `/admin/callern-management` - supervisors see access denied message
+
 ### Critical Data Integrity Compliance Fix (July 20, 2025)
 - **ELIMINATED ALL FAKE REVENUE DATA**: Fixed business intelligence dashboard to use only authentic database transactions instead of calculated estimates
 - **Real Payment Integration**: Monthly revenue now shows 0 IRR (accurate - no payments in database) instead of fake 26.35M IRR estimates

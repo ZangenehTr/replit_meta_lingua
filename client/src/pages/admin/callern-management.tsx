@@ -12,6 +12,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   Phone, 
   Users, 
@@ -29,6 +30,7 @@ import {
 export function CallernManagement() {
   const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -68,9 +70,12 @@ export function CallernManagement() {
         }
       });
       if (!response.ok) {
+        console.error('Failed to fetch teachers:', response.status, response.statusText);
         throw new Error(`Failed to fetch teachers: ${response.status}`);
       }
-      return response.json();
+      const teachers = await response.json();
+      console.log('Available teachers data:', teachers);
+      return teachers;
     }
   });
 
@@ -217,6 +222,34 @@ export function CallernManagement() {
     return isOnline ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />;
   };
 
+  // Check if user has admin access
+  if (user && user.role !== 'Admin') {
+    return (
+      <div className={`min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 p-4 sm:p-6 flex items-center justify-center ${isRTL ? 'rtl' : 'ltr'}`}>
+        <Card className="max-w-md text-center">
+          <CardHeader>
+            <CardTitle className="text-red-600">Access Denied</CardTitle>
+            <CardDescription>
+              Only administrators can access Callern Management. Your current role is: {user.role}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Please log in with an admin account to manage Callern settings.
+            </p>
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={() => window.location.href = '/login'}
+            >
+              Switch Account
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 p-4 sm:p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Header */}
@@ -361,11 +394,18 @@ export function CallernManagement() {
                           <SelectValue placeholder="Choose a teacher" />
                         </SelectTrigger>
                         <SelectContent>
-                          {Array.isArray(availableTeachers) && availableTeachers?.map((teacher) => (
-                            <SelectItem key={teacher.id} value={teacher.id.toString()}>
-                              {teacher.firstName} {teacher.lastName}
-                            </SelectItem>
-                          ))}
+                          {loadingTeachers ? (
+                            <SelectItem value="loading" disabled>Loading teachers...</SelectItem>
+                          ) : (
+                            Array.isArray(availableTeachers) && availableTeachers.length > 0 ? 
+                            availableTeachers.map((teacher) => (
+                              <SelectItem key={teacher.id} value={teacher.id.toString()}>
+                                {teacher.firstName} {teacher.lastName}
+                              </SelectItem>
+                            )) : (
+                              <SelectItem value="no-teachers" disabled>No teachers available</SelectItem>
+                            )
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
