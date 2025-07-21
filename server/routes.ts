@@ -9152,7 +9152,7 @@ Return JSON format:
     }
   });
 
-  app.post("/api/leads", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+  app.post("/api/leads", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
     try {
       // Handle name field conversion for database compatibility
       const { name, ...otherData } = req.body;
@@ -9211,7 +9211,7 @@ Return JSON format:
     }
   });
 
-  app.post("/api/leads/:id/communication", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
+  app.post("/api/leads/:id/communication", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
     try {
       const leadId = parseInt(req.params.id);
       const communicationData = {
@@ -12534,7 +12534,7 @@ Return JSON format:
   // ===== CALLERN MANAGEMENT ENDPOINTS =====
   
   // Create Callern course with package configuration
-  app.post("/api/admin/callern/courses", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/callern/courses", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const { courseData, callernConfig } = req.body;
       
@@ -12580,7 +12580,7 @@ Return JSON format:
   });
 
   // Get teacher availability for Callern
-  app.get("/api/admin/callern/teacher-availability", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.get("/api/admin/callern/teacher-availability", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const availability = await storage.getTeacherCallernAvailability();
       res.json(availability);
@@ -12591,7 +12591,7 @@ Return JSON format:
   });
 
   // Add teacher to Callern availability with schedule conflict checking
-  app.post("/api/admin/callern/teacher-availability", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/callern/teacher-availability", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const { teacherId, hourlyRate, availableHours } = req.body;
 
@@ -12636,7 +12636,7 @@ Return JSON format:
   });
 
   // Update teacher standby status
-  app.put("/api/admin/callern/teacher-availability/:teacherId", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.put("/api/admin/callern/teacher-availability/:teacherId", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const teacherId = parseInt(req.params.teacherId);
       const { isOnline, availableHours, hourlyRate } = req.body;
@@ -12656,7 +12656,7 @@ Return JSON format:
   });
 
   // Get available teachers for Callern assignment
-  app.get("/api/admin/callern/available-teachers", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.get("/api/admin/callern/available-teachers", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const teachers = await storage.getTeachersForCallern();
       res.json(teachers);
@@ -12667,7 +12667,7 @@ Return JSON format:
   });
 
   // Get Callern packages
-  app.get("/api/admin/callern/packages", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.get("/api/admin/callern/packages", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const packages = await storage.getCallernPackages();
       res.json(packages);

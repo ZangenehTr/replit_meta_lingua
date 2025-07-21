@@ -222,20 +222,20 @@ export function CallernManagement() {
     return isOnline ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />;
   };
 
-  // Check if user has admin access
-  if (user && user.role !== 'Admin') {
+  // Check if user has admin or supervisor access
+  if (user && !['Admin', 'Supervisor'].includes(user.role)) {
     return (
       <div className={`min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 p-4 sm:p-6 flex items-center justify-center ${isRTL ? 'rtl' : 'ltr'}`}>
         <Card className="max-w-md text-center">
           <CardHeader>
             <CardTitle className="text-red-600">Access Denied</CardTitle>
             <CardDescription>
-              Only administrators can access Callern Management. Your current role is: {user.role}
+              Only administrators and supervisors can access Callern Management. Your current role is: {user.role}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Please log in with an admin account to manage Callern settings.
+              Please log in with an admin or supervisor account to manage Callern settings.
             </p>
             <Button 
               variant="outline" 
