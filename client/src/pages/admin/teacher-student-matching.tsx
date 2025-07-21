@@ -213,8 +213,12 @@ export default function TeacherStudentMatchingPage() {
     );
   };
 
-  // Filter students
-  const filteredStudents = students.filter((student) => {
+  // Filter students based on active tab
+  const currentStudents = activeTab === "one-on-one" ? oneOnOneStudents : 
+                         activeTab === "group-classes" ? [] : // Group classes don't have individual students
+                         [];
+  
+  const filteredStudents = currentStudents.filter((student: any) => {
     const matchesSearch = student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -311,7 +315,7 @@ export default function TeacherStudentMatchingPage() {
               <Users className="h-5 w-5 text-blue-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{students.length}</div>
+              <div className="text-3xl font-bold">{oneOnOneStudents.length}</div>
               <p className="text-xs text-blue-100">Awaiting assignment</p>
             </CardContent>
           </Card>
@@ -332,7 +336,7 @@ export default function TeacherStudentMatchingPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {students.filter((s: Student) => s.preferredClassType === 'private' || s.preferredClassType === 'both').length}
+                {oneOnOneStudents.filter((s: any) => s.preferredClassType === 'private' || s.preferredClassType === 'both').length}
               </div>
               <p className="text-xs text-purple-100">Students prefer 1-on-1</p>
             </CardContent>
@@ -344,7 +348,7 @@ export default function TeacherStudentMatchingPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {students.filter((s: Student) => s.preferredMode === 'online' || s.preferredMode === 'both').length}
+                {oneOnOneStudents.filter((s: any) => s.preferredMode === 'online' || s.preferredMode === 'both').length}
               </div>
               <p className="text-xs text-indigo-100">Prefer virtual</p>
             </CardContent>
@@ -718,7 +722,7 @@ export default function TeacherStudentMatchingPage() {
                 {filteredStudents.length} students
               </Badge>
             </div>
-            {studentsLoading ? (
+            {oneOnOneLoading ? (
               <Card className="shadow-lg">
                 <CardContent className="text-center py-12">
                   <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
