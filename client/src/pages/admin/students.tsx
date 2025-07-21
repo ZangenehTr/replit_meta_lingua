@@ -164,6 +164,8 @@ export function AdminStudents() {
   // Handle student contact/communication
   const handleContact = async (student: any) => {
     try {
+      console.log('Starting contact with student:', student.firstName, student.lastName, 'ID:', student.id);
+      
       // Navigate to communication center with student pre-selected
       const response = await fetch('/api/communication/create-conversation', {
         method: 'POST',
@@ -172,9 +174,9 @@ export function AdminStudents() {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
         },
         body: JSON.stringify({
-          participants: [student.id],
-          type: 'direct',
-          title: `Communication with ${student.firstName} ${student.lastName}`
+          studentId: student.id,
+          studentName: `${student.firstName} ${student.lastName}`,
+          subject: `Contact with ${student.firstName} ${student.lastName}`
         })
       });
 

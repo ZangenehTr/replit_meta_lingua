@@ -4867,6 +4867,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create conversation endpoint
+  app.post("/api/communication/create-conversation", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { studentId, studentName, subject = "Student Contact" } = req.body;
+      
+      console.log('Creating conversation:', { userId, studentId, studentName, subject });
+      
+      // Create conversation between admin and student
+      const conversationData = {
+        title: `Contact with ${studentName}`,
+        participants: [userId, studentId],
+        type: 'direct' as const,
+        isActive: true,
+        createdBy: userId,
+        createdAt: new Date(),
+        lastMessageAt: new Date(),
+        lastMessage: `Started conversation with ${studentName}`
+      };
+      
+      const conversation = await storage.createChatConversation(conversationData);
+      
+      // Log communication attempt
+      const communicationLog = {
+        userId: studentId,
+        agentId: userId,
+        type: 'internal_message' as const,
+        content: `Started internal conversation with admin`,
+        timestamp: new Date(),
+        channel: 'internal_chat',
+        successful: true,
+        metadata: {
+          conversationId: conversation.id,
+          subject: subject
+        }
+      };
+      
+      await storage.createCommunicationLog(communicationLog);
+      
+      res.status(201).json({ 
+        success: true, 
+        conversation,
+        message: `Conversation started with ${studentName}` 
+      });
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      res.status(500).json({ error: 'Failed to create conversation' });
+    }
+  });
+
   app.get("/api/communication/stats", authenticateToken, requireRole(['Admin', 'Call Center Agent']), async (req: any, res) => {
     try {
       const templates = await storage.getCommunicationTemplates();
