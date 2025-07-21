@@ -1,6 +1,12 @@
 // DEPRECATED: This file is being replaced by useLanguage.tsx
 // Use import { useLanguage } from "@/hooks/useLanguage"; instead
 import { useQuery } from '@tanstack/react-query';
+import { translations, type Language } from '../lib/i18n';
+
+// Import JSON translation files
+import enCommon from '../i18n/locales/en/common.json';
+import faCommon from '../i18n/locales/fa/common.json';
+import arCommon from '../i18n/locales/ar/common.json';
 
 export interface LanguageSettings {
   language: string;
@@ -19,7 +25,7 @@ export function useLanguage() {
   });
 
   // Default to English unless user has specifically selected Farsi
-  const currentLanguage: Language = (userPreferences?.preferences?.language || localStorage.getItem('appLanguage') || 'en') as Language;
+  const currentLanguage: Language = (localStorage.getItem('appLanguage') || 'en') as Language;
   const isRTL = currentLanguage === 'fa' || currentLanguage === 'ar';
 
   // Helper function to change language
