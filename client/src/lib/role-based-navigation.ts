@@ -74,7 +74,7 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   { path: "/admin/teachers", icon: "GraduationCap", label: "Teacher Management", roles: ["Admin", "Supervisor"] },
   
   // Financial Management & Billing
-  { path: "/admin/financial", icon: "DollarSign", label: "Financial Management", roles: ["Admin", "Accountant"] },
+  { path: "/admin/financial", icon: "DollarSign", label: "Financial Management", roles: ["Admin", "Accountant", "Supervisor"] },
   
   // Advanced Reporting & Analytics
   { path: "/admin/reports", icon: "BarChart", label: "Reports & Analytics", roles: ["Admin", "Supervisor"] },
@@ -104,7 +104,7 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
 
 // Lead Management & Call Center CRM
 export const getCallCenterNavigation = (t: any): NavigationItem[] => [
-  { path: "/callcenter/leads", icon: "UserPlus", label: "Lead Management", roles: ["Call Center Agent", "Admin"] },
+  { path: "/callcenter/leads", icon: "UserPlus", label: "Lead Management", roles: ["Call Center Agent", "Admin", "Supervisor"] },
   { path: "/callcenter/calls", icon: "Phone", label: "Call Logs", roles: ["Call Center Agent", "Admin"] },
   { path: "/callcenter/prospects", icon: "Target", label: "Prospects", roles: ["Call Center Agent", "Admin"] },
   { path: "/callcenter/campaigns", icon: "Megaphone", label: "Campaigns", roles: ["Call Center Agent", "Admin"] },

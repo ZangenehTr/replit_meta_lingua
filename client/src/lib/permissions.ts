@@ -68,14 +68,20 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
     businessAnalytics: true
   },
   supervisor: {
-    canView: ['teacher_performance', 'quality_metrics', 'compliance_reports', 'audit_trails', 'class_observations'],
-    canEdit: ['teacher_evaluations', 'quality_standards', 'compliance_settings'],
-    canDelete: [],
-    canCreate: ['evaluation_reports', 'quality_audits', 'compliance_checks'],
+    canView: ['teacher_performance', 'quality_metrics', 'compliance_reports', 'audit_trails', 'class_observations', 'students', 'teachers', 'courses', 'payments', 'leads', 'callern_management', 'sessions', 'analytics'],
+    canEdit: ['teacher_evaluations', 'quality_standards', 'compliance_settings', 'students', 'teachers', 'courses', 'teacher_assignments', 'callern_availability', 'leads', 'schedules'],
+    canDelete: ['duplicate_leads'],
+    canCreate: ['evaluation_reports', 'quality_audits', 'compliance_checks', 'students', 'teachers', 'courses', 'teacher_assignments', 'sessions', 'reports'],
     // Supervisor-specific powers
     qualityAssurance: true,
     teacherEvaluation: true,
-    complianceMonitoring: true
+    complianceMonitoring: true,
+    teacherManagement: true,
+    courseManagement: true,
+    studentManagement: true,
+    paymentApproval: true,
+    leadManagement: true,
+    callernManagement: true
   },
   teacher: {
     canView: ['own_students', 'own_courses', 'own_sessions', 'class_analytics', 'student_progress'],
