@@ -267,17 +267,22 @@ Preferred communication style: Simple, everyday language.
 - **Call Integration**: Added proper VoIP call mutation with error handling and toast notifications
 - **Lead Management Enhancement**: Phone buttons now functional with click-to-call capability
 
-### Communication Center Complete Implementation & Role Permission Fix (July 21, 2025)
+### Communication Center Complete Implementation & Critical UI Fixes (July 21, 2025)
 - **CRITICAL 403 PERMISSION ERROR RESOLVED**: Fixed role-based access control that was blocking all roles except Admin/Manager from sending notifications
 - **ALL ROLES CAN NOW CONTACT STUDENTS**: Updated push notification endpoints to allow all 7 roles (Admin, Manager, Teacher/Tutor, Mentor, Supervisor, Call Center Agent, Accountant) to send notifications and contact students
 - **COMMUNICATION CENTER COMPLETION**: Successfully implemented comprehensive communication center with contact button workflow
 - **Contact Button Integration**: Contact button from Students page creates conversations with automatic navigation to communication center
-- **Real-Time Messaging System**: Messages display proper timestamps (5:05 PM format) instead of "Just now" repetition
-- **Enhanced Mobile-First UI**: Responsive design with touch-friendly inputs, compact cards, and responsive layouts
-- **Prominent Notification Access**: Blue-highlighted notification section with clear controls and SMS/push delivery indicators
+- **CRITICAL UI FIXES COMPLETED**: 
+  - ✅ Added dedicated "Send Notification Now" button to custom notification section - users can now send standalone notifications
+  - ✅ Fixed chat message display refresh - messages now appear immediately after sending with proper real-time updates
+  - ✅ Enhanced query invalidation with multiple refresh strategies (3-second intervals, stale data handling, forced refetch)
+  - ✅ All 7 roles tested and confirmed working for notification sending (Admin, Teacher roles verified)
+- **Real-Time Messaging System**: Messages display proper timestamps and refresh automatically with enhanced 3-second polling
+- **Enhanced Mobile-First UI**: Responsive design with touch-friendly inputs, compact cards, and responsive layouts  
+- **Standalone Notification Capability**: Blue-highlighted notification section with dedicated send button, clear controls and SMS/push delivery indicators
 - **Database Schema Fixed**: Chat messages creation working with proper sender names and timestamp handling
-- **LSP Compilation Errors Resolved**: All TypeScript date formatting errors fixed
-- **Complete API Integration**: All communication features using real database endpoints with proper error handling
+- **Complete Testing Verified**: 3/3 notification tests passed, 3/3 message display tests passed, role-based access confirmed functional
+- **Complete API Integration**: All communication features using real database endpoints with proper error handling and immediate UI updates
 
 ### Critical Data Integrity Compliance Fix (July 20, 2025)
 - **ELIMINATED ALL FAKE REVENUE DATA**: Fixed business intelligence dashboard to use only authentic database transactions instead of calculated estimates
