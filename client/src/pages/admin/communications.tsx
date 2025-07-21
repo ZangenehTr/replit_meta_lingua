@@ -170,6 +170,11 @@ export default function AdminCommunicationsPage() {
         setSelectedConversation(conversation);
         setActiveTab("chat"); // Auto-switch to chat tab
         console.log('Auto-selected conversation:', conversation.id);
+        
+        // Clear URL parameters after auto-selection for clean URL
+        if (window.history.replaceState) {
+          window.history.replaceState({}, '', window.location.pathname);
+        }
       }
     }
   }, [conversationsData]);
