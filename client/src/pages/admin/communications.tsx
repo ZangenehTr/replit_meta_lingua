@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -142,11 +143,11 @@ export default function AdminCommunicationsPage() {
     queryKey: ['/api/push-notifications'],
   });
 
-  // Real API calls for conversation messages with ULTRA aggressive refresh
+  // Real API calls for conversation messages - FIXED query key
   const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useQuery({
-    queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'],
+    queryKey: selectedConversation ? [`/api/chat/conversations/${selectedConversation.id}/messages`] : ['no-conversation'],
     enabled: !!selectedConversation,
-    refetchInterval: 500, // Ultra aggressive - every 0.5 seconds
+    refetchInterval: 1000, // Refresh every second
     staleTime: 0, // Always treat data as stale
     gcTime: 0, // No caching at all
     refetchOnWindowFocus: true,
@@ -167,7 +168,17 @@ export default function AdminCommunicationsPage() {
     role: user?.role 
   });
   
-  // Process messages with proper ownership detection
+  // Process messages with proper ownership detection - add debug
+  console.log('Raw messages data from query:', messages);
+  
+  // Force refresh on conversation change
+  useEffect(() => {
+    if (selectedConversation) {
+      queryClient.invalidateQueries({ queryKey: [`/api/chat/conversations/${selectedConversation.id}/messages`] });
+      refetchMessages();
+    }
+  }, [selectedConversation?.id]);
+  
   const messagesData = ((messages as Array<{
     id: number;
     conversationId: number; 
