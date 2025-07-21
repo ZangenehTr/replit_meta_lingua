@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
   filterTeachers, 
+  filterActiveTeachers,
   filterStudents, 
   filterActiveUsers, 
   calculatePercentage, 
@@ -13,7 +14,9 @@ import {
   roundCurrency,
   safeNumber,
   isActiveUser,
-  ACTIVE_OBSERVATION_STATUSES 
+  ACTIVE_OBSERVATION_STATUSES,
+  isActiveObservation,
+  validateActiveTeacher
 } from "./business-logic-utils";
 import { ollamaService } from "./ollama-service";
 import { ollamaInstaller } from "./ollama-installer";
@@ -45,14 +48,6 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import mammoth from "mammoth";
-import { 
-  filterTeachers, 
-  filterActiveTeachers, 
-  filterStudents,
-  ACTIVE_OBSERVATION_STATUSES,
-  isActiveObservation,
-  validateActiveTeacher
-} from './business-logic-utils';
 
 // Configure multer for audio uploads
 const audioStorage = multer.diskStorage({
@@ -15117,5 +15112,6 @@ Meta Lingua Academy`;
   });
 
   const httpServer = createServer(app);
+  
   return httpServer;
 }

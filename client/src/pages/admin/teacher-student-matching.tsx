@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
@@ -91,6 +92,7 @@ function isTimeOverlap(slot1: any, slot2: any): boolean {
 
 export default function TeacherStudentMatchingPage() {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("one-on-one"); // "one-on-one" or "group-classes" or "callern-pool"
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterLanguage, setFilterLanguage] = useState("all");
@@ -98,6 +100,7 @@ export default function TeacherStudentMatchingPage() {
   const [filterMode, setFilterMode] = useState<string>("all");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [selectedGroupClass, setSelectedGroupClass] = useState<any>(null);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const [selectedSlots, setSelectedSlots] = useState<TimeSlot[]>([]);
   const [matchFormData, setMatchFormData] = useState({
@@ -106,9 +109,14 @@ export default function TeacherStudentMatchingPage() {
     notes: ""
   });
 
-  // Fetch students without teachers
-  const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
+  // Fetch one-on-one students without teachers
+  const { data: oneOnOneStudents = [], isLoading: oneOnOneLoading } = useQuery<Student[]>({
     queryKey: ['/api/admin/students/unassigned-teacher'],
+  });
+
+  // Fetch group classes awaiting teacher assignment
+  const { data: groupClasses = [], isLoading: groupClassesLoading } = useQuery({
+    queryKey: ['/api/admin/group-classes/awaiting-teachers'],
   });
 
   // Fetch available teachers  
@@ -119,6 +127,15 @@ export default function TeacherStudentMatchingPage() {
   // Fetch courses with their scheduling information for teacher matching integration
   const { data: courses = [], isLoading: coursesLoading } = useQuery({
     queryKey: ['/api/admin/courses'],
+  });
+
+  // Fetch Callern teachers and performance data  
+  const { data: callernTeachers = [], isLoading: callernTeachersLoading } = useQuery({
+    queryKey: ['/api/admin/callern/available-teachers'],
+  });
+
+  const { data: callernPerformance = [], isLoading: callernPerformanceLoading } = useQuery({
+    queryKey: ['/api/admin/callern/performance'],
   });
 
   // Create teacher assignment mutation
@@ -399,8 +416,300 @@ export default function TeacherStudentMatchingPage() {
           </CardContent>
         </Card>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* Tab Navigation */}
+        <Card className="shadow-lg border-gray-200 mb-8">
+          <CardContent className="p-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="one-on-one">One-on-One Students</TabsTrigger>
+                <TabsTrigger value="group-classes">Group Classes</TabsTrigger>
+                <TabsTrigger value="callern-pool">Callern Teacher Pool</TabsTrigger>
+              </TabsList>
+              
+              {/* Tab Content */}
+              <div className="mt-6">
+                <TabsContent value="one-on-one" className="space-y-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {/* One-on-One Students List */}
+                    <Card className="shadow-lg">
+                      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+                        <CardTitle className="flex items-center text-blue-900">
+                          <Users className="h-5 w-5 mr-2" />
+                          One-on-One Students ({oneOnOneStudents.length})
+                        </CardTitle>
+                        <CardDescription>Students needing private teacher assignment</CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 max-h-96 overflow-y-auto">
+                        {oneOnOneLoading ? (
+                          <div className="text-center py-8 text-gray-500">Loading students...</div>
+                        ) : oneOnOneStudents.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">No one-on-one students found</div>
+                        ) : (
+                          <div className="space-y-3">
+                            {oneOnOneStudents.map((student: any) => (
+                              <div key={student.id} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-medium">{student.firstName} {student.lastName}</div>
+                                    <div className="text-sm text-gray-500">{student.email}</div>
+                                    <div className="flex gap-2 mt-1">
+                                      <Badge variant="outline">{student.level || 'intermediate'}</Badge>
+                                      <Badge variant="outline">{student.language || 'persian'}</Badge>
+                                    </div>
+                                  </div>
+                                  <Button size="sm" variant="outline">
+                                    Assign Teacher
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Available Teachers */}
+                    <Card className="shadow-lg">
+                      <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+                        <CardTitle className="flex items-center text-green-900">
+                          <UserPlus className="h-5 w-5 mr-2" />
+                          Available Teachers ({teachers.length})
+                        </CardTitle>
+                        <CardDescription>Teachers available for one-on-one assignments</CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 max-h-96 overflow-y-auto">
+                        {teachersLoading ? (
+                          <div className="text-center py-8 text-gray-500">Loading teachers...</div>
+                        ) : teachers.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">No available teachers found</div>
+                        ) : (
+                          <div className="space-y-3">
+                            {teachers.map((teacher: any) => (
+                              <div key={teacher.id} className="p-3 border rounded-lg hover:bg-gray-50">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-medium">{teacher.firstName} {teacher.lastName}</div>
+                                    <div className="text-sm text-gray-500">{teacher.email}</div>
+                                    <div className="flex gap-2 mt-1">
+                                      <Badge variant="outline">{teacher.specialization || 'Persian'}</Badge>
+                                      <Badge variant="secondary">Available</Badge>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm font-medium">{teacher.hourlyRate ? `${teacher.hourlyRate.toLocaleString()} IRR/hr` : 'Rate TBD'}</div>
+                                    <div className="text-xs text-gray-500">Experience: {teacher.experience || 'N/A'}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="group-classes" className="space-y-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {/* Group Classes Awaiting Teachers */}
+                    <Card className="shadow-lg">
+                      <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50">
+                        <CardTitle className="flex items-center text-purple-900">
+                          <Target className="h-5 w-5 mr-2" />
+                          Group Classes ({groupClasses.length})
+                        </CardTitle>
+                        <CardDescription>Group classes awaiting teacher assignment</CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 max-h-96 overflow-y-auto">
+                        {groupClassesLoading ? (
+                          <div className="text-center py-8 text-gray-500">Loading group classes...</div>
+                        ) : groupClasses.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">No group classes awaiting teachers</div>
+                        ) : (
+                          <div className="space-y-3">
+                            {groupClasses.map((groupClass: any) => (
+                              <div key={groupClass.id} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-medium">{groupClass.title}</div>
+                                    <div className="text-sm text-gray-500">{groupClass.language} - {groupClass.level}</div>
+                                    <div className="flex gap-2 mt-1">
+                                      <Badge variant="outline">{groupClass.deliveryMode}</Badge>
+                                      <Badge variant="outline">Max: {groupClass.maxStudents}</Badge>
+                                      <Badge variant="secondary">{groupClass.status}</Badge>
+                                    </div>
+                                    {groupClass.scheduledDays?.length > 0 && (
+                                      <div className="text-xs text-gray-500 mt-1">
+                                        {groupClass.scheduledDays.join(', ')} • {groupClass.scheduledTimes.startTime} - {groupClass.scheduledTimes.endTime}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <Button size="sm" variant="outline">
+                                    Assign Teacher
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Available Teachers for Group Classes */}
+                    <Card className="shadow-lg">
+                      <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+                        <CardTitle className="flex items-center text-green-900">
+                          <UserPlus className="h-5 w-5 mr-2" />
+                          Available Teachers ({teachers.length})
+                        </CardTitle>
+                        <CardDescription>Teachers available for group class assignments</CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 max-h-96 overflow-y-auto">
+                        {teachersLoading ? (
+                          <div className="text-center py-8 text-gray-500">Loading teachers...</div>
+                        ) : teachers.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">No available teachers found</div>
+                        ) : (
+                          <div className="space-y-3">
+                            {teachers.map((teacher: any) => (
+                              <div key={teacher.id} className="p-3 border rounded-lg hover:bg-gray-50">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-medium">{teacher.firstName} {teacher.lastName}</div>
+                                    <div className="text-sm text-gray-500">{teacher.email}</div>
+                                    <div className="flex gap-2 mt-1">
+                                      <Badge variant="outline">{teacher.specialization || 'Persian'}</Badge>
+                                      <Badge variant="secondary">Available</Badge>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm font-medium">Group Rate: {teacher.hourlyRate ? `${Math.floor(teacher.hourlyRate * 0.8).toLocaleString()} IRR/hr` : 'TBD'}</div>
+                                    <div className="text-xs text-gray-500">Group Experience: {teacher.experience || 'N/A'}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="callern-pool" className="space-y-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {/* Callern Teacher Pool */}
+                    <Card className="shadow-lg">
+                      <CardHeader className="bg-gradient-to-r from-orange-50 to-red-50">
+                        <CardTitle className="flex items-center text-orange-900">
+                          <Video className="h-5 w-5 mr-2" />
+                          Callern Teacher Pool ({callernTeachers.length})
+                        </CardTitle>
+                        <CardDescription>Teachers assigned to on-demand Callern service</CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 max-h-96 overflow-y-auto">
+                        {callernTeachersLoading ? (
+                          <div className="text-center py-8 text-gray-500">Loading Callern teachers...</div>
+                        ) : callernTeachers.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">No teachers in Callern pool</div>
+                        ) : (
+                          <div className="space-y-3">
+                            {callernTeachers.map((teacher: any) => (
+                              <div key={teacher.id} className="p-3 border rounded-lg hover:bg-gray-50">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-medium">{teacher.firstName} {teacher.lastName}</div>
+                                    <div className="text-sm text-gray-500">{teacher.email}</div>
+                                    <div className="flex gap-2 mt-1">
+                                      <Badge variant={teacher.isOnlineNow ? 'default' : 'secondary'}>
+                                        {teacher.isOnlineNow ? 'Online' : 'Offline'}
+                                      </Badge>
+                                      <Badge variant="outline">Callern Pool</Badge>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      Calls: {teacher.totalCallsHandled || 0} • Avg: {teacher.averageCallDuration || 0}min • Rating: {teacher.rating || 4.5}
+                                    </div>
+                                  </div>
+                                  <Button 
+                                    size="sm" 
+                                    variant={teacher.isAssignedToCallern ? "destructive" : "default"}
+                                  >
+                                    {teacher.isAssignedToCallern ? 'Remove' : 'Add to Pool'}
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Callern Performance Dashboard */}
+                    <Card className="shadow-lg">
+                      <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50">
+                        <CardTitle className="flex items-center text-indigo-900">
+                          <Target className="h-5 w-5 mr-2" />
+                          Callern Performance Metrics
+                        </CardTitle>
+                        <CardDescription>Real-time performance tracking and analytics</CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        {callernPerformanceLoading ? (
+                          <div className="text-center py-8 text-gray-500">Loading performance data...</div>
+                        ) : !callernPerformance || Object.keys(callernPerformance).length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">No performance data available</div>
+                        ) : (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="p-3 bg-blue-50 rounded-lg">
+                                <div className="text-2xl font-bold text-blue-900">{callernPerformance.totalCalls || 0}</div>
+                                <div className="text-sm text-blue-600">Total Calls</div>
+                              </div>
+                              <div className="p-3 bg-green-50 rounded-lg">
+                                <div className="text-2xl font-bold text-green-900">{callernPerformance.totalMinutes || 0}</div>
+                                <div className="text-sm text-green-600">Total Minutes</div>
+                              </div>
+                              <div className="p-3 bg-purple-50 rounded-lg">
+                                <div className="text-2xl font-bold text-purple-900">{callernPerformance.averageCallDuration || 0}</div>
+                                <div className="text-sm text-purple-600">Avg Duration</div>
+                              </div>
+                              <div className="p-3 bg-orange-50 rounded-lg">
+                                <div className="text-2xl font-bold text-orange-900">{callernPerformance.teacherPerformance?.length || 0}</div>
+                                <div className="text-sm text-orange-600">Active Teachers</div>
+                              </div>
+                            </div>
+                            
+                            {callernPerformance.teacherPerformance && callernPerformance.teacherPerformance.length > 0 && (
+                              <div className="space-y-3">
+                                <h4 className="font-medium text-gray-900">Top Performers</h4>
+                                {callernPerformance.teacherPerformance.slice(0, 3).map((teacher: any, index: number) => (
+                                  <div key={teacher.teacherId} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                    <div>
+                                      <div className="font-medium">{teacher.teacherName}</div>
+                                      <div className="text-sm text-gray-500">
+                                        {teacher.callsHandled} calls • {teacher.totalMinutes}min • {teacher.averageRating}★
+                                      </div>
+                                    </div>
+                                    <Badge variant={index === 0 ? 'default' : 'secondary'}>
+                                      #{index + 1}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+              </div>
+            </Tabs>
+          </CardContent>
+        </Card>
+        
+        {/* Legacy Main Content Grid - keeping for now */}
+        <div className="hidden grid-cols-1 xl:grid-cols-2 gap-8">
           {/* Students List */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
