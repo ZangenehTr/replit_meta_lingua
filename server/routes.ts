@@ -14356,7 +14356,7 @@ Meta Lingua Academy`;
   });
 
   // Push Notifications
-  app.get("/api/push-notifications", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+  app.get("/api/push-notifications", authenticateToken, requireRole(['Admin', 'Manager', 'Teacher/Tutor', 'Mentor', 'Supervisor', 'Call Center Agent', 'Accountant']), async (req, res) => {
     try {
       const { targetAudience, status } = req.query;
       const notifications = await storage.getPushNotifications({
@@ -14370,7 +14370,7 @@ Meta Lingua Academy`;
     }
   });
 
-  app.get("/api/push-notifications/:id", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+  app.get("/api/push-notifications/:id", authenticateToken, requireRole(['Admin', 'Manager', 'Teacher/Tutor', 'Mentor', 'Supervisor', 'Call Center Agent', 'Accountant']), async (req, res) => {
     try {
       const notification = await storage.getPushNotification(parseInt(req.params.id));
       if (!notification) {
@@ -14383,7 +14383,7 @@ Meta Lingua Academy`;
     }
   });
 
-  app.post("/api/push-notifications", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+  app.post("/api/push-notifications", authenticateToken, requireRole(['Admin', 'Manager', 'Teacher/Tutor', 'Mentor', 'Supervisor', 'Call Center Agent', 'Accountant']), async (req, res) => {
     try {
       const { testPhoneNumber, ...notificationData } = req.body;
       const notification = await storage.createPushNotification({
@@ -14412,7 +14412,7 @@ Meta Lingua Academy`;
     }
   });
 
-  app.patch("/api/push-notifications/:id", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+  app.patch("/api/push-notifications/:id", authenticateToken, requireRole(['Admin', 'Manager', 'Teacher/Tutor', 'Mentor', 'Supervisor', 'Call Center Agent', 'Accountant']), async (req, res) => {
     try {
       const notification = await storage.updatePushNotification(parseInt(req.params.id), req.body);
       if (!notification) {
@@ -14425,7 +14425,7 @@ Meta Lingua Academy`;
     }
   });
 
-  app.delete("/api/push-notifications/:id", authenticateToken, requireRole(['Admin', 'Manager']), async (req, res) => {
+  app.delete("/api/push-notifications/:id", authenticateToken, requireRole(['Admin', 'Manager', 'Teacher/Tutor', 'Mentor', 'Supervisor', 'Call Center Agent', 'Accountant']), async (req, res) => {
     try {
       await storage.deletePushNotification(parseInt(req.params.id));
       res.status(204).send();
