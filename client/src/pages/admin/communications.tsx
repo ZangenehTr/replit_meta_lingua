@@ -141,10 +141,14 @@ export default function AdminCommunicationsPage() {
     queryKey: ['/api/push-notifications'],
   });
 
-  // Real API calls for conversation messages
+  // Real API calls for conversation messages with enhanced refresh
   const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useQuery({
     queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'],
     enabled: !!selectedConversation,
+    refetchInterval: 3000, // Refresh every 3 seconds for real-time updates
+    staleTime: 0, // Always treat data as stale to ensure fresh updates
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   const ticketsData = (tickets as SupportTicket[]) || [];
@@ -227,12 +231,20 @@ export default function AdminCommunicationsPage() {
 
       return response;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'] });
-      refetchMessages(); // Immediate refresh of messages
+    onSuccess: async () => {
+      // Clear form first
       setChatInput("");
       setSendNotification(false);
+      setCustomNotificationText("New message from admin");
+      
+      // Multiple invalidation strategies for reliable refresh
+      await queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'] });
+      
+      // Force immediate refetch
+      await refetchMessages();
+      
+      // Success feedback
       toast({ title: "Message sent successfully" });
     },
     onError: (error: any) => {
@@ -252,6 +264,9 @@ export default function AdminCommunicationsPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/push-notifications'] });
       toast({ title: "Notification sent successfully" });
       setNotificationDialog(false);
+      // Clear custom notification text after successful send
+      setCustomNotificationText("New message from admin");
+      setSendNotification(false);
     },
     onError: (error: any) => {
       toast({ title: "Failed to send notification", description: error.message, variant: "destructive" });
@@ -728,10 +743,36 @@ export default function AdminCommunicationsPage() {
                             disabled={!sendNotification}
                           />
                           {sendNotification && (
-                            <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                              <MessageSquare className="h-3 w-3" />
-                              This notification will be sent via SMS and push notification
-                            </p>
+                            <div className="space-y-3">
+                              <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                                <MessageSquare className="h-3 w-3" />
+                                This notification will be sent via SMS and push notification
+                              </p>
+                              <Button 
+                                onClick={() => {
+                                  if (customNotificationText.trim()) {
+                                    sendNotificationMutation.mutate({
+                                      title: "Custom Notification",
+                                      message: customNotificationText,
+                                      type: "info",
+                                      targetAudience: "student",
+                                      channels: ["push", "sms"],
+                                      status: "sent"
+                                    });
+                                  }
+                                }}
+                                disabled={!customNotificationText.trim() || sendNotificationMutation.isPending}
+                                size="sm"
+                                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                              >
+                                {sendNotificationMutation.isPending ? (
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
+                                ) : (
+                                  <Bell className="h-4 w-4 mr-2" />
+                                )}
+                                Send Notification Now
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </div>
