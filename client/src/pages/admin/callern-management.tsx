@@ -44,9 +44,13 @@ export function CallernManagement() {
     queryFn: async () => {
       const response = await fetch('/api/admin/callern/teacher-availability', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
         }
       });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch availability: ${response.status}`);
+      }
       const data = await response.json();
       console.log('Teacher availability data:', data);
       return data;
@@ -56,11 +60,35 @@ export function CallernManagement() {
   // Fetch available teachers
   const { data: availableTeachers, isLoading: loadingTeachers } = useQuery({
     queryKey: ['/api/admin/callern/available-teachers'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/callern/available-teachers', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch teachers: ${response.status}`);
+      }
+      return response.json();
+    }
   });
 
   // Fetch Callern packages
   const { data: callernPackages, isLoading: loadingPackages } = useQuery({
     queryKey: ['/api/admin/callern/packages'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/callern/packages', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch packages: ${response.status}`);
+      }
+      return response.json();
+    }
   });
 
   // Update teacher availability mutation
