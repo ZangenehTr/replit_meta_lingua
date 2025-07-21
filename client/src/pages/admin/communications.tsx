@@ -812,11 +812,11 @@ export default function AdminCommunicationsPage() {
                             {notification.deliveryStats && (
                               <div className="mt-2 pt-2 border-t">
                                 <div className="flex justify-between text-xs">
-                                  {notification.deliveryStats.sms_sent && (
-                                    <span>SMS Sent: {notification.deliveryStats.sms_sent}</span>
+                                  {notification.deliveryStats.sent && (
+                                    <span>SMS Sent: {notification.deliveryStats.sent}</span>
                                   )}
-                                  {notification.deliveryStats.total_recipients && (
-                                    <span>Recipients: {notification.deliveryStats.total_recipients}</span>
+                                  {notification.deliveryStats.delivered && (
+                                    <span>Recipients: {notification.deliveryStats.delivered}</span>
                                   )}
                                   {notification.deliveryStats.sent && (
                                     <span>Sent: {notification.deliveryStats.sent}</span>

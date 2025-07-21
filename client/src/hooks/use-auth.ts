@@ -64,11 +64,16 @@ export function useAuth() {
       const response = await apiClient.post("/auth/login", credentials);
       const data = response.data;
       
-      // Store both tokens
-      if (data.auth_token) {
+      // Store both tokens - handle different response formats
+      if (data.accessToken) {
+        localStorage.setItem("auth_token", data.accessToken);
+      } else if (data.auth_token) {
         localStorage.setItem("auth_token", data.auth_token);
       }
-      if (data.refresh_token) {
+      
+      if (data.refreshToken) {
+        localStorage.setItem("refresh_token", data.refreshToken);
+      } else if (data.refresh_token) {
         localStorage.setItem("refresh_token", data.refresh_token);
       }
       
@@ -85,11 +90,16 @@ export function useAuth() {
       const response = await apiClient.post("/auth/register", userData);
       const data = response.data;
       
-      // Store both tokens
-      if (data.auth_token) {
+      // Store both tokens - handle different response formats
+      if (data.accessToken) {
+        localStorage.setItem("auth_token", data.accessToken);
+      } else if (data.auth_token) {
         localStorage.setItem("auth_token", data.auth_token);
       }
-      if (data.refresh_token) {
+      
+      if (data.refreshToken) {
+        localStorage.setItem("refresh_token", data.refreshToken);
+      } else if (data.refresh_token) {
         localStorage.setItem("refresh_token", data.refresh_token);
       }
       
@@ -115,8 +125,8 @@ export function useAuth() {
     localStorage.removeItem("refresh_token");
     queryClient.setQueryData(["/api/users/me"], null);
     queryClient.clear();
-    // Use location.reload() instead of window.location.href to avoid connection reset
-    window.location.reload();
+    // Navigate to login page instead of reloading to avoid connection issues
+    window.location.href = '/auth';
   };
 
   return {
