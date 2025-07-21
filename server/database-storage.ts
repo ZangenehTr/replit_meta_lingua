@@ -5569,7 +5569,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
-    const [newMessage] = await db.insert(chatMessages).values(message).returning();
+    // The schema doesn't have senderName field, so just insert the message
+    const messageWithTimestamp = {
+      ...message,
+      sentAt: new Date()
+    };
+    
+    const [newMessage] = await db.insert(chatMessages).values(messageWithTimestamp).returning();
     
     // Update conversation's lastMessage and lastMessageAt
     await db.update(chatConversations)

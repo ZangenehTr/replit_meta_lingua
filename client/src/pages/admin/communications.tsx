@@ -461,7 +461,13 @@ export default function AdminCommunicationsPage() {
                             </p>
                             <div className="flex items-center justify-between text-xs text-gray-500">
                               <span>by {ticket.studentName}</span>
-                              <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                              <span>
+                                {ticket.createdAt ? (
+                                  typeof ticket.createdAt === 'string' 
+                                    ? new Date(ticket.createdAt).toLocaleDateString()
+                                    : ticket.createdAt.toLocaleDateString()
+                                ) : 'Unknown'}
+                              </span>
                             </div>
                           </div>
                         ))
@@ -512,7 +518,11 @@ export default function AdminCommunicationsPage() {
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-sm font-medium">{message.senderName}</span>
                                   <span className="text-xs text-gray-500">
-                                    {new Date(message.sentAt).toLocaleString()}
+                                    {message.sentAt ? (
+                                      typeof message.sentAt === 'string' 
+                                        ? new Date(message.sentAt).toLocaleString()
+                                        : message.sentAt.toLocaleString()
+                                    ) : 'Just now'}
                                   </span>
                                 </div>
                                 <p className="text-sm">{message.message}</p>
@@ -619,7 +629,11 @@ export default function AdminCommunicationsPage() {
                                   {conversation.lastMessage}
                                 </p>
                                 <p className="text-xs text-gray-400">
-                                  {new Date(conversation.lastMessageAt).toLocaleTimeString()}
+                                  {conversation.lastMessageAt ? (
+                                    typeof conversation.lastMessageAt === 'string' 
+                                      ? new Date(conversation.lastMessageAt).toLocaleTimeString()
+                                      : conversation.lastMessageAt.toLocaleTimeString()
+                                  ) : 'No messages'}
                                 </p>
                               </div>
                             </div>
@@ -681,7 +695,11 @@ export default function AdminCommunicationsPage() {
                                   <p className={`text-xs mt-1 ${
                                     message.isOwnMessage ? 'text-blue-100' : 'text-gray-500'
                                   }`}>
-                                    {new Date(message.sentAt).toLocaleTimeString()}
+                                    {message.sentAt ? (
+                                      typeof message.sentAt === 'string' 
+                                        ? new Date(message.sentAt).toLocaleTimeString()
+                                        : message.sentAt.toLocaleTimeString()
+                                    ) : 'Just now'}
                                   </p>
                                 </div>
                                 {message.isOwnMessage && (
