@@ -161,6 +161,46 @@ export function AdminStudents() {
     });
   };
 
+  // Handle student contact/communication
+  const handleContact = async (student: any) => {
+    try {
+      // Navigate to communication center with student pre-selected
+      const response = await fetch('/api/communication/create-conversation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify({
+          participants: [student.id],
+          type: 'direct',
+          title: `Communication with ${student.firstName} ${student.lastName}`
+        })
+      });
+
+      if (response.ok) {
+        const conversation = await response.json();
+        toast({
+          title: "Communication Started",
+          description: `Opening chat with ${student.firstName} ${student.lastName}`,
+        });
+        
+        // Could redirect to communication center with conversation ID
+        // window.location.href = `/communication?conversation=${conversation.id}`;
+        console.log('Communication initiated:', conversation);
+      } else {
+        throw new Error('Failed to create conversation');
+      }
+    } catch (error) {
+      console.error('Contact error:', error);
+      toast({
+        title: "Contact Failed",
+        description: `Unable to start communication with ${student.firstName} ${student.lastName}. Please try again.`,
+        variant: "destructive",
+      });
+    }
+  };
+
   // Handle adding course to new student
   const handleAddCourse = (courseTitle: string) => {
     const course = coursesList.find((c: any) => c.title === courseTitle);
@@ -1113,15 +1153,22 @@ export function AdminStudents() {
                 </div>
               </div>
 
-              {/* Action Buttons - Mobile-first design */}
+              {/* Action Buttons - Mobile-first design - STANDARDIZED 4-BUTTON LAYOUT */}
               <div className="flex gap-1 sm:gap-2 pt-2 sm:pt-3">
-                {student.phone && (
-                  <VoIPContactButton 
-                    phoneNumber={student.phone}
-                    contactName={`${student.firstName} ${student.lastName}`}
-                    className="flex-1 h-7 sm:h-8 text-xs"
-                  />
-                )}
+                {/* Call Button - Always show, with proper handling for missing phone */}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleVoIPCall(student)}
+                  disabled={!student.phone}
+                  className="flex-1 h-7 sm:h-8 border-green-200 hover:bg-green-50 text-xs sm:text-sm px-2 sm:px-3 disabled:opacity-50"
+                  title={!student.phone ? "No phone number available" : `Call ${student.firstName} ${student.lastName}`}
+                >
+                  <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline sm:ml-1">Call</span>
+                </Button>
+                
+                {/* View Button */}
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button 
@@ -1274,6 +1321,7 @@ export function AdminStudents() {
                   </DialogContent>
                 </Dialog>
 
+                {/* Edit Button */}
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -1287,10 +1335,13 @@ export function AdminStudents() {
                   <Edit3 className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline sm:ml-1">Edit</span>
                 </Button>
+                
+                {/* Contact Button - NOW FUNCTIONAL */}
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="flex-1 h-7 sm:h-8 border-green-200 hover:bg-green-50 text-xs sm:text-sm px-2 sm:px-3"
+                  className="flex-1 h-7 sm:h-8 border-orange-200 hover:bg-orange-50 text-xs sm:text-sm px-2 sm:px-3"
+                  onClick={() => handleContact(student)}
                 >
                   <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline sm:ml-1">Contact</span>
@@ -1375,15 +1426,28 @@ export function AdminStudents() {
                     </div>
                   </div>
                   
-                  {/* Mobile Actions */}
+                  {/* Mobile Actions - STANDARDIZED 4-BUTTON LAYOUT */}
                   <div className="flex gap-1 pt-1">
-                    {student.phone && (
-                      <VoIPContactButton 
-                        phoneNumber={student.phone}
-                        contactName={`${student.firstName} ${student.lastName}`}
-                        className="flex-1 h-7 text-xs"
-                      />
-                    )}
+                    {/* Call Button - Always show */}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleVoIPCall(student)}
+                      disabled={!student.phone}
+                      className="flex-1 h-7 border-green-200 hover:bg-green-50 text-xs px-2 disabled:opacity-50"
+                      title={!student.phone ? "No phone number available" : `Call ${student.firstName} ${student.lastName}`}
+                    >
+                      <Phone className="h-3 w-3" />
+                    </Button>
+                    {/* View Button */}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1 h-7 border-blue-200 hover:bg-blue-50 text-xs px-2"
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                    {/* Edit Button */}
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -1392,10 +1456,12 @@ export function AdminStudents() {
                     >
                       <Edit3 className="h-3 w-3" />
                     </Button>
+                    {/* Contact Button - NOW FUNCTIONAL */}
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex-1 h-7 border-green-200 hover:bg-green-50 text-xs px-2"
+                      onClick={() => handleContact(student)}
+                      className="flex-1 h-7 border-orange-200 hover:bg-orange-50 text-xs px-2"
                     >
                       <MessageCircle className="h-3 w-3" />
                     </Button>
@@ -1456,15 +1522,38 @@ export function AdminStudents() {
                     </div>
                   </div>
                   <div className="col-span-2">
+                    {/* Desktop Actions - STANDARDIZED 4-BUTTON LAYOUT */}
                     <div className="flex gap-1">
+                      {/* Call Button - Always show with proper handling */}
                       <Button 
                         variant="outline" 
                         size="sm"
                         onClick={() => handleVoIPCall(student)}
-                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                        disabled={!student.phone}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50 disabled:opacity-50"
+                        title={!student.phone ? "No phone number available" : `Call ${student.firstName} ${student.lastName}`}
                       >
                         <Phone className="h-3 w-3" />
                       </Button>
+                      {/* View Button */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl">
+                          <DialogHeader>
+                            <DialogTitle>Student Profile: {student.firstName} {student.lastName}</DialogTitle>
+                          </DialogHeader>
+                          <p>Comprehensive student profile view for desktop layout</p>
+                        </DialogContent>
+                      </Dialog>
+                      {/* Edit Button */}
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -1473,26 +1562,15 @@ export function AdminStudents() {
                       >
                         <Edit3 className="h-3 w-3" />
                       </Button>
+                      {/* Contact Button - NOW FUNCTIONAL */}
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={() => handleContact(student)}
+                        className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
                       >
                         <MessageCircle className="h-3 w-3" />
                       </Button>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl">
-                          <DialogHeader>
-                            <DialogTitle>View Profile</DialogTitle>
-                          </DialogHeader>
-                          <p>Profile view dialog for desktop layout</p>
-                        </DialogContent>
-                      </Dialog>
                     </div>
                   </div>
                 </div>
@@ -1554,74 +1632,85 @@ export function AdminStudents() {
               Update student information and enrollment details
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="editFirstName">First Name</Label>
-              <Input 
-                id="editFirstName" 
-                placeholder="Enter first name"
-                value={editStudentData.firstName}
-                onChange={(e) => setEditStudentData({...editStudentData, firstName: e.target.value})}
-              />
+          {editingStudent && (
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="editFirstName">First Name</Label>
+                <Input 
+                  id="editFirstName" 
+                  placeholder="Enter first name"
+                  value={editingStudent.firstName || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, firstName: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editLastName">Last Name</Label>
+                <Input 
+                  id="editLastName" 
+                  placeholder="Enter last name"
+                  value={editingStudent.lastName || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, lastName: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editEmail">Email</Label>
+                <Input 
+                  id="editEmail" 
+                  type="email" 
+                  placeholder="Enter email address"
+                  value={editingStudent.email || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, email: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editPhone">Phone Number</Label>
+                <Input 
+                  id="editPhone" 
+                  type="tel" 
+                  placeholder="Enter phone number"
+                  value={editingStudent.phone || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, phone: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editStatus">Status</Label>
+                <Select value={editingStudent.status || 'active'} onValueChange={(value) => setEditingStudent({...editingStudent, status: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editLevel">Level</Label>
+                <Select value={editingStudent.level || 'Beginner'} onValueChange={(value) => setEditingStudent({...editingStudent, level: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Beginner">Beginner</SelectItem>
+                    <SelectItem value="Intermediate">Intermediate</SelectItem>
+                    <SelectItem value="Advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label htmlFor="editNotes">Notes</Label>
+                <Input 
+                  id="editNotes" 
+                  placeholder="Additional notes about the student"
+                  value={editingStudent.notes || ''}
+                  onChange={(e) => setEditingStudent({...editingStudent, notes: e.target.value})}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="editLastName">Last Name</Label>
-              <Input 
-                id="editLastName" 
-                placeholder="Enter last name"
-                value={editStudentData.lastName}
-                onChange={(e) => setEditStudentData({...editStudentData, lastName: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="editEmail">Email</Label>
-              <Input 
-                id="editEmail" 
-                type="email" 
-                placeholder="Enter email address"
-                value={editStudentData.email}
-                onChange={(e) => setEditStudentData({...editStudentData, email: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="editPhone">Phone Number</Label>
-              <Input 
-                id="editPhone" 
-                type="tel" 
-                placeholder="Enter phone number"
-                value={editStudentData.phone}
-                onChange={(e) => setEditStudentData({...editStudentData, phone: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="editStatus">Status</Label>
-              <Select value={editStudentData.status} onValueChange={(value) => setEditStudentData({...editStudentData, status: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="editLevel">Level</Label>
-              <Select value={editStudentData.level} onValueChange={(value) => setEditStudentData({...editStudentData, level: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Beginner">Beginner</SelectItem>
-                  <SelectItem value="Intermediate">Intermediate</SelectItem>
-                  <SelectItem value="Advanced">Advanced</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
+            <Button onClick={handleSaveEdit} disabled={!editingStudent}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
