@@ -608,7 +608,7 @@ function Router() {
           }
           
           if (!user) {
-            return <Redirect to="/simple-auth" />;
+            return <Redirect to="/auth" />;
           }
           
           // Redirect authenticated users based on their role
