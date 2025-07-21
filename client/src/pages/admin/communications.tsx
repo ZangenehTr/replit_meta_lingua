@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SupportTicket {
   id: number;
@@ -154,14 +155,21 @@ export default function AdminCommunicationsPage() {
   const ticketsData = (tickets as SupportTicket[]) || [];
   const conversationsData = (conversations as ChatConversation[]) || [];
   const notificationsData = (notifications as PushNotification[]) || [];
-  const messagesData = (messages as Array<{
+  // Get current user for message ownership detection
+  const { user } = useAuth();
+  
+  const messagesData = ((messages as Array<{
     id: number;
     conversationId: number; 
     message: string;
     senderName: string;
+    senderId: number;
     sentAt: string;
     isOwnMessage?: boolean;
-  }>) || [];
+  }>) || []).map(msg => ({
+    ...msg,
+    isOwnMessage: msg.senderId === user?.id // Properly determine if message is from current user
+  }));
 
   // Parse URL parameters and auto-select conversation
   useEffect(() => {
