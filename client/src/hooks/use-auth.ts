@@ -56,7 +56,7 @@ export function useAuth() {
       return failureCount < 3;
     },
     refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 1 * 60 * 1000, // 1 minute - shorter cache to detect token changes faster
   });
 
   const loginMutation = useMutation({
