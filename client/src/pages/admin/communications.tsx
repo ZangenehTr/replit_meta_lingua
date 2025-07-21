@@ -142,15 +142,16 @@ export default function AdminCommunicationsPage() {
     queryKey: ['/api/push-notifications'],
   });
 
-  // Real API calls for conversation messages with aggressive refresh
+  // Real API calls for conversation messages with ULTRA aggressive refresh
   const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useQuery({
     queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'],
     enabled: !!selectedConversation,
-    refetchInterval: 1000, // More aggressive refresh - every 1 second
+    refetchInterval: 500, // Ultra aggressive - every 0.5 seconds
     staleTime: 0, // Always treat data as stale
-    gcTime: 0, // No caching
+    gcTime: 0, // No caching at all
     refetchOnWindowFocus: true,
     refetchOnMount: 'always' as const,
+    structuralSharing: false, // Disable structural sharing to force complete data refresh
   });
 
   const ticketsData = (tickets as SupportTicket[]) || [];
@@ -166,6 +167,7 @@ export default function AdminCommunicationsPage() {
     role: user?.role 
   });
   
+  // Process messages with proper ownership detection
   const messagesData = ((messages as Array<{
     id: number;
     conversationId: number; 
@@ -175,8 +177,10 @@ export default function AdminCommunicationsPage() {
     sentAt: string;
     isOwnMessage?: boolean;
   }>) || []).map(msg => {
-    const isOwn = user && msg.senderId === user.id;
-    console.log(`Message ${msg.id}: senderId=${msg.senderId}, currentUserId=${user?.id}, isOwn=${isOwn}`);
+    const isOwn = user && msg.senderId && msg.senderId === user.id;
+    if (selectedConversation) {
+      console.log(`Message ${msg.id}: senderId=${msg.senderId}, currentUserId=${user?.id}, isOwn=${isOwn}`);
+    }
     return {
       ...msg,
       isOwnMessage: isOwn
@@ -616,14 +620,14 @@ export default function AdminCommunicationsPage() {
 
           {/* Internal Chat Tab */}
           <TabsContent value="chat" className="space-y-4 md:space-y-6">
-            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {/* Mobile-First Conversations List */}
-              <Card className="lg:h-auto">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Conversations</CardTitle>
-                  <CardDescription className="text-sm">Staff internal messaging</CardDescription>
+              <Card className="w-full lg:h-auto">
+                <CardHeader className="p-3 sm:p-4">
+                  <CardTitle className="text-base sm:text-lg">Conversations</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Staff internal messaging</CardDescription>
                 </CardHeader>
-                <CardContent className="p-3 md:p-6">
+                <CardContent className="p-3 sm:p-4">
                   <ScrollArea className="h-[300px] md:h-[500px]">
                     <div className="space-y-2">
                       {conversationsLoading ? (
@@ -684,9 +688,9 @@ export default function AdminCommunicationsPage() {
               </Card>
 
               {/* Mobile-First Chat Interface */}
-              <Card className="lg:col-span-2">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
+              <Card className="w-full lg:col-span-2">
+                <CardHeader className="p-3 sm:p-4 border-b">
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
                     {selectedConversation ? (
                       <span className="truncate">
@@ -700,10 +704,10 @@ export default function AdminCommunicationsPage() {
                     {selectedConversation ? "Real-time messaging" : "Choose a conversation to start messaging"}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-3 md:p-6">
-                  <div className="flex flex-col h-[400px] md:h-[500px]">
-                    <ScrollArea className="flex-1 mb-4">
-                      <div className="space-y-4 p-2 md:p-4">
+                <CardContent className="p-0">
+                  <div className="flex flex-col h-[350px] sm:h-[400px] lg:h-[450px]">
+                    <ScrollArea className="flex-1">
+                      <div className="space-y-3 p-3 sm:p-4">
                         {selectedConversation ? (
                           messagesLoading ? (
                             <div className="text-center py-8 text-gray-500">Loading messages...</div>
@@ -722,7 +726,7 @@ export default function AdminCommunicationsPage() {
                                 {!(user && message.senderId === user.id) && (
                                   <Avatar className="h-8 w-8">
                                     <AvatarFallback>
-                                      {message.senderName?.charAt(0) || 'U'}
+                                      {message.senderName?.split(' ').map(n => n[0]).join('') || 'U'}
                                     </AvatarFallback>
                                   </Avatar>
                                 )}
@@ -754,7 +758,8 @@ export default function AdminCommunicationsPage() {
                       </div>
                     </ScrollArea>
                     
-                    <div className="space-y-3">
+                    {/* Message Input Area - Mobile Optimized */}
+                    <div className="border-t p-3 sm:p-4 space-y-3">
                       {/* Enhanced Notification Options - Mobile-First */}
                       <div className="flex flex-col gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                         <div className="flex items-center justify-between">

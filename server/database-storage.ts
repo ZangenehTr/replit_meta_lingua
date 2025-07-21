@@ -5551,6 +5551,7 @@ export class DatabaseStorage implements IStorage {
       conversationId: chatMessages.conversationId,
       senderId: chatMessages.senderId,
       senderName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+      senderAvatar: users.avatar,
       message: chatMessages.message,
       messageType: chatMessages.messageType,
       attachments: chatMessages.attachments,
