@@ -72,6 +72,23 @@ interface TeacherAssignment {
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+// Time overlap detection utility function
+function isTimeOverlap(slot1: any, slot2: any): boolean {
+  // Convert time strings to minutes for easier comparison
+  const timeToMinutes = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const start1 = timeToMinutes(slot1.startTime);
+  const end1 = timeToMinutes(slot1.endTime);
+  const start2 = timeToMinutes(slot2.startTime);
+  const end2 = timeToMinutes(slot2.endTime);
+
+  // Check if there's any overlap
+  return start1 < end2 && start2 < end1;
+}
+
 export default function TeacherStudentMatchingPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
@@ -90,13 +107,18 @@ export default function TeacherStudentMatchingPage() {
   });
 
   // Fetch students without teachers
-  const { data: students = [], isLoading: studentsLoading } = useQuery({
+  const { data: students = [], isLoading: studentsLoading } = useQuery<Student[]>({
     queryKey: ['/api/admin/students/unassigned-teacher'],
   });
 
-  // Fetch available teachers
-  const { data: teachers = [], isLoading: teachersLoading } = useQuery({
+  // Fetch available teachers  
+  const { data: teachers = [], isLoading: teachersLoading } = useQuery<Teacher[]>({
     queryKey: ['/api/admin/teachers/available'],
+  });
+
+  // Fetch courses with their scheduling information for teacher matching integration
+  const { data: courses = [], isLoading: coursesLoading } = useQuery({
+    queryKey: ['/api/admin/courses'],
   });
 
   // Create teacher assignment mutation
@@ -175,7 +197,7 @@ export default function TeacherStudentMatchingPage() {
   };
 
   // Filter students
-  const filteredStudents = students.filter((student: Student) => {
+  const filteredStudents = students.filter((student) => {
     const matchesSearch = student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -186,18 +208,53 @@ export default function TeacherStudentMatchingPage() {
     return matchesSearch && matchesLevel && matchesLanguage && matchesClassType && matchesMode;
   });
 
-  // Get compatible teachers for selected student
+  // Get compatible teachers for selected student (including course scheduling integration)
   const getCompatibleTeachers = (student: Student) => {
-    return teachers.filter((teacher: Teacher) => {
+    return teachers.filter((teacher) => {
       const hasCapacity = teacher.currentStudents < teacher.maxStudents;
       const speaksLanguage = teacher.languages && teacher.languages.includes(student.language);
       const teachesLevel = teacher.levels && teacher.levels.includes(student.level);
       const supportsClassType = student.preferredClassType === 'both' || 
-                               teacher.classTypes.includes(student.preferredClassType);
+                               teacher.classTypes?.includes(student.preferredClassType);
       const supportsMode = student.preferredMode === 'both' || 
-                          teacher.modes.includes(student.preferredMode);
+                          teacher.modes?.includes(student.preferredMode);
       
       return hasCapacity && speaksLanguage && teachesLevel && supportsClassType && supportsMode;
+    });
+  };
+
+  // Get courses that can be taught by teacher (with time slot overlap logic)
+  const getCompatibleCourses = (teacher: Teacher) => {
+    return courses.filter((course: any) => {
+      // Skip Callern courses - they have 24/7 availability
+      if (course.courseStructure === 'callern') {
+        return teacher.languages?.includes('persian') || teacher.languages?.includes('english');
+      }
+
+      // For regular courses, check time slot overlap
+      if (course.scheduledDays && course.scheduledTimes && teacher.timeSlots) {
+        const courseSchedule = course.scheduledDays.map((day: string, index: number) => ({
+          day: day,
+          startTime: course.scheduledTimes.startTime,
+          endTime: course.scheduledTimes.endTime
+        }));
+
+        // Check if teacher has availability that overlaps with course schedule
+        const hasOverlap = courseSchedule.some((courseSlot: any) => 
+          teacher.timeSlots?.some((teacherSlot: any) => 
+            teacherSlot.day === courseSlot.day &&
+            isTimeOverlap(courseSlot, teacherSlot)
+          )
+        );
+
+        // Also check if teacher supports the course level and language
+        const supportsLevel = teacher.levels?.includes(course.level);
+        const supportsLanguage = teacher.languages?.includes(course.language);
+        
+        return hasOverlap && supportsLevel && supportsLanguage;
+      }
+
+      return false;
     });
   };
 
@@ -454,7 +511,7 @@ export default function TeacherStudentMatchingPage() {
                   <p className="text-gray-500">Select a student from the left to see compatible teachers</p>
                 </CardContent>
               </Card>
-            ) : teachersLoading ? (
+            ) : teachersLoading || coursesLoading ? (
               <Card className="shadow-lg">
                 <CardContent className="text-center py-12">
                   <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -543,6 +600,25 @@ export default function TeacherStudentMatchingPage() {
                                   <Clock className="h-3 w-3 inline mr-1" />
                                   {matchingSlots.length} matching time slots available
                                 </p>
+                              </div>
+                            )}
+                            
+                            {/* Course Integration: Show compatible courses */}
+                            {courses && courses.length > 0 && (
+                              <div className="mt-3">
+                                <p className="text-xs font-medium text-gray-700 mb-2">Compatible Courses:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {getCompatibleCourses(teacher).slice(0, 3).map((course: any, idx: number) => (
+                                    <Badge key={idx} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                      {course.courseStructure === 'callern' ? '📞 Callern' : course.title}
+                                    </Badge>
+                                  ))}
+                                  {getCompatibleCourses(teacher).length > 3 && (
+                                    <Badge variant="outline" className="text-xs text-gray-600">
+                                      +{getCompatibleCourses(teacher).length - 3} more
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
                             )}
                           </div>
