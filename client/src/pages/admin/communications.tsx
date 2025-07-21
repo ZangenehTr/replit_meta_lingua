@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useLocation } from "wouter";
 import { 
   HeadphonesIcon,
   MessageSquare, 
@@ -93,6 +94,7 @@ interface PushNotification {
 export default function AdminCommunicationsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [location] = useLocation();
   const [activeTab, setActiveTab] = useState("tickets");
   const [newTicketDialog, setNewTicketDialog] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
@@ -100,6 +102,8 @@ export default function AdminCommunicationsPage() {
   const [notificationDialog, setNotificationDialog] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<ChatConversation | null>(null);
   const [ticketReply, setTicketReply] = useState("");
+  const [sendNotification, setSendNotification] = useState(false);
+  const [customNotificationText, setCustomNotificationText] = useState("New message from admin");
   
   // New ticket form state
   const [ticketForm, setTicketForm] = useState({
@@ -137,9 +141,38 @@ export default function AdminCommunicationsPage() {
     queryKey: ['/api/push-notifications'],
   });
 
+  // Real API calls for conversation messages
+  const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useQuery({
+    queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'],
+    enabled: !!selectedConversation,
+  });
+
   const ticketsData = (tickets as SupportTicket[]) || [];
   const conversationsData = (conversations as ChatConversation[]) || [];
   const notificationsData = (notifications as PushNotification[]) || [];
+  const messagesData = (messages as Array<{
+    id: number;
+    conversationId: number; 
+    message: string;
+    senderName: string;
+    sentAt: string;
+    isOwnMessage?: boolean;
+  }>) || [];
+
+  // Parse URL parameters and auto-select conversation
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const conversationId = searchParams.get('conversation');
+    
+    if (conversationId && conversationsData.length > 0) {
+      const conversation = conversationsData.find(c => c.id === parseInt(conversationId));
+      if (conversation) {
+        setSelectedConversation(conversation);
+        setActiveTab("chat"); // Auto-switch to chat tab
+        console.log('Auto-selected conversation:', conversation.id);
+      }
+    }
+  }, [conversationsData]);
 
   // Ticket operations
   const createTicketMutation = useMutation({
@@ -159,17 +192,43 @@ export default function AdminCommunicationsPage() {
     }
   });
 
-  // Send chat message
+  // Send chat message with optional notification
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ conversationId, message }: { conversationId: number; message: string }) => {
-      return apiRequest(`/api/chat/conversations/${conversationId}/messages`, { 
+    mutationFn: async ({ conversationId, message, withNotification, notificationText }: { 
+      conversationId: number; 
+      message: string;
+      withNotification?: boolean;
+      notificationText?: string;
+    }) => {
+      const response = await apiRequest(`/api/chat/conversations/${conversationId}/messages`, { 
         method: 'POST', 
         body: JSON.stringify({ message }) 
       });
+
+      // Send notification if requested
+      if (withNotification && notificationText) {
+        await apiRequest('/api/push-notifications', {
+          method: 'POST',
+          body: JSON.stringify({
+            title: "New Message",
+            message: notificationText,
+            type: "info",
+            targetAudience: "student",
+            channels: ["push", "sms"],
+            status: "sent"
+          })
+        });
+      }
+
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'] });
+      refetchMessages(); // Immediate refresh of messages
       setChatInput("");
+      setSendNotification(false);
+      toast({ title: "Message sent successfully" });
     },
     onError: (error: any) => {
       toast({ title: "Failed to send message", description: error.message, variant: "destructive" });
@@ -234,30 +293,30 @@ export default function AdminCommunicationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+      <div className="container mx-auto px-3 md:px-4 py-4 md:py-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 md:mb-6">
+          <div className="flex-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
               Communication Hub
             </h1>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">
               Modern ticketing, real-time chat, and push notifications
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setNewTicketDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Ticket
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button onClick={() => setNewTicketDialog(true)} size="sm" className="w-full sm:w-auto">
+              <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="text-xs md:text-sm">New Ticket</span>
             </Button>
-            <Button variant="outline" onClick={() => setNotificationDialog(true)}>
-              <Bell className="h-4 w-4 mr-2" />
-              Send Notification
+            <Button variant="outline" onClick={() => setNotificationDialog(true)} size="sm" className="w-full sm:w-auto">
+              <Bell className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+              <span className="text-xs md:text-sm">Send Notification</span>
             </Button>
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Mobile-First Statistics Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -313,24 +372,28 @@ export default function AdminCommunicationsPage() {
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="tickets" className="flex items-center gap-2">
-              <HeadphonesIcon className="h-4 w-4" />
-              Support Tickets
+        {/* Mobile-First Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 md:gap-0">
+            <TabsTrigger value="tickets" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3">
+              <HeadphonesIcon className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Support</span>
+              <span className="sm:hidden">Tickets</span>
             </TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Internal Chat
+            <TabsTrigger value="chat" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3">
+              <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Chat</span>
+              <span className="sm:hidden">Chat</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
-              <Bell className="h-4 w-4" />
-              Push Notifications
+            <TabsTrigger value="notifications" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3">
+              <Bell className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Notifications</span>
+              <span className="sm:hidden">Push</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <Globe className="h-4 w-4" />
-              Analytics
+            <TabsTrigger value="analytics" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3">
+              <Globe className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Analytics</span>
+              <span className="sm:hidden">Data</span>
             </TabsTrigger>
           </TabsList>
 
@@ -495,16 +558,16 @@ export default function AdminCommunicationsPage() {
           </TabsContent>
 
           {/* Internal Chat Tab */}
-          <TabsContent value="chat" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Conversations List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Conversations</CardTitle>
-                  <CardDescription>Staff internal messaging</CardDescription>
+          <TabsContent value="chat" className="space-y-4 md:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+              {/* Mobile-First Conversations List */}
+              <Card className="lg:h-auto">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Conversations</CardTitle>
+                  <CardDescription className="text-sm">Staff internal messaging</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[500px]">
+                <CardContent className="p-3 md:p-6">
+                  <ScrollArea className="h-[300px] md:h-[500px]">
                     <div className="space-y-2">
                       {conversationsLoading ? (
                         <div className="text-center py-8">Loading conversations...</div>
@@ -563,64 +626,138 @@ export default function AdminCommunicationsPage() {
                 </CardContent>
               </Card>
 
-              {/* Chat Interface */}
+              {/* Mobile-First Chat Interface */}
               <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>Chat</CardTitle>
-                  <CardDescription>Real-time staff communication</CardDescription>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    {selectedConversation ? (
+                      <span className="truncate">
+                        {selectedConversation.title || selectedConversation.participants.join(', ')}
+                      </span>
+                    ) : (
+                      "Select Conversation"
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-sm">
+                    {selectedConversation ? "Real-time messaging" : "Choose a conversation to start messaging"}
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col h-[500px]">
+                <CardContent className="p-3 md:p-6">
+                  <div className="flex flex-col h-[400px] md:h-[500px]">
                     <ScrollArea className="flex-1 mb-4">
-                      <div className="space-y-4 p-4">
-                        {/* Sample messages */}
-                        <div className="flex items-start gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>JD</AvatarFallback>
-                          </Avatar>
-                          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 max-w-xs">
-                            <p className="text-sm">Hey, can you help me with the new student enrollment?</p>
-                            <p className="text-xs text-gray-500 mt-1">10:30 AM</p>
+                      <div className="space-y-4 p-2 md:p-4">
+                        {selectedConversation ? (
+                          messagesLoading ? (
+                            <div className="text-center py-8 text-gray-500">Loading messages...</div>
+                          ) : messagesData.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">
+                              No messages yet. Start the conversation!
+                            </div>
+                          ) : (
+                            messagesData.map((message) => (
+                              <div 
+                                key={message.id}
+                                className={`flex items-start gap-3 ${message.isOwnMessage ? 'justify-end' : ''}`}
+                              >
+                                {!message.isOwnMessage && (
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarFallback>
+                                      {message.senderName?.charAt(0) || 'U'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                )}
+                                <div className={`rounded-lg p-3 max-w-[70%] ${
+                                  message.isOwnMessage 
+                                    ? 'bg-blue-500 text-white' 
+                                    : 'bg-gray-100 dark:bg-gray-800'
+                                }`}>
+                                  <p className="text-sm">{message.message}</p>
+                                  <p className={`text-xs mt-1 ${
+                                    message.isOwnMessage ? 'text-blue-100' : 'text-gray-500'
+                                  }`}>
+                                    {new Date(message.sentAt).toLocaleTimeString()}
+                                  </p>
+                                </div>
+                                {message.isOwnMessage && (
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarFallback>ME</AvatarFallback>
+                                  </Avatar>
+                                )}
+                              </div>
+                            ))
+                          )
+                        ) : (
+                          <div className="text-center py-12 text-gray-500">
+                            Select a conversation to view messages
                           </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-3 justify-end">
-                          <div className="bg-blue-500 text-white rounded-lg p-3 max-w-xs">
-                            <p className="text-sm">Sure! I'll send you the checklist.</p>
-                            <p className="text-xs text-blue-100 mt-1">10:32 AM</p>
-                          </div>
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>ME</AvatarFallback>
-                          </Avatar>
-                        </div>
+                        )}
                       </div>
                     </ScrollArea>
                     
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Type a message..."
-                        value={chatInput}
-                        onChange={(e) => setChatInput(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter' && chatInput.trim()) {
-                            // Handle send message
-                            setChatInput("");
-                          }
-                        }}
-                      />
-                      <Button 
-                        onClick={() => {
-                          if (chatInput.trim() && selectedConversation) {
-                            sendMessageMutation.mutate({
-                              conversationId: selectedConversation.id,
-                              message: chatInput
-                            });
-                          }
-                        }}
-                        disabled={!chatInput.trim() || !selectedConversation || sendMessageMutation.isPending}
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
+                    <div className="space-y-3">
+                      {/* Notification Options */}
+                      <div className="flex flex-col sm:flex-row gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="sendNotif"
+                            checked={sendNotification}
+                            onCheckedChange={(checked) => setSendNotification(checked as boolean)}
+                          />
+                          <Label htmlFor="sendNotif" className="text-sm font-medium">
+                            Send notification with message
+                          </Label>
+                        </div>
+                        {sendNotification && (
+                          <Input
+                            placeholder="Custom notification text..."
+                            value={customNotificationText}
+                            onChange={(e) => setCustomNotificationText(e.target.value)}
+                            className="flex-1 text-sm"
+                          />
+                        )}
+                      </div>
+
+                      {/* Message Input */}
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Type a message..."
+                          value={chatInput}
+                          onChange={(e) => setChatInput(e.target.value)}
+                          className="flex-1"
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && chatInput.trim() && selectedConversation) {
+                              sendMessageMutation.mutate({
+                                conversationId: selectedConversation.id,
+                                message: chatInput,
+                                withNotification: sendNotification,
+                                notificationText: customNotificationText
+                              });
+                            }
+                          }}
+                        />
+                        <Button 
+                          onClick={() => {
+                            if (chatInput.trim() && selectedConversation) {
+                              sendMessageMutation.mutate({
+                                conversationId: selectedConversation.id,
+                                message: chatInput,
+                                withNotification: sendNotification,
+                                notificationText: customNotificationText
+                              });
+                            }
+                          }}
+                          disabled={!chatInput.trim() || !selectedConversation || sendMessageMutation.isPending}
+                          size="sm"
+                          className="shrink-0"
+                        >
+                          {sendMessageMutation.isPending ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
