@@ -4044,7 +4044,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Course Management API Routes
   
   // Get all courses for admin
-  app.get("/api/admin/courses", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+  app.get("/api/admin/courses", authenticateToken, requireRole(['Admin', 'Teacher/Tutor', 'Supervisor']), async (req: any, res) => {
     try {
       const courses = await storage.getCourses();
       res.json(courses);
@@ -4055,7 +4055,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get single course details
-  app.get("/api/admin/courses/:id", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+  app.get("/api/admin/courses/:id", authenticateToken, requireRole(['Admin', 'Teacher/Tutor', 'Supervisor']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
       const course = await storage.getCourse(courseId);
@@ -4070,7 +4070,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new course
-  app.post("/api/admin/courses", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/courses", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const courseData = req.body;
       
@@ -4118,7 +4118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update course
-  app.put("/api/admin/courses/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.put("/api/admin/courses/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
       const updateData = req.body;
@@ -4136,7 +4136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add module to course
-  app.post("/api/admin/courses/:id/modules", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/courses/:id/modules", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
       const { name, description, duration, order } = req.body;
@@ -4160,7 +4160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add lesson to module
-  app.post("/api/admin/courses/:courseId/modules/:moduleId/lessons", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/courses/:courseId/modules/:moduleId/lessons", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.courseId);
       const moduleId = parseInt(req.params.moduleId);
@@ -4191,7 +4191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Publish course
-  app.post("/api/admin/courses/:id/publish", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/courses/:id/publish", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
       
@@ -4208,7 +4208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get course modules
-  app.get("/api/admin/courses/:courseId/modules", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.get("/api/admin/courses/:courseId/modules", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.courseId);
       const modules = await storage.getCourseModules(courseId);
@@ -4220,7 +4220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get course module lessons
-  app.get("/api/admin/courses/:courseId/modules/:moduleId/lessons", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.get("/api/admin/courses/:courseId/modules/:moduleId/lessons", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const moduleId = parseInt(req.params.moduleId);
       const lessons = await storage.getModuleLessons(moduleId);
@@ -4232,7 +4232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete course
-  app.delete("/api/admin/courses/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.delete("/api/admin/courses/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
       
@@ -4282,7 +4282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Duplicate course
-  app.post("/api/admin/courses/:id/duplicate", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/courses/:id/duplicate", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
       const originalCourse = await storage.getCourse(courseId);
@@ -4312,7 +4312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk course operations
-  app.post("/api/admin/courses/bulk", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+  app.post("/api/admin/courses/bulk", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const { action, courseIds } = req.body;
       
