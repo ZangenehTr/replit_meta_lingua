@@ -14319,14 +14319,10 @@ Meta Lingua Academy`;
 
   app.post("/api/chat/conversations/:conversationId/messages", authenticateToken, async (req, res) => {
     try {
-      const user = await storage.getUser(req.user.id);
-      const senderName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.email || 'Unknown User';
-      
       const messageData = {
         ...req.body,
         conversationId: parseInt(req.params.conversationId),
-        senderId: req.user.id,
-        senderName: senderName
+        senderId: req.user.id
       };
       const message = await storage.createChatMessage(messageData);
       res.status(201).json(message);
