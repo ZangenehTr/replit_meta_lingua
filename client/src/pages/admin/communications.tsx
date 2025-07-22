@@ -1072,6 +1072,66 @@ export default function AdminCommunicationsPage() {
                         
                         {/* Message Input Area */}
                         <div className="border-t p-4 space-y-3">
+                          {/* Enhanced Notification Options */}
+                          <div className="flex flex-col gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <Bell className="h-4 w-4 text-blue-500" />
+                                <Label htmlFor="sendNotif" className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                  Send Custom Notification
+                                </Label>
+                              </div>
+                              <Checkbox 
+                                id="sendNotif"
+                                checked={sendNotification}
+                                onCheckedChange={(checked) => setSendNotification(checked as boolean)}
+                                className="data-[state=checked]:bg-blue-500 border-blue-400"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Input
+                                placeholder={sendNotification ? "Enter your custom notification message..." : "Check the box above to send a notification with your message"}
+                                value={customNotificationText}
+                                onChange={(e) => setCustomNotificationText(e.target.value)}
+                                className="w-full text-sm bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-600 focus:border-blue-500"
+                                disabled={!sendNotification}
+                              />
+                              {sendNotification && (
+                                <div className="space-y-3">
+                                  <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                                    <MessageSquare className="h-3 w-3" />
+                                    This notification will be sent via SMS and push notification
+                                  </p>
+                                  <Button 
+                                    onClick={() => {
+                                      if (customNotificationText.trim()) {
+                                        sendNotificationMutation.mutate({
+                                          title: "Custom Notification",
+                                          message: customNotificationText,
+                                          type: "info",
+                                          targetAudience: "student",
+                                          channels: ["push", "sms"],
+                                          status: "sent"
+                                        });
+                                      }
+                                    }}
+                                    disabled={!customNotificationText.trim() || sendNotificationMutation.isPending}
+                                    size="sm"
+                                    className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                                  >
+                                    {sendNotificationMutation.isPending ? (
+                                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
+                                    ) : (
+                                      <Bell className="h-4 w-4 mr-2" />
+                                    )}
+                                    Send Notification Now
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Message Input & Send Button */}
                           <div className="flex items-center gap-2">
                             <Input
                               placeholder="Type your message here..."
@@ -1110,102 +1170,6 @@ export default function AdminCommunicationsPage() {
                             </Button>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Panel>
-                
-                {/* Resize Handle */}
-                <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors" />
-                
-                {/* Notification Panel */}
-                <Panel defaultSize={30} minSize={20} maxSize={50}>
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Bell className="h-5 w-5" />
-                        Send Notification
-                      </CardTitle>
-                      <CardDescription>Create and send custom notifications</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Enhanced Notification Options */}
-                      <div className="flex flex-col gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <Bell className="h-4 w-4 text-blue-500" />
-                            <Label htmlFor="sendNotif" className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                              Send Custom Notification
-                            </Label>
-                          </div>
-                          <Checkbox 
-                            id="sendNotif"
-                            checked={sendNotification}
-                            onCheckedChange={(checked) => setSendNotification(checked as boolean)}
-                            className="data-[state=checked]:bg-blue-500 border-blue-400"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Input
-                            placeholder={sendNotification ? "Enter your custom notification message..." : "Check the box above to send a notification with your message"}
-                            value={customNotificationText}
-                            onChange={(e) => setCustomNotificationText(e.target.value)}
-                            className="w-full text-sm bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-600 focus:border-blue-500"
-                            disabled={!sendNotification}
-                          />
-                          {sendNotification && (
-                            <div className="space-y-3">
-                              <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                                <MessageSquare className="h-3 w-3" />
-                                This notification will be sent via SMS and push notification
-                              </p>
-                              <Button 
-                                onClick={() => {
-                                  if (customNotificationText.trim()) {
-                                    sendNotificationMutation.mutate({
-                                      title: "Custom Notification",
-                                      message: customNotificationText,
-                                      type: "info",
-                                      targetAudience: "student",
-                                      channels: ["push", "sms"],
-                                      status: "sent"
-                                    });
-                                  }
-                                }}
-                                disabled={!customNotificationText.trim() || sendNotificationMutation.isPending}
-                                size="sm"
-                                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-                              >
-                                {sendNotificationMutation.isPending ? (
-                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
-                                ) : (
-                                  <Bell className="h-4 w-4 mr-2" />
-                                )}
-                                Send Notification Now
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Recent Notifications */}
-                      <div>
-                        <h4 className="text-sm font-medium mb-2">Recent Notifications</h4>
-                        <ScrollArea className="h-[350px]">
-                          <div className="space-y-2">
-                            {notificationsData.slice(0, 5).map((notification) => (
-                              <div key={notification.id} className="p-3 border rounded-lg">
-                                <p className="text-sm font-medium">{notification.title}</p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {notification.message}
-                                </p>
-                                <p className="text-xs text-gray-400 mt-2">
-                                  {notification.sentAt ? new Date(notification.sentAt).toLocaleString() : 'Pending'}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </ScrollArea>
                       </div>
                     </CardContent>
                   </Card>

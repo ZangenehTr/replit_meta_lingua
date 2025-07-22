@@ -289,11 +289,12 @@ Preferred communication style: Simple, everyday language.
 
 ### Communication Center Resizable Panels Implementation (July 22, 2025)
 - **RESIZABLE COLUMNS IMPLEMENTED**: Successfully implemented adjustable column widths in Communication Center using react-resizable-panels library
-- **DESKTOP LAYOUT ENHANCED**: Replaced fixed 400px grid layout with flexible resizable panels for conversations, chat, and notifications
-- **USER EXPERIENCE IMPROVED**: Users can now drag resize handles to adjust column widths according to their preferences
-- **PANEL CONFIGURATION**: Conversations (30% default, 20-50% range), Chat (40% default, 30%+ min), Notifications (30% default, 20-50% range)
+- **2-COLUMN LAYOUT RESTORED**: Corrected layout to display only 2 columns (Conversations and Chat) with single adjustable divider as requested
+- **DESKTOP LAYOUT ENHANCED**: Replaced fixed grid layout with flexible resizable panels for conversations and chat interface
+- **USER EXPERIENCE IMPROVED**: Users can now drag the resize handle to adjust column widths according to their preferences
+- **PANEL CONFIGURATION**: Conversations (30% default, 20-50% range), Chat (remaining space, minimum 30%)
+- **NOTIFICATION INTEGRATION**: Moved notification functionality into chat panel's message input area to maintain feature availability
 - **MOBILE LAYOUT PRESERVED**: Maintained single-column mobile layout with fullscreen chat modal for optimal mobile experience
-- **OLD DESKTOP LAYOUT REMOVED**: Eliminated duplicate desktop grid layout code to prevent UI conflicts
 - **USER SEARCH INTEGRATION**: Search functionality properly integrated within resizable conversations panel
 
 ### Communication Center Mobile Responsive Design Implementation (July 22, 2025)
