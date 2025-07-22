@@ -15,6 +15,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { useTranslation } from 'react-i18next';
 import { 
   Users, 
   GraduationCap, 
@@ -76,6 +77,7 @@ const targetSchema = z.object({
 });
 
 export default function SupervisorDashboard() {
+  const { t } = useTranslation('supervisor');
   const [observationDialogOpen, setObservationDialogOpen] = useState(false);
   const [targetDialogOpen, setTargetDialogOpen] = useState(false);
   const [teachersAttentionDialogOpen, setTeachersAttentionDialogOpen] = useState(false);
@@ -398,8 +400,8 @@ export default function SupervisorDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Supervision Dashboard</h1>
-            <p className="text-gray-600 mt-2">Quality assurance and teacher performance monitoring</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('dashboard')}</h1>
+            <p className="text-gray-600 mt-2">{t('welcomeMessage')}</p>
           </div>
           <div className="flex space-x-3">
             <Button 
@@ -407,7 +409,7 @@ export default function SupervisorDashboard() {
               onClick={() => setObservationDialogOpen(true)}
             >
               <ClipboardCheck className="h-4 w-4 mr-2" />
-              New Observation
+              {t('scheduleObservation')}
             </Button>
 
           </div>
@@ -419,7 +421,7 @@ export default function SupervisorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100">Total Teachers</p>
+                  <p className="text-blue-100">{t('teachers')}</p>
                   <p className="text-3xl font-bold">{stats?.totalTeachers || 0}</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-200" />
@@ -431,7 +433,7 @@ export default function SupervisorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100">Total Students</p>
+                  <p className="text-green-100">مجموع دانش‌آموزان</p>
                   <p className="text-3xl font-bold">{stats?.totalStudents || 0}</p>
                 </div>
                 <GraduationCap className="h-8 w-8 text-green-200" />
@@ -446,7 +448,7 @@ export default function SupervisorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-red-100">Teachers Needing Attention</p>
+                  <p className="text-red-100">{t('improvementNeeded')}</p>
                   <p className="text-3xl font-bold">{teachersNeedingAttention?.length || 0}</p>
                 </div>
                 <UserMinus className="h-8 w-8 text-red-200" />
@@ -458,7 +460,7 @@ export default function SupervisorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100">Pending Reviews</p>
+                  <p className="text-purple-100">{t('pendingReviews')}</p>
                   <p className="text-3xl font-bold">{pendingObservations.length || 0}</p>
                 </div>
                 <ClipboardCheck className="h-8 w-8 text-purple-200" />
