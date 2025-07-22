@@ -498,9 +498,9 @@ export default function SupervisorDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
-                    Business Intelligence
+                    {t('dashboard.businessIntelligence.title')}
                   </CardTitle>
-                  <CardDescription>Key performance indicators from real data</CardDescription>
+                  <CardDescription>{t('dashboard.businessIntelligence.subtitle')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -510,7 +510,7 @@ export default function SupervisorDashboard() {
                           <div className="text-2xl font-bold text-green-700">
                             {businessIntelligence.monthlyRevenue.toLocaleString()}
                           </div>
-                          <div className="text-xs text-green-600">IRR Monthly Revenue</div>
+                          <div className="text-xs text-green-600">{t('dashboard.businessIntelligence.monthlyRevenue')}</div>
                           {businessIntelligence.revenueGrowth > 0 && (
                             <div className="text-xs text-green-500">
                               +{businessIntelligence.revenueGrowth}% from last month
@@ -530,9 +530,9 @@ export default function SupervisorDashboard() {
                       <div className="text-2xl font-bold text-blue-700">
                         {businessIntelligence?.studentEngagementRate || 0}%
                       </div>
-                      <div className="text-xs text-blue-600">Student Engagement</div>
+                      <div className="text-xs text-blue-600">{t('dashboard.businessIntelligence.studentEngagement')}</div>
                       <div className="text-xs text-blue-500">
-                        {businessIntelligence?.activeStudents || 0} active students
+                        {businessIntelligence?.activeStudents || 0} {t('dashboard.businessIntelligence.activeStudents')}
                       </div>
                     </div>
                     
@@ -540,17 +540,17 @@ export default function SupervisorDashboard() {
                       <div className="text-2xl font-bold text-purple-700">
                         {businessIntelligence?.sessionCompletionRate || 0}%
                       </div>
-                      <div className="text-xs text-purple-600">Session Completion</div>
-                      <div className="text-xs text-purple-500">Academic performance</div>
+                      <div className="text-xs text-purple-600">{t('dashboard.businessIntelligence.sessionCompletion')}</div>
+                      <div className="text-xs text-purple-500">{t('dashboard.businessIntelligence.academicPerformance')}</div>
                     </div>
                     
                     <div className="text-center p-3 rounded-lg bg-orange-50">
                       <div className="text-2xl font-bold text-orange-700">
                         {businessIntelligence?.teacherQualityScore || 0}/5.0
                       </div>
-                      <div className="text-xs text-orange-600">Teaching Quality</div>
+                      <div className="text-xs text-orange-600">{t('dashboard.businessIntelligence.teachingQuality')}</div>
                       <div className="text-xs text-orange-500">
-                        {businessIntelligence?.observationsCompleted || 0} observations
+                        {businessIntelligence?.observationsCompleted || 0} {t('dashboard.businessIntelligence.observations')}
                       </div>
                     </div>
                   </div>
@@ -565,7 +565,7 @@ export default function SupervisorDashboard() {
                           : 'bg-amber-100 text-amber-800'
                       }
                     >
-                      Quality Trend: {businessIntelligence?.qualityTrend?.replace('_', ' ') || 'Stable'}
+                      {t('dashboard.businessIntelligence.qualityTrend')}: {businessIntelligence?.qualityTrend?.replace('_', ' ') || t('dashboard.businessIntelligence.stable')}
                     </Badge>
                   </div>
                 </CardContent>
@@ -1263,7 +1263,7 @@ export default function SupervisorDashboard() {
             <DialogHeader>
               <DialogTitle className="flex items-center">
                 <AlertCircle className="h-5 w-5 mr-2 text-amber-600" />
-                Students Needing Attention ({studentsNeedingAttention?.length || 0})
+                {t('dashboard.studentsNeedingAttention')} ({studentsNeedingAttention?.length || 0})
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
