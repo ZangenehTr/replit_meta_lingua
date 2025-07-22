@@ -18,6 +18,22 @@ import enStudent from './locales/en/student.json';
 import faStudent from './locales/fa/student.json';
 import arStudent from './locales/ar/student.json';
 
+import enMentor from './locales/en/mentor.json';
+import faMentor from './locales/fa/mentor.json';
+import arMentor from './locales/ar/mentor.json';
+
+import enSupervisor from './locales/en/supervisor.json';
+import faSupervisor from './locales/fa/supervisor.json';
+import arSupervisor from './locales/ar/supervisor.json';
+
+import enCallcenter from './locales/en/callcenter.json';
+import faCallcenter from './locales/fa/callcenter.json';
+import arCallcenter from './locales/ar/callcenter.json';
+
+import enAccountant from './locales/en/accountant.json';
+import faAccountant from './locales/fa/accountant.json';
+import arAccountant from './locales/ar/accountant.json';
+
 // Language detection options
 const detectionOptions = {
   order: ['localStorage', 'navigator', 'htmlTag'],
@@ -46,6 +62,10 @@ i18n
         admin: enAdmin,
         teacher: enTeacher,
         student: enStudent,
+        mentor: enMentor,
+        supervisor: enSupervisor,
+        callcenter: enCallcenter,
+        accountant: enAccountant,
       },
       fa: {
         common: fa.common,
@@ -54,6 +74,10 @@ i18n
         admin: faAdmin,
         teacher: faTeacher,
         student: faStudent,
+        mentor: faMentor,
+        supervisor: faSupervisor,
+        callcenter: faCallcenter,
+        accountant: faAccountant,
       },
       ar: {
         common: ar.common,
@@ -62,11 +86,15 @@ i18n
         admin: arAdmin,
         teacher: arTeacher,
         student: arStudent,
+        mentor: arMentor,
+        supervisor: arSupervisor,
+        callcenter: arCallcenter,
+        accountant: arAccountant,
       },
     },
     
     defaultNS: 'common',
-    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student'],
+    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant'],
   });
 
 export default i18n;
