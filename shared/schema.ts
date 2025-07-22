@@ -2540,9 +2540,11 @@ export const chatMessages = pgTable("chat_messages", {
   id: serial("id").primaryKey(),
   conversationId: integer("conversation_id").references(() => chatConversations.id).notNull(),
   senderId: integer("sender_id").references(() => users.id).notNull(),
+  senderName: text("sender_name"), // Sender's full name for display
   message: text("message").notNull(),
   messageType: varchar("message_type", { length: 20 }).default("text"), // text, image, file, system
   attachments: text("attachments").array().default([]),
+  isRead: boolean("is_read").default(false), // Add missing is_read field
   isEdited: boolean("is_edited").default(false),
   editedAt: timestamp("edited_at"),
   replyTo: integer("reply_to").references(() => chatMessages.id),

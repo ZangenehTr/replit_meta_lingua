@@ -5546,52 +5546,67 @@ export class DatabaseStorage implements IStorage {
 
   // Chat Messages
   async getChatMessages(conversationId: number, limit: number = 50): Promise<any[]> {
-    return await db.select({
-      id: chatMessages.id,
-      conversationId: chatMessages.conversationId,
-      senderId: chatMessages.senderId,
-      senderName: sql`${users.firstName} || ' ' || ${users.lastName}`,
-      senderAvatar: users.avatar,
-      message: chatMessages.message,
-      messageType: chatMessages.messageType,
-      attachments: chatMessages.attachments,
-      isEdited: chatMessages.isEdited,
-      editedAt: chatMessages.editedAt,
-      replyTo: chatMessages.replyTo,
-      reactions: chatMessages.reactions,
-      sentAt: chatMessages.sentAt,
-      readBy: chatMessages.readBy
-    })
-    .from(chatMessages)
-    .leftJoin(users, eq(chatMessages.senderId, users.id))
-    .where(eq(chatMessages.conversationId, conversationId))
-    .orderBy(desc(chatMessages.sentAt))
-    .limit(limit);
+    try {
+      console.log(`Fetching messages for conversation ${conversationId}`);
+      const messageResults = await db.select({
+        id: chatMessages.id,
+        conversationId: chatMessages.conversationId,
+        senderId: chatMessages.senderId,
+        senderName: chatMessages.senderName,
+        senderAvatar: users.avatar,
+        message: chatMessages.message,
+        messageType: chatMessages.messageType,
+        attachments: chatMessages.attachments,
+        isEdited: chatMessages.isEdited,
+        editedAt: chatMessages.editedAt,
+        replyTo: chatMessages.replyTo,
+        reactions: chatMessages.reactions,
+        sentAt: chatMessages.sentAt,
+        readBy: chatMessages.readBy
+      })
+      .from(chatMessages)
+      .leftJoin(users, eq(chatMessages.senderId, users.id))
+      .where(eq(chatMessages.conversationId, conversationId))
+      .orderBy(desc(chatMessages.sentAt))
+      .limit(limit);
+      
+      console.log(`Found ${messageResults.length} messages for conversation ${conversationId}`);
+      return messageResults;
+    } catch (error) {
+      console.error('Error fetching chat messages:', error);
+      throw error;
+    }
   }
 
   async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
-    // Get sender details for sender_name field (database requires it)
-    const sender = await this.getUser(message.senderId);
-    const senderName = sender ? `${sender.firstName} ${sender.lastName}`.trim() || sender.email : 'Unknown User';
-    
-    const messageWithSender = {
-      ...message,
-      senderName,
-      sentAt: new Date()
-    };
-    
-    const [newMessage] = await db.insert(chatMessages).values(messageWithSender).returning();
-    
-    // Update conversation's lastMessage and lastMessageAt
-    await db.update(chatConversations)
-      .set({
-        lastMessage: message.message,
-        lastMessageAt: new Date(),
-        updatedAt: new Date()
-      })
-      .where(eq(chatConversations.id, message.conversationId));
+    try {
+      // Get sender details for sender_name field (database requires it)
+      const sender = await this.getUser(message.senderId);
+      const senderName = sender ? `${sender.firstName} ${sender.lastName}`.trim() || sender.email : 'Unknown User';
+      
+      const messageWithSender = {
+        ...message,
+        senderName,
+        sentAt: new Date()
+      };
+      
+      console.log('Creating message with data:', messageWithSender);
+      const [newMessage] = await db.insert(chatMessages).values(messageWithSender).returning();
+      
+      // Update conversation's lastMessage and lastMessageAt
+      await db.update(chatConversations)
+        .set({
+          lastMessage: message.message,
+          lastMessageAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(chatConversations.id, message.conversationId));
 
-    return newMessage;
+      return newMessage;
+    } catch (error) {
+      console.error('Error creating chat message:', error);
+      throw error;
+    }
   }
 
   async updateChatMessage(id: number, updates: Partial<ChatMessage>): Promise<ChatMessage | undefined> {
