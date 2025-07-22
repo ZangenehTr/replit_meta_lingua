@@ -23,10 +23,10 @@ export const LanguageSelector: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
+        <Button variant="ghost" size="sm" className="gap-1 sm:gap-2">
           <Globe className="h-4 w-4" />
           <span>{currentLanguage?.flag}</span>
-          <span>{currentLanguage?.name}</span>
+          <span className="hidden sm:inline">{currentLanguage?.name}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">

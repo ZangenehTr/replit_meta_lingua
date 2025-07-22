@@ -123,10 +123,8 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           {/* Mobile-Optimized User Actions */}
           <div className="flex items-center space-x-2">
-            {/* Language Selector - Mobile Optimized */}
-            <div className="hidden sm:block">
-              <LanguageSelector />
-            </div>
+            {/* Language Selector - Always Visible */}
+            <LanguageSelector />
             
             {/* User Menu - Enhanced for Mobile */}
             <DropdownMenu>
@@ -164,6 +162,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+
               <DropdownMenuItem onClick={handleSwitchAccount}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Switch Account</span>
