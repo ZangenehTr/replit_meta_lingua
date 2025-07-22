@@ -1753,6 +1753,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User search endpoint - allow all authenticated users to search
+  app.get("/api/users/search", authenticateToken, async (req: any, res) => {
+    try {
+      const query = req.query.query as string;
+      
+      if (!query || query.length === 0) {
+        return res.json([]);
+      }
+
+      const allUsers = await storage.getAllUsers();
+      
+      // Search users by name, email, or role
+      const searchResults = allUsers.filter(user => {
+        const searchTerm = query.toLowerCase();
+        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase();
+        
+        return fullName.includes(searchTerm) ||
+               (user.email && user.email.toLowerCase().includes(searchTerm)) ||
+               (user.role && user.role.toLowerCase().includes(searchTerm));
+      });
+
+      // Return limited user information for privacy
+      const sanitizedResults = searchResults.map(user => ({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role
+      }));
+
+      res.json(sanitizedResults);
+    } catch (error) {
+      console.error('User search error:', error);
+      res.status(500).json({ message: "Failed to search users" });
+    }
+  });
+
   // User Management (Admin/Manager only)
   app.get("/api/users", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
