@@ -1,0 +1,17 @@
+I am trying to fix all the mentioned issues and errors. I want you to do the following:
+
+run a first-check protocol to avoid duplications. If there are any code or function already meeting the mentioned request, use that to enhance and match with the requests. 
+never use mock data or fake information.
+Every single button or feature in entire application must have a business logic and function. This meta lingua is supposed to be a dynamic web-application not a static and hardcoded application.
+ Now Research deeply and comprehensively across my entire Meta lingua codebase and Find what files and functions are related to the problems and goals I outlined above
+Assess reasons for why the features might not be working.
+In assessing the reason or reasons why the feature does not work properly, always pay attention to the entire codebase and keep in mind not to provide solutions without first looking for that feature in the codebase. Always try to provide solutions and plans considering the whole codebase avoiding reinventing the wheel and duplicating anything. 
+Always understand and check the logic of a feature I am asking you. If I am asking for something impossible or a task you do not have the tools to accomplish, let me know.
+ your next step now is to Develop a plan to fix all of the mentioned issues or requests.
+
+Write this entire plan and report into a file called "Instructions.md" in my project.
+Now I want you to fix and implement the detected issues. After reviewing the whole codebase for ALL roles and then implementing the feature or debugging the feature or enhancing the feature already in the codebase, test the logic of it at least 3 times and check if the business logic is effectively following the dependancies in other roles which are relevant to that feature or not.if in any step, instead of real api calls or integration, had codes or mock data is used, immediately replace it with the real api calls. 
+Attention: Always address all the issues and requests which are mentioned in a prompt and never finish the task partially fulfilled.
+Attention 2:When the prompt is not clear to you, avoid any interpretations and always ask me for further clarification.
+Attention 3: Before you begin, please carefully read and adhere to the plan and insights found in the "Instructions.md" file and follow those instructions. If there is something in those Instructions that might stop you, let me know and guide me on how to unblock you. 
+
