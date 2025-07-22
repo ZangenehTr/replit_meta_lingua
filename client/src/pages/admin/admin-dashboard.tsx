@@ -205,7 +205,7 @@ export function AdminDashboard() {
         {/* Revenue Analytics */}
         <Card>
           <CardHeader>
-            <CardTitle>Revenue Analytics (Last 6 Months)</CardTitle>
+            <CardTitle>{t('admin:dashboard.revenueAnalyticsLast6Months')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -230,13 +230,13 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5 text-yellow-600" />
-              Top Performing Teachers
+              {t('admin:dashboard.topPerformingTeachers')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-green-600 mb-2">
-                Lowest Attrition Rates
+                {t('admin:dashboard.lowestAttritionRates')}
               </h4>
               <div className="space-y-1">
                 {(teacherPerformance?.lowestAttrition || []).map((teacher, index) => (
@@ -258,13 +258,13 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-600" />
-              Student Retention Champions
+              {t('admin:dashboard.studentRetentionChampions')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-blue-600 mb-2">
-                Highest Retention Rates
+                {t('admin:dashboard.highestRetentionRates')}
               </h4>
               <div className="space-y-1">
                 {(teacherPerformance?.highestRetention || []).map((teacher, index) => (
@@ -286,13 +286,13 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ThumbsDown className="h-5 w-5 text-red-600" />
-              Performance Improvement Needed
+              {t('admin:dashboard.performanceImprovementNeeded')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-red-600 mb-2">
-                Lowest Student Scores
+                {t('admin:dashboard.lowestStudentScores')}
               </h4>
               <div className="space-y-1">
                 {(teacherPerformance?.lowestScores || []).map((teacher, index) => (
@@ -315,18 +315,18 @@ export function AdminDashboard() {
         {/* Student Retention Metrics */}
         <Card>
           <CardHeader>
-            <CardTitle>Student Retention Analysis</CardTitle>
+            <CardTitle>{t('admin:dashboard.studentRetentionAnalysis')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">{studentRetention?.overall || '0.0'}%</div>
-                  <p className="text-xs text-muted-foreground">Overall Retention</p>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.overallRetention')}</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">{studentRetention?.newStudents || '0.0'}%</div>
-                  <p className="text-xs text-muted-foreground">New Student (3mo)</p>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.newStudent3mo')}</p>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={200}>
@@ -345,18 +345,18 @@ export function AdminDashboard() {
         {/* Course Completion Rates */}
         <Card>
           <CardHeader>
-            <CardTitle>Course Completion Analytics</CardTitle>
+            <CardTitle>{t('admin:dashboard.courseCompletionAnalytics')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-600">{courseCompletion?.average || '0.0'}%</div>
-                  <p className="text-xs text-muted-foreground">Avg Completion</p>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.avgCompletion')}</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-orange-600">{courseCompletion?.onTime || '0.0'}%</div>
-                  <p className="text-xs text-muted-foreground">On-Time Completion</p>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.onTimeCompletion')}</p>
                 </div>
               </div>
               <div className="space-y-2">
@@ -385,7 +385,7 @@ export function AdminDashboard() {
         {/* Lead Conversion Funnel */}
         <Card>
           <CardHeader>
-            <CardTitle>Lead Conversion Funnel</CardTitle>
+            <CardTitle>{t('admin:dashboard.leadConversionFunnel')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -405,7 +405,7 @@ export function AdminDashboard() {
         {/* Acquisition Channels */}
         <Card>
           <CardHeader>
-            <CardTitle>Student Acquisition Sources</CardTitle>
+            <CardTitle>{t('admin:dashboard.studentAcquisitionSources')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
@@ -430,16 +430,16 @@ export function AdminDashboard() {
         {/* Customer Lifetime Value */}
         <Card>
           <CardHeader>
-            <CardTitle>Financial KPIs</CardTitle>
+            <CardTitle>{t('admin:dashboard.financialKPIs')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm">Avg Customer LTV</span>
+                <span className="text-sm">{t('admin:dashboard.avgCustomerLTV')}</span>
                 <span className="font-semibold">${financialKPIs?.averageLTV || '2,847'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Cost per Acquisition</span>
+                <span className="text-sm">{t('admin:dashboard.costPerAcquisition')}</span>
                 <span className="font-semibold">${financialKPIs?.costPerAcquisition || '185'}</span>
               </div>
               <div className="flex justify-between">
