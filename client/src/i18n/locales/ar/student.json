@@ -1,5 +1,8 @@
 {
-  "dashboard": "لوحة الطالب",
+  "dashboard": {
+    "title": "لوحة الطالب",
+    "welcomeMessage": "مرحباً بك في رحلة التعلم"
+  },
   "welcomeMessage": "تتبع تقدمك في التعلم وحقق أهدافك اللغوية",
   "overview": "نظرة عامة",
   "courses": "دوراتي",

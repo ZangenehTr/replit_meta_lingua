@@ -1,7 +1,11 @@
 {
   "dashboard": {
-    "title": "داشبورد معلم",
-    "welcomeMessage": "به مرکز تدریس خود خوش آمدید"
+    "title": "داشبورد آموزگار",
+    "welcomeMessage": "مدیریت کلاس‌ها و پیگیری پیشرفت دانش‌آموزان",
+    "upcomingClasses": "کلاس‌های آتی",
+    "recentAssignments": "تکالیف اخیر",
+    "studentProgress": "پیشرفت دانش‌آموزان",
+    "quickActions": "اقدامات سریع"
   },
   "teachingOverview": "نمای کلی تدریس",
   "studentProgress": "پیشرفت دانش‌آموزان",

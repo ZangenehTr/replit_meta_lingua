@@ -39,7 +39,8 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from 'react-i18next';
 import { useState } from "react";
 
 interface AccountantStats {
@@ -129,7 +130,7 @@ interface StudentFinancials {
 function AccountantDashboard() {
   const { user } = useAuth();
   const { t } = useTranslation(['accountant', 'common']);
-  const { language, isRTL, direction } = useLanguage();
+  const { isRTL } = useLanguage();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -272,150 +273,81 @@ function AccountantDashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* Professional Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl shadow-lg">
-              <Calculator className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t('accountant:dashboard.title')}</h1>
-              <p className="text-gray-600 mt-1">
-                {t('accountant:dashboard.welcomeMessage')}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Link href="/accountant/invoices/create">
-              <Button className="bg-emerald-600 hover:bg-emerald-700 shadow-md">
-                <Receipt className="h-4 w-4 mr-2" />
-                Create Invoice
-              </Button>
-            </Link>
-            <Link href="/accountant/reports">
-              <Button variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Financial Reports
-              </Button>
-            </Link>
+      <div className={`p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">{t('accountant:dashboard.title')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {t('accountant:dashboard.welcomeMessage')}
+            </p>
           </div>
         </div>
 
-        {/* Key Financial Indicators */}
+        {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('accountant.monthlyRevenue')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(accountantStats?.monthlyRevenue || 425000000)}
-              </div>
-              <div className="flex items-center gap-1 text-xs">
-                <ArrowUp className="h-3 w-3 text-green-600" />
-                <span className="text-green-600">+18.5% from last month</span>
+          <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-emerald-100">{t('accountant:dashboard.totalRevenue')}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(accountantStats?.totalRevenue || 0)}</p>
+                </div>
+                <DollarSign className="w-12 h-12 text-emerald-200" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('admin.students')}</CardTitle>
-              <Users className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{accountantStats?.activeStudents || 26}</div>
-              <p className="text-xs text-muted-foreground">
-                {accountantStats?.totalStudents || 32} total students
-              </p>
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100">{t('accountant:dashboard.monthlyRevenue')}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(accountantStats?.monthlyRevenue || 0)}</p>
+                </div>
+                <TrendingUp className="w-12 h-12 text-blue-200" />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-orange-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('accountant.pendingPayments')}</CardTitle>
-              <Clock className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingInvoices.length}</div>
-              <p className="text-xs text-muted-foreground">
-                {overdueInvoices.length} overdue
-              </p>
+          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100">{t('accountant:dashboard.pendingPayments')}</p>
+                  <p className="text-3xl font-bold">{accountantStats?.pendingPayments || 0}</p>
+                </div>
+                <Clock className="w-12 h-12 text-orange-200" />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Shetab Transactions</CardTitle>
-              <CreditCard className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{accountantStats?.shetabTransactions || 18}</div>
-              <p className="text-xs text-muted-foreground">
-                Today: {todayTransactions.filter(t => t.method === 'shetab').length}
-              </p>
+          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100">{t('accountant:dashboard.activeStudents')}</p>
+                  <p className="text-3xl font-bold">{accountantStats?.activeStudents || 0}</p>
+                </div>
+                <Users className="w-12 h-12 text-purple-200" />
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Financial Summary Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Revenue Breakdown
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Course Payments</span>
-                  <span className="font-medium">{formatCurrency(320000000)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Private Sessions</span>
-                  <span className="font-medium">{formatCurrency(85000000)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Materials & Books</span>
-                  <span className="font-medium">{formatCurrency(15000000)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Membership Fees</span>
-                  <span className="font-medium">{formatCurrency(5000000)}</span>
-                </div>
-                <hr />
-                <div className="flex justify-between items-center font-bold">
-                  <span>Total Revenue</span>
-                  <span>{formatCurrency(425000000)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Payment Methods
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm">Shetab Gateway</span>
-                  </div>
-                  <span className="font-medium">68%</span>
-                </div>
-                <Progress value={68} className="h-2" />
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+        {/* Tabs */}
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">{t('accountant:overview')}</TabsTrigger>
+            <TabsTrigger value="payments">{t('accountant:payments')}</TabsTrigger>
+            <TabsTrigger value="revenue">{t('accountant:revenue')}</TabsTrigger>
+            <TabsTrigger value="reports">{t('accountant:reports')}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+    </AppLayout>
+  );
+}
                     <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
                     <span className="text-sm">Digital Wallet</span>
                   </div>

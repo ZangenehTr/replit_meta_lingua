@@ -1,5 +1,8 @@
 {
-  "dashboard": "Supervisor Dashboard",
+  "dashboard": {
+    "title": "Supervisor Dashboard",
+    "welcomeMessage": "Monitor quality and teacher performance"
+  },
   "welcomeMessage": "Monitor teaching quality and ensure educational excellence",
   "overview": "Overview",
   "observations": "Observations",

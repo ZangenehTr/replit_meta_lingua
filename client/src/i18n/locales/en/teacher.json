@@ -1,7 +1,11 @@
 {
   "dashboard": {
     "title": "Teacher Dashboard",
-    "welcomeMessage": "Welcome to your teaching center"
+    "welcomeMessage": "Manage your classes and track student progress",
+    "upcomingClasses": "Upcoming Classes",
+    "recentAssignments": "Recent Assignments",
+    "studentProgress": "Student Progress",
+    "quickActions": "Quick Actions"
   },
   "teachingOverview": "Teaching Overview",
   "studentProgress": "Student Progress",

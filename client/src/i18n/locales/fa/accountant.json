@@ -1,7 +1,11 @@
 {
   "dashboard": {
     "title": "داشبورد حسابدار",
-    "welcomeMessage": "مدیریت عملیات مالی و انطباق"
+    "welcomeMessage": "مدیریت عملیات مالی و انطباق",
+    "totalRevenue": "کل درآمد",
+    "monthlyRevenue": "درآمد ماهانه",
+    "pendingPayments": "پرداخت‌های در انتظار",
+    "activeStudents": "دانش‌آموزان فعال"
   },
   "welcomeMessage": "امور مالی را مدیریت کنید، پرداخت‌ها را پردازش کنید و درآمد را پیگیری کنید",
   "overview": "نمای کلی",
