@@ -63,6 +63,10 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
         if (fetchError.name === 'AbortError') {
           throw new Error('Request timeout');
         }
+        // Convert network errors to a more user-friendly format
+        if (fetchError.message === 'Failed to fetch') {
+          throw new Error('Network connection error. Please check your internet connection.');
+        }
         throw fetchError;
       });
 
