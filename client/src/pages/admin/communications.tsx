@@ -886,15 +886,15 @@ export default function AdminCommunicationsPage() {
               )}
             </div>
 
-            {/* Desktop Layout with Resizable Panels */}
-            <div className="hidden lg:block h-[700px]">
+            {/* Desktop Layout with Resizable Panels - 2 Column Only */}
+            <div className="hidden lg:block h-[700px] border-2 border-blue-200 rounded-lg">
               <PanelGroup direction="horizontal" className="h-full">
                 {/* Conversations Panel */}
-                <Panel defaultSize={30} minSize={20} maxSize={50}>
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle>Conversations</CardTitle>
-                      <CardDescription>Staff internal messaging</CardDescription>
+                <Panel defaultSize={40} minSize={25} maxSize={60}>
+                  <Card className="h-full border-l-4 border-l-green-500">
+                    <CardHeader className="bg-green-50 dark:bg-green-900/20">
+                      <CardTitle className="text-green-800 dark:text-green-200">📋 Conversations</CardTitle>
+                      <CardDescription className="text-green-600 dark:text-green-400">Staff internal messaging</CardDescription>
                     </CardHeader>
                     <CardContent>
                       {/* Search Box */}
@@ -995,13 +995,13 @@ export default function AdminCommunicationsPage() {
                 {/* Resize Handle */}
                 <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors" />
                 
-                {/* Chat Interface Panel */}
-                <Panel defaultSize={40} minSize={30}>
-                  <Card className="h-full">
-                    <CardHeader className="border-b">
-                      <CardTitle className="flex items-center gap-2">
+                {/* Chat Interface Panel - Expanded */}
+                <Panel defaultSize={60} minSize={40}>
+                  <Card className="h-full border-l-4 border-l-blue-500">
+                    <CardHeader className="border-b bg-blue-50 dark:bg-blue-900/20">
+                      <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
                         <MessageSquare className="h-5 w-5" />
-                        {selectedConversation ? (
+                        💬 {selectedConversation ? (
                           <span className="truncate">
                             {selectedConversation.title || selectedConversation.participants.join(', ')}
                           </span>
@@ -1009,8 +1009,8 @@ export default function AdminCommunicationsPage() {
                           "Select Conversation"
                         )}
                       </CardTitle>
-                      <CardDescription className="text-sm">
-                        {selectedConversation ? "Real-time messaging" : "Choose a conversation to start messaging"}
+                      <CardDescription className="text-sm text-blue-600 dark:text-blue-400">
+                        {selectedConversation ? "Real-time messaging & notifications" : "Choose a conversation to start messaging"}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
