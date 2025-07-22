@@ -8,11 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation(['teacher', 'common']);
 
   // Fetch teacher dashboard stats
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -119,17 +121,17 @@ export default function TeacherDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Teacher Dashboard</h1>
-              <p className="text-gray-600">Manage your classes, assignments, and student progress</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('teacher:dashboard')}</h1>
+              <p className="text-gray-600">{t('teacher:welcomeMessage')}</p>
             </div>
             <div className="mt-4 lg:mt-0 flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <Star className="w-5 h-5 text-yellow-500" />
                 <span className="font-semibold text-gray-900">{stats?.overview?.rating || 4.8}</span>
-                <span className="text-gray-600">({stats?.overview?.totalReviews || 156} reviews)</span>
+                <span className="text-gray-600">({stats?.overview?.totalReviews || 156} {t('teacher:reviews')})</span>
               </div>
               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                Active Teacher
+                {t('teacher:activeTeacher')}
               </Badge>
             </div>
           </div>
@@ -143,7 +145,7 @@ export default function TeacherDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100">Total Classes</p>
+                  <p className="text-blue-100">{t('teacher:totalClasses')}</p>
                   <p className="text-3xl font-bold">{stats?.overview?.totalClasses || 0}</p>
                 </div>
                 <BookOpen className="w-12 h-12 text-blue-200" />
@@ -155,7 +157,7 @@ export default function TeacherDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100">Students</p>
+                  <p className="text-green-100">{t('teacher:students')}</p>
                   <p className="text-3xl font-bold">{stats?.overview?.totalStudents || 0}</p>
                 </div>
                 <Users className="w-12 h-12 text-green-200" />
@@ -167,7 +169,7 @@ export default function TeacherDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100">Monthly Earnings</p>
+                  <p className="text-purple-100">{t('teacher:monthlyEarnings')}</p>
                   <p className="text-2xl font-bold">{formatCurrency(stats?.overview?.monthlyEarnings || 0)}</p>
                 </div>
                 <DollarSign className="w-12 h-12 text-purple-200" />
@@ -179,7 +181,7 @@ export default function TeacherDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100">Upcoming Classes</p>
+                  <p className="text-orange-100">{t('teacher:upcomingClasses')}</p>
                   <p className="text-3xl font-bold">{stats?.overview?.upcomingClasses || 0}</p>
                 </div>
                 <Clock className="w-12 h-12 text-orange-200" />
@@ -191,13 +193,13 @@ export default function TeacherDashboard() {
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:grid-cols-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="classes">Classes</TabsTrigger>
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
-            <TabsTrigger value="availability">Availability</TabsTrigger>
+            <TabsTrigger value="overview">{t('teacher:overview')}</TabsTrigger>
+            <TabsTrigger value="classes">{t('teacher:classes')}</TabsTrigger>
+            <TabsTrigger value="assignments">{t('teacher:assignments')}</TabsTrigger>
+            <TabsTrigger value="schedule">{t('teacher:schedule')}</TabsTrigger>
+            <TabsTrigger value="availability">{t('teacher:availability')}</TabsTrigger>
             <TabsTrigger value="observations" className="relative">
-              Observations
+              {t('teacher:observations')}
               {unacknowledgedObservations?.length > 0 && (
                 <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs">
                   {unacknowledgedObservations.length}

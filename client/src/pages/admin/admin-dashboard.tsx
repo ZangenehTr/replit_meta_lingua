@@ -5,6 +5,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useTranslation } from 'react-i18next';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -48,6 +49,7 @@ import {
 
 export function AdminDashboard() {
   const { t, isRTL } = useLanguage();
+  const { t: tAdmin } = useTranslation(['admin', 'common']);
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -113,9 +115,9 @@ export function AdminDashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">{t('admin.dashboard')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{tAdmin('admin:dashboard')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base">
-            {t('admin.welcomeMessage')}
+            {tAdmin('admin:welcomeMessage')}
           </p>
         </div>
       </div>
@@ -125,13 +127,13 @@ export function AdminDashboard() {
         {/* Server Uptime */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin.systemHealth')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{tAdmin('admin:systemHealth')}</CardTitle>
             <Server className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{systemMetrics?.uptime || '0.0'}%</div>
+            <div className="text-2xl font-bold text-green-600">{(systemMetrics as any)?.uptime || '0.0'}%</div>
             <p className="text-xs text-muted-foreground">
-              Last 30 days
+              {t('admin:lastDays')}
             </p>
           </CardContent>
         </Card>
@@ -139,13 +141,13 @@ export function AdminDashboard() {
         {/* Call Center Performance */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Call Response Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:callResponseRate')}</CardTitle>
             <Phone className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{callCenterStats?.responseRate || '0.0'}%</div>
+            <div className="text-2xl font-bold text-blue-600">{(callCenterStats as any)?.responseRate || '0.0'}%</div>
             <p className="text-xs text-muted-foreground">
-              +2.3% from last week
+              +2.3% {t('admin:fromLastWeek')}
             </p>
           </CardContent>
         </Card>
@@ -153,13 +155,13 @@ export function AdminDashboard() {
         {/* Overdue Payments Alert */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue Payments</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:overduePayments')}</CardTitle>
             <AlertCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{overduePayments?.count || 0}</div>
+            <div className="text-2xl font-bold text-red-600">{(overduePayments as any)?.count || 0}</div>
             <p className="text-xs text-red-600">
-              ${overduePayments?.totalAmount || '0'} total
+              ${(overduePayments as any)?.totalAmount || '0'} {t('admin:total')}
             </p>
           </CardContent>
         </Card>
@@ -167,13 +169,13 @@ export function AdminDashboard() {
         {/* Monthly Revenue */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin.totalRevenue')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:monthlyRevenue')}</CardTitle>
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">${revenueData?.monthly || '0'}</div>
+            <div className="text-2xl font-bold text-green-600">${(revenueData as any)?.monthly || '0'}</div>
             <p className="text-xs text-green-600">
-              +15.3% from last month
+              +15.3% {t('admin:fromLastMonth')}
             </p>
           </CardContent>
         </Card>
@@ -184,11 +186,11 @@ export function AdminDashboard() {
         {/* Call Center Performance Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Call Center Performance Trends</CardTitle>
+            <CardTitle>{t('admin:callCenterPerformance')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={callCenterStats?.weeklyData || []}>
+              <AreaChart data={(callCenterStats as any)?.weeklyData || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="day" />
                 <YAxis />

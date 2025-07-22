@@ -38,6 +38,7 @@ import {
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from 'react-i18next';
 import { useState } from "react";
 
 interface StudentStats {
@@ -111,7 +112,8 @@ interface LearningGoal {
 
 function StudentDashboard() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t: tLang } = useLanguage();
+  const { t } = useTranslation(['student', 'common']);
   const [selectedTab, setSelectedTab] = useState("overview");
   const queryClient = useQueryClient();
 
