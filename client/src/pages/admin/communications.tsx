@@ -630,17 +630,17 @@ export default function AdminCommunicationsPage() {
           </TabsContent>
 
           {/* Internal Chat Tab */}
-          <TabsContent value="chat" className="space-y-4 md:space-y-6">
-            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-              {/* Mobile-First Conversations List */}
-              <Card className="w-full lg:h-auto">
-                <CardHeader className="p-3 sm:p-4">
-                  <CardTitle className="text-base sm:text-lg">Conversations</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">Staff internal messaging</CardDescription>
+          <TabsContent value="chat" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Conversations List */}
+              <Card className="lg:col-span-1">
+                <CardHeader>
+                  <CardTitle>Conversations</CardTitle>
+                  <CardDescription>Staff internal messaging</CardDescription>
                 </CardHeader>
-                <CardContent className="p-3 sm:p-4">
-                  <ScrollArea className="h-[300px] md:h-[500px]">
-                    <div className="space-y-2">
+                <CardContent>
+                  <ScrollArea className="h-[400px] lg:h-[500px]">
+                    <div className="space-y-2 pr-4">
                       {conversationsLoading ? (
                         <div className="text-center py-8">Loading conversations...</div>
                       ) : conversationsData.length === 0 ? (
@@ -698,10 +698,10 @@ export default function AdminCommunicationsPage() {
                 </CardContent>
               </Card>
 
-              {/* Mobile-First Chat Interface */}
-              <Card className="w-full lg:col-span-2">
-                <CardHeader className="p-3 sm:p-4 border-b">
-                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              {/* Chat Interface */}
+              <Card className="lg:col-span-2">
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
                     {selectedConversation ? (
                       <span className="truncate">
@@ -716,9 +716,9 @@ export default function AdminCommunicationsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="flex flex-col h-[350px] sm:h-[400px] lg:h-[450px]">
+                  <div className="flex flex-col h-[500px]">
                     <ScrollArea className="flex-1">
-                      <div className="space-y-3 p-3 sm:p-4">
+                      <div className="space-y-3 p-4">
                         {selectedConversation ? (
                           messagesLoading ? (
                             <div className="text-center py-8 text-gray-500">Loading messages...</div>
@@ -769,10 +769,10 @@ export default function AdminCommunicationsPage() {
                       </div>
                     </ScrollArea>
                     
-                    {/* Message Input Area - Mobile Optimized */}
-                    <div className="border-t p-3 sm:p-4 space-y-3">
-                      {/* Enhanced Notification Options - Mobile-First */}
-                      <div className="flex flex-col gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    {/* Message Input Area */}
+                    <div className="border-t p-4 space-y-3">
+                      {/* Enhanced Notification Options */}
+                      <div className="flex flex-col gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
                             <Bell className="h-4 w-4 text-blue-500" />
@@ -830,13 +830,13 @@ export default function AdminCommunicationsPage() {
                         </div>
                       </div>
 
-                      {/* Enhanced Message Input - Mobile-First */}
-                      <div className="flex flex-col sm:flex-row gap-2">
+                      {/* Message Input & Send Button */}
+                      <div className="flex items-center gap-2">
                         <Input
                           placeholder="Type your message here..."
                           value={chatInput}
                           onChange={(e) => setChatInput(e.target.value)}
-                          className="flex-1 min-h-[44px] text-sm md:text-base" 
+                          className="flex-1" 
                           onKeyPress={(e) => {
                             if (e.key === 'Enter' && chatInput.trim() && selectedConversation) {
                               sendMessageMutation.mutate({
@@ -860,8 +860,6 @@ export default function AdminCommunicationsPage() {
                             }
                           }}
                           disabled={!chatInput.trim() || !selectedConversation || sendMessageMutation.isPending}
-                          size="default"
-                          className="shrink-0 min-h-[44px] px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium"
                         >
                           {sendMessageMutation.isPending ? (
                             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
