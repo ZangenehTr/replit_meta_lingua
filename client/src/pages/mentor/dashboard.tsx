@@ -318,6 +318,5 @@ function MentorDashboard() {
     </AppLayout>
   );
 }
-                            {mentee.firstName[0]}{mentee.lastName[0]}
-                          </AvatarFallback>
-                        </Avatar>
+
+export default MentorDashboard;
