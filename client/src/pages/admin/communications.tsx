@@ -107,6 +107,9 @@ export default function AdminCommunicationsPage() {
   const [ticketReply, setTicketReply] = useState("");
   const [sendNotification, setSendNotification] = useState(false);
   const [customNotificationText, setCustomNotificationText] = useState("New message from admin");
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [testPhoneNumber, setTestPhoneNumber] = useState("");
   
   // New ticket form state
   const [ticketForm, setTicketForm] = useState({
@@ -156,9 +159,16 @@ export default function AdminCommunicationsPage() {
     structuralSharing: false, // Disable structural sharing to force complete data refresh
   });
 
+  // Search users API call
+  const { data: searchedUsers } = useQuery({
+    queryKey: ['/api/users/search', { query: userSearchQuery }],
+    enabled: userSearchQuery.length > 0,
+  });
+
   const ticketsData = (tickets as SupportTicket[]) || [];
   const conversationsData = (conversations as ChatConversation[]) || [];
   const notificationsData = (notifications as PushNotification[]) || [];
+  const searchedUsersData = (searchedUsers as any[]) || [];
   // Get current user for message ownership detection with debug logging
   const { user } = useAuth();
   
@@ -359,6 +369,28 @@ export default function AdminCommunicationsPage() {
     },
     onError: (error: any) => {
       toast({ title: "Failed to send reply", description: error.message, variant: "destructive" });
+    }
+  });
+
+  // Create conversation with user mutation
+  const createConversationMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      return apiRequest('/api/chat/conversations', { 
+        method: 'POST', 
+        body: JSON.stringify({ 
+          participantIds: [userId],
+          type: 'direct'
+        }) 
+      });
+    },
+    onSuccess: (newConversation) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
+      setSelectedConversation(newConversation);
+      setUserSearchQuery("");
+      toast({ title: "Conversation started" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to start conversation", description: error.message, variant: "destructive" });
     }
   });
 
@@ -632,21 +664,70 @@ export default function AdminCommunicationsPage() {
 
           {/* Internal Chat Tab */}
           <TabsContent value="chat" className="space-y-4">
-            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4">
-              {/* Conversations List */}
-              <Card className="lg:col-span-1 order-1 lg:order-1">
+            <div className="flex flex-col lg:grid lg:grid-cols-5 gap-4">
+              {/* Conversations List - Made wider */}
+              <Card className="lg:col-span-2 order-1 lg:order-1">
                 <CardHeader>
                   <CardTitle>Conversations</CardTitle>
                   <CardDescription>Staff internal messaging</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {/* Search Box */}
+                  <div className="mb-4 space-y-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Input 
+                        placeholder="Search users by name or role..." 
+                        className="pl-10"
+                        value={userSearchQuery}
+                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    {userSearchQuery && (
+                      <div className="text-xs text-gray-500">
+                        Search across: Students, Teachers, Call Center Agents, Accountants, Admin, and all other roles
+                      </div>
+                    )}
+                  </div>
                   <ScrollArea className="h-[400px] lg:h-[500px]">
                     <div className="space-y-2 pr-4">
+                      {/* Show search results if searching */}
+                      {userSearchQuery && searchedUsersData.length > 0 && (
+                        <div className="mb-4">
+                          <p className="text-sm font-medium text-gray-600 mb-2">Search Results</p>
+                          {searchedUsersData.map((user) => (
+                            <div
+                              key={user.id}
+                              className="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors border border-gray-200 mb-2"
+                              onClick={() => createConversationMutation.mutate(user.id)}
+                            >
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10">
+                                  <AvatarFallback>
+                                    {user.firstName?.[0] || user.email?.[0] || 'U'}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium">
+                                    {user.firstName} {user.lastName}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {user.role} • {user.email}
+                                  </p>
+                                </div>
+                                <Plus className="h-4 w-4 text-gray-400" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Existing conversations */}
                       {conversationsLoading ? (
                         <div className="text-center py-8">Loading conversations...</div>
-                      ) : conversationsData.length === 0 ? (
+                      ) : conversationsData.length === 0 && !userSearchQuery ? (
                         <div className="text-center py-8 text-gray-500">
-                          No conversations yet
+                          No conversations yet. Search for users to start chatting.
                         </div>
                       ) : (
                         conversationsData.map((conversation) => (
@@ -803,7 +884,7 @@ export default function AdminCommunicationsPage() {
               )}
 
               {/* Chat Interface - Desktop */}
-              <Card className="lg:col-span-2 order-2 lg:order-2 hidden lg:block">
+              <Card className="lg:col-span-3 order-2 lg:order-2 hidden lg:block">
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
