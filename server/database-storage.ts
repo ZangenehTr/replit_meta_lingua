@@ -5521,7 +5521,18 @@ export class DatabaseStorage implements IStorage {
 
   // Chat Conversations
   async getChatConversations(userId: number): Promise<any[]> {
-    return await db.select().from(chatConversations).orderBy(desc(chatConversations.lastMessageAt));
+    try {
+      console.log(`Fetching conversations for user ${userId}`);
+      const conversations = await db.select().from(chatConversations)
+        .where(sql`${userId} = ANY(${chatConversations.participants})`)
+        .orderBy(desc(chatConversations.lastMessageAt));
+      
+      console.log(`Found ${conversations.length} conversations for user ${userId}`);
+      return conversations;
+    } catch (error) {
+      console.error('Error fetching chat conversations:', error);
+      throw error;
+    }
   }
 
   async getChatConversation(id: number): Promise<ChatConversation | undefined> {
