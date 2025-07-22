@@ -9,13 +9,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation(['teacher', 'common']);
-  const { language, isRTL, direction } = useLanguage();
+  const { isRTL } = useLanguage();
 
   // Fetch teacher dashboard stats
   const { data: stats, isLoading: statsLoading } = useQuery({

@@ -1,7 +1,11 @@
 {
   "dashboard": {
     "title": "Accountant Dashboard",
-    "welcomeMessage": "Manage financial operations and compliance"
+    "welcomeMessage": "Manage financial operations and compliance",
+    "totalRevenue": "Total Revenue",
+    "monthlyRevenue": "Monthly Revenue",
+    "pendingPayments": "Pending Payments",
+    "activeStudents": "Active Students"
   },
   "welcomeMessage": "Manage finances, process payments, and track revenue",
   "overview": "Overview",

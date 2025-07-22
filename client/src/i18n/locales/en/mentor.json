@@ -1,7 +1,11 @@
 {
   "dashboard": {
     "title": "Mentor Dashboard",
-    "welcomeMessage": "Guide and support your students' learning journey"
+    "welcomeMessage": "Guide and support your mentees' learning journey",
+    "totalMentees": "Total Mentees",
+    "activeMentees": "Active Mentees", 
+    "sessionsCompleted": "Sessions Completed",
+    "averageRating": "Average Rating"
   },
   "welcomeMessage": "Guide and support students on their learning journey",
   "overview": "Overview",

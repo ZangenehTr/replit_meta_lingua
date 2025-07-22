@@ -43,7 +43,8 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from 'react-i18next';
 import { useState } from "react";
 
 interface CallCenterStats {
@@ -120,7 +121,7 @@ interface AgentPerformance {
 function CallCenterDashboard() {
   const { user } = useAuth();
   const { t } = useTranslation(['callcenter', 'common']);
-  const { language, isRTL, direction } = useLanguage();
+  const { isRTL } = useLanguage();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -262,154 +263,81 @@ function CallCenterDashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* Professional Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-700 rounded-xl shadow-lg">
-              <Headphones className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t('callcenter:dashboard.title')}</h1>
-              <p className="text-gray-600 mt-1">
-                {t('callcenter:dashboard.welcomeMessage')}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Link href="/callcenter/voip">
-              <Button className="bg-blue-600 hover:bg-blue-700 shadow-md">
-                <Headphones className="h-4 w-4 mr-2" />
-                VoIP Center
-              </Button>
-            </Link>
-            <Link href="/callcenter/leads/new">
-              <Button className="bg-teal-600 hover:bg-teal-700 shadow-md">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Lead
-              </Button>
-            </Link>
-            <Link href="/callcenter/reports">
-              <Button variant="outline" className="border-teal-200 text-teal-700 hover:bg-teal-50">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Reports
-              </Button>
-            </Link>
+      <div className={`p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">{t('callcenter:dashboard.title')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {t('callcenter:dashboard.welcomeMessage')}
+            </p>
           </div>
         </div>
 
-        {/* Key Performance Indicators */}
+        {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('callCenter.todayCalls')}</CardTitle>
-              <Phone className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{todayCalls.length}</div>
-              <div className="flex items-center gap-2 mt-2">
-                <Progress value={todayCallsPercentage} className="h-2 flex-1" />
-                <span className="text-xs text-muted-foreground">
-                  {dailyGoals?.targetCalls || 50}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {Math.round(todayCallsPercentage)}% of daily target
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-orange-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('callCenter.hotLeads')}</CardTitle>
-              <Target className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{hotLeads.length}</div>
-              <p className="text-xs text-muted-foreground">
-                {newLeads.length} new leads today
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('callCenter.conversionRate')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {callCenterStats?.conversionRate || 12.8}%
-              </div>
-              <div className="flex items-center gap-1 text-xs">
-                <ArrowUp className="h-3 w-3 text-green-600" />
-                <span className="text-green-600">+2.3% from last week</span>
+          <Card className="bg-gradient-to-r from-teal-500 to-teal-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-teal-100">{t('callcenter:dashboard.totalLeads')}</p>
+                  <p className="text-3xl font-bold">{callCenterStats?.totalLeads || 0}</p>
+                </div>
+                <Users className="w-12 h-12 text-teal-200" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('callCenter.revenueGenerated')}</CardTitle>
-              <DollarSign className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(callCenterStats?.revenueGenerated || 127500000)}
+          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100">{t('callcenter:dashboard.hotLeads')}</p>
+                  <p className="text-3xl font-bold">{callCenterStats?.hotLeads || 0}</p>
+                </div>
+                <Target className="w-12 h-12 text-orange-200" />
               </div>
-              <p className="text-xs text-muted-foreground">
-                This month
-              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100">{t('callcenter:dashboard.todayCalls')}</p>
+                  <p className="text-3xl font-bold">{callCenterStats?.todayCalls || 0}</p>
+                </div>
+                <Phone className="w-12 h-12 text-blue-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100">{t('callcenter:dashboard.conversionRate')}</p>
+                  <p className="text-3xl font-bold">{(callCenterStats?.conversionRate || 0).toFixed(1)}%</p>
+                </div>
+                <TrendingUp className="w-12 h-12 text-green-200" />
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Daily Goals Progress */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Daily Goals Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>Calls Made</span>
-                  <span className="font-medium">
-                    {dailyGoals?.actualCalls || todayCalls.length}/{dailyGoals?.targetCalls || 50}
-                  </span>
-                </div>
-                <Progress value={todayCallsPercentage} className="h-3" />
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>Conversions</span>
-                  <span className="font-medium">
-                    {dailyGoals?.actualConversions || 6}/{dailyGoals?.targetConversions || 8}
-                  </span>
-                </div>
-                <Progress value={todayConversionsPercentage} className="h-3" />
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>Revenue</span>
-                  <span className="font-medium">
-                    {formatCurrency(dailyGoals?.actualRevenue || 18500000)}
-                  </span>
-                </div>
-                <Progress value={todayRevenuePercentage} className="h-3" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Main Content Tabs */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="leads">Leads</TabsTrigger>
+        {/* Tabs */}
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">{t('callcenter:overview')}</TabsTrigger>
+            <TabsTrigger value="leads">{t('callcenter:leads')}</TabsTrigger>
+            <TabsTrigger value="calls">{t('callcenter:calls')}</TabsTrigger>
+            <TabsTrigger value="performance">{t('callcenter:performance')}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+    </AppLayout>
+  );
+}
             <TabsTrigger value="calls">Call Logs</TabsTrigger>
             <TabsTrigger value="team">Team</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>

@@ -37,7 +37,8 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from 'react-i18next';
 import { useState } from "react";
 
 interface MentorStats {
@@ -111,7 +112,7 @@ interface LearningGoal {
 function MentorDashboard() {
   const { user } = useAuth();
   const { t } = useTranslation(['mentor', 'common']);
-  const { language, isRTL, direction } = useLanguage();
+  const { isRTL } = useLanguage();
   const [selectedTab, setSelectedTab] = useState("overview");
   const queryClient = useQueryClient();
 
@@ -242,150 +243,81 @@ function MentorDashboard() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* Professional Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-700 rounded-xl shadow-lg">
-              <Heart className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t('mentor:dashboard.title')}</h1>
-              <p className="text-gray-600 mt-1">
-                {t('mentor:dashboard.welcomeMessage')}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Link href="/mentor/sessions/schedule">
-              <Button className="bg-orange-600 hover:bg-orange-700 shadow-md">
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Session
-              </Button>
-            </Link>
-            <Link href="/mentor/goals/create">
-              <Button variant="outline" className="border-orange-200 text-orange-700 hover:bg-orange-50">
-                <Target className="h-4 w-4 mr-2" />
-                Set Goal
-              </Button>
-            </Link>
+      <div className={`p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">{t('mentor:dashboard.title')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {t('mentor:dashboard.welcomeMessage')}
+            </p>
           </div>
         </div>
 
-        {/* Key Performance Indicators */}
+        {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-orange-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('mentor.totalMentees')}</CardTitle>
-              <Users className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mentorStats?.totalMentees || mentees.length}</div>
-              <p className="text-xs text-muted-foreground">
-                {activeMentees.length} currently active
-              </p>
+          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100">{t('mentor:dashboard.totalMentees')}</p>
+                  <p className="text-3xl font-bold">{mentorStats?.totalMentees || 0}</p>
+                </div>
+                <Users className="w-12 h-12 text-orange-200" />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('mentor.goalsAchieved')}</CardTitle>
-              <Target className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mentorStats?.goalsAchieved || 26}</div>
-              <p className="text-xs text-muted-foreground">
-                This month
-              </p>
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100">{t('mentor:dashboard.activeMentees')}</p>
+                  <p className="text-3xl font-bold">{mentorStats?.activeMentees || 0}</p>
+                </div>
+                <Heart className="w-12 h-12 text-green-200" />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-yellow-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('mentor.averageRating')}</CardTitle>
-              <Star className="h-4 w-4 text-yellow-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mentorStats?.averageRating || 4.7}</div>
-              <p className="text-xs text-muted-foreground">
-                Average mentee rating
-              </p>
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100">{t('mentor:dashboard.sessionsCompleted')}</p>
+                  <p className="text-3xl font-bold">{mentorStats?.totalSessions || 0}</p>
+                </div>
+                <Calendar className="w-12 h-12 text-blue-200" />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
-              <MessageSquare className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mentorStats?.responseRate || 94}%</div>
-              <p className="text-xs text-muted-foreground">
-                24-hour response rate
-              </p>
+          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100">{t('mentor:dashboard.averageRating')}</p>
+                  <p className="text-3xl font-bold">{mentorStats?.averageRating?.toFixed(1) || '0.0'}</p>
+                </div>
+                <Star className="w-12 h-12 text-purple-200" />
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="mentees">My Mentees</TabsTrigger>
-            <TabsTrigger value="sessions">Sessions</TabsTrigger>
-            <TabsTrigger value="goals">Goals</TabsTrigger>
-            <TabsTrigger value="progress">Progress</TabsTrigger>
+        {/* Tabs */}
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">{t('mentor:overview')}</TabsTrigger>
+            <TabsTrigger value="students">{t('mentor:students')}</TabsTrigger>
+            <TabsTrigger value="messages">{t('mentor:messages')}</TabsTrigger>
+            <TabsTrigger value="progress">{t('mentor:progress')}</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Upcoming Sessions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Today's Sessions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {upcomingSessions.length > 0 ? (
-                    upcomingSessions.slice(0, 3).map((session) => (
-                      <div key={session.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex-1">
-                          <h4 className="font-medium">{session.title}</h4>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Users className="h-4 w-4" />
-                            {session.menteeName}
-                            <Clock className="h-4 w-4 ml-2" />
-                            {new Date(session.scheduledTime).toLocaleTimeString()} • {session.duration} min
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className={`${session.type === 'goal_setting' ? 'border-orange-200 text-orange-700' : 'border-blue-200 text-blue-700'}`}>
-                            {session.type.replace('_', ' ')}
-                          </Badge>
-                          <Link href={`/mentor/sessions/${session.id}`}>
-                            <Button size="sm">
-                              <Video className="h-4 w-4 mr-1" />
-                              Join
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground text-center py-4">
-                      No sessions scheduled for today
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Mentee Alerts */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5" />
+        </Tabs>
+      </div>
+    </AppLayout>
+  );
+}
                     Mentee Alerts
                   </CardTitle>
                 </CardHeader>

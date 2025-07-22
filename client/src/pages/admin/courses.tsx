@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -622,7 +623,8 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
 }
 
 export function AdminCourses() {
-  const { t, isRTL } = useLanguage();
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
@@ -641,9 +643,9 @@ export function AdminCourses() {
     }
   });
 
-  const courseData = courses || [];
+  const courseData = Array.isArray(courses) ? courses : [];
 
-  const filteredCourses = (courseData || []).filter(course => {
+  const filteredCourses = courseData.filter((course: any) => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === "all" || course.category === filterCategory;
@@ -739,7 +741,7 @@ export function AdminCourses() {
 
       {/* Courses Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.map((course) => (
+        {filteredCourses.map((course: any) => (
           <Card key={course.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
@@ -806,7 +808,7 @@ export function AdminCourses() {
             <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{courseData.length}</div>
+            <div className="text-2xl font-bold">{Array.isArray(courseData) ? courseData.length : 0}</div>
             <p className="text-xs text-green-600">Real database count</p>
           </CardContent>
         </Card>
@@ -817,7 +819,7 @@ export function AdminCourses() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {courseData.filter(c => c.status === 'active').length}
+              {Array.isArray(courseData) ? courseData.filter((c: any) => c.status === 'active').length : 0}
             </div>
             <p className="text-xs text-green-600">Currently available</p>
           </CardContent>
@@ -829,7 +831,7 @@ export function AdminCourses() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {new Set(courseData.map(c => c.category)).size}
+              {Array.isArray(courseData) ? new Set(courseData.map((c: any) => c.category)).size : 0}
             </div>
             <p className="text-xs text-blue-600">Unique categories</p>
           </CardContent>
@@ -841,7 +843,7 @@ export function AdminCourses() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {(courseData.reduce((sum, course) => sum + (course.price || 0), 0)).toLocaleString()} IRR
+              {Array.isArray(courseData) ? courseData.reduce((sum: number, course: any) => sum + (course.price || 0), 0).toLocaleString() : 0} IRR
             </div>
             <p className="text-xs text-green-600">Total potential</p>
           </CardContent>

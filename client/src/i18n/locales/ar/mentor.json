@@ -1,7 +1,11 @@
 {
   "dashboard": {
     "title": "لوحة المرشد",
-    "welcomeMessage": "توجيه ودعم رحلة تعلم طلابك"
+    "welcomeMessage": "توجيه ودعم رحلة تعلم طلابك",
+    "totalMentees": "إجمالي الطلاب المرشدين",
+    "activeMentees": "الطلاب المرشدين النشطين", 
+    "sessionsCompleted": "الجلسات المكتملة",
+    "averageRating": "متوسط التقييم"
   },
   "welcomeMessage": "وجه ادعم الطلاب في رحلة التعلم",
   "overview": "نظرة عامة",

@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { SimpleDateInput } from "@/components/ui/simple-date-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { VoIPContactButton } from "@/components/voip-contact-button";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -47,7 +48,8 @@ import {
 } from "lucide-react";
 
 export function AdminStudents() {
-  const { t, isRTL } = useLanguage();
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");

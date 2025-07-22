@@ -1,5 +1,8 @@
 {
-  "dashboard": "لوحة المشرف",
+  "dashboard": {
+    "title": "لوحة المشرف",
+    "welcomeMessage": "مراقبة الجودة وأداء المعلمين"
+  },
   "welcomeMessage": "راقب جودة التدريس واضمن التميز التعليمي",
   "overview": "نظرة عامة",
   "observations": "الملاحظات",

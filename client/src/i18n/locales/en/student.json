@@ -1,5 +1,8 @@
 {
-  "dashboard": "Student Dashboard",
+  "dashboard": {
+    "title": "Student Dashboard",
+    "welcomeMessage": "Welcome to your learning journey"
+  },
   "welcomeMessage": "Track your learning progress and achieve your language goals",
   "overview": "Overview",
   "courses": "My Courses",

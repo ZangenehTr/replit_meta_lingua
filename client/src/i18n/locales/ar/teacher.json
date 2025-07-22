@@ -1,7 +1,11 @@
 {
   "dashboard": {
     "title": "لوحة المعلم",
-    "welcomeMessage": "مرحباً بك في مركز التدريس"
+    "welcomeMessage": "إدارة الفصول وتتبع تقدم الطلاب",
+    "upcomingClasses": "الفصول القادمة",
+    "recentAssignments": "المهام الحديثة",
+    "studentProgress": "تقدم الطلاب",
+    "quickActions": "الإجراءات السريعة"
   },
   "teachingOverview": "نظرة عامة على التدريس",
   "studentProgress": "تقدم الطلاب",
