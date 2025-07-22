@@ -33,7 +33,8 @@ import {
   Eye,
   Paperclip,
   Star,
-  MoreVertical
+  MoreVertical,
+  ArrowLeft
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -631,9 +632,9 @@ export default function AdminCommunicationsPage() {
 
           {/* Internal Chat Tab */}
           <TabsContent value="chat" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4">
               {/* Conversations List */}
-              <Card className="lg:col-span-1">
+              <Card className="lg:col-span-1 order-1 lg:order-1">
                 <CardHeader>
                   <CardTitle>Conversations</CardTitle>
                   <CardDescription>Staff internal messaging</CardDescription>
@@ -651,14 +652,14 @@ export default function AdminCommunicationsPage() {
                         conversationsData.map((conversation) => (
                           <div
                             key={conversation.id}
-                            className={`p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
+                            className={`p-2 sm:p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
                               selectedConversation?.id === conversation.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                             }`}
                             onClick={() => setSelectedConversation(conversation)}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="relative">
-                                <Avatar className="h-10 w-10">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              <div className="relative flex-shrink-0">
+                                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                                   <AvatarFallback>
                                     {conversation.type === 'group' ? (
                                       <Users className="h-5 w-5" />
@@ -672,21 +673,21 @@ export default function AdminCommunicationsPage() {
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                  <p className="text-sm font-medium truncate">
+                                <div className="flex items-center justify-between gap-1">
+                                  <p className="text-xs sm:text-sm font-medium truncate">
                                     {conversation.title || conversation.participants.join(', ')}
                                   </p>
                                   {conversation.unreadCount > 0 && (
-                                    <Badge variant="destructive" className="text-xs">
+                                    <Badge variant="destructive" className="text-xs px-1 py-0">
                                       {conversation.unreadCount}
                                     </Badge>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-500 truncate">
+                                <p className="text-xs sm:text-sm text-gray-500 truncate">
                                   {conversation.lastMessage}
                                 </p>
                                 <p className="text-xs text-gray-400">
-                                  {conversation.lastMessageAt ? new Date(conversation.lastMessageAt).toLocaleTimeString() : 'No messages'}
+                                  {conversation.lastMessageAt ? new Date(conversation.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'No messages'}
                                 </p>
                               </div>
                             </div>
@@ -698,8 +699,111 @@ export default function AdminCommunicationsPage() {
                 </CardContent>
               </Card>
 
-              {/* Chat Interface */}
-              <Card className="lg:col-span-2">
+              {/* Chat Interface - Mobile Modal */}
+              {selectedConversation && (
+                <Card className="lg:hidden fixed inset-0 z-50 bg-white dark:bg-gray-900 m-0 rounded-none">
+                  <CardHeader className="border-b flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedConversation(null)}
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </Button>
+                      <CardTitle className="text-base">
+                        {selectedConversation.title || selectedConversation.participants.join(', ')}
+                      </CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="flex flex-col h-[calc(100vh-120px)]">
+                      <ScrollArea className="flex-1">
+                        <div className="space-y-3 p-4">
+                          {messagesLoading ? (
+                            <div className="text-center py-8">Loading messages...</div>
+                          ) : !messagesData || messagesData.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">
+                              No messages yet. Start the conversation!
+                            </div>
+                          ) : (
+                            messagesData.map((message) => {
+                              const isOwn = message.senderId === user?.id;
+                              return (
+                                <div
+                                  key={message.id}
+                                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                                >
+                                  <div
+                                    className={`max-w-[70%] rounded-lg p-3 ${
+                                      isOwn
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-100 dark:bg-gray-800'
+                                    }`}
+                                  >
+                                    {!isOwn && (
+                                      <p className="text-xs font-medium mb-1">
+                                        {message.senderName}
+                                      </p>
+                                    )}
+                                    <p className="text-sm">{message.message}</p>
+                                    <p className={`text-xs mt-1 ${isOwn ? 'text-blue-100' : 'text-gray-500'}`}>
+                                      {new Date(message.sentAt).toLocaleTimeString([], {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </ScrollArea>
+                      
+                      {/* Mobile Message Input */}
+                      <div className="border-t p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            placeholder="Type your message..."
+                            value={chatInput}
+                            onChange={(e) => setChatInput(e.target.value)}
+                            className="flex-1"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter' && chatInput.trim()) {
+                                sendMessageMutation.mutate({
+                                  conversationId: selectedConversation.id,
+                                  message: chatInput,
+                                  withNotification: sendNotification,
+                                  notificationText: customNotificationText
+                                });
+                              }
+                            }}
+                          />
+                          <Button 
+                            onClick={() => {
+                              if (chatInput.trim()) {
+                                sendMessageMutation.mutate({
+                                  conversationId: selectedConversation.id,
+                                  message: chatInput,
+                                  withNotification: sendNotification,
+                                  notificationText: customNotificationText
+                                });
+                              }
+                            }}
+                            disabled={!chatInput.trim() || sendMessageMutation.isPending}
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Chat Interface - Desktop */}
+              <Card className="lg:col-span-2 order-2 lg:order-2 hidden lg:block">
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
