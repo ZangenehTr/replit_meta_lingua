@@ -20,7 +20,7 @@ import { Sidebar } from "./sidebar";
 import { LanguageSelector } from "@/components/language-selector";
 import MobileBottomNav from "./mobile-bottom-nav";
 import { useState } from "react";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface AppLayoutProps {
   children: React.ReactNode;

@@ -31,7 +31,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Link, useLocation } from "wouter";
 import { getNavigationForRole } from "@/lib/role-based-navigation";
 
@@ -69,7 +70,8 @@ const iconMap = {
 
 export function Sidebar() {
   const { user, logout } = useAuth();
-  const { t, isRTL } = useLanguage();
+  const { t } = useTranslation(['common', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant']);
+  const { isRTL } = useLanguage();
   const [location] = useLocation();
   
   // Get navigation items based on user role according to PRD specifications
