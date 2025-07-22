@@ -1,4 +1,11 @@
 {
+  "timeframes": {
+    "lastDays": "Last 30 days",
+    "thisWeek": "This week",
+    "thisMonth": "This month",
+    "lastWeek": "Last week",
+    "lastMonth": "Last month"
+  },
   "navigation": {
     "dashboard": "Dashboard",
     "admin": "Admin",
@@ -19,7 +26,20 @@
     "messages": "Messages",
     "progress": "Progress",
     "paymentCredits": "Payment & Credits",
-    "profile": "Profile"
+    "profile": "Profile",
+    "students": "Students",
+    "courses": "Courses",
+    "classes": "Classes",
+    "assignments": "Assignments",
+    "sessions": "Sessions",
+    "settings": "Settings",
+    "chat": "Chat",
+    "leads": "Leads",
+    "calls": "Calls",
+    "performance": "Performance",
+    "payments": "Payments",
+    "reports": "Reports",
+    "compliance": "Compliance"
   },
   "dashboard": {
     "welcomeBack": "Welcome back",

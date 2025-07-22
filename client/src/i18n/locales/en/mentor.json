@@ -1,5 +1,8 @@
 {
-  "dashboard": "Mentor Dashboard",
+  "dashboard": {
+    "title": "Mentor Dashboard",
+    "welcomeMessage": "Guide and support your students' learning journey"
+  },
   "welcomeMessage": "Guide and support students on their learning journey",
   "overview": "Overview",
   "students": "My Students", 

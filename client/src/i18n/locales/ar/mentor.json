@@ -1,5 +1,8 @@
 {
-  "dashboard": "لوحة المرشد",
+  "dashboard": {
+    "title": "لوحة المرشد",
+    "welcomeMessage": "توجيه ودعم رحلة تعلم طلابك"
+  },
   "welcomeMessage": "وجه ادعم الطلاب في رحلة التعلم",
   "overview": "نظرة عامة",
   "students": "طلابي",

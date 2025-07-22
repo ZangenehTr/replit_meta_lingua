@@ -1,4 +1,11 @@
 {
+  "timeframes": {
+    "lastDays": "آخر 30 يوماً",
+    "thisWeek": "هذا الأسبوع",
+    "thisMonth": "هذا الشهر",
+    "lastWeek": "الأسبوع الماضي",
+    "lastMonth": "الشهر الماضي"
+  },
   "navigation": {
     "dashboard": "لوحة القيادة",
     "admin": "مدير",
@@ -19,7 +26,20 @@
     "messages": "الرسائل",
     "progress": "التقدم",
     "paymentCredits": "الدفع والائتمان",
-    "profile": "الملف الشخصي"
+    "profile": "الملف الشخصي",
+    "students": "الطلاب",
+    "courses": "الدورات",
+    "classes": "الفصول",
+    "assignments": "المهام",
+    "sessions": "الجلسات",
+    "settings": "الإعدادات",
+    "chat": "الدردشة",
+    "leads": "العملاء المحتملون",
+    "calls": "المكالمات",
+    "performance": "الأداء",
+    "payments": "المدفوعات",
+    "reports": "التقارير",
+    "compliance": "الامتثال"
   },
   "dashboard": {
     "welcomeBack": "مرحباً بعودتك",

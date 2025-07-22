@@ -1,5 +1,8 @@
 {
-  "dashboard": "Teacher Dashboard",
+  "dashboard": {
+    "title": "Teacher Dashboard",
+    "welcomeMessage": "Welcome to your teaching center"
+  },
   "teachingOverview": "Teaching Overview",
   "studentProgress": "Student Progress",
   "myClasses": "My Classes",

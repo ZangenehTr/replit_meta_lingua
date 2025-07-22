@@ -1,5 +1,12 @@
 {
-  "dashboard": "داشبورد مدیریت",
+  "dashboard": {
+    "title": "داشبورد مدیریت",
+    "welcomeMessage": "به مرکز کنترل مدیریتی خوش آمدید.",
+    "systemHealth": "سلامت سیستم",
+    "callResponseRate": "نرخ پاسخگویی تماس",
+    "overduePayments": "پرداخت‌های معوقه",
+    "monthlyRevenue": "درآمد ماهانه"
+  },
   "totalRevenue": "مجموع درآمد",
   "pendingPayments": "پرداخت‌های در انتظار",
   "teacherPayouts": "پرداخت‌های معلمان",

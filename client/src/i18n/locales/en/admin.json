@@ -1,5 +1,12 @@
 {
-  "dashboard": "Admin Dashboard",
+  "dashboard": {
+    "title": "Admin Dashboard",
+    "welcomeMessage": "Welcome to the administrative control center.",
+    "systemHealth": "System Health",
+    "callResponseRate": "Call Response Rate",
+    "overduePayments": "Overdue Payments",
+    "monthlyRevenue": "Monthly Revenue"
+  },
   "totalRevenue": "Total Revenue",
   "pendingPayments": "Pending Payments",
   "teacherPayouts": "Teacher Payouts",

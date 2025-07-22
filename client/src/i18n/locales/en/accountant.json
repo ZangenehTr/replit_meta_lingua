@@ -1,5 +1,8 @@
 {
-  "dashboard": "Accountant Dashboard",
+  "dashboard": {
+    "title": "Accountant Dashboard",
+    "welcomeMessage": "Manage financial operations and compliance"
+  },
   "welcomeMessage": "Manage finances, process payments, and track revenue",
   "overview": "Overview",
   "payments": "Payments",
