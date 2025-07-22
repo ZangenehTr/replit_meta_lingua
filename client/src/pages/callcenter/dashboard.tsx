@@ -333,6 +333,30 @@ function CallCenterDashboard() {
             <TabsTrigger value="calls">{t('callcenter:calls')}</TabsTrigger>
             <TabsTrigger value="performance">{t('callcenter:performance')}</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="overview">
+            <div className="mt-6">
+              <p>Overview content coming soon...</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="leads">
+            <div className="mt-6">
+              <p>Leads content coming soon...</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="calls">
+            <div className="mt-6">
+              <p>Calls content coming soon...</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="performance">
+            <div className="mt-6">
+              <p>Performance content coming soon...</p>
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
     </AppLayout>

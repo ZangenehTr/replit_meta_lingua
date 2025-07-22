@@ -129,8 +129,8 @@ export default function TeacherDashboard() {
             <div className="mt-4 lg:mt-0 flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <Star className="w-5 h-5 text-yellow-500" />
-                <span className="font-semibold text-gray-900">{stats?.overview?.rating || 4.8}</span>
-                <span className="text-gray-600">({stats?.overview?.totalReviews || 156} {t('teacher:reviews')})</span>
+                <span className="font-semibold text-gray-900">{(stats as any)?.overview?.rating || 4.8}</span>
+                <span className="text-gray-600">({(stats as any)?.overview?.totalReviews || 156} reviews)</span>
               </div>
               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                 {t('teacher:activeTeacher')}
@@ -148,7 +148,7 @@ export default function TeacherDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100">{t('teacher:totalClasses')}</p>
-                  <p className="text-3xl font-bold">{stats?.overview?.totalClasses || 0}</p>
+                  <p className="text-3xl font-bold">{(stats as any)?.overview?.totalClasses || 0}</p>
                 </div>
                 <BookOpen className="w-12 h-12 text-blue-200" />
               </div>
@@ -160,7 +160,7 @@ export default function TeacherDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100">{t('teacher:students')}</p>
-                  <p className="text-3xl font-bold">{stats?.overview?.totalStudents || 0}</p>
+                  <p className="text-3xl font-bold">{(stats as any)?.overview?.totalStudents || 0}</p>
                 </div>
                 <Users className="w-12 h-12 text-green-200" />
               </div>
@@ -172,7 +172,7 @@ export default function TeacherDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-100">{t('teacher:monthlyEarnings')}</p>
-                  <p className="text-2xl font-bold">{formatCurrency(stats?.overview?.monthlyEarnings || 0)}</p>
+                  <p className="text-2xl font-bold">{formatCurrency((stats as any)?.overview?.monthlyEarnings || 0)}</p>
                 </div>
                 <DollarSign className="w-12 h-12 text-purple-200" />
               </div>
@@ -184,7 +184,7 @@ export default function TeacherDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-orange-100">{t('teacher:upcomingClasses')}</p>
-                  <p className="text-3xl font-bold">{stats?.overview?.upcomingClasses || 0}</p>
+                  <p className="text-3xl font-bold">{(stats as any)?.overview?.upcomingClasses || 0}</p>
                 </div>
                 <Clock className="w-12 h-12 text-orange-200" />
               </div>
@@ -202,9 +202,9 @@ export default function TeacherDashboard() {
             <TabsTrigger value="availability">{t('teacher:availability')}</TabsTrigger>
             <TabsTrigger value="observations" className="relative">
               {t('teacher:observations')}
-              {unacknowledgedObservations?.length > 0 && (
+              {(unacknowledgedObservations as any)?.length > 0 && (
                 <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs">
-                  {unacknowledgedObservations.length}
+                  {(unacknowledgedObservations as any).length}
                 </Badge>
               )}
             </TabsTrigger>
@@ -218,11 +218,11 @@ export default function TeacherDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Calendar className="w-5 h-5 mr-2" />
-                    Today's Schedule
+                    {t('teacher:todaysSchedule')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {upcomingSessions?.slice(0, 3).map((session: any) => (
+                  {(upcomingSessions as any)?.slice(0, 3).map((session: any) => (
                     <div key={session.id} className="flex items-center justify-between py-3 border-b last:border-b-0">
                       <div className="flex items-center space-x-3">
                         <div className="text-2xl">{getServiceIcon(session.type)}</div>
@@ -247,7 +247,7 @@ export default function TeacherDashboard() {
                       </Button>
                     </div>
                   )) || (
-                    <p className="text-gray-500 text-center py-8">No classes scheduled for today</p>
+                    <p className="text-gray-500 text-center py-8">{t('teacher:noClassesToday')}</p>
                   )}
                 </CardContent>
               </Card>
@@ -255,7 +255,7 @@ export default function TeacherDashboard() {
               {/* Recent Activity */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
+                  <CardTitle>{t('teacher:recentActivity')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -273,7 +273,7 @@ export default function TeacherDashboard() {
                         </Badge>
                       </div>
                     )) || (
-                      <p className="text-gray-500 text-center py-4">No recent activity</p>
+                      <p className="text-gray-500 text-center py-4">{t('teacher:noRecentActivity')}</p>
                     )}
                   </div>
                 </CardContent>
@@ -285,12 +285,12 @@ export default function TeacherDashboard() {
           <TabsContent value="classes" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>My Classes</CardTitle>
-                <p className="text-sm text-gray-600">Classes assigned to you by administrators</p>
+                <CardTitle>{t('teacher:myClasses')}</CardTitle>
+                <p className="text-sm text-gray-600">{t('teacher:classesAssignedByAdmin')}</p>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {classes?.map((classItem: any) => (
+                  {(classes as any)?.map((classItem: any) => (
                     <Card key={classItem.id} className="border border-gray-200 hover:shadow-md transition-shadow">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
@@ -320,7 +320,7 @@ export default function TeacherDashboard() {
                             onClick={() => handleClassChat(classItem.id)}
                           >
                             <MessageCircle className="w-3 h-3 mr-1" />
-                            Chat
+                            {t('common:chat')}
                           </Button>
                           {classItem.type === 'online' && (
                             <Button 
@@ -329,7 +329,7 @@ export default function TeacherDashboard() {
                               onClick={() => handleJoinClass(classItem)}
                             >
                               <Video className="w-3 h-3 mr-1" />
-                              Join
+                              {t('teacher:join')}
                             </Button>
                           )}
                         </div>
@@ -337,7 +337,7 @@ export default function TeacherDashboard() {
                     </Card>
                   )) || (
                     <div className="col-span-full text-center py-8 text-gray-500">
-                      No classes assigned yet. Contact your administrator for class assignments.
+                      {t('teacher:noClassesAssigned')}
                     </div>
                   )}
                 </div>
@@ -349,12 +349,12 @@ export default function TeacherDashboard() {
           <TabsContent value="assignments" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Student Assignments</CardTitle>
-                <p className="text-sm text-gray-600">Create and manage assignments for your students</p>
+                <CardTitle>{t('teacher:studentAssignments')}</CardTitle>
+                <p className="text-sm text-gray-600">{t('teacher:createAndManageAssignments')}</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {assignments?.map((assignment: any) => (
+                  {(assignments as any)?.map((assignment: any) => (
                     <Card key={assignment.id} className="border border-gray-200">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
@@ -380,14 +380,14 @@ export default function TeacherDashboard() {
                               onClick={() => handleViewAssignment(assignment.id)}
                             >
                               <FileText className="w-3 h-3 mr-1" />
-                              View
+                              {t('common:view')}
                             </Button>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                   )) || (
-                    <p className="text-center py-8 text-gray-500">No assignments created yet</p>
+                    <p className="text-center py-8 text-gray-500">{t('teacher:noAssignmentsCreated')}</p>
                   )}
                 </div>
               </CardContent>
@@ -398,12 +398,12 @@ export default function TeacherDashboard() {
           <TabsContent value="schedule" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Weekly Schedule</CardTitle>
-                <p className="text-sm text-gray-600">Your class schedule for this week</p>
+                <CardTitle>{t('teacher:weeklySchedule')}</CardTitle>
+                <p className="text-sm text-gray-600">{t('teacher:classScheduleThisWeek')}</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {upcomingSessions?.map((session: any) => (
+                  {(upcomingSessions as any)?.map((session: any) => (
                     <div key={session.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center space-x-4">
                         <div className="text-2xl">{getServiceIcon(session.type)}</div>
@@ -424,19 +424,19 @@ export default function TeacherDashboard() {
                           {session.type === 'online' ? (
                             <>
                               <Video className="w-3 h-3 mr-1" />
-                              Join
+                              {t('teacher:join')}
                             </>
                           ) : (
                             <>
                               <Play className="w-3 h-3 mr-1" />
-                              Start
+                              {t('teacher:start')}
                             </>
                           )}
                         </Button>
                       </div>
                     </div>
                   )) || (
-                    <p className="text-center py-8 text-gray-500">No upcoming sessions</p>
+                    <p className="text-center py-8 text-gray-500">{t('teacher:noUpcomingSessions')}</p>
                   )}
                 </div>
               </CardContent>
@@ -473,7 +473,7 @@ export default function TeacherDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Eye className="w-5 h-5 mr-2" />
-                  Teaching Observations
+                  {t('teacher:teachingObservations')}
                 </CardTitle>
                 <p className="text-sm text-gray-600">
                   View and respond to your classroom observation reports
@@ -482,20 +482,19 @@ export default function TeacherDashboard() {
               <CardContent>
                 <div className="text-center py-8">
                   <Eye className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Observation Management</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('teacher:observationManagement')}</h3>
                   <p className="text-gray-600 mb-4">
-                    Review feedback from supervisors about your teaching performance.<br />
-                    Acknowledge observations and submit improvement plans when needed.
+                    {t('teacher:reviewFeedbackFromSupervisors')}
                   </p>
                   <div className="flex justify-center space-x-4">
                     <Button onClick={handleViewObservations}>
                       <Eye className="w-4 h-4 mr-2" />
-                      View All Observations
+                      {t('teacher:viewAllObservations')}
                     </Button>
-                    {unacknowledgedObservations?.length > 0 && (
+                    {(unacknowledgedObservations as any)?.length > 0 && (
                       <Button variant="outline" className="border-red-200 text-red-700">
                         <AlertCircle className="w-4 h-4 mr-2" />
-                        {unacknowledgedObservations.length} Unacknowledged
+                        {(unacknowledgedObservations as any).length} {t('teacher:unacknowledged')}
                       </Button>
                     )}
                   </div>
