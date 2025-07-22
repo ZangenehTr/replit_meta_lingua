@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import { useTranslation } from "react-i18next";
+import "./i18n"; // Initialize i18n
 import { AppLayout } from "@/components/layout/app-layout";
 import { RTLLayout } from "@/components/rtl-layout";
 

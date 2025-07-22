@@ -112,7 +112,7 @@ interface LearningGoal {
 
 function StudentDashboard() {
   const { user } = useAuth();
-  const { t: tLang } = useLanguage();
+  const { direction, isRTL } = useLanguage();
   const { t } = useTranslation(['student', 'common']);
   const [selectedTab, setSelectedTab] = useState("overview");
   const queryClient = useQueryClient();
@@ -233,17 +233,17 @@ function StudentDashboard() {
               )}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t('student.dashboard')}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t('dashboard')}</h1>
               <div className="flex items-center gap-4 mt-1">
                 <p className="text-gray-600">
-                  {t('student.currentLevel')}: {studentStats?.currentLevel || 'Beginner'} • {studentStats?.totalXP || 0} XP
+                  {t('currentLevel')}: {studentStats?.currentLevel || 'Beginner'} • {studentStats?.totalXP || 0} XP
                 </p>
                 <Badge className={getMemberTierColor(studentStats?.memberTier || 'bronze')}>
                   {studentStats?.memberTier?.toUpperCase() || 'BRONZE'} Member
                 </Badge>
               </div>
               <p className="text-gray-600 mt-1">
-                {t('student.welcomeMessage')}
+                {t('welcomeMessage')}
               </p>
             </div>
           </div>
@@ -251,25 +251,25 @@ function StudentDashboard() {
             <Link href="/ai-practice">
               <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md">
                 <Mic className="h-4 w-4 mr-2" />
-                AI Practice
+                {t('practice')}
               </Button>
             </Link>
             <Link href="/video-courses">
               <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md">
                 <Video className="h-4 w-4 mr-2" />
-                Video Courses
+                {t('common:dashboard.liveVideoClasses')}
               </Button>
             </Link>
             <Link href="/games">
               <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-md">
                 <Trophy className="h-4 w-4 mr-2" />
-                Play Games
+                {t('practiceTests')}
               </Button>
             </Link>
             <Link href="/level-assessment">
               <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
                 <Target className="h-4 w-4 mr-2" />
-                Test Level
+                {t('common:dashboard.whatsMyLevel')}
               </Button>
             </Link>
           </div>
