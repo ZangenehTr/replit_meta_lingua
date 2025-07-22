@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Settings, Home, Menu } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { LanguageSelector } from "@/components/language-selector";
+import MobileBottomNav from "./mobile-bottom-nav";
 import { useState } from "react";
 import { useLanguage } from "@/hooks/use-language";
 
@@ -69,27 +70,27 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background" dir={direction}>
-      {/* Global Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-14 items-center justify-between px-2 sm:px-4">
-          {/* Mobile Menu Button */}
-          <div className="flex items-center space-x-2 md:space-x-3">
+      {/* Mobile-First Global Header */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-inset-top">
+        <div className="flex h-16 items-center justify-between px-3 md:px-6">
+          {/* Mobile Menu Button & Brand */}
+          <div className="flex items-center space-x-3">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="md:hidden"
+                  className="md:hidden touch-target-sm"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side={direction === 'rtl' ? 'right' : 'left'} className="w-64 p-0">
+              <SheetContent side={direction === 'rtl' ? 'right' : 'left'} className="w-80 p-0">
                 <Sidebar />
               </SheetContent>
             </Sheet>
             
-            {/* Logo and Brand */}
+            {/* Enhanced Logo and Brand */}
             <Button 
               variant="ghost" 
               size="sm"
@@ -106,16 +107,28 @@ export function AppLayout({ children }: AppLayoutProps) {
                   setLocation("/dashboard");
                 }
               }}
-              className="flex items-center gap-1 sm:gap-2"
+              className="flex items-center gap-2 touch-target"
             >
-              <Home className="h-4 w-4" />
-              <span className="font-semibold text-sm sm:text-base">Meta Lingua</span>
+              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                <Home className="h-4 w-4 text-white" />
+              </div>
+              <div className="hidden sm:flex flex-col items-start">
+                <span className="font-bold text-sm leading-none">Meta Lingua</span>
+                <span className="text-xs text-muted-foreground leading-none">
+                  {user.role === 'Teacher/Tutor' ? 'Teacher' : user.role}
+                </span>
+              </div>
             </Button>
           </div>
 
-          {/* Language Selector and User Menu */}
+          {/* Mobile-Optimized User Actions */}
           <div className="flex items-center space-x-2">
-            <LanguageSelector />
+            {/* Language Selector - Mobile Optimized */}
+            <div className="hidden sm:block">
+              <LanguageSelector />
+            </div>
+            
+            {/* User Menu - Enhanced for Mobile */}
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full">
@@ -172,13 +185,16 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Sidebar />
         </div>
         
-        {/* Main Content - properly spaced for sidebar */}
-        <main className={`flex-1 w-full ${direction === 'rtl' ? 'md:mr-64' : 'md:ml-64'} p-2 xs:p-3 sm:p-4 md:p-6 lg:p-8 overflow-y-auto`}>
+        {/* Main Content - properly spaced for sidebar and bottom nav */}
+        <main className={`flex-1 w-full ${direction === 'rtl' ? 'md:mr-64' : 'md:ml-64'} p-2 xs:p-3 sm:p-4 md:p-6 lg:p-8 overflow-y-auto pb-20 md:pb-8`}>
           <div className="max-w-full">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }
