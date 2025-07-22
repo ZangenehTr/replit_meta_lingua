@@ -39,6 +39,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 interface SupportTicket {
   id: number;
@@ -664,7 +665,8 @@ export default function AdminCommunicationsPage() {
 
           {/* Internal Chat Tab */}
           <TabsContent value="chat" className="space-y-4">
-            <div className="flex flex-col lg:grid lg:grid-cols-5 gap-4">
+            {/* Mobile Layout - Use existing grid system */}
+            <div className="flex flex-col gap-4 lg:hidden">
               {/* Conversations List - Made wider */}
               <Card className="lg:col-span-2 order-1 lg:order-1">
                 <CardHeader>
@@ -882,80 +884,251 @@ export default function AdminCommunicationsPage() {
                   </CardContent>
                 </Card>
               )}
+            </div>
 
-              {/* Chat Interface - Desktop */}
-              <Card className="lg:col-span-3 order-2 lg:order-2 hidden lg:block">
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5" />
-                    {selectedConversation ? (
-                      <span className="truncate">
-                        {selectedConversation.title || selectedConversation.participants.join(', ')}
-                      </span>
-                    ) : (
-                      "Select Conversation"
-                    )}
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    {selectedConversation ? "Real-time messaging" : "Choose a conversation to start messaging"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="flex flex-col h-[500px]">
-                    <ScrollArea className="flex-1">
-                      <div className="space-y-3 p-4">
-                        {selectedConversation ? (
-                          messagesLoading ? (
-                            <div className="text-center py-8 text-gray-500">Loading messages...</div>
-                          ) : messagesData.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
-                              No messages yet. Start the conversation!
-                            </div>
-                          ) : (
-                            messagesData
-                              .filter(message => message.message && message.message.trim().length > 0) // Fix 2: Filter empty messages
-                              .map((message) => (
-                              <div 
-                                key={message.id}
-                                className={`flex items-start gap-3 ${user && message.senderId === user.id ? 'justify-end' : ''}`}
-                              >
-                                {!(user && message.senderId === user.id) && (
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarFallback>
-                                      {message.senderName?.split(' ').map(n => n[0]).join('') || 'U'}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                )}
-                                <div className={`rounded-lg p-3 max-w-[70%] ${
-                                  (user && message.senderId === user.id)
-                                    ? 'bg-blue-500 text-white' 
-                                    : 'bg-gray-100 dark:bg-gray-800'
-                                }`}>
-                                  <p className="text-sm">{message.message}</p>
-                                  <p className={`text-xs mt-1 ${
-                                    (user && message.senderId === user.id) ? 'text-blue-100' : 'text-gray-500'
-                                  }`}>
-                                    {message.sentAt ? new Date(message.sentAt).toLocaleTimeString() : 'Just now'}
-                                  </p>
-                                </div>
-                                {(user && message.senderId === user.id) && (
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarFallback>ME</AvatarFallback>
-                                  </Avatar>
-                                )}
-                              </div>
-                            ))
-                          )
-                        ) : (
-                          <div className="text-center py-12 text-gray-500">
-                            Select a conversation to view messages
+            {/* Desktop Layout with Resizable Panels */}
+            <div className="hidden lg:block h-[700px]">
+              <PanelGroup direction="horizontal" className="h-full">
+                {/* Conversations Panel */}
+                <Panel defaultSize={30} minSize={20} maxSize={50}>
+                  <Card className="h-full">
+                    <CardHeader>
+                      <CardTitle>Conversations</CardTitle>
+                      <CardDescription>Staff internal messaging</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {/* Search Box */}
+                      <div className="mb-4 space-y-2">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                          <Input 
+                            placeholder="Search users by name or role..." 
+                            className="pl-10"
+                            value={userSearchQuery}
+                            onChange={(e) => setUserSearchQuery(e.target.value)}
+                          />
+                        </div>
+                        {userSearchQuery && (
+                          <div className="text-xs text-gray-500">
+                            Search across: Students, Teachers, Call Center Agents, Accountants, Admin, and all other roles
                           </div>
                         )}
                       </div>
-                    </ScrollArea>
-                    
-                    {/* Message Input Area */}
-                    <div className="border-t p-4 space-y-3">
+                      <ScrollArea className="h-[500px]">
+                        <div className="space-y-2 pr-4">
+                          {/* Show search results if searching */}
+                          {userSearchQuery && searchedUsersData.length > 0 && (
+                            <div className="mb-4">
+                              <p className="text-sm font-medium text-gray-600 mb-2">Search Results</p>
+                              {searchedUsersData.map((user) => (
+                                <div
+                                  key={user.id}
+                                  className="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors border border-gray-200 mb-2"
+                                  onClick={() => createConversationMutation.mutate(user.id)}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Avatar className="h-10 w-10">
+                                      <AvatarFallback>
+                                        {user.firstName?.[0] || user.email?.[0] || 'U'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                      <p className="text-sm font-medium">
+                                        {user.firstName} {user.lastName}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {user.role} • {user.email}
+                                      </p>
+                                    </div>
+                                    <Plus className="h-4 w-4 text-gray-400" />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Existing conversations */}
+                          {conversationsLoading ? (
+                            <div className="text-center py-8">Loading conversations...</div>
+                          ) : conversationsData.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500">
+                              No conversations yet. Search for a user to start chatting!
+                            </div>
+                          ) : (
+                            conversationsData.map((conversation) => (
+                              <div
+                                key={conversation.id}
+                                className={`p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
+                                  selectedConversation?.id === conversation.id ? 'bg-gray-100 dark:bg-gray-800' : ''
+                                }`}
+                                onClick={() => setSelectedConversation(conversation)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-10 w-10">
+                                    <AvatarFallback>
+                                      {conversation.participants?.[0]?.[0] || 'C'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">
+                                      {conversation.title || conversation.participants?.join(', ') || 'Conversation'}
+                                    </p>
+                                    <p className="text-xs text-gray-500 truncate">
+                                      {conversation.lastMessage || 'No messages yet'}
+                                    </p>
+                                  </div>
+                                  {conversation.unreadCount > 0 && (
+                                    <Badge variant="default" className="ml-auto">
+                                      {conversation.unreadCount}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                </Panel>
+                
+                {/* Resize Handle */}
+                <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors" />
+                
+                {/* Chat Interface Panel */}
+                <Panel defaultSize={40} minSize={30}>
+                  <Card className="h-full">
+                    <CardHeader className="border-b">
+                      <CardTitle className="flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5" />
+                        {selectedConversation ? (
+                          <span className="truncate">
+                            {selectedConversation.title || selectedConversation.participants.join(', ')}
+                          </span>
+                        ) : (
+                          "Select Conversation"
+                        )}
+                      </CardTitle>
+                      <CardDescription className="text-sm">
+                        {selectedConversation ? "Real-time messaging" : "Choose a conversation to start messaging"}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="flex flex-col h-[580px]">
+                        <ScrollArea className="flex-1">
+                          <div className="space-y-3 p-4">
+                            {selectedConversation ? (
+                              messagesLoading ? (
+                                <div className="text-center py-8 text-gray-500">Loading messages...</div>
+                              ) : messagesData.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500">
+                                  No messages yet. Start the conversation!
+                                </div>
+                              ) : (
+                                messagesData
+                                  .filter(message => message.message && message.message.trim().length > 0)
+                                  .map((message) => {
+                                    const isOwn = user && message.senderId === user.id;
+                                    return (
+                                      <div 
+                                        key={message.id}
+                                        className={`flex items-start gap-3 ${isOwn ? 'justify-end' : ''}`}
+                                      >
+                                        {!isOwn && (
+                                          <Avatar className="h-8 w-8">
+                                            <AvatarFallback>
+                                              {message.senderName?.split(' ').map(n => n[0]).join('') || 'U'}
+                                            </AvatarFallback>
+                                          </Avatar>
+                                        )}
+                                        <div className={`rounded-lg p-3 max-w-[70%] ${
+                                          isOwn
+                                            ? 'bg-blue-500 text-white' 
+                                            : 'bg-gray-100 dark:bg-gray-800'
+                                        }`}>
+                                          <p className="text-sm">{message.message}</p>
+                                          <p className={`text-xs mt-1 ${
+                                            isOwn ? 'text-blue-100' : 'text-gray-500'
+                                          }`}>
+                                            {message.sentAt ? new Date(message.sentAt).toLocaleTimeString() : 'Just now'}
+                                          </p>
+                                        </div>
+                                        {isOwn && (
+                                          <Avatar className="h-8 w-8">
+                                            <AvatarFallback>ME</AvatarFallback>
+                                          </Avatar>
+                                        )}
+                                      </div>
+                                    );
+                                  })
+                              )
+                            ) : (
+                              <div className="text-center py-12 text-gray-500">
+                                Select a conversation to view messages
+                              </div>
+                            )}
+                          </div>
+                        </ScrollArea>
+                        
+                        {/* Message Input Area */}
+                        <div className="border-t p-4 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="Type your message here..."
+                              value={chatInput}
+                              onChange={(e) => setChatInput(e.target.value)}
+                              className="flex-1" 
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter' && chatInput.trim() && selectedConversation) {
+                                  sendMessageMutation.mutate({
+                                    conversationId: selectedConversation.id,
+                                    message: chatInput,
+                                    withNotification: sendNotification,
+                                    notificationText: customNotificationText
+                                  });
+                                }
+                              }}
+                            />
+                            <Button 
+                              onClick={() => {
+                                if (chatInput.trim() && selectedConversation) {
+                                  sendMessageMutation.mutate({
+                                    conversationId: selectedConversation.id,
+                                    message: chatInput,
+                                    withNotification: sendNotification,
+                                    notificationText: customNotificationText
+                                  });
+                                }
+                              }}
+                              disabled={!chatInput.trim() || !selectedConversation || sendMessageMutation.isPending}
+                            >
+                              {sendMessageMutation.isPending ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                              ) : (
+                                <Send className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Panel>
+                
+                {/* Resize Handle */}
+                <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors" />
+                
+                {/* Notification Panel */}
+                <Panel defaultSize={30} minSize={20} maxSize={50}>
+                  <Card className="h-full">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Bell className="h-5 w-5" />
+                        Send Notification
+                      </CardTitle>
+                      <CardDescription>Create and send custom notifications</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                       {/* Enhanced Notification Options */}
                       <div className="flex flex-col gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                         <div className="flex items-center justify-between">
@@ -1014,49 +1187,30 @@ export default function AdminCommunicationsPage() {
                           )}
                         </div>
                       </div>
-
-                      {/* Message Input & Send Button */}
-                      <div className="flex items-center gap-2">
-                        <Input
-                          placeholder="Type your message here..."
-                          value={chatInput}
-                          onChange={(e) => setChatInput(e.target.value)}
-                          className="flex-1" 
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' && chatInput.trim() && selectedConversation) {
-                              sendMessageMutation.mutate({
-                                conversationId: selectedConversation.id,
-                                message: chatInput,
-                                withNotification: sendNotification,
-                                notificationText: customNotificationText
-                              });
-                            }
-                          }}
-                        />
-                        <Button 
-                          onClick={() => {
-                            if (chatInput.trim() && selectedConversation) {
-                              sendMessageMutation.mutate({
-                                conversationId: selectedConversation.id,
-                                message: chatInput,
-                                withNotification: sendNotification,
-                                notificationText: customNotificationText
-                              });
-                            }
-                          }}
-                          disabled={!chatInput.trim() || !selectedConversation || sendMessageMutation.isPending}
-                        >
-                          {sendMessageMutation.isPending ? (
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                          ) : (
-                            <Send className="h-4 w-4" />
-                          )}
-                        </Button>
+                      
+                      {/* Recent Notifications */}
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Recent Notifications</h4>
+                        <ScrollArea className="h-[350px]">
+                          <div className="space-y-2">
+                            {notificationsData.slice(0, 5).map((notification) => (
+                              <div key={notification.id} className="p-3 border rounded-lg">
+                                <p className="text-sm font-medium">{notification.title}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {notification.message}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-2">
+                                  {notification.sentAt ? new Date(notification.sentAt).toLocaleString() : 'Pending'}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                </Panel>
+              </PanelGroup>
             </div>
           </TabsContent>
 
