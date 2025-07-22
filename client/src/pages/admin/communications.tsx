@@ -148,16 +148,14 @@ export default function AdminCommunicationsPage() {
     queryKey: ['/api/push-notifications'],
   });
 
-  // Real API calls for conversation messages - FIXED query key
+  // Real API calls for conversation messages - CORRECTED query key format
   const { data: messages, isLoading: messagesLoading, refetch: refetchMessages } = useQuery({
-    queryKey: selectedConversation ? [`/api/chat/conversations/${selectedConversation.id}/messages`] : ['no-conversation'],
-    enabled: !!selectedConversation,
-    refetchInterval: 1000, // Refresh every second
-    staleTime: 0, // Always treat data as stale
-    gcTime: 0, // No caching at all
+    queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'],
+    enabled: !!selectedConversation?.id,
+    refetchInterval: 3000, // Refresh every 3 seconds (more reasonable)
+    staleTime: 5000, // 5 seconds stale time for better performance
     refetchOnWindowFocus: true,
     refetchOnMount: 'always' as const,
-    structuralSharing: false, // Disable structural sharing to force complete data refresh
   });
 
   // Search users API call
@@ -173,23 +171,27 @@ export default function AdminCommunicationsPage() {
   // Get current user for message ownership detection with debug logging
   const { user } = useAuth();
   
-  // Debug current user state
+  // Debug current user state and query execution
   console.log('Communications: Current user from useAuth:', { 
     id: user?.id, 
     email: user?.email,
     role: user?.role 
   });
   
-  // Process messages with proper ownership detection - add debug
-  console.log('Raw messages data from query:', messages);
+  console.log('Debug Query State:', {
+    selectedConversationId: selectedConversation?.id,
+    messagesQueryEnabled: !!selectedConversation?.id,
+    messagesLoading: messagesLoading,
+    rawMessages: messages
+  });
   
   // Force refresh on conversation change
   useEffect(() => {
-    if (selectedConversation) {
-      queryClient.invalidateQueries({ queryKey: [`/api/chat/conversations/${selectedConversation.id}/messages`] });
+    if (selectedConversation?.id) {
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations', selectedConversation.id, 'messages'] });
       refetchMessages();
     }
-  }, [selectedConversation?.id]);
+  }, [selectedConversation?.id, queryClient, refetchMessages]);
   
   const messagesData = ((messages as Array<{
     id: number;
@@ -288,9 +290,9 @@ export default function AdminCommunicationsPage() {
       setSendNotification(false);
       setCustomNotificationText("New message from admin");
       
-      // Aggressive cache invalidation
-      queryClient.removeQueries({ queryKey: ['/api/chat/conversations'] });
-      queryClient.removeQueries({ queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'] });
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/chat/conversations', selectedConversation?.id, 'messages'] });
       
       // Force multiple refetches with delays
       setTimeout(() => {
@@ -630,13 +632,14 @@ export default function AdminCommunicationsPage() {
                           value={ticketReply}
                           onChange={(e) => setTicketReply(e.target.value)}
                         />
-                        <div className="flex justify-between">
-                          <Button variant="outline" size="sm">
+                        <div className="flex flex-col sm:flex-row justify-between gap-3">
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto h-10">
                             <Paperclip className="h-4 w-4 mr-2" />
                             Attach File
                           </Button>
                           <Button 
                             size="sm"
+                            className="w-full sm:w-auto h-10"
                             onClick={() => {
                               if (ticketReply.trim()) {
                                 sendTicketReplyMutation.mutate({
@@ -844,14 +847,41 @@ export default function AdminCommunicationsPage() {
                         </div>
                       </ScrollArea>
                       
-                      {/* Mobile Message Input */}
-                      <div className="border-t p-4 space-y-3">
-                        <div className="flex items-center gap-2">
+                      {/* Mobile Message Input - ENHANCED VISIBILITY */}
+                      <div className="border-t p-4 space-y-4 bg-white dark:bg-gray-900">
+                        {/* Enhanced Notification Options for Mobile */}
+                        <div className="flex flex-col gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <Bell className="h-4 w-4 text-blue-500" />
+                              <Label htmlFor="sendNotifMobile" className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                Send Notification
+                              </Label>
+                            </div>
+                            <Checkbox 
+                              id="sendNotifMobile"
+                              checked={sendNotification}
+                              onCheckedChange={(checked) => setSendNotification(checked as boolean)}
+                              className="data-[state=checked]:bg-blue-500 border-blue-400"
+                            />
+                          </div>
+                          {sendNotification && (
+                            <Input
+                              placeholder="Enter notification message..."
+                              value={customNotificationText}
+                              onChange={(e) => setCustomNotificationText(e.target.value)}
+                              className="w-full text-sm bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-600"
+                            />
+                          )}
+                        </div>
+                        
+                        {/* Message Input with Better Mobile Visibility */}
+                        <div className="flex items-center gap-3">
                           <Input
                             placeholder="Type your message..."
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
-                            className="flex-1"
+                            className="flex-1 h-12 text-base" // Larger height and text for mobile
                             onKeyPress={(e) => {
                               if (e.key === 'Enter' && chatInput.trim()) {
                                 sendMessageMutation.mutate({
@@ -875,8 +905,14 @@ export default function AdminCommunicationsPage() {
                               }
                             }}
                             disabled={!chatInput.trim() || sendMessageMutation.isPending}
+                            size="lg" // Larger button for mobile
+                            className="h-12 px-4" // Match input height
                           >
-                            <Send className="h-4 w-4" />
+                            {sendMessageMutation.isPending ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            ) : (
+                              <Send className="h-5 w-5" />
+                            )}
                           </Button>
                         </div>
                       </div>
