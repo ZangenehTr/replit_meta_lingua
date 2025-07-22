@@ -178,11 +178,12 @@ export default function AdminCommunicationsPage() {
     role: user?.role 
   });
   
-  console.log('Debug Query State:', {
+  console.log('Debug Query State [CACHE CLEARED]:', {
     selectedConversationId: selectedConversation?.id,
     messagesQueryEnabled: !!selectedConversation?.id,
     messagesLoading: messagesLoading,
-    rawMessages: messages
+    rawMessages: messages,
+    timestamp: new Date().toISOString()
   });
   
   // Force refresh on conversation change
@@ -403,10 +404,11 @@ export default function AdminCommunicationsPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 md:mb-6">
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
-              Communication Hub
+              Communication Hub 
+              <span className="text-green-600 text-sm ml-2">[CACHE CLEARED ✓]</span>
             </h1>
             <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">
-              Modern ticketing, real-time chat, and push notifications
+              Modern ticketing, real-time chat, and push notifications | ENHANCED MOBILE UI ACTIVE
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -906,7 +908,7 @@ export default function AdminCommunicationsPage() {
                             }}
                             disabled={!chatInput.trim() || sendMessageMutation.isPending}
                             size="lg" // Larger button for mobile
-                            className="h-12 px-4" // Match input height
+                            className="h-12 px-4 bg-green-600 hover:bg-green-700" // ENHANCED VISIBILITY - Green color
                           >
                             {sendMessageMutation.isPending ? (
                               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
