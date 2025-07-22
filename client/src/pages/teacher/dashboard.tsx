@@ -15,6 +15,7 @@ export default function TeacherDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation(['teacher', 'common']);
+  const { language, isRTL, direction } = useLanguage();
 
   // Fetch teacher dashboard stats
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -121,8 +122,8 @@ export default function TeacherDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('teacher:dashboard')}</h1>
-              <p className="text-gray-600">{t('teacher:welcomeMessage')}</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('teacher:dashboard.title')}</h1>
+              <p className="text-gray-600">{t('teacher:dashboard.welcomeMessage')}</p>
             </div>
             <div className="mt-4 lg:mt-0 flex items-center space-x-4">
               <div className="flex items-center space-x-2">

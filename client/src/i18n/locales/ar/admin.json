@@ -1,5 +1,12 @@
 {
-  "dashboard": "لوحة المدير",
+  "dashboard": {
+    "title": "لوحة المدير",
+    "welcomeMessage": "مرحباً بك في مركز التحكم الإداري.",
+    "systemHealth": "صحة النظام",
+    "callResponseRate": "معدل الاستجابة للمكالمات",
+    "overduePayments": "المدفوعات المتأخرة",
+    "monthlyRevenue": "الإيرادات الشهرية"
+  },
   "totalRevenue": "إجمالي الإيرادات",
   "pendingPayments": "المدفوعات المعلقة",
   "teacherPayouts": "مدفوعات المعلمين",

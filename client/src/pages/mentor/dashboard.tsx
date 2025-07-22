@@ -110,7 +110,8 @@ interface LearningGoal {
 
 function MentorDashboard() {
   const { user } = useAuth();
-  const { t, isRTL } = useLanguage();
+  const { t } = useTranslation(['mentor', 'common']);
+  const { language, isRTL, direction } = useLanguage();
   const [selectedTab, setSelectedTab] = useState("overview");
   const queryClient = useQueryClient();
 
@@ -249,9 +250,9 @@ function MentorDashboard() {
               <Heart className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t('mentor.dashboard')}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t('mentor:dashboard.title')}</h1>
               <p className="text-gray-600 mt-1">
-                {t('mentor.welcomeMessage')}
+                {t('mentor:dashboard.welcomeMessage')}
               </p>
             </div>
           </div>

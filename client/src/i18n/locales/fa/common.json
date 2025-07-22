@@ -1,4 +1,11 @@
 {
+  "timeframes": {
+    "lastDays": "۳۰ روز گذشته",
+    "thisWeek": "این هفته",
+    "thisMonth": "این ماه",
+    "lastWeek": "هفته گذشته",
+    "lastMonth": "ماه گذشته"
+  },
   "navigation": {
     "dashboard": "داشبورد",
     "admin": "مدیر",
@@ -19,7 +26,20 @@
     "messages": "پیام‌ها",
     "progress": "پیشرفت",
     "paymentCredits": "پرداخت و اعتبار",
-    "profile": "پروفایل"
+    "profile": "پروفایل",
+    "students": "دانش‌آموزان",
+    "courses": "دوره‌ها",
+    "classes": "کلاس‌ها",
+    "assignments": "تکالیف",
+    "sessions": "جلسات",
+    "settings": "تنظیمات",
+    "chat": "چت",
+    "leads": "سرنخ‌ها",
+    "calls": "تماس‌ها",
+    "performance": "عملکرد",
+    "payments": "پرداخت‌ها",
+    "reports": "گزارش‌ها",
+    "compliance": "انطباق"
   },
   "dashboard": {
     "welcomeBack": "خوش آمدید",

@@ -128,7 +128,8 @@ interface StudentFinancials {
 
 function AccountantDashboard() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t } = useTranslation(['accountant', 'common']);
+  const { language, isRTL, direction } = useLanguage();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -279,9 +280,9 @@ function AccountantDashboard() {
               <Calculator className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t('accountant.dashboard')}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t('accountant:dashboard.title')}</h1>
               <p className="text-gray-600 mt-1">
-                {t('accountant.welcomeMessage')}
+                {t('accountant:dashboard.welcomeMessage')}
               </p>
             </div>
           </div>

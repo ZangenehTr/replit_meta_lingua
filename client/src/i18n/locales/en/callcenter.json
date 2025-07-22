@@ -1,5 +1,8 @@
 {
-  "dashboard": "Call Center Dashboard",
+  "dashboard": {
+    "title": "Call Center Dashboard",
+    "welcomeMessage": "Manage leads and customer communications"
+  },
   "welcomeMessage": "Manage leads, handle inquiries, and convert prospects",
   "overview": "Overview",
   "leads": "Leads",

@@ -1,5 +1,8 @@
 {
-  "dashboard": "داشبورد معلم",
+  "dashboard": {
+    "title": "داشبورد معلم",
+    "welcomeMessage": "به مرکز تدریس خود خوش آمدید"
+  },
   "teachingOverview": "نمای کلی تدریس",
   "studentProgress": "پیشرفت دانش‌آموزان",
   "myClasses": "کلاس‌های من",
