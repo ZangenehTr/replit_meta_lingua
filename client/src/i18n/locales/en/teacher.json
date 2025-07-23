@@ -65,5 +65,19 @@
   "course": "Course",
   "dueDate": "Due Date",
   "status": "Status",
-  "progress": "Progress"
+  "progress": "Progress",
+  "join": "Join",
+  "start": "Start",
+  "noClassesAssigned": "No classes assigned yet. Contact your administrator for class assignments.",
+  "studentAssignments": "Student Assignments",
+  "createAndManageAssignments": "Create and manage assignments for your students",
+  "noAssignmentsCreated": "No assignments created yet",
+  "weeklySchedule": "Weekly Schedule",
+  "classScheduleThisWeek": "Your class schedule for this week",
+  "noUpcomingSessions": "No upcoming sessions",
+  "teachingObservations": "Teaching Observations",
+  "observationManagement": "Observation Management",
+  "reviewFeedbackFromSupervisors": "Review feedback from supervisors about your teaching performance. Acknowledge observations and submit improvement plans when needed.",
+  "viewAllObservations": "View All Observations",
+  "unacknowledged": "Unacknowledged"
 }
