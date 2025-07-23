@@ -65,5 +65,19 @@
   "course": "دوره",
   "dueDate": "تاریخ موعد",
   "status": "وضعیت",
-  "progress": "پیشرفت"
+  "progress": "پیشرفت",
+  "join": "پیوستن",
+  "start": "شروع",
+  "noClassesAssigned": "هنوز کلاسی به شما اختصاص داده نشده است. با مدیر برای تخصیص کلاس تماس بگیرید.",
+  "studentAssignments": "تکالیف دانشجویان",
+  "createAndManageAssignments": "تکالیف را برای دانشجویان خود ایجاد و مدیریت کنید",
+  "noAssignmentsCreated": "هنوز تکلیفی ایجاد نشده است",
+  "weeklySchedule": "برنامه هفتگی",
+  "classScheduleThisWeek": "برنامه کلاس‌های شما برای این هفته",
+  "noUpcomingSessions": "جلسه‌ای پیش رو نیست",
+  "teachingObservations": "بازدیدهای تدریس",
+  "observationManagement": "مدیریت بازدیدها",
+  "reviewFeedbackFromSupervisors": "بازخوردهای سرپرستان درباره عملکرد تدریس خود را بررسی کنید. بازدیدها را تأیید کرده و در صورت نیاز برنامه‌های بهبود ارائه دهید.",
+  "viewAllObservations": "مشاهده همه بازدیدها",
+  "unacknowledged": "تأیید نشده"
 }
