@@ -61,7 +61,7 @@ export default function RoomManagement() {
   });
 
   // Fetch rooms
-  const { data: rooms = [], isLoading } = useQuery({
+  const { data: rooms = [], isLoading } = useQuery<Room[]>({
     queryKey: ["/api/rooms"],
   });
 
@@ -258,7 +258,7 @@ export default function RoomManagement() {
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{rooms.length}</div>
+              <div className="text-2xl font-bold">{Array.isArray(rooms) ? rooms.length : 0}</div>
             </CardContent>
           </Card>
           <Card>
@@ -268,7 +268,7 @@ export default function RoomManagement() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {rooms.filter((r: Room) => r.isActive).length}
+                {Array.isArray(rooms) ? rooms.filter((r: Room) => r.isActive).length : 0}
               </div>
             </CardContent>
           </Card>
@@ -279,7 +279,7 @@ export default function RoomManagement() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {rooms.reduce((sum: number, r: Room) => sum + r.capacity, 0)}
+                {Array.isArray(rooms) ? rooms.reduce((sum: number, r: Room) => sum + r.capacity, 0) : 0}
               </div>
             </CardContent>
           </Card>
@@ -290,7 +290,7 @@ export default function RoomManagement() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {rooms.length > 0 
+                {Array.isArray(rooms) && rooms.length > 0 
                   ? Math.round(rooms.reduce((sum: number, r: Room) => sum + r.capacity, 0) / rooms.length)
                   : 0}
               </div>
@@ -324,7 +324,7 @@ export default function RoomManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rooms.map((room: Room) => (
+                  {Array.isArray(rooms) ? rooms.map((room: Room) => (
                     <TableRow key={room.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
@@ -385,7 +385,7 @@ export default function RoomManagement() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : null}
                 </TableBody>
               </Table>
             )}

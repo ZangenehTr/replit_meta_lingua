@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +17,7 @@ import {
 } from "lucide-react";
 
 export function AdminSystem() {
-  const { t } = useLanguage();
+  const { t } = useTranslation(['admin', 'common']);
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -53,49 +54,49 @@ export function AdminSystem() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">System Configuration</h1>
-        <p className="text-gray-600">Manage system settings, backups, and configurations</p>
+        <h1 className="text-3xl font-bold">{t('admin:system.title')}</h1>
+        <p className="text-gray-600">{t('admin:system.description')}</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="overview">System Overview</TabsTrigger>
-          <TabsTrigger value="backup">Backup & Export</TabsTrigger>
-          <TabsTrigger value="monitoring">System Health</TabsTrigger>
+          <TabsTrigger value="overview">{t('admin:system.overview')}</TabsTrigger>
+          <TabsTrigger value="backup">{t('admin:system.backup')}</TabsTrigger>
+          <TabsTrigger value="monitoring">{t('admin:system.monitoring')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">System Status</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('admin:system.status')}</CardTitle>
                 <CheckCircle className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">Online</div>
-                <p className="text-xs text-muted-foreground">All systems operational</p>
+                <div className="text-2xl font-bold">{t('admin:system.online')}</div>
+                <p className="text-xs text-muted-foreground">{t('admin:system.operational')}</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Database</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('admin:system.database')}</CardTitle>
                 <Database className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">Connected</div>
-                <p className="text-xs text-muted-foreground">PostgreSQL running</p>
+                <div className="text-2xl font-bold">{t('admin:system.connected')}</div>
+                <p className="text-xs text-muted-foreground">{t('admin:system.running')}</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Last Backup</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('admin:system.lastBackup')}</CardTitle>
                 <Monitor className="h-4 w-4 text-orange-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">2h ago</div>
-                <p className="text-xs text-muted-foreground">Auto backup completed</p>
+                <p className="text-xs text-muted-foreground">{t('admin:system.completed')}</p>
               </CardContent>
             </Card>
           </div>

@@ -1,0 +1,75 @@
+{
+  "title": "تنظیمات مدیریت",
+  "description": "پیکربندی تنظیمات سیستم، یکپارچه‌سازی API و گزینه‌های امنیتی",
+  "updateSuccess": "تنظیمات به‌روزرسانی شد",
+  "updateSuccessDescription": "تنظیمات سیستم با موفقیت به‌روزرسانی شد",
+  "updateFailed": "به‌روزرسانی ناموفق",
+  "updateFailedDescription": "به‌روزرسانی تنظیمات ناموفق بود",
+  "tabs": {
+    "payment": "درگاه پرداخت",
+    "sms": "خدمات پیامک",
+    "email": "خدمات ایمیل",
+    "database": "پایگاه داده و پشتیبان‌گیری",
+    "security": "امنیت",
+    "system": "سیستم"
+  },
+  "payment": {
+    "title": "درگاه پرداخت شتاب",
+    "description": "پیکربندی تنظیمات درگاه پرداخت ایرانی",
+    "enabled": "فعال‌سازی درگاه شتاب",
+    "merchantId": "شناسه پذیرنده",
+    "terminalId": "شناسه ترمینال",
+    "apiKey": "کلید API",
+    "secretKey": "کلید مخفی",
+    "environment": "محیط",
+    "sandbox": "آزمایشی",
+    "production": "تولید",
+    "testConnection": "تست اتصال"
+  },
+  "sms": {
+    "title": "خدمات پیامک کاوه‌نگار",
+    "description": "پیکربندی اعلان‌های پیامکی",
+    "enabled": "فعال‌سازی خدمات پیامک",
+    "apiKey": "کلید API کاوه‌نگار",
+    "sender": "فرستنده پیامک",
+    "testSms": "تست پیامک"
+  },
+  "email": {
+    "title": "پیکربندی ایمیل",
+    "description": "پیکربندی تنظیمات SMTP برای اعلان‌های ایمیلی",
+    "enabled": "فعال‌سازی خدمات ایمیل",
+    "smtpHost": "هاست SMTP",
+    "smtpPort": "پورت SMTP",
+    "username": "نام کاربری",
+    "password": "رمز عبور",
+    "fromAddress": "آدرس فرستنده",
+    "testEmail": "تست ایمیل"
+  },
+  "database": {
+    "title": "پایگاه داده و پشتیبان‌گیری",
+    "description": "مدیریت پشتیبان‌گیری و سیاست‌های نگهداری",
+    "backupEnabled": "فعال‌سازی پشتیبان‌گیری خودکار",
+    "backupFrequency": "دوره پشتیبان‌گیری",
+    "retentionDays": "نگهداری (روز)"
+  },
+  "security": {
+    "title": "تنظیمات امنیتی",
+    "description": "پیکربندی احراز هویت و سیاست‌های امنیتی",
+    "jwtSecret": "کلید مخفی JWT",
+    "sessionTimeout": "زمان انقضای جلسه (دقیقه)",
+    "maxLoginAttempts": "حداکثر تلاش برای ورود",
+    "passwordMinLength": "حداقل طول رمز عبور",
+    "requireTwoFactor": "نیاز به احراز هویت دو مرحله‌ای"
+  },
+  "system": {
+    "title": "پیکربندی سیستم",
+    "description": "تنظیمات عمومی سیستم و عملکرد",
+    "maintenanceMode": "حالت تعمیر",
+    "debugMode": "حالت اشکال‌زدایی",
+    "logLevel": "سطح گزارش",
+    "maxUploadSize": "حداکثر اندازه آپلود (مگابایت)",
+    "apiRateLimit": "محدودیت نرخ API",
+    "rateLimitWindow": "پنجره محدودیت نرخ (دقیقه)",
+    "fileStorageProvider": "ارائه‌دهنده ذخیره‌سازی فایل"
+  }
+}

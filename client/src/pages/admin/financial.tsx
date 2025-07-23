@@ -165,10 +165,8 @@ export function AdminFinancial() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Financial Management</h1>
-          <p className="text-muted-foreground mt-2">
-            Comprehensive billing, payouts, marketplace commissions & Iranian payment integration
-          </p>
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{t('admin:financial.title')}</h1>
+          <p className="text-muted-foreground mt-2">{t('admin:financial.subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" className="border-green-200 hover:bg-green-50">
