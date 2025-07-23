@@ -290,6 +290,13 @@
     "customerSatisfaction": "Customer Satisfaction",
     "welcomeMessage": "Ready to connect with potential students today!"
   },
+  "success": "Success",
+  "error": "Error",
+  "errors": {
+    "unknownError": "Unknown error occurred",
+    "networkError": "Network connection error",
+    "validationError": "Validation error"
+  },
   "student": {
     "dashboard": "Student Dashboard",
     "learningProgress": "Learning Progress",

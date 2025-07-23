@@ -72,6 +72,7 @@ const courseSchema = z.object({
 
 // Create Course Dialog Component
 function CreateCourseDialog({ queryClient }: { queryClient: any }) {
+  const { t } = useTranslation(['admin', 'common']);
   const [isOpen, setIsOpen] = useState(false);
   const form = useForm<z.infer<typeof courseSchema>>({
     resolver: zodResolver(courseSchema),
@@ -109,7 +110,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
       });
     },
     onSuccess: () => {
-      toast({ title: "Course created successfully" });
+      toast({ title: t('admin:courses.createdSuccessfully') });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
       setIsOpen(false);
       form.reset();
@@ -117,8 +118,8 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
     onError: (error: any) => {
       console.error('Error creating course:', error);
       toast({ 
-        title: "Failed to create course", 
-        description: error.message || "Unknown error occurred",
+        title: t('admin:courses.failedToCreate'), 
+        description: error.message || t('common:errors.unknownError'),
         variant: "destructive" 
       });
     }
@@ -623,7 +624,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
 }
 
 export function AdminCourses() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['admin', 'common']);
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const queryClient = useQueryClient();

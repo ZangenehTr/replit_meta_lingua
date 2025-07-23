@@ -48,7 +48,7 @@ import {
 } from "lucide-react";
 
 export function AdminStudents() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['admin', 'common']);
   const { isRTL } = useLanguage();
   const { toast } = useToast();
   const [location, setLocation] = useLocation();

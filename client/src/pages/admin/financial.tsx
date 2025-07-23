@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { 
   DollarSign, 
@@ -30,7 +31,8 @@ import {
 } from "lucide-react";
 
 export function AdminFinancial() {
-  const { t, isRTL } = useLanguage();
+  const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const [dateRange, setDateRange] = useState("30days");
   const [filterType, setFilterType] = useState("all");
 

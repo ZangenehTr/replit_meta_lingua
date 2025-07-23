@@ -27,6 +27,7 @@ import {
   AlertCircle,
   UserPlus
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface TeacherStudentBundle {
   id: string;
@@ -80,6 +81,7 @@ interface MentorAssignment {
 }
 
 export default function MentorMatchingPage() {
+  const { t } = useTranslation(['admin', 'common']);
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
@@ -117,8 +119,8 @@ export default function MentorMatchingPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Mentor successfully matched with teacher-student bundle"
+        title: t('common:success'),
+        description: t('admin:mentorMatching.successfullyMatched')
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/teacher-student-bundles'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/mentors/available'] });
@@ -130,8 +132,8 @@ export default function MentorMatchingPage() {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create mentor assignment",
+        title: t('common:error'),
+        description: error.message || t('admin:mentorMatching.failedToCreate'),
         variant: "destructive",
       });
     },

@@ -93,5 +93,26 @@
     "hourlyRate": "نرخ ساعتی",
     "bio": "بیوگرافی",
     "status": "وضعیت"
-  }
+  },
+  "newThisMonth": "جدید این ماه",
+  "activeStudents": "دانشجویان فعال",
+  "completionRate": "نرخ تکمیل",
+  "retentionRate": "نرخ حفظ",
+  "courseTitle": "عنوان دوره",
+  "registrations": "ثبت‌نام‌ها",
+  "performance": "عملکرد",
+  "teacher": "معلم",
+  "rating": "امتیاز",
+  "classes": "کلاس‌ها",
+  "leads": "مشتریان بالقوه",
+  "conversions": "تبدیل‌ها",
+  "channel": "کانال",
+  "classUtilization": "استفاده از کلاس",
+  "teacherUtilization": "استفاده از معلم",
+  "efficiency": "کارایی",
+  "operationalMetrics": "معیارهای عملیاتی",
+  "studentSatisfaction": "رضایت دانشجو",
+  "npsScore": "امتیاز NPS",
+  "viewDetails": "مشاهده جزئیات",
+  "classObservations": "مشاهدات اخیر کلاس"
 }

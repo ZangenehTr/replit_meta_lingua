@@ -25,6 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrendingUp, Trophy, Star, Target, Users, Zap, Menu, Mic, BarChart3 } from "lucide-react";
 import { Link, useLocation, Redirect } from "wouter";
+import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -55,7 +56,8 @@ export default function Dashboard() {
   }
   const [companionVisible, setCompanionVisible] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentLanguage, t, isRTL } = useLanguage();
+  const { t } = useTranslation(['student', 'common']);
+  const { language, isRTL } = useLanguage();
 
   return (
     <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
@@ -67,7 +69,7 @@ export default function Dashboard() {
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg text-xs px-3 py-2"
           >
             <Trophy className="h-4 w-4 mr-1" />
-            <span>{currentLanguage === 'fa' ? 'پیشرفت' : 'Progress'}</span>
+            <span>{t('common:navigation.progress')}</span>
           </Button>
         </Link>
       </div>
@@ -91,13 +93,10 @@ export default function Dashboard() {
                   <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="text-center md:text-left">
                       <h3 className="text-lg md:text-xl font-bold mb-2">
-                        {currentLanguage === 'fa' ? 'سطح زبان خود را بیابید' : 'Discover Your Language Level'}
+                        {t('student:dashboard.discoverLevel')}
                       </h3>
                       <p className="text-sm md:text-base opacity-90">
-                        {currentLanguage === 'fa' 
-                          ? 'آزمون سطح‌سنجی جامع برای تعیین دقیق سطح زبان شما'
-                          : 'Take our comprehensive assessment to determine your exact proficiency level'
-                        }
+                        {t('student:dashboard.assessmentDescription')}
                       </p>
                     </div>
                     <Link href="/level-assessment">
@@ -106,7 +105,7 @@ export default function Dashboard() {
                         className="bg-white text-purple-600 hover:bg-gray-50 font-semibold px-6 py-3"
                       >
                         <Target className="h-5 w-5 mr-2" />
-                        {currentLanguage === 'fa' ? 'سطح من چیست؟' : 'What is my level?'}
+                        {t('student:dashboard.whatIsMyLevel')}
                       </Button>
                     </Link>
                   </div>
@@ -120,23 +119,23 @@ export default function Dashboard() {
                 <TabsList className="grid w-full grid-cols-5 mb-3 md:mb-4 h-9 sm:h-10">
                   <TabsTrigger value="overview" className="text-xs sm:text-sm px-2">
                     <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    <span className="truncate">{t('overview')}</span>
+                    <span className="truncate">{t('student:dashboard.overview')}</span>
                   </TabsTrigger>
                   <TabsTrigger value="proficiency" className="text-xs sm:text-sm px-2">
                     <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    <span className="truncate">{currentLanguage === 'fa' ? 'مهارت‌ها' : 'Skills'}</span>
+                    <span className="truncate">{t('student:dashboard.skills')}</span>
                   </TabsTrigger>
                   <TabsTrigger value="ai-practice" className="text-xs sm:text-sm px-2">
                     <Mic className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    <span className="truncate">{currentLanguage === 'fa' ? 'تمرین AI' : 'AI Practice'}</span>
+                    <span className="truncate">{t('student:dashboard.aiPractice')}</span>
                   </TabsTrigger>
                   <TabsTrigger value="challenges" className="text-xs sm:text-sm px-2">
                     <Target className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    <span className="truncate">{t('challenges')}</span>
+                    <span className="truncate">{t('common:gamification.challenges')}</span>
                   </TabsTrigger>
                   <TabsTrigger value="leaderboard" className="text-xs sm:text-sm px-2">
                     <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    <span className="truncate">{t('leaderboard')}</span>
+                    <span className="truncate">{t('common:gamification.leaderboard')}</span>
                   </TabsTrigger>
                 </TabsList>
                 

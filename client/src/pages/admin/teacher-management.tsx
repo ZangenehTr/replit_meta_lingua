@@ -74,6 +74,7 @@ const teacherSchema = z.object({
 type TeacherFormData = z.infer<typeof teacherSchema>;
 
 export function AdminTeacherManagement() {
+  const { t } = useTranslation(['admin', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
@@ -126,14 +127,14 @@ export function AdminTeacherManagement() {
       setIsCreateDialogOpen(false);
       form.reset();
       toast({
-        title: "Success",
-        description: "Teacher created successfully",
+        title: t('common:success'),
+        description: t('admin:teachers.createdSuccessfully'),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create teacher",
+        title: t('common:error'),
+        description: error.message || t('admin:teachers.failedToCreate'),
         variant: "destructive",
       });
     },
