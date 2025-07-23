@@ -140,7 +140,7 @@ export default function MentorMatchingPage() {
   });
 
   // Filter bundles based on search and filters
-  const filteredBundles = bundles.filter((bundle: TeacherStudentBundle) => {
+  const filteredBundles = Array.isArray(bundles) ? bundles.filter((bundle: TeacherStudentBundle) => {
     const matchesSearch = searchTerm === "" || 
                          bundle.student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          bundle.student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -151,7 +151,7 @@ export default function MentorMatchingPage() {
     const matchesLanguage = filterLanguage === "all" || bundle.student.language === filterLanguage;
     
     return matchesSearch && matchesLevel && matchesLanguage;
-  });
+  }) : [];
 
   const handleCreateAssignment = () => {
     if (!selectedBundle || !selectedMentor) {
@@ -194,7 +194,7 @@ export default function MentorMatchingPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{bundles.length}</div>
+            <div className="text-2xl font-bold">{Array.isArray(bundles) ? bundles.length : 0}</div>
             <p className="text-xs text-muted-foreground">Need mentors</p>
           </CardContent>
         </Card>
@@ -205,7 +205,7 @@ export default function MentorMatchingPage() {
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mentors.length}</div>
+            <div className="text-2xl font-bold">{Array.isArray(mentors) ? mentors.length : 0}</div>
             <p className="text-xs text-muted-foreground">Have capacity</p>
           </CardContent>
         </Card>
@@ -216,7 +216,7 @@ export default function MentorMatchingPage() {
             <Link2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{assignments.filter((a: any) => a.status === 'active').length}</div>
+            <div className="text-2xl font-bold">{Array.isArray(assignments) ? assignments.filter((a: any) => a.status === 'active').length : 0}</div>
             <p className="text-xs text-muted-foreground">Ongoing mentorships</p>
           </CardContent>
         </Card>
@@ -228,7 +228,7 @@ export default function MentorMatchingPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {assignments.length > 0 
+              {Array.isArray(assignments) && assignments.length > 0 
                 ? `${Math.round((assignments.filter((a: any) => a.status === 'active').length / assignments.length) * 100)}%`
                 : 'N/A'}
             </div>

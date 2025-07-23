@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,7 @@ interface Game {
 }
 
 export default function GamesManagement() {
+  const { t } = useTranslation(['admin', 'common']);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -472,14 +474,14 @@ export default function GamesManagement() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Games Management</h1>
-          <p className="text-gray-600">Manage educational games and gamification features</p>
+          <h1 className="text-3xl font-bold">{t('admin:games.title')}</h1>
+          <p className="text-gray-600">{t('admin:games.subtitle')}</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              Create Game
+{t('admin:games.createGame')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -496,9 +498,9 @@ export default function GamesManagement() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="games">Games</TabsTrigger>
-          <TabsTrigger value="configuration">Configuration</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="games">{t('admin:games.title')}</TabsTrigger>
+          <TabsTrigger value="configuration">{t('admin:games.configuration')}</TabsTrigger>
+          <TabsTrigger value="analytics">{t('admin:games.analytics')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="games" className="space-y-6">

@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   CardContent,
@@ -611,7 +612,7 @@ export function AdminTeacherManagement() {
                               e.currentTarget.nextElementSibling.style.display = 'flex';
                             }}
                           />
-                          <div className="w-full h-full flex items-center justify-center text-gray-400" style={{display: 'none'}}>
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 hidden">
                             <User className="h-8 w-8" />
                           </div>
                         </div>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "@/components/ui/back-button";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
 import { apiRequest } from "@/lib/queryClient";
 
 interface AdminSettings {
@@ -88,14 +89,15 @@ interface AdminSettings {
 }
 
 export default function AdminSettings() {
+  const { t } = useTranslation(['admin', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { currentLanguage, isRTL } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const [activeTab, setActiveTab] = useState("payment");
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
 
   // Fetch current settings
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings, isLoading } = useQuery<AdminSettings>({
     queryKey: ["/api/admin/settings"],
     retry: false
   });
@@ -105,13 +107,16 @@ export default function AdminSettings() {
     mutationFn: (data: Partial<AdminSettings>) => 
       apiRequest("/api/admin/settings", {
         method: 'PATCH',
-        body: data
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
       toast({
-        title: "Settings Updated",
-        description: "System settings have been updated successfully."
+        title: t('admin:settings.updateSuccess'),
+        description: t('admin:settings.updateSuccessDescription')
       });
     },
     onError: (error: any) => {
@@ -203,9 +208,9 @@ export default function AdminSettings() {
         <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
           <Settings className="h-8 w-8 text-primary" />
           <div>
-            <h1 className="text-3xl font-bold">Admin Settings</h1>
+            <h1 className="text-3xl font-bold">{t('admin:settings.title')}</h1>
             <p className="text-muted-foreground">
-              Configure system settings, API integrations, and security options
+              {t('admin:settings.description')}
             </p>
           </div>
         </div>

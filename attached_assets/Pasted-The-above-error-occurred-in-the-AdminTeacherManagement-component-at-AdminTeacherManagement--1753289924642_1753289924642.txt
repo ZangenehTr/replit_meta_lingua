@@ -1,0 +1,50 @@
+The above error occurred in the <AdminTeacherManagement> component:
+
+    at AdminTeacherManagement (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/pages/admin/teacher-management.tsx:90:17)
+    at div
+    at main
+    at div
+    at div
+    at AppLayout (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/components/layout/app-layout.tsx:42:29)
+    at ProtectedRoute (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/App.tsx?v=ojwiNqrrHH0WkkpM4GDWv:112:27)
+    at Route (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=5794ba62:323:16)
+    at Switch (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=5794ba62:379:17)
+    at Router (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/App.tsx?v=ojwiNqrrHH0WkkpM4GDWv:1370:7)
+    at Provider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=5794ba62:38:15)
+    at TooltipProvider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=5794ba62:67:5)
+    at AppWithBranding (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/App.tsx?v=ojwiNqrrHH0WkkpM4GDWv:1389:35)
+    at div
+    at RTLLayout (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/components/rtl-layout.tsx:20:29)
+    at LanguageProvider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/hooks/useLanguage.tsx:22:36)
+    at QueryClientProvider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=5794ba62:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+at AdminTeacherManagement (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/pages/admin/teacher-management.tsx:90:17)
+at div
+at main
+at div
+at div
+at AppLayout (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/components/layout/app-layout.tsx:42:29)
+at ProtectedRoute (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/App.tsx?v=ojwiNqrrHH0WkkpM4GDWv:112:27)
+at Route (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=5794ba62:323:16)
+at Switch (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=5794ba62:379:17)
+at Router (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/App.tsx?v=ojwiNqrrHH0WkkpM4GDWv:1370:7)
+at Provider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=5794ba62:38:15)
+at TooltipProvider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=5794ba62:67:5)
+at AppWithBranding (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/App.tsx?v=ojwiNqrrHH0WkkpM4GDWv:1389:35)
+at div
+at RTLLayout (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/components/rtl-layout.tsx:20:29)
+at LanguageProvider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/src/hooks/useLanguage.tsx:22:36)
+at QueryClientProvider (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=5794ba62:2805:3)
+at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+at t.value (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+useTranslation is not defined
