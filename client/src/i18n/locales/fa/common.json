@@ -343,6 +343,13 @@
     "customerSatisfaction": "رضایت مشتری",
     "welcomeMessage": "آماده برای ارتباط با دانشجویان احتمالی امروز!"
   },
+  "success": "موفقیت",
+  "error": "خطا", 
+  "errors": {
+    "unknownError": "خطای نامشخص رخ داده است",
+    "networkError": "خطای اتصال به شبکه",
+    "validationError": "خطای اعتبارسنجی"
+  },
   "student": {
     "dashboard": "داشبورد دانشجو",
     "learningProgress": "پیشرفت یادگیری",

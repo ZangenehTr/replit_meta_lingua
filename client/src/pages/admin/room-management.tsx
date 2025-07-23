@@ -28,6 +28,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from 'react-i18next';
 
 interface Room {
   id: number;
@@ -44,6 +45,7 @@ interface Room {
 }
 
 export default function RoomManagement() {
+  const { t } = useTranslation(['admin', 'common']);
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
@@ -73,16 +75,16 @@ export default function RoomManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rooms"] });
       toast({
-        title: "Success",
-        description: "Room created successfully",
+        title: t('common:success'),
+        description: t('admin:rooms.createdSuccessfully'),
       });
       resetForm();
       setIsDialogOpen(false);
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message,
+        title: t('common:error'),
+        description: error.message || t('admin:rooms.failedToCreate'),
         variant: "destructive",
       });
     },
@@ -98,16 +100,16 @@ export default function RoomManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rooms"] });
       toast({
-        title: "Success",
-        description: "Room updated successfully",
+        title: t('common:success'),
+        description: t('admin:rooms.updatedSuccessfully'),
       });
       resetForm();
       setIsDialogOpen(false);
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message,
+        title: t('common:error'),
+        description: error.message || t('admin:rooms.failedToUpdate'),
         variant: "destructive",
       });
     },
@@ -122,14 +124,14 @@ export default function RoomManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rooms"] });
       toast({
-        title: "Success",
-        description: "Room deleted successfully",
+        title: t('common:success'),
+        description: t('admin:rooms.deletedSuccessfully'),
       });
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error.message,
+        title: t('common:error'),
+        description: error.message || t('admin:rooms.failedToDelete'),
         variant: "destructive",
       });
     },

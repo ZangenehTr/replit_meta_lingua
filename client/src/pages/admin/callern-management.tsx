@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -28,7 +29,8 @@ import {
 } from "lucide-react";
 
 export function CallernManagement() {
-  const { t, isRTL } = useLanguage();
+  const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
