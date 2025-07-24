@@ -151,8 +151,8 @@ export function AdminTeacherManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Teacher Management</h1>
-          <p className="text-muted-foreground">Manage instructors and teaching staff</p>
+          <h1 className="text-3xl font-bold">{t('admin:teacherManagement.title')}</h1>
+          <p className="text-muted-foreground">{t('admin:teacherManagement.subtitle')}</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -175,7 +175,7 @@ export function AdminTeacherManagement() {
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Teacher
+                {t('admin:teacherManagement.addTeacher')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -454,7 +454,7 @@ export function AdminTeacherManagement() {
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search teachers..."
+              placeholder={t('admin:teacherManagement.searchTeachers')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8"

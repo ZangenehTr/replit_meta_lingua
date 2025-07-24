@@ -209,7 +209,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData?.monthlyTrend || []}>
+              <LineChart data={(revenueData as any)?.monthlyTrend || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
@@ -239,7 +239,7 @@ export function AdminDashboard() {
                 {t('admin:dashboard.lowestAttritionRates')}
               </h4>
               <div className="space-y-1">
-                {(teacherPerformance?.lowestAttrition || []).map((teacher, index) => (
+                {((teacherPerformance as any)?.lowestAttrition || []).map((teacher: any, index: number) => (
                   <div key={index} className="flex justify-between items-center">
                     <span className="text-sm">{teacher.name}</span>
                     <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export function AdminDashboard() {
                 {t('admin:dashboard.highestRetentionRates')}
               </h4>
               <div className="space-y-1">
-                {(teacherPerformance?.highestRetention || []).map((teacher, index) => (
+                {((teacherPerformance as any)?.highestRetention || []).map((teacher: any, index: number) => (
                   <div key={index} className="flex justify-between items-center">
                     <span className="text-sm">{teacher.name}</span>
                     <div className="flex items-center gap-2">
@@ -295,7 +295,7 @@ export function AdminDashboard() {
                 {t('admin:dashboard.lowestStudentScores')}
               </h4>
               <div className="space-y-1">
-                {(teacherPerformance?.lowestScores || []).map((teacher, index) => (
+                {((teacherPerformance as any)?.lowestScores || []).map((teacher: any, index: number) => (
                   <div key={index} className="flex justify-between items-center">
                     <span className="text-sm">{teacher.name}</span>
                     <div className="flex items-center gap-2">
@@ -321,16 +321,16 @@ export function AdminDashboard() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{studentRetention?.overall || '0.0'}%</div>
+                  <div className="text-2xl font-bold text-blue-600">{(studentRetention as any)?.overall || '0.0'}%</div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.overallRetention')}</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{studentRetention?.newStudents || '0.0'}%</div>
+                  <div className="text-2xl font-bold text-green-600">{(studentRetention as any)?.newStudents || '0.0'}%</div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.newStudent3mo')}</p>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={studentRetention?.byLevel || []}>
+                <BarChart data={(studentRetention as any)?.byLevel || []}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="level" />
                   <YAxis />
@@ -351,11 +351,11 @@ export function AdminDashboard() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{courseCompletion?.average || '0.0'}%</div>
+                  <div className="text-2xl font-bold text-purple-600">{(courseCompletion as any)?.average || '0.0'}%</div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.avgCompletion')}</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">{courseCompletion?.onTime || '0.0'}%</div>
+                  <div className="text-2xl font-bold text-orange-600">{(courseCompletion as any)?.onTime || '0.0'}%</div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.onTimeCompletion')}</p>
                 </div>
               </div>
@@ -389,7 +389,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {(marketingMetrics?.funnel || []).map((stage, index) => (
+              {((marketingMetrics as any)?.funnel || []).map((stage: any, index: number) => (
                 <div key={index} className="flex justify-between items-center">
                   <span className="text-sm">{stage.stage}</span>
                   <div className="flex items-center gap-2">
@@ -417,7 +417,7 @@ export function AdminDashboard() {
                   outerRadius={60}
                   dataKey="value"
                 >
-                  {(marketingMetrics?.sources || []).map((entry, index) => (
+                  {((marketingMetrics as any)?.sources || []).map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -436,23 +436,23 @@ export function AdminDashboard() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm">{t('admin:dashboard.avgCustomerLTV')}</span>
-                <span className="font-semibold">${financialKPIs?.averageLTV || '2,847'}</span>
+                <span className="font-semibold">${(financialKPIs as any)?.averageLTV || '2,847'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">{t('admin:dashboard.costPerAcquisition')}</span>
-                <span className="font-semibold">${financialKPIs?.costPerAcquisition || '185'}</span>
+                <span className="font-semibold">${(financialKPIs as any)?.costPerAcquisition || '185'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Monthly Churn Rate</span>
-                <span className="font-semibold text-red-600">{financialKPIs?.churnRate || '4.2'}%</span>
+                <span className="text-sm">{t('admin:dashboard.monthlyChurnRate')}</span>
+                <span className="font-semibold text-red-600">{(financialKPIs as any)?.churnRate || '4.2'}%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Revenue per Student</span>
-                <span className="font-semibold">${financialKPIs?.revenuePerStudent || '287'}</span>
+                <span className="text-sm">{t('admin:dashboard.revenuePerStudent')}</span>
+                <span className="font-semibold">${(financialKPIs as any)?.revenuePerStudent || '287'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Profit Margin</span>
-                <span className="font-semibold text-green-600">{financialKPIs?.profitMargin || '34.7'}%</span>
+                <span className="text-sm">{t('admin:dashboard.profitMargin')}</span>
+                <span className="font-semibold text-green-600">{(financialKPIs as any)?.profitMargin || '34.7'}%</span>
               </div>
             </div>
           </CardContent>
@@ -464,35 +464,35 @@ export function AdminDashboard() {
         {/* Class Utilization */}
         <Card>
           <CardHeader>
-            <CardTitle>Class & Resource Utilization</CardTitle>
+            <CardTitle>{t('admin:dashboard.operationalMetrics')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{operationalMetrics?.classUtilization || '89.3'}%</div>
-                  <p className="text-xs text-muted-foreground">Classroom Utilization</p>
+                  <div className="text-2xl font-bold text-blue-600">{(operationalMetrics as any)?.classUtilization || '89.3'}%</div>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.classUtilization')}</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{operationalMetrics?.teacherUtilization || '76.8'}%</div>
-                  <p className="text-xs text-muted-foreground">Teacher Utilization</p>
+                  <div className="text-2xl font-bold text-green-600">{(operationalMetrics as any)?.teacherUtilization || '76.8'}%</div>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.teacherUtilization')}</p>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm">Peak Hours (6-9 PM)</span>
+                  <span className="text-sm">{t('admin:dashboard.peakHours')}</span>
                   <Badge variant="outline">95.2% full</Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Morning Classes</span>
+                  <span className="text-sm">{t('admin:dashboard.morningClasses')}</span>
                   <Badge variant="outline">67.4% full</Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Weekend Sessions</span>
+                  <span className="text-sm">{t('admin:dashboard.weekendSessions')}</span>
                   <Badge variant="outline">82.1% full</Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Online Capacity</span>
+                  <span className="text-sm">{t('admin:dashboard.onlineCapacity')}</span>
                   <Badge variant="outline">91.8% used</Badge>
                 </div>
               </div>
@@ -503,23 +503,23 @@ export function AdminDashboard() {
         {/* Quality & Satisfaction Metrics */}
         <Card>
           <CardHeader>
-            <CardTitle>Quality & Satisfaction Metrics</CardTitle>
+            <CardTitle>{t('admin:dashboard.qualitySatisfactionMetrics')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-600">{operationalMetrics?.studentSatisfaction || '4.6'}/5</div>
-                  <p className="text-xs text-muted-foreground">Student Satisfaction</p>
+                  <div className="text-2xl font-bold text-yellow-600">{(operationalMetrics as any)?.studentSatisfaction || '4.6'}/5</div>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.studentSatisfaction')}</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{operationalMetrics?.nps || '+47'}</div>
-                  <p className="text-xs text-muted-foreground">Net Promoter Score</p>
+                  <div className="text-2xl font-bold text-purple-600">{(operationalMetrics as any)?.nps || '+47'}</div>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.netPromoterScore')}</p>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm">Course Material Quality</span>
+                  <span className="text-sm">{t('admin:dashboard.courseMaterialQuality')}</span>
                   <div className="flex">
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -528,7 +528,7 @@ export function AdminDashboard() {
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Teaching Quality</span>
+                  <span className="text-sm">{t('admin:dashboard.teachingQuality')}</span>
                   <div className="flex">
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -537,11 +537,11 @@ export function AdminDashboard() {
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Support Response Time</span>
+                  <span className="text-sm">{t('admin:dashboard.supportResponseTime')}</span>
                   <Badge variant="outline">&lt; 2 hours</Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Technical Issues</span>
+                  <span className="text-sm">{t('admin:dashboard.technicalIssues')}</span>
                   <Badge variant="outline" className="text-green-600">0.8% sessions</Badge>
                 </div>
               </div>
