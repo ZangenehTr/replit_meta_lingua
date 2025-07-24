@@ -23,6 +23,7 @@
   },
   "classes": {
     "title": "My Classes",
+    "subtitle": "Manage your teaching classes and track student progress",
     "noClasses": "No classes assigned",
     "nextSession": "Next Session",
     "studentsEnrolled": "Students Enrolled",
@@ -31,7 +32,8 @@
     "classType": "Class Type"
   },
   "assignments": {
-    "title": "Assignments",
+    "title": "Student Assignments",
+    "subtitle": "Create and manage assignments for your students",
     "create": "Create Assignment",
     "pending": "Pending",
     "graded": "Graded",
@@ -41,14 +43,16 @@
     "notSubmitted": "Not Submitted"
   },
   "availability": {
-    "title": "Set Availability",
+    "title": "Monthly Availability",
+    "subtitle": "Set your available time slots for administrators to assign classes",
     "selectDays": "Select Days",
     "timeRange": "Time Range", 
     "save": "Save Availability",
     "updated": "Availability updated successfully"
   },
   "observations": {
-    "title": "Observations",
+    "title": "My Observations",
+    "subtitle": "View and respond to your teaching observation reports",
     "pending": "Pending",
     "acknowledged": "Acknowledged",
     "viewDetails": "View Details",

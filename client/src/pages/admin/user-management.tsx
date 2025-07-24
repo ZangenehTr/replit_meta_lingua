@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, Edit, Trash2, UserPlus, Shield, Mail, Phone } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface User {
   id: number;
@@ -25,6 +26,7 @@ interface User {
 }
 
 export default function UserManagement() {
+  const { t } = useTranslation(['admin', 'common']);
   // Fetch roles dynamically from API
   const { data: ROLES = [] } = useQuery({
     queryKey: ['/api/admin/user-roles'],
@@ -109,9 +111,9 @@ export default function UserManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
+          <h1 className="text-3xl font-bold">{t('admin:userManagement.title')}</h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Create and manage users with different roles
+            {t('admin:userManagement.subtitle')}
           </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>

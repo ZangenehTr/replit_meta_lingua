@@ -21,8 +21,10 @@ import {
   Globe
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from 'react-i18next';
 
 export default function MoodLearningPage() {
+  const { t } = useTranslation(['student', 'common']);
   const [currentMoodData, setCurrentMoodData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<string>('tracker');
 
@@ -56,10 +58,9 @@ export default function MoodLearningPage() {
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold">Persian Learning Mood Intelligence</h1>
+        <h1 className="text-3xl font-bold">{t('student:moodLearning.title')}</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Track your emotional state and receive personalized Persian learning recommendations 
-          powered by Iranian cultural insights. Completely offline for secure learning.
+          {t('student:moodLearning.subtitle')}
         </p>
         <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
           <Globe className="h-4 w-4" />

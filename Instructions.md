@@ -39,6 +39,55 @@
 - Mobile components translation
 - API response message translations
 
+# COMPREHENSIVE I18N AUDIT & IMPLEMENTATION PROTOCOL (July 24, 2025)
+
+## SYSTEMATIC ROLE-BY-ROLE TRANSLATION METHODOLOGY
+
+### AUDIT PROTOCOL:
+1. **Role Identification**: List all 7 roles
+2. **Page Enumeration**: Identify ALL pages per role 
+3. **Component Analysis**: Map all sections, data, components per page
+4. **Translation Implementation**: Systematic useTranslation implementation
+5. **Page Verification**: AI assistant verification per page
+6. **Role Completion**: Complete role before next role
+7. **Final Audit**: Comprehensive system-wide verification
+
+### DISCOVERED UNTRANSLATED ISSUES:
+- Hardcoded technical variable names: "callCenterPerformance", "dashboard.callResponseRate"
+- Many pages completely untranslated
+- Partial translation coverage across roles
+- Missing useTranslation hooks in components
+
+## SYSTEMATIC IMPLEMENTATION PLAN
+
+### 1. ADMIN ROLE - COMPLETE AUDIT & TRANSLATION
+
+#### Admin Pages Identified:
+1. `/admin/dashboard` - Main admin dashboard
+2. `/admin/students` - Student management
+3. `/admin/courses` - Course management  
+4. `/admin/teacher-management` - Teacher management
+5. `/admin/financial` - Financial management
+6. `/admin/settings` - Admin settings
+7. `/admin/system-simple` - System configuration
+8. `/admin/games-management` - Games management
+9. `/admin/teacher-payments` - Teacher payment system
+10. `/admin/white-label` - White-label management
+11. `/admin/supervision` - Supervision system
+12. `/admin/sms-settings` - SMS management
+13. `/admin/campaign-management` - Campaign management
+14. `/admin/website-builder` - Website builder
+15. `/admin/iranian-compliance-settings` - Iranian compliance
+16. `/admin/ai-services` - AI services management
+17. `/admin/mentor-matching` - Mentor matching
+18. `/admin/room-management` - Room management
+19. `/admin/callern-management` - Callern management
+20. `/admin/classes` - Class scheduling
+
+#### Current Admin Translation Status:
+✅ **COMPLETED**: settings, financial, system-simple, games-management (partial)
+❌ **INCOMPLETE**: dashboard (hardcoded strings), students, courses, teacher-management, teacher-payments, supervision, all other pages
+
 # COMPREHENSIVE IMPLEMENTATION STRATEGY
 
 ## PHASE 1: IMMEDIATE CRITICAL FIXES (Priority: URGENT)

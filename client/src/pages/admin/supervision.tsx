@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +53,8 @@ const questionnaireSchema = z.object({
 });
 
 export default function Supervision() {
+  const { t } = useTranslation(['admin', 'common']);
+  const { language, isRTL, direction } = useLanguage();
   const [activeTab, setActiveTab] = useState("live");
   const [observationDialogOpen, setObservationDialogOpen] = useState(false);
   const [questionnaireDialogOpen, setQuestionnaireDialogOpen] = useState(false);
@@ -147,18 +151,18 @@ export default function Supervision() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-            Quality Assurance & Supervision
+            {t('admin:supervision.title')}
           </h1>
-          <p className="text-muted-foreground mt-2">Monitor teaching quality and manage evaluations</p>
+          <p className="text-muted-foreground mt-2">{t('admin:supervision.qualityAssurance')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setObservationDialogOpen(true)} className="border-green-200 hover:bg-green-50">
             <Plus className="h-4 w-4 mr-2" />
-            New Observation
+            {t('admin:supervision.createObservation')}
           </Button>
           <Button variant="outline" onClick={() => setQuestionnaireDialogOpen(true)} className="border-teal-200 hover:bg-teal-50">
             <Plus className="h-4 w-4 mr-2" />
-            New Questionnaire
+            {t('admin:supervision.questionnaires')}
           </Button>
         </div>
       </div>
@@ -167,29 +171,29 @@ export default function Supervision() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Live Classes</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:supervision.liveObservations')}</CardTitle>
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{qaStats?.liveClasses || 0}</div>
-            <p className="text-xs text-muted-foreground">Currently in session</p>
+            <p className="text-xs text-muted-foreground">{t('common:currentlyInSession')}</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Quality Score</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:supervision.score')}</CardTitle>
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{qaStats?.averageQualityScore || 0}</div>
-            <p className="text-xs text-muted-foreground">Out of 5.0</p>
+            <p className="text-xs text-muted-foreground">{t('common:outOfFive')}</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Retention Trend</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('common:retention')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -200,24 +204,24 @@ export default function Supervision() {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Teachers Supervised</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('common:teachersSupervised')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{qaStats?.teachersUnderSupervision || 0}</div>
-            <p className="text-xs text-muted-foreground">Active this month</p>
+            <p className="text-xs text-muted-foreground">{t('common:activeThisMonth')}</p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="live">Live Classes</TabsTrigger>
-          <TabsTrigger value="recorded">Recorded Classes</TabsTrigger>
-          <TabsTrigger value="evaluations">In-person Evaluations</TabsTrigger>
-          <TabsTrigger value="retention">Teacher Retention</TabsTrigger>
-          <TabsTrigger value="questionnaires">Student Questionnaires</TabsTrigger>
-          <TabsTrigger value="notifications">Push Notifications</TabsTrigger>
+          <TabsTrigger value="live">{t('admin:supervision.liveObservations')}</TabsTrigger>
+          <TabsTrigger value="recorded">{t('admin:supervision.recordedSessions')}</TabsTrigger>
+          <TabsTrigger value="evaluations">{t('common:evaluations')}</TabsTrigger>
+          <TabsTrigger value="retention">{t('common:retention')}</TabsTrigger>
+          <TabsTrigger value="questionnaires">{t('admin:supervision.questionnaires')}</TabsTrigger>
+          <TabsTrigger value="notifications">{t('common:notifications')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="live" className="space-y-4">

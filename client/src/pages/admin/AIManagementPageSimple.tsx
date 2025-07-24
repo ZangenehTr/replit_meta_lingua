@@ -1,17 +1,19 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bot } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 export function AIManagementPageSimple() {
+  const { t } = useTranslation(['admin', 'common']);
   console.log("Simple AI Management page loading...");
   
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">AI Services Management</h1>
+          <h1 className="text-3xl font-bold">{t('admin:aiServices.title')}</h1>
           <p className="text-muted-foreground">
-            Manage local AI processing with Ollama and monitor service status
+            {t('admin:aiServices.subtitle')}
           </p>
         </div>
         <Button variant="outline">

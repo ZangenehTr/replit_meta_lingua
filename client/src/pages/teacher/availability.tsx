@@ -11,10 +11,12 @@ import { Switch } from '@/components/ui/switch';
 import { Calendar, Clock, Plus, Edit, Trash2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from 'react-i18next';
 
 // Fetch days of week from API instead of hardcoding
 
 export default function TeacherAvailabilityPage() {
+  const { t } = useTranslation(['teacher', 'common']);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
@@ -186,8 +188,8 @@ export default function TeacherAvailabilityPage() {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Monthly Availability</h1>
-            <p className="text-gray-600">Set your available time slots for administrators to assign classes</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('teacher:availability.title')}</h1>
+            <p className="text-gray-600">{t('teacher:availability.subtitle')}</p>
           </div>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>

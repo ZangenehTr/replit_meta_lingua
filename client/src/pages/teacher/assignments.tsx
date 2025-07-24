@@ -19,6 +19,7 @@ import { CalendarIcon, Plus, Edit, Eye, FileText, Clock, User, ArrowLeft } from 
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 
 const assignmentSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -36,6 +37,7 @@ const assignmentSchema = z.object({
 type AssignmentFormData = z.infer<typeof assignmentSchema>;
 
 export default function TeacherAssignmentsPage() {
+  const { t } = useTranslation(['teacher', 'common']);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
@@ -310,8 +312,8 @@ export default function TeacherAssignmentsPage() {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Student Assignments</h1>
-            <p className="text-gray-600">Create and manage assignments for your students</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('teacher:assignments.title')}</h1>
+            <p className="text-gray-600">{t('teacher:assignments.subtitle')}</p>
           </div>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 import { 
   Bot, 
   Server, 
@@ -27,6 +28,7 @@ interface OllamaStatus {
 }
 
 export function AIManagementPage() {
+  const { t } = useTranslation(['admin', 'common']);
   const [selectedModel, setSelectedModel] = useState("");
   const [testPrompt, setTestPrompt] = useState('');
   const [testResponse, setTestResponse] = useState('');
@@ -110,9 +112,9 @@ export function AIManagementPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">AI Services Management</h1>
+          <h1 className="text-3xl font-bold">{t('admin:aiServices.title')}</h1>
           <p className="text-muted-foreground">
-            Manage local AI processing with Ollama and monitor service status
+            {t('admin:aiServices.subtitle')}
           </p>
         </div>
         <Button

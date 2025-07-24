@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -65,6 +67,7 @@ interface TeacherSession {
 }
 
 function SessionDetailsSection({ teacherId, period }: { teacherId: number; period: string }) {
+  const { t } = useTranslation(['admin', 'common']);
   const [isOpen, setIsOpen] = useState(false);
   
   // Convert period format from "current" to a proper date period
@@ -156,6 +159,8 @@ interface Teacher {
 }
 
 export default function TeacherPaymentsPage() {
+  const { t } = useTranslation(['admin', 'common']);
+  const { language, isRTL, direction } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedPeriod, setSelectedPeriod] = useState('current');
@@ -445,10 +450,10 @@ export default function TeacherPaymentsPage() {
                         <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
                           <Users className="h-5 w-5 text-white" />
                         </div>
-                        <CardTitle className="text-3xl font-bold text-gray-900">Teacher Payment Overview</CardTitle>
+                        <CardTitle className="text-3xl font-bold text-gray-900">{t('admin:teacherPayments.title')}</CardTitle>
                       </div>
                       <CardDescription className="text-lg text-gray-600">
-                        Comprehensive payslip management with real-time recalculation
+                        {t('admin:teacherPayments.payrollOverview')}
                       </CardDescription>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -457,34 +462,34 @@ export default function TeacherPaymentsPage() {
                         onChange={(e) => setSelectedPeriod(e.target.value)}
                         className="px-6 py-3 border-2 border-gray-200 rounded-xl bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium shadow-sm hover:border-gray-300 transition-colors"
                       >
-                        <option value="current">Current Month</option>
-                        <option value="previous">Previous Month</option>
-                        <option value="custom">Custom Period</option>
+                        <option value="current">{t('common:currentMonth')}</option>
+                        <option value="previous">{t('common:previousMonth')}</option>
+                        <option value="custom">{t('common:customPeriod')}</option>
                       </select>
                       
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
                             <Calculator className="h-5 w-5 mr-2" />
-                            Calculate Payments
+                            {t('admin:teacherPayments.calculatePayments')}
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Calculate Teacher Payments</DialogTitle>
+                            <DialogTitle>{t('admin:teacherPayments.calculateTitle')}</DialogTitle>
                             <DialogDescription>
-                              Select period and click calculate to generate payment calculations for all teachers
+                              {t('admin:teacherPayments.calculateDescription')}
                             </DialogDescription>
                           </DialogHeader>
                           <div className="space-y-4">
-                            <Label>Period to Calculate</Label>
+                            <Label>{t('admin:teacherPayments.periodLabel')}</Label>
                             <Select defaultValue={selectedPeriod}>
                               <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="current">Current Month</SelectItem>
-                                <SelectItem value="previous">Previous Month</SelectItem>
+                                <SelectItem value="current">{t('common:currentMonth')}</SelectItem>
+                                <SelectItem value="previous">{t('common:previousMonth')}</SelectItem>
                               </SelectContent>
                             </Select>
                             <div className="flex gap-2 justify-end">
@@ -492,10 +497,10 @@ export default function TeacherPaymentsPage() {
                                 onClick={() => calculatePaymentsMutation.mutate(selectedPeriod)}
                                 disabled={calculatePaymentsMutation.isPending}
                               >
-                                {calculatePaymentsMutation.isPending ? 'Calculating...' : 'Calculate Payments'}
+                                {calculatePaymentsMutation.isPending ? t('common:calculating') : t('admin:teacherPayments.calculatePayments')}
                               </Button>
                               <DialogClose asChild>
-                                <Button variant="outline">Cancel</Button>
+                                <Button variant="outline">{t('common:cancel')}</Button>
                               </DialogClose>
                             </div>
                           </div>
@@ -507,7 +512,7 @@ export default function TeacherPaymentsPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {isLoading ? (
-                      <div className="text-center py-4">Loading payment data...</div>
+                      <div className="text-center py-4">{t('common:loadingPaymentData')}</div>
                     ) : error ? (
                       <div className="text-center py-4 text-red-500">Error loading payments: {error?.message}</div>
                     ) : payments?.length === 0 ? (
@@ -527,10 +532,10 @@ export default function TeacherPaymentsPage() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Teacher</TableHead>
-                            <TableHead>Total Pay</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Payslip Actions</TableHead>
+                            <TableHead>{t('admin:teacherPayments.teacherName')}</TableHead>
+                            <TableHead>{t('admin:teacherPayments.finalAmount')}</TableHead>
+                            <TableHead>{t('admin:teacherPayments.status')}</TableHead>
+                            <TableHead>{t('admin:teacherPayments.actions')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>

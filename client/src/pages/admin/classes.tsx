@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import { format, addDays, startOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from 'date-fns';
 import { 
   Calendar as CalendarIcon, 
@@ -78,6 +79,7 @@ interface ClassRoom {
 }
 
 export default function AdminClassesPage() {
+  const { t } = useTranslation(['admin', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -195,10 +197,10 @@ export default function AdminClassesPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Class Scheduling
+            {t('admin:classes.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Schedule when and where courses are delivered with teacher and room assignments
+            {t('admin:classes.subtitle')}
           </p>
         </div>
 

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +42,8 @@ interface Institute {
 }
 
 export default function WhiteLabelPage() {
+  const { t } = useTranslation(['admin', 'common']);
+  const { language, isRTL, direction } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedInstitute, setSelectedInstitute] = useState<Institute | null>(null);
@@ -60,8 +64,8 @@ export default function WhiteLabelPage() {
       }),
     onSuccess: () => {
       toast({
-        title: "Institute Created",
-        description: "New white-label institute has been created successfully.",
+        title: t('admin:whiteLabel.createInstitute'),
+        description: t('common:createdSuccessfully'),
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/white-label/institutes'] });
       setIsCreateModalOpen(false);
@@ -78,8 +82,8 @@ export default function WhiteLabelPage() {
       }),
     onSuccess: () => {
       toast({
-        title: "Institute Updated",
-        description: "Institute settings have been updated successfully.",
+        title: t('common:updated'),
+        description: t('common:updatedSuccessfully'),
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/white-label/institutes'] });
     },
@@ -108,15 +112,15 @@ export default function WhiteLabelPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            White-Label Institute Management
+            {t('admin:whiteLabel.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Manage multiple language institutes with custom branding
+            {t('common:manageInstitutes')}
           </p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
           <Building2 className="h-4 w-4 mr-2" />
-          Create New Institute
+          {t('admin:whiteLabel.createInstitute')}
         </Button>
       </div>
 
@@ -125,14 +129,14 @@ export default function WhiteLabelPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Institutes
+              {t('admin:whiteLabel.institutes')}
             </CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">24</div>
             <p className="text-xs text-muted-foreground">
-              +3 this month
+              +3 {t('common:thisMonth')}
             </p>
           </CardContent>
         </Card>
@@ -140,14 +144,14 @@ export default function WhiteLabelPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Revenue
+              {t('common:totalRevenue')}
             </CardTitle>
             <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">45,300,000 IRR</div>
             <p className="text-xs text-muted-foreground">
-              +18% from last month
+              +18% {t('common:fromLastMonth')}
             </p>
           </CardContent>
         </Card>

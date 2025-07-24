@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 import { 
   Mic, 
   MicOff, 
@@ -25,6 +26,7 @@ interface Message {
 }
 
 export default function AIConversation() {
+  const { t } = useTranslation(['student', 'common']);
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -163,9 +165,9 @@ export default function AIConversation() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">AI Language Practice</h1>
+        <h1 className="text-3xl font-bold mb-2">{t('student:aiConversation.title')}</h1>
         <p className="text-muted-foreground">
-          Practice conversations with AI in English or Farsi. Hold the microphone button to speak.
+          {t('student:aiConversation.subtitle')}
         </p>
       </div>
 

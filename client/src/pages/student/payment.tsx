@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Progress } from "@/components/ui/progress";
 import { CreditCard, Wallet, Plus, ArrowUpRight, ArrowDownLeft, Gift, Star, Crown, Shield, Trophy } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from 'react-i18next';
 import { format } from "date-fns";
 
 interface WalletTransaction {
@@ -38,6 +39,7 @@ interface MembershipTier {
 }
 
 export default function PaymentPage() {
+  const { t } = useTranslation(['student', 'common']);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [topupAmount, setTopupAmount] = useState("");
@@ -188,10 +190,10 @@ export default function PaymentPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Wallet & Credits
+            {t('student:payment.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Manage your wallet balance and membership benefits
+            {t('student:payment.subtitle')}
           </p>
         </div>
 

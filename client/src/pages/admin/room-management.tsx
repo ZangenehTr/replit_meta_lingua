@@ -184,9 +184,9 @@ export default function RoomManagement() {
     };
     
     if (editingRoom) {
-      updateMutation.mutate({ id: editingRoom.id, ...submitData });
+      updateMutation.mutate({ id: editingRoom.id, ...submitData } as any);
     } else {
-      createMutation.mutate(submitData);
+      createMutation.mutate(submitData as any);
     }
   };
 
@@ -238,9 +238,9 @@ export default function RoomManagement() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 p-4 sm:p-6 space-y-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">Room Management</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">{t('admin:rooms.title')}</h1>
             <p className="text-muted-foreground mt-2">
-              Manage classrooms, labs, and meeting rooms
+              {t('admin:rooms.subtitle')}
             </p>
           </div>
           <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700">
