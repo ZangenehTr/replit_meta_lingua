@@ -25,6 +25,7 @@ import {
   CheckCircle,
   Clock
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface ManagerStats {
   totalStudents: number;
@@ -61,6 +62,7 @@ interface CourseAnalytics {
 }
 
 export default function ManagerDashboard() {
+  const { t } = useTranslation(['admin', 'common']);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("overview");
 
@@ -108,10 +110,10 @@ export default function ManagerDashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Manager Dashboard
+            {t('admin:dashboard.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Institute performance overview and team management
+            {t('admin:dashboard.managerSubtitle')}
           </p>
         </div>
 

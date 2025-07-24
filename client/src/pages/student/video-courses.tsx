@@ -7,9 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { PlayCircle, Clock, BookOpen, Filter } from "lucide-react";
 import { Link } from "wouter";
+import { useTranslation } from 'react-i18next';
 import { AppLayout } from "@/components/layout/app-layout";
 
 export default function StudentVideoCourses() {
+  const { t } = useTranslation(['student', 'common']);
   const [languageFilter, setLanguageFilter] = useState<string>("all");
   const [levelFilter, setLevelFilter] = useState<string>("all");
   const [skillFilter, setSkillFilter] = useState<string>("all");
@@ -66,8 +68,8 @@ export default function StudentVideoCourses() {
     <AppLayout>
       <div className="container mx-auto p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Video Courses</h1>
-          <p className="text-gray-600">Browse and watch language learning video courses</p>
+          <h1 className="text-3xl font-bold mb-2">{t('student:videoCourses.title')}</h1>
+          <p className="text-gray-600">{t('student:videoCourses.subtitle')}</p>
         </div>
 
         {/* Filters */}

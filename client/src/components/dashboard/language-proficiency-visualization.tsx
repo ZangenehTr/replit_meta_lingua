@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from 'react-i18next';
 import { 
   Target, 
   TrendingUp, 
@@ -61,6 +62,7 @@ interface LearningInsight {
 }
 
 export function LanguageProficiencyVisualization() {
+  const { t } = useTranslation(['student', 'common']);
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('month');
 
@@ -115,13 +117,13 @@ export function LanguageProficiencyVisualization() {
           {
             type: 'strength',
             title: 'Strong Reading Comprehension',
-            description: 'Your reading skills are above average for your level',
+            description: t('student:proficiency.readingAboveAverage'),
             action: 'Challenge yourself with native-level content'
           },
           {
             type: 'weakness',
             title: 'Writing Needs Attention',
-            description: 'Your writing scores are below your other skills',
+            description: t('student:proficiency.writingBelowAverage'),
             action: 'Practice daily journal writing'
           },
           {
@@ -164,7 +166,7 @@ export function LanguageProficiencyVisualization() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Language Proficiency Overview</CardTitle>
-              <CardDescription>Your current level and progress</CardDescription>
+              <CardDescription>{t('student:proficiency.currentLevelDescription')}</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="default" className="text-lg px-4 py-2">
@@ -231,7 +233,7 @@ export function LanguageProficiencyVisualization() {
         <Card>
           <CardHeader>
             <CardTitle>Progress Timeline</CardTitle>
-            <CardDescription>Your improvement over time</CardDescription>
+            <CardDescription>{t('student:proficiency.improvementOverTime')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-80">

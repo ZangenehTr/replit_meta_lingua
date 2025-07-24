@@ -19,10 +19,12 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from 'react-i18next';
 import { Badge } from "@/components/ui/badge";
 import { MobileNav } from "./mobile-nav";
 
 export function Navigation() {
+  const { t } = useTranslation(['common']);
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
@@ -48,10 +50,10 @@ export function Navigation() {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Meta Lingua
+                  {t('common:navigation.siteName')}
                 </h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Language Learning Platform
+                  {t('common:navigation.tagline')}
                 </p>
               </div>
             </div>

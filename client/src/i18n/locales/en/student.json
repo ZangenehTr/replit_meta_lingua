@@ -1,7 +1,18 @@
 {
   "dashboard": {
     "title": "Student Dashboard",
-    "welcome": "Welcome back",
+    "welcome": "Welcome back, {{name}}",
+    "welcomeBack": "Welcome back!",
+    "welcomeMessage": "Ready to continue your learning journey?",
+    "myProgress": "My Progress",
+    "dayStreak": "Day Streak",
+    "lessons": "Lessons", 
+    "credits": "Credits",
+    "learningStreak": "Learning Streak",
+    "courseProgress": "Course Progress",
+    "availableCredits": "Available Credits",
+    "nextSession": "Next Session",
+    "noSessions": "No sessions",
     "overview": "Overview",
     "courses": "My Courses",
     "assignments": "Assignments",
@@ -99,5 +110,21 @@
   "tests": {
     "title": "My Tests",
     "subtitle": "Take tests and view your results"
+  },
+  "videoCourses": {
+    "title": "Video Courses",
+    "subtitle": "Browse and watch language learning video courses"
+  },
+  "gamification": {
+    "title": "Progress & Achievements",
+    "subtitle": "Track your learning journey and earn rewards",
+    "dailyChallenges": "Daily Challenges",
+    "challengeSubtitle": "Complete challenges to earn rewards"
+  },
+  "proficiency": {
+    "readingAboveAverage": "Your reading skills are above average for your level",
+    "writingBelowAverage": "Your writing scores are below your other skills",
+    "currentLevelDescription": "Your current level and progress",
+    "improvementOverTime": "Your improvement over time"
   }
 }

@@ -400,8 +400,8 @@ export default function SupervisorDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t('dashboard')}</h1>
-            <p className="text-gray-600 mt-2">{t('welcomeMessage')}</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('supervisor:dashboard.title')}</h1>
+            <p className="text-gray-600 mt-2">{t('supervisor:dashboard.welcomeMessage')}</p>
           </div>
           <div className="flex space-x-3">
             <Button 
