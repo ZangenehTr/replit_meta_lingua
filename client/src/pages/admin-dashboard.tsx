@@ -364,7 +364,7 @@ export default function AdminDashboard() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Search leads..."
+                    placeholder={t('admin:dashboard.searchLeads')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9 w-64"
@@ -377,7 +377,7 @@ export default function AdminDashboard() {
               </div>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Lead
+                {t('admin:dashboard.addLead')}
               </Button>
             </div>
 
@@ -386,14 +386,14 @@ export default function AdminDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Lead</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Source</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Interested Courses</TableHead>
-                      <TableHead>Assigned To</TableHead>
-                      <TableHead>Follow Up</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t('admin:dashboard.lead')}</TableHead>
+                      <TableHead>{t('admin:dashboard.contact')}</TableHead>
+                      <TableHead>{t('admin:dashboard.source')}</TableHead>
+                      <TableHead>{t('admin:dashboard.status')}</TableHead>
+                      <TableHead>{t('admin:dashboard.interestedCourses')}</TableHead>
+                      <TableHead>{t('admin:dashboard.assignedTo')}</TableHead>
+                      <TableHead>{t('admin:dashboard.followUp')}</TableHead>
+                      <TableHead>{t('admin:dashboard.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -403,7 +403,7 @@ export default function AdminDashboard() {
                           <div>
                             <div className="font-medium">{lead.name}</div>
                             <div className="text-sm text-gray-600 dark:text-gray-400">
-                              Created: {lead.createdAt}
+                              {t('admin:dashboard.created')}: {lead.createdAt}
                             </div>
                           </div>
                         </TableCell>

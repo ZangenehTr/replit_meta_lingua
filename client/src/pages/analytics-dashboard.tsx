@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,7 @@ interface AnalyticsData {
 }
 
 export default function AnalyticsDashboard() {
+  const { t } = useTranslation(['admin', 'common']);
   const [selectedTab, setSelectedTab] = useState("overview");
   const [timeRange, setTimeRange] = useState("6months");
   const [courseFilter, setCourseFilter] = useState("all");
@@ -161,11 +163,11 @@ export default function AnalyticsDashboard() {
               </Select>
               <Button variant="outline" onClick={() => refetch()}>
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
+                {t('admin:analytics.refresh')}
               </Button>
               <Button>
                 <Download className="h-4 w-4 mr-2" />
-                Export Report
+                {t('admin:analytics.download')}
               </Button>
             </div>
           </div>
@@ -246,10 +248,10 @@ export default function AnalyticsDashboard() {
         {/* Main Analytics Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <TabsList className="grid w-full lg:w-auto grid-cols-5">
-            <TabsTrigger value="overview">Revenue Overview</TabsTrigger>
-            <TabsTrigger value="students">Student Analytics</TabsTrigger>
-            <TabsTrigger value="teachers">Teacher Performance</TabsTrigger>
-            <TabsTrigger value="courses">Course Insights</TabsTrigger>
+            <TabsTrigger value="overview">{t('admin:analytics.overview')}</TabsTrigger>
+            <TabsTrigger value="students">{t('admin:analytics.students')}</TabsTrigger>
+            <TabsTrigger value="teachers">{t('admin:analytics.teachers')}</TabsTrigger>
+            <TabsTrigger value="courses">{t('admin:analytics.courses')}</TabsTrigger>
             <TabsTrigger value="operational">Operations</TabsTrigger>
           </TabsList>
 
@@ -258,8 +260,8 @@ export default function AnalyticsDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Monthly Revenue Trend</CardTitle>
-                  <CardDescription>Revenue growth over time (in Toman)</CardDescription>
+                  <CardTitle>{t('admin:analytics.totalRevenue')}</CardTitle>
+                  <CardDescription>{t('admin:analytics.monthlyGrowth')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>

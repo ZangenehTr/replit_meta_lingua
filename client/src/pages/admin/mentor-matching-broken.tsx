@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
@@ -80,6 +81,7 @@ interface MentorAssignment {
 }
 
 export default function MentorMatchingPage() {
+  const { t } = useTranslation(['admin', 'common']);
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
@@ -204,10 +206,10 @@ export default function MentorMatchingPage() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
-            Mentor Matching System
+            {t('admin:mentorMatching.title')}
           </h1>
           <p className="text-muted-foreground mt-2">
-            Match students with compatible mentors based on language, level, and learning goals
+            {t('admin:mentorMatching.subtitle')}
           </p>
         </div>
       </div>
