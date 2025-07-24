@@ -3,49 +3,55 @@
     "title": "داشبورد مرکز تماس",
     "welcome": "خوش آمدید",
     "overview": "نمای کلی",
-    "leads": "مدیریت سرنخ",
-    "calls": "سابقه تماس",
+    "leads": "مشتریان بالقوه",
+    "calls": "تماس‌ها",
     "performance": "عملکرد",
-    "voip": "مرکز VoIP",
-    "reports": "گزارش‌ها"
+    "reports": "گزارش‌ها",
+    "voip": "مرکز VoIP"
   },
   "stats": {
     "totalCalls": "کل تماس‌ها",
-    "dailyCalls": "تماس‌های روزانه",
-    "successfulCalls": "تماس‌های موفق",
-    "responseRate": "نرخ پاسخ",
+    "completedCalls": "تماس‌های تکمیل شده",
     "conversionRate": "نرخ تبدیل",
-    "averageCallDuration": "میانگین مدت تماس",
-    "leadsGenerated": "سرنخ‌های تولید شده",
-    "followUpsScheduled": "پیگیری‌های برنامه‌ریزی شده"
+    "avgCallDuration": "متوسط مدت تماس",
+    "activeLeads": "مشتریان بالقوه فعال",
+    "thisWeek": "این هفته",
+    "responseRate": "نرخ پاسخ",
+    "qualityScore": "امتیاز کیفیت"
   },
   "leads": {
-    "title": "مدیریت سرنخ",
-    "newLead": "سرنخ جدید",
+    "title": "مدیریت مشتریان بالقوه",
+    "newLead": "مشتری بالقوه جدید",
+    "hotLeads": "مشتریان بالقوه داغ",
     "followUp": "پیگیری",
     "converted": "تبدیل شده",
-    "closed": "بسته شده",
-    "callLead": "تماس با سرنخ",
-    "updateStatus": "به‌روزرسانی وضعیت",
-    "scheduleFollowUp": "برنامه‌ریزی پیگیری"
+    "callNow": "تماس حالا",
+    "schedule": "برنامه‌ریزی تماس",
+    "addNotes": "افزودن یادداشت"
   },
   "calls": {
-    "title": "سابقه تماس",
-    "duration": "مدت",
-    "status": "وضعیت",
+    "title": "تاریخچه تماس‌ها",
+    "duration": "مدت زمان",
+    "outcome": "نتیجه",
     "recording": "ضبط",
     "notes": "یادداشت‌ها",
-    "missed": "از دست رفته",
+    "callback": "تماس برگشتی",
     "completed": "تکمیل شده",
-    "callback": "تماس برگشتی"
+    "missed": "از دست رفته"
   },
   "voip": {
-    "title": "مرکز VoIP",
-    "dialNumber": "شماره‌گیری",
-    "callInProgress": "تماس در حال انجام",
-    "endCall": "پایان تماس",
-    "mute": "خاموش کردن صدا",
-    "hold": "نگه‌داری",
-    "transfer": "انتقال"
+    "title": "مرکز تماس VoIP",
+    "dialNumber": "شماره گیری",
+    "callStatus": "وضعیت تماس",
+    "connecting": "در حال اتصال",
+    "connected": "متصل",
+    "ended": "تماس پایان یافت",
+    "studentDirectory": "فهرست دانش‌آموزان"
+  },
+  "performance": {
+    "title": "معیارهای عملکرد",
+    "callsToday": "تماس‌های امروز",
+    "leadsConverted": "سرنخ‌های تبدیل شده",
+    "avgCallTime": "میانگین زمان تماس"
   }
 }

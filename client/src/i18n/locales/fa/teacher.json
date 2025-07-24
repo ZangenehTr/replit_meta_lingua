@@ -9,7 +9,10 @@
     "schedule": "برنامه",
     "resources": "منابع",
     "observations": "مشاهدات",
-    "availability": "در دسترس بودن"
+    "availability": "در دسترس بودن",
+    "quickActions": "اقدامات سریع",
+    "todaysSchedule": "برنامه امروز",
+    "recentActivity": "فعالیت‌های اخیر"
   },
   "stats": {
     "completedLessons": "درس‌های تکمیل شده",
@@ -54,5 +57,14 @@
     "viewDetails": "مشاهده جزئیات",
     "acknowledge": "تأیید",
     "respond": "پاسخ"
+  },
+  "noClassesToday": "هیچ کلاسی برای امروز برنامه‌ریزی نشده",
+  "noRecentActivity": "فعالیت اخیری وجود ندارد",
+  "myClasses": "کلاس‌های من",
+  "classesAssignedByAdmin": "کلاس‌های تعیین شده توسط مدیران",
+  "recentActivity": "فعالیت‌های اخیر",
+  "classes": {
+    "active": "کلاس‌های فعال",
+    "completed": "تکمیل شده"
   }
 }

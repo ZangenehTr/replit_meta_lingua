@@ -1,46 +1,57 @@
 {
   "dashboard": {
-    "title": "داشبورد منتور",
+    "title": "داشبورد مربی",
     "welcome": "خوش آمدید",
     "overview": "نمای کلی",
-    "mentees": "دانش‌آموزان من",
+    "students": "دانش‌آموزان",
     "assignments": "تکالیف",
-    "progress": "ردیابی پیشرفت",
+    "progress": "پیگیری پیشرفت",
     "communication": "ارتباطات",
+    "assessments": "ارزیابی‌ها",
     "reports": "گزارش‌ها"
   },
   "stats": {
     "totalMentees": "کل دانش‌آموزان",
-    "activeMentees": "دانش‌آموزان فعال",
+    "activeStudents": "دانش‌آموزان فعال",
     "averageProgress": "میانگین پیشرفت",
-    "monthlyGoals": "اهداف ماهانه",
+    "thisMonth": "این ماه",
     "completedAssignments": "تکالیف تکمیل شده",
     "pendingReviews": "بررسی‌های در انتظار",
-    "successRate": "نرخ موفقیت"
+    "totalSessions": "کل جلسات",
+    "monthlyRating": "امتیاز ماهانه"
   },
-  "mentees": {
+  "students": {
     "title": "دانش‌آموزان من",
-    "noMentees": "هیچ دانش‌آموزی تعیین نشده",
+    "noStudents": "هیچ دانش‌آموزی تعیین نشده",
     "progress": "پیشرفت",
-    "lastContact": "آخرین تماس",
-    "nextGoal": "هدف بعدی",
+    "lastActivity": "آخرین فعالیت",
     "viewProfile": "مشاهده پروفایل",
-    "contactMentee": "تماس با دانش‌آموز"
+    "sendMessage": "ارسال پیام",
+    "scheduleCall": "برنامه‌ریزی تماس"
   },
   "assignments": {
-    "title": "تکالیف",
-    "assign": "تعیین وظیفه",
+    "title": "تکالیف دانش‌آموزان",
+    "create": "ایجاد تکلیف",
     "pending": "در انتظار",
     "completed": "تکمیل شده",
+    "overdue": "معوقه",
     "dueDate": "مهلت تحویل",
     "review": "بررسی",
     "feedback": "بازخورد"
   },
-  "communication": {
-    "title": "ارتباطات",
-    "sendMessage": "ارسال پیام",
-    "scheduleCall": "برنامه‌ریزی تماس",
-    "videoCall": "تماس ویدیویی",
-    "messageHistory": "سابقه پیام‌ها"
+  "assessments": {
+    "title": "ارزیابی‌های پیشرفت",
+    "conductAssessment": "انجام ارزیابی",
+    "viewResults": "مشاهده نتایج",
+    "generateReport": "تولید گزارش",
+    "skillLevel": "سطح مهارت",
+    "recommendations": "توصیه‌ها"
+  },
+  "guideStudentJourneys": "راهنمایی و پشتیبانی از مسیر یادگیری دانشجویان",
+  "mentees": {
+    "totalMentees": "کل محصلان",
+    "activeMentees": "محصلان فعال",
+    "currentProgress": "پیشرفت فعلی",
+    "viewProfile": "مشاهده پروفایل"
   }
 }

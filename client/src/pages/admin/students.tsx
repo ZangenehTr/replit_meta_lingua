@@ -187,8 +187,8 @@ export function AdminStudents() {
       if (response.ok) {
         const conversation = await response.json();
         toast({
-          title: "Communication Started",
-          description: `Opening chat with ${student.firstName} ${student.lastName}`,
+          title: t('communication.started'),
+          description: t('communication.opening_chat', { name: `${student.firstName} ${student.lastName}` }),
         });
         
         // Navigate to communication center with conversation ID
@@ -200,8 +200,8 @@ export function AdminStudents() {
     } catch (error) {
       console.error('Contact error:', error);
       toast({
-        title: "Contact Failed",
-        description: `Unable to start communication with ${student.firstName} ${student.lastName}. Please try again.`,
+        title: t('errors.contactFailed'),
+        description: t('errors.unableToStartCommunication', { name: `${student.firstName} ${student.lastName}` }),
         variant: "destructive",
       });
     }

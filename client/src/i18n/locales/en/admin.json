@@ -72,7 +72,17 @@
     "netPromoterScore": "Net Promoter Score",
     "keyPerformanceIndicators": "Key Performance Indicators",
     "financialMetrics": "Financial Metrics",
-    "operationalMetrics": "Operational Metrics",
+    "operationalMetrics": "Operational Metrics"
+  },
+  "communication": {
+    "started": "Communication Started",
+    "opening_chat": "Opening chat with {{name}}"
+  },
+  "leads": {
+    "title": "Total Leads",
+    "hotLeads": "Hot Leads"
+  },
+  "quality": {
     "qualitySatisfactionMetrics": "Quality & Satisfaction Metrics",
     "courseMaterialQuality": "Course Material Quality",
     "teachingQuality": "Teaching Quality",
@@ -112,6 +122,14 @@
     "teacherPerformance": "Teacher Performance",
     "courseInsights": "Course Insights"
   },
+  "financial": {
+    "title": "Financial Management",
+    "overview": "Overview",
+    "transactions": "Transactions", 
+    "invoices": "Invoices",
+    "payouts": "Payouts",
+    "analytics": "Analytics"
+  },
   "mentorMatching": {
     "title": "Mentor Matching System",
     "subtitle": "Assign mentors to teacher-student pairs",
@@ -143,6 +161,32 @@
     "offline": "Offline",
     "installing": "Installing",
     "bootstrapSystem": "Bootstrap System"
+  },
+  "courses": {
+    "title": "Course Management",
+    "createCourse": "Create Course",
+    "createNewCourse": "Create New Course",
+    "createCourseDescription": "Build a comprehensive course with all required information",
+    "courseCode": "Course Code", 
+    "courseCodePlaceholder": "e.g. PER-BEG-001",
+    "courseTitle": "Course Title",
+    "courseTitlePlaceholder": "Enter course title",
+    "category": "Category",
+    "selectCategory": "Select category",
+    "courseLanguage": "Course Language",
+    "selectLanguage": "Select language"
+  },
+  "financial": {
+    "title": "Financial Management",
+    "subtitle": "Comprehensive financial oversight and revenue analytics",
+    "totalRevenue": "Total Revenue",
+    "monthlyRevenue": "Monthly Revenue", 
+    "pendingPayments": "Pending Payments",
+    "overduePayments": "Overdue Payments",
+    "exportReport": "Export Report",
+    "manualTransaction": "Manual Transaction",
+    "createManualTransaction": "Create Manual Transaction",
+    "processManualPayments": "Process manual payments and financial transactions"
   },
   "teacherManagement": {
     "title": "Teacher Management",

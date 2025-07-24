@@ -9,7 +9,10 @@
     "schedule": "Schedule",
     "resources": "Resources",
     "observations": "Observations",
-    "availability": "Availability"
+    "availability": "Availability",
+    "quickActions": "Quick Actions",
+    "todaysSchedule": "Today's Schedule",
+    "recentActivity": "Recent Activity"
   },
   "stats": {
     "completedLessons": "Completed Lessons",
@@ -58,5 +61,16 @@
     "viewDetails": "View Details",
     "acknowledge": "Acknowledge",
     "respond": "Respond"
+  },
+  "noClassesToday": "No classes scheduled for today",
+  "noRecentActivity": "No recent activity",
+  "myClasses": "My Classes",
+  "classesAssignedByAdmin": "Classes assigned by administrators",
+  "recentActivity": "Recent Activity",
+  "activeClasses": "Active Classes",
+  "completedClasses": "Completed",
+  "classes": {
+    "active": "Active Classes",
+    "completed": "Completed"
   }
 }

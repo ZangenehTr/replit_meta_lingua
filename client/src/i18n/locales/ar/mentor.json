@@ -3,15 +3,48 @@
     "title": "لوحة المرشد",
     "welcome": "مرحباً بعودتك",
     "overview": "نظرة عامة",
-    "mentees": "طلابي",
+    "students": "الطلاب",
     "assignments": "المهام",
     "progress": "تتبع التقدم",
-    "communication": "التواصل"
+    "communication": "التواصل",
+    "assessments": "التقييمات",
+    "reports": "التقارير"
   },
   "stats": {
-    "totalMentees": "إجمالي الطلاب",
-    "activeMentees": "الطلاب النشطون",
+    "totalMentees": "إجمالي المتدربين",
+    "activeStudents": "الطلاب النشطون",
     "averageProgress": "متوسط التقدم",
-    "successRate": "معدل النجاح"
+    "thisMonth": "هذا الشهر",
+    "completedAssignments": "المهام المكتملة",
+    "pendingReviews": "المراجعات المعلقة",
+    "totalSessions": "إجمالي الجلسات",
+    "monthlyRating": "التقييم الشهري"
+  },
+  "students": {
+    "title": "متدربيني",
+    "noStudents": "لا يوجد طلاب معينون",
+    "progress": "التقدم",
+    "lastActivity": "آخر نشاط",
+    "viewProfile": "عرض الملف الشخصي",
+    "sendMessage": "إرسال رسالة",
+    "scheduleCall": "جدولة مكالمة"
+  },
+  "assignments": {
+    "title": "مهام الطلاب",
+    "create": "إنشاء مهمة",
+    "pending": "معلقة",
+    "completed": "مكتملة",
+    "overdue": "متأخرة",
+    "dueDate": "تاريخ الاستحقاق",
+    "review": "مراجعة",
+    "feedback": "التعليقات"
+  },
+  "assessments": {
+    "title": "تقييمات التقدم",
+    "conductAssessment": "إجراء تقييم",
+    "viewResults": "عرض النتائج",
+    "generateReport": "إنشاء تقرير",
+    "skillLevel": "مستوى المهارة",
+    "recommendations": "التوصيات"
   }
 }

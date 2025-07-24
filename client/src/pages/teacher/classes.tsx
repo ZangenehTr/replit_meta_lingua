@@ -51,7 +51,7 @@ export default function TeacherClassesPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Loading classes...</p>
+          <p>{t('common:ui.loading')}</p>
         </div>
       </div>
     );
@@ -74,9 +74,9 @@ export default function TeacherClassesPage() {
 
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="active">Active ({activeClasses.length})</TabsTrigger>
-            <TabsTrigger value="completed">Completed ({completedClasses.length})</TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming (0)</TabsTrigger>
+            <TabsTrigger value="active">{t('common:active')} ({activeClasses.length})</TabsTrigger>
+            <TabsTrigger value="completed">{t('common:completed')} ({completedClasses.length})</TabsTrigger>
+            <TabsTrigger value="upcoming">{t('common:upcoming')} (0)</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active" className="mt-6">

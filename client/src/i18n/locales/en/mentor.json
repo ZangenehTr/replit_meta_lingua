@@ -3,57 +3,55 @@
     "title": "Mentor Dashboard",
     "welcome": "Welcome back",
     "overview": "Overview",
-    "mentees": "My Mentees",
+    "students": "Students",
     "assignments": "Assignments",
     "progress": "Progress Tracking",
     "communication": "Communication",
+    "assessments": "Assessments",
     "reports": "Reports"
   },
   "stats": {
     "totalMentees": "Total Mentees",
-    "activeMentees": "Active Mentees",
+    "activeStudents": "Active Students",
     "averageProgress": "Average Progress",
-    "monthlyGoals": "Monthly Goals",
+    "thisMonth": "This Month",
     "completedAssignments": "Completed Assignments",
     "pendingReviews": "Pending Reviews",
-    "successRate": "Success Rate"
-  },
-  "mentees": {
-    "title": "My Mentees",
-    "subtitle": "Manage and track your mentees' progress",
-    "noMentees": "No mentees assigned",
-    "progress": "Progress",
-    "lastContact": "Last Contact",
-    "nextGoal": "Next Goal",
-    "viewProfile": "View Profile",
-    "contactMentee": "Contact Mentee"
+    "totalSessions": "Total Sessions",
+    "monthlyRating": "Monthly Rating"
   },
   "students": {
     "title": "My Mentees",
-    "subtitle": "Manage and track your mentees' progress"
+    "noStudents": "No students assigned",
+    "progress": "Progress",
+    "lastActivity": "Last Activity",
+    "viewProfile": "View Profile",
+    "sendMessage": "Send Message",
+    "scheduleCall": "Schedule Call"
   },
   "assignments": {
-    "title": "Assignments",
-    "assign": "Assign Task",
+    "title": "Student Assignments",
+    "create": "Create Assignment",
     "pending": "Pending",
     "completed": "Completed",
+    "overdue": "Overdue",
     "dueDate": "Due Date",
     "review": "Review",
     "feedback": "Feedback"
   },
-  "communication": {
-    "title": "Communication",
-    "sendMessage": "Send Message",
-    "scheduleCall": "Schedule Call",
-    "videoCall": "Video Call",
-    "messageHistory": "Message History"
+  "assessments": {
+    "title": "Progress Assessments",
+    "conductAssessment": "Conduct Assessment",
+    "viewResults": "View Results",
+    "generateReport": "Generate Report",
+    "skillLevel": "Skill Level",
+    "recommendations": "Recommendations"
   },
-  "sessions": {
-    "title": "Mentoring Sessions",
-    "subtitle": "Schedule and manage your mentoring sessions"
-  },
-  "progress": {
-    "title": "Progress Tracking",
-    "subtitle": "Track and analyze your mentees' learning progress"
+  "guideStudentJourneys": "Guide and support student learning journeys",
+  "mentees": {
+    "totalMentees": "Total Mentees",
+    "activeMentees": "Active Mentees",
+    "currentProgress": "Current Progress",
+    "viewProfile": "View Profile"
   }
 }

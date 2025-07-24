@@ -77,7 +77,7 @@ const targetSchema = z.object({
 });
 
 export default function SupervisorDashboard() {
-  const { t } = useTranslation('supervisor');
+  const { t } = useTranslation(['supervisor', 'common']);
   const [observationDialogOpen, setObservationDialogOpen] = useState(false);
   const [targetDialogOpen, setTargetDialogOpen] = useState(false);
   const [teachersAttentionDialogOpen, setTeachersAttentionDialogOpen] = useState(false);

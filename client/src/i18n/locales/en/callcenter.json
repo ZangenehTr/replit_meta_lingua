@@ -3,54 +3,56 @@
     "title": "Call Center Dashboard",
     "welcome": "Welcome back",
     "overview": "Overview",
-    "leads": "Lead Management",
-    "calls": "Call History",
+    "leads": "Leads",
+    "calls": "Calls",
     "performance": "Performance",
-    "voip": "VoIP Center",
-    "reports": "Reports"
+    "reports": "Reports",
+    "voip": "VoIP Center"
   },
   "stats": {
     "totalCalls": "Total Calls",
-    "dailyCalls": "Daily Calls",
-    "successfulCalls": "Successful Calls",
-    "responseRate": "Response Rate",
+    "completedCalls": "Completed Calls",
     "conversionRate": "Conversion Rate",
-    "averageCallDuration": "Average Call Duration",
-    "leadsGenerated": "Leads Generated",
-    "followUpsScheduled": "Follow-ups Scheduled"
+    "avgCallDuration": "Avg Call Duration",
+    "activeLeads": "Active Leads",
+    "thisWeek": "This Week",
+    "responseRate": "Response Rate",
+    "qualityScore": "Quality Score",
+    "todayCalls": "Today's Calls"
   },
   "leads": {
     "title": "Lead Management",
     "newLead": "New Lead",
+    "hotLeads": "Hot Leads",
     "followUp": "Follow Up",
     "converted": "Converted",
-    "closed": "Closed",
-    "callLead": "Call Lead",
-    "updateStatus": "Update Status",
-    "scheduleFollowUp": "Schedule Follow-up"
+    "callNow": "Call Now",
+    "schedule": "Schedule Call",
+    "addNotes": "Add Notes"
   },
   "calls": {
-    "title": "Call Logs",
-    "subtitle": "Track all incoming and outgoing calls",
+    "title": "Call History",
     "duration": "Duration",
-    "status": "Status",
+    "outcome": "Outcome",
     "recording": "Recording",
     "notes": "Notes",
-    "missed": "Missed",
+    "callback": "Callback",
     "completed": "Completed",
-    "callback": "Callback"
+    "missed": "Missed"
   },
   "voip": {
-    "title": "VoIP Center",
+    "title": "VoIP Call Center",
     "dialNumber": "Dial Number",
-    "callInProgress": "Call in Progress",
-    "endCall": "End Call",
-    "mute": "Mute",
-    "hold": "Hold",
-    "transfer": "Transfer"
+    "callStatus": "Call Status",
+    "connecting": "Connecting",
+    "connected": "Connected",
+    "ended": "Call Ended",
+    "studentDirectory": "Student Directory"
   },
-  "campaigns": {
-    "title": "Campaigns",
-    "subtitle": "Manage marketing campaigns and outreach"
+  "performance": {
+    "title": "Performance Metrics",
+    "callsToday": "Calls Today",
+    "leadsConverted": "Leads Converted",
+    "avgCallTime": "Avg Call Time"
   }
 }

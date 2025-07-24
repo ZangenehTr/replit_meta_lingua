@@ -1,7 +1,18 @@
 {
   "dashboard": {
     "title": "داشبورد دانش‌آموز",
-    "welcome": "خوش آمدید",
+    "welcome": "خوش آمدید {{name}}",
+    "welcomeBack": "خوش آمدید!",
+    "welcomeMessage": "آماده ادامه سفر یادگیری هستید؟",
+    "myProgress": "پیشرفت من",
+    "dayStreak": "سری روزانه",
+    "lessons": "درس‌ها", 
+    "credits": "اعتبارات",
+    "learningStreak": "سری یادگیری",
+    "courseProgress": "پیشرفت دوره",
+    "availableCredits": "اعتبارات موجود",
+    "nextSession": "جلسه بعدی",
+    "noSessions": "هیچ جلسه‌ای",
     "overview": "نمای کلی",
     "courses": "دوره‌های من",
     "assignments": "تکالیف",
@@ -10,22 +21,25 @@
     "packages": "بسته‌ها",
     "gamification": "دستاوردها",
     "videoLessons": "درس‌های ویدیویی",
-    "discoverLevel": "سطح زبان خود را بیابید",
-    "assessmentDescription": "آزمون سطح‌سنجی جامع برای تعیین دقیق سطح زبان شما",
-    "startAssessment": "شروع آزمون",
+    "discoverLevel": "سطح زبان خود را کشف کنید",
+    "assessmentDescription": "ارزیابی جامع ما را انجام دهید تا سطح دقیق مهارت خود را تعیین کنید",
+    "startAssessment": "شروع ارزیابی",
     "whatIsMyLevel": "سطح من چیست؟",
     "skills": "مهارت‌ها",
-    "aiPractice": "تمرین AI"
+    "aiPractice": "تمرین هوش مصنوعی",
+    "quickStats": "آمار سریع",
+    "todaysGoals": "اهداف امروز",
+    "recentAchievements": "دستاوردهای اخیر"
   },
   "stats": {
     "totalLessons": "کل درس‌ها",
     "completedLessons": "درس‌های تکمیل شده",
-    "currentStreak": "رشته فعلی",
+    "currentStreak": "سری فعلی",
     "totalXP": "کل امتیاز تجربه", 
     "currentLevel": "سطح فعلی",
-    "nextLevelXP": "امتیاز سطح بعدی",
+    "nextLevelXP": "امتیاز تجربه سطح بعدی",
     "walletBalance": "موجودی کیف پول",
-    "memberTier": "درجه عضویت",
+    "memberTier": "سطح عضویت",
     "studyTimeThisWeek": "زمان مطالعه این هفته",
     "weeklyGoalHours": "ساعات هدف هفتگی"
   },
@@ -34,7 +48,7 @@
     "noCourses": "هیچ دوره‌ای ثبت‌نام نشده",
     "progress": "پیشرفت",
     "nextSession": "جلسه بعدی",
-    "instructor": "مربی",
+    "instructor": "مدرس",
     "continue": "ادامه یادگیری",
     "viewDetails": "مشاهده جزئیات"
   },
@@ -59,17 +73,16 @@
     "title": "دستاوردها",
     "level": "سطح",
     "xp": "امتیاز تجربه",
-    "streak": "رشته روزانه",
+    "streak": "سری روزانه",
     "achievements": "دستاوردها",
-    "leaderboard": "جدول رتبه‌بندی",
-    "badges": "نشان‌ها"
+    "leaderboard": "جدول امتیازات"
   },
-  "packages": {
-    "title": "بسته‌های جلسه",
-    "purchase": "خرید بسته",
-    "remaining": "باقی‌مانده",
-    "used": "استفاده شده",
-    "expired": "منقضی شده",
-    "active": "فعال"
-  }
+  "sessionsTitle": "جلسات یادگیری من",
+  "upcomingSessions": "جلسات آینده",
+  "pastSessions": "جلسات گذشته",
+  "todaySessions": "جلسات امروز",
+  "thisWeek": "این هفته",
+  "completed": "تکمیل شده",
+  "noSessionsToday": "هیچ جلسه‌ای برای امروز برنامه‌ریزی نشده",
+  "bookSession": "رزرو جلسه"
 }

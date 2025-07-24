@@ -3,56 +3,52 @@
     "title": "داشبورد حسابدار",
     "welcome": "خوش آمدید",
     "overview": "نمای کلی",
-    "financial": "مدیریت مالی",
-    "transactions": "تراکنش‌ها",
     "payments": "پرداخت‌ها",
     "invoices": "فاکتورها",
-    "reports": "گزارش‌های مالی",
-    "compliance": "انطباق ایرانی"
+    "reports": "گزارشات",
+    "compliance": "انطباق",
+    "analytics": "تحلیل‌ها"
   },
   "stats": {
     "totalRevenue": "کل درآمد",
-    "monthlyRevenue": "درآمد ماهانه",
     "pendingPayments": "پرداخت‌های در انتظار",
     "completedTransactions": "تراکنش‌های تکمیل شده",
-    "walletBalance": "کل موجودی کیف پول",
-    "shetabTransactions": "تراکنش‌های شتاب",
-    "iranianCompliance": "انطباق ایرانی",
-    "taxReporting": "گزارش‌دهی مالیاتی"
-  },
-  "financial": {
-    "title": "مدیریت مالی",
-    "revenue": "درآمد",
-    "expenses": "هزینه‌ها",
-    "profit": "سود",
-    "cashFlow": "جریان نقدی",
-    "budgetTracking": "ردیابی بودجه",
-    "financialForecasting": "پیش‌بینی مالی"
-  },
-  "transactions": {
-    "title": "تراکنش‌ها",
-    "income": "درآمد",
-    "expense": "هزینه",
-    "pending": "در انتظار",
-    "completed": "تکمیل شده",
-    "failed": "ناموفق",
-    "amount": "مبلغ",
-    "date": "تاریخ",
-    "description": "توضیحات"
+    "monthlyGrowth": "رشد ماهانه",
+    "totalStudents": "کل دانشجویان",
+    "averagePayment": "میانگین پرداخت",
+    "thisMonth": "این ماه",
+    "complianceRate": "نرخ انطباق"
   },
   "payments": {
-    "title": "مدیریت پرداخت",
-    "shetabGateway": "درگاه شتاب",
-    "walletTopUp": "شارژ کیف پول",
+    "title": "مدیریت پرداخت‌ها",
+    "newPayment": "پرداخت جدید",
+    "pendingPayments": "پرداخت‌های در انتظار",
+    "completedPayments": "پرداخت‌های تکمیل شده",
     "refunds": "بازپرداخت‌ها",
-    "paymentHistory": "سابقه پرداخت",
-    "iranianBanking": "بانکداری ایرانی"
+    "processPayment": "پردازش پرداخت",
+    "verifyPayment": "تأیید پرداخت",
+    "amount": "مبلغ",
+    "status": "وضعیت",
+    "paymentMethod": "روش پرداخت"
+  },
+  "invoices": {
+    "title": "مدیریت فاکتورها",
+    "createInvoice": "ایجاد فاکتور",
+    "pending": "در انتظار",
+    "paid": "پرداخت شده",
+    "overdue": "سررسید گذشته",
+    "sendReminder": "ارسال یادآوری",
+    "downloadPDF": "دانلود PDF",
+    "invoiceNumber": "شماره فاکتور",
+    "dueDate": "تاریخ سررسید"
   },
   "compliance": {
-    "title": "انطباق ایرانی",
+    "title": "انطباق مالی ایران",
+    "shetabIntegration": "یکپارچگی شتاب",
     "taxCompliance": "انطباق مالیاتی",
-    "reportingRequirements": "الزامات گزارش‌دهی",
-    "localRegulations": "مقررات محلی",
-    "currencyCompliance": "انطباق ارزی (ریال)"
+    "reportingStandards": "استانداردهای گزارش‌دهی",
+    "auditTrail": "مسیر حسابرسی",
+    "complianceStatus": "وضعیت انطباق",
+    "generateReport": "تولید گزارش"
   }
 }

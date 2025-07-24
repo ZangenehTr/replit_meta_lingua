@@ -9,7 +9,10 @@
     "schedule": "الجدول",
     "resources": "الموارد",
     "observations": "الملاحظات",
-    "availability": "التوفر"
+    "availability": "التوفر",
+    "quickActions": "الإجراءات السريعة",
+    "todaysSchedule": "جدول اليوم",
+    "recentActivity": "النشاط الأخير"
   },
   "stats": {
     "completedLessons": "الدروس المكتملة",
@@ -20,5 +23,48 @@
     "pendingAssignments": "المهام المعلقة",
     "activeStudents": "الطلاب النشطون",
     "thisWeek": "هذا الأسبوع"
-  }
+  },
+  "classes": {
+    "title": "فصولي",
+    "subtitle": "إدارة فصول التدريس الخاصة بك وتتبع تقدم الطلاب",
+    "noClasses": "لا توجد فصول معينة",
+    "nextSession": "الجلسة التالية",
+    "studentsEnrolled": "الطلاب المسجلون",
+    "viewDetails": "عرض التفاصيل",
+    "startClass": "بدء الفصل",
+    "classType": "نوع الفصل"
+  },
+  "assignments": {
+    "title": "مهام الطلاب",
+    "subtitle": "إنشاء وإدارة المهام لطلابك",
+    "create": "إنشاء مهمة",
+    "pending": "معلقة",
+    "graded": "تم التقييم",
+    "dueDate": "تاريخ الاستحقاق",
+    "grade": "الدرجة",
+    "submitted": "تم التسليم",
+    "notSubmitted": "لم يتم التسليم"
+  },
+  "availability": {
+    "title": "التوفر الشهري",
+    "subtitle": "حدد فترات الوقت المتاحة للإداريين لتعيين الفصول",
+    "selectDays": "اختر الأيام",
+    "timeRange": "نطاق الوقت", 
+    "save": "حفظ التوفر",
+    "updated": "تم تحديث التوفر بنجاح"
+  },
+  "observations": {
+    "title": "ملاحظاتي",
+    "subtitle": "عرض والرد على تقارير ملاحظة التدريس الخاصة بك",
+    "pending": "معلقة",
+    "acknowledged": "مُعترف بها",
+    "viewDetails": "عرض التفاصيل",
+    "acknowledge": "إقرار",
+    "respond": "رد"
+  },
+  "noClassesToday": "لا توجد فصول مجدولة لليوم",
+  "noRecentActivity": "لا يوجد نشاط حديث",
+  "myClasses": "فصولي",
+  "classesAssignedByAdmin": "الفصول المعينة من قبل المسؤولين",
+  "recentActivity": "النشاط الأخير"
 }
