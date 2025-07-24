@@ -34,6 +34,10 @@
     "invalidResponse": "Invalid response from server",
     "dataLoadFailed": "Failed to load data",
     "saveDataFailed": "Failed to save data",
-    "deleteDataFailed": "Failed to delete data"
+    "deleteDataFailed": "Failed to delete data",
+    "failedToJoinSession": "Failed to join session",
+    "loadingSessions": "Error loading sessions",
+    "contactFailed": "Contact Failed",
+    "unableToStartCommunication": "Unable to start communication with {{name}}. Please try again."
   }
 }

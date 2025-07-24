@@ -49,7 +49,7 @@ import {
 
 export function AdminDashboard() {
   const { t } = useTranslation(['admin', 'common']);
-  const { language, isRTL, direction } = useLanguage();
+  const { isRTL } = useLanguage();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 

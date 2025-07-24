@@ -247,9 +247,9 @@ function MentorDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">{t('mentor:dashboard.title')}</h1>
+            <h1 className="text-3xl font-bold">{t('dashboard.title')}</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {t('mentor:dashboard.welcomeMessage')}
+              {t('dashboard.welcome')}
             </p>
           </div>
         </div>
@@ -260,7 +260,7 @@ function MentorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100">{t('mentor:dashboard.totalMentees')}</p>
+                  <p className="text-orange-100">{t('dashboard.totalMentees')}</p>
                   <p className="text-3xl font-bold">{mentorStats?.totalMentees || 0}</p>
                 </div>
                 <Users className="w-12 h-12 text-orange-200" />
@@ -272,7 +272,7 @@ function MentorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100">{t('mentor:dashboard.activeMentees')}</p>
+                  <p className="text-green-100">{t('dashboard.activeMentees')}</p>
                   <p className="text-3xl font-bold">{mentorStats?.activeMentees || 0}</p>
                 </div>
                 <Heart className="w-12 h-12 text-green-200" />
@@ -284,7 +284,7 @@ function MentorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100">{t('mentor:dashboard.sessionsCompleted')}</p>
+                  <p className="text-blue-100">{t('dashboard.sessionsCompleted')}</p>
                   <p className="text-3xl font-bold">{mentorStats?.totalSessions || 0}</p>
                 </div>
                 <Calendar className="w-12 h-12 text-blue-200" />
@@ -296,7 +296,7 @@ function MentorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100">{t('mentor:dashboard.averageRating')}</p>
+                  <p className="text-purple-100">{t('dashboard.averageRating')}</p>
                   <p className="text-3xl font-bold">{mentorStats?.averageRating?.toFixed(1) || '0.0'}</p>
                 </div>
                 <Star className="w-12 h-12 text-purple-200" />

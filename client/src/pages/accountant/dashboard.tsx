@@ -277,9 +277,9 @@ function AccountantDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">{t('accountant:dashboard.title')}</h1>
+            <h1 className="text-3xl font-bold">{t('dashboard.title')}</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {t('accountant:dashboard.welcomeMessage')}
+              {t('dashboard.welcome')}
             </p>
           </div>
         </div>

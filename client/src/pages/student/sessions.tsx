@@ -50,11 +50,11 @@ export default function SessionsPage() {
       const response = await fetch(`/api/sessions/${sessionId}/join`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json'
         }
       });
-      if (!response.ok) throw new Error('Failed to join session');
+      if (!response.ok) throw new Error(t('errors.failedToJoinSession'));
       return response.json();
     },
     onSuccess: () => {
@@ -67,7 +67,7 @@ export default function SessionsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Loading sessions...</p>
+          <p>{t('common:ui.loading')}</p>
         </div>
       </div>
     );
@@ -77,8 +77,8 @@ export default function SessionsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">Error loading sessions</p>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
+          <p className="text-red-600 mb-4">{t('errors.loadingSessions')}</p>
+          <Button onClick={() => window.location.reload()}>{t('common:ui.tryAgain')}</Button>
         </div>
       </div>
     );
@@ -266,7 +266,7 @@ export default function SessionsPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                Today's Sessions
+                {t('todaySessions')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -276,7 +276,7 @@ export default function SessionsPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                This Week
+                {t('thisWeek')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -286,7 +286,7 @@ export default function SessionsPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                Completed
+                {t('completed')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -298,9 +298,9 @@ export default function SessionsPage() {
         {/* Sessions Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="today">Today ({todaySessions.length})</TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming ({upcomingSessions.length})</TabsTrigger>
-            <TabsTrigger value="past">Past ({pastSessions.length})</TabsTrigger>
+            <TabsTrigger value="today">{t('todaySessions')} ({todaySessions.length})</TabsTrigger>
+            <TabsTrigger value="upcoming">{t('upcomingSessions')} ({upcomingSessions.length})</TabsTrigger>
+            <TabsTrigger value="past">{t('pastSessions')} ({pastSessions.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="today" className="mt-6">
@@ -312,9 +312,9 @@ export default function SessionsPage() {
               ) : (
                 <div className="text-center py-12">
                   <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No sessions scheduled for today</p>
+                  <p className="text-gray-500">{t('noSessionsToday')}</p>
                   <Button className="mt-4" onClick={() => window.location.href = '/tutors'}>
-                    Book a Session
+                    {t('bookSession')}
                   </Button>
                 </div>
               )}

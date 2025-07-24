@@ -259,7 +259,7 @@ export default function TeacherDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {stats?.recentActivity?.map((activity: any, index: number) => (
+                    {(stats as any)?.recentActivity?.map((activity: any, index: number) => (
                       <div key={index} className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                           <BookOpen className="w-4 h-4 text-blue-600" />

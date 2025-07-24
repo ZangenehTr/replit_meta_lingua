@@ -1,45 +1,62 @@
 {
   "dashboard": {
-    "title": "داشبورد ناظر", 
+    "title": "داشبورد ناظر",
     "welcome": "خوش آمدید",
     "overview": "نمای کلی",
-    "teachers": "مدیریت معلمان",
+    "teachers": "مدرسان",
     "observations": "مشاهدات",
     "quality": "تضمین کیفیت",
     "reports": "گزارش‌ها",
-    "schedule": "بررسی برنامه"
+    "analytics": "تحلیل‌ها",
+    "compliance": "انطباق"
   },
   "stats": {
-    "totalTeachers": "کل معلمان",
-    "activeTeachers": "معلمان فعال",
-    "pendingObservations": "مشاهدات در انتظار",
-    "completedObservations": "مشاهدات تکمیل شده",
-    "complianceRate": "نرخ انطباق",
+    "totalTeachers": "کل مدرسان",
+    "activeObservations": "مشاهدات فعال",
+    "completionRate": "نرخ تکمیل",
     "qualityScore": "امتیاز کیفیت",
-    "improvementNeeded": "نیاز به بهبود"
-  },
-  "observations": {
-    "title": "مشاهدات معلم",
-    "schedule": "برنامه‌ریزی مشاهده",
-    "pending": "در انتظار",
-    "completed": "تکمیل شده",
-    "overdue": "عقب‌افتاده",
-    "viewDetails": "مشاهده جزئیات",
-    "createObservation": "ایجاد مشاهده"
+    "pendingObservations": "مشاهدات در انتظار",
+    "thisMonth": "این ماه",
+    "complianceRate": "نرخ انطباق",
+    "averageRating": "میانگین امتیاز"
   },
   "teachers": {
-    "title": "مدیریت معلمان",
+    "title": "مدیریت مدرسان",
     "performance": "عملکرد",
-    "evaluation": "ارزیابی",
-    "feedback": "بازخورد",
-    "training": "نیازهای آموزشی",
-    "status": "وضعیت"
+    "viewProfile": "مشاهده پروفایل",
+    "scheduleObservation": "برنامه‌ریزی مشاهده",
+    "sendFeedback": "ارسال بازخورد",
+    "viewReports": "مشاهده گزارش‌ها"
+  },
+  "observations": {
+    "title": "مشاهدات تدریس",
+    "schedule": "برنامه‌ریزی جدید",
+    "pending": "در انتظار",
+    "completed": "تکمیل شده",
+    "inProgress": "در حال انجام",
+    "overdue": "معوقه",
+    "viewDetails": "مشاهده جزئیات",
+    "addFeedback": "افزودن بازخورد"
   },
   "quality": {
     "title": "تضمین کیفیت",
     "standards": "استانداردهای تدریس",
     "compliance": "بررسی انطباق",
     "improvement": "برنامه‌های بهبود",
-    "metrics": "معیارهای کیفیت"
+    "training": "نیازهای آموزشی"
+  },
+  "reports": {
+    "title": "گزارش‌های عملکرد",
+    "generate": "تولید گزارش",
+    "teacherPerformance": "عملکرد مدرس",
+    "institutionalMetrics": "معیارهای موسسه‌ای",
+    "export": "صادرات داده"
+  },
+  "teacherManagement": {
+    "title": "مدیریت مدرسان",
+    "totalTeachers": "کل مدرسان",
+    "activeTeachers": "مدرسان فعال",
+    "viewProfile": "مشاهده پروفایل",
+    "scheduleObservation": "برنامه‌ریزی مشاهده"
   }
 }

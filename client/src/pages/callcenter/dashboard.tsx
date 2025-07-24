@@ -267,9 +267,9 @@ function CallCenterDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">{t('callcenter:dashboard.title')}</h1>
+            <h1 className="text-3xl font-bold">{t('dashboard.title')}</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {t('callcenter:dashboard.welcomeMessage')}
+              {t('dashboard.welcome')}
             </p>
           </div>
         </div>
@@ -280,7 +280,7 @@ function CallCenterDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-teal-100">{t('callcenter:dashboard.totalLeads')}</p>
+                  <p className="text-teal-100">{t('leads.title')}</p>
                   <p className="text-3xl font-bold">{callCenterStats?.totalLeads || 0}</p>
                 </div>
                 <Users className="w-12 h-12 text-teal-200" />
@@ -292,7 +292,7 @@ function CallCenterDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100">{t('callcenter:dashboard.hotLeads')}</p>
+                  <p className="text-orange-100">{t('leads.hotLeads')}</p>
                   <p className="text-3xl font-bold">{callCenterStats?.hotLeads || 0}</p>
                 </div>
                 <Target className="w-12 h-12 text-orange-200" />
@@ -304,7 +304,7 @@ function CallCenterDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100">{t('callcenter:dashboard.todayCalls')}</p>
+                  <p className="text-blue-100">{t('stats.totalCalls')}</p>
                   <p className="text-3xl font-bold">{callCenterStats?.todayCalls || 0}</p>
                 </div>
                 <Phone className="w-12 h-12 text-blue-200" />
@@ -328,10 +328,10 @@ function CallCenterDashboard() {
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">{t('callcenter:overview')}</TabsTrigger>
-            <TabsTrigger value="leads">{t('callcenter:leads')}</TabsTrigger>
-            <TabsTrigger value="calls">{t('callcenter:calls')}</TabsTrigger>
-            <TabsTrigger value="performance">{t('callcenter:performance')}</TabsTrigger>
+            <TabsTrigger value="overview">{t('dashboard.overview')}</TabsTrigger>
+            <TabsTrigger value="leads">{t('dashboard.leads')}</TabsTrigger>
+            <TabsTrigger value="calls">{t('dashboard.calls')}</TabsTrigger>
+            <TabsTrigger value="performance">{t('dashboard.performance')}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview">

@@ -1,16 +1,54 @@
 {
   "dashboard": {
     "title": "لوحة المحاسب",
-    "welcome": "مرحباً بعودتك",
+    "welcome": "أهلاً وسهلاً",
     "overview": "نظرة عامة",
-    "financial": "الإدارة المالية",
-    "transactions": "المعاملات",
-    "payments": "المدفوعات"
+    "payments": "المدفوعات",
+    "invoices": "الفواتير",
+    "reports": "التقارير",
+    "compliance": "الامتثال",
+    "analytics": "التحليلات"
   },
   "stats": {
     "totalRevenue": "إجمالي الإيرادات",
-    "monthlyRevenue": "الإيرادات الشهرية",
     "pendingPayments": "المدفوعات المعلقة",
-    "walletBalance": "رصيد المحفظة"
+    "completedTransactions": "المعاملات المكتملة",
+    "monthlyGrowth": "النمو الشهري",
+    "totalStudents": "إجمالي الطلاب",
+    "averagePayment": "متوسط الدفع",
+    "thisMonth": "هذا الشهر",
+    "complianceRate": "معدل الامتثال"
+  },
+  "payments": {
+    "title": "إدارة المدفوعات",
+    "newPayment": "دفعة جديدة",
+    "pendingPayments": "المدفوعات المعلقة",
+    "completedPayments": "المدفوعات المكتملة",
+    "refunds": "المبالغ المسترجعة",
+    "processPayment": "معالجة الدفع",
+    "verifyPayment": "التحقق من الدفع",
+    "amount": "المبلغ",
+    "status": "الحالة",
+    "paymentMethod": "طريقة الدفع"
+  },
+  "invoices": {
+    "title": "إدارة الفواتير",
+    "createInvoice": "إنشاء فاتورة",
+    "pending": "معلقة",
+    "paid": "مدفوعة",
+    "overdue": "متأخرة",
+    "sendReminder": "إرسال تذكير",
+    "downloadPDF": "تحميل PDF",
+    "invoiceNumber": "رقم الفاتورة",
+    "dueDate": "تاريخ الاستحقاق"
+  },
+  "compliance": {
+    "title": "الامتثال المالي الإيراني",
+    "shetabIntegration": "تكامل شتاب",
+    "taxCompliance": "الامتثال الضريبي",
+    "reportingStandards": "معايير التقارير",
+    "auditTrail": "مسار التدقيق",
+    "complianceStatus": "حالة الامتثال",
+    "generateReport": "إنتاج تقرير"
   }
 }

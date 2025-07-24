@@ -3,14 +3,53 @@
     "title": "لوحة المشرف",
     "welcome": "مرحباً بعودتك",
     "overview": "نظرة عامة",
-    "teachers": "إدارة المعلمين",
+    "teachers": "المعلمون",
     "observations": "الملاحظات",
-    "quality": "ضمان الجودة"
+    "quality": "ضمان الجودة",
+    "reports": "التقارير",
+    "analytics": "التحليلات",
+    "compliance": "الامتثال"
   },
   "stats": {
     "totalTeachers": "إجمالي المعلمين",
-    "activeTeachers": "المعلمون النشطون",
+    "activeObservations": "الملاحظات النشطة",
+    "completionRate": "معدل الإنجاز",
+    "qualityScore": "نقاط الجودة",
     "pendingObservations": "الملاحظات المعلقة",
-    "complianceRate": "معدل الامتثال"
+    "thisMonth": "هذا الشهر",
+    "complianceRate": "معدل الامتثال",
+    "averageRating": "متوسط التقييم"
+  },
+  "teachers": {
+    "title": "إدارة المعلمين",
+    "performance": "الأداء",
+    "viewProfile": "عرض الملف الشخصي",
+    "scheduleObservation": "جدولة ملاحظة",
+    "sendFeedback": "إرسال تعليقات",
+    "viewReports": "عرض التقارير"
+  },
+  "observations": {
+    "title": "ملاحظات التدريس",
+    "schedule": "جدولة جديدة",
+    "pending": "معلقة",
+    "completed": "مكتملة",
+    "inProgress": "قيد التنفيذ",
+    "overdue": "متأخرة",
+    "viewDetails": "عرض التفاصيل",
+    "addFeedback": "إضافة تعليقات"
+  },
+  "quality": {
+    "title": "ضمان الجودة",
+    "standards": "معايير التدريس",
+    "compliance": "فحص الامتثال",
+    "improvement": "خطط التحسين",
+    "training": "احتياجات التدريب"
+  },
+  "reports": {
+    "title": "تقارير الأداء",
+    "generate": "إنشاء تقرير",
+    "teacherPerformance": "أداء المعلم",
+    "institutionalMetrics": "المقاييس المؤسسية",
+    "export": "تصدير البيانات"
   }
 }

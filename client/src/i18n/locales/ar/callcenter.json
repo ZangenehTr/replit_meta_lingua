@@ -3,14 +3,49 @@
     "title": "لوحة مركز الاتصال",
     "welcome": "مرحباً بعودتك",
     "overview": "نظرة عامة",
-    "leads": "إدارة العملاء المحتملين",
-    "calls": "سجل المكالمات",
-    "performance": "الأداء"
+    "leads": "العملاء المحتملون",
+    "calls": "المكالمات",
+    "performance": "الأداء",
+    "reports": "التقارير",
+    "voip": "مركز VoIP"
   },
   "stats": {
     "totalCalls": "إجمالي المكالمات",
-    "dailyCalls": "المكالمات اليومية",
+    "completedCalls": "المكالمات المكتملة",
+    "conversionRate": "معدل التحويل",
+    "avgCallDuration": "متوسط مدة المكالمة",
+    "activeLeads": "العملاء المحتملون النشطون",
+    "thisWeek": "هذا الأسبوع",
     "responseRate": "معدل الاستجابة",
-    "conversionRate": "معدل التحويل"
+    "qualityScore": "نقاط الجودة"
+  },
+  "leads": {
+    "title": "إدارة العملاء المحتملين",
+    "newLead": "عميل محتمل جديد",
+    "hotLeads": "عملاء محتملون مهمون",
+    "followUp": "متابعة",
+    "converted": "تم التحويل",
+    "callNow": "اتصل الآن",
+    "schedule": "جدولة مكالمة",
+    "addNotes": "إضافة ملاحظات"
+  },
+  "calls": {
+    "title": "تاريخ المكالمات",
+    "duration": "المدة",
+    "outcome": "النتيجة",
+    "recording": "التسجيل",
+    "notes": "الملاحظات",
+    "callback": "معاودة الاتصال",
+    "completed": "مكتملة",
+    "missed": "فائتة"
+  },
+  "voip": {
+    "title": "مركز اتصال VoIP",
+    "dialNumber": "طلب رقم",
+    "callStatus": "حالة المكالمة",
+    "connecting": "جاري الاتصال",
+    "connected": "متصل",
+    "ended": "انتهت المكالمة",
+    "studentDirectory": "دليل الطلاب"
   }
 }

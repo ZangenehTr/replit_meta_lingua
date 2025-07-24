@@ -1,21 +1,80 @@
 {
   "dashboard": {
-    "title": "لوحة الطالب",
-    "welcome": "مرحباً بعودتك",
+    "title": "لوحة تحكم الطالب",
+    "welcome": "مرحباً بك {{name}}",
+    "welcomeBack": "مرحباً بك مرة أخرى!",
+    "welcomeMessage": "هل أنت مستعد لمواصلة رحلة التعلم؟",
+    "myProgress": "تقدمي",
+    "dayStreak": "سلسلة الأيام",
+    "lessons": "الدروس", 
+    "credits": "الاعتمادات",
+    "learningStreak": "سلسلة التعلم",
+    "courseProgress": "تقدم الدورة",
+    "availableCredits": "الاعتمادات المتاحة",
+    "nextSession": "الجلسة التالية",
+    "noSessions": "لا توجد جلسات",
     "overview": "نظرة عامة",
     "courses": "دوراتي",
     "assignments": "المهام",
     "progress": "التقدم",
-    "practice": "الممارسة بالذكاء الاصطناعي",
+    "practice": "ممارسة الذكاء الاصطناعي",
     "packages": "الحزم",
-    "gamification": "الإنجازات"
+    "gamification": "الإنجازات",
+    "videoLessons": "دروس الفيديو",
+    "discoverLevel": "اكتشف مستوى لغتك",
+    "assessmentDescription": "خذ تقييمنا الشامل لتحديد مستوى إتقانك الدقيق",
+    "startAssessment": "بدء التقييم",
+    "whatIsMyLevel": "ما هو مستواي؟",
+    "skills": "المهارات",
+    "aiPractice": "ممارسة الذكاء الاصطناعي",
+    "quickStats": "إحصائيات سريعة",
+    "todaysGoals": "أهداف اليوم",
+    "recentAchievements": "الإنجازات الأخيرة"
   },
   "stats": {
     "totalLessons": "إجمالي الدروس",
     "completedLessons": "الدروس المكتملة",
     "currentStreak": "السلسلة الحالية",
-    "totalXP": "إجمالي نقاط الخبرة",
+    "totalXP": "إجمالي نقاط الخبرة", 
     "currentLevel": "المستوى الحالي",
-    "walletBalance": "رصيد المحفظة"
+    "nextLevelXP": "نقاط خبرة المستوى التالي",
+    "walletBalance": "رصيد المحفظة",
+    "memberTier": "مستوى العضوية",
+    "studyTimeThisWeek": "وقت الدراسة هذا الأسبوع",
+    "weeklyGoalHours": "ساعات الهدف الأسبوعي"
+  },
+  "courses": {
+    "title": "دوراتي",
+    "noCourses": "لا توجد دورات مسجلة",
+    "progress": "التقدم",
+    "nextSession": "الجلسة التالية",
+    "instructor": "المدرب",
+    "continue": "متابعة التعلم",
+    "viewDetails": "عرض التفاصيل"
+  },
+  "assignments": {
+    "title": "المهام",
+    "pending": "معلقة",
+    "completed": "مكتملة",
+    "dueDate": "تاريخ الاستحقاق",
+    "submit": "إرسال",
+    "submitted": "تم الإرسال",
+    "graded": "تم التقييم"
+  },
+  "practice": {
+    "title": "ممارسة الذكاء الاصطناعي",
+    "subtitle": "تدرب على الفارسية مع محادثة الذكاء الاصطناعي",
+    "startSession": "بدء جلسة التدريب",
+    "holdToSpeak": "اضغط مع الاستمرار للتحدث",
+    "sessionActive": "الجلسة نشطة",
+    "sessionEnded": "انتهت الجلسة"
+  },
+  "gamification": {
+    "title": "الإنجازات",
+    "level": "المستوى",
+    "xp": "نقاط الخبرة",
+    "streak": "سلسلة الأيام",
+    "achievements": "الإنجازات",
+    "leaderboard": "لوحة المتصدرين"
   }
 }

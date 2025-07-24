@@ -165,28 +165,28 @@ export function AdminFinancial() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{t('admin:financial.title')}</h1>
-          <p className="text-muted-foreground mt-2">{t('admin:financial.subtitle')}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{t('financial.title')}</h1>
+          <p className="text-muted-foreground mt-2">{t('financial.subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" className="border-green-200 hover:bg-green-50">
             <Download className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">{t('exportReport')}</span>
+            <span className="hidden sm:inline">{t('financial.exportReport')}</span>
             <span className="sm:hidden">Export</span>
           </Button>
           <Dialog>
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
                 <Plus className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">{t('manualTransaction')}</span>
+                <span className="hidden sm:inline">{t('financial.manualTransaction')}</span>
                 <span className="sm:hidden">Add</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>{t('createManualTransaction')}</DialogTitle>
+                <DialogTitle>{t('financial.createManualTransaction')}</DialogTitle>
                 <DialogDescription>
-                  {t('processManualPayments')}
+                  {t('financial.processManualPayments')}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 py-4">

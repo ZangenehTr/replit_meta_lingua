@@ -134,14 +134,14 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Create Course
+{t('admin:courses.createCourse')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Course</DialogTitle>
+          <DialogTitle>{t('admin:courses.createNewCourse')}</DialogTitle>
           <DialogDescription>
-            Build a comprehensive course with all required information
+            {t('admin:courses.createCourseDescription')}
           </DialogDescription>
         </DialogHeader>
         
@@ -154,9 +154,9 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="courseCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Course Code</FormLabel>
+                    <FormLabel>{t('admin:courses.courseCode')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. PER-BEG-001" {...field} />
+                      <Input placeholder={t('admin:courses.courseCodePlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -168,9 +168,9 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Course Title</FormLabel>
+                    <FormLabel>{t('admin:courses.courseTitle')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter course title" {...field} />
+                      <Input placeholder={t('admin:courses.courseTitlePlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -182,11 +182,11 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>{t('admin:courses.category')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
+                          <SelectValue placeholder={t('admin:courses.selectCategory')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -206,11 +206,11 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="language"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Course Language</FormLabel>
+                    <FormLabel>{t('admin:courses.courseLanguage')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select language" />
+                          <SelectValue placeholder={t('admin:courses.selectLanguage')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

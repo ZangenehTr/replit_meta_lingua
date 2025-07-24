@@ -1,46 +1,62 @@
 {
   "dashboard": {
-    "title": "Supervisor Dashboard", 
-    "welcomeMessage": "Monitor teaching quality and performance across all instructors",
+    "title": "Supervisor Dashboard",
     "welcome": "Welcome back",
     "overview": "Overview",
-    "teachers": "Teacher Management",
+    "teachers": "Teachers",
     "observations": "Observations",
     "quality": "Quality Assurance",
     "reports": "Reports",
-    "schedule": "Schedule Review"
+    "analytics": "Analytics",
+    "compliance": "Compliance"
   },
   "stats": {
     "totalTeachers": "Total Teachers",
-    "activeTeachers": "Active Teachers",
-    "pendingObservations": "Pending Observations",
-    "completedObservations": "Completed Observations",
-    "complianceRate": "Compliance Rate",
+    "activeObservations": "Active Observations",
+    "completionRate": "Completion Rate",
     "qualityScore": "Quality Score",
-    "improvementNeeded": "Improvement Needed"
-  },
-  "observations": {
-    "title": "Teacher Observations",
-    "schedule": "Schedule Observation",
-    "pending": "Pending",
-    "completed": "Completed",
-    "overdue": "Overdue",
-    "viewDetails": "View Details",
-    "createObservation": "Create Observation"
+    "pendingObservations": "Pending Observations",
+    "thisMonth": "This Month",
+    "complianceRate": "Compliance Rate",
+    "averageRating": "Average Rating"
   },
   "teachers": {
     "title": "Teacher Management",
     "performance": "Performance",
-    "evaluation": "Evaluation",
-    "feedback": "Feedback",
-    "training": "Training Needs",
-    "status": "Status"
+    "viewProfile": "View Profile",
+    "scheduleObservation": "Schedule Observation",
+    "sendFeedback": "Send Feedback",
+    "viewReports": "View Reports"
+  },
+  "observations": {
+    "title": "Teaching Observations",
+    "schedule": "Schedule New",
+    "pending": "Pending",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "overdue": "Overdue",
+    "viewDetails": "View Details",
+    "addFeedback": "Add Feedback"
   },
   "quality": {
     "title": "Quality Assurance",
     "standards": "Teaching Standards",
     "compliance": "Compliance Check",
     "improvement": "Improvement Plans",
-    "metrics": "Quality Metrics"
+    "training": "Training Needs"
+  },
+  "reports": {
+    "title": "Performance Reports",
+    "generate": "Generate Report",
+    "teacherPerformance": "Teacher Performance",
+    "institutionalMetrics": "Institutional Metrics",
+    "export": "Export Data"
+  },
+  "teacherManagement": {
+    "title": "Teacher Management",
+    "totalTeachers": "Total Teachers",
+    "activeTeachers": "Active Teachers",
+    "viewProfile": "View Profile",
+    "scheduleObservation": "Schedule Observation"
   }
 }

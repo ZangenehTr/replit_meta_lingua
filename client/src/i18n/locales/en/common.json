@@ -316,7 +316,8 @@
   },
   "ui": {
     "days": "days",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "tryAgain": "Try Again"
   },
   "student": {
     "dashboard": "Student Dashboard",

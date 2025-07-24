@@ -26,7 +26,10 @@
     "startAssessment": "Start Assessment",
     "whatIsMyLevel": "What is my level?",
     "skills": "Skills",
-    "aiPractice": "AI Practice"
+    "aiPractice": "AI Practice",
+    "quickStats": "Quick Stats",
+    "todaysGoals": "Today's Goals",
+    "recentAchievements": "Recent Achievements"
   },
   "stats": {
     "totalLessons": "Total Lessons",
@@ -126,5 +129,13 @@
     "writingBelowAverage": "Your writing scores are below your other skills",
     "currentLevelDescription": "Your current level and progress",
     "improvementOverTime": "Your improvement over time"
-  }
+  },
+  "sessionsTitle": "My Learning Sessions",
+  "upcomingSessions": "Upcoming Sessions", 
+  "pastSessions": "Past Sessions",
+  "todaySessions": "Today's Sessions",
+  "thisWeek": "This Week",
+  "completed": "Completed",
+  "noSessionsToday": "No sessions scheduled for today",
+  "bookSession": "Book a Session"
 }

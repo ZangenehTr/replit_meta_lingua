@@ -3,56 +3,52 @@
     "title": "Accountant Dashboard",
     "welcome": "Welcome back",
     "overview": "Overview",
-    "financial": "Financial Management",
-    "transactions": "Transactions",
     "payments": "Payments",
     "invoices": "Invoices",
-    "reports": "Financial Reports",
-    "compliance": "Iranian Compliance"
+    "reports": "Reports",
+    "compliance": "Compliance",
+    "analytics": "Analytics"
   },
   "stats": {
     "totalRevenue": "Total Revenue",
-    "monthlyRevenue": "Monthly Revenue",
     "pendingPayments": "Pending Payments",
     "completedTransactions": "Completed Transactions",
-    "walletBalance": "Total Wallet Balance",
-    "shetabTransactions": "Shetab Transactions",
-    "iranianCompliance": "Iranian Compliance",
-    "taxReporting": "Tax Reporting"
-  },
-  "financial": {
-    "title": "Financial Management",
-    "revenue": "Revenue",
-    "expenses": "Expenses",
-    "profit": "Profit",
-    "cashFlow": "Cash Flow",
-    "budgetTracking": "Budget Tracking",
-    "financialForecasting": "Financial Forecasting"
-  },
-  "transactions": {
-    "title": "Transactions",
-    "income": "Income",
-    "expense": "Expense",
-    "pending": "Pending",
-    "completed": "Completed",
-    "failed": "Failed",
-    "amount": "Amount",
-    "date": "Date",
-    "description": "Description"
+    "monthlyGrowth": "Monthly Growth",
+    "totalStudents": "Total Students",
+    "averagePayment": "Average Payment",
+    "thisMonth": "This Month",
+    "complianceRate": "Compliance Rate"
   },
   "payments": {
     "title": "Payment Management",
-    "shetabGateway": "Shetab Gateway",
-    "walletTopUp": "Wallet Top-up",
+    "newPayment": "New Payment",
+    "pendingPayments": "Pending Payments",
+    "completedPayments": "Completed Payments",
     "refunds": "Refunds",
-    "paymentHistory": "Payment History",
-    "iranianBanking": "Iranian Banking"
+    "processPayment": "Process Payment",
+    "verifyPayment": "Verify Payment",
+    "amount": "Amount",
+    "status": "Status",
+    "paymentMethod": "Payment Method"
+  },
+  "invoices": {
+    "title": "Invoice Management",
+    "createInvoice": "Create Invoice",
+    "pending": "Pending",
+    "paid": "Paid",
+    "overdue": "Overdue",
+    "sendReminder": "Send Reminder",
+    "downloadPDF": "Download PDF",
+    "invoiceNumber": "Invoice Number",
+    "dueDate": "Due Date"
   },
   "compliance": {
-    "title": "Iranian Compliance",
+    "title": "Iranian Financial Compliance",
+    "shetabIntegration": "Shetab Integration",
     "taxCompliance": "Tax Compliance",
-    "reportingRequirements": "Reporting Requirements",
-    "localRegulations": "Local Regulations",
-    "currencyCompliance": "Currency Compliance (IRR)"
+    "reportingStandards": "Reporting Standards",
+    "auditTrail": "Audit Trail",
+    "complianceStatus": "Compliance Status",
+    "generateReport": "Generate Report"
   }
 }
