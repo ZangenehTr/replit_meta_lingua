@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -71,6 +72,7 @@ const teacherSchema = z.object({
 type TeacherFormData = z.infer<typeof teacherSchema>;
 
 export function AdminTeacherManagement() {
+  const { t } = useTranslation(['admin', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
