@@ -30,7 +30,8 @@
     "scheduleFollowUp": "Schedule Follow-up"
   },
   "calls": {
-    "title": "Call History",
+    "title": "Call Logs",
+    "subtitle": "Track all incoming and outgoing calls",
     "duration": "Duration",
     "status": "Status",
     "recording": "Recording",

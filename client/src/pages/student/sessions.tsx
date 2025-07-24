@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Video, Calendar, Clock, User, MapPin, ExternalLink, Phone, MessageSquare } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from 'react-i18next';
 import { format } from "date-fns";
 
 interface Session {
@@ -34,6 +35,7 @@ interface Session {
 }
 
 export default function SessionsPage() {
+  const { t } = useTranslation(['student', 'common']);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("upcoming");
@@ -252,10 +254,10 @@ export default function SessionsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Live Sessions
+            {t('student:sessions.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Manage your upcoming and past learning sessions
+            {t('student:sessions.subtitle')}
           </p>
         </div>
 

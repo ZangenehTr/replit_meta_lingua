@@ -12,9 +12,11 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 import { Save, TestTube, Phone, CreditCard, MessageSquare, Settings, CheckCircle2, CheckCircle, AlertCircle, Info, Eye, EyeOff } from "lucide-react";
 
 export function IranianComplianceSettings() {
+  const { t } = useTranslation(['admin', 'common']);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"voip" | "shetab" | "sms" | "general">("voip");
@@ -167,8 +169,8 @@ export function IranianComplianceSettings() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Third Party Settings</h1>
-          <p className="text-muted-foreground mt-1">Configure third-party Iranian services for local deployment</p>
+          <h1 className="text-2xl font-bold">{t('admin:iranianCompliance.title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('admin:iranianCompliance.subtitle')}</p>
         </div>
         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
           <CheckCircle2 className="h-3 w-3 mr-1" />

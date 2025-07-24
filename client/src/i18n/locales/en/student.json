@@ -71,5 +71,33 @@
     "used": "Used",
     "expired": "Expired",
     "active": "Active"
+  },
+  "moodLearning": {
+    "title": "Persian Learning Mood Intelligence",
+    "subtitle": "Track your emotional state and receive personalized Persian learning recommendations powered by Iranian cultural insights. Completely offline for secure learning."
+  },
+  "aiConversation": {
+    "title": "AI Language Practice",
+    "subtitle": "Practice conversations with AI in English or Farsi. Hold the microphone button to speak."
+  },
+  "sessions": {
+    "title": "Live Sessions",
+    "subtitle": "Manage your upcoming and past learning sessions"
+  },
+  "homework": {
+    "title": "Homework & Assignments",
+    "subtitle": "Complete your assignments and track your progress"
+  },
+  "messages": {
+    "title": "Messages",
+    "subtitle": "Connect with your tutors and classmates"
+  },
+  "payment": {
+    "title": "Wallet & Credits",
+    "subtitle": "Manage your wallet balance and membership benefits"
+  },
+  "tests": {
+    "title": "My Tests",
+    "subtitle": "Take tests and view your results"
   }
 }

@@ -700,9 +700,9 @@ export function AdminCourses() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">{t('courseManagement')}</h1>
+          <h1 className="text-3xl font-bold">{t('admin:courses.title')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Define curriculum, content, and learning objectives
+            {t('admin:courses.subtitle')}
           </p>
         </div>
         <div className="flex gap-3">

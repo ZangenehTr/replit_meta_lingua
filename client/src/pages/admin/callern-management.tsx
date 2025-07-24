@@ -257,9 +257,9 @@ export function CallernManagement() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Callern Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{t('admin:callern.title')}</h1>
           <p className="text-muted-foreground mt-2">
-            Manage teacher availability for on-demand video calls
+            {t('admin:callern.subtitle')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

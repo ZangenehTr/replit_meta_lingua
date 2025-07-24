@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,8 @@ interface KavenegarSettings {
 }
 
 export default function SMSSettingsPage() {
+  const { t } = useTranslation(['admin', 'common']);
+  const { language, isRTL, direction } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTemplate, setSelectedTemplate] = useState<SMSTemplate | null>(null);
@@ -118,23 +122,23 @@ export default function SMSSettingsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            SMS Service Configuration
+            {t('admin:smsSettings.title')}
           </h1>
           <p className="text-muted-foreground mt-2">
-            Configure Kavenegar SMS service and message templates
+            {t('common:configureService')}
           </p>
         </div>
         <div className="flex space-x-2">
           <Button variant="outline" onClick={() => window.location.href = '/admin/sms-test'}>
             <TestTube className="h-4 w-4 mr-2" />
-            Test SMS
+            {t('common:testSMS')}
           </Button>
           <Button 
             onClick={() => saveKavenegarMutation.mutate(kavenegarData)}
             disabled={saveKavenegarMutation.isPending}
           >
             <Save className="h-4 w-4 mr-2" />
-            {saveKavenegarMutation.isPending ? 'Saving...' : 'Save Settings'}
+            {saveKavenegarMutation.isPending ? t('common:saving') : t('common:saveSettings')}
           </Button>
         </div>
       </div>
@@ -144,10 +148,10 @@ export default function SMSSettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Kavenegar SMS Service Configuration
+            {t('admin:smsSettings.kavenegarSettings')}
           </CardTitle>
           <CardDescription>
-            Configure your Iranian SMS service settings
+            {t('common:configureSMSService')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

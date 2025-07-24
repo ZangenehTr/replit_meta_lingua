@@ -20,12 +20,17 @@
   },
   "mentees": {
     "title": "My Mentees",
+    "subtitle": "Manage and track your mentees' progress",
     "noMentees": "No mentees assigned",
     "progress": "Progress",
     "lastContact": "Last Contact",
     "nextGoal": "Next Goal",
     "viewProfile": "View Profile",
     "contactMentee": "Contact Mentee"
+  },
+  "students": {
+    "title": "My Mentees",
+    "subtitle": "Manage and track your mentees' progress"
   },
   "assignments": {
     "title": "Assignments",

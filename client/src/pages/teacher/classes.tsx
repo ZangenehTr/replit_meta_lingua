@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Calendar, Clock, Video, MessageSquare, FileText, Settings, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from 'react-i18next';
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 
@@ -37,7 +37,7 @@ interface TeacherClass {
 
 export default function TeacherClassesPage() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t } = useTranslation(['teacher', 'common']);
   const [, setLocation] = useLocation();
   const [selectedTab, setSelectedTab] = useState("active");
 
@@ -65,10 +65,10 @@ export default function TeacherClassesPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            My Classes
+            {t('teacher:classes.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Manage your teaching classes and track student progress
+            {t('teacher:classes.subtitle')}
           </p>
         </div>
 

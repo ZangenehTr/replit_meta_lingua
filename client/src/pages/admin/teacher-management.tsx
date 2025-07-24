@@ -227,8 +227,8 @@ export function AdminTeacherManagement() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">Teacher Management</h1>
-          <p className="text-muted-foreground mt-2">Manage instructors and teaching staff</p>
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">{t('admin:teachers.title')}</h1>
+          <p className="text-muted-foreground mt-2">{t('admin:teachers.subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex border rounded-lg overflow-hidden border-emerald-200">
@@ -609,7 +609,7 @@ export function AdminTeacherManagement() {
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling.style.display = 'flex';
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
                             }}
                           />
                           <div className="w-full h-full flex items-center justify-center text-gray-400 hidden">

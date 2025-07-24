@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from 'react-i18next';
 
 interface Campaign {
   id: number;
@@ -66,6 +67,7 @@ interface Campaign {
 }
 
 export default function CampaignManagementPage() {
+  const { t } = useTranslation(['admin', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
@@ -357,10 +359,10 @@ export default function CampaignManagementPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Campaign Management
+              {t('admin:campaigns.title')}
             </h1>
             <p className="text-muted-foreground mt-2">
-              Manage marketing campaigns across all channels
+              {t('admin:campaigns.subtitle')}
             </p>
           </div>
           <div className="flex gap-2">

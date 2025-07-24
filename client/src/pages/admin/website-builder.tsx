@@ -12,7 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from 'react-i18next';
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Globe, 
@@ -106,8 +107,9 @@ interface WebsiteSection {
 }
 
 export default function WebsiteBuilderPage() {
+  const { t } = useTranslation(['admin', 'common']);
   const { toast } = useToast();
-  const { t, isRTL } = useLanguage();
+  const { isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [selectedTemplate, setSelectedTemplate] = useState<WebsiteTemplate | null>(null);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -349,10 +351,10 @@ export default function WebsiteBuilderPage() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                Website Builder
+                {t('admin:websiteBuilder.title')}
               </h1>
               <p className="text-gray-600 dark:text-gray-300">
-                Create responsive, SEO-optimized websites with online payment integration
+                {t('admin:websiteBuilder.subtitle')}
               </p>
             </div>
             <div className="flex gap-2">

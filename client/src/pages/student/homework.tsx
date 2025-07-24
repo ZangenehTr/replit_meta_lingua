@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClipboardList, Calendar, Clock, CheckCircle, AlertCircle, Upload, Download, FileText, Mic, Play, Pause } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from 'react-i18next';
 import { format } from "date-fns";
 
 interface Homework {
@@ -48,6 +49,7 @@ interface HomeworkSubmission {
 }
 
 export default function HomeworkPage() {
+  const { t } = useTranslation(['student', 'common']);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("pending");
@@ -340,10 +342,10 @@ export default function HomeworkPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Homework & Assignments
+            {t('student:homework.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Complete your assignments and track your progress
+            {t('student:homework.subtitle')}
           </p>
         </div>
 

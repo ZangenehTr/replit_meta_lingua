@@ -27,6 +27,7 @@ import {
   UserPlus,
   CheckCircle
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface TimeSlot {
   day: string;
@@ -91,6 +92,7 @@ function isTimeOverlap(slot1: any, slot2: any): boolean {
 }
 
 export default function TeacherStudentMatchingPage() {
+  const { t } = useTranslation(['admin', 'common']);
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("one-on-one"); // "one-on-one" or "group-classes"
   const [searchTerm, setSearchTerm] = useState("");
@@ -293,10 +295,10 @@ export default function TeacherStudentMatchingPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Teacher-Student Matching System
+            {t('admin:teacherStudentMatching.title')}
           </h1>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Match students with teachers based on schedule availability, language, level, and preferences
+            {t('admin:teacherStudentMatching.subtitle')}
           </p>
         </div>
 

@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { MessageSquare, Send, Search, Plus, Phone, Video, MoreVertical, Paperclip, Smile } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from 'react-i18next';
 import { format } from "date-fns";
 
 interface Message {
@@ -46,6 +47,7 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
+  const { t } = useTranslation(['student', 'common']);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
@@ -149,10 +151,10 @@ export default function MessagesPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Messages
+            {t('student:messages.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Connect with your tutors and classmates
+            {t('student:messages.subtitle')}
           </p>
         </div>
 

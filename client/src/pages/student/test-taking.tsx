@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 import { useLocation } from "wouter";
 import {
   Card,
@@ -71,6 +72,7 @@ interface TestQuestion {
 }
 
 export default function StudentTestTaking() {
+  const { t } = useTranslation(['student', 'common']);
   const { user } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -364,7 +366,7 @@ export default function StudentTestTaking() {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">My Tests</h1>
+      <h1 className="text-3xl font-bold mb-6">{t('student:tests.title')}</h1>
 
       <Tabs defaultValue="available">
         <TabsList className="mb-6">

@@ -38,6 +38,7 @@ import {
   Eye
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 
 interface SupervisionObservation {
   id: number;
@@ -86,6 +87,7 @@ interface TeacherObservationResponse {
 }
 
 export default function TeacherObservationsPage() {
+  const { t } = useTranslation(['teacher', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedObservation, setSelectedObservation] = useState<SupervisionObservation | null>(null);
@@ -268,9 +270,9 @@ export default function TeacherObservationsPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">My Observations</h1>
+          <h1 className="text-3xl font-bold">{t('teacher:observations.title')}</h1>
           <p className="text-muted-foreground mt-2">
-            View and respond to your teaching observation reports
+            {t('teacher:observations.subtitle')}
           </p>
         </div>
         {unacknowledgedObservations?.length > 0 && (

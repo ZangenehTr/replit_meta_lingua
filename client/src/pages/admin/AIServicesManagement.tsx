@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 import { 
   Bot, 
   Server, 
@@ -64,6 +65,7 @@ const RECOMMENDED_MODELS = [
 ];
 
 export default function AIServicesManagement() {
+  const { t } = useTranslation(['admin', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedModel, setSelectedModel] = useState<string>("");

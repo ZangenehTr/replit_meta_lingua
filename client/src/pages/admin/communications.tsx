@@ -40,6 +40,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { useTranslation } from 'react-i18next';
 
 interface SupportTicket {
   id: number;
@@ -96,6 +97,7 @@ interface PushNotification {
 }
 
 export default function AdminCommunicationsPage() {
+  const { t } = useTranslation(['admin', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [location] = useLocation();
@@ -404,11 +406,11 @@ export default function AdminCommunicationsPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 md:mb-6">
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
-              Communication Hub 
+              {t('admin:communications.title')}
               <span className="text-green-600 text-sm ml-2">[CACHE CLEARED ✓]</span>
             </h1>
             <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">
-              Modern ticketing, real-time chat, and push notifications | ENHANCED MOBILE UI ACTIVE
+              {t('admin:communications.subtitle')}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">

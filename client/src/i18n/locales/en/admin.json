@@ -263,5 +263,243 @@
     "points": "Points per Correct",
     "active": "Active",
     "inactive": "Inactive"
+  },
+  "whiteLabel": {
+    "title": "White-Label Management",
+    "institutes": "Institutes",
+    "createInstitute": "Create Institute",
+    "instituteName": "Institute Name",
+    "subdomain": "Subdomain",
+    "domain": "Domain",
+    "status": "Status",
+    "subscriptionPlan": "Subscription Plan",
+    "students": "Students",
+    "teachers": "Teachers",
+    "monthlyRevenue": "Monthly Revenue",
+    "actions": "Actions",
+    "active": "Active",
+    "pending": "Pending",
+    "suspended": "Suspended",
+    "basic": "Basic",
+    "professional": "Professional",
+    "enterprise": "Enterprise"
+  },
+  "supervision": {
+    "title": "Supervision System",
+    "liveObservations": "Live Observations",
+    "recordedSessions": "Recorded Sessions",
+    "qualityAssurance": "Quality Assurance",
+    "observations": "Observations",
+    "questionnaires": "Questionnaires",
+    "stats": "Quality Statistics",
+    "createObservation": "Create Observation",
+    "viewRecording": "View Recording",
+    "teacher": "Teacher",
+    "date": "Date",
+    "type": "Type",
+    "status": "Status",
+    "score": "Score",
+    "actions": "Actions"
+  },
+  "teacherPayments": {
+    "title": "Teacher Payment Management",
+    "payrollOverview": "Payroll Overview",
+    "pendingCalculations": "Pending Calculations",
+    "readyForApproval": "Ready for Approval",
+    "processedPayments": "Processed Payments",
+    "teacherName": "Teacher Name",
+    "period": "Period",
+    "totalHours": "Total Hours",
+    "hourlyRate": "Hourly Rate",
+    "basePay": "Base Pay",
+    "bonuses": "Bonuses",
+    "deductions": "Deductions",
+    "finalAmount": "Final Amount",
+    "status": "Status",
+    "actions": "Actions",
+    "calculate": "Calculate",
+    "approve": "Approve",
+    "sendSMS": "Send SMS",
+    "download": "Download"
+  },
+  "smsSettings": {
+    "title": "SMS Management",
+    "templates": "SMS Templates",
+    "configuration": "Configuration",
+    "testing": "Testing & Logs",
+    "eventType": "Event Type",
+    "recipient": "Recipient",
+    "template": "Template",
+    "language": "Language",
+    "status": "Status",
+    "actions": "Actions",
+    "kavenegarSettings": "Kavenegar Settings",
+    "apiKey": "API Key",
+    "senderNumber": "Sender Number",
+    "dailyLimit": "Daily Limit",
+    "enabled": "Enabled",
+    "save": "Save Settings",
+    "test": "Test SMS"
+  },
+  "reports": {
+    "title": "Reports & Analytics",
+    "subtitle": "Institute-wide reports and analytics dashboard"
+  },
+  "courses": {
+    "title": "Course Management",
+    "subtitle": "Manage courses and academic programs",
+    "createCourse": "Create Course",
+    "editCourse": "Edit Course",
+    "deleteCourse": "Delete Course",
+    "courseDetails": "Course Details",
+    "activeStudents": "Active Students",
+    "totalSessions": "Total Sessions",
+    "courseName": "Course Name",
+    "courseCode": "Course Code",
+    "description": "Description",
+    "language": "Language",
+    "level": "Level",
+    "price": "Price",
+    "status": "Status"
+  },
+  "mentorMatching": {
+    "title": "Mentor Matching System",
+    "subtitle": "Match students with compatible mentors based on language, level, and learning goals",
+    "successfullyMatched": "Mentor successfully matched with student",
+    "failedToCreate": "Failed to create mentor assignment"
+  },
+  "students": {
+    "title": "Student Management",
+    "subtitle": "Student management and tracking"
+  },
+  "callern": {
+    "title": "Callern Management",
+    "subtitle": "Manage teacher availability for on-demand video calls"
+  },
+  "rooms": {
+    "title": "Room Management",
+    "subtitle": "Manage classrooms, labs, and meeting rooms",
+    "createdSuccessfully": "Room created successfully",
+    "updatedSuccessfully": "Room updated successfully",
+    "deletedSuccessfully": "Room deleted successfully",
+    "failedToCreate": "Failed to create room",
+    "failedToUpdate": "Failed to update room",
+    "failedToDelete": "Failed to delete room"
+  },
+  "system": {
+    "title": "System Configuration",
+    "description": "White-labeling, role management, integrations, and system settings"
+  },
+  "courses": {
+    "title": "Course Management",
+    "subtitle": "Define curriculum, content, and learning objectives"
+  },
+  "communications": {
+    "title": "Communication Hub",
+    "subtitle": "Modern ticketing, real-time chat, and push notifications"
+  },
+  "userManagement": {
+    "title": "User Management",
+    "subtitle": "Create and manage users with different roles"
+  },
+  "classes": {
+    "title": "Class Scheduling",
+    "subtitle": "Schedule when and where courses are delivered with teacher and room assignments"
+  },
+  "campaigns": {
+    "title": "Campaign Management",
+    "subtitle": "Manage marketing campaigns across all channels"
+  },
+  "financial": {
+    "title": "Financial Management",
+    "subtitle": "Manage revenue, expenses, and financial reporting"
+  },
+  "teachers": {
+    "title": "Teacher Management",
+    "subtitle": "Manage instructors and their qualifications"
+  },
+  "websiteBuilder": {
+    "title": "Website Builder",
+    "subtitle": "Create and customize your institute's website"
+  },
+  "iranianCompliance": {
+    "title": "Iranian Compliance",
+    "subtitle": "Manage Iranian market compliance settings"
+  },
+  "smsSettings": {
+    "title": "SMS Settings",
+    "subtitle": "Configure SMS notifications and templates"
+  },
+  "teacherPayments": {
+    "title": "Teacher Payments",
+    "subtitle": "Manage teacher compensation and payroll"
+  },
+  "roomManagement": {
+    "title": "Room Management",
+    "subtitle": "Manage physical and virtual learning spaces"
+  },
+  "callernManagement": {
+    "title": "Callern Management",
+    "subtitle": "Manage on-demand teacher availability and video calls"
+  },
+  "mentorMatching": {
+    "title": "Mentor Matching",
+    "subtitle": "Assign mentors to support teacher-student relationships"
+  },
+  "supervision": {
+    "title": "Supervision System",
+    "qualityAssurance": "Comprehensive quality assurance and teacher observation system"
+  },
+  "whiteLabel": {
+    "title": "White Label Management",
+    "subtitle": "Manage multi-institute deployments and branding"
+  },
+  "reports": {
+    "title": "Reports & Analytics", 
+    "subtitle": "Comprehensive reporting and data analytics"
+  },
+  "aiServices": {
+    "title": "AI Services Management",
+    "subtitle": "Configure and manage AI models for language learning"
+  },
+  "financialReports": {
+    "title": "Financial Reports",
+    "subtitle": "Detailed financial analytics and reporting"
+  },
+  "settings": {
+    "title": "System Settings",
+    "subtitle": "Configure payment gateways, SMS, email, and security settings"
+  },
+  "system": {
+    "title": "System Administration", 
+    "subtitle": "Manage system configuration, backups, and monitoring"
+  },
+  "financial": {
+    "title": "Financial Management",
+    "subtitle": "Manage transactions, invoices, and payment processing"
+  },
+  "games": {
+    "title": "Games Management",
+    "subtitle": "Configure educational games and gamification features"
+  },
+  "teacherStudentMatching": {
+    "title": "Teacher-Student Matching",
+    "subtitle": "Intelligently match teachers with students based on preferences"
+  },
+  "userManagement": {
+    "title": "User Management", 
+    "subtitle": "Manage user accounts, roles, and permissions"
+  },
+  "dashboard": {
+    "title": "Admin Dashboard",
+    "subtitle": "Administrative overview and system metrics"
+  },
+  "campaigns": {
+    "title": "Campaign Management",
+    "subtitle": "Manage marketing campaigns and social media integration"
+  },
+  "classes": {
+    "title": "Class Scheduling",
+    "subtitle": "Schedule and manage class sessions across the institute"
   }
 }

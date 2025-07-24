@@ -115,9 +115,9 @@ export function AdminDashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">{t('admin:dashboard.title')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t('common:dashboard.title')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base">
-            {t('admin:dashboard.welcomeMessage')}
+            {t('common:welcomeMessage')}
           </p>
         </div>
       </div>
@@ -127,7 +127,7 @@ export function AdminDashboard() {
         {/* Server Uptime */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin:dashboard.systemHealth')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('common:dashboard.systemHealth')}</CardTitle>
             <Server className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -141,13 +141,13 @@ export function AdminDashboard() {
         {/* Call Center Performance */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin:dashboard.callResponseRate')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('common:dashboard.callResponseRate')}</CardTitle>
             <Phone className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{(callCenterStats as any)?.responseRate || '0.0'}%</div>
             <p className="text-xs text-muted-foreground">
-              +2.3% {t('admin:fromLastWeek')}
+              +2.3% {t('common:dashboard.fromLastWeek')}
             </p>
           </CardContent>
         </Card>
@@ -155,13 +155,13 @@ export function AdminDashboard() {
         {/* Overdue Payments Alert */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin:overduePayments')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('common:dashboard.overduePayments')}</CardTitle>
             <AlertCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{(overduePayments as any)?.count || 0}</div>
             <p className="text-xs text-red-600">
-              ${(overduePayments as any)?.totalAmount || '0'} {t('admin:total')}
+              ${(overduePayments as any)?.totalAmount || '0'} {t('common:dashboard.total')}
             </p>
           </CardContent>
         </Card>
@@ -186,7 +186,7 @@ export function AdminDashboard() {
         {/* Call Center Performance Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:callCenterPerformance')}</CardTitle>
+            <CardTitle>{t('common:dashboard.callCenterPerformance')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -555,7 +555,7 @@ export function AdminDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center">
             <AlertCircle className="h-5 w-5 mr-2 text-red-600" />
-            Critical: Students with Overdue Payments
+{t('common:dashboard.criticalOverduePayments')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -563,12 +563,12 @@ export function AdminDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2">Student Name</th>
-                  <th className="text-left p-2">Amount Due</th>
-                  <th className="text-left p-2">Days Overdue</th>
-                  <th className="text-left p-2">Course</th>
-                  <th className="text-left p-2">Contact</th>
-                  <th className="text-left p-2">Action</th>
+                  <th className="text-left p-2">{t('common:dashboard.studentName')}</th>
+                  <th className="text-left p-2">{t('common:dashboard.amountDue')}</th>
+                  <th className="text-left p-2">{t('common:dashboard.daysOverdue')}</th>
+                  <th className="text-left p-2">{t('common:dashboard.course')}</th>
+                  <th className="text-left p-2">{t('common:dashboard.contact')}</th>
+                  <th className="text-left p-2">{t('common:dashboard.action')}</th>
                 </tr>
               </thead>
               <tbody>

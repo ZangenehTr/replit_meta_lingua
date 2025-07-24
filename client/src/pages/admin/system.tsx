@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -42,7 +43,8 @@ import {
 } from "lucide-react";
 
 export function AdminSystem() {
-  const { t, isRTL } = useLanguage();
+  const { t } = useTranslation(['admin', 'common']);
+  const { isRTL } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,7 +60,7 @@ export function AdminSystem() {
   const [newRoleDialog, setNewRoleDialog] = useState(false);
 
   // Handle Export Configuration function
-  const handleExportConfiguration = () => {
+  const handleExportConfig = () => {
     handleCreateBackup();
   };
 
@@ -464,9 +466,9 @@ export function AdminSystem() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">System Configuration</h1>
+          <h1 className="text-3xl font-bold">{t('admin:system.title')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            White-labeling, role management, integrations, and system settings
+            {t('admin:system.description')}
           </p>
         </div>
         <div className="flex gap-3">

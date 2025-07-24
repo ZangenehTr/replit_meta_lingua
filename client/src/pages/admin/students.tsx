@@ -641,10 +641,10 @@ export function AdminStudents() {
           
           <div className="text-right">
             <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              {t('admin.students')}
+              {t('admin:students.title')}
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
-              Student management and tracking
+              {t('admin:students.subtitle')}
             </p>
           </div>
         </div>
