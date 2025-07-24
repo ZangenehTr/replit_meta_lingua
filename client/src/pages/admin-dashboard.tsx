@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +72,7 @@ interface InvoiceSummary {
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation(['admin', 'common']);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("overview");
 
@@ -122,10 +124,10 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Institute Management
+            {t('admin:dashboard.instituteManagement')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Comprehensive CRM and administrative dashboard
+            {t('admin:dashboard.comprehensiveCRM')}
           </p>
         </div>
 
@@ -136,11 +138,11 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Total Students
+                    {t('admin:dashboard.totalStudents')}
                   </p>
                   <p className="text-2xl font-bold">{stats?.totalStudents || 0}</p>
                   <p className="text-xs text-green-600 dark:text-green-400">
-                    {stats?.activeStudents || 0} active
+                    {stats?.activeStudents || 0} {t('admin:dashboard.active')}
                   </p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
@@ -153,11 +155,11 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Monthly Revenue
+                    {t('admin:dashboard.monthlyRevenue')}
                   </p>
                   <p className="text-2xl font-bold">${stats?.monthlyRevenue || 0}</p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
-                    Total: ${stats?.totalRevenue || 0}
+                    {t('admin:dashboard.total')}: ${stats?.totalRevenue || 0}
                   </p>
                 </div>
                 <DollarSign className="h-8 w-8 text-green-600" />
@@ -170,11 +172,11 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Pending Leads
+                    {t('admin:dashboard.pendingLeads')}
                   </p>
                   <p className="text-2xl font-bold">{stats?.pendingLeads || 0}</p>
                   <p className="text-xs text-orange-600 dark:text-orange-400">
-                    Require follow-up
+                    {t('admin:dashboard.requireFollowUp')}
                   </p>
                 </div>
                 <UserPlus className="h-8 w-8 text-orange-600" />
@@ -187,11 +189,11 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Today's Sessions
+                    {t('admin:dashboard.todaysSessions')}
                   </p>
                   <p className="text-2xl font-bold">{stats?.todaysSessions || 0}</p>
                   <p className="text-xs text-purple-600 dark:text-purple-400">
-                    {stats?.overdueInvoices || 0} overdue invoices
+                    {stats?.overdueInvoices || 0} {t('admin:dashboard.overdueInvoices')}
                   </p>
                 </div>
                 <Calendar className="h-8 w-8 text-purple-600" />
@@ -203,10 +205,10 @@ export default function AdminDashboard() {
         {/* Main Content Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
           <TabsList className="grid w-full lg:w-auto grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="leads">Leads</TabsTrigger>
-            <TabsTrigger value="finance">Finance</TabsTrigger>
+            <TabsTrigger value="overview">{t('admin:dashboard.overview')}</TabsTrigger>
+            <TabsTrigger value="students">{t('admin:dashboard.students')}</TabsTrigger>
+            <TabsTrigger value="leads">{t('admin:dashboard.leads')}</TabsTrigger>
+            <TabsTrigger value="finance">{t('admin:dashboard.finance')}</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -214,8 +216,8 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Student Activity</CardTitle>
-                  <CardDescription>Latest enrollments and activity</CardDescription>
+                  <CardTitle>{t('admin:dashboard.recentStudentActivity')}</CardTitle>
+                  <CardDescription>{t('admin:dashboard.latestEnrollments')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -224,7 +226,7 @@ export default function AdminDashboard() {
                         <div>
                           <p className="font-medium">{student.name}</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {student.enrolledCourses} courses • Last active: {student.lastActivity}
+                            {student.enrolledCourses} {t('admin:dashboard.courses')} • {t('admin:dashboard.lastActive')}: {student.lastActivity}
                           </p>
                         </div>
                         <Badge className={getStatusColor(student.status)}>
@@ -238,8 +240,8 @@ export default function AdminDashboard() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Urgent Follow-ups</CardTitle>
-                  <CardDescription>Leads requiring immediate attention</CardDescription>
+                  <CardTitle>{t('admin:dashboard.urgentFollowUps')}</CardTitle>
+                  <CardDescription>{t('admin:dashboard.leadsRequiringAttention')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -249,7 +251,7 @@ export default function AdminDashboard() {
                         <div>
                           <p className="font-medium">{lead.name}</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {lead.source} • Follow up: {lead.followUpDate}
+                            {lead.source} • {t('admin:dashboard.followUp')}: {lead.followUpDate}
                           </p>
                         </div>
                         <Badge className={getStatusColor(lead.status)}>
@@ -270,7 +272,7 @@ export default function AdminDashboard() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Search students..."
+                    placeholder={t('admin:dashboard.searchStudents')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9 w-64"
@@ -278,12 +280,12 @@ export default function AdminDashboard() {
                 </div>
                 <Button variant="outline" size="sm">
                   <Filter className="h-4 w-4 mr-2" />
-                  Filter
+                  {t('admin:dashboard.filter')}
                 </Button>
               </div>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Student
+                {t('admin:dashboard.addStudent')}
               </Button>
             </div>
 
@@ -292,13 +294,13 @@ export default function AdminDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Courses</TableHead>
-                      <TableHead>Total Paid</TableHead>
-                      <TableHead>Last Activity</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t('admin:dashboard.student')}</TableHead>
+                      <TableHead>{t('admin:dashboard.contact')}</TableHead>
+                      <TableHead>{t('admin:dashboard.status')}</TableHead>
+                      <TableHead>{t('admin:dashboard.courses')}</TableHead>
+                      <TableHead>{t('admin:dashboard.totalPaid')}</TableHead>
+                      <TableHead>{t('admin:dashboard.lastActivity')}</TableHead>
+                      <TableHead>{t('admin:dashboard.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
