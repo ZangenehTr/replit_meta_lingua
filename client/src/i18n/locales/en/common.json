@@ -302,7 +302,21 @@
   "errors": {
     "unknownError": "Unknown error occurred",
     "networkError": "Network connection error",
-    "validationError": "Validation error"
+    "validationError": "Validation error",
+    "pageNotFound": "404 Page Not Found",
+    "pageNotFoundDescription": "Did you forget to add the page to the router?"
+  },
+  "wallet": {
+    "title": "Wallet",
+    "subtitle": "Manage wallet, account top-up and course enrollment"
+  },
+  "navigation": {
+    "siteName": "Meta Lingua",
+    "tagline": "Language Learning Platform"
+  },
+  "ui": {
+    "days": "days",
+    "loading": "Loading..."
   },
   "student": {
     "dashboard": "Student Dashboard",

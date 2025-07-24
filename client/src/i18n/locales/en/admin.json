@@ -1,6 +1,8 @@
 {
   "dashboard": {
     "title": "Admin Dashboard",
+    "managerSubtitle": "Institute performance overview and team management",
+    "adminControlCenter": "Admin Control Center", 
     "welcome": "Welcome Back",
     "overview": "System Overview",
     "users": "User Management",

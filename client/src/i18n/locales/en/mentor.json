@@ -47,5 +47,13 @@
     "scheduleCall": "Schedule Call",
     "videoCall": "Video Call",
     "messageHistory": "Message History"
+  },
+  "sessions": {
+    "title": "Mentoring Sessions",
+    "subtitle": "Schedule and manage your mentoring sessions"
+  },
+  "progress": {
+    "title": "Progress Tracking",
+    "subtitle": "Track and analyze your mentees' learning progress"
   }
 }

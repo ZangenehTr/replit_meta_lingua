@@ -1,6 +1,7 @@
 {
   "dashboard": {
     "title": "Supervisor Dashboard", 
+    "welcomeMessage": "Monitor teaching quality and performance across all instructors",
     "welcome": "Welcome back",
     "overview": "Overview",
     "teachers": "Teacher Management",

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Clock, Target, Zap, BookOpen, Users, MessageCircle } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 interface DailyChallenge {
   id: number;
@@ -44,6 +45,7 @@ const getDifficultyColor = (difficulty: string) => {
 };
 
 export function DailyChallenges() {
+  const { t } = useTranslation(['student', 'common']);
   const { language: currentLanguage, isRTL } = useLanguage();
 
   // Fetch daily challenges from API instead of hardcoding
@@ -60,13 +62,10 @@ export function DailyChallenges() {
     <div className={`space-y-4 ${isRTL ? 'rtl' : 'ltr'}`}>
       <div className="text-center">
         <h3 className="text-lg font-bold mb-1">
-          {currentLanguage === 'fa' ? 'چالش‌های روزانه' : 'Daily Challenges'}
+          {t('student:gamification.dailyChallenges')}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {currentLanguage === 'fa' 
-            ? 'چالش‌ها را تکمیل کنید و جوایز کسب کنید'
-            : 'Complete challenges to earn rewards'
-          }
+          {t('student:gamification.challengeSubtitle')}
         </p>
       </div>
 

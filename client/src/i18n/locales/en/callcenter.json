@@ -48,5 +48,9 @@
     "mute": "Mute",
     "hold": "Hold",
     "transfer": "Transfer"
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "subtitle": "Manage marketing campaigns and outreach"
   }
 }

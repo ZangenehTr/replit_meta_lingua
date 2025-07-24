@@ -10,6 +10,7 @@ import {
   Award, Medal, Crown, Zap, Calendar, TrendingUp, ArrowLeft, Home 
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'wouter';
 
 interface Achievement {
@@ -51,7 +52,8 @@ const iconMap = {
 };
 
 export default function GamificationProgress() {
-  const { t, currentLanguage, isRTL } = useLanguage();
+  const { t: tLang, currentLanguage, isRTL } = useLanguage();
+  const { t } = useTranslation(['student', 'common']);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // Fetch real user statistics
@@ -125,13 +127,10 @@ export default function GamificationProgress() {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
-            {currentLanguage === 'fa' ? 'پیشرفت و دستاوردها' : 'Progress & Achievements'}
+            {t('student:gamification.title')}
           </h1>
           <p className="text-muted-foreground">
-            {currentLanguage === 'fa' 
-              ? 'مسیر یادگیری خود را دنبال کنید و جوایز کسب کنید'
-              : 'Track your learning journey and earn rewards'
-            }
+            {t('student:gamification.subtitle')}
           </p>
         </div>
 

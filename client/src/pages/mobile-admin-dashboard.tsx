@@ -20,6 +20,7 @@ import {
   Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
 
 interface DashboardStats {
   totalStudents: number;
@@ -131,6 +132,7 @@ const AlertCard = ({
 };
 
 export function MobileAdminDashboard() {
+  const { t } = useTranslation(['admin', 'common']);
   const [, setLocation] = useLocation();
 
   // Fetch dashboard statistics
@@ -195,9 +197,9 @@ export function MobileAdminDashboard() {
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold leading-tight">Dashboard</h1>
+          <h1 className="text-2xl font-bold leading-tight">{t('admin:dashboard.title')}</h1>
           <p className="text-sm text-muted-foreground">
-            Admin Control Center
+            {t('admin:dashboard.adminControlCenter')}
           </p>
         </div>
         <div className="flex gap-2">

@@ -22,6 +22,7 @@ import {
   Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
 
 interface StudentStats {
   currentLevel: string;
@@ -245,6 +246,7 @@ const AssignmentsCard = ({
 );
 
 export function MobileStudentDashboard() {
+  const { t } = useTranslation(['student', 'common']);
   const [, setLocation] = useLocation();
 
   // Fetch student statistics
@@ -275,8 +277,8 @@ export function MobileStudentDashboard() {
     <div className="space-y-6 p-4 pb-6">
       {/* Welcome Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold">Welcome back!</h1>
-        <p className="text-muted-foreground">Ready to continue your learning journey?</p>
+        <h1 className="text-2xl font-bold">{t('student:dashboard.welcomeBack')}</h1>
+        <p className="text-muted-foreground">{t('student:dashboard.welcomeMessage')}</p>
       </div>
 
       {/* Gamification Widget */}

@@ -2,9 +2,11 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { WalletSystem } from "@/components/dashboard/wallet-system";
 import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from 'react-i18next';
 import { BackButton } from "@/components/ui/back-button";
 
 export default function WalletPage() {
+  const { t } = useTranslation(['common']);
   const { currentLanguage, isRTL } = useLanguage();
 
   return (
@@ -19,14 +21,10 @@ export default function WalletPage() {
                 <BackButton href="/dashboard" />
               </div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                {currentLanguage === 'fa' ? 'کیف پول' :
-                 currentLanguage === 'ar' ? 'المحفظة' :
-                 'Wallet'}
+                {t('common:wallet.title')}
               </h1>
               <p className="text-gray-600 dark:text-gray-300 mt-2">
-                {currentLanguage === 'fa' ? 'مدیریت کیف پول، شارژ حساب و ثبت نام در دوره‌ها' :
-                 currentLanguage === 'ar' ? 'إدارة المحفظة وشحن الحساب والتسجيل في الدورات' :
-                 'Manage wallet, account top-up and course enrollment'}
+                {t('common:wallet.subtitle')}
               </p>
             </div>
             
