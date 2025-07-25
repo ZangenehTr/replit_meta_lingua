@@ -41,7 +41,7 @@ export default function TeacherClassesPage() {
   const [, setLocation] = useLocation();
   const [selectedTab, setSelectedTab] = useState("active");
 
-  const { data: classes, isLoading } = useQuery({
+  const { data: classes, isLoading } = useQuery<TeacherClass[]>({
     queryKey: ['/api/teacher/classes'],
     enabled: !!user
   });

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Clock, Users, Video, MapPin, Plus, Edit, Trash2, Info } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from 'react-i18next';
 
 interface ClassSession {
   id: number;
@@ -26,7 +26,7 @@ interface ClassSession {
 }
 
 export default function TeacherSchedulePage() {
-  const { t } = useLanguage();
+  const { t } = useTranslation(['teacher', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(new Date());

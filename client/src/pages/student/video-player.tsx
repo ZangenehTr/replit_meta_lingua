@@ -17,6 +17,7 @@ import {
   Bookmark, Edit2, Trash2, Clock, FileText, BookOpen
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
+import { useTranslation } from 'react-i18next';
 
 interface VideoNote {
   id: number;
@@ -33,7 +34,9 @@ interface VideoBookmark {
 }
 
 export default function VideoPlayer() {
-  const { lessonId } = useParams();
+  const params = useParams<{ lessonId: string }>();
+  const lessonId = params.lessonId;
+  const { t } = useTranslation(['student', 'common']);
   const [, navigate] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   
@@ -52,18 +55,21 @@ export default function VideoPlayer() {
   const [editingNoteText, setEditingNoteText] = useState("");
 
   // Fetch lesson details
-  const { data: lesson, isLoading: lessonLoading } = useQuery({
+  const { data: lesson, isLoading: lessonLoading } = useQuery<any>({
     queryKey: [`/api/student/video-lessons/${lessonId}`],
+    enabled: !!lessonId
   });
 
   // Fetch notes
-  const { data: notes = [], refetch: refetchNotes } = useQuery({
+  const { data: notes = [], refetch: refetchNotes } = useQuery<VideoNote[]>({
     queryKey: [`/api/student/video-lessons/${lessonId}/notes`],
+    enabled: !!lessonId
   });
 
   // Fetch bookmarks
-  const { data: bookmarks = [], refetch: refetchBookmarks } = useQuery({
+  const { data: bookmarks = [], refetch: refetchBookmarks } = useQuery<VideoBookmark[]>({
     queryKey: [`/api/student/video-lessons/${lessonId}/bookmarks`],
+    enabled: !!lessonId
   });
 
   // Update progress mutation

@@ -34,6 +34,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Upload, Volume2, Trash2, Edit, Save } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslation } from 'react-i18next';
 
 interface TestQuestion {
   id: number;
@@ -57,6 +58,7 @@ export default function TestQuestions() {
   const { testId } = useParams() as { testId: string };
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation(['teacher', 'common']);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<TestQuestion | null>(null);

@@ -15,7 +15,7 @@ import {
   Target, BookOpen, MessageSquare, Phone
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from 'react-i18next';
 
 interface TeachingStats {
   totalStudents: number;
@@ -37,7 +37,7 @@ interface TeachingStats {
 }
 
 export default function TeacherReportsPage() {
-  const { t } = useLanguage();
+  const { t } = useTranslation(['teacher', 'common']);
   const [dateRange, setDateRange] = useState("last3months");
   const [reportType, setReportType] = useState("overview");
 
