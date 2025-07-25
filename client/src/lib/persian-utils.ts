@@ -70,3 +70,18 @@ export function formatPersianPercentage(value: number | string): string {
 export function isRTL(language: string): boolean {
   return ['fa', 'ar'].includes(language);
 }
+
+/**
+ * Format mixed English/Persian text with proper Persian translations
+ */
+export function formatPersianText(text: string): string {
+  return text
+    .replace(/full\s+(\d+\.?\d*%?)/gi, (match, number) => {
+      const persianNumber = toPersianNumbers(number.replace('%', ''));
+      return `کامل ${persianNumber}${number.includes('%') ? '٪' : ''}`;
+    })
+    .replace(/used\s+(\d+\.?\d*%?)/gi, (match, number) => {
+      const persianNumber = toPersianNumbers(number.replace('%', ''));
+      return `استفاده شده ${persianNumber}${number.includes('%') ? '٪' : ''}`;
+    });
+}

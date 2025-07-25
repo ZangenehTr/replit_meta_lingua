@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useTranslation } from 'react-i18next';
-import { formatPersianNumber, formatPersianPercentage, formatPersianCurrency } from '@/lib/persian-utils';
+import { formatPersianNumber, formatPersianPercentage, formatPersianCurrency, formatPersianText } from '@/lib/persian-utils';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -450,23 +450,33 @@ export function AdminDashboard() {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm">{t('admin:dashboard.avgCustomerLTV')}</span>
-                <span className="font-semibold">${(financialKPIs as any)?.averageLTV || '2,847'}</span>
+                <span className="font-semibold">
+                  {isPersian ? formatPersianCurrency((financialKPIs as any)?.averageLTV || '2847') : `$${(financialKPIs as any)?.averageLTV || '2,847'}`}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">{t('admin:dashboard.costPerAcquisition')}</span>
-                <span className="font-semibold">${(financialKPIs as any)?.costPerAcquisition || '185'}</span>
+                <span className="font-semibold">
+                  {isPersian ? formatPersianCurrency((financialKPIs as any)?.costPerAcquisition || '185') : `$${(financialKPIs as any)?.costPerAcquisition || '185'}`}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">{t('admin:dashboard.monthlyChurnRate')}</span>
-                <span className="font-semibold text-red-600">{(financialKPIs as any)?.churnRate || '4.2'}%</span>
+                <span className="font-semibold text-red-600">
+                  {isPersian ? formatPersianPercentage((financialKPIs as any)?.churnRate || '4.2') : `${(financialKPIs as any)?.churnRate || '4.2'}%`}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">{t('admin:dashboard.revenuePerStudent')}</span>
-                <span className="font-semibold">${(financialKPIs as any)?.revenuePerStudent || '287'}</span>
+                <span className="font-semibold">
+                  {isPersian ? formatPersianCurrency((financialKPIs as any)?.revenuePerStudent || '287') : `$${(financialKPIs as any)?.revenuePerStudent || '287'}`}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">{t('admin:dashboard.profitMargin')}</span>
-                <span className="font-semibold text-green-600">{(financialKPIs as any)?.profitMargin || '34.7'}%</span>
+                <span className="font-semibold text-green-600">
+                  {isPersian ? formatPersianPercentage((financialKPIs as any)?.profitMargin || '34.7') : `${(financialKPIs as any)?.profitMargin || '34.7'}%`}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -499,19 +509,27 @@ export function AdminDashboard() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-sm">{t('admin:dashboard.peakHours')}</span>
-                  <Badge variant="outline">95.2% full</Badge>
+                  <Badge variant="outline">
+                    {isPersian ? formatPersianText("95.2% full") : "95.2% full"}
+                  </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">{t('admin:dashboard.morningClasses')}</span>
-                  <Badge variant="outline">67.4% full</Badge>
+                  <Badge variant="outline">
+                    {isPersian ? formatPersianText("67.4% full") : "67.4% full"}
+                  </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">{t('admin:dashboard.weekendSessions')}</span>
-                  <Badge variant="outline">82.1% full</Badge>
+                  <Badge variant="outline">
+                    {isPersian ? formatPersianText("82.1% full") : "82.1% full"}
+                  </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">{t('admin:dashboard.onlineCapacity')}</span>
-                  <Badge variant="outline">91.8% used</Badge>
+                  <Badge variant="outline">
+                    {isPersian ? formatPersianText("91.8% used") : "91.8% used"}
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -546,7 +564,9 @@ export function AdminDashboard() {
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     ))}
-                    <span className="ml-1 text-xs">4.7</span>
+                    <span className="ml-1 text-xs">
+                      {isPersian ? formatPersianNumber("4.7") : "4.7"}
+                    </span>
                   </div>
                 </div>
                 <div className="flex justify-between">
@@ -555,7 +575,9 @@ export function AdminDashboard() {
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     ))}
-                    <span className="ml-1 text-xs">4.5</span>
+                    <span className="ml-1 text-xs">
+                      {isPersian ? formatPersianNumber("4.5") : "4.5"}
+                    </span>
                   </div>
                 </div>
                 <div className="flex justify-between">
