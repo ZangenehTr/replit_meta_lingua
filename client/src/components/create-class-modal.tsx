@@ -13,6 +13,7 @@ import { CalendarIcon, Plus, Clock, Users } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from "react-i18next";
 // Removed formatPersianDate import - will use date-fns format instead
 
 interface CreateClassModalProps {
@@ -47,6 +48,7 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('common');
 
   const { data: availableTeachers } = useQuery<TeacherAvailability[]>({
     queryKey: ['/api/manager/available-teachers', courseType, level, selectedDays, timeSlot],
@@ -63,16 +65,16 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/manager/classes'] });
       toast({
-        title: "کلاس با موفقیت ایجاد شد / Class Created Successfully",
-        description: "کلاس جدید ایجاد و معلم تخصیص داده شد / New class created and teacher assigned.",
+        title: t('toast.classCreated'),
+        description: t('toast.classCreatedDescription'),
       });
       setOpen(false);
       resetForm();
     },
     onError: () => {
       toast({
-        title: "خطا / Error",
-        description: "ایجاد کلاس با مشکل مواجه شد / Failed to create class. Please try again.",
+        title: t('toast.error'),
+        description: t('toast.classCreationFailed'),
         variant: "destructive",
       });
     },
@@ -129,8 +131,8 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
     
     if (!className || !courseType || !level || !startDate || !endDate || !selectedTeacher) {
       toast({
-        title: "اطلاعات ناقص / Missing Information",
-        description: "لطفاً تمام فیلدهای ضروری را پر کنید / Please fill in all required fields.",
+        title: t('toast.missingInformation'),
+        description: t('toast.fillRequiredFields'),
         variant: "destructive",
       });
       return;

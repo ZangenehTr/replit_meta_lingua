@@ -111,29 +111,37 @@ export default function AdminClassesPage() {
 
   // Create new class session
   const createSession = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/admin/class-sessions', 'POST', data),
+    mutationFn: (data: any) => apiRequest('/api/admin/class-sessions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/class-sessions'] });
-      toast({ title: "Success", description: "Class scheduled successfully" });
+      toast({ title: t('common:toast.success'), description: t('common:toast.classScheduled') });
       setIsCreateDialogOpen(false);
     }
   });
 
   // Update class session
   const updateSession = useMutation({
-    mutationFn: ({ id, ...data }: any) => apiRequest(`/api/admin/class-sessions/${id}`, 'PATCH', data),
+    mutationFn: ({ id, ...data }: any) => apiRequest(`/api/admin/class-sessions/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/class-sessions'] });
-      toast({ title: "Success", description: "Class updated successfully" });
+      toast({ title: t('common:toast.success'), description: t('common:toast.classUpdated') });
     }
   });
 
   // Delete class session
   const deleteSession = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/class-sessions/${id}`, 'DELETE'),
+    mutationFn: (id: number) => apiRequest(`/api/admin/class-sessions/${id}`, {
+      method: 'DELETE',
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/class-sessions'] });
-      toast({ title: "Success", description: "Class deleted successfully" });
+      toast({ title: t('common:toast.success'), description: t('common:toast.classDeleted') });
     }
   });
 

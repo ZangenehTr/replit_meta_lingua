@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from "react-i18next";
 
 interface SimpleDateInputProps {
   value?: Date | null;
@@ -15,6 +16,7 @@ export function SimpleDateInput({
   placeholder = "Select date",
   className,
 }: SimpleDateInputProps) {
+  const { t } = useTranslation('common');
   const [day, setDay] = useState("");
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
@@ -101,7 +103,7 @@ export function SimpleDateInput({
           <Label className="text-xs text-gray-500">Day</Label>
           <Input
             type="text"
-            placeholder="DD"
+            placeholder={t('placeholders.dayPlaceholder')}
             value={day}
             onChange={handleDayChange}
             onFocus={(e) => e.target.select()}
@@ -113,7 +115,7 @@ export function SimpleDateInput({
           <Label className="text-xs text-gray-500">Month</Label>
           <Input
             type="text"
-            placeholder="MM"
+            placeholder={t('placeholders.monthPlaceholder')}
             value={month}
             onChange={handleMonthChange}
             onFocus={(e) => e.target.select()}
@@ -125,7 +127,7 @@ export function SimpleDateInput({
           <Label className="text-xs text-gray-500">Year</Label>
           <Input
             type="text"
-            placeholder="YYYY"
+            placeholder={t('placeholders.yearPlaceholder')}
             value={year}
             onChange={handleYearChange}
             onFocus={(e) => e.target.select()}

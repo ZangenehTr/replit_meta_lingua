@@ -111,30 +111,36 @@ export default function Supervision() {
 
   // Create observation mutation
   const createObservationMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/supervision/observations', 'POST', data),
+    mutationFn: (data: any) => apiRequest('/api/supervision/observations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/supervision/observations'] });
       queryClient.invalidateQueries({ queryKey: ['/api/supervision/stats'] });
       setObservationDialogOpen(false);
       observationForm.reset();
-      toast({ title: "Success", description: "Observation created successfully" });
+      toast({ title: t('common:toast.success'), description: t('common:toast.observationCreated') });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to create observation", variant: "destructive" });
+      toast({ title: t('common:toast.error'), description: t('common:toast.observationFailed'), variant: "destructive" });
     },
   });
 
   // Create questionnaire mutation
   const createQuestionnaireMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/supervision/questionnaires', 'POST', data),
+    mutationFn: (data: any) => apiRequest('/api/supervision/questionnaires', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/supervision/questionnaires'] });
       setQuestionnaireDialogOpen(false);
       questionnaireForm.reset();
-      toast({ title: "Success", description: "Questionnaire created successfully" });
+      toast({ title: t('common:toast.success'), description: t('common:toast.questionnaireCreated') });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to create questionnaire", variant: "destructive" });
+      toast({ title: t('common:toast.error'), description: t('common:toast.questionnaireFailed'), variant: "destructive" });
     },
   });
 

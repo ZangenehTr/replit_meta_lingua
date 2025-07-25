@@ -21,6 +21,34 @@
     "payments": "المدفوعات",
     "compliance": "الامتثال"
   },
+  "toast": {
+    "success": "نجح",
+    "error": "خطأ",
+    "created": "تم الإنشاء بنجاح",
+    "updated": "تم التحديث بنجاح",
+    "deleted": "تم الحذف بنجاح",
+    "failed": "فشلت العملية",
+    "observationCreated": "تم إنشاء المراقبة بنجاح",
+    "observationFailed": "فشل في إنشاء المراقبة",
+    "questionnaireCreated": "تم إنشاء الاستبيان بنجاح",
+    "questionnaireFailed": "فشل في إنشاء الاستبيان",
+    "settingsUpdated": "تم تحديث الإعدادات بنجاح",
+    "classScheduled": "تم جدولة الفصل بنجاح",
+    "classUpdated": "تم تحديث الفصل بنجاح",
+    "classDeleted": "تم حذف الفصل بنجاح",
+    "missingInformation": "معلومات مفقودة",
+    "fillRequiredFields": "يرجى ملء جميع الحقول المطلوبة"
+  },
+  "placeholders": {
+    "sessionTitle": "مثال: القواعد الفارسية - الجمل الشرطية",
+    "selectCourse": "اختر الدورة",
+    "sessionDescription": "وصف موجز لما سيتم تغطيته في هذه الجلسة",
+    "selectDuration": "المدة",
+    "dayPlaceholder": "اليوم",
+    "monthPlaceholder": "الشهر",
+    "yearPlaceholder": "السنة",
+    "enterPhoneNumber": "أدخل رقم الهاتف"
+  },
   "common": {
     "save": "حفظ",
     "cancel": "إلغاء",

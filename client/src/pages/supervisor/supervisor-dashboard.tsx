@@ -277,7 +277,7 @@ export default function SupervisorDashboard() {
       
       setObservationDialogOpen(false);
       observationForm.reset();
-      toast({ title: "Success", description: "Observation created successfully" });
+      toast({ title: t('common:toast.success'), description: t('common:toast.observationCreated') });
     },
     onError: (error: any) => {
       console.error('Mutation error:', error);

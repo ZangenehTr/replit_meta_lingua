@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
 import { CreditCard, Plus, Shield, Banknote, CheckCircle, XCircle, Clock, Star, Coins } from "lucide-react";
 import { useState } from "react";
 
@@ -30,6 +31,7 @@ export function PaymentCredits() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('common');
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [customCredits, setCustomCredits] = useState("");
