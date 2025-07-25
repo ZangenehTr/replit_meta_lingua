@@ -138,7 +138,9 @@
     "recentActivity": "فعالیت‌های اخیر",
     "upcomingTasks": "وظایف آینده",
     "performance": "عملکرد",
-    "progress": "پیشرفت"
+    "progress": "پیشرفت",
+    "contact": "تماس",
+    "action": "عملیات"
   },
   "toast": {
     "success": "موفقیت",
