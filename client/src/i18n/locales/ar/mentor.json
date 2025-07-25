@@ -1,50 +1,41 @@
 {
   "dashboard": {
     "title": "لوحة المرشد",
-    "welcome": "مرحباً بعودتك",
-    "overview": "نظرة عامة",
-    "students": "الطلاب",
-    "assignments": "المهام",
-    "progress": "تتبع التقدم",
-    "communication": "التواصل",
-    "assessments": "التقييمات",
-    "reports": "التقارير"
-  },
-  "stats": {
-    "totalMentees": "إجمالي المتدربين",
-    "activeStudents": "الطلاب النشطون",
-    "averageProgress": "متوسط التقدم",
-    "thisMonth": "هذا الشهر",
-    "completedAssignments": "المهام المكتملة",
-    "pendingReviews": "المراجعات المعلقة",
+    "welcome": "مرحباً بك في لوحة الإرشاد",
+    "totalMentees": "إجمالي الطلاب المرشدين",
+    "activeMentees": "الطلاب النشطون",
     "totalSessions": "إجمالي الجلسات",
-    "monthlyRating": "التقييم الشهري"
+    "averageRating": "متوسط التقييم",
+    "goalsAchieved": "الأهداف المحققة",
+    "monthlyEarnings": "الأرباح الشهرية",
+    "responseRate": "معدل الاستجابة",
+    "completionRate": "معدل الإكمال"
   },
-  "students": {
-    "title": "متدربيني",
-    "noStudents": "لا يوجد طلاب معينون",
+  "mentees": {
+    "title": "الطلاب المرشدون",
+    "assignedStudents": "الطلاب المعينون",
     "progress": "التقدم",
-    "lastActivity": "آخر نشاط",
-    "viewProfile": "عرض الملف الشخصي",
-    "sendMessage": "إرسال رسالة",
-    "scheduleCall": "جدولة مكالمة"
+    "sessions": "الجلسات",
+    "communication": "التواصل",
+    "viewProgress": "عرض التقدم",
+    "scheduleSession": "جدولة جلسة",
+    "sendMessage": "إرسال رسالة"
   },
-  "assignments": {
-    "title": "مهام الطلاب",
-    "create": "إنشاء مهمة",
-    "pending": "معلقة",
+  "sessions": {
+    "title": "جلسات الإرشاد",
+    "upcoming": "القادمة",
     "completed": "مكتملة",
-    "overdue": "متأخرة",
-    "dueDate": "تاريخ الاستحقاق",
-    "review": "مراجعة",
-    "feedback": "التعليقات"
+    "scheduled": "مجدولة",
+    "duration": "المدة",
+    "notes": "الملاحظات",
+    "goals": "الأهداف"
   },
-  "assessments": {
-    "title": "تقييمات التقدم",
-    "conductAssessment": "إجراء تقييم",
-    "viewResults": "عرض النتائج",
-    "generateReport": "إنشاء تقرير",
-    "skillLevel": "مستوى المهارة",
-    "recommendations": "التوصيات"
+  "progress": {
+    "title": "تتبع التقدم",
+    "overallProgress": "التقدم العام",
+    "skillAssessment": "تقييم المهارات",
+    "learningGoals": "أهداف التعلم",
+    "milestones": "المعالم",
+    "achievements": "الإنجازات"
   }
 }

@@ -7,6 +7,11 @@ import en from './locales/en';
 import fa from './locales/fa';
 import ar from './locales/ar';
 
+// Import all translation files
+import enCommon from './locales/en/common.json';
+import faCommon from './locales/fa/common.json';
+import arCommon from './locales/ar/common.json';
+
 // Import additional namespaces
 import enAdmin from './locales/en/admin.json';
 import faAdmin from './locales/fa/admin.json';
@@ -56,7 +61,7 @@ i18n
     
     resources: {
       en: {
-        common: en.common,
+        common: enCommon,
         errors: en.errors,
         validation: en.validation,
         admin: enAdmin,
@@ -68,7 +73,7 @@ i18n
         accountant: enAccountant,
       },
       fa: {
-        common: fa.common,
+        common: faCommon,
         errors: fa.errors,
         validation: fa.validation,
         admin: faAdmin,
@@ -80,7 +85,7 @@ i18n
         accountant: faAccountant,
       },
       ar: {
-        common: ar.common,
+        common: arCommon,
         errors: ar.errors,
         validation: ar.validation,
         admin: arAdmin,

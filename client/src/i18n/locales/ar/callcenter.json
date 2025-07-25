@@ -1,51 +1,53 @@
 {
   "dashboard": {
     "title": "لوحة مركز الاتصال",
-    "welcome": "مرحباً بعودتك",
-    "overview": "نظرة عامة",
-    "leads": "العملاء المحتملون",
-    "calls": "المكالمات",
+    "welcome": "مرحباً بك في مركز الاتصال",
+    "leadManagement": "إدارة العملاء المحتملين",
+    "callMetrics": "مقاييس المكالمات",
     "performance": "الأداء",
-    "reports": "التقارير",
-    "voip": "مركز VoIP"
-  },
-  "stats": {
     "totalCalls": "إجمالي المكالمات",
-    "completedCalls": "المكالمات المكتملة",
-    "conversionRate": "معدل التحويل",
-    "avgCallDuration": "متوسط مدة المكالمة",
-    "activeLeads": "العملاء المحتملون النشطون",
-    "thisWeek": "هذا الأسبوع",
+    "callsToday": "مكالمات اليوم",
+    "totalLeads": "إجمالي العملاء المحتملين",
+    "convertedLeads": "العملاء المحولين",
     "responseRate": "معدل الاستجابة",
-    "qualityScore": "نقاط الجودة"
+    "conversionRate": "معدل التحويل",
+    "averageCallDuration": "متوسط مدة المكالمة",
+    "dailyTarget": "الهدف اليومي"
   },
   "leads": {
     "title": "إدارة العملاء المحتملين",
-    "newLead": "عميل محتمل جديد",
-    "hotLeads": "عملاء محتملون مهمون",
+    "new": "جديد",
+    "contacted": "تم التواصل",
+    "interested": "مهتم",
+    "enrolled": "مسجل",
     "followUp": "متابعة",
-    "converted": "تم التحويل",
-    "callNow": "اتصل الآن",
-    "schedule": "جدولة مكالمة",
+    "cold": "بارد",
+    "hot": "ساخن",
+    "warm": "دافئ",
+    "callLead": "اتصال بالعميل",
+    "scheduleMeeting": "جدولة اجتماع",
+    "sendEmail": "إرسال بريد إلكتروني",
+    "updateStatus": "تحديث الحالة",
     "addNotes": "إضافة ملاحظات"
   },
   "calls": {
-    "title": "تاريخ المكالمات",
-    "duration": "المدة",
-    "outcome": "النتيجة",
-    "recording": "التسجيل",
-    "notes": "الملاحظات",
-    "callback": "معاودة الاتصال",
-    "completed": "مكتملة",
-    "missed": "فائتة"
+    "title": "نظام المكالمات",
+    "makeCall": "إجراء مكالمة",
+    "callHistory": "تاريخ المكالمات",
+    "activeCall": "مكالمة نشطة",
+    "endCall": "إنهاء المكالمة",
+    "recordCall": "تسجيل المكالمة",
+    "transferCall": "تحويل المكالمة",
+    "holdCall": "انتظار المكالمة",
+    "voipCenter": "مركز VoIP"
   },
-  "voip": {
-    "title": "مركز اتصال VoIP",
-    "dialNumber": "طلب رقم",
-    "callStatus": "حالة المكالمة",
-    "connecting": "جاري الاتصال",
-    "connected": "متصل",
-    "ended": "انتهت المكالمة",
-    "studentDirectory": "دليل الطلاب"
+  "performance": {
+    "title": "أداء مركز الاتصال",
+    "dailyStats": "إحصائيات يومية",
+    "weeklyReport": "تقرير أسبوعي",
+    "monthlyReport": "تقرير شهري",
+    "targetAchievement": "تحقيق الهدف",
+    "callVolume": "حجم المكالمات",
+    "successRate": "معدل النجاح"
   }
 }

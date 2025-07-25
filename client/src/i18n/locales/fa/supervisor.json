@@ -1,62 +1,46 @@
 {
   "dashboard": {
     "title": "داشبورد ناظر",
-    "welcome": "خوش آمدید",
-    "overview": "نمای کلی",
-    "teachers": "مدرسان",
-    "observations": "مشاهدات",
-    "quality": "تضمین کیفیت",
-    "reports": "گزارش‌ها",
-    "analytics": "تحلیل‌ها",
-    "compliance": "انطباق"
-  },
-  "stats": {
-    "totalTeachers": "کل مدرسان",
-    "activeObservations": "مشاهدات فعال",
-    "completionRate": "نرخ تکمیل",
+    "welcome": "به پنل نظارت کیفی خوش آمدید",
+    "qualityAssurance": "تضمین کیفیت",
+    "teacherEvaluations": "ارزیابی مدرسان",
+    "classObservations": "مشاهدات کلاسی",
+    "performanceMetrics": "معیارهای عملکرد",
+    "totalObservations": "کل مشاهدات",
+    "pendingEvaluations": "ارزیابی‌های در انتظار",
     "qualityScore": "امتیاز کیفیت",
-    "pendingObservations": "مشاهدات در انتظار",
-    "thisMonth": "این ماه",
-    "complianceRate": "نرخ انطباق",
-    "averageRating": "میانگین امتیاز"
-  },
-  "teachers": {
-    "title": "مدیریت مدرسان",
-    "performance": "عملکرد",
-    "viewProfile": "مشاهده پروفایل",
-    "scheduleObservation": "برنامه‌ریزی مشاهده",
-    "sendFeedback": "ارسال بازخورد",
-    "viewReports": "مشاهده گزارش‌ها"
+    "complianceRate": "نرخ انطباق"
   },
   "observations": {
-    "title": "مشاهدات تدریس",
-    "schedule": "برنامه‌ریزی جدید",
+    "title": "مشاهدات کلاسی",
+    "schedule": "برنامه‌ریزی",
     "pending": "در انتظار",
     "completed": "تکمیل شده",
-    "inProgress": "در حال انجام",
     "overdue": "معوقه",
-    "viewDetails": "مشاهده جزئیات",
-    "addFeedback": "افزودن بازخورد"
+    "teacherName": "نام مدرس",
+    "observationDate": "تاریخ مشاهده",
+    "status": "وضعیت",
+    "feedback": "بازخورد",
+    "rating": "امتیاز"
   },
-  "quality": {
+  "evaluations": {
+    "title": "ارزیابی مدرسان",
+    "create": "ایجاد ارزیابی",
+    "performance": "عملکرد",
+    "teaching": "تدریس",
+    "communication": "ارتباطات",
+    "preparation": "آمادگی",
+    "overall": "کلی",
+    "comments": "نظرات",
+    "recommendations": "توصیه‌ها"
+  },
+  "qualityAssurance": {
     "title": "تضمین کیفیت",
-    "standards": "استانداردهای تدریس",
-    "compliance": "بررسی انطباق",
-    "improvement": "برنامه‌های بهبود",
-    "training": "نیازهای آموزشی"
-  },
-  "reports": {
-    "title": "گزارش‌های عملکرد",
-    "generate": "تولید گزارش",
-    "teacherPerformance": "عملکرد مدرس",
-    "institutionalMetrics": "معیارهای موسسه‌ای",
-    "export": "صادرات داده"
-  },
-  "teacherManagement": {
-    "title": "مدیریت مدرسان",
-    "totalTeachers": "کل مدرسان",
-    "activeTeachers": "مدرسان فعال",
-    "viewProfile": "مشاهده پروفایل",
-    "scheduleObservation": "برنامه‌ریزی مشاهده"
+    "standards": "استانداردها",
+    "compliance": "انطباق",
+    "improvement": "بهبود",
+    "monitoring": "نظارت",
+    "reporting": "گزارش‌دهی",
+    "training": "آموزش"
   }
 }

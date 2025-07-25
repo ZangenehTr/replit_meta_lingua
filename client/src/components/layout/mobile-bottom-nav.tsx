@@ -36,58 +36,58 @@ const getRoleNavigation = (role: string, t: (key: string) => string): BottomNavI
     case 'Admin':
     case 'Supervisor':
       return [
-        { route: "/admin", icon: LayoutDashboard, label: t('navigation.dashboard') },
-        { route: "/admin/students", icon: Users, label: t('navigation.students') },
-        { route: "/admin/communications", icon: MessageSquare, label: t('navigation.chat') },
-        { route: "/admin/system", icon: Settings, label: t('navigation.settings') }
+        { route: "/admin", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
+        { route: "/admin/students", icon: Users, label: t('common:navigation.students') },
+        { route: "/admin/communications", icon: MessageSquare, label: t('common:navigation.chat') },
+        { route: "/admin/system", icon: Settings, label: t('common:navigation.settings') }
       ];
       
     case 'Teacher/Tutor':
       return [
-        { route: "/teacher", icon: Home, label: t('navigation.dashboard') },
-        { route: "/teacher/classes", icon: GraduationCap, label: t('navigation.classes') },
-        { route: "/teacher/assignments", icon: ClipboardList, label: t('navigation.assignments') },
-        { route: "/teacher/students", icon: Users, label: t('navigation.students') }
+        { route: "/teacher", icon: Home, label: t('common:navigation.dashboard') },
+        { route: "/teacher/classes", icon: GraduationCap, label: t('common:navigation.classes') },
+        { route: "/teacher/assignments", icon: ClipboardList, label: t('common:navigation.assignments') },
+        { route: "/teacher/students", icon: Users, label: t('common:navigation.students') }
       ];
       
     case 'Student':
       return [
-        { route: "/dashboard", icon: Home, label: t('navigation.dashboard') },
-        { route: "/courses", icon: BookOpen, label: t('navigation.courses') },
-        { route: "/assignments", icon: ClipboardList, label: t('navigation.assignments') },
-        { route: "/progress", icon: TrendingUp, label: t('navigation.progress') }
+        { route: "/dashboard", icon: Home, label: t('common:navigation.dashboard') },
+        { route: "/courses", icon: BookOpen, label: t('common:navigation.courses') },
+        { route: "/assignments", icon: ClipboardList, label: t('common:navigation.assignments') },
+        { route: "/progress", icon: TrendingUp, label: t('common:navigation.progress') }
       ];
       
     case 'Call Center Agent':
       return [
-        { route: "/callcenter", icon: LayoutDashboard, label: t('navigation.dashboard') },
-        { route: "/callcenter/leads", icon: Target, label: t('navigation.leads') },
-        { route: "/callcenter/voip", icon: Phone, label: t('navigation.calls') },
-        { route: "/callcenter/performance", icon: BarChart3, label: t('navigation.performance') }
+        { route: "/callcenter", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
+        { route: "/callcenter/leads", icon: Target, label: t('common:navigation.leads') },
+        { route: "/callcenter/voip", icon: Phone, label: t('common:navigation.calls') },
+        { route: "/callcenter/performance", icon: BarChart3, label: t('common:navigation.performance') }
       ];
       
     case 'Mentor':
       return [
-        { route: "/mentor", icon: Home, label: t('navigation.dashboard') },
-        { route: "/mentor/students", icon: Users, label: t('navigation.students') },
-        { route: "/mentor/sessions", icon: Calendar, label: t('navigation.sessions') },
-        { route: "/mentor/progress", icon: TrendingUp, label: t('navigation.progress') }
+        { route: "/mentor", icon: Home, label: t('common:navigation.dashboard') },
+        { route: "/mentor/students", icon: Users, label: t('common:navigation.students') },
+        { route: "/mentor/sessions", icon: Calendar, label: t('common:navigation.sessions') },
+        { route: "/mentor/progress", icon: TrendingUp, label: t('common:navigation.progress') }
       ];
       
     case 'Accountant':
       return [
-        { route: "/accountant", icon: LayoutDashboard, label: t('navigation.dashboard') },
-        { route: "/accountant/payments", icon: DollarSign, label: t('navigation.payments') },
-        { route: "/accountant/reports", icon: BarChart3, label: t('navigation.reports') },
-        { route: "/accountant/compliance", icon: Shield, label: t('navigation.compliance') }
+        { route: "/accountant", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
+        { route: "/accountant/payments", icon: DollarSign, label: t('common:navigation.payments') },
+        { route: "/accountant/reports", icon: BarChart3, label: t('common:navigation.reports') },
+        { route: "/accountant/compliance", icon: Shield, label: t('common:navigation.compliance') }
       ];
       
     default:
       return [
-        { route: "/dashboard", icon: Home, label: t('navigation.dashboard') },
-        { route: "/courses", icon: BookOpen, label: t('navigation.courses') },
-        { route: "/assignments", icon: ClipboardList, label: t('navigation.assignments') },
-        { route: "/profile", icon: UserCheck, label: t('navigation.profile') }
+        { route: "/dashboard", icon: Home, label: t('common:navigation.dashboard') },
+        { route: "/courses", icon: BookOpen, label: t('common:navigation.courses') },
+        { route: "/assignments", icon: ClipboardList, label: t('common:navigation.assignments') },
+        { route: "/profile", icon: UserCheck, label: t('common:navigation.profile') }
       ];
   }
 };

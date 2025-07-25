@@ -1,70 +1,61 @@
 {
   "dashboard": {
-    "title": "داشبورد معلم",
-    "welcome": "خوش آمدید",
-    "overview": "نمای کلی",
-    "classes": "کلاس‌ها", 
+    "title": "داشبورد مدرس",
+    "welcome": "به پنل مدرس خوش آمدید",
+    "students": "دانشجویان من",
+    "classes": "کلاس‌های من",
     "assignments": "تکالیف",
-    "students": "دانش‌آموزان",
-    "schedule": "برنامه",
-    "resources": "منابع",
-    "observations": "مشاهدات",
-    "availability": "در دسترس بودن",
-    "quickActions": "اقدامات سریع",
-    "todaysSchedule": "برنامه امروز",
-    "recentActivity": "فعالیت‌های اخیر"
-  },
-  "stats": {
+    "schedule": "برنامه تدریس",
+    "availability": "دسترسی",
+    "totalStudents": "کل دانشجویان",
+    "totalClasses": "کل کلاس‌ها",
     "completedLessons": "درس‌های تکمیل شده",
-    "totalStudents": "کل دانش‌آموزان", 
+    "pendingAssignments": "تکالیف در انتظار",
     "averageRating": "میانگین امتیاز",
     "monthlyEarnings": "درآمد ماهانه",
-    "upcomingSessions": "جلسات آتی",
-    "pendingAssignments": "تکالیف در انتظار",
-    "activeStudents": "دانش‌آموزان فعال",
-    "thisWeek": "این هفته"
+    "attendanceRate": "نرخ حضور",
+    "nextPaymentDate": "تاریخ پرداخت بعدی"
   },
   "classes": {
     "title": "کلاس‌های من",
-    "noClasses": "هیچ کلاسی تعیین نشده",
-    "nextSession": "جلسه بعدی",
-    "studentsEnrolled": "دانش‌آموزان ثبت‌نام شده",
-    "viewDetails": "مشاهده جزئیات",
-    "startClass": "شروع کلاس",
-    "classType": "نوع کلاس"
+    "upcoming": "آینده",
+    "today": "امروز",
+    "thisWeek": "این هفته",
+    "joinClass": "ورود به کلاس",
+    "prepareMaterials": "آماده‌سازی مطالب",
+    "takeAttendance": "حضور و غیاب",
+    "assignHomework": "تعیین تکلیف",
+    "viewStudents": "مشاهده دانشجویان"
   },
   "assignments": {
-    "title": "تکالیف",
+    "title": "مدیریت تکالیف",
     "create": "ایجاد تکلیف",
     "pending": "در انتظار",
     "graded": "نمره داده شده",
+    "overdue": "معوقه",
     "dueDate": "مهلت تحویل",
+    "submissions": "تحویل‌ها",
     "grade": "نمره",
-    "submitted": "تحویل داده شده",
-    "notSubmitted": "تحویل داده نشده"
+    "feedback": "بازخورد"
   },
-  "availability": {
-    "title": "تنظیم در دسترس بودن",
-    "selectDays": "انتخاب روزها",
-    "timeRange": "بازه زمانی", 
-    "save": "ذخیره در دسترس بودن",
-    "updated": "در دسترس بودن با موفقیت به‌روزرسانی شد"
+  "students": {
+    "title": "دانشجویان من",
+    "progress": "پیشرفت",
+    "attendance": "حضور",
+    "grades": "نمرات",
+    "notes": "یادداشت‌ها",
+    "contact": "تماس",
+    "sendMessage": "ارسال پیام"
   },
-  "observations": {
-    "title": "مشاهدات",
-    "pending": "در انتظار",
-    "acknowledged": "تأیید شده",
-    "viewDetails": "مشاهده جزئیات",
-    "acknowledge": "تأیید",
-    "respond": "پاسخ"
-  },
-  "noClassesToday": "هیچ کلاسی برای امروز برنامه‌ریزی نشده",
-  "noRecentActivity": "فعالیت اخیری وجود ندارد",
-  "myClasses": "کلاس‌های من",
-  "classesAssignedByAdmin": "کلاس‌های تعیین شده توسط مدیران",
-  "recentActivity": "فعالیت‌های اخیر",
-  "classes": {
-    "active": "کلاس‌های فعال",
-    "completed": "تکمیل شده"
+  "schedule": {
+    "title": "برنامه تدریس",
+    "setAvailability": "تنظیم دسترسی",
+    "manageAvailability": "مدیریت دسترسی",
+    "weeklySchedule": "برنامه هفتگی",
+    "monthlyView": "نمای ماهانه",
+    "timeSlots": "بازه‌های زمانی",
+    "available": "در دسترس",
+    "busy": "مشغول",
+    "break": "استراحت"
   }
 }

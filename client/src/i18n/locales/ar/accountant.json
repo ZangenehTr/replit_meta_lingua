@@ -1,54 +1,55 @@
 {
   "dashboard": {
     "title": "لوحة المحاسب",
-    "welcome": "أهلاً وسهلاً",
-    "overview": "نظرة عامة",
-    "payments": "المدفوعات",
-    "invoices": "الفواتير",
-    "reports": "التقارير",
-    "compliance": "الامتثال",
-    "analytics": "التحليلات"
-  },
-  "stats": {
-    "totalRevenue": "إجمالي الإيرادات",
-    "pendingPayments": "المدفوعات المعلقة",
-    "completedTransactions": "المعاملات المكتملة",
-    "monthlyGrowth": "النمو الشهري",
+    "welcome": "مرحباً بك في النظام المالي",
+    "financialOverview": "نظرة مالية عامة",
+    "revenue": "الإيرادات",
+    "expenses": "المصروفات",
+    "profit": "الربح",
+    "monthlyRevenue": "الإيرادات الشهرية",
     "totalStudents": "إجمالي الطلاب",
+    "pendingPayments": "المدفوعات المعلقة",
+    "overduePayments": "المدفوعات المتأخرة",
     "averagePayment": "متوسط الدفع",
-    "thisMonth": "هذا الشهر",
-    "complianceRate": "معدل الامتثال"
+    "paymentSuccess": "نجاح الدفع",
+    "revenueGrowth": "نمو الإيرادات",
+    "iranianCompliance": "الامتثال الإيراني"
   },
   "payments": {
     "title": "إدارة المدفوعات",
-    "newPayment": "دفعة جديدة",
-    "pendingPayments": "المدفوعات المعلقة",
-    "completedPayments": "المدفوعات المكتملة",
-    "refunds": "المبالغ المسترجعة",
-    "processPayment": "معالجة الدفع",
-    "verifyPayment": "التحقق من الدفع",
+    "shetabGateway": "بوابة شتاب",
+    "bankTransfer": "تحويل بنكي",
+    "cash": "نقدي",
+    "installments": "أقساط",
+    "pending": "معلق",
+    "completed": "مكتمل",
+    "failed": "فاشل",
+    "refunded": "مسترد",
     "amount": "المبلغ",
-    "status": "الحالة",
-    "paymentMethod": "طريقة الدفع"
+    "currency": "ريال إيراني",
+    "paymentMethod": "طريقة الدفع",
+    "transactionId": "معرف المعاملة",
+    "processPayment": "معالجة الدفع",
+    "refundPayment": "استرداد الدفع"
   },
-  "invoices": {
-    "title": "إدارة الفواتير",
-    "createInvoice": "إنشاء فاتورة",
-    "pending": "معلقة",
-    "paid": "مدفوعة",
-    "overdue": "متأخرة",
-    "sendReminder": "إرسال تذكير",
-    "downloadPDF": "تحميل PDF",
-    "invoiceNumber": "رقم الفاتورة",
-    "dueDate": "تاريخ الاستحقاق"
+  "financial": {
+    "title": "التقارير المالية",
+    "monthlyReport": "تقرير شهري",
+    "annualReport": "تقرير سنوي",
+    "taxReport": "تقرير ضريبي",
+    "profitLoss": "الربح والخسارة",
+    "cashFlow": "التدفق النقدي",
+    "balanceSheet": "الميزانية العمومية",
+    "iranianTax": "الضريبة الإيرانية",
+    "exportReport": "تصدير التقرير"
   },
   "compliance": {
     "title": "الامتثال المالي الإيراني",
-    "shetabIntegration": "تكامل شتاب",
+    "iranianLaw": "القانون الإيراني",
     "taxCompliance": "الامتثال الضريبي",
-    "reportingStandards": "معايير التقارير",
+    "bankingLaw": "قانون البنوك",
+    "currencyRegulation": "لوائح العملة",
     "auditTrail": "مسار التدقيق",
-    "complianceStatus": "حالة الامتثال",
-    "generateReport": "إنتاج تقرير"
+    "documentation": "التوثيق"
   }
 }
