@@ -409,7 +409,7 @@ export default function SupervisorDashboard() {
               onClick={() => setObservationDialogOpen(true)}
             >
               <ClipboardCheck className="h-4 w-4 mr-2" />
-              {t('scheduleObservation')}
+              {t('common:supervisor.scheduleObservation')}
             </Button>
 
           </div>
@@ -421,7 +421,7 @@ export default function SupervisorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100">{t('teachers')}</p>
+                  <p className="text-blue-100">{t('common:supervisor.teachers')}</p>
                   <p className="text-3xl font-bold">{stats?.totalTeachers || 0}</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-200" />
@@ -448,7 +448,7 @@ export default function SupervisorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-red-100">{t('improvementNeeded')}</p>
+                  <p className="text-red-100">{t('common:supervisor.improvementNeeded')}</p>
                   <p className="text-3xl font-bold">{teachersNeedingAttention?.length || 0}</p>
                 </div>
                 <UserMinus className="h-8 w-8 text-red-200" />
@@ -460,7 +460,7 @@ export default function SupervisorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100">{t('pendingReviews')}</p>
+                  <p className="text-purple-100">{t('common:supervisor.pendingReviews')}</p>
                   <p className="text-3xl font-bold">{pendingObservations.length || 0}</p>
                 </div>
                 <ClipboardCheck className="h-8 w-8 text-purple-200" />
@@ -475,7 +475,7 @@ export default function SupervisorDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-amber-100">Students Needing Attention</p>
+                  <p className="text-amber-100">{t('common:supervisor.studentsNeedingAttention')}</p>
                   <p className="text-3xl font-bold">{studentsNeedingAttention?.length || 0}</p>
                 </div>
                 <AlertCircle className="h-8 w-8 text-amber-200" />
@@ -487,8 +487,8 @@ export default function SupervisorDashboard() {
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="teachers">Teacher Performance</TabsTrigger>
+            <TabsTrigger value="overview">{t('common:dashboard.overview')}</TabsTrigger>
+            <TabsTrigger value="teachers">{t('supervisor:evaluations.performance')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -576,9 +576,9 @@ export default function SupervisorDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <TrendingUp className="h-5 w-5 mr-2 text-indigo-600" />
-                    Iranian Market KPIs
+                    {t('supervisor:dashboard.iranianMarketKPIs')}
                   </CardTitle>
-                  <CardDescription>Local market performance indicators</CardDescription>
+                  <CardDescription>{t('supervisor:dashboard.localMarketIndicators')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
@@ -646,18 +646,18 @@ export default function SupervisorDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <ClipboardCheck className="h-5 w-5 mr-2 text-orange-600" />
-                    To-Do Observations
+                    {t('supervisor:observations.title')}
                   </CardTitle>
                   <CardDescription>
-                    Approved classes scheduled for observation
+                    {t('supervisor:observations.approvedClasses')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {pendingObservations.length === 0 ? (
                     <div className="text-center py-4 text-gray-500">
                       <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                      <p className="text-sm">No pending observations</p>
-                      <p className="text-xs text-gray-400">Approve classes from Schedule Review to see them here</p>
+                      <p className="text-sm">{t('supervisor:observations.noPending')}</p>
+                      <p className="text-xs text-gray-400">{t('supervisor:observations.approveFromSchedule')}</p>
                     </div>
                   ) : (
                     pendingObservations.slice(0, 4).map((observation: any) => (
@@ -680,7 +680,7 @@ export default function SupervisorDashboard() {
                   {pendingObservations.length > 4 && (
                     <div className="text-center pt-2">
                       <Button variant="link" className="text-xs h-auto p-0">
-                        View All {pendingObservations.length - 4} More
+                        {t('supervisor:observations.viewAll')} {pendingObservations.length - 4} {t('supervisor:observations.more')}
                       </Button>
                     </div>
                   )}
@@ -694,10 +694,10 @@ export default function SupervisorDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <DollarSign className="h-5 w-5 mr-2 text-green-600" />
-                    Daily Income by Student Category
+                    {t('supervisor:dashboard.dailyIncomeByCategory')}
                   </CardTitle>
                   <CardDescription>
-                    Revenue breakdown by course delivery and format - {new Date().toLocaleDateString()}
+                    {t('supervisor:dashboard.revenueBreakdown')} - {new Date().toLocaleDateString()}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

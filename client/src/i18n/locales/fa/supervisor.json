@@ -2,6 +2,7 @@
   "dashboard": {
     "title": "داشبورد ناظر",
     "welcome": "به پنل نظارت کیفی خوش آمدید",
+    "welcomeMessage": "آماده برای بررسی کیفیت تدریس و نظارت بر عملکرد مدرسان هستید؟",
     "qualityAssurance": "تضمین کیفیت",
     "teacherEvaluations": "ارزیابی مدرسان",
     "classObservations": "مشاهدات کلاسی",
@@ -9,10 +10,27 @@
     "totalObservations": "کل مشاهدات",
     "pendingEvaluations": "ارزیابی‌های در انتظار",
     "qualityScore": "امتیاز کیفیت",
-    "complianceRate": "نرخ انطباق"
+    "complianceRate": "نرخ انطباق",
+    "businessIntelligence": {
+      "title": "هوش تجاری",
+      "subtitle": "نمایش کلی از عملکرد مالی و آکادمیک",
+      "monthlyRevenue": "درآمد ماهانه",
+      "studentEngagement": "مشارکت دانش‌آموزان",
+      "activeStudents": "دانش‌آموزان فعال",
+      "sessionCompletion": "تکمیل جلسات",
+      "academicPerformance": "عملکرد آکادمیک",
+      "teachingQuality": "کیفیت تدریس",
+      "observations": "مشاهدات",
+      "qualityTrend": "روند کیفیت",
+      "stable": "پایدار"
+    },
+    "iranianMarketKPIs": "شاخص‌های بازار ایران",
+    "localMarketIndicators": "شاخص‌های عملکرد بازار محلی",
+    "dailyIncomeByCategory": "درآمد روزانه بر اساس دسته‌بندی دانش‌آموزان",
+    "revenueBreakdown": "تفکیک درآمد بر اساس نوع ارائه دوره و فرمت"
   },
   "observations": {
-    "title": "مشاهدات کلاسی",
+    "title": "مشاهدات کلاسی", 
     "schedule": "برنامه‌ریزی",
     "pending": "در انتظار",
     "completed": "تکمیل شده",
@@ -21,7 +39,12 @@
     "observationDate": "تاریخ مشاهده",
     "status": "وضعیت",
     "feedback": "بازخورد",
-    "rating": "امتیاز"
+    "rating": "امتیاز",
+    "approvedClasses": "کلاس‌های تأیید شده برای مشاهده",
+    "noPending": "هیچ مشاهده در انتظاری وجود ندارد", 
+    "approveFromSchedule": "کلاس‌ها را از بررسی برنامه تأیید کنید تا اینجا نمایش داده شوند",
+    "viewAll": "مشاهده همه",
+    "more": "بیشتر"
   },
   "evaluations": {
     "title": "ارزیابی مدرسان",
