@@ -41,7 +41,8 @@ export const getTeacherNavigation = (t: any): NavigationItem[] => [
 // Institute Management Platform (IMP) navigation - Admin/Supervisor
 export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   // Dashboard - Primary navigation item
-  { path: "/supervisor/dashboard", icon: "Home", label: "Dashboard", roles: ["Admin", "Supervisor"] },
+  { path: "/admin/dashboard", icon: "Home", label: "Dashboard", roles: ["Admin"] },
+  { path: "/supervisor/dashboard", icon: "Home", label: "Dashboard", roles: ["Supervisor"] },
   
   // Student Information System (SIS)
   { path: "/admin/students", icon: "Users", label: "Student Information System", roles: ["Admin", "Supervisor"] },
