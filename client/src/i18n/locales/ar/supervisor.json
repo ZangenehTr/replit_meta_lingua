@@ -1,55 +1,46 @@
 {
   "dashboard": {
     "title": "لوحة المشرف",
-    "welcome": "مرحباً بعودتك",
-    "overview": "نظرة عامة",
-    "teachers": "المعلمون",
-    "observations": "الملاحظات",
-    "quality": "ضمان الجودة",
-    "reports": "التقارير",
-    "analytics": "التحليلات",
-    "compliance": "الامتثال"
-  },
-  "stats": {
-    "totalTeachers": "إجمالي المعلمين",
-    "activeObservations": "الملاحظات النشطة",
-    "completionRate": "معدل الإنجاز",
+    "welcome": "مرحباً بك في لوحة ضمان الجودة",
+    "qualityAssurance": "ضمان الجودة",
+    "teacherEvaluations": "تقييمات المعلمين",
+    "classObservations": "ملاحظات الفصل",
+    "performanceMetrics": "مقاييس الأداء",
+    "totalObservations": "إجمالي الملاحظات",
+    "pendingEvaluations": "التقييمات المعلقة",
     "qualityScore": "نقاط الجودة",
-    "pendingObservations": "الملاحظات المعلقة",
-    "thisMonth": "هذا الشهر",
-    "complianceRate": "معدل الامتثال",
-    "averageRating": "متوسط التقييم"
-  },
-  "teachers": {
-    "title": "إدارة المعلمين",
-    "performance": "الأداء",
-    "viewProfile": "عرض الملف الشخصي",
-    "scheduleObservation": "جدولة ملاحظة",
-    "sendFeedback": "إرسال تعليقات",
-    "viewReports": "عرض التقارير"
+    "complianceRate": "معدل الامتثال"
   },
   "observations": {
-    "title": "ملاحظات التدريس",
-    "schedule": "جدولة جديدة",
-    "pending": "معلقة",
-    "completed": "مكتملة",
-    "inProgress": "قيد التنفيذ",
-    "overdue": "متأخرة",
-    "viewDetails": "عرض التفاصيل",
-    "addFeedback": "إضافة تعليقات"
+    "title": "ملاحظات الفصل",
+    "schedule": "جدولة",
+    "pending": "معلق",
+    "completed": "مكتمل",
+    "overdue": "متأخر",
+    "teacherName": "اسم المعلم",
+    "observationDate": "تاريخ الملاحظة",
+    "status": "الحالة",
+    "feedback": "التعليق",
+    "rating": "التقييم"
   },
-  "quality": {
+  "evaluations": {
+    "title": "تقييمات المعلمين",
+    "create": "إنشاء تقييم",
+    "performance": "الأداء",
+    "teaching": "التدريس",
+    "communication": "التواصل",
+    "preparation": "التحضير",
+    "overall": "عام",
+    "comments": "التعليقات",
+    "recommendations": "التوصيات"
+  },
+  "qualityAssurance": {
     "title": "ضمان الجودة",
-    "standards": "معايير التدريس",
-    "compliance": "فحص الامتثال",
-    "improvement": "خطط التحسين",
-    "training": "احتياجات التدريب"
-  },
-  "reports": {
-    "title": "تقارير الأداء",
-    "generate": "إنشاء تقرير",
-    "teacherPerformance": "أداء المعلم",
-    "institutionalMetrics": "المقاييس المؤسسية",
-    "export": "تصدير البيانات"
+    "standards": "المعايير",
+    "compliance": "الامتثال",
+    "improvement": "التحسين",
+    "monitoring": "المراقبة",
+    "reporting": "الإبلاغ",
+    "training": "التدريب"
   }
 }

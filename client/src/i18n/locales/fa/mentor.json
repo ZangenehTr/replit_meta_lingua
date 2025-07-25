@@ -1,57 +1,41 @@
 {
   "dashboard": {
     "title": "داشبورد مربی",
-    "welcome": "خوش آمدید",
-    "overview": "نمای کلی",
-    "students": "دانش‌آموزان",
-    "assignments": "تکالیف",
-    "progress": "پیگیری پیشرفت",
-    "communication": "ارتباطات",
-    "assessments": "ارزیابی‌ها",
-    "reports": "گزارش‌ها"
-  },
-  "stats": {
-    "totalMentees": "کل دانش‌آموزان",
-    "activeStudents": "دانش‌آموزان فعال",
-    "averageProgress": "میانگین پیشرفت",
-    "thisMonth": "این ماه",
-    "completedAssignments": "تکالیف تکمیل شده",
-    "pendingReviews": "بررسی‌های در انتظار",
+    "welcome": "به پنل مربی‌گری خوش آمدید",
+    "totalMentees": "کل دانشجویان تحت نظارت",
+    "activeMentees": "دانشجویان فعال",
     "totalSessions": "کل جلسات",
-    "monthlyRating": "امتیاز ماهانه"
+    "averageRating": "میانگین امتیاز",
+    "goalsAchieved": "اهداف محقق شده",
+    "monthlyEarnings": "درآمد ماهانه",
+    "responseRate": "نرخ پاسخ‌دهی",
+    "completionRate": "نرخ تکمیل"
   },
-  "students": {
-    "title": "دانش‌آموزان من",
-    "noStudents": "هیچ دانش‌آموزی تعیین نشده",
-    "progress": "پیشرفت",
-    "lastActivity": "آخرین فعالیت",
-    "viewProfile": "مشاهده پروفایل",
-    "sendMessage": "ارسال پیام",
-    "scheduleCall": "برنامه‌ریزی تماس"
-  },
-  "assignments": {
-    "title": "تکالیف دانش‌آموزان",
-    "create": "ایجاد تکلیف",
-    "pending": "در انتظار",
-    "completed": "تکمیل شده",
-    "overdue": "معوقه",
-    "dueDate": "مهلت تحویل",
-    "review": "بررسی",
-    "feedback": "بازخورد"
-  },
-  "assessments": {
-    "title": "ارزیابی‌های پیشرفت",
-    "conductAssessment": "انجام ارزیابی",
-    "viewResults": "مشاهده نتایج",
-    "generateReport": "تولید گزارش",
-    "skillLevel": "سطح مهارت",
-    "recommendations": "توصیه‌ها"
-  },
-  "guideStudentJourneys": "راهنمایی و پشتیبانی از مسیر یادگیری دانشجویان",
   "mentees": {
-    "totalMentees": "کل محصلان",
-    "activeMentees": "محصلان فعال",
-    "currentProgress": "پیشرفت فعلی",
-    "viewProfile": "مشاهده پروفایل"
+    "title": "دانشجویان تحت نظارت",
+    "assignedStudents": "دانشجویان تخصیص یافته",
+    "progress": "پیشرفت",
+    "sessions": "جلسات",
+    "communication": "ارتباطات",
+    "viewProgress": "مشاهده پیشرفت",
+    "scheduleSession": "برنامه‌ریزی جلسه",
+    "sendMessage": "ارسال پیام"
+  },
+  "sessions": {
+    "title": "جلسات مربی‌گری",
+    "upcoming": "آینده",
+    "completed": "تکمیل شده",
+    "scheduled": "برنامه‌ریزی شده",
+    "duration": "مدت زمان",
+    "notes": "یادداشت‌ها",
+    "goals": "اهداف"
+  },
+  "progress": {
+    "title": "رهگیری پیشرفت",
+    "overallProgress": "پیشرفت کلی",
+    "skillAssessment": "ارزیابی مهارت‌ها",
+    "learningGoals": "اهداف یادگیری",
+    "milestones": "مراحل مهم",
+    "achievements": "دستاوردها"
   }
 }

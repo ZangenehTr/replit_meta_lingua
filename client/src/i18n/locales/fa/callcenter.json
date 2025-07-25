@@ -1,57 +1,53 @@
 {
   "dashboard": {
     "title": "داشبورد مرکز تماس",
-    "welcome": "خوش آمدید",
-    "overview": "نمای کلی",
-    "leads": "مشتریان بالقوه",
-    "calls": "تماس‌ها",
+    "welcome": "به مرکز تماس خوش آمدید",
+    "leadManagement": "مدیریت مشتریان بالقوه",
+    "callMetrics": "معیارهای تماس",
     "performance": "عملکرد",
-    "reports": "گزارش‌ها",
-    "voip": "مرکز VoIP"
-  },
-  "stats": {
     "totalCalls": "کل تماس‌ها",
-    "completedCalls": "تماس‌های تکمیل شده",
+    "callsToday": "تماس‌های امروز",
+    "totalLeads": "کل مشتریان بالقوه",
+    "convertedLeads": "مشتریان تبدیل شده",
+    "responseRate": "نرخ پاسخ‌دهی",
     "conversionRate": "نرخ تبدیل",
-    "avgCallDuration": "متوسط مدت تماس",
-    "activeLeads": "مشتریان بالقوه فعال",
-    "thisWeek": "این هفته",
-    "responseRate": "نرخ پاسخ",
-    "qualityScore": "امتیاز کیفیت"
+    "averageCallDuration": "میانگین مدت تماس",
+    "dailyTarget": "هدف روزانه"
   },
   "leads": {
     "title": "مدیریت مشتریان بالقوه",
-    "newLead": "مشتری بالقوه جدید",
-    "hotLeads": "مشتریان بالقوه داغ",
+    "new": "جدید",
+    "contacted": "تماس گرفته شده",
+    "interested": "علاقه‌مند",
+    "enrolled": "ثبت‌نام شده",
     "followUp": "پیگیری",
-    "converted": "تبدیل شده",
-    "callNow": "تماس حالا",
-    "schedule": "برنامه‌ریزی تماس",
+    "cold": "سرد",
+    "hot": "داغ",
+    "warm": "گرم",
+    "callLead": "تماس با مشتری",
+    "scheduleMeeting": "برنامه‌ریزی جلسه",
+    "sendEmail": "ارسال ایمیل",
+    "updateStatus": "به‌روزرسانی وضعیت",
     "addNotes": "افزودن یادداشت"
   },
   "calls": {
-    "title": "تاریخچه تماس‌ها",
-    "duration": "مدت زمان",
-    "outcome": "نتیجه",
-    "recording": "ضبط",
-    "notes": "یادداشت‌ها",
-    "callback": "تماس برگشتی",
-    "completed": "تکمیل شده",
-    "missed": "از دست رفته"
-  },
-  "voip": {
-    "title": "مرکز تماس VoIP",
-    "dialNumber": "شماره گیری",
-    "callStatus": "وضعیت تماس",
-    "connecting": "در حال اتصال",
-    "connected": "متصل",
-    "ended": "تماس پایان یافت",
-    "studentDirectory": "فهرست دانش‌آموزان"
+    "title": "سیستم تماس",
+    "makeCall": "برقراری تماس",
+    "callHistory": "تاریخچه تماس‌ها",
+    "activeCall": "تماس فعال",
+    "endCall": "پایان تماس",
+    "recordCall": "ضبط تماس",
+    "transferCall": "انتقال تماس",
+    "holdCall": "نگهداری تماس",
+    "voipCenter": "مرکز VoIP"
   },
   "performance": {
-    "title": "معیارهای عملکرد",
-    "callsToday": "تماس‌های امروز",
-    "leadsConverted": "سرنخ‌های تبدیل شده",
-    "avgCallTime": "میانگین زمان تماس"
+    "title": "عملکرد مرکز تماس",
+    "dailyStats": "آمار روزانه",
+    "weeklyReport": "گزارش هفتگی",
+    "monthlyReport": "گزارش ماهانه",
+    "targetAchievement": "دستیابی به هدف",
+    "callVolume": "حجم تماس",
+    "successRate": "نرخ موفقیت"
   }
 }

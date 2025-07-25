@@ -1,54 +1,55 @@
 {
   "dashboard": {
     "title": "داشبورد حسابدار",
-    "welcome": "خوش آمدید",
-    "overview": "نمای کلی",
-    "payments": "پرداخت‌ها",
-    "invoices": "فاکتورها",
-    "reports": "گزارشات",
-    "compliance": "انطباق",
-    "analytics": "تحلیل‌ها"
-  },
-  "stats": {
-    "totalRevenue": "کل درآمد",
-    "pendingPayments": "پرداخت‌های در انتظار",
-    "completedTransactions": "تراکنش‌های تکمیل شده",
-    "monthlyGrowth": "رشد ماهانه",
+    "welcome": "به سیستم مالی خوش آمدید",
+    "financialOverview": "نمای کلی مالی",
+    "revenue": "درآمد",
+    "expenses": "هزینه‌ها",
+    "profit": "سود",
+    "monthlyRevenue": "درآمد ماهانه",
     "totalStudents": "کل دانشجویان",
+    "pendingPayments": "پرداخت‌های در انتظار",
+    "overduePayments": "پرداخت‌های معوقه",
     "averagePayment": "میانگین پرداخت",
-    "thisMonth": "این ماه",
-    "complianceRate": "نرخ انطباق"
+    "paymentSuccess": "موفقیت پرداخت",
+    "revenueGrowth": "رشد درآمد",
+    "iranianCompliance": "انطباق ایرانی"
   },
   "payments": {
     "title": "مدیریت پرداخت‌ها",
-    "newPayment": "پرداخت جدید",
-    "pendingPayments": "پرداخت‌های در انتظار",
-    "completedPayments": "پرداخت‌های تکمیل شده",
-    "refunds": "بازپرداخت‌ها",
-    "processPayment": "پردازش پرداخت",
-    "verifyPayment": "تأیید پرداخت",
-    "amount": "مبلغ",
-    "status": "وضعیت",
-    "paymentMethod": "روش پرداخت"
-  },
-  "invoices": {
-    "title": "مدیریت فاکتورها",
-    "createInvoice": "ایجاد فاکتور",
+    "shetabGateway": "درگاه شتاب",
+    "bankTransfer": "انتقال بانکی",
+    "cash": "نقدی",
+    "installments": "اقساط",
     "pending": "در انتظار",
-    "paid": "پرداخت شده",
-    "overdue": "سررسید گذشته",
-    "sendReminder": "ارسال یادآوری",
-    "downloadPDF": "دانلود PDF",
-    "invoiceNumber": "شماره فاکتور",
-    "dueDate": "تاریخ سررسید"
+    "completed": "تکمیل شده",
+    "failed": "ناموفق",
+    "refunded": "بازگردانده شده",
+    "amount": "مبلغ",
+    "currency": "ریال ایران",
+    "paymentMethod": "روش پرداخت",
+    "transactionId": "شناسه تراکنش",
+    "processPayment": "پردازش پرداخت",
+    "refundPayment": "بازگردانی پرداخت"
+  },
+  "financial": {
+    "title": "گزارش‌های مالی",
+    "monthlyReport": "گزارش ماهانه",
+    "annualReport": "گزارش سالانه",
+    "taxReport": "گزارش مالیاتی",
+    "profitLoss": "سود و زیان",
+    "cashFlow": "جریان نقدی",
+    "balanceSheet": "ترازنامه",
+    "iranianTax": "مالیات ایرانی",
+    "exportReport": "صادرات گزارش"
   },
   "compliance": {
-    "title": "انطباق مالی ایران",
-    "shetabIntegration": "یکپارچگی شتاب",
+    "title": "انطباق مالی ایرانی",
+    "iranianLaw": "قانون ایرانی",
     "taxCompliance": "انطباق مالیاتی",
-    "reportingStandards": "استانداردهای گزارش‌دهی",
+    "bankingLaw": "قانون بانکداری",
+    "currencyRegulation": "مقررات ارزی",
     "auditTrail": "مسیر حسابرسی",
-    "complianceStatus": "وضعیت انطباق",
-    "generateReport": "تولید گزارش"
+    "documentation": "مستندسازی"
   }
 }
