@@ -230,13 +230,13 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5 text-yellow-600" />
-              {t('admin:dashboard.topPerformingTeachers')}
+              Top Performing Teachers
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-green-600 mb-2">
-                {t('admin:dashboard.lowestAttritionRates')}
+                Lowest Attrition Rates
               </h4>
               <div className="space-y-1">
                 {((teacherPerformance as any)?.lowestAttrition || []).map((teacher: any, index: number) => (
@@ -258,13 +258,13 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-600" />
-              {t('admin:dashboard.studentRetentionChampions')}
+              Student Retention Champions
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-blue-600 mb-2">
-                {t('admin:dashboard.highestRetentionRates')}
+                Highest Retention Rates
               </h4>
               <div className="space-y-1">
                 {((teacherPerformance as any)?.highestRetention || []).map((teacher: any, index: number) => (
@@ -286,13 +286,13 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ThumbsDown className="h-5 w-5 text-red-600" />
-              {t('admin:dashboard.performanceImprovementNeeded')}
+              Performance Improvement Needed
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-red-600 mb-2">
-                {t('admin:dashboard.lowestStudentScores')}
+                Lowest Student Scores
               </h4>
               <div className="space-y-1">
                 {((teacherPerformance as any)?.lowestScores || []).map((teacher: any, index: number) => (
@@ -315,18 +315,18 @@ export function AdminDashboard() {
         {/* Student Retention Metrics */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:dashboard.studentRetentionAnalysis')}</CardTitle>
+            <CardTitle>Student Retention Analysis</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">{(studentRetention as any)?.overall || '0.0'}%</div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.overallRetention')}</p>
+                  <p className="text-xs text-muted-foreground">Overall Retention</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">{(studentRetention as any)?.newStudents || '0.0'}%</div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.newStudent3mo')}</p>
+                  <p className="text-xs text-muted-foreground">New Student 3mo</p>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={200}>
@@ -503,23 +503,23 @@ export function AdminDashboard() {
         {/* Quality & Satisfaction Metrics */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:dashboard.qualitySatisfactionMetrics')}</CardTitle>
+            <CardTitle>Quality & Satisfaction Metrics</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-600">{(operationalMetrics as any)?.studentSatisfaction || '4.6'}/5</div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.studentSatisfaction')}</p>
+                  <p className="text-xs text-muted-foreground">Student Satisfaction</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-600">{(operationalMetrics as any)?.nps || '+47'}</div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.netPromoterScore')}</p>
+                  <p className="text-xs text-muted-foreground">Net Promoter Score</p>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.courseMaterialQuality')}</span>
+                  <span className="text-sm">Course Material Quality</span>
                   <div className="flex">
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -528,7 +528,7 @@ export function AdminDashboard() {
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.teachingQuality')}</span>
+                  <span className="text-sm">Teaching Quality</span>
                   <div className="flex">
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -537,11 +537,11 @@ export function AdminDashboard() {
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.supportResponseTime')}</span>
+                  <span className="text-sm">Support Response Time</span>
                   <Badge variant="outline">&lt; 2 hours</Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.technicalIssues')}</span>
+                  <span className="text-sm">Technical Issues</span>
                   <Badge variant="outline" className="text-green-600">0.8% sessions</Badge>
                 </div>
               </div>
