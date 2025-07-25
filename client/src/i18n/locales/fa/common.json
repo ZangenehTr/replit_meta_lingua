@@ -21,6 +21,13 @@
     "payments": "پرداخت‌ها",
     "compliance": "انطباق"
   },
+  "supervisor": {
+    "teachers": "مدرسان",
+    "improvementNeeded": "نیاز به بهبود",
+    "pendingReviews": "بازبینی‌های در انتظار",
+    "scheduleObservation": "برنامه‌ریزی مشاهده",
+    "studentsNeedingAttention": "دانش‌آموزان نیازمند توجه"
+  },
   "toast": {
     "success": "موفقیت",
     "error": "خطا",
