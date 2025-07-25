@@ -176,6 +176,11 @@ function Router() {
           <EnhancedAdminDashboard />
         </ProtectedRoute>
       </Route>
+      <Route path="/admin/dashboard">
+        <ProtectedRoute>
+          <EnhancedAdminDashboard />
+        </ProtectedRoute>
+      </Route>
       <Route path="/admin/students">
         <ProtectedRoute>
           <AdminStudents />
@@ -614,7 +619,7 @@ function Router() {
           
           // Redirect authenticated users based on their role
           if (user.role === 'Admin') {
-            return <Redirect to="/admin" />;
+            return <Redirect to="/admin/dashboard" />;
           } else if (user.role === 'Teacher/Tutor') {
             return <Redirect to="/teacher/dashboard" />;
           } else if (user.role === 'Supervisor') {
