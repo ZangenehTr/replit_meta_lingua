@@ -242,6 +242,16 @@ Preferred communication style: Simple, everyday language.
 2. **Real Data Only**: Never use mock data or fake information - all data must be authentic and database-driven
 3. **Feature Testing**: After any changes, run comprehensive tests to ensure all features and buttons function correctly
 
+### CRITICAL RECURRING BUG - ADMIN ROUTING ISSUE (July 25, 2025)
+- **RECURRING PROBLEM**: Admin authentication routing keeps reverting to supervisor dashboard instead of admin dashboard
+- **ROOT CAUSE**: Role-based navigation configuration in `client/src/lib/role-based-navigation.ts` incorrectly routes Admin users to `/supervisor/dashboard`
+- **PERMANENT FIX IMPLEMENTED**: 
+  - Updated `App.tsx` to redirect Admin users to `/admin/dashboard` (line 620)
+  - Added dedicated `/admin/dashboard` route in App.tsx (lines 182-186)
+  - Fixed role-based navigation to separate Admin and Supervisor dashboard paths (lines 47-48)
+- **USER IMPACT**: This bug has caused user frustration due to recurring nature - must be monitored closely
+- **PREVENTION PROTOCOL**: Any future changes to navigation or routing must be tested with all 7 user roles to prevent regression
+
 ### Recent Fixes (July 13, 2025)
 1. **SMS Notification Fix** - Resolved 404 errors by fixing phone number field references in API calls
 2. **Payslip Recalculation** - Implemented complete recalculation logic that generates new payslips when edits are made
