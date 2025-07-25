@@ -159,7 +159,8 @@
     "dailyAvg": "Daily Avg",
     "weeklyAvg": "Weekly Avg",
     "monthlyTotal": "Monthly Total",
-    "total": "total"
+    "total": "total",
+    "monthlyRevenue": "Monthly Revenue"
   },
   "communication": {
     "started": "Communication Started",
