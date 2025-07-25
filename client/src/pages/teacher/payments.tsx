@@ -29,7 +29,7 @@ import {
   Clock,
   AlertCircle
 } from "lucide-react";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from 'react-i18next';
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -67,10 +67,10 @@ interface SessionDetail {
 }
 
 export default function TeacherPayments() {
-  const { t } = useLanguage();
+  const { t } = useTranslation(['teacher', 'common']);
   const [selectedPayslip, setSelectedPayslip] = useState<PayslipDetail | null>(null);
 
-  const { data: payslips, isLoading } = useQuery({
+  const { data: payslips, isLoading } = useQuery<PayslipDetail[]>({
     queryKey: ['/api/teacher/payslips'],
     queryFn: async () => {
       const response = await fetch('/api/teacher/payslips');
@@ -79,7 +79,7 @@ export default function TeacherPayments() {
     }
   });
 
-  const { data: currentPayslip } = useQuery({
+  const { data: currentPayslip } = useQuery<PayslipDetail>({
     queryKey: ['/api/teacher/payslip/current'],
     queryFn: async () => {
       const response = await fetch('/api/teacher/payslip/current');

@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, MapPin, Clock, DollarSign, Filter, Search, Video, MessageCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from 'react-i18next';
 
 interface Tutor {
   id: number;
@@ -28,17 +29,18 @@ interface Tutor {
 
 export default function TutorsPage() {
   const { user } = useAuth();
+  const { t } = useTranslation(['student', 'common']);
   const [searchTerm, setSearchTerm] = useState("");
   const [languageFilter, setLanguageFilter] = useState("all");
   const [priceFilter, setPriceFilter] = useState("all");
   const [ratingFilter, setRatingFilter] = useState("all");
 
-  const { data: tutors, isLoading, error } = useQuery({
+  const { data: tutors, isLoading, error } = useQuery<Tutor[]>({
     queryKey: ['/api/tutors'],
     enabled: !!user
   });
 
-  const { data: userProfile } = useQuery({
+  const { data: userProfile } = useQuery<any>({
     queryKey: ['/api/users/me/profile'],
     enabled: !!user
   });

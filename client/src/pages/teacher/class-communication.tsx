@@ -20,7 +20,7 @@ import {
   Image as ImageIcon,
   Mic
 } from "lucide-react";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/hooks/use-auth";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
@@ -70,7 +70,7 @@ interface Attachment {
 
 export default function ClassCommunication() {
   const { classId } = useParams<{ classId: string }>();
-  const { t } = useLanguage();
+  const { t } = useTranslation(['teacher', 'common']);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);

@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   CardContent,
@@ -46,16 +47,17 @@ import type { Test, Course } from "@shared/schema";
 export default function TeacherTests() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation(['teacher', 'common']);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedTest, setSelectedTest] = useState<Test | null>(null);
 
   // Fetch teacher's tests
-  const { data: tests = [], isLoading: testsLoading } = useQuery<Test[]>({
+  const { data: tests = [], isLoading: testsLoading } = useQuery<any[]>({
     queryKey: ["/api/teacher/tests"],
   });
 
   // Fetch courses for the dropdown
-  const { data: courses = [] } = useQuery<Course[]>({
+  const { data: courses = [] } = useQuery<any[]>({
     queryKey: ["/api/teacher/courses"],
   });
 

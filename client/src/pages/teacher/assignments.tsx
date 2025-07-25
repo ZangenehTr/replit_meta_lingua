@@ -79,12 +79,12 @@ export default function TeacherAssignmentsPage() {
   });
 
   // Fetch assignments
-  const { data: assignments = [], isLoading } = useQuery({
+  const { data: assignments = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/teacher/assignments']
   });
 
   // Fetch teacher's classes for student/course selection
-  const { data: classes = [] } = useQuery({
+  const { data: classes = [] } = useQuery<any[]>({
     queryKey: ['/api/teacher/classes']
   });
 

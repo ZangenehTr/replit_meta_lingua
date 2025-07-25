@@ -57,5 +57,39 @@
     "available": "در دسترس",
     "busy": "مشغول",
     "break": "استراحت"
+  },
+  "tests": {
+    "title": "آزمون‌ها و ارزیابی",
+    "createTest": "ایجاد آزمون",
+    "manageTests": "مدیریت آزمون‌ها",
+    "questions": "سوالات",
+    "testSettings": "تنظیمات آزمون",
+    "duration": "مدت زمان",
+    "difficulty": "سطح دشواری",
+    "results": "نتایج"
+  },
+  "videoCourses": {
+    "title": "دوره‌های ویدئویی",
+    "createCourse": "ایجاد دوره",
+    "manageCourses": "مدیریت دوره‌ها",
+    "uploadVideo": "بارگذاری ویدئو",
+    "courseContent": "محتوای دوره",
+    "studentProgress": "پیشرفت دانشجویان"
+  },
+  "payments": {
+    "title": "پرداخت‌ها و درآمد",
+    "monthlyEarnings": "درآمد ماهانه",
+    "paymentHistory": "تاریخچه پرداخت‌ها",
+    "pendingPayments": "پرداخت‌های در انتظار",
+    "totalEarned": "کل درآمد",
+    "paymentMethod": "روش پرداخت"
+  },
+  "communication": {
+    "title": "ارتباطات",
+    "sendMessage": "ارسال پیام",
+    "messageHistory": "تاریخچه پیام‌ها",
+    "notifications": "اطلاعیه‌ها",
+    "announcements": "اعلان‌ها",
+    "chatWithStudents": "گفتگو با دانشجویان"
   }
 }

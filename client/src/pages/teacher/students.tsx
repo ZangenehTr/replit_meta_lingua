@@ -13,7 +13,7 @@ import {
   Star, Calendar, Target, AlertCircle 
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from 'react-i18next';
 
 interface Student {
   id: number;
@@ -37,7 +37,7 @@ interface Student {
 }
 
 export default function TeacherStudentsPage() {
-  const { t } = useLanguage();
+  const { t } = useTranslation(['teacher', 'common']);
   const [searchTerm, setSearchTerm] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");

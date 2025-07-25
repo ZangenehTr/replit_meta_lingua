@@ -17,7 +17,7 @@ import { format } from 'date-fns';
 import { Plus, Edit, Trash2, Clock, Calendar as CalendarLucide, Globe, MapPin, Bell, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { useLanguage } from '@/hooks/use-language';
+import { useTranslation } from 'react-i18next';
 
 const availabilityPeriodSchema = z.object({
   periodStartDate: z.date().refine(
@@ -46,7 +46,7 @@ const availabilityPeriodSchema = z.object({
 type AvailabilityPeriodFormData = z.infer<typeof availabilityPeriodSchema>;
 
 export default function TeacherAvailabilityPage() {
-  const { t } = useLanguage();
+  const { t } = useTranslation(['teacher', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);

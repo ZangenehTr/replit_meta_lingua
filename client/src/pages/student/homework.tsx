@@ -56,7 +56,7 @@ export default function HomeworkPage() {
   const [submissionText, setSubmissionText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: homework, isLoading, error } = useQuery({
+  const { data: homework, isLoading, error } = useQuery<Homework[]>({
     queryKey: ['/api/students/homework'],
     enabled: !!user
   });

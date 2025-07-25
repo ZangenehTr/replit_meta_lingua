@@ -3,40 +3,40 @@
     "title": "لوحة المعلم",
     "welcome": "مرحباً بك في لوحة المعلم",
     "students": "طلابي",
-    "classes": "فصولي",
-    "assignments": "الواجبات",
+    "classes": "صفوفي",
+    "assignments": "المهام",
     "schedule": "جدول التدريس",
     "availability": "التوفر",
     "totalStudents": "إجمالي الطلاب",
-    "totalClasses": "إجمالي الفصول",
+    "totalClasses": "إجمالي الصفوف",
     "completedLessons": "الدروس المكتملة",
-    "pendingAssignments": "الواجبات المعلقة",
+    "pendingAssignments": "المهام المعلقة",
     "averageRating": "متوسط التقييم",
     "monthlyEarnings": "الأرباح الشهرية",
     "attendanceRate": "معدل الحضور",
-    "nextPaymentDate": "تاريخ الدفع التالي"
+    "nextPaymentDate": "تاريخ الدفع القادم"
   },
   "classes": {
-    "title": "فصولي",
+    "title": "صفوفي",
     "upcoming": "القادمة",
     "today": "اليوم",
     "thisWeek": "هذا الأسبوع",
-    "joinClass": "دخول الفصل",
+    "joinClass": "دخول الصف",
     "prepareMaterials": "إعداد المواد",
     "takeAttendance": "أخذ الحضور",
-    "assignHomework": "تعيين واجب منزلي",
+    "assignHomework": "تعيين واجب",
     "viewStudents": "عرض الطلاب"
   },
   "assignments": {
-    "title": "إدارة الواجبات",
-    "create": "إنشاء واجب",
-    "pending": "معلق",
-    "graded": "مقيم",
-    "overdue": "متأخر",
-    "dueDate": "تاريخ الاستحقاق",
+    "title": "إدارة المهام",
+    "create": "إنشاء مهمة",
+    "pending": "في الانتظار",
+    "graded": "مُقيّمة",
+    "overdue": "متأخرة",
+    "dueDate": "موعد التسليم",
     "submissions": "التسليمات",
     "grade": "الدرجة",
-    "feedback": "التعليق"
+    "feedback": "التعليقات"
   },
   "students": {
     "title": "طلابي",
@@ -44,7 +44,7 @@
     "attendance": "الحضور",
     "grades": "الدرجات",
     "notes": "الملاحظات",
-    "contact": "اتصال",
+    "contact": "الاتصال",
     "sendMessage": "إرسال رسالة"
   },
   "schedule": {
@@ -57,5 +57,39 @@
     "available": "متاح",
     "busy": "مشغول",
     "break": "استراحة"
+  },
+  "tests": {
+    "title": "الاختبارات والتقييم",
+    "createTest": "إنشاء اختبار",
+    "manageTests": "إدارة الاختبارات",
+    "questions": "الأسئلة",
+    "testSettings": "إعدادات الاختبار",
+    "duration": "المدة الزمنية",
+    "difficulty": "مستوى الصعوبة",
+    "results": "النتائج"
+  },
+  "videoCourses": {
+    "title": "الدورات المرئية",
+    "createCourse": "إنشاء دورة",
+    "manageCourses": "إدارة الدورات",
+    "uploadVideo": "رفع فيديو",
+    "courseContent": "محتوى الدورة",
+    "studentProgress": "تقدم الطلاب"
+  },
+  "payments": {
+    "title": "المدفوعات والأرباح",
+    "monthlyEarnings": "الأرباح الشهرية",
+    "paymentHistory": "تاريخ المدفوعات",
+    "pendingPayments": "المدفوعات المعلقة",
+    "totalEarned": "إجمالي الأرباح",
+    "paymentMethod": "طريقة الدفع"
+  },
+  "communication": {
+    "title": "الاتصالات",
+    "sendMessage": "إرسال رسالة",
+    "messageHistory": "تاريخ الرسائل",
+    "notifications": "الإشعارات",
+    "announcements": "الإعلانات",
+    "chatWithStudents": "المحادثة مع الطلاب"
   }
 }

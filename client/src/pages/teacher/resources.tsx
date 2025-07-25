@@ -11,7 +11,7 @@ import {
   Folder, Star, Clock, BookOpen, Users, Globe 
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/use-toast";
 
 interface Resource {
@@ -42,7 +42,7 @@ interface Category {
 }
 
 export default function TeacherResourcesPage() {
-  const { t } = useLanguage();
+  const { t } = useTranslation(['teacher', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");

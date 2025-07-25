@@ -4,19 +4,19 @@
     "welcome": "مرحباً بك في نظام التعلم",
     "myCourses": "دوراتي",
     "progress": "تقدمي",
-    "assignments": "واجباتي",
+    "assignments": "مهامي",
     "schedule": "جدولي",
     "achievements": "الإنجازات",
     "currentLevel": "المستوى الحالي",
     "nextLevelXP": "نقاط المستوى التالي",
     "walletBalance": "رصيد المحفظة",
-    "memberTier": "مستوى العضوية",
+    "memberTier": "درجة العضوية",
     "studyTimeThisWeek": "وقت الدراسة هذا الأسبوع",
     "weeklyGoalHours": "هدف الساعات الأسبوعية"
   },
   "courses": {
     "title": "دوراتي",
-    "enrolled": "مسجل",
+    "enrolled": "مسجّل",
     "inProgress": "قيد التقدم",
     "completed": "مكتمل",
     "progress": "التقدم",
@@ -26,14 +26,14 @@
     "viewCertificate": "عرض الشهادة"
   },
   "assignments": {
-    "title": "واجباتي",
-    "pending": "معلق",
-    "submitted": "مسلم",
-    "graded": "مقيم",
+    "title": "مهامي",
+    "pending": "في الانتظار",
+    "submitted": "مُسلّم",
+    "graded": "مُقيّم",
     "overdue": "متأخر",
-    "dueDate": "تاريخ الاستحقاق",
-    "submitAssignment": "تسليم الواجب",
-    "viewFeedback": "عرض التعليق"
+    "dueDate": "موعد التسليم",
+    "submitAssignment": "تسليم المهمة",
+    "viewFeedback": "عرض التعليقات"
   },
   "progress": {
     "title": "تقدمي",
@@ -46,7 +46,7 @@
     "currentStreak": "السلسلة الحالية"
   },
   "gamification": {
-    "xp": "نقاط الخبرة",
+    "xp": "النقاط",
     "level": "المستوى",
     "streak": "السلسلة",
     "badges": "الشارات",
@@ -54,5 +54,44 @@
     "dailyGoals": "الأهداف اليومية",
     "weeklyChallenge": "التحدي الأسبوعي",
     "achievements": "الإنجازات"
+  },
+  "videoCourses": {
+    "title": "الدورات المرئية",
+    "watchVideo": "مشاهدة الفيديو",
+    "courseProgress": "تقدم الدورة",
+    "nextLesson": "الدرس التالي",
+    "previousLesson": "الدرس السابق",
+    "completedLessons": "الدروس المكتملة",
+    "downloadMaterials": "تحميل المواد",
+    "bookmarks": "الإشارات المرجعية",
+    "notes": "الملاحظات"
+  },
+  "tutors": {
+    "title": "المعلمون",
+    "findTutor": "العثور على معلم",
+    "myTutors": "معلموني",
+    "bookSession": "حجز جلسة",
+    "tutorProfile": "ملف المعلم",
+    "rating": "التقييم",
+    "availability": "التوفر",
+    "specialization": "التخصص"
+  },
+  "homework": {
+    "title": "الواجبات",
+    "submit": "إرسال",
+    "download": "تحميل",
+    "instructions": "التعليمات",
+    "attachments": "المرفقات",
+    "feedback": "التعليقات",
+    "score": "النتيجة",
+    "status": "الحالة"
+  },
+  "payment": {
+    "title": "الدفع",
+    "wallet": "المحفظة",
+    "addCredit": "إضافة رصيد",
+    "transactionHistory": "تاريخ المعاملات",
+    "paymentMethods": "طرق الدفع",
+    "balance": "الرصيد"
   }
 }

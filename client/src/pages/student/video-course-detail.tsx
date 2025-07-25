@@ -12,19 +12,23 @@ import {
   BookOpen, FileText, Download, ChevronRight 
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
+import { useTranslation } from 'react-i18next';
 
 export default function VideoCoursDetail() {
-  const { courseId } = useParams();
+  const params = useParams<{ courseId: string }>();
+  const courseId = params.courseId;
   const [selectedModule, setSelectedModule] = useState<number | null>(null);
+  const { t } = useTranslation(['student', 'common']);
 
   // Fetch course details
-  const { data: course, isLoading: courseLoading } = useQuery({
+  const { data: course, isLoading: courseLoading } = useQuery<any>({
     queryKey: ["/api/courses/" + courseId],
   });
 
   // Fetch video lessons for this course
-  const { data: lessons, isLoading: lessonsLoading } = useQuery({
+  const { data: lessons, isLoading: lessonsLoading } = useQuery<any[]>({
     queryKey: [`/api/student/courses/${courseId}/video-lessons`],
+    enabled: !!courseId
   });
 
   // Group lessons by module

@@ -54,5 +54,44 @@
     "dailyGoals": "اهداف روزانه",
     "weeklyChallenge": "چالش هفتگی",
     "achievements": "دستاوردها"
+  },
+  "videoCourses": {
+    "title": "دوره‌های ویدئویی",
+    "watchVideo": "تماشای ویدئو",
+    "courseProgress": "پیشرفت دوره",
+    "nextLesson": "درس بعدی",
+    "previousLesson": "درس قبلی",
+    "completedLessons": "درس‌های تکمیل شده",
+    "downloadMaterials": "دانلود منابع",
+    "bookmarks": "نشانک‌ها",
+    "notes": "یادداشت‌ها"
+  },
+  "tutors": {
+    "title": "مدرسین",
+    "findTutor": "یافتن مدرس",
+    "myTutors": "مدرسین من",
+    "bookSession": "رزرو جلسه",
+    "tutorProfile": "پروفایل مدرس",
+    "rating": "امتیاز",
+    "availability": "دسترسی",
+    "specialization": "تخصص"
+  },
+  "homework": {
+    "title": "تکالیف",
+    "submit": "ارسال",
+    "download": "دانلود",
+    "instructions": "دستورالعمل",
+    "attachments": "ضمیمه‌ها",
+    "feedback": "بازخورد",
+    "score": "نمره",
+    "status": "وضعیت"
+  },
+  "payment": {
+    "title": "پرداخت",
+    "wallet": "کیف پول",
+    "addCredit": "افزودن اعتبار",
+    "transactionHistory": "تاریخچه تراکنش‌ها",
+    "paymentMethods": "روش‌های پرداخت",
+    "balance": "موجودی"
   }
 }

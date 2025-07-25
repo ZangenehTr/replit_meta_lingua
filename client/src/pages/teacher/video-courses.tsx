@@ -48,6 +48,7 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { formatDuration } from "date-fns";
+import { useTranslation } from 'react-i18next';
 
 interface VideoLesson {
   id: number;
@@ -82,6 +83,7 @@ interface Course {
 export default function TeacherVideoCourses() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation(['teacher', 'common']);
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingLesson, setEditingLesson] = useState<VideoLesson | null>(null);
