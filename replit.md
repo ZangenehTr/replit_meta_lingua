@@ -415,6 +415,11 @@ Preferred communication style: Simple, everyday language.
 - **✅ PERSIAN NUMBER FORMATTING IMPLEMENTATION**: Created formatPersianNumber() utility converting Western numerals (0123456789) to Persian numerals (۰۱۲۳۴۵۶۷۸۹) throughout all numeric displays, percentages, and currency values in admin dashboard - complete Persian localization compliance achieved (July 25, 2025)
 - **✅ BACKEND LOCALIZATION FIXES**: Updated database-storage.ts marketing funnel data to use translation keys (websiteVisitors, inquiries, consultations, enrollments) instead of hardcoded English strings, enabling proper multilingual display (July 25, 2025)
 - **✅ COMPREHENSIVE NUMERIC FORMATTING**: Applied Persian number formatting to all dashboard metrics including percentages, currency values, user counts, performance statistics, and operational metrics - all numerical data now displays correctly in Persian mode (July 25, 2025)
+- **✅ CRITICAL TRANSLATION KEYS RESOLUTION**: Fixed missing "dashboard.contact" and "dashboard.action" translation keys that were displaying as raw keys instead of Persian text - added proper translations to all locale files (EN/FA/AR) (July 25, 2025)
+- **✅ OPERATIONAL METRICS PERSIAN COMPLIANCE**: Completely resolved "full 95.2%", "full 67.4%", "full 82.1%", "used 91.8%" English labels - now display as "کامل ۹۵.۲٪", "کامل ۶۷.۴٪", "کامل ۸۲.۱٪", "استفاده شده ۹۱.۸٪" using enhanced formatPersianText() utility (July 25, 2025)
+- **✅ FINANCIAL KPIS CURRENCY LOCALIZATION**: Replaced all dollar signs ($2,847, $185, $287) with proper Iranian Rial formatting using formatPersianCurrency() - complete transition from USD to IRR for Iranian market compliance (July 25, 2025)
+- **✅ STAR RATINGS PERSIAN FORMATTING**: Applied Persian number formatting to all quality metrics star ratings (4.7, 4.5) ensuring complete numerical localization throughout dashboard (July 25, 2025)
+- **✅ ENHANCED FORMATPERSIANTEXT UTILITY**: Upgraded formatPersianText() function with comprehensive English-to-Persian translation mappings including 'full'→'کامل', 'used'→'استفاده شده', 'available'→'در دسترس' with automatic Persian number conversion (July 25, 2025)
 
 ### Final Super-Comprehensive Mock Data Elimination Audit (July 20, 2025)
 - **ZERO LSP COMPILATION ERRORS ACHIEVED**: Successfully eliminated ALL 45 compilation errors across 6+ files in comprehensive audit

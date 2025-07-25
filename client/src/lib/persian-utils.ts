@@ -75,13 +75,26 @@ export function isRTL(language: string): boolean {
  * Format mixed English/Persian text with proper Persian translations
  */
 export function formatPersianText(text: string): string {
-  return text
-    .replace(/full\s+(\d+\.?\d*%?)/gi, (match, number) => {
-      const persianNumber = toPersianNumbers(number.replace('%', ''));
-      return `کامل ${persianNumber}${number.includes('%') ? '٪' : ''}`;
-    })
-    .replace(/used\s+(\d+\.?\d*%?)/gi, (match, number) => {
-      const persianNumber = toPersianNumbers(number.replace('%', ''));
-      return `استفاده شده ${persianNumber}${number.includes('%') ? '٪' : ''}`;
-    });
+  // Define translation mappings
+  const translations: { [key: string]: string } = {
+    'full': 'کامل',
+    'used': 'استفاده شده',
+    'available': 'در دسترس',
+    'occupied': 'اشغال شده',
+    'empty': 'خالی',
+    'busy': 'مشغول'
+  };
+  
+  let result = text;
+  
+  // Replace English terms with Persian equivalents
+  Object.entries(translations).forEach(([english, persian]) => {
+    const regex = new RegExp(`\\b${english}\\b`, 'gi');
+    result = result.replace(regex, persian);
+  });
+  
+  // Convert numbers to Persian
+  result = toPersianNumbers(result);
+  
+  return result;
 }
