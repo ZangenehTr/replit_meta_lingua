@@ -402,7 +402,9 @@ export function AdminDashboard() {
                           style={{ width: `${course.completion}%` }}
                         ></div>
                       </div>
-                      <span className="text-xs w-12 text-right">{course.completion}%</span>
+                      <span className="text-xs w-12 text-right">
+                        {isPersian ? formatPersianPercentage(course.completion.toString()) : `${course.completion}%`}
+                      </span>
                     </div>
                   </div>
                 ))}
