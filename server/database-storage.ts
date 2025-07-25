@@ -6202,10 +6202,10 @@ export class DatabaseStorage implements IStorage {
 
       return {
         funnel: [
-          { stage: 'Website Visitors', count: total + 2500, rate: 100 },
-          { stage: 'Inquiries', count: Math.floor(total * 0.12), rate: 12.0 },
-          { stage: 'Consultations', count: Math.floor(total * 0.07), rate: 55.3 },
-          { stage: 'Enrollments', count: Math.floor(total * 0.04), rate: 67.2 }
+          { stage: 'websiteVisitors', count: total + 2500, rate: 100 },
+          { stage: 'inquiries', count: Math.floor(total * 0.12), rate: 12.0 },
+          { stage: 'consultations', count: Math.floor(total * 0.07), rate: 55.3 },
+          { stage: 'enrollments', count: Math.floor(total * 0.04), rate: 67.2 }
         ],
         sources: [
           { name: 'Referrals', value: 38, color: '#3B82F6' },
