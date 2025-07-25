@@ -37,10 +37,10 @@ export function IranianComplianceSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
-      toast({ title: "Success", description: "Settings updated successfully" });
+      toast({ title: t('common:toast.success'), description: t('common:toast.settingsUpdated') });
     },
-    onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    onError: (error: any) => {
+      toast({ title: t('common:toast.error'), description: error.message, variant: "destructive" });
     }
   });
 

@@ -12,6 +12,7 @@ import { CalendarIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from "react-i18next";
 
 interface ScheduleSessionModalProps {
   children: React.ReactNode;
@@ -30,6 +31,7 @@ export function ScheduleSessionModal({ children }: ScheduleSessionModalProps) {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('common');
 
   const scheduleSession = useMutation({
     mutationFn: async (data: any) => {
@@ -41,16 +43,16 @@ export function ScheduleSessionModal({ children }: ScheduleSessionModalProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/teacher/sessions'] });
       toast({
-        title: "Session Scheduled",
-        description: "Your teaching session has been successfully scheduled.",
+        title: t('toast.success'),
+        description: t('toast.created'),
       });
       setOpen(false);
       resetForm();
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to schedule session. Please try again.",
+        title: t('toast.error'),
+        description: t('toast.failed'),
         variant: "destructive",
       });
     },
@@ -72,8 +74,8 @@ export function ScheduleSessionModal({ children }: ScheduleSessionModalProps) {
     
     if (!title || !course || !date || !time || !duration) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: t('toast.missingInformation'),
+        description: t('toast.fillRequiredFields'),
         variant: "destructive",
       });
       return;
@@ -112,7 +114,7 @@ export function ScheduleSessionModal({ children }: ScheduleSessionModalProps) {
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Persian Grammar - Conditional Sentences"
+                placeholder={t('placeholders.sessionTitle')}
                 required
               />
             </div>
@@ -120,7 +122,7 @@ export function ScheduleSessionModal({ children }: ScheduleSessionModalProps) {
               <Label htmlFor="course">Course *</Label>
               <Select value={course} onValueChange={setCourse}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select course" />
+                  <SelectValue placeholder={t('placeholders.selectCourse')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="persian-grammar">Persian Grammar Fundamentals</SelectItem>
@@ -138,7 +140,7 @@ export function ScheduleSessionModal({ children }: ScheduleSessionModalProps) {
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description of what will be covered in this session"
+              placeholder={t('placeholders.sessionDescription')}
               rows={3}
             />
           </div>
@@ -180,7 +182,7 @@ export function ScheduleSessionModal({ children }: ScheduleSessionModalProps) {
               <Label htmlFor="duration">Duration (minutes) *</Label>
               <Select value={duration} onValueChange={setDuration}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Duration" />
+                  <SelectValue placeholder={t('placeholders.selectDuration')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="30">30 minutes</SelectItem>
