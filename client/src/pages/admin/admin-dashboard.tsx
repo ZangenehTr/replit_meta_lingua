@@ -177,7 +177,7 @@ export function AdminDashboard() {
         {/* Monthly Revenue */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin:monthlyRevenue')}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:dashboard.monthlyRevenue')}</CardTitle>
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -510,25 +510,25 @@ export function AdminDashboard() {
                 <div className="flex justify-between">
                   <span className="text-sm">{t('admin:dashboard.peakHours')}</span>
                   <Badge variant="outline">
-                    {isPersian ? formatPersianText("95.2% full") : "95.2% full"}
+                    {isPersian ? formatPersianText("full 95.2%") : "95.2% full"}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">{t('admin:dashboard.morningClasses')}</span>
                   <Badge variant="outline">
-                    {isPersian ? formatPersianText("67.4% full") : "67.4% full"}
+                    {isPersian ? formatPersianText("full 67.4%") : "67.4% full"}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">{t('admin:dashboard.weekendSessions')}</span>
                   <Badge variant="outline">
-                    {isPersian ? formatPersianText("82.1% full") : "82.1% full"}
+                    {isPersian ? formatPersianText("full 82.1%") : "82.1% full"}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">{t('admin:dashboard.onlineCapacity')}</span>
                   <Badge variant="outline">
-                    {isPersian ? formatPersianText("91.8% used") : "91.8% used"}
+                    {isPersian ? formatPersianText("used 91.8%") : "91.8% used"}
                   </Badge>
                 </div>
               </div>

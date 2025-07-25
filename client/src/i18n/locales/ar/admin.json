@@ -96,7 +96,8 @@
     "dailyAvg": "المتوسط اليومي",
     "weeklyAvg": "المتوسط الأسبوعي",
     "monthlyTotal": "المجموع الشهري",
-    "total": "المجموع"
+    "total": "المجموع",
+    "monthlyRevenue": "الإيرادات الشهرية"
   },
   "students": {
     "title": "إدارة الطلاب",
