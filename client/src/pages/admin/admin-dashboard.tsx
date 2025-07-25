@@ -203,8 +203,13 @@ export function AdminDashboard() {
               <AreaChart data={(callCenterStats as any)?.weeklyData || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="day" />
-                <YAxis />
-                <Tooltip />
+                <YAxis tickFormatter={(value) => isPersian ? formatPersianNumber(value.toString()) : value} />
+                <Tooltip 
+                  formatter={(value, name) => [
+                    isPersian ? formatPersianNumber(value.toString()) : value,
+                    name
+                  ]}
+                />
                 <Area type="monotone" dataKey="calls" stackId="1" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.6} />
                 <Area type="monotone" dataKey="answered" stackId="2" stroke="#10B981" fill="#10B981" fillOpacity={0.6} />
               </AreaChart>
@@ -222,8 +227,11 @@ export function AdminDashboard() {
               <LineChart data={(revenueData as any)?.monthlyTrend || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`$${value}`, '']} />
+                <YAxis tickFormatter={(value) => isPersian ? formatPersianNumber(value.toString()) : value} />
+                <Tooltip formatter={(value) => [
+                  isPersian ? formatPersianCurrency(value.toString()) : `$${value}`, 
+                  ''
+                ]} />
                 <Line type="monotone" dataKey="daily" stroke="#F59E0B" strokeWidth={2} name={t('admin:dashboard.dailyAvg')} />
                 <Line type="monotone" dataKey="weekly" stroke="#8B5CF6" strokeWidth={2} name={t('admin:dashboard.weeklyAvg')} />
                 <Line type="monotone" dataKey="monthly" stroke="#EF4444" strokeWidth={2} name={t('admin:dashboard.monthlyTotal')} />
@@ -331,11 +339,15 @@ export function AdminDashboard() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{(studentRetention as any)?.overall || '0.0'}%</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {isPersian ? formatPersianPercentage((studentRetention as any)?.overall || '0.0') : `${(studentRetention as any)?.overall || '0.0'}%`}
+                  </div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.overallRetention')}</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{(studentRetention as any)?.newStudents || '0.0'}%</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {isPersian ? formatPersianPercentage((studentRetention as any)?.newStudents || '0.0') : `${(studentRetention as any)?.newStudents || '0.0'}%`}
+                  </div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.newStudent3mo')}</p>
                 </div>
               </div>
@@ -343,8 +355,14 @@ export function AdminDashboard() {
                 <BarChart data={(studentRetention as any)?.byLevel || []}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="level" />
-                  <YAxis />
-                  <Tooltip />
+                  <YAxis tickFormatter={(value) => isPersian ? formatPersianNumber(value.toString()) : value} />
+                  <Tooltip 
+                    formatter={(value, name) => [
+                      isPersian ? formatPersianNumber(value.toString()) : value,
+                      name
+                    ]}
+                    labelFormatter={(label) => isPersian ? formatPersianNumber(label.toString()) : label}
+                  />
                   <Bar dataKey="retention" fill="#3B82F6" />
                 </BarChart>
               </ResponsiveContainer>
@@ -361,11 +379,15 @@ export function AdminDashboard() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{(courseCompletion as any)?.average || '0.0'}%</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {isPersian ? formatPersianPercentage((courseCompletion as any)?.average || '0.0') : `${(courseCompletion as any)?.average || '0.0'}%`}
+                  </div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.avgCompletion')}</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">{(courseCompletion as any)?.onTime || '0.0'}%</div>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {isPersian ? formatPersianPercentage((courseCompletion as any)?.onTime || '0.0') : `${(courseCompletion as any)?.onTime || '0.0'}%`}
+                  </div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.onTimeCompletion')}</p>
                 </div>
               </div>
@@ -435,7 +457,12 @@ export function AdminDashboard() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value, name) => [
+                    isPersian ? formatPersianNumber(value.toString()) : value,
+                    name
+                  ]}
+                />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
