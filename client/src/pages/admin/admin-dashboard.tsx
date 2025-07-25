@@ -127,13 +127,13 @@ export function AdminDashboard() {
         {/* Server Uptime */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Health</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:dashboard.systemHealth')}</CardTitle>
             <Server className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{(systemMetrics as any)?.uptime || '0.0'}%</div>
             <p className="text-xs text-muted-foreground">
-              Last 30 days
+{t('admin:dashboard.last30Days')}
             </p>
           </CardContent>
         </Card>
@@ -141,13 +141,13 @@ export function AdminDashboard() {
         {/* Call Center Performance */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Call Response Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:dashboard.callResponseRate')}</CardTitle>
             <Phone className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">{(callCenterStats as any)?.responseRate || '0.0'}%</div>
             <p className="text-xs text-muted-foreground">
-              +2.3% from last week
++2.3% {t('admin:dashboard.fromLastWeek')}
             </p>
           </CardContent>
         </Card>
@@ -155,7 +155,7 @@ export function AdminDashboard() {
         {/* Overdue Payments Alert */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue Payments</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:dashboard.overduePayments')}</CardTitle>
             <AlertCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
@@ -175,7 +175,7 @@ export function AdminDashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-green-600">${(revenueData as any)?.monthly || '0'}</div>
             <p className="text-xs text-green-600">
-              +15.3% from last month
++15.3% {t('admin:dashboard.fromLastMonth')}
             </p>
           </CardContent>
         </Card>
@@ -186,7 +186,7 @@ export function AdminDashboard() {
         {/* Call Center Performance Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Call Center Performance</CardTitle>
+            <CardTitle>{t('admin:dashboard.callCenterPerformance')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -236,7 +236,7 @@ export function AdminDashboard() {
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-green-600 mb-2">
-                Lowest Attrition Rates
+{t('admin:dashboard.lowestAttritionRates')}
               </h4>
               <div className="space-y-1">
                 {((teacherPerformance as any)?.lowestAttrition || []).map((teacher: any, index: number) => (
@@ -258,13 +258,13 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-600" />
-              Student Retention Champions
+{t('admin:dashboard.studentRetentionChampions')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-blue-600 mb-2">
-                Highest Retention Rates
+{t('admin:dashboard.highestRetentionRates')}
               </h4>
               <div className="space-y-1">
                 {((teacherPerformance as any)?.highestRetention || []).map((teacher: any, index: number) => (
@@ -286,13 +286,13 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ThumbsDown className="h-5 w-5 text-red-600" />
-              Performance Improvement Needed
+{t('admin:dashboard.performanceImprovementNeeded')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-red-600 mb-2">
-                Lowest Student Scores
+{t('admin:dashboard.lowestStudentScores')}
               </h4>
               <div className="space-y-1">
                 {((teacherPerformance as any)?.lowestScores || []).map((teacher: any, index: number) => (
@@ -315,18 +315,18 @@ export function AdminDashboard() {
         {/* Student Retention Metrics */}
         <Card>
           <CardHeader>
-            <CardTitle>Student Retention Analysis</CardTitle>
+            <CardTitle>{t('admin:dashboard.studentRetentionAnalysis')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">{(studentRetention as any)?.overall || '0.0'}%</div>
-                  <p className="text-xs text-muted-foreground">Overall Retention</p>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.overallRetention')}</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">{(studentRetention as any)?.newStudents || '0.0'}%</div>
-                  <p className="text-xs text-muted-foreground">New Student 3mo</p>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.newStudent3mo')}</p>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={200}>
@@ -503,23 +503,23 @@ export function AdminDashboard() {
         {/* Quality & Satisfaction Metrics */}
         <Card>
           <CardHeader>
-            <CardTitle>Quality & Satisfaction Metrics</CardTitle>
+            <CardTitle>{t('admin:dashboard.qualitySatisfactionMetrics')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-600">{(operationalMetrics as any)?.studentSatisfaction || '4.6'}/5</div>
-                  <p className="text-xs text-muted-foreground">Student Satisfaction</p>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.studentSatisfaction')}</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-600">{(operationalMetrics as any)?.nps || '+47'}</div>
-                  <p className="text-xs text-muted-foreground">Net Promoter Score</p>
+                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.netPromoterScore')}</p>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm">Course Material Quality</span>
+                  <span className="text-sm">{t('admin:dashboard.courseMaterialQuality')}</span>
                   <div className="flex">
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -528,7 +528,7 @@ export function AdminDashboard() {
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Teaching Quality</span>
+                  <span className="text-sm">{t('admin:dashboard.teachingQuality')}</span>
                   <div className="flex">
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -537,12 +537,12 @@ export function AdminDashboard() {
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Support Response Time</span>
-                  <Badge variant="outline">&lt; 2 hours</Badge>
+                  <span className="text-sm">{t('admin:dashboard.supportResponseTime')}</span>
+                  <Badge variant="outline">{t('admin:dashboard.hours2Plus')}</Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Technical Issues</span>
-                  <Badge variant="outline" className="text-green-600">0.8% sessions</Badge>
+                  <span className="text-sm">{t('admin:dashboard.technicalIssues')}</span>
+                  <Badge variant="outline" className="text-green-600">{t('admin:dashboard.sessions08Percent')}</Badge>
                 </div>
               </div>
             </div>
@@ -555,7 +555,7 @@ export function AdminDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center">
             <AlertCircle className="h-5 w-5 mr-2 text-red-600" />
-Critical Overdue Payments
+{t('admin:dashboard.criticalOverduePayments')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -563,10 +563,10 @@ Critical Overdue Payments
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2">Student Name</th>
-                  <th className="text-left p-2">Amount Due</th>
-                  <th className="text-left p-2">Days Overdue</th>
-                  <th className="text-left p-2">Course</th>
+                  <th className="text-left p-2">{t('admin:dashboard.studentName')}</th>
+                  <th className="text-left p-2">{t('admin:dashboard.amountDue')}</th>
+                  <th className="text-left p-2">{t('admin:dashboard.daysOverdue')}</th>
+                  <th className="text-left p-2">{t('admin:dashboard.course')}</th>
                   <th className="text-left p-2">{t('common:dashboard.contact')}</th>
                   <th className="text-left p-2">{t('common:dashboard.action')}</th>
                 </tr>
@@ -578,7 +578,7 @@ Critical Overdue Payments
                     <td className="p-2 text-red-600 font-semibold">{payment.amount}</td>
                     <td className="p-2">
                       <Badge variant={payment.days > 14 ? "destructive" : "secondary"}>
-                        {payment.days} days
+{payment.days} {t('admin:dashboard.days')}
                       </Badge>
                     </td>
                     <td className="p-2">{payment.course}</td>
