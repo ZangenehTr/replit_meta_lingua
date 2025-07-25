@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useTranslation } from 'react-i18next';
+import { formatPersianNumber, formatPersianPercentage, formatPersianCurrency } from '@/lib/persian-utils';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -48,7 +49,8 @@ import {
 } from 'recharts';
 
 export function AdminDashboard() {
-  const { t } = useTranslation(['admin', 'common']);
+  const { t, i18n } = useTranslation(['admin', 'common']);
+  const isPersian = i18n.language === 'fa';
   const { isRTL } = useLanguage();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
@@ -131,7 +133,9 @@ export function AdminDashboard() {
             <Server className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{(systemMetrics as any)?.uptime || '0.0'}%</div>
+            <div className="text-2xl font-bold text-green-600">
+              {isPersian ? formatPersianPercentage((systemMetrics as any)?.uptime || '0.0') : `${(systemMetrics as any)?.uptime || '0.0'}%`}
+            </div>
             <p className="text-xs text-muted-foreground">
 {t('admin:dashboard.last30Days')}
             </p>
@@ -145,9 +149,11 @@ export function AdminDashboard() {
             <Phone className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{(callCenterStats as any)?.responseRate || '0.0'}%</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {isPersian ? formatPersianPercentage((callCenterStats as any)?.responseRate || '0.0') : `${(callCenterStats as any)?.responseRate || '0.0'}%`}
+            </div>
             <p className="text-xs text-muted-foreground">
-+2.3% {t('admin:dashboard.fromLastWeek')}
+              {isPersian ? `+۲.۳% ${t('admin:dashboard.fromLastWeek')}` : `+2.3% ${t('admin:dashboard.fromLastWeek')}`}
             </p>
           </CardContent>
         </Card>
@@ -159,9 +165,11 @@ export function AdminDashboard() {
             <AlertCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{(overduePayments as any)?.count || 0}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {isPersian ? formatPersianNumber((overduePayments as any)?.count || 0) : ((overduePayments as any)?.count || 0)}
+            </div>
             <p className="text-xs text-red-600">
-              ${(overduePayments as any)?.totalAmount || '0'} total
+              {isPersian ? `${formatPersianCurrency((overduePayments as any)?.totalAmount || '0')} ${t('admin:dashboard.total')}` : `$${(overduePayments as any)?.totalAmount || '0'} ${t('admin:dashboard.total')}`}
             </p>
           </CardContent>
         </Card>
@@ -173,9 +181,11 @@ export function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">${(revenueData as any)?.monthly || '0'}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {isPersian ? formatPersianCurrency((revenueData as any)?.monthly || '0') : `$${(revenueData as any)?.monthly || '0'}`}
+            </div>
             <p className="text-xs text-green-600">
-+15.3% {t('admin:dashboard.fromLastMonth')}
+              {isPersian ? `+۱۵.۳% ${t('admin:dashboard.fromLastMonth')}` : `+15.3% ${t('admin:dashboard.fromLastMonth')}`}
             </p>
           </CardContent>
         </Card>
@@ -205,7 +215,7 @@ export function AdminDashboard() {
         {/* Revenue Analytics */}
         <Card>
           <CardHeader>
-            <CardTitle>Revenue Analytics - Last 6 Months</CardTitle>
+            <CardTitle>{t('admin:dashboard.revenueAnalyticsLast6Months')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -214,9 +224,9 @@ export function AdminDashboard() {
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip formatter={(value) => [`$${value}`, '']} />
-                <Line type="monotone" dataKey="daily" stroke="#F59E0B" strokeWidth={2} name="Daily Avg" />
-                <Line type="monotone" dataKey="weekly" stroke="#8B5CF6" strokeWidth={2} name="Weekly Avg" />
-                <Line type="monotone" dataKey="monthly" stroke="#EF4444" strokeWidth={2} name="Monthly Total" />
+                <Line type="monotone" dataKey="daily" stroke="#F59E0B" strokeWidth={2} name={t('admin:dashboard.dailyAvg')} />
+                <Line type="monotone" dataKey="weekly" stroke="#8B5CF6" strokeWidth={2} name={t('admin:dashboard.weeklyAvg')} />
+                <Line type="monotone" dataKey="monthly" stroke="#EF4444" strokeWidth={2} name={t('admin:dashboard.monthlyTotal')} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -230,7 +240,7 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5 text-yellow-600" />
-              Top Performing Teachers
+{t('admin:dashboard.topPerformingTeachers')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -391,10 +401,14 @@ export function AdminDashboard() {
             <div className="space-y-3">
               {((marketingMetrics as any)?.funnel || []).map((stage: any, index: number) => (
                 <div key={index} className="flex justify-between items-center">
-                  <span className="text-sm">{stage.stage}</span>
+                  <span className="text-sm">{t(`admin:dashboard.${stage.stage}`)}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">{stage.count}</span>
-                    <Badge variant="outline">{stage.rate}%</Badge>
+                    <span className="text-sm font-semibold">
+                      {isPersian ? formatPersianNumber(stage.count) : stage.count}
+                    </span>
+                    <Badge variant="outline">
+                      {isPersian ? formatPersianPercentage(stage.rate) : `${stage.rate}%`}
+                    </Badge>
                   </div>
                 </div>
               ))}
@@ -470,11 +484,15 @@ export function AdminDashboard() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{(operationalMetrics as any)?.classUtilization || '89.3'}%</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {isPersian ? formatPersianPercentage((operationalMetrics as any)?.classUtilization || '89.3') : `${(operationalMetrics as any)?.classUtilization || '89.3'}%`}
+                  </div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.classUtilization')}</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{(operationalMetrics as any)?.teacherUtilization || '76.8'}%</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {isPersian ? formatPersianPercentage((operationalMetrics as any)?.teacherUtilization || '76.8') : `${(operationalMetrics as any)?.teacherUtilization || '76.8'}%`}
+                  </div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.teacherUtilization')}</p>
                 </div>
               </div>
@@ -509,11 +527,15 @@ export function AdminDashboard() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-600">{(operationalMetrics as any)?.studentSatisfaction || '4.6'}/5</div>
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {isPersian ? `${formatPersianNumber((operationalMetrics as any)?.studentSatisfaction || '4.6')}/۵` : `${(operationalMetrics as any)?.studentSatisfaction || '4.6'}/5`}
+                  </div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.studentSatisfaction')}</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{(operationalMetrics as any)?.nps || '+47'}</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {isPersian ? formatPersianNumber((operationalMetrics as any)?.nps || '+47') : (operationalMetrics as any)?.nps || '+47'}
+                  </div>
                   <p className="text-xs text-muted-foreground">{t('admin:dashboard.netPromoterScore')}</p>
                 </div>
               </div>
