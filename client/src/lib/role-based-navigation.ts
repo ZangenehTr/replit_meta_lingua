@@ -11,19 +11,19 @@ export interface NavigationItem {
 
 // Student-facing platform navigation
 export const getStudentNavigation = (t: any): NavigationItem[] => [
-  { path: "/dashboard", icon: "Home", label: "Dashboard", roles: ["Student"] },
-  { path: "/courses", icon: "BookOpen", label: "Courses", roles: ["Student"] },
-  { path: "/video-courses", icon: "Play", label: "Video Courses", roles: ["Student"] },
-  { path: "/callern", icon: "Video", label: "Callern Video Calls", roles: ["Student"] },
-  { path: "/games", icon: "Gamepad2", label: "Gamification & Games", roles: ["Student"] },
-  { path: "/tutors", icon: "Users", label: "Find Tutors", roles: ["Student"] },
-  { path: "/sessions", icon: "Calendar", label: "Live Sessions", roles: ["Student"] },
-  { path: "/tests", icon: "FileText", label: "Tests & Assessments", roles: ["Student"] },
-  { path: "/homework", icon: "ClipboardList", label: "Homework", roles: ["Student"] },
-  { path: "/messages", icon: "MessageSquare", label: "Messages", roles: ["Student"] },
-  { path: "/progress", icon: "TrendingUp", label: "Progress", roles: ["Student"] },
-  { path: "/wallet", icon: "CreditCard", label: "کیف پول / Credits", roles: ["Student"] },
-  { path: "/referrals", icon: "Share2", label: "سیستم معرفی", roles: ["Student"] },
+  { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Student"] },
+  { path: "/courses", icon: "BookOpen", label: t('common:navigation.courses'), roles: ["Student"] },
+  { path: "/video-courses", icon: "Play", label: t('common:navigation.videoCourses'), roles: ["Student"] },
+  { path: "/callern", icon: "Video", label: t('common:navigation.callernVideoCalls'), roles: ["Student"] },
+  { path: "/games", icon: "Gamepad2", label: t('common:navigation.gamificationGames'), roles: ["Student"] },
+  { path: "/tutors", icon: "Users", label: t('common:navigation.findTutors'), roles: ["Student"] },
+  { path: "/sessions", icon: "Calendar", label: t('common:navigation.liveSessions'), roles: ["Student"] },
+  { path: "/tests", icon: "FileText", label: t('common:navigation.testsAssessments'), roles: ["Student"] },
+  { path: "/homework", icon: "ClipboardList", label: t('common:navigation.homework'), roles: ["Student"] },
+  { path: "/messages", icon: "MessageSquare", label: t('common:navigation.messages'), roles: ["Student"] },
+  { path: "/progress", icon: "TrendingUp", label: t('common:navigation.progress'), roles: ["Student"] },
+  { path: "/wallet", icon: "CreditCard", label: t('common:navigation.walletCredits'), roles: ["Student"] },
+  { path: "/referrals", icon: "Share2", label: t('common:navigation.referralSystem'), roles: ["Student"] },
 ];
 
 // Teacher/Tutor navigation
@@ -41,62 +41,62 @@ export const getTeacherNavigation = (t: any): NavigationItem[] => [
 // Institute Management Platform (IMP) navigation - Admin/Supervisor
 export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   // Dashboard - Primary navigation item
-  { path: "/admin/dashboard", icon: "Home", label: "Dashboard", roles: ["Admin"] },
-  { path: "/supervisor/dashboard", icon: "Home", label: "Dashboard", roles: ["Supervisor"] },
+  { path: "/admin/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Admin"] },
+  { path: "/supervisor/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Supervisor"] },
   
   // Student Information System (SIS)
-  { path: "/admin/students", icon: "Users", label: "Student Information System", roles: ["Admin", "Supervisor"] },
+  { path: "/admin/students", icon: "Users", label: t('common:navigation.studentInformationSystem'), roles: ["Admin", "Supervisor"] },
   
   // User Management
-  { path: "/admin/user-management", icon: "UserCog", label: "User Management", roles: ["Admin"] },
+  { path: "/admin/user-management", icon: "UserCog", label: t('common:navigation.userManagement'), roles: ["Admin"] },
   
   // Course & Curriculum Management
-  { path: "/admin/courses", icon: "BookOpen", label: "Course Management", roles: ["Admin", "Supervisor", "Teacher/Tutor"] },
+  { path: "/admin/courses", icon: "BookOpen", label: t('common:navigation.courseManagement'), roles: ["Admin", "Supervisor", "Teacher/Tutor"] },
   
   // Class Scheduling & Management
-  { path: "/admin/classes", icon: "Calendar", label: "Class Scheduling", roles: ["Admin", "Supervisor"] },
+  { path: "/admin/classes", icon: "Calendar", label: t('common:navigation.classScheduling'), roles: ["Admin", "Supervisor"] },
   
   // Games Management
-  { path: "/admin/games-management", icon: "Gamepad2", label: "Games Management", roles: ["Admin", "Supervisor"] },
+  { path: "/admin/games-management", icon: "Gamepad2", label: t('common:navigation.gamesManagement'), roles: ["Admin", "Supervisor"] },
   
   // Callern Video Call Management
-  { path: "/admin/callern-management", icon: "Video", label: "Callern Management", roles: ["Admin", "Supervisor"] },
+  { path: "/admin/callern-management", icon: "Video", label: t('common:navigation.callernManagement'), roles: ["Admin", "Supervisor"] },
   
   // Room Management
-  { path: "/admin/room-management", icon: "Building2", label: "Room Management", roles: ["Admin", "Supervisor"] },
+  { path: "/admin/room-management", icon: "Building2", label: t('common:navigation.roomManagement'), roles: ["Admin", "Supervisor"] },
   
   // Mentor Matching System
-  { path: "/admin/mentor-matching", icon: "Users", label: "Mentor Matching", roles: ["Admin"] },
+  { path: "/admin/mentor-matching", icon: "Users", label: t('common:navigation.mentorMatching'), roles: ["Admin"] },
   
   // Teacher-Student Matching
-  { path: "/admin/teacher-student-matching", icon: "GraduationCap", label: "Teacher Matching", roles: ["Admin"] },
+  { path: "/admin/teacher-student-matching", icon: "GraduationCap", label: t('common:navigation.teacherMatching'), roles: ["Admin"] },
   
   // Teacher & Staff Management
-  { path: "/admin/teachers", icon: "GraduationCap", label: "Teacher Management", roles: ["Admin", "Supervisor"] },
+  { path: "/admin/teachers", icon: "GraduationCap", label: t('common:navigation.teacherManagement'), roles: ["Admin", "Supervisor"] },
   
   // Financial Management & Billing
-  { path: "/admin/financial", icon: "DollarSign", label: "Financial Management", roles: ["Admin", "Accountant", "Supervisor"] },
+  { path: "/admin/financial", icon: "DollarSign", label: t('common:navigation.financialManagement'), roles: ["Admin", "Accountant", "Supervisor"] },
   
   // Advanced Reporting & Analytics
-  { path: "/admin/reports", icon: "BarChart", label: "Reports & Analytics", roles: ["Admin", "Supervisor"] },
+  { path: "/admin/reports", icon: "BarChart", label: t('common:navigation.reportsAnalytics'), roles: ["Admin", "Supervisor"] },
   
   // Iranian Market Compliance Settings
-  { path: "/admin/iranian-compliance", icon: "Settings", label: "Third Party Settings", roles: ["Admin"] },
+  { path: "/admin/iranian-compliance", icon: "Settings", label: t('common:navigation.thirdPartySettings'), roles: ["Admin"] },
   
   // AI Services Management
-  { path: "/admin/ai-services", icon: "Bot", label: "AI Services", roles: ["Admin"] },
+  { path: "/admin/ai-services", icon: "Bot", label: t('common:navigation.aiServices'), roles: ["Admin"] },
   
   // Communication & Collaboration Tools
-  { path: "/admin/communications", icon: "MessageCircle", label: "Communication Center", roles: ["Admin", "Supervisor"] },
+  { path: "/admin/communications", icon: "MessageCircle", label: t('common:navigation.communicationCenter'), roles: ["Admin", "Supervisor"] },
   
   // Quality Assurance & Supervision
-  { path: "/admin/supervision", icon: "Eye", label: "Quality Assurance", roles: ["Supervisor", "Admin"] },
+  { path: "/admin/supervision", icon: "Eye", label: t('common:navigation.qualityAssurance'), roles: ["Supervisor", "Admin"] },
   
   // Schedule Review System
-  { path: "/supervisor/schedule-review", icon: "Calendar", label: "Schedule Review", roles: ["Supervisor", "Admin"] },
+  { path: "/supervisor/schedule-review", icon: "Calendar", label: t('common:navigation.scheduleReview'), roles: ["Supervisor", "Admin"] },
   
   // Enterprise Features
-  { path: "/admin/teacher-payments", icon: "DollarSign", label: "Teacher Payments", roles: ["Admin", "Accountant"] },
+  { path: "/admin/teacher-payments", icon: "DollarSign", label: t('common:navigation.teacherPayments'), roles: ["Admin", "Accountant"] },
   { path: "/admin/white-label", icon: "Building2", label: "White-Label Management", roles: ["Admin"] },
   { path: "/admin/sms-settings", icon: "Send", label: "SMS Management", roles: ["Admin", "Supervisor"] },
   { path: "/admin/campaign-management", icon: "Megaphone", label: "Campaign Management", roles: ["Admin", "Call Center Agent"] },
@@ -105,18 +105,18 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
 
 // Lead Management & Call Center CRM
 export const getCallCenterNavigation = (t: any): NavigationItem[] => [
-  { path: "/callcenter/leads", icon: "UserPlus", label: "Lead Management", roles: ["Call Center Agent", "Admin", "Supervisor"] },
-  { path: "/callcenter/calls", icon: "Phone", label: "Call Logs", roles: ["Call Center Agent", "Admin"] },
-  { path: "/callcenter/prospects", icon: "Target", label: "Prospects", roles: ["Call Center Agent", "Admin"] },
-  { path: "/callcenter/campaigns", icon: "Megaphone", label: "Campaigns", roles: ["Call Center Agent", "Admin"] },
+  { path: "/callcenter/leads", icon: "UserPlus", label: t('common:navigation.leadManagement'), roles: ["Call Center Agent", "Admin", "Supervisor"] },
+  { path: "/callcenter/calls", icon: "Phone", label: t('common:navigation.callLogs'), roles: ["Call Center Agent", "Admin"] },
+  { path: "/callcenter/prospects", icon: "Target", label: t('common:navigation.prospects'), roles: ["Call Center Agent", "Admin"] },
+  { path: "/callcenter/campaigns", icon: "Megaphone", label: t('common:navigation.campaigns'), roles: ["Call Center Agent", "Admin"] },
 ];
 
 // Mentor-specific navigation
 export const getMentorNavigation = (t: any): NavigationItem[] => [
-  { path: "/mentor/dashboard", icon: "Home", label: t('dashboard'), roles: ["Mentor"] },
-  { path: "/mentor/students", icon: "Users", label: t('mentees'), roles: ["Mentor"] },
-  { path: "/mentor/sessions", icon: "Calendar", label: t('mentoringSessions'), roles: ["Mentor"] },
-  { path: "/mentor/progress", icon: "TrendingUp", label: t('progressTracking'), roles: ["Mentor"] },
+  { path: "/mentor/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Mentor"] },
+  { path: "/mentor/students", icon: "Users", label: t('common:navigation.mentees'), roles: ["Mentor"] },
+  { path: "/mentor/sessions", icon: "Calendar", label: t('common:navigation.mentoringSessions'), roles: ["Mentor"] },
+  { path: "/mentor/progress", icon: "TrendingUp", label: t('common:navigation.progressTracking'), roles: ["Mentor"] },
 ];
 
 // Get navigation based on user role
