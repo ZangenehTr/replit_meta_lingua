@@ -120,62 +120,62 @@ export default function UserManagement() {
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="h-4 w-4 mr-2" />
-              Create User
+              {t('admin:userManagement.createUser')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Create New User</DialogTitle>
+              <DialogTitle>{t('admin:userManagement.createNewUser')}</DialogTitle>
               <DialogDescription>
-                Add a new user to the system with a specific role
+                {t('admin:userManagement.addNewUser')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName">{t('admin:userManagement.firstName')}</Label>
                   <Input
                     id="firstName"
                     value={newUser.firstName}
                     onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })}
-                    placeholder="John"
+                    placeholder={t('admin:userManagement.firstName')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName">{t('admin:userManagement.lastName')}</Label>
                   <Input
                     id="lastName"
                     value={newUser.lastName}
                     onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })}
-                    placeholder="Doe"
+                    placeholder={t('admin:userManagement.lastName')}
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('admin:userManagement.email')}</Label>
                 <Input
                   id="email"
                   type="email"
                   value={newUser.email}
                   onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                  placeholder="john.doe@example.com"
+                  placeholder={t('admin:userManagement.email')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('admin:userManagement.password')}</Label>
                 <Input
                   id="password"
                   type="password"
                   value={newUser.password}
                   onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                  placeholder="Enter password"
+                  placeholder={t('admin:userManagement.password')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Phone Number (Optional)</Label>
+                <Label htmlFor="phoneNumber">{t('admin:userManagement.phoneNumber')} (اختیاری)</Label>
                 <Input
                   id="phoneNumber"
                   value={newUser.phoneNumber}
@@ -185,7 +185,7 @@ export default function UserManagement() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role">{t('admin:userManagement.role')}</Label>
                 <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -199,22 +199,22 @@ export default function UserManagement() {
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-gray-500">
-                  {newUser.role === 'Mentor' && "Mentors can guide and support students"}
-                  {newUser.role === 'Teacher' && "Teachers can create courses and manage classes"}
-                  {newUser.role === 'Admin' && "Admins have full system access"}
-                  {newUser.role === 'Student' && "Students can enroll in courses and track progress"}
+                  {newUser.role === 'Mentor' && "منتورها می‌توانند دانشجویان را راهنمایی و پشتیبانی کنند"}
+                  {newUser.role === 'Teacher' && "مدرسان می‌توانند دوره‌ها ایجاد کرده و کلاس‌ها را مدیریت کنند"}
+                  {newUser.role === 'Admin' && "مدیران دسترسی کامل به سیستم دارند"}
+                  {newUser.role === 'Student' && "دانشجویان می‌توانند در دوره‌ها ثبت‌نام کرده و پیشرفت خود را دنبال کنند"}
                 </p>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                Cancel
+                {t('admin:userManagement.cancel')}
               </Button>
               <Button 
                 onClick={handleCreateUser} 
                 disabled={createUserMutation.isPending || !newUser.email || !newUser.firstName || !newUser.lastName || !newUser.password}
               >
-                {createUserMutation.isPending ? "Creating..." : "Create User"}
+                {createUserMutation.isPending ? "در حال ایجاد..." : t('admin:userManagement.createUser')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -225,45 +225,45 @@ export default function UserManagement() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:userManagement.totalUsers')}</CardTitle>
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users.length}</div>
-            <p className="text-xs text-muted-foreground">All roles combined</p>
+            <p className="text-xs text-muted-foreground">{t('admin:userManagement.allRolesCombined')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mentors</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:userManagement.mentors')}</CardTitle>
             <UserPlus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users.filter(u => u.role === 'Mentor').length}</div>
-            <p className="text-xs text-muted-foreground">Available for matching</p>
+            <p className="text-xs text-muted-foreground">{t('admin:userManagement.availableForMatching')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Teachers</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:userManagement.teachers')}</CardTitle>
             <UserPlus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users.filter(u => u.role === 'Teacher').length}</div>
-            <p className="text-xs text-muted-foreground">Active instructors</p>
+            <p className="text-xs text-muted-foreground">{t('admin:userManagement.activeInstructors')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Students</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:userManagement.students')}</CardTitle>
             <UserPlus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users.filter(u => u.role === 'Student').length}</div>
-            <p className="text-xs text-muted-foreground">Enrolled learners</p>
+            <p className="text-xs text-muted-foreground">دانشجویان ثبت‌نام شده</p>
           </CardContent>
         </Card>
       </div>
@@ -271,15 +271,15 @@ export default function UserManagement() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>All Users</CardTitle>
-          <CardDescription>Search and filter users by name, email, or role</CardDescription>
+          <CardTitle>همه کاربران</CardTitle>
+          <CardDescription>جستجو و فیلتر کاربران بر اساس نام، ایمیل یا نقش</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search users..."
+                placeholder={t('admin:userManagement.searchUsers')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -290,7 +290,7 @@ export default function UserManagement() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="all">{t('admin:userManagement.allRoles')}</SelectItem>
                 {ROLES.map((role) => (
                   <SelectItem key={role.value} value={role.value}>
                     {role.label}
@@ -302,20 +302,20 @@ export default function UserManagement() {
 
           {/* Users Table */}
           {isLoading ? (
-            <div className="text-center py-8">Loading users...</div>
+            <div className="text-center py-8">بارگذاری کاربران...</div>
           ) : filteredUsers.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">No users found</div>
+            <div className="text-center py-8 text-gray-500">کاربری یافت نشد</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left pb-3 font-medium">User</th>
-                    <th className="text-left pb-3 font-medium">Email</th>
-                    <th className="text-left pb-3 font-medium">Role</th>
-                    <th className="text-left pb-3 font-medium">Status</th>
-                    <th className="text-left pb-3 font-medium">Created</th>
-                    <th className="text-right pb-3 font-medium">Actions</th>
+                    <th className="text-left pb-3 font-medium">کاربر</th>
+                    <th className="text-left pb-3 font-medium">ایمیل</th>
+                    <th className="text-left pb-3 font-medium">نقش</th>
+                    <th className="text-left pb-3 font-medium">وضعیت</th>
+                    <th className="text-left pb-3 font-medium">ایجاد شده</th>
+                    <th className="text-right pb-3 font-medium">عملیات</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -352,7 +352,7 @@ export default function UserManagement() {
                       </td>
                       <td className="py-4">
                         <Badge variant={user.isActive ? "default" : "secondary"}>
-                          {user.isActive ? "Active" : "Inactive"}
+                          {user.isActive ? t('admin:userManagement.active') : t('admin:userManagement.inactive')}
                         </Badge>
                       </td>
                       <td className="py-4 text-sm text-gray-500">
