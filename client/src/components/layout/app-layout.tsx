@@ -183,11 +183,14 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="flex min-h-[calc(100vh-3.5rem)]" dir={direction}>
         {/* Desktop Sidebar - hidden on mobile */}
         <div 
-          className={`hidden md:block md:fixed md:top-16 md:h-[calc(100vh-4rem)] md:w-64 md:z-30 border-r border-border bg-background`}
+          className={`sidebar-container hidden md:block md:fixed md:top-16 md:h-[calc(100vh-4rem)] md:w-64 md:z-30 border-r border-border bg-background ${direction === 'rtl' ? 'rtl-sidebar' : 'ltr-sidebar'}`}
           style={{
-            right: direction === 'rtl' ? '0px' : 'auto',
-            left: direction === 'rtl' ? 'auto' : '0px',
-            position: 'fixed'
+            position: 'fixed',
+            top: '64px',
+            width: '256px',
+            height: 'calc(100vh - 64px)',
+            zIndex: 30,
+            ...(direction === 'rtl' ? { right: '0px', left: 'auto' } : { left: '0px', right: 'auto' })
           }}
         >
           <Sidebar />
@@ -195,15 +198,15 @@ export function AppLayout({ children }: AppLayoutProps) {
         
         {/* Main Content - properly spaced for sidebar and bottom nav */}
         <main 
-          className="flex-1 overflow-y-auto pb-20 md:pb-8" 
+          className={`flex-1 overflow-y-auto pb-20 md:pb-8 ${direction === 'rtl' ? 'rtl-main-content' : 'ltr-main-content'}`}
           dir={direction} 
           style={{
-            marginLeft: direction === 'ltr' ? '256px' : '0px',
-            marginRight: direction === 'rtl' ? '256px' : '0px',
-            width: direction === 'rtl' ? 'calc(100vw - 256px)' : 'calc(100vw - 256px)',
+            position: 'relative',
             minHeight: '100vh',
             direction: direction,
-            textAlign: direction === 'rtl' ? 'right' : 'left'
+            textAlign: direction === 'rtl' ? 'right' : 'left',
+            paddingLeft: direction === 'ltr' ? '256px' : '0',
+            paddingRight: direction === 'rtl' ? '256px' : '0'
           }}
         >
           <div className="min-h-full p-4 sm:p-6 lg:p-8" style={{direction: direction, textAlign: direction === 'rtl' ? 'right' : 'left'}}>
