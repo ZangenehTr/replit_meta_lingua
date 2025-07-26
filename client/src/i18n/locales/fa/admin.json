@@ -289,6 +289,23 @@
     "edit": "ویرایش",
     "view": "مشاهده",
     "call": "تماس",
-    "daysAgo": "روز پیش"
+    "daysAgo": "روز پیش",
+    "addNewStudent": "افزودن دانشجوی جدید",
+    "createProfile": "ایجاد پروفایل جامع دانشجو با تمام اطلاعات مورد نیاز",
+    "createNewProfile": "ایجاد پروفایل جدید دانشجو و ثبت‌نام",
+    "firstName": "نام",
+    "lastName": "نام خانوادگی",
+    "email": "ایمیل",
+    "phoneNumber": "شماره تلفن",
+    "course": "دوره",
+    "level": "سطح",
+    "selectCourses": "انتخاب دوره‌ها",
+    "selectLevel": "انتخاب سطح",
+    "addStudent": "افزودن دانشجو",
+    "cancel": "لغو",
+    "enterFirstName": "نام را وارد کنید",
+    "enterLastName": "نام خانوادگی را وارد کنید",
+    "enterEmail": "آدرس ایمیل را وارد کنید",
+    "enterPhone": "شماره تلفن را وارد کنید"
   }
 }
