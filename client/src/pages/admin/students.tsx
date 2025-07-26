@@ -694,7 +694,7 @@ export function AdminStudents() {
                 <span className="hidden sm:inline sm:ml-1">{t('admin:students.add')}</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className={`max-w-3xl max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
               <DialogHeader>
                 <DialogTitle>{t('admin:students.addNewStudent')}</DialogTitle>
                 <DialogDescription>
@@ -739,10 +739,10 @@ export function AdminStudents() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="nationalId">National ID Number</Label>
+                  <Label htmlFor="nationalId">{t('admin:students.nationalId')}</Label>
                   <Input 
                     id="nationalId" 
-                    placeholder="Enter national ID number"
+                    placeholder={t('admin:students.enterNationalId')}
                     value={newStudentData.nationalId}
                     onChange={(e) => {
                       const value = e.target.value.replace(/[^\d]/g, ''); // Only allow numbers
@@ -752,11 +752,11 @@ export function AdminStudents() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="birthday">Birthday</Label>
+                  <Label htmlFor="birthday">{t('admin:students.birthday')}</Label>
                   <SimpleDateInput
                     value={newStudentData.birthday}
                     onChange={(date) => setNewStudentData({...newStudentData, birthday: date})}
-                    placeholder="Select birthday"
+                    placeholder={t('admin:students.selectBirthday')}
                     className="w-full"
                   />
                 </div>
@@ -774,37 +774,37 @@ export function AdminStudents() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="status">Student Status</Label>
+                  <Label htmlFor="status">{t('admin:students.status')}</Label>
                   <Select value={newStudentData.status} onValueChange={(value) => setNewStudentData({...newStudentData, status: value})}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder={t('admin:students.selectStatus')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="active">{t('admin:students.active')}</SelectItem>
+                      <SelectItem value="inactive">{t('admin:students.inactive')}</SelectItem>
+                      <SelectItem value="pending">{t('admin:students.pending')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="guardian">Guardian Name</Label>
+                  <Label htmlFor="guardian">{t('admin:students.guardian')}</Label>
                   <Input 
                     id="guardian" 
-                    placeholder="Parent/Guardian name"
+                    placeholder={t('admin:students.enterGuardian')}
                     value={newStudentData.guardianName}
                     onChange={(e) => setNewStudentData({...newStudentData, guardianName: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="guardianPhone">Guardian Phone</Label>
+                  <Label htmlFor="guardianPhone">{t('admin:students.guardianPhone')}</Label>
                   <PhoneInput
                     value={newStudentData.guardianPhone}
                     onChange={(value) => setNewStudentData({...newStudentData, guardianPhone: value})}
-                    placeholder="Enter guardian phone number"
+                    placeholder={t('admin:students.enterGuardianPhone')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="profileImage">Profile Image</Label>
+                  <Label htmlFor="profileImage">{t('admin:students.profileImage')}</Label>
                   <div className="flex items-center gap-2">
                     <Input 
                       id="profileImage" 
@@ -818,8 +818,8 @@ export function AdminStudents() {
                 </div>
                 <div className="col-span-2 space-y-4">
                   <div>
-                    <Label>Course Registration</Label>
-                    <p className="text-sm text-gray-600 mb-3">Select courses for the student</p>
+                    <Label>{t('admin:students.courseRegistration')}</Label>
+                    <p className="text-sm text-gray-600 mb-3">{t('admin:students.selectCoursesDesc')}</p>
                     <div className="grid grid-cols-1 gap-3 max-h-40 overflow-y-auto border rounded-md p-3">
                       {coursesList && coursesList.length > 0 ? coursesList.map((course: any) => (
                         <div key={course.id} className="flex items-center justify-between space-x-3 p-2 border rounded-md hover:bg-gray-50">
@@ -1061,7 +1061,7 @@ export function AdminStudents() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder="Search students by name or email..."
+            placeholder={t('admin:students.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 w-full"

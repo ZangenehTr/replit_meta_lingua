@@ -306,6 +306,26 @@
     "enterFirstName": "نام را وارد کنید",
     "enterLastName": "نام خانوادگی را وارد کنید",
     "enterEmail": "آدرس ایمیل را وارد کنید",
-    "enterPhone": "شماره تلفن را وارد کنید"
+    "enterPhone": "شماره تلفن را وارد کنید",
+    "beginner": "مبتدی",
+    "intermediate": "متوسط", 
+    "advanced": "پیشرفته",
+    "searchPlaceholder": "جستجوی دانشجویان بر اساس نام یا ایمیل",
+    "nationalId": "شماره ملی",
+    "birthday": "تاریخ تولد",
+    "status": "وضعیت",
+    "guardian": "نام سرپرست",
+    "guardianPhone": "تلفن سرپرست",
+    "profileImage": "تصویر پروفایل",
+    "courseRegistration": "ثبت‌نام دوره",
+    "selectCoursesDesc": "دوره‌های دانشجو را انتخاب کنید",
+    "enterNationalId": "شماره ملی را وارد کنید",
+    "selectBirthday": "تاریخ تولد را انتخاب کنید",
+    "selectStatus": "وضعیت را انتخاب کنید",
+    "enterGuardian": "نام والدین/سرپرست",
+    "enterGuardianPhone": "شماره تلفن سرپرست را وارد کنید",
+    "active": "فعال",
+    "inactive": "غیرفعال",
+    "pending": "در انتظار"
   }
 }
