@@ -59,7 +59,7 @@ export default function UserManagement() {
     mutationFn: async (userData: typeof newUser) => {
       return apiRequest('/api/admin/users', {
         method: 'POST',
-        body: JSON.stringify(userData)
+        body: userData
       });
     },
     onSuccess: () => {
