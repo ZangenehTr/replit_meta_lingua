@@ -87,8 +87,8 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side={direction === 'rtl' ? 'right' : 'left'} className="w-80 p-0">
-                <Sidebar />
+              <SheetContent side={direction === 'rtl' ? 'right' : 'left'} className="w-72 p-0 max-w-[75vw]" onInteractOutside={() => setMobileMenuOpen(false)}>
+                <Sidebar onNavigate={() => setMobileMenuOpen(false)} />
               </SheetContent>
             </Sheet>
             

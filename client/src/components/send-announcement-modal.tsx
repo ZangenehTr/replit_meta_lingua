@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { MessageSquare, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useTranslation } from "react-i18next";
 
 interface SendAnnouncementModalProps {
   children: React.ReactNode;
@@ -25,6 +26,7 @@ export function SendAnnouncementModal({ children }: SendAnnouncementModalProps) 
   const [scheduleForLater, setScheduleForLater] = useState(false);
   
   const { toast } = useToast();
+  const { t } = useTranslation(['common']);
   const queryClient = useQueryClient();
 
   const sendAnnouncement = useMutation({
@@ -37,7 +39,7 @@ export function SendAnnouncementModal({ children }: SendAnnouncementModalProps) 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/teacher/announcements'] });
       toast({
-        title: "Announcement Sent",
+        title: t('common:toast.announcementSent'),
         description: "Your announcement has been successfully sent to students.",
       });
       setOpen(false);
@@ -45,7 +47,7 @@ export function SendAnnouncementModal({ children }: SendAnnouncementModalProps) 
     },
     onError: () => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: "Failed to send announcement. Please try again.",
         variant: "destructive",
       });
@@ -74,7 +76,7 @@ export function SendAnnouncementModal({ children }: SendAnnouncementModalProps) 
     
     if (!title || !message) {
       toast({
-        title: "Missing Information",
+        title: t('common:toast.missingInformation'),
         description: "Please provide both a title and message.",
         variant: "destructive",
       });

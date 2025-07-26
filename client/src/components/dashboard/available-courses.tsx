@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, MapPin, Calendar, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface AvailableCourse {
   id: number;
@@ -27,6 +28,7 @@ interface AvailableCourse {
 
 export function AvailableCourses() {
   const { toast } = useToast();
+  const { t } = useTranslation(['common']);
   
   const { data: availableCourses, isLoading } = useQuery<AvailableCourse[]>({
     queryKey: ["/api/courses/available"],
@@ -44,7 +46,7 @@ export function AvailableCourses() {
 
       if (response.ok) {
         toast({
-          title: "Enrollment Successful",
+          title: t('common:toast.enrollmentSuccessful'),
           description: "You have successfully enrolled in the course!",
         });
       } else {
@@ -52,7 +54,7 @@ export function AvailableCourses() {
       }
     } catch (error) {
       toast({
-        title: "Enrollment Failed",
+        title: t('common:toast.enrollmentFailed'),
         description: "Failed to enroll in the course. Please try again.",
         variant: "destructive",
       });

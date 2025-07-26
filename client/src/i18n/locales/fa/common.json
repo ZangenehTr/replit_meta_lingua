@@ -181,7 +181,14 @@
     "failedToSendMessage": "ارسال پیام ناموفق بود",
     "microphoneAccessDenied": "دسترسی به میکروفون رد شد",
     "bookmarkAdded": "نشانک اضافه شد",
-    "bookmarkDeleted": "نشانک حذف شد"
+    "bookmarkDeleted": "نشانک حذف شد",
+    "enrollmentSuccessful": "ثبت نام موفق بود",
+    "enrollmentFailed": "ثبت نام ناموفق بود",
+    "announcementSent": "اعلان ارسال شد",
+    "missingInformation": "اطلاعات ناقص",
+    "invalidPhoneNumber": "شماره تلفن نامعتبر",
+    "voipCallInitiated": "تماس VoIP برقرار شد",
+    "voipCallFailed": "تماس VoIP ناموفق بود"
   },
   "supervisor": {
     "teachers": "مدرسان",
