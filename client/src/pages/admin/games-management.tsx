@@ -87,16 +87,16 @@ export default function GamesManagement() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Game created successfully",
+        title: t('common:toast.success'),
+        description: t('common:toast.gameCreated'),
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/games'] });
       setIsCreateDialogOpen(false);
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: `Failed to create game: ${error.message}`,
+        title: t('common:toast.error'),
+        description: `${t('common:toast.gameCreateFailed')}: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -113,8 +113,8 @@ export default function GamesManagement() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Game updated successfully",
+        title: t('common:toast.success'),
+        description: t('common:toast.gameUpdated'),
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/games'] });
       setIsEditDialogOpen(false);
@@ -122,8 +122,8 @@ export default function GamesManagement() {
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: `Failed to update game: ${error.message}`,
+        title: t('common:toast.error'),
+        description: `${t('common:toast.gameCreateFailed')}: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -139,15 +139,15 @@ export default function GamesManagement() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Game deleted successfully",
+        title: t('common:toast.success'),
+        description: t('common:toast.gameDeleted'),
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/games'] });
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: `Failed to delete game: ${error.message}`,
+        title: t('common:toast.error'),
+        description: `${t('common:toast.gameDeleteFailed')}: ${error.message}`,
         variant: "destructive",
       });
     }

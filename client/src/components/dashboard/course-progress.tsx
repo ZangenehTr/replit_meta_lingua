@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, BookOpen, Clock, DollarSign } from "lucide-react";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 
 interface Course {
@@ -26,7 +26,7 @@ interface Course {
 }
 
 export function CourseProgress() {
-  const { t } = useLanguage();
+  const { t } = useTranslation('common');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -50,13 +50,13 @@ export function CourseProgress() {
         window.open(`sms:?body=${encodedMessage}`, '_self');
         
         toast({
-          title: "لینک معرفی آماده شد",
+          title: t('toast.referralLinkReady'),
           description: "پیام در اپلیکیشن پیامک شما آماده شده است",
         });
       }
     } catch (error) {
       toast({
-        title: "خطا",
+        title: t('toast.error'),
         description: "مشکلی در ایجاد لینک معرفی پیش آمد",
         variant: "destructive",
       });

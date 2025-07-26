@@ -59,7 +59,7 @@ export function PaymentCredits() {
     onSuccess: (data) => {
       if (data.success && data.paymentUrl) {
         toast({
-          title: "Redirecting to Payment Gateway",
+          title: t('toast.redirectingToPaymentGateway'),
           description: "You will be redirected to Shetab payment gateway...",
         });
         // Redirect to Shetab payment gateway
@@ -79,7 +79,7 @@ export function PaymentCredits() {
       }
       
       toast({
-        title: "Payment Failed",
+        title: t('toast.paymentFailed'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -100,7 +100,7 @@ export function PaymentCredits() {
     
     if (!amount || amount < 1000) {
       toast({
-        title: "Invalid Amount",
+        title: t('toast.invalidAmount'),
         description: "Minimum payment amount is 1,000 IRR",
         variant: "destructive",
       });
@@ -109,7 +109,7 @@ export function PaymentCredits() {
     
     if (!credits || credits < 1) {
       toast({
-        title: "Invalid Credits",
+        title: t('toast.invalidCredits'),
         description: "Please specify the number of credits to purchase",
         variant: "destructive",
       });

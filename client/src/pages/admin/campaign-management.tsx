@@ -95,10 +95,10 @@ export default function CampaignManagementPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/campaigns'] });
-      toast({ title: "Campaign updated successfully" });
+      toast({ title: t('common:toast.campaignUpdated') });
     },
     onError: () => {
-      toast({ title: "Failed to update campaign", variant: "destructive" });
+      toast({ title: t('common:toast.failedToUpdateCampaign'), variant: "destructive" });
     }
   });
 
@@ -112,11 +112,11 @@ export default function CampaignManagementPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/campaigns'] });
-      toast({ title: "New campaign created successfully" });
+      toast({ title: t('common:toast.newCampaignCreated') });
       setShowNewCampaignDialog(false);
     },
     onError: () => {
-      toast({ title: "Failed to create campaign", variant: "destructive" });
+      toast({ title: t('common:toast.failedToCreateCampaign'), variant: "destructive" });
     }
   });
 
@@ -276,7 +276,7 @@ export default function CampaignManagementPage() {
       });
     },
     onSuccess: () => {
-      toast({ title: "Email sent successfully to all students" });
+      toast({ title: t('common:toast.emailSentSuccessfully') });
       setShowEmailDialog(false);
       setEmailContent('');
     },

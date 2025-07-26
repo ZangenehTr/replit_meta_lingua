@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Play, Pause, RefreshCw, Trophy, Clock, Star, Target } from 'lucide-react';
 import { Link } from 'wouter';
 
@@ -47,6 +48,7 @@ interface Question {
 }
 
 export default function GamePlayer() {
+  const { t } = useTranslation('common');
   const [, params] = useRoute('/game/:gameId');
   const gameId = params?.gameId ? parseInt(params.gameId) : null;
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -98,8 +100,8 @@ export default function GamePlayer() {
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: "Failed to start game. Please try again.",
+        title: t('toast.error'),
+        description: t('toast.gameStartFailed'),
         variant: "destructive"
       });
     }
@@ -130,8 +132,8 @@ export default function GamePlayer() {
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: "Failed to complete game. Please try again.",
+        title: t('toast.error'),
+        description: t('toast.gameCompleteFailed'),
         variant: "destructive"
       });
     }

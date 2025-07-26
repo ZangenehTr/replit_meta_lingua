@@ -104,13 +104,13 @@ export default function StudentTestTaking() {
       setCurrentAttempt(data.attempt);
       setTestQuestions(data.questions);
       toast({
-        title: "Test Started",
+        title: t('common:toast.testStarted'),
         description: "Good luck! Your timer has begun.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: error.message || "Failed to start test",
         variant: "destructive",
       });
@@ -144,7 +144,7 @@ export default function StudentTestTaking() {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: error.message || "Failed to submit test",
         variant: "destructive",
       });

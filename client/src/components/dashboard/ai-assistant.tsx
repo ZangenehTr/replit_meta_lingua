@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 import { Bot, Lightbulb } from "lucide-react";
 import { useState } from "react";
 
@@ -13,6 +14,7 @@ interface AIRecommendation {
 
 export function AIAssistant() {
   const { toast } = useToast();
+  const { t } = useTranslation(['common']);
   const [recommendations, setRecommendations] = useState<string[]>([
     "Practice pronunciation for the next few sessions",
     "Review irregular verbs in your target language",
@@ -35,13 +37,13 @@ export function AIAssistant() {
     onSuccess: (data) => {
       setRecommendations(data.recommendations);
       toast({
-        title: "AI Recommendations Updated",
+        title: t('toast.recommendationsUpdated'),
         description: "Your personalized study plan has been generated!",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: "Failed to generate recommendations. Please try again.",
         variant: "destructive",
       });

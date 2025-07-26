@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from 'react-i18next';
 import { Wallet, Plus, CreditCard, Star, Trophy, Crown, Gem, Clock, Calendar, User, BookOpen } from "lucide-react";
 import { useState } from "react";
 
@@ -70,6 +71,7 @@ const tierColors = {
 export function WalletSystem() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation(['common']);
   const queryClient = useQueryClient();
   const [topupAmount, setTopupAmount] = useState(100000);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -111,7 +113,7 @@ export function WalletSystem() {
     },
     onSuccess: () => {
       toast({
-        title: "پرداخت موفق",
+        title: t('toast.paymentSuccessful'),
         description: "کیف پول شما با موفقیت شارژ شد",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/wallet"] });
@@ -119,7 +121,7 @@ export function WalletSystem() {
     },
     onError: (error: any) => {
       toast({
-        title: "خطا در پرداخت",
+        title: t('toast.paymentError'),
         description: error.message || "مشکلی در فرآیند پرداخت رخ داد",
         variant: "destructive",
       });
@@ -139,7 +141,7 @@ export function WalletSystem() {
     },
     onSuccess: () => {
       toast({
-        title: "ثبت نام موفق",
+        title: t('toast.enrollmentSuccessful'),
         description: "شما با موفقیت در دوره ثبت نام شدید",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/wallet"] });
@@ -149,7 +151,7 @@ export function WalletSystem() {
     },
     onError: (error: any) => {
       toast({
-        title: "خطا در ثبت نام",
+        title: t('toast.enrollmentError'),
         description: error.message || "مشکلی در فرآیند ثبت نام رخ داد",
         variant: "destructive",
       });

@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from "react-i18next";
 
 interface Session {
   id: number;
@@ -17,7 +17,7 @@ interface Session {
 export function UpcomingSessions() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t } = useLanguage();
+  const { t } = useTranslation('common');
 
   const { data: sessions, isLoading } = useQuery<Session[]>({
     queryKey: ["/api/sessions/upcoming"],
@@ -30,7 +30,7 @@ export function UpcomingSessions() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Session Starting",
+        title: t('toast.sessionStarting'),
         description: "Connecting to your live session...",
       });
       // In a real implementation, this would open the LiveKit session
@@ -38,7 +38,7 @@ export function UpcomingSessions() {
     },
     onError: () => {
       toast({
-        title: "Error",
+        title: t('toast.error'),
         description: "Failed to join session. Please try again.",
         variant: "destructive",
       });

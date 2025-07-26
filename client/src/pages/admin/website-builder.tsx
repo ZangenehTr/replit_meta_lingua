@@ -148,7 +148,7 @@ export default function WebsiteBuilderPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Page Created",
+        title: t('common:toast.pageCreated'),
         description: "New website page has been created successfully.",
       });
       setIsCreateDialogOpen(false);
@@ -165,7 +165,7 @@ export default function WebsiteBuilderPage() {
     },
     onError: (error) => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: "Failed to create page. Please try again.",
         variant: "destructive",
       });
@@ -182,14 +182,14 @@ export default function WebsiteBuilderPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Page Updated",
+        title: t('common:toast.pageUpdated'),
         description: "Website page has been updated successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/website-pages'] });
     },
     onError: (error) => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: "Failed to update page. Please try again.",
         variant: "destructive",
       });
@@ -206,7 +206,7 @@ export default function WebsiteBuilderPage() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Website Deployed",
+        title: t('common:toast.websiteDeployed'),
         description: `Website is now live at ${data.url}`,
       });
     },
@@ -229,7 +229,7 @@ export default function WebsiteBuilderPage() {
   const handleCreatePage = async () => {
     if (!selectedTemplate) {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: "Please select a template first.",
         variant: "destructive",
       });

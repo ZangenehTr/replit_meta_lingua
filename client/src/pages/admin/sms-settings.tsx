@@ -89,14 +89,14 @@ export default function SMSSettingsPage() {
     },
     onSuccess: (result: any) => {
       toast({
-        title: "Settings Saved",
+        title: t('common:toast.settingsSaved'),
         description: result.message || "Kavenegar settings updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/kavenegar-settings'] });
     },
     onError: (error: any) => {
       toast({
-        title: "Save Failed",
+        title: t('common:toast.saveFailed'),
         description: error.message || "Failed to save Kavenegar settings",
         variant: "destructive",
       });

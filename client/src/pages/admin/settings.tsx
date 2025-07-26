@@ -121,7 +121,7 @@ export default function AdminSettings() {
     },
     onError: (error: any) => {
       toast({
-        title: "Update Failed",
+        title: t('common:toast.updateFailed'),
         description: error.message || "Failed to update settings.",
         variant: "destructive"
       });
@@ -133,13 +133,13 @@ export default function AdminSettings() {
     mutationFn: () => apiRequest("/api/admin/test/shetab", { method: 'POST' }),
     onSuccess: () => {
       toast({
-        title: "Shetab Connection Successful",
+        title: t('common:toast.shetabConnectionSuccessful'),
         description: "Payment gateway connection is working properly."
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Shetab Connection Failed",
+        title: t('common:toast.shetabConnectionFailed'),
         description: error.message || "Failed to connect to Shetab gateway.",
         variant: "destructive"
       });
@@ -150,13 +150,13 @@ export default function AdminSettings() {
     mutationFn: () => apiRequest("/api/admin/test/kavehnegar", { method: 'POST' }),
     onSuccess: () => {
       toast({
-        title: "Kavehnegar Connection Successful",
+        title: t('common:toast.kavenegarConnectionSuccessful'),
         description: "SMS service connection is working properly."
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Kavehnegar Connection Failed",
+        title: t('common:toast.kavenegarConnectionFailed'),
         description: error.message || "Failed to connect to SMS service.",
         variant: "destructive"
       });
