@@ -182,22 +182,30 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Main Layout with Sidebar */}
       <div className="flex min-h-[calc(100vh-3.5rem)]" dir={direction}>
         {/* Desktop Sidebar - hidden on mobile */}
-        <div className={`hidden md:block ${direction === 'rtl' ? 'md:fixed md:right-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-64' : 'md:fixed md:left-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-64'} md:z-30 border-r border-border bg-background`}>
+        <div 
+          className={`hidden md:block md:fixed md:top-16 md:h-[calc(100vh-4rem)] md:w-64 md:z-30 border-r border-border bg-background`}
+          style={{
+            right: direction === 'rtl' ? '0' : 'auto',
+            left: direction === 'rtl' ? 'auto' : '0'
+          }}
+        >
           <Sidebar />
         </div>
         
         {/* Main Content - properly spaced for sidebar and bottom nav */}
         <main 
-          className="flex-1 w-full overflow-y-auto pb-20 md:pb-8" 
+          className="flex-1 overflow-y-auto pb-20 md:pb-8" 
           dir={direction} 
           style={{
             marginLeft: direction === 'ltr' ? '256px' : '0',
             marginRight: direction === 'rtl' ? '256px' : '0',
-            width: 'calc(100% - 256px)',
-            minHeight: '100vh'
+            width: 'calc(100vw - 256px)',
+            minHeight: '100vh',
+            direction: direction,
+            textAlign: direction === 'rtl' ? 'right' : 'left'
           }}
         >
-          <div className="min-h-full p-4 sm:p-6 lg:p-8" dir={direction} style={{direction: direction, textAlign: direction === 'rtl' ? 'right' : 'left'}}>
+          <div className="min-h-full p-4 sm:p-6 lg:p-8" style={{direction: direction, textAlign: direction === 'rtl' ? 'right' : 'left'}}>
             {children}
           </div>
         </main>
