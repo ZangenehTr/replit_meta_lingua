@@ -173,100 +173,138 @@ function Router() {
       </Route>
       <Route path="/admin">
         <ProtectedRoute>
-          <EnhancedAdminDashboard />
+          <AppLayout>
+            <EnhancedAdminDashboard />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/dashboard">
         <ProtectedRoute>
-          <EnhancedAdminDashboard />
+          <AppLayout>
+            <EnhancedAdminDashboard />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/students">
         <ProtectedRoute>
-          <AdminStudents />
+          <AppLayout>
+            <AdminStudents />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/courses">
         <ProtectedRoute>
-          <AdminCourses />
+          <AppLayout>
+            <AdminCourses />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/financial">
         <ProtectedRoute>
-          <AdminFinancial />
+          <AppLayout>
+            <AdminFinancial />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/system">
         <ProtectedRoute>
-          <AdminSystem />
+          <AppLayout>
+            <AdminSystem />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/iranian-compliance">
         <ProtectedRoute>
-          <IranianComplianceSettings />
+          <AppLayout>
+            <IranianComplianceSettings />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/settings">
         <ProtectedRoute>
-          <AdminSettings />
+          <AppLayout>
+            <AdminSettings />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/financial-reports">
         <ProtectedRoute>
-          <FinancialReportsPage />
+          <AppLayout>
+            <FinancialReportsPage />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/ai-management">
         <ProtectedRoute>
-          <AIServicesManagement />
+          <AppLayout>
+            <AIServicesManagement />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/ai-services">
         <ProtectedRoute>
-          <AIServicesManagement />
+          <AppLayout>
+            <AIServicesManagement />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/games-management">
         <ProtectedRoute>
-          <GamesManagement />
+          <AppLayout>
+            <GamesManagement />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       
       {/* Enterprise Features */}
       <Route path="/admin/teacher-payments">
         <ProtectedRoute>
-          <AdminTeacherPaymentsPage />
+          <AppLayout>
+            <AdminTeacherPaymentsPage />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/white-label">
         <ProtectedRoute>
-          <WhiteLabelPage />
+          <AppLayout>
+            <WhiteLabelPage />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/sms-settings">
         <ProtectedRoute>
-          <SMSSettingsPage />
+          <AppLayout>
+            <SMSSettingsPage />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/sms-test">
         <ProtectedRoute>
-          <SMSTestPage />
+          <AppLayout>
+            <SMSTestPage />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/campaign-management">
         <ProtectedRoute>
-          <CampaignManagementPage />
+          <AppLayout>
+            <CampaignManagementPage />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/website-builder">
         <ProtectedRoute>
-          <WebsiteBuilderPage />
+          <AppLayout>
+            <WebsiteBuilderPage />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
 
       <Route path="/admin/teachers">
         <ProtectedRoute>
-          <AdminTeacherManagement />
+          <AppLayout>
+            <AdminTeacherManagement />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/callcenter">
@@ -547,7 +585,9 @@ function Router() {
       </Route>
       <Route path="/admin/room-management">
         <ProtectedRoute>
-          <RoomManagement />
+          <AppLayout>
+            <RoomManagement />
+          </AppLayout>
         </ProtectedRoute>
       </Route>
       <Route path="/admin/mentor-matching">
