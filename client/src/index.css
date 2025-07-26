@@ -88,6 +88,17 @@ body.rtl p, body.rtl div, body.rtl span {
     margin-left: 256px !important;
     margin-right: 0 !important;
   }
+  
+  /* Force sidebar positioning for RTL */
+  body.rtl .sidebar-container {
+    right: 0 !important;
+    left: auto !important;
+  }
+  
+  body.ltr .sidebar-container {
+    left: 0 !important;
+    right: auto !important;
+  }
 }
 
 /* RTL-specific spacing utilities */
