@@ -93,7 +93,7 @@ export default function AIConversation() {
     },
     onError: () => {
       toast({
-        title: "Failed to send message",
+        title: t('common:toast.failedToSendMessage'),
         description: "Please try again",
         variant: "destructive"
       });
@@ -132,7 +132,7 @@ export default function AIConversation() {
     } catch (error) {
       console.error('Error accessing microphone:', error);
       toast({
-        title: "Microphone access denied",
+        title: t('common:toast.microphoneAccessDenied'),
         description: "Please allow microphone access to use voice chat",
         variant: "destructive"
       });

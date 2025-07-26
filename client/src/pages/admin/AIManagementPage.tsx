@@ -53,7 +53,7 @@ export function AIManagementPage() {
   const testModel = async () => {
     if (!testPrompt.trim()) {
       toast({
-        title: "No Test Prompt",
+        title: t('common:toast.noTestPrompt'),
         description: "Please enter a test prompt",
         variant: "destructive",
       });
@@ -76,13 +76,13 @@ export function AIManagementPage() {
       setTestResponse(response.response || 'Test completed successfully');
       
       toast({
-        title: "Model Test Complete",
+        title: t('common:toast.modelTestComplete'),
         description: "Response generated successfully",
       });
 
     } catch (error: any) {
       toast({
-        title: "Model Test Failed",
+        title: t('common:toast.modelTestFailed'),
         description: error.message || "Failed to test the model",
         variant: "destructive",
       });

@@ -23,7 +23,7 @@ export function AdminSystem() {
 
   const handleCreateBackup = () => {
     toast({
-      title: "Backup Created",
+      title: t('common:toast.backupCreated'),
       description: "System backup has been created successfully.",
     });
   };
@@ -46,7 +46,7 @@ export function AdminSystem() {
     URL.revokeObjectURL(url);
     
     toast({
-      title: "Configuration Exported",
+      title: t('common:toast.configurationExported'),
       description: "System configuration has been downloaded.",
     });
   };

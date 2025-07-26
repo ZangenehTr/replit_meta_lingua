@@ -73,8 +73,8 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
     },
     onError: () => {
       toast({
-        title: t('toast.error'),
-        description: t('toast.classCreationFailed'),
+        title: t('toast.classFailed'),
+        description: t('toast.classFailedDescription'),
         variant: "destructive",
       });
     },

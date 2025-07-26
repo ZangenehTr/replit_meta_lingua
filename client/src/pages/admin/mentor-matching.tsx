@@ -156,7 +156,7 @@ export default function MentorMatchingPage() {
   const handleCreateAssignment = () => {
     if (!selectedBundle || !selectedMentor) {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: "Please select both a bundle and a mentor",
         variant: "destructive",
       });

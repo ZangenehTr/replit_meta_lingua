@@ -77,7 +77,7 @@ export function AdminSystem() {
             clearInterval(interval);
             setIsBackupInProgress(false);
             toast({
-              title: "Backup Created Successfully",
+              title: t('common:toast.backupCreatedSuccessfully'),
               description: "System backup has been created and saved.",
             });
             return 100;
@@ -88,7 +88,7 @@ export function AdminSystem() {
     } catch (error) {
       setIsBackupInProgress(false);
       toast({
-        title: "Backup Failed",
+        title: t('common:toast.backupFailed'),
         description: "Failed to create system backup.",
         variant: "destructive",
       });
@@ -116,12 +116,12 @@ export function AdminSystem() {
       URL.revokeObjectURL(url);
       
       toast({
-        title: "Configuration Exported",
+        title: t('common:toast.configurationExported'),
         description: "System configuration has been exported successfully.",
       });
     } catch (error) {
       toast({
-        title: "Export Failed",
+        title: t('common:toast.exportFailed'),
         description: "Failed to export system configuration.",
         variant: "destructive",
       });
@@ -137,7 +137,7 @@ export function AdminSystem() {
       });
     } catch (error) {
       toast({
-        title: "Failed to Toggle Maintenance Mode",
+        title: t('common:toast.failedToToggleMaintenanceMode'),
         description: "Could not change maintenance mode status.",
         variant: "destructive",
       });
@@ -194,7 +194,7 @@ export function AdminSystem() {
       URL.revokeObjectURL(url);
       
       toast({
-        title: "Configuration Exported",
+        title: t('common:toast.configurationExported'),
         description: "System configuration has been downloaded successfully.",
       });
     },

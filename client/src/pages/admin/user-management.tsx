@@ -66,8 +66,8 @@ export default function UserManagement() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       setIsCreateDialogOpen(false);
       toast({
-        title: "Success",
-        description: "User created successfully"
+        title: t('common:toast.success'),
+        description: t('common:toast.userCreated')
       });
       // Reset form
       setNewUser({
@@ -81,8 +81,8 @@ export default function UserManagement() {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create user",
+        title: t('common:toast.error'),
+        description: error.message || t('common:toast.userCreateFailed'),
         variant: "destructive"
       });
     }

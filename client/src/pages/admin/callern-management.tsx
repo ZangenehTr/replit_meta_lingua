@@ -108,14 +108,14 @@ export function CallernManagement() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Teacher availability updated successfully"
+        title: t('common:toast.success'),
+        description: t('common:toast.availabilityUpdated')
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/callern/teacher-availability'] });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -132,8 +132,8 @@ export function CallernManagement() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Teacher added to Callern successfully"
+        title: t('common:toast.success'),
+        description: t('common:toast.teacherAddedToCallern')
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/callern/teacher-availability'] });
       setIsAddDialogOpen(false);
@@ -164,8 +164,8 @@ export function CallernManagement() {
         window.location.href = '/api/login';
       } else {
         toast({
-          title: "Error",
-          description: error.message || "Failed to add teacher to Callern",
+          title: t('common:toast.error'),
+          description: error.message || t('common:toast.teacherAddFailed'),
           variant: "destructive"
         });
       }
@@ -202,8 +202,8 @@ export function CallernManagement() {
   const handleSubmitNewTeacher = () => {
     if (!newTeacherForm.teacherId) {
       toast({
-        title: "Error",
-        description: "Please select a teacher",
+        title: t('common:toast.error'),
+        description: t('common:toast.selectTeacher'),
         variant: "destructive"
       });
       return;

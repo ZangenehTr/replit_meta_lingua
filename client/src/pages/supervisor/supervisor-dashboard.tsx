@@ -283,7 +283,7 @@ export default function SupervisorDashboard() {
       console.error('Mutation error:', error);
       const errorMessage = error?.message || "Failed to create observation";
       toast({ 
-        title: "Error", 
+        title: t('common:toast.error'), 
         description: errorMessage, 
         variant: "destructive" 
       });
@@ -306,8 +306,8 @@ export default function SupervisorDashboard() {
     },
     onError: (error: any) => {
       toast({ 
-        title: "Error", 
-        description: error?.message || "Failed to set target",
+        title: t('common:toast.error'), 
+        description: error?.message || t('common:toast.targetFailed'),
         variant: "destructive" 
       });
     },

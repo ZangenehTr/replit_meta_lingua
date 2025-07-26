@@ -93,7 +93,7 @@ export function AdminStudents() {
     // Check if student has a phone number
     if (!student.phone) {
       toast({
-        title: "No Phone Number",
+        title: t('common:toast.noPhoneNumber'),
         description: `${student.firstName} ${student.lastName} does not have a phone number on file.`,
         variant: "destructive",
       });
@@ -124,7 +124,7 @@ export function AdminStudents() {
       const callData = await response.json();
       
       toast({
-        title: "VoIP Call Initiated",
+        title: t('common:toast.voipCallInitiated'),
         description: `Connecting to ${student.firstName} ${student.lastName} at ${student.phone}...`,
       });
 
@@ -134,7 +134,7 @@ export function AdminStudents() {
     } catch (error) {
       console.error('VoIP call error:', error);
       toast({
-        title: "Call Failed",
+        title: t('common:toast.callFailed'),
         description: "Unable to initiate VoIP call. Please try again.",
         variant: "destructive",
       });
@@ -319,8 +319,8 @@ export function AdminStudents() {
       setIsEditDialogOpen(false);
       setEditingStudent(null);
       toast({
-        title: "Success",
-        description: "Student updated successfully",
+        title: t('common:toast.success'),
+        description: t('common:toast.studentUpdated'),
       });
     },
     onError: (error: any) => {
@@ -345,7 +345,7 @@ export function AdminStudents() {
       }
       
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -356,7 +356,7 @@ export function AdminStudents() {
     // Validate required fields
     if (!newStudentData.firstName || !newStudentData.lastName || !newStudentData.email) {
       toast({
-        title: "Validation Error",
+        title: t('common:toast.validationError'),
         description: "Please fill in all required fields",
         variant: "destructive",
       });
@@ -383,8 +383,8 @@ export function AdminStudents() {
       await createStudentMutation.mutateAsync(studentData);
       // Success handled in onSuccess callback
       toast({
-        title: "Success",
-        description: "Student created successfully",
+        title: t('common:toast.success'),
+        description: t('common:toast.studentCreated'),
       });
     } catch (error: any) {
       console.error('Error creating student:', error);
@@ -480,7 +480,7 @@ export function AdminStudents() {
   const handleUpdateStudent = async () => {
     if (!editingStudent || !editingStudent.firstName || !editingStudent.lastName || !editingStudent.email) {
       toast({
-        title: "Validation Error",
+        title: t('common:toast.validationError'),
         description: "Please fill in all required fields",
         variant: "destructive",
       });
@@ -511,8 +511,8 @@ export function AdminStudents() {
 
       await editStudentMutation.mutateAsync({ id: editingStudent.id, studentData });
       toast({
-        title: "Success",
-        description: "Student updated successfully",
+        title: t('common:toast.success'),
+        description: t('common:toast.studentUpdated'),
       });
     } catch (error: any) {
       console.error('Error updating student:', error);
@@ -558,8 +558,8 @@ export function AdminStudents() {
 
       if (response) {
         toast({
-          title: "Success",
-          description: "Student has been updated successfully.",
+          title: t('common:toast.success'),
+          description: t('common:toast.studentUpdated'),
         });
         
         queryClient.invalidateQueries({ queryKey: ['/api/students/list'] });

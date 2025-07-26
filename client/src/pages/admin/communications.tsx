@@ -245,11 +245,11 @@ export default function AdminCommunicationsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/support-tickets'] });
-      toast({ title: "Support ticket created successfully" });
+      toast({ title: t('common:toast.supportTicketCreated') });
       setNewTicketDialog(false);
     },
     onError: (error: any) => {
-      toast({ title: "Failed to create ticket", description: error.message, variant: "destructive" });
+      toast({ title: t('common:toast.failedToCreateTicket'), description: error.message, variant: "destructive" });
     }
   });
 
@@ -271,7 +271,7 @@ export default function AdminCommunicationsPage() {
         await apiRequest('/api/push-notifications', {
           method: 'POST',
           body: JSON.stringify({
-            title: "New Message",
+            title: t('common:toast.newMessage'),
             message: notificationText,
             type: "info",
             targetAudience: "student",

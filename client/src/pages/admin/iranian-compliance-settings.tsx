@@ -68,7 +68,7 @@ export function IranianComplianceSettings() {
     },
     onError: (error) => {
       console.error('VoIP diagnostic error:', error);
-      toast({ title: "VoIP Diagnostic Failed", description: error.message, variant: "destructive" });
+      toast({ title: t('common:toast.voipDiagnosticFailed'), description: error.message, variant: "destructive" });
     }
   });
 
@@ -82,12 +82,12 @@ export function IranianComplianceSettings() {
       const response = data as any;
       if (response.success) {
         toast({ 
-          title: "VoIP Test Successful", 
+          title: t('common:toast.voipTestSuccessful'), 
           description: `${response.provider} connected successfully. Server: ${response.server}, Status: ${response.status}` 
         });
       } else {
         toast({ 
-          title: "VoIP Test", 
+          title: t('common:toast.voipTest'), 
           description: response.message || "Connection validated but external test failed",
           variant: "default"
         });
@@ -95,7 +95,7 @@ export function IranianComplianceSettings() {
     },
     onError: (error) => {
       console.error('VoIP test error:', error);
-      toast({ title: "VoIP Test Failed", description: error.message, variant: "destructive" });
+      toast({ title: t('common:toast.voipTestFailed'), description: error.message, variant: "destructive" });
     }
   });
 
@@ -104,10 +104,10 @@ export function IranianComplianceSettings() {
       return apiRequest('/api/admin/test-shetab', { method: 'POST' });
     },
     onSuccess: () => {
-      toast({ title: "Shetab Test", description: "Payment gateway connection successful" });
+      toast({ title: t('common:toast.shetabTest'), description: "Payment gateway connection successful" });
     },
     onError: (error) => {
-      toast({ title: "Shetab Test Failed", description: error.message, variant: "destructive" });
+      toast({ title: t('common:toast.shetabTestFailed'), description: error.message, variant: "destructive" });
     }
   });
 

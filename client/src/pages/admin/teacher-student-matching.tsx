@@ -143,8 +143,8 @@ export default function TeacherStudentMatchingPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Teacher successfully matched with student"
+        title: t('common:toast.success'),
+        description: t('common:toast.studentAssigned')
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/students/unassigned-teacher'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/teachers/available'] });
@@ -156,8 +156,8 @@ export default function TeacherStudentMatchingPage() {
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to create teacher assignment",
+        title: t('common:toast.error'),
+        description: t('common:toast.assignmentFailed'),
         variant: "destructive"
       });
     }

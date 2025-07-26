@@ -13,6 +13,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { Mic, MicOff, Volume2, VolumeX, MessageSquare, Bot, User, Play, Pause, RotateCcw, Settings, Target, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface ConversationMessage {
   id: string;
@@ -33,6 +34,7 @@ interface AIConversationSettings {
 export default function AIPracticePage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const queryClient = useQueryClient();
   
   // State management
@@ -117,8 +119,8 @@ export default function AIPracticePage() {
     onError: (error) => {
       console.error('AI conversation error:', error);
       toast({
-        title: "Error",
-        description: "Failed to get AI response. Please try again.",
+        title: t('toast.error'),
+        description: t('toast.aiResponseFailed'),
         variant: "destructive"
       });
     }
@@ -204,8 +206,8 @@ export default function AIPracticePage() {
   const clearConversation = () => {
     setConversation([]);
     toast({
-      title: "Conversation Cleared",
-      description: "Starting fresh conversation!"
+      title: t('toast.success'),
+      description: t('toast.conversationCleared')
     });
   };
 

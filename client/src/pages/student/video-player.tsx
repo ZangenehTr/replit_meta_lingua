@@ -97,7 +97,7 @@ export default function VideoPlayer() {
       setNoteText("");
       refetchNotes();
       toast({
-        title: "Note added",
+        title: t('common:toast.noteAdded'),
         description: "Your note has been saved.",
       });
     }
@@ -116,7 +116,7 @@ export default function VideoPlayer() {
       setEditingNoteText("");
       refetchNotes();
       toast({
-        title: "Note updated",
+        title: t('common:toast.noteUpdated'),
         description: "Your note has been updated.",
       });
     }
@@ -132,7 +132,7 @@ export default function VideoPlayer() {
     onSuccess: () => {
       refetchNotes();
       toast({
-        title: "Note deleted",
+        title: t('common:toast.noteDeleted'),
         description: "Your note has been deleted.",
       });
     }
@@ -150,7 +150,7 @@ export default function VideoPlayer() {
       setBookmarkTitle("");
       refetchBookmarks();
       toast({
-        title: "Bookmark added",
+        title: t('common:toast.bookmarkAdded'),
         description: "Your bookmark has been saved.",
       });
     }
@@ -166,7 +166,7 @@ export default function VideoPlayer() {
     onSuccess: () => {
       refetchBookmarks();
       toast({
-        title: "Bookmark deleted",
+        title: t('common:toast.bookmarkDeleted'),
         description: "Your bookmark has been deleted.",
       });
     }

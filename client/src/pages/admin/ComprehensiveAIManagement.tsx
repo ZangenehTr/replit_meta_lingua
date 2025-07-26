@@ -194,7 +194,7 @@ export function ComprehensiveAIManagement() {
             });
             
             toast({
-              title: "Model Downloaded",
+              title: t('common:toast.modelDownloaded'),
               description: `${modelName} has been installed successfully`,
             });
             
@@ -230,7 +230,7 @@ export function ComprehensiveAIManagement() {
     },
     onSuccess: (data, modelName) => {
       toast({
-        title: "Model Download Started",
+        title: t('common:toast.modelDownloadStarted'),
         description: `${modelName} download initiated. Progress will be shown below.`,
       });
       // Model will be added to downloadingModels in handleModelDownload
@@ -252,7 +252,7 @@ export function ComprehensiveAIManagement() {
       }
       
       toast({
-        title: "Download Failed",
+        title: t('common:toast.downloadFailed'),
         description: `Failed to download ${modelName}: ${errorMessage}`,
         variant: "destructive",
       });
@@ -289,7 +289,7 @@ export function ComprehensiveAIManagement() {
     },
     onSuccess: (data, modelName) => {
       toast({
-        title: "Model Deleted",
+        title: t('common:toast.modelDeleted'),
         description: `${modelName} has been removed successfully`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
@@ -312,7 +312,7 @@ export function ComprehensiveAIManagement() {
       }
       
       toast({
-        title: "Delete Failed",
+        title: t('common:toast.deleteFailed'),
         description: `Failed to delete ${modelName}: ${errorMessage}`,
         variant: "destructive",
       });
@@ -330,7 +330,7 @@ export function ComprehensiveAIManagement() {
     },
     onSuccess: (data, modelName) => {
       toast({
-        title: "Active Model Updated",
+        title: t('common:toast.activeModelUpdated'),
         description: `${modelName} is now the active model for training and fine-tuning`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/active-model"] });
@@ -349,7 +349,7 @@ export function ComprehensiveAIManagement() {
       }
       
       toast({
-        title: "Failed to Set Active Model",
+        title: t('common:toast.failedToSetActiveModel'),
         description: `Failed to set ${modelName} as active: ${errorMessage}`,
         variant: "destructive",
       });
@@ -374,7 +374,7 @@ export function ComprehensiveAIManagement() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Ollama Bootstrap Successful",
+        title: t('common:toast.ollamaBootstrapSuccessful'),
         description: data.message || "Ollama has been installed and configured successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/test/ollama-status"] });
@@ -403,7 +403,7 @@ export function ComprehensiveAIManagement() {
       }
       
       toast({
-        title: "Bootstrap Failed",
+        title: t('common:toast.bootstrapFailed'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -489,7 +489,7 @@ export function ComprehensiveAIManagement() {
       setIsRecording(true);
     } catch (error) {
       toast({
-        title: "Recording Failed",
+        title: t('common:toast.recordingFailed'),
         description: "Could not access microphone. Please check permissions.",
         variant: "destructive",
       });
@@ -627,8 +627,8 @@ export function ComprehensiveAIManagement() {
       
       if (!isSupported) {
         toast({
-          title: "Unsupported File Type",
-          description: `${file.name} must be a text file (.txt, .md, .docx, .pages)`,
+          title: t('common:toast.unsupportedFileType'),
+          description: t('common:toast.fileMustBeText'),
           variant: "destructive",
         });
         continue;

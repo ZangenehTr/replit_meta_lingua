@@ -110,7 +110,7 @@ export default function AIServicesManagement() {
     mutationFn: () => apiRequest("/api/admin/ollama/start", { method: "POST" }),
     onSuccess: (data) => {
       toast({
-        title: "Ollama Service",
+        title: t('common:toast.ollamaService'),
         description: data.success ? "Service started successfully" : `Failed to start: ${data.message}`,
         variant: data.success ? "default" : "destructive"
       });
@@ -127,7 +127,7 @@ export default function AIServicesManagement() {
     onSuccess: (data, modelName) => {
       setDownloadingModel(null);
       toast({
-        title: "Model Download",
+        title: t('common:toast.modelDownload'),
         description: data.success ? `${modelName} downloaded successfully` : `Download failed: ${data.message}`,
         variant: data.success ? "default" : "destructive"
       });
@@ -143,7 +143,7 @@ export default function AIServicesManagement() {
     mutationFn: (modelName: string) => apiRequest(`/api/admin/ollama/models/${modelName}`, { method: "DELETE" }),
     onSuccess: (data, modelName) => {
       toast({
-        title: "Model Removal",
+        title: t('common:toast.modelRemoval'),
         description: data.success ? `${modelName} removed successfully` : `Removal failed: ${data.message}`,
         variant: data.success ? "default" : "destructive"
       });
@@ -160,7 +160,7 @@ export default function AIServicesManagement() {
       }),
     onSuccess: (data) => {
       toast({
-        title: "AI Test Successful",
+        title: t('common:toast.aiTestSuccessful'),
         description: "Model responded correctly. Check console for full response.",
         variant: "default"
       });
@@ -168,7 +168,7 @@ export default function AIServicesManagement() {
     },
     onError: (error) => {
       toast({
-        title: "AI Test Failed",
+        title: t('common:toast.aiTestFailed'),
         description: error.message,
         variant: "destructive"
       });

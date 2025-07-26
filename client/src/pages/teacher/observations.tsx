@@ -123,13 +123,13 @@ export default function TeacherObservationsPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/teacher/observations'] });
       queryClient.invalidateQueries({ queryKey: ['/api/teacher/observations', 'unacknowledged'] });
       toast({
-        title: "Observation Acknowledged",
+        title: t('common:toast.observationAcknowledged'),
         description: "You have successfully acknowledged this observation.",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: "Failed to acknowledge observation. Please try again.",
         variant: "destructive",
       });
@@ -158,13 +158,13 @@ export default function TeacherObservationsPage() {
       setResponseContent('');
       setSelectedObservation(null);
       toast({
-        title: "Response Submitted",
+        title: t('common:toast.responseSubmitted'),
         description: "Your response has been submitted successfully.",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: "Failed to submit response. Please try again.",
         variant: "destructive",
       });
@@ -194,13 +194,13 @@ export default function TeacherObservationsPage() {
       setImprovementDeadline('');
       setSelectedObservation(null);
       toast({
-        title: "Improvement Plan Updated",
+        title: t('common:toast.improvementPlanUpdated'),
         description: "Your improvement plan has been updated successfully.",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: "Failed to update improvement plan. Please try again.",
         variant: "destructive",
       });

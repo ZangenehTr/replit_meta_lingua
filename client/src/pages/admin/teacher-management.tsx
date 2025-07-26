@@ -174,14 +174,14 @@ export function AdminTeacherManagement() {
       setIsEditDialogOpen(false);
       editForm.reset();
       toast({
-        title: "Success",
-        description: "Teacher updated successfully",
+        title: t('common:toast.success'),
+        description: t('common:toast.teacherUpdated'),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update teacher",
+        title: t('common:toast.error'),
+        description: error.message || t('common:toast.teacherCreateFailed'),
         variant: "destructive",
       });
     },

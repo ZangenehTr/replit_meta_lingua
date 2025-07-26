@@ -71,7 +71,7 @@ export default function TeacherTests() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
+        title: t('common:toast.success'),
         description: "Test created successfully",
       });
       setIsCreateDialogOpen(false);
@@ -79,7 +79,7 @@ export default function TeacherTests() {
     },
     onError: (error) => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: error.message,
         variant: "destructive",
       });
@@ -95,14 +95,14 @@ export default function TeacherTests() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
+        title: t('common:toast.success'),
         description: "Test deleted successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/teacher/tests"] });
     },
     onError: (error) => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: error.message,
         variant: "destructive",
       });

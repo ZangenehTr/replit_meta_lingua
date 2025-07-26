@@ -188,7 +188,7 @@ export default function TeacherPaymentsPage() {
       }),
     onSuccess: () => {
       toast({
-        title: "Payments Calculated",
+        title: t('common:toast.paymentsCalculated'),
         description: "Teacher payments calculated using individual hourly rates.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/teacher-payments'] });
@@ -205,7 +205,7 @@ export default function TeacherPaymentsPage() {
       }),
     onSuccess: () => {
       toast({
-        title: "Rate Updated",
+        title: t('common:toast.rateUpdated'),
         description: "Teacher hourly rate has been updated successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/teachers/rates'] });
@@ -221,7 +221,7 @@ export default function TeacherPaymentsPage() {
       }),
     onSuccess: () => {
       toast({
-        title: "Payment Approved",
+        title: t('common:toast.paymentApproved'),
         description: "Payment has been approved for processing.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/teacher-payments'] });
@@ -247,7 +247,7 @@ export default function TeacherPaymentsPage() {
       document.body.removeChild(a);
       
       toast({
-        title: "Report Downloaded",
+        title: t('common:toast.reportDownloaded'),
         description: "Payment report has been downloaded successfully.",
       });
     },
@@ -263,7 +263,7 @@ export default function TeacherPaymentsPage() {
       }),
     onSuccess: (data) => {
       toast({
-        title: "Sent to Accounting",
+        title: t('common:toast.sentToAccounting'),
         description: `Payment data sent successfully. Tracking ID: ${data.trackingId}`,
       });
     },
@@ -843,7 +843,7 @@ export default function TeacherPaymentsPage() {
                                           });
                                           
                                           toast({
-                                            title: "Payment Approved",
+                                            title: t('common:toast.paymentApproved'),
                                             description: `Payslip approved and SMS sent to ${payment.teacherName}`,
                                           });
                                         } catch (error) {
