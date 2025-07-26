@@ -267,5 +267,28 @@
     "role": "نقش",
     "cancel": "لغو",
     "create": "ایجاد"
+  },
+  "students": {
+    "title": "مدیریت دانشجویان",
+    "subtitle": "مدیریت حساب‌های دانشجویی، ثبت‌نام و رهگیری پیشرفت",
+    "add": "افزودن",
+    "back": "بازگشت",
+    "allStudents": "همه دانشجویان",
+    "newestFirst": "جدیدترین ابتدا",
+    "oldestFirst": "قدیمی‌ترین ابتدا",
+    "searchPlaceholder": "جستجوی دانشجویان بر اساس نام یا ایمیل...",
+    "active": "فعال",
+    "inactive": "غیرفعال",
+    "beginner": "مبتدی",
+    "intermediate": "متوسط",
+    "advanced": "پیشرفته",
+    "progress": "پیشرفت",
+    "attendance": "حضور",
+    "courses": "دوره‌ها",
+    "noCourses": "بدون دوره",
+    "edit": "ویرایش",
+    "view": "مشاهده",
+    "call": "تماس",
+    "daysAgo": "روز پیش"
   }
 }

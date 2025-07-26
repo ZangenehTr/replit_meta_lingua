@@ -656,7 +656,7 @@ export function AdminStudents() {
               <SelectValue placeholder="Sort..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="newest">{t('admin:students.newestFirst')}</SelectItem>
               <SelectItem value="oldest">Oldest First</SelectItem>
               <SelectItem value="course">By Course</SelectItem>
               <SelectItem value="level">By Level</SelectItem>
@@ -892,7 +892,7 @@ export function AdminStudents() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Student Profile</DialogTitle>
+            <DialogTitle>{t('admin:students.edit')} {t('admin:students.title')}</DialogTitle>
             <DialogDescription>
               Update student information and profile details
             </DialogDescription>
@@ -1073,7 +1073,7 @@ export function AdminStudents() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Students</SelectItem>
+            <SelectItem value="all">{t('admin:students.allStudents')}</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
@@ -1171,7 +1171,7 @@ export function AdminStudents() {
                   title={!student.phone ? "No phone number available" : `Call ${student.firstName} ${student.lastName}`}
                 >
                   <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline sm:ml-1">Call</span>
+                  <span className="hidden sm:inline sm:ml-1">{t('admin:students.call')}</span>
                 </Button>
                 
                 {/* View Button */}
@@ -1183,7 +1183,7 @@ export function AdminStudents() {
                       className="flex-1 h-7 sm:h-8 border-blue-200 hover:bg-blue-50 text-xs sm:text-sm px-2 sm:px-3"
                     >
                       <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                      <span className="hidden sm:inline sm:ml-1">View</span>
+                      <span className="hidden sm:inline sm:ml-1">{t('admin:students.view')}</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl">
@@ -1339,7 +1339,7 @@ export function AdminStudents() {
                   }}
                 >
                   <Edit3 className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline sm:ml-1">Edit</span>
+                  <span className="hidden sm:inline sm:ml-1">{t('admin:students.edit')}</span>
                 </Button>
                 
                 {/* Contact Button - NOW FUNCTIONAL */}
@@ -1633,7 +1633,7 @@ export function AdminStudents() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Student</DialogTitle>
+            <DialogTitle>{t('admin:students.edit')}</DialogTitle>
             <DialogDescription>
               Update student information and enrollment details
             </DialogDescription>
