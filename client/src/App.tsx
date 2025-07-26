@@ -571,65 +571,47 @@ function Router() {
       {/* Admin Routes */}
       <Route path="/admin/classes">
         <ProtectedRoute>
-          <AppLayout>
-            <AdminClassesPage />
-          </AppLayout>
+          <AdminClassesPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/callern-management">
         <ProtectedRoute>
-          <AppLayout>
-            <CallernManagement />
-          </AppLayout>
+          <CallernManagement />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/room-management">
         <ProtectedRoute>
-          <AppLayout>
-            <RoomManagement />
-          </AppLayout>
+          <RoomManagement />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/mentor-matching">
         <ProtectedRoute>
-          <AppLayout>
-            <MentorMatchingPage />
-          </AppLayout>
+          <MentorMatchingPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/user-management">
         <ProtectedRoute>
-          <AppLayout>
-            <UserManagement />
-          </AppLayout>
+          <UserManagement />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/teacher-student-matching">
         <ProtectedRoute>
-          <AppLayout>
-            <TeacherStudentMatchingPage />
-          </AppLayout>
+          <TeacherStudentMatchingPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/reports">
         <ProtectedRoute>
-          <AppLayout>
-            <AdminReportsPage />
-          </AppLayout>
+          <AdminReportsPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/communications">
         <ProtectedRoute>
-          <AppLayout>
-            <AdminCommunicationsPage />
-          </AppLayout>
+          <AdminCommunicationsPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/supervision">
         <ProtectedRoute>
-          <AppLayout>
-            <AdminSupervisionPage />
-          </AppLayout>
+          <AdminSupervisionPage />
         </ProtectedRoute>
       </Route>
 
