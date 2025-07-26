@@ -187,8 +187,17 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
         
         {/* Main Content - properly spaced for sidebar and bottom nav */}
-        <main className={`flex-1 w-full ${direction === 'rtl' ? 'md:mr-64' : 'md:ml-64'} overflow-y-auto pb-20 md:pb-8`} dir={direction}>
-          <div className="min-h-full p-4 sm:p-6 lg:p-8">
+        <main 
+          className="flex-1 w-full overflow-y-auto pb-20 md:pb-8" 
+          dir={direction} 
+          style={{
+            marginLeft: direction === 'ltr' ? '256px' : '0',
+            marginRight: direction === 'rtl' ? '256px' : '0',
+            width: 'calc(100% - 256px)',
+            minHeight: '100vh'
+          }}
+        >
+          <div className="min-h-full p-4 sm:p-6 lg:p-8" dir={direction} style={{direction: direction, textAlign: direction === 'rtl' ? 'right' : 'left'}}>
             {children}
           </div>
         </main>

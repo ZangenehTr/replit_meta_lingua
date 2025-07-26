@@ -113,12 +113,12 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{direction: 'inherit', textAlign: 'inherit'}}>
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">{t('admin:users.title')}</h1>
-          <p className="text-gray-600 dark:text-gray-300">
+      <div className="flex justify-between items-center" style={{direction: 'inherit'}}>
+        <div style={{textAlign: 'inherit', direction: 'inherit'}}>
+          <h1 className="text-3xl font-bold" style={{textAlign: 'inherit', direction: 'inherit'}}>{t('admin:users.title')}</h1>
+          <p className="text-gray-600 dark:text-gray-300" style={{textAlign: 'inherit', direction: 'inherit'}}>
             {t('admin:users.subtitle')}
           </p>
         </div>

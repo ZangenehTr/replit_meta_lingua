@@ -10,7 +10,13 @@
 @tailwind utilities;
 
 /* Enhanced RTL Support */
-.rtl, [dir="rtl"] {
+.rtl, [dir="rtl"], body.rtl, body.rtl * {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+/* Force RTL for Persian language */
+body.lang-fa, body.lang-fa *, [lang="fa"], [lang="fa"] * {
   direction: rtl !important;
   text-align: right !important;
 }
@@ -62,6 +68,26 @@
 .rtl th, [dir="rtl"] th,
 .rtl td, [dir="rtl"] td {
   text-align: right !important;
+}
+
+/* Force RTL for all content */
+body.rtl h1, body.rtl h2, body.rtl h3, body.rtl h4, body.rtl h5, body.rtl h6,
+body.rtl p, body.rtl div, body.rtl span {
+  text-align: right !important;
+  direction: rtl !important;
+}
+
+/* Desktop specific margin fixes */
+@media (min-width: 768px) {
+  .rtl-main-content {
+    margin-right: 256px !important;
+    margin-left: 0 !important;
+  }
+  
+  .ltr-main-content {
+    margin-left: 256px !important;
+    margin-right: 0 !important;
+  }
 }
 
 /* RTL-specific spacing utilities */

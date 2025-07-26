@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
-import { useLanguage } from '@/hooks/useLanguage';
+import { useTranslation } from 'react-i18next';
 
 interface RTLLayoutProps {
   children: React.ReactNode;
 }
 
 export function RTLLayout({ children }: RTLLayoutProps) {
-  const { language, isRTL } = useLanguage();
+  const { i18n } = useTranslation();
+  const language = i18n.language || 'en';
+  const isRTL = language === 'fa' || language === 'ar';
 
   useEffect(() => {
     // Apply RTL/LTR direction to document
@@ -20,8 +22,12 @@ export function RTLLayout({ children }: RTLLayoutProps) {
     
     if (isRTL) {
       document.body.classList.add('rtl');
+      document.body.style.direction = 'rtl';
+      document.body.style.textAlign = 'right';
     } else {
       document.body.classList.add('ltr');
+      document.body.style.direction = 'ltr';
+      document.body.style.textAlign = 'left';
     }
     
     document.body.classList.add(`lang-${language}`);
