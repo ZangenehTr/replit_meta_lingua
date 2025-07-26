@@ -173,138 +173,100 @@ function Router() {
       </Route>
       <Route path="/admin">
         <ProtectedRoute>
-          <AppLayout>
-            <EnhancedAdminDashboard />
-          </AppLayout>
+          <EnhancedAdminDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/dashboard">
         <ProtectedRoute>
-          <AppLayout>
-            <EnhancedAdminDashboard />
-          </AppLayout>
+          <EnhancedAdminDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/students">
         <ProtectedRoute>
-          <AppLayout>
-            <AdminStudents />
-          </AppLayout>
+          <AdminStudents />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/courses">
         <ProtectedRoute>
-          <AppLayout>
-            <AdminCourses />
-          </AppLayout>
+          <AdminCourses />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/financial">
         <ProtectedRoute>
-          <AppLayout>
-            <AdminFinancial />
-          </AppLayout>
+          <AdminFinancial />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/system">
         <ProtectedRoute>
-          <AppLayout>
-            <AdminSystem />
-          </AppLayout>
+          <AdminSystem />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/iranian-compliance">
         <ProtectedRoute>
-          <AppLayout>
-            <IranianComplianceSettings />
-          </AppLayout>
+          <IranianComplianceSettings />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/settings">
         <ProtectedRoute>
-          <AppLayout>
-            <AdminSettings />
-          </AppLayout>
+          <AdminSettings />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/financial-reports">
         <ProtectedRoute>
-          <AppLayout>
-            <FinancialReportsPage />
-          </AppLayout>
+          <FinancialReportsPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/ai-management">
         <ProtectedRoute>
-          <AppLayout>
-            <AIServicesManagement />
-          </AppLayout>
+          <AIServicesManagement />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/ai-services">
         <ProtectedRoute>
-          <AppLayout>
-            <AIServicesManagement />
-          </AppLayout>
+          <AIServicesManagement />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/games-management">
         <ProtectedRoute>
-          <AppLayout>
-            <GamesManagement />
-          </AppLayout>
+          <GamesManagement />
         </ProtectedRoute>
       </Route>
       
       {/* Enterprise Features */}
       <Route path="/admin/teacher-payments">
         <ProtectedRoute>
-          <AppLayout>
-            <AdminTeacherPaymentsPage />
-          </AppLayout>
+          <AdminTeacherPaymentsPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/white-label">
         <ProtectedRoute>
-          <AppLayout>
-            <WhiteLabelPage />
-          </AppLayout>
+          <WhiteLabelPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/sms-settings">
         <ProtectedRoute>
-          <AppLayout>
-            <SMSSettingsPage />
-          </AppLayout>
+          <SMSSettingsPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/sms-test">
         <ProtectedRoute>
-          <AppLayout>
-            <SMSTestPage />
-          </AppLayout>
+          <SMSTestPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/campaign-management">
         <ProtectedRoute>
-          <AppLayout>
-            <CampaignManagementPage />
-          </AppLayout>
+          <CampaignManagementPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/website-builder">
         <ProtectedRoute>
-          <AppLayout>
-            <WebsiteBuilderPage />
-          </AppLayout>
+          <WebsiteBuilderPage />
         </ProtectedRoute>
       </Route>
 
       <Route path="/admin/teachers">
         <ProtectedRoute>
-          <AppLayout>
-            <AdminTeacherManagement />
-          </AppLayout>
+          <AdminTeacherManagement />
         </ProtectedRoute>
       </Route>
       <Route path="/callcenter">
