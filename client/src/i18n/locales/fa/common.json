@@ -325,6 +325,7 @@
     "failedToDelete": "حذف ناموفق",
     "userCreated": "کاربر با موفقیت ایجاد شد",
     "userCreateFailed": "ایجاد کاربر ناموفق بود",
+    "emailAlreadyExists": "کاربری با این ایمیل قبلاً ثبت شده است",
     "failedToSend": "ارسال ناموفق",
     "missingInformation": "اطلاعات ناقص",
     "fillRequiredFields": "لطفاً تمام فیلدهای ضروری را پر کنید",

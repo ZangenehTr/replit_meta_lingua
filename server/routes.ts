@@ -1129,6 +1129,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Creating user with data:', { email, firstName, lastName, role, phoneNumber });
       
+      // Check if user with this email already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ 
+          message: "User with this email already exists", 
+          error: "Email address is already registered" 
+        });
+      }
+      
       // Hash the password
       const hashedPassword = await bcrypt.hash(password || "defaultpass123", 10);
       
@@ -1156,6 +1165,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(userResponse);
     } catch (error) {
       console.error("Error creating user:", error);
+      if (error.code === '23505') {
+        return res.status(400).json({ 
+          message: "User with this email already exists", 
+          error: "Email address is already registered" 
+        });
+      }
       res.status(500).json({ message: "Failed to create user", error: error.message });
     }
   });

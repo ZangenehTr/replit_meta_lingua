@@ -80,9 +80,15 @@ export default function UserManagement() {
       });
     },
     onError: (error: any) => {
+      const isEmailDuplicateError = error.message?.includes("email already exists") || 
+                                   error.message?.includes("already registered") ||
+                                   error.message?.includes("duplicate key");
+      
       toast({
         title: t('common:toast.error'),
-        description: error.message || t('common:toast.userCreateFailed'),
+        description: isEmailDuplicateError 
+          ? t('common:toast.emailAlreadyExists')
+          : error.message || t('common:toast.userCreateFailed'),
         variant: "destructive"
       });
     }
