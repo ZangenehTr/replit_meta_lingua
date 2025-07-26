@@ -28,14 +28,14 @@ export const getStudentNavigation = (t: any): NavigationItem[] => [
 
 // Teacher/Tutor navigation
 export const getTeacherNavigation = (t: any): NavigationItem[] => [
-  { path: "/teacher/dashboard", icon: "Home", label: t('dashboard'), roles: ["Teacher/Tutor"] },
-  { path: "/teacher/classes", icon: "Users", label: t('teacher.myClasses'), roles: ["Teacher/Tutor"] },
-  { path: "/teacher/schedule", icon: "Calendar", label: t('teacher.schedule'), roles: ["Teacher/Tutor"] },
-  { path: "/teacher/assignments", icon: "ClipboardCheck", label: t('teacher.assignments'), roles: ["Teacher/Tutor"] },
-  { path: "/teacher/students", icon: "GraduationCap", label: t('teacher.students'), roles: ["Teacher/Tutor"] },
-  { path: "/teacher/resources", icon: "FileText", label: t('teacher.resources'), roles: ["Teacher/Tutor"] },
-  { path: "/teacher/reports", icon: "BarChart", label: t('teacher.reports'), roles: ["Teacher/Tutor"] },
-  { path: "/teacher/payments", icon: "DollarSign", label: t('teacher.payments'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/classes", icon: "Users", label: t('common:navigation.myClasses'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/schedule", icon: "Calendar", label: t('common:navigation.schedule'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/assignments", icon: "ClipboardCheck", label: t('common:navigation.assignments'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/students", icon: "GraduationCap", label: t('common:navigation.students'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/resources", icon: "FileText", label: t('common:navigation.resources'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/reports", icon: "BarChart", label: t('common:navigation.reports'), roles: ["Teacher/Tutor"] },
+  { path: "/teacher/payments", icon: "DollarSign", label: t('common:navigation.payments'), roles: ["Teacher/Tutor"] },
 ];
 
 // Institute Management Platform (IMP) navigation - Admin/Supervisor
@@ -97,10 +97,10 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
   
   // Enterprise Features
   { path: "/admin/teacher-payments", icon: "DollarSign", label: t('common:navigation.teacherPayments'), roles: ["Admin", "Accountant"] },
-  { path: "/admin/white-label", icon: "Building2", label: "White-Label Management", roles: ["Admin"] },
-  { path: "/admin/sms-settings", icon: "Send", label: "SMS Management", roles: ["Admin", "Supervisor"] },
-  { path: "/admin/campaign-management", icon: "Megaphone", label: "Campaign Management", roles: ["Admin", "Call Center Agent"] },
-  { path: "/admin/website-builder", icon: "Globe", label: "Website Builder", roles: ["Admin"] },
+  { path: "/admin/white-label", icon: "Building2", label: t('common:navigation.whiteLabelManagement'), roles: ["Admin"] },
+  { path: "/admin/sms-settings", icon: "Send", label: t('common:navigation.smsManagement'), roles: ["Admin", "Supervisor"] },
+  { path: "/admin/campaign-management", icon: "Megaphone", label: t('common:navigation.campaignManagement'), roles: ["Admin", "Call Center Agent"] },
+  { path: "/admin/website-builder", icon: "Globe", label: t('common:navigation.websiteBuilder'), roles: ["Admin"] },
 ];
 
 // Lead Management & Call Center CRM

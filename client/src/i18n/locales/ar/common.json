@@ -52,7 +52,14 @@
     "campaigns": "الحملات",
     "mentees": "المتدربون",
     "mentoringSessions": "جلسات التوجيه",
-    "progressTracking": "تتبع التقدم"
+    "progressTracking": "تتبع التقدم",
+    "whiteLabelManagement": "إدارة العلامة البيضاء",
+    "smsManagement": "إدارة الرسائل النصية",
+    "campaignManagement": "إدارة الحملات",
+    "websiteBuilder": "منشئ المواقع",
+    "myClasses": "فصولي",
+    "schedule": "الجدول الزمني",
+    "resources": "الموارد"
   },
   "toast": {
     "success": "نجح",
