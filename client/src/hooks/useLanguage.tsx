@@ -39,13 +39,27 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     i18n.changeLanguage(lang);
     localStorage.setItem('i18nextLng', lang);
     
+    const isRTLLang = RTL_LANGUAGES.includes(lang);
+    
     // Update document attributes immediately
-    document.documentElement.setAttribute('dir', RTL_LANGUAGES.includes(lang) ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('dir', isRTLLang ? 'rtl' : 'ltr');
     document.documentElement.setAttribute('lang', lang);
     
-    // Update body classes
-    document.body.classList.remove('rtl', 'ltr');
-    document.body.classList.add(RTL_LANGUAGES.includes(lang) ? 'rtl' : 'ltr');
+    // Update body classes with full RTL enforcement
+    document.body.classList.remove('rtl', 'ltr', 'lang-en', 'lang-fa', 'lang-ar');
+    
+    if (isRTLLang) {
+      document.body.classList.add('rtl', `lang-${lang}`);
+      // Force all elements to be RTL
+      document.body.style.direction = 'rtl';
+      document.body.style.textAlign = 'right';
+    } else {
+      document.body.classList.add('ltr', `lang-${lang}`);
+      document.body.style.direction = 'ltr';
+      document.body.style.textAlign = 'left';
+    }
+    
+    console.log(`Applied ${isRTLLang ? 'RTL' : 'LTR'} styles for ${lang}`);
   };
 
   useEffect(() => {
