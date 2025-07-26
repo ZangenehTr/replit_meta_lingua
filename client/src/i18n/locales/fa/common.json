@@ -323,6 +323,8 @@
     "failedToCreate": "ایجاد ناموفق",
     "failedToUpdate": "به‌روزرسانی ناموفق",
     "failedToDelete": "حذف ناموفق",
+    "userCreated": "کاربر با موفقیت ایجاد شد",
+    "userCreateFailed": "ایجاد کاربر ناموفق بود",
     "failedToSend": "ارسال ناموفق",
     "missingInformation": "اطلاعات ناقص",
     "fillRequiredFields": "لطفاً تمام فیلدهای ضروری را پر کنید",
