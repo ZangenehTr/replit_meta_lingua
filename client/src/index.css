@@ -93,11 +93,28 @@ body.rtl p, body.rtl div, body.rtl span {
   body.rtl .sidebar-container {
     right: 0 !important;
     left: auto !important;
+    transform: translateX(0) !important;
   }
   
   body.ltr .sidebar-container {
     left: 0 !important;
     right: auto !important;
+    transform: translateX(0) !important;
+  }
+  
+  /* Force main content spacing */
+  body.rtl main {
+    margin-right: 256px !important;
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+  
+  body.ltr main {
+    margin-left: 256px !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 }
 
