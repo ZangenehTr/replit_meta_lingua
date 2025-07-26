@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Phone, PhoneCall } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface VoIPContactButtonProps {
   phoneNumber: string;
@@ -12,12 +13,13 @@ interface VoIPContactButtonProps {
 export function VoIPContactButton({ phoneNumber, contactName, className }: VoIPContactButtonProps) {
   const [isCallActive, setIsCallActive] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation(['common']);
 
   const handleVoIPCall = async () => {
     // Validate phone number
     if (!phoneNumber || phoneNumber.trim() === '') {
       toast({
-        title: "Invalid Phone Number",
+        title: t('common:toast.invalidPhoneNumber'),
         description: "Please provide a valid phone number to make a call.",
         variant: "destructive",
       });
@@ -50,7 +52,7 @@ export function VoIPContactButton({ phoneNumber, contactName, className }: VoIPC
       const callData = await voipResponse.json();
       
       toast({
-        title: "VoIP Call Initiated",
+        title: t('common:toast.voipCallInitiated'),
         description: `Connecting to ${contactName} at ${phoneNumber}`,
       });
 
@@ -109,7 +111,7 @@ export function VoIPContactButton({ phoneNumber, contactName, className }: VoIPC
       setIsCallActive(false);
       // Handle VoIP call error gracefully
       toast({
-        title: "VoIP Call Failed",
+        title: t('common:toast.voipCallFailed'),
         description: error.message || "Unable to connect via Isabel VoIP line. Please check configuration.",
         variant: "destructive",
       });

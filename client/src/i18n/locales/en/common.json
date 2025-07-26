@@ -619,7 +619,14 @@
     "failedToSendMessage": "Failed to send message",
     "microphoneAccessDenied": "Microphone access denied",
     "bookmarkAdded": "Bookmark added",
-    "bookmarkDeleted": "Bookmark deleted"
+    "bookmarkDeleted": "Bookmark deleted",
+    "enrollmentSuccessful": "Enrollment Successful",
+    "enrollmentFailed": "Enrollment Failed",
+    "announcementSent": "Announcement Sent",
+    "missingInformation": "Missing Information",
+    "invalidPhoneNumber": "Invalid Phone Number",
+    "voipCallInitiated": "VoIP Call Initiated",
+    "voipCallFailed": "VoIP Call Failed"
   },
   "placeholders": {
     "enterAmount": "Enter amount",

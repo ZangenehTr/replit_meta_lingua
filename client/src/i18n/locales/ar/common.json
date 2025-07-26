@@ -181,7 +181,14 @@
     "failedToSendMessage": "فشل في إرسال الرسالة",
     "microphoneAccessDenied": "تم رفض الوصول للميكروفون",
     "bookmarkAdded": "تمت إضافة الإشارة المرجعية",
-    "bookmarkDeleted": "تم حذف الإشارة المرجعية"
+    "bookmarkDeleted": "تم حذف الإشارة المرجعية",
+    "enrollmentSuccessful": "تم التسجيل بنجاح",
+    "enrollmentFailed": "فشل التسجيل",
+    "announcementSent": "تم إرسال الإعلان",
+    "missingInformation": "معلومات مفقودة",
+    "invalidPhoneNumber": "رقم هاتف غير صالح",
+    "voipCallInitiated": "تم بدء مكالمة VoIP",
+    "voipCallFailed": "فشلت مكالمة VoIP"
   },
   "supervisor": {
     "error": "خطأ",

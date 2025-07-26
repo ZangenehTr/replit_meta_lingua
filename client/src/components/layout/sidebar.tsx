@@ -68,11 +68,15 @@ const iconMap = {
   Share2: TrendingUp // Using TrendingUp as fallback for Share2
 };
 
-export function Sidebar() {
+interface SidebarProps {
+  onNavigate?: () => void;
+}
+
+export function Sidebar({ onNavigate }: SidebarProps = {}) {
   const { user, logout } = useAuth();
   const { t } = useTranslation(['common', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant']);
   const { isRTL } = useLanguage();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   
   // Get navigation items based on user role according to PRD specifications
   const navigationItems = user ? getNavigationForRole(user.role, t) : [];
@@ -94,6 +98,10 @@ export function Sidebar() {
                       ? "bg-primary text-primary-foreground" 
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
+                  onClick={() => {
+                    setLocation(item.path);
+                    onNavigate?.();
+                  }}
                 >
                   <Icon className="h-4 w-4 mr-3" />
                   <span>{item.label}</span>
