@@ -185,8 +185,9 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div 
           className={`hidden md:block md:fixed md:top-16 md:h-[calc(100vh-4rem)] md:w-64 md:z-30 border-r border-border bg-background`}
           style={{
-            right: direction === 'rtl' ? '0' : 'auto',
-            left: direction === 'rtl' ? 'auto' : '0'
+            right: direction === 'rtl' ? '0px' : 'auto',
+            left: direction === 'rtl' ? 'auto' : '0px',
+            position: 'fixed'
           }}
         >
           <Sidebar />
@@ -197,9 +198,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           className="flex-1 overflow-y-auto pb-20 md:pb-8" 
           dir={direction} 
           style={{
-            marginLeft: direction === 'ltr' ? '256px' : '0',
-            marginRight: direction === 'rtl' ? '256px' : '0',
-            width: 'calc(100vw - 256px)',
+            marginLeft: direction === 'ltr' ? '256px' : '0px',
+            marginRight: direction === 'rtl' ? '256px' : '0px',
+            width: direction === 'rtl' ? 'calc(100vw - 256px)' : 'calc(100vw - 256px)',
             minHeight: '100vh',
             direction: direction,
             textAlign: direction === 'rtl' ? 'right' : 'left'
