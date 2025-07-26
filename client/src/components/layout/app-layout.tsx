@@ -198,15 +198,16 @@ export function AppLayout({ children }: AppLayoutProps) {
         
         {/* Main Content - properly spaced for sidebar and bottom nav */}
         <main 
-          className={`flex-1 overflow-y-auto pb-20 md:pb-8 ${direction === 'rtl' ? 'rtl-main-content' : 'ltr-main-content'}`}
+          className="flex-1 overflow-y-auto pb-20 md:pb-8"
           dir={direction} 
           style={{
             position: 'relative',
             minHeight: '100vh',
             direction: direction,
             textAlign: direction === 'rtl' ? 'right' : 'left',
-            paddingLeft: direction === 'ltr' ? '256px' : '0',
-            paddingRight: direction === 'rtl' ? '256px' : '0'
+            marginLeft: direction === 'ltr' ? '256px' : '0',
+            marginRight: direction === 'rtl' ? '256px' : '0',
+            width: 'calc(100vw - 256px)'
           }}
         >
           <div className="min-h-full p-4 sm:p-6 lg:p-8" style={{direction: direction, textAlign: direction === 'rtl' ? 'right' : 'left'}}>
