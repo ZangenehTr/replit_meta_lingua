@@ -636,7 +636,7 @@ export function AdminStudents() {
             className="h-8 px-3 border-blue-200 hover:bg-blue-50 text-xs sm:text-sm"
           >
             <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-            <span className="hidden sm:inline">Back</span>
+            <span className="hidden sm:inline">{t('admin:students.back')}</span>
           </Button>
           
           <div className="text-right">
@@ -657,9 +657,9 @@ export function AdminStudents() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="newest">{t('admin:students.newestFirst')}</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="course">By Course</SelectItem>
-              <SelectItem value="level">By Level</SelectItem>
+              <SelectItem value="oldest">{t('admin:students.oldestFirst')}</SelectItem>
+              <SelectItem value="course">بر اساس دوره</SelectItem>
+              <SelectItem value="level">بر اساس سطح</SelectItem>
             </SelectContent>
           </Select>
           
@@ -691,7 +691,7 @@ export function AdminStudents() {
             <DialogTrigger asChild>
               <Button className="h-8 px-2 sm:px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs">
                 <Plus className="h-3 w-3" />
-                <span className="hidden sm:inline sm:ml-1">Add</span>
+                <span className="hidden sm:inline sm:ml-1">{t('admin:students.add')}</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
