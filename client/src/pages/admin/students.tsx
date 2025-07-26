@@ -696,46 +696,46 @@ export function AdminStudents() {
             </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Add New Student</DialogTitle>
+                <DialogTitle>{t('admin:students.addNewStudent')}</DialogTitle>
                 <DialogDescription>
-                  Create a comprehensive student profile with all required information
+                  {t('admin:students.createProfile')}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName">{t('admin:students.firstName')}</Label>
                   <Input 
                     id="firstName" 
-                    placeholder="Enter first name"
+                    placeholder={t('admin:students.enterFirstName')}
                     value={newStudentData.firstName}
                     onChange={(e) => setNewStudentData({...newStudentData, firstName: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName">{t('admin:students.lastName')}</Label>
                   <Input 
                     id="lastName" 
-                    placeholder="Enter last name"
+                    placeholder={t('admin:students.enterLastName')}
                     value={newStudentData.lastName}
                     onChange={(e) => setNewStudentData({...newStudentData, lastName: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('admin:students.email')}</Label>
                   <Input 
                     id="email" 
                     type="email" 
-                    placeholder="student@example.com"
+                    placeholder={t('admin:students.enterEmail')}
                     value={newStudentData.email}
                     onChange={(e) => setNewStudentData({...newStudentData, email: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">{t('admin:students.phoneNumber')}</Label>
                   <PhoneInput
                     value={newStudentData.phone}
                     onChange={(value) => setNewStudentData({...newStudentData, phone: value})}
-                    placeholder="Enter phone number"
+                    placeholder={t('admin:students.enterPhone')}
                   />
                 </div>
                 <div className="space-y-2">
@@ -761,15 +761,15 @@ export function AdminStudents() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="level">Proficiency Level</Label>
+                  <Label htmlFor="level">{t('admin:students.level')}</Label>
                   <Select value={newStudentData.level} onValueChange={(value) => setNewStudentData({...newStudentData, level: value})}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select level" />
+                      <SelectValue placeholder={t('admin:students.selectLevel')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="beginner">Beginner</SelectItem>
-                      <SelectItem value="intermediate">Intermediate</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
+                      <SelectItem value="beginner">{t('admin:students.beginner')}</SelectItem>
+                      <SelectItem value="intermediate">{t('admin:students.intermediate')}</SelectItem>
+                      <SelectItem value="advanced">{t('admin:students.advanced')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1820,8 +1820,8 @@ export function AdminStudents() {
           )}
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddStudent}>Add Student</Button>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>{t('admin:students.cancel')}</Button>
+            <Button onClick={handleAddStudent}>{t('admin:students.addStudent')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
