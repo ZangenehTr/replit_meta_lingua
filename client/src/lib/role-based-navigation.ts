@@ -40,9 +40,6 @@ export const getTeacherNavigation = (t: any): NavigationItem[] => [
 
 // Institute Management Platform (IMP) navigation - Admin/Supervisor
 export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
-  // Dashboard - Primary navigation item
-  { path: "/admin/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Admin"] },
-  { path: "/supervisor/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Supervisor"] },
   
   // Student Information System (SIS)
   { path: "/admin/students", icon: "Users", label: t('common:navigation.studentInformationSystem'), roles: ["Admin", "Supervisor"] },
@@ -129,17 +126,33 @@ export const getNavigationForRole = (role: string, t: any): NavigationItem[] => 
     case "Mentor":
       return getMentorNavigation(t);
     case "Admin":
+      return [
+        // Dashboard - Primary navigation item for Admin
+        { path: "/admin/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Admin"] },
+        ...getInstituteManagementNavigation(t),
+        ...getCallCenterNavigation(t)
+      ];
     case "Supervisor":
       return [
+        // Dashboard - Primary navigation item for Supervisor  
+        { path: "/supervisor/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Supervisor"] },
         ...getInstituteManagementNavigation(t),
         ...getCallCenterNavigation(t)
       ];
     case "Call Center Agent":
-      return getCallCenterNavigation(t);
+      return [
+        // Dashboard - Primary navigation item for Call Center Agent
+        { path: "/callcenter/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Call Center Agent"] },
+        ...getCallCenterNavigation(t)
+      ];
     case "Accountant":
-      return getInstituteManagementNavigation(t).filter(item => 
-        item.roles.includes("Accountant") || item.roles.includes("Admin")
-      );
+      return [
+        // Dashboard - Primary navigation item for Accountant
+        { path: "/accountant/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Accountant"] },
+        ...getInstituteManagementNavigation(t).filter(item => 
+          item.roles.includes("Accountant") || item.roles.includes("Admin")
+        )
+      ];
     default:
       return getStudentNavigation(t);
   }
