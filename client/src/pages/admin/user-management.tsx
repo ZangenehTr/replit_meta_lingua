@@ -117,29 +117,29 @@ export default function UserManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">{t('admin:userManagement.title')}</h1>
+          <h1 className="text-3xl font-bold">{t('admin:users.title')}</h1>
           <p className="text-gray-600 dark:text-gray-300">
-            {t('admin:userManagement.subtitle')}
+            {t('admin:users.subtitle')}
           </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="h-4 w-4 mr-2" />
-              {t('admin:userManagement.createUser')}
+              {t('admin:users.createUser')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{t('admin:userManagement.createNewUser')}</DialogTitle>
+              <DialogTitle>{t('admin:users.createNewUser')}</DialogTitle>
               <DialogDescription>
-                {t('admin:userManagement.addNewUser')}
+                {t('admin:users.fillInformation')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">{t('admin:userManagement.firstName')}</Label>
+                  <Label htmlFor="firstName">{t('admin:users.firstName')}</Label>
                   <Input
                     id="firstName"
                     value={newUser.firstName}

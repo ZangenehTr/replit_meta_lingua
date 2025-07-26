@@ -180,15 +180,15 @@ export function AppLayout({ children }: AppLayoutProps) {
       </header>
 
       {/* Main Layout with Sidebar */}
-      <div className="flex min-h-[calc(100vh-3.5rem)]">
+      <div className="flex min-h-[calc(100vh-3.5rem)]" dir={direction}>
         {/* Desktop Sidebar - hidden on mobile */}
-        <div className={`hidden md:block ${direction === 'rtl' ? 'md:fixed md:right-0 md:top-14 md:h-[calc(100vh-3.5rem)] md:w-64' : 'md:fixed md:left-0 md:top-14 md:h-[calc(100vh-3.5rem)] md:w-64'} md:z-30`}>
+        <div className={`hidden md:block ${direction === 'rtl' ? 'md:fixed md:right-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-64' : 'md:fixed md:left-0 md:top-16 md:h-[calc(100vh-4rem)] md:w-64'} md:z-30 border-r border-border bg-background`}>
           <Sidebar />
         </div>
         
         {/* Main Content - properly spaced for sidebar and bottom nav */}
-        <main className={`flex-1 w-full ${direction === 'rtl' ? 'md:mr-64' : 'md:ml-64'} p-2 xs:p-3 sm:p-4 md:p-6 lg:p-8 overflow-y-auto pb-20 md:pb-8`}>
-          <div className="max-w-full">
+        <main className={`flex-1 w-full ${direction === 'rtl' ? 'md:mr-64' : 'md:ml-64'} overflow-y-auto pb-20 md:pb-8`} dir={direction}>
+          <div className="min-h-full p-4 sm:p-6 lg:p-8">
             {children}
           </div>
         </main>

@@ -9,38 +9,59 @@
 @tailwind components;
 @tailwind utilities;
 
-/* RTL Support */
-.rtl {
-  direction: rtl;
-}
-
-/* Ensure proper text alignment for RTL languages */
-.rtl .text-left {
+/* Enhanced RTL Support */
+.rtl, [dir="rtl"] {
+  direction: rtl !important;
   text-align: right !important;
 }
 
-.rtl .text-right {
+/* Ensure proper text alignment for RTL languages */
+.rtl .text-left, [dir="rtl"] .text-left {
+  text-align: right !important;
+}
+
+.rtl .text-right, [dir="rtl"] .text-right {
   text-align: left !important;
 }
 
 /* Fix margin and padding for RTL */
-.rtl .ml-auto {
+.rtl .ml-auto, [dir="rtl"] .ml-auto {
   margin-left: unset !important;
   margin-right: auto !important;
 }
 
-.rtl .mr-auto {
+.rtl .mr-auto, [dir="rtl"] .mr-auto {
   margin-right: unset !important;
   margin-left: auto !important;
 }
 
 /* Fix flex alignment for RTL */
-.rtl .justify-start {
+.rtl .justify-start, [dir="rtl"] .justify-start {
   justify-content: flex-end !important;
 }
 
-.rtl .justify-end {
+.rtl .justify-end, [dir="rtl"] .justify-end {
   justify-content: flex-start !important;
+}
+
+/* Fix flex direction for RTL */
+.rtl .flex-row, [dir="rtl"] .flex-row {
+  flex-direction: row-reverse !important;
+}
+
+/* RTL Grid Layout Fixes */
+.rtl .grid, [dir="rtl"] .grid {
+  direction: rtl;
+}
+
+/* RTL Table Fixes */
+.rtl table, [dir="rtl"] table {
+  direction: rtl;
+}
+
+.rtl th, [dir="rtl"] th,
+.rtl td, [dir="rtl"] td {
+  text-align: right !important;
 }
 
 /* RTL-specific spacing utilities */
