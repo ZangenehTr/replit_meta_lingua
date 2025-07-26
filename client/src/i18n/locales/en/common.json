@@ -72,7 +72,14 @@
     "campaigns": "Campaigns",
     "mentees": "Mentees",
     "mentoringSessions": "Mentoring Sessions",
-    "progressTracking": "Progress Tracking"
+    "progressTracking": "Progress Tracking",
+    "whiteLabelManagement": "White-Label Management",
+    "smsManagement": "SMS Management",
+    "campaignManagement": "Campaign Management",
+    "websiteBuilder": "Website Builder",
+    "myClasses": "My Classes",
+    "schedule": "Schedule",
+    "resources": "Resources"
   },
   "toast": {
     "success": "Success",

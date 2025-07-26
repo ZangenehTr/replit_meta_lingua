@@ -52,7 +52,14 @@
     "campaigns": "کمپین‌ها",
     "mentees": "دانشجویان تحت نظر",
     "mentoringSessions": "جلسات راهنمایی",
-    "progressTracking": "پیگیری پیشرفت"
+    "progressTracking": "پیگیری پیشرفت",
+    "whiteLabelManagement": "مدیریت برند سفید",
+    "smsManagement": "مدیریت پیامک",
+    "campaignManagement": "مدیریت کمپین",
+    "websiteBuilder": "سازنده وب‌سایت",
+    "myClasses": "کلاس‌های من",
+    "schedule": "برنامه زمانی",
+    "resources": "منابع"
   },
   "supervisor": {
     "teachers": "مدرسان",
