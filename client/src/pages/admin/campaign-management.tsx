@@ -367,7 +367,7 @@ export default function CampaignManagementPage() {
           <div className="flex gap-2">
             <Button onClick={() => setShowNewCampaignDialog(true)} className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
               <Plus className="h-4 w-4 mr-2" />
-              New Campaign
+              {t('admin:campaigns.newCampaign')}
             </Button>
           </div>
         </div>
@@ -376,10 +376,10 @@ export default function CampaignManagementPage() {
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              360° Campaign Management
+              {t('admin:campaigns.campaignOverview')}
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              Professional marketing tools & social media integration
+              {t('admin:campaigns.campaignOverviewDesc')}
             </p>
           </div>
           <div className="flex space-x-2">
@@ -387,22 +387,22 @@ export default function CampaignManagementPage() {
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Mail className="h-4 w-4 mr-2" />
-                  Email Broadcast
+                  {t('admin:campaigns.emailBroadcast')}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Send Email to All Students</DialogTitle>
+                  <DialogTitle>{t('admin:campaigns.sendEmailToAllStudents')}</DialogTitle>
                   <DialogDescription>
-                    Broadcast email to all registered students
+                    {t('admin:campaigns.broadcastEmailDesc')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="emailContent">Email Content</Label>
+                    <Label htmlFor="emailContent">{t('admin:campaigns.emailContent')}</Label>
                     <Textarea
                       id="emailContent"
-                      placeholder="Enter your email message..."
+                      placeholder={t('admin:campaigns.emailPlaceholder')}
                       value={emailContent}
                       onChange={(e) => setEmailContent(e.target.value)}
                       rows={5}
@@ -411,10 +411,10 @@ export default function CampaignManagementPage() {
                   <div className="flex gap-2">
                     <Button onClick={handleEmailBroadcast} disabled={sendEmailMutation.isPending}>
                       <Send className="h-4 w-4 mr-2" />
-                      {sendEmailMutation.isPending ? 'Sending...' : 'Send Email'}
+                      {sendEmailMutation.isPending ? t('admin:campaigns.sending') : t('admin:campaigns.sendEmail')}
                     </Button>
                     <Button variant="outline" onClick={() => setShowEmailDialog(false)}>
-                      Cancel
+                      {t('admin:campaigns.cancel')}
                     </Button>
                   </div>
                 </div>
@@ -425,22 +425,22 @@ export default function CampaignManagementPage() {
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <MessageSquare className="h-4 w-4 mr-2" />
-                  Telegram Automation
+                  {t('admin:campaigns.telegramAutomation')}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Telegram Channel Automation</DialogTitle>
+                  <DialogTitle>{t('admin:campaigns.telegramChannelAutomation')}</DialogTitle>
                   <DialogDescription>
-                    Post to Telegram channel with auto-reply enabled
+                    {t('admin:campaigns.setupTelegramDesc')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="telegramContent">Message Content</Label>
+                    <Label htmlFor="telegramContent">{t('admin:campaigns.telegramMessage')}</Label>
                     <Textarea
                       id="telegramContent"
-                      placeholder="Enter your Telegram message..."
+                      placeholder={t('admin:campaigns.telegramPlaceholder')}
                       value={telegramContent}
                       onChange={(e) => setTelegramContent(e.target.value)}
                       rows={5}
@@ -448,15 +448,15 @@ export default function CampaignManagementPage() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <Switch defaultChecked />
-                    <Label>Enable AI Auto-Reply</Label>
+                    <Label>{t('admin:campaigns.enableAutoReply')}</Label>
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={handleTelegramAutomation} disabled={telegramMutation.isPending}>
                       <Send className="h-4 w-4 mr-2" />
-                      {telegramMutation.isPending ? 'Sending...' : 'Send & Configure'}
+                      {telegramMutation.isPending ? t('admin:campaigns.sending') : t('admin:campaigns.configure')}
                     </Button>
                     <Button variant="outline" onClick={() => setShowTelegramDialog(false)}>
-                      Cancel
+                      {t('admin:campaigns.cancel')}
                     </Button>
                   </div>
                 </div>
@@ -467,22 +467,22 @@ export default function CampaignManagementPage() {
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Bot className="h-4 w-4 mr-2" />
-                  AI Assistant
+                  {t('admin:campaigns.aiAssistant')}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Fine-tuned AI Assistant</DialogTitle>
+                  <DialogTitle>{t('admin:campaigns.fineTunedAiAssistant')}</DialogTitle>
                   <DialogDescription>
-                    Query the AI assistant for marketing insights
+                    {t('admin:campaigns.askAiForHelp')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="aiQuery">Your Question</Label>
+                    <Label htmlFor="aiQuery">{t('common:form.question')}</Label>
                     <Input
                       id="aiQuery"
-                      placeholder="e.g., How can I improve student engagement?"
+                      placeholder={t('admin:campaigns.aiQueryPlaceholder')}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           handleAIAssistant(e.currentTarget.value);
@@ -504,10 +504,10 @@ export default function CampaignManagementPage() {
                       disabled={aiAssistantMutation.isPending}
                     >
                       <Bot className="h-4 w-4 mr-2" />
-                      {aiAssistantMutation.isPending ? 'Asking...' : 'Ask AI'}
+                      {aiAssistantMutation.isPending ? t('admin:campaigns.asking') : t('admin:campaigns.askAi')}
                     </Button>
                     <Button variant="outline" onClick={() => setShowAIDialog(false)}>
-                      Close
+                      {t('common:actions.close')}
                     </Button>
                   </div>
                 </div>
@@ -516,7 +516,7 @@ export default function CampaignManagementPage() {
 
             <Button onClick={handleNewCampaign} disabled={createCampaignMutation.isPending}>
               <Plus className="h-4 w-4 mr-2" />
-              {createCampaignMutation.isPending ? 'Creating...' : 'New Campaign'}
+              {createCampaignMutation.isPending ? t('common:actions.creating') : t('admin:campaigns.newCampaign')}
             </Button>
           </div>
         </div>
@@ -526,7 +526,7 @@ export default function CampaignManagementPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Campaigns
+              {t('admin:campaigns.activeCampaigns')}
             </CardTitle>
             <Megaphone className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -541,7 +541,7 @@ export default function CampaignManagementPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Leads
+              {t('admin:campaigns.totalLeads')}
             </CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -556,7 +556,7 @@ export default function CampaignManagementPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Conversion Rate
+              {t('admin:campaigns.conversionRate')}
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -571,7 +571,7 @@ export default function CampaignManagementPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              ROI Average
+              {t('admin:campaigns.roiAverage')}
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -586,19 +586,19 @@ export default function CampaignManagementPage() {
 
       <Tabs defaultValue="campaigns" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="campaigns">Active Campaigns</TabsTrigger>
-          <TabsTrigger value="social">Social Media</TabsTrigger>
-          <TabsTrigger value="tools">Marketing Tools</TabsTrigger>
-          <TabsTrigger value="website">Website Builder</TabsTrigger>
-          <TabsTrigger value="analytics">360° Analytics</TabsTrigger>
+          <TabsTrigger value="campaigns">{t('admin:campaigns.activeCampaigns')}</TabsTrigger>
+          <TabsTrigger value="social">{t('admin:campaigns.social')}</TabsTrigger>
+          <TabsTrigger value="tools">{t('admin:campaigns.tools')}</TabsTrigger>
+          <TabsTrigger value="website">{t('admin:campaigns.websiteBuilderLandingPages')}</TabsTrigger>
+          <TabsTrigger value="analytics">{t('admin:campaigns.analytics')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="campaigns">
           <Card>
             <CardHeader>
-              <CardTitle>Campaign Performance Dashboard</CardTitle>
+              <CardTitle>{t('admin:campaigns.campaignPerformanceDashboard')}</CardTitle>
               <CardDescription>
-                Monitor and manage all marketing campaigns
+                {t('admin:campaigns.monitorAndManage')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -631,14 +631,14 @@ export default function CampaignManagementPage() {
                           
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                             <div>
-                              <p className="text-xs text-gray-500">Budget Spent</p>
+                              <p className="text-xs text-gray-500">{t('admin:campaigns.budgetSpent')}</p>
                               <p className="text-sm font-medium">
                                 {campaign.spent.toLocaleString()} / {campaign.budget.toLocaleString()} IRR
                               </p>
                               <Progress value={(campaign.spent / campaign.budget) * 100} className="h-2 mt-1" />
                             </div>
                             <div>
-                              <p className="text-xs text-gray-500">Conversions</p>
+                              <p className="text-xs text-gray-500">{t('admin:campaigns.conversions')}</p>
                               <p className="text-sm font-medium">{campaign.metrics?.conversions || 0}</p>
                               <p className="text-xs text-gray-400">
                                 {campaign.metrics?.clicks && campaign.metrics?.conversions 
@@ -647,11 +647,11 @@ export default function CampaignManagementPage() {
                               </p>
                             </div>
                             <div>
-                              <p className="text-xs text-gray-500">Cost per Lead</p>
+                              <p className="text-xs text-gray-500">{t('admin:campaigns.costPerLead')}</p>
                               <p className="text-sm font-medium">{(campaign.metrics?.cost_per_lead || 0).toLocaleString()} IRR</p>
                             </div>
                             <div>
-                              <p className="text-xs text-gray-500">ROI</p>
+                              <p className="text-xs text-gray-500">{t('admin:campaigns.roi')}</p>
                               <p className="text-sm font-medium text-green-600">{campaign.metrics?.roi || 0}%</p>
                             </div>
                           </div>
@@ -692,9 +692,9 @@ export default function CampaignManagementPage() {
         <TabsContent value="social">
           <Card>
             <CardHeader>
-              <CardTitle>Social Media Integration</CardTitle>
+              <CardTitle>{t('admin:campaigns.socialMediaIntegration')}</CardTitle>
               <CardDescription>
-                Manage Instagram, Telegram, YouTube, LinkedIn, and Twitter
+                {t('admin:campaigns.connectManagePlatforms')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -719,15 +719,15 @@ export default function CampaignManagementPage() {
                         
                         <div className="grid grid-cols-3 gap-4 mb-4">
                           <div>
-                            <p className="text-xs text-gray-500">Followers</p>
+                            <p className="text-xs text-gray-500">{t('admin:campaigns.followers')}</p>
                             <p className="text-lg font-bold">{platform.followers}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">Engagement</p>
+                            <p className="text-xs text-gray-500">{t('admin:campaigns.engagement')}</p>
                             <p className="text-lg font-bold text-blue-600">{platform.engagement}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">Last Post</p>
+                            <p className="text-xs text-gray-500">{t('admin:campaigns.lastPost')}</p>
                             <p className="text-sm">{platform.lastPost}</p>
                           </div>
                         </div>
@@ -741,7 +741,7 @@ export default function CampaignManagementPage() {
                             disabled={socialMediaMutation.isPending}
                           >
                             <ExternalLink className="h-4 w-4 mr-2" />
-                            View
+                            {t('admin:campaigns.view')}
                           </Button>
                           <Button 
                             size="sm" 
@@ -751,7 +751,7 @@ export default function CampaignManagementPage() {
                             disabled={socialMediaMutation.isPending}
                           >
                             <Settings className="h-4 w-4 mr-2" />
-                            Manage
+                            {t('admin:campaigns.manage')}
                           </Button>
                         </div>
                       </CardContent>
@@ -766,14 +766,14 @@ export default function CampaignManagementPage() {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <Calendar className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                      <h4 className="font-medium">Content Scheduler</h4>
-                      <p className="text-sm text-gray-500 mb-3">Schedule posts across all platforms</p>
+                      <h4 className="font-medium">{t('admin:campaigns.contentScheduler')}</h4>
+                      <p className="text-sm text-gray-500 mb-3">{t('admin:campaigns.schedulePostsAllPlatforms')}</p>
                       <Button 
                         size="sm" 
                         className="w-full"
                         onClick={() => handleCrossplatformTool('scheduler')}
                       >
-                        Setup Scheduler
+                        {t('admin:campaigns.setupScheduler')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -781,14 +781,14 @@ export default function CampaignManagementPage() {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <BarChart3 className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                      <h4 className="font-medium">Analytics Hub</h4>
-                      <p className="text-sm text-gray-500 mb-3">Unified social media analytics</p>
+                      <h4 className="font-medium">{t('admin:campaigns.analyticsHub')}</h4>
+                      <p className="text-sm text-gray-500 mb-3">{t('admin:campaigns.unifiedSocialAnalytics')}</p>
                       <Button 
                         size="sm" 
                         className="w-full"
                         onClick={() => handleCrossplatformTool('analytics')}
                       >
-                        View Analytics
+                        {t('admin:campaigns.viewAnalytics')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -796,14 +796,14 @@ export default function CampaignManagementPage() {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <Target className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-                      <h4 className="font-medium">Lead Tracking</h4>
-                      <p className="text-sm text-gray-500 mb-3">Track leads from each platform</p>
+                      <h4 className="font-medium">{t('admin:campaigns.leadTracking')}</h4>
+                      <p className="text-sm text-gray-500 mb-3">{t('admin:campaigns.trackLeadsFromPlatforms')}</p>
                       <Button 
                         size="sm" 
                         className="w-full"
                         onClick={() => handleCrossplatformTool('tracking')}
                       >
-                        Track Leads
+                        {t('admin:campaigns.trackLeads')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -816,9 +816,9 @@ export default function CampaignManagementPage() {
         <TabsContent value="tools">
           <Card>
             <CardHeader>
-              <CardTitle>Professional Marketing Tools</CardTitle>
+              <CardTitle>{t('admin:campaigns.professionalMarketingTools')}</CardTitle>
               <CardDescription>
-                Integrated third-party services and native tools
+                {t('admin:campaigns.integratedThirdParty')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -873,21 +873,21 @@ export default function CampaignManagementPage() {
         <TabsContent value="website">
           <Card>
             <CardHeader>
-              <CardTitle>Website Builder & Landing Pages</CardTitle>
+              <CardTitle>{t('admin:campaigns.websiteBuilderLandingPages')}</CardTitle>
               <CardDescription>
-                Create conversion-optimized pages for campaigns
+                {t('admin:campaigns.createConversionOptimized')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-12">
                 <Globe className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-xl font-medium mb-2">Website Builder Integration</h3>
+                <h3 className="text-xl font-medium mb-2">{t('admin:campaigns.websiteBuilderIntegration')}</h3>
                 <p className="text-gray-500 mb-6">
-                  This will be implemented as a comprehensive website builder for creating course showcase pages, landing pages, and campaign-specific websites.
+                  {t('admin:campaigns.websiteBuilderDesc')}
                 </p>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Landing Page
+                  {t('admin:campaigns.createLandingPage')}
                 </Button>
               </div>
             </CardContent>
@@ -897,33 +897,33 @@ export default function CampaignManagementPage() {
         <TabsContent value="analytics">
           <Card>
             <CardHeader>
-              <CardTitle>360° Campaign Analytics</CardTitle>
+              <CardTitle>{t('admin:campaigns.campaignAnalytics')}</CardTitle>
               <CardDescription>
-                Comprehensive performance tracking across all channels
+                {t('admin:campaigns.comprehensivePerformanceTracking')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Attribution Tracking</CardTitle>
+                    <CardTitle className="text-lg">{t('admin:campaigns.attributionTracking')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span>Instagram → Enrollment</span>
+                        <span>{t('admin:campaigns.instagramEnrollment')}</span>
                         <span className="font-medium">34%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Google Ads → Enrollment</span>
+                        <span>{t('admin:campaigns.googleAdsEnrollment')}</span>
                         <span className="font-medium">28%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Telegram → Enrollment</span>
+                        <span>{t('admin:campaigns.telegramEnrollment')}</span>
                         <span className="font-medium">22%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Referral → Enrollment</span>
+                        <span>{t('admin:campaigns.referralEnrollment')}</span>
                         <span className="font-medium">16%</span>
                       </div>
                     </div>
@@ -932,24 +932,24 @@ export default function CampaignManagementPage() {
                 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">ROI by Channel</CardTitle>
+                    <CardTitle className="text-lg">{t('admin:campaigns.roiByChannel')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span>Referral Program</span>
+                        <span>{t('admin:campaigns.referralProgram')}</span>
                         <span className="font-medium text-green-600">520%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Instagram Ads</span>
+                        <span>{t('admin:campaigns.instagramAds')}</span>
                         <span className="font-medium text-green-600">380%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Email Marketing</span>
+                        <span>{t('admin:campaigns.emailMarketing')}</span>
                         <span className="font-medium text-green-600">290%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Google Ads</span>
+                        <span>{t('admin:campaigns.googleAds')}</span>
                         <span className="font-medium text-blue-600">180%</span>
                       </div>
                     </div>
