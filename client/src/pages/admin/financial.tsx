@@ -151,6 +151,17 @@ export function AdminFinancial() {
     }
   };
 
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'completed': return t('admin:financial.completed');
+      case 'paid': return t('admin:financial.completed');
+      case 'pending': return t('admin:financial.pending');
+      case 'scheduled': return t('admin:financial.pending');
+      case 'failed': return t('admin:financial.failed');
+      default: return status;
+    }
+  };
+
   const getTransactionIcon = (type) => {
     switch (type) {
       case 'course_payment': return <CreditCard className="h-4 w-4 text-green-600" />;
@@ -165,51 +176,51 @@ export function AdminFinancial() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{t('financial.title')}</h1>
-          <p className="text-muted-foreground mt-2">{t('financial.subtitle')}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{t('admin:financial.title')}</h1>
+          <p className="text-muted-foreground mt-2">{t('admin:financial.overview')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" className="border-green-200 hover:bg-green-50">
             <Download className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">{t('financial.exportReport')}</span>
-            <span className="sm:hidden">Export</span>
+            <span className="hidden sm:inline">{t('admin:financial.exportData')}</span>
+            <span className="sm:hidden">{t('admin:financial.export')}</span>
           </Button>
           <Dialog>
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
                 <Plus className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">{t('financial.manualTransaction')}</span>
-                <span className="sm:hidden">Add</span>
+                <span className="hidden sm:inline">{t('admin:financial.manualTransaction')}</span>
+                <span className="sm:hidden">{t('admin:financial.add')}</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>{t('financial.createManualTransaction')}</DialogTitle>
+                <DialogTitle>{t('admin:financial.createManualTransaction')}</DialogTitle>
                 <DialogDescription>
-                  {t('financial.processManualPayments')}
+                  {t('admin:financial.processManualPayments')}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="transactionType">{t('transactionType')}</Label>
+                  <Label htmlFor="transactionType">{t('admin:financial.transactionType')}</Label>
                   <Select>
                     <SelectTrigger>
-                      <SelectValue placeholder={t('selectType')} />
+                      <SelectValue placeholder={t('admin:financial.selectType')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="payment">{t('coursePayment')}</SelectItem>
-                      <SelectItem value="refund">{t('refund')}</SelectItem>
-                      <SelectItem value="payout">{t('teacherPayout')}</SelectItem>
-                      <SelectItem value="adjustment">{t('manualAdjustment')}</SelectItem>
+                      <SelectItem value="payment">{t('admin:financial.coursePayment')}</SelectItem>
+                      <SelectItem value="refund">{t('admin:financial.refund')}</SelectItem>
+                      <SelectItem value="payout">{t('admin:financial.teacherPayout')}</SelectItem>
+                      <SelectItem value="adjustment">{t('admin:financial.manualAdjustment')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="amount">{t('amount')}</Label>
+                  <Label htmlFor="amount">{t('admin:financial.amount')}</Label>
                   <Input id="amount" type="number" placeholder="0.00" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="currency">{t('currency')}</Label>
+                  <Label htmlFor="currency">{t('admin:financial.currency')}</Label>
                   <Select>
                     <SelectTrigger>
                       <SelectValue placeholder="USD" />
@@ -222,23 +233,23 @@ export function AdminFinancial() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="paymentMethod">{t('paymentMethod')}</Label>
+                  <Label htmlFor="paymentMethod">{t('admin:financial.paymentMethod')}</Label>
                   <Select>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select method" />
+                      <SelectValue placeholder={t('admin:financial.selectMethod')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="shetab">Shetab (Iranian)</SelectItem>
-                      <SelectItem value="credit_card">Credit Card</SelectItem>
-                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="shetab">{t('admin:financial.shetabIranian')}</SelectItem>
+                      <SelectItem value="credit_card">{t('admin:financial.creditCards')}</SelectItem>
+                      <SelectItem value="bank_transfer">{t('admin:financial.bankTransfer')}</SelectItem>
+                      <SelectItem value="cash">{t('admin:financial.cash')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="flex justify-end gap-3">
-                <Button variant="outline">Cancel</Button>
-                <Button>Process Transaction</Button>
+                <Button variant="outline">{t('admin:financial.cancel')}</Button>
+                <Button>{t('admin:financial.processTransaction')}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -253,10 +264,10 @@ export function AdminFinancial() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="7days">Last 7 days</SelectItem>
-            <SelectItem value="30days">Last 30 days</SelectItem>
-            <SelectItem value="90days">Last 90 days</SelectItem>
-            <SelectItem value="1year">Last year</SelectItem>
+            <SelectItem value="7days">{t('admin:financial.last7Days')}</SelectItem>
+            <SelectItem value="30days">{t('admin:financial.last30Days')}</SelectItem>
+            <SelectItem value="90days">{t('admin:financial.last90Days')}</SelectItem>
+            <SelectItem value="1year">{t('admin:financial.lastYear')}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filterType} onValueChange={setFilterType}>
@@ -265,10 +276,10 @@ export function AdminFinancial() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Transactions</SelectItem>
-            <SelectItem value="payments">Course Payments</SelectItem>
-            <SelectItem value="payouts">Teacher Payouts</SelectItem>
-            <SelectItem value="refunds">Refunds</SelectItem>
+            <SelectItem value="all">{t('admin:financial.allTransactions')}</SelectItem>
+            <SelectItem value="payments">{t('admin:financial.coursePayments')}</SelectItem>
+            <SelectItem value="payouts">{t('admin:financial.teacherPayouts')}</SelectItem>
+            <SelectItem value="refunds">{t('admin:financial.refunds')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -304,18 +315,18 @@ export function AdminFinancial() {
       {/* Main Content Tabs */}
       <Tabs defaultValue="transactions" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="transactions">Recent Transactions</TabsTrigger>
-          <TabsTrigger value="payouts">Teacher Payouts</TabsTrigger>
-          <TabsTrigger value="analytics">Financial Analytics</TabsTrigger>
-          <TabsTrigger value="settings">Payment Settings</TabsTrigger>
+          <TabsTrigger value="transactions">{t('admin:financial.recentTransactions')}</TabsTrigger>
+          <TabsTrigger value="payouts">{t('admin:financial.teacherPayoutsTab')}</TabsTrigger>
+          <TabsTrigger value="analytics">{t('admin:financial.financialAnalytics')}</TabsTrigger>
+          <TabsTrigger value="settings">{t('admin:financial.paymentSettings')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="transactions" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Transaction History</CardTitle>
+              <CardTitle>{t('admin:financial.transactionHistory')}</CardTitle>
               <CardDescription>
-                All payment transactions, refunds, and payouts with Shetab integration
+                {t('admin:financial.transactionHistoryDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -330,7 +341,7 @@ export function AdminFinancial() {
                             {transaction.student || transaction.teacher}
                           </span>
                           <Badge className={getStatusColor(transaction.status)}>
-                            {transaction.status}
+                            {getStatusText(transaction.status)}
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-600">
@@ -365,9 +376,9 @@ export function AdminFinancial() {
         <TabsContent value="payouts" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Teacher Payout Management</CardTitle>
+              <CardTitle>{t('admin:financial.teacherPayoutManagement')}</CardTitle>
               <CardDescription>
-                Monthly payouts with commission calculations and payment scheduling
+                {t('admin:financial.teacherPayoutDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -385,25 +396,25 @@ export function AdminFinancial() {
                             <p className="text-sm text-gray-600">{payout.period}</p>
                           </div>
                           <Badge className={getStatusColor(payout.status)}>
-                            {payout.status}
+                            {getStatusText(payout.status)}
                           </Badge>
                         </div>
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
                           <div>
-                            <span className="text-gray-600">{t('courses')}:</span>
-                            <div className="font-medium">{payout.courses.length} active</div>
+                            <span className="text-gray-600">{t('admin:financial.courses')}:</span>
+                            <div className="font-medium">{payout.courses.length} {t('admin:financial.active')}</div>
                           </div>
                           <div>
-                            <span className="text-gray-600">{t('students')}:</span>
+                            <span className="text-gray-600">{t('admin:financial.students')}:</span>
                             <div className="font-medium">{payout.studentsCount}</div>
                           </div>
                           <div>
-                            <span className="text-gray-600">{t('totalEarnings')}:</span>
+                            <span className="text-gray-600">{t('admin:financial.totalEarnings')}:</span>
                             <div className="font-medium">${payout.totalEarnings.toLocaleString()}</div>
                           </div>
                           <div>
-                            <span className="text-gray-600">{t('commission')} ({payout.commission}%):</span>
+                            <span className="text-gray-600">{t('admin:financial.commission')} ({payout.commission}%):</span>
                             <div className="font-medium">${(payout.totalEarnings - payout.netPayout).toLocaleString()}</div>
                           </div>
                         </div>
@@ -413,9 +424,9 @@ export function AdminFinancial() {
                         <div className="text-xl font-bold text-green-600">
                           ${payout.netPayout.toLocaleString()}
                         </div>
-                        <p className="text-sm text-gray-600">Net Payout</p>
+                        <p className="text-sm text-gray-600">{t('admin:financial.netPayout')}</p>
                         <Button variant="outline" size="sm" className="mt-2">
-                          {payout.status === 'pending' ? 'Process Payment' : 'View Details'}
+                          {payout.status === 'pending' ? t('admin:financial.processPayment') : t('admin:financial.viewDetails')}
                         </Button>
                       </div>
                     </div>
@@ -430,12 +441,12 @@ export function AdminFinancial() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Revenue Breakdown</CardTitle>
+                <CardTitle>{t('admin:financial.revenueBreakdown')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span>Course Sales</span>
+                    <span>{t('admin:financial.courseSales')}</span>
                     <span className="font-bold">$389,450 (86%)</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -443,7 +454,7 @@ export function AdminFinancial() {
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span>Platform {t('commission')}</span>
+                    <span>{t('admin:financial.platformCommission')}</span>
                     <span className="font-bold">$63,440 (14%)</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -455,20 +466,20 @@ export function AdminFinancial() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Payment Methods</CardTitle>
+                <CardTitle>{t('admin:financial.paymentMethods')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span>Shetab (Iranian)</span>
+                    <span>{t('admin:financial.shetabIranian')}</span>
                     <span className="font-bold">68%</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Credit Cards</span>
+                    <span>{t('admin:financial.creditCards')}</span>
                     <span className="font-bold">24%</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Bank Transfer</span>
+                    <span>{t('admin:financial.bankTransfer')}</span>
                     <span className="font-bold">8%</span>
                   </div>
                 </div>
@@ -479,31 +490,31 @@ export function AdminFinancial() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Average Transaction</CardTitle>
+                <CardTitle>{t('admin:financial.averageTransaction')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">$347</div>
-                <p className="text-sm text-gray-600">Per course purchase</p>
+                <p className="text-sm text-gray-600">{t('admin:financial.perCoursePurchase')}</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Monthly Growth</CardTitle>
+                <CardTitle>{t('admin:financial.monthlyGrowth')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">+18.2%</div>
-                <p className="text-sm text-gray-600">Revenue increase</p>
+                <p className="text-sm text-gray-600">{t('admin:financial.revenueIncrease')}</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Failed Payments</CardTitle>
+                <CardTitle>{t('admin:financial.failedPayments')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">2.3%</div>
-                <p className="text-sm text-gray-600">Failure rate</p>
+                <p className="text-sm text-gray-600">{t('admin:financial.failureRate')}</p>
               </CardContent>
             </Card>
           </div>
@@ -513,16 +524,16 @@ export function AdminFinancial() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Payment Gateway Configuration</CardTitle>
-                <CardDescription>Configure Shetab and international payment methods</CardDescription>
+                <CardTitle>{t('admin:financial.paymentGatewayConfiguration')}</CardTitle>
+                <CardDescription>{t('admin:financial.paymentGatewayDescription')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium">Shetab Payment Gateway</h4>
-                    <p className="text-sm text-gray-600">Iranian national payment system</p>
+                    <h4 className="font-medium">{t('admin:financial.shetabPaymentGateway')}</h4>
+                    <p className="text-sm text-gray-600">{t('admin:financial.iranianNationalPaymentSystem')}</p>
                   </div>
-                  <Badge className="bg-green-100 text-green-800">Active</Badge>
+                  <Badge className="bg-green-100 text-green-800">{t('admin:financial.active')}</Badge>
                 </div>
                 
                 <div className="flex items-center justify-between">
