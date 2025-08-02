@@ -890,7 +890,7 @@ function ClassScheduleForm({
 
       <div className="flex justify-end gap-2 pt-4">
         <Button type="submit" disabled={isPending}>
-          {isPending ? 'Scheduling...' : 'Schedule Class'}
+          {isPending ? t('classScheduling.creating') : t('classScheduling.scheduleClass')}
         </Button>
       </div>
     </form>
