@@ -1,8 +1,8 @@
 # 🚀 Meta Lingua - Login Instructions
 
-## Application Status: ✅ FULLY OPERATIONAL
+## Application Status: ✅ AUTHENTICATION RESTORED
 
-Your Meta Lingua application is working perfectly! The issue is simply that you need to log in.
+Authentication system is now working! You can log in with the credentials below.
 
 ## Quick Login Solution
 
@@ -12,15 +12,11 @@ Your Meta Lingua application is working perfectly! The issue is simply that you 
 ```
 Admin Account:
 - Email: admin@test.com
-- Password: admin123
-
-Teacher Account:  
-- Email: teacher@test.com
-- Password: teacher123
+- Password: password123
 
 Student Account:
-- Email: student@test.com  
-- Password: student123
+- Email: ahmad.rezaei@example.com  
+- Password: password123
 ```
 
 ## What Just Got Fixed ✅
