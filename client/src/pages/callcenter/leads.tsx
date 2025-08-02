@@ -91,8 +91,8 @@ export default function LeadsPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Lead Created",
-        description: "New lead has been added successfully.",
+        title: t('callcenter:leads.leadCreated'),
+        description: t('callcenter:leads.leadCreatedDesc'),
       });
       setIsCreateDialogOpen(false);
       setNewLeadData({
@@ -110,8 +110,8 @@ export default function LeadsPage() {
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: "Failed to create lead. Please try again.",
+        title: t('common:error'),
+        description: t('common:errorTryAgain'),
         variant: "destructive",
       });
     },
@@ -130,14 +130,14 @@ export default function LeadsPage() {
     },
     onSuccess: (data) => {
       toast({
-        title: "VoIP Call Initiated",
-        description: `Call initiated to ${data.contactName}`,
+        title: t('callcenter:leads.voipCallInitiated'),
+        description: t('callcenter:leads.callInitiatedTo', { contactName: data.contactName }),
       });
     },
     onError: (error) => {
       toast({
-        title: "Call Failed",
-        description: "Failed to initiate VoIP call. Please check your connection.",
+        title: t('callcenter:leads.callFailed'),
+        description: t('callcenter:leads.callFailedDesc'),
         variant: "destructive",
       });
     },
@@ -147,8 +147,8 @@ export default function LeadsPage() {
   const handleVoIPCall = (lead: Lead) => {
     if (!lead.phone) {
       toast({
-        title: "No Phone Number",
-        description: `${lead.firstName} ${lead.lastName} does not have a phone number.`,
+        title: t('callcenter:leads.noPhoneNumber'),
+        description: t('callcenter:leads.noPhoneNumberDesc', { firstName: lead.firstName, lastName: lead.lastName }),
         variant: "destructive",
       });
       return;
@@ -198,10 +198,10 @@ export default function LeadsPage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                Lead Management
+                {t('callcenter:leads.title')}
               </h1>
               <p className="text-gray-600 dark:text-gray-300">
-                Manage and track potential students and prospects
+                {t('callcenter:leads.subtitle')}
               </p>
             </div>
             <div className="flex gap-2">
@@ -210,109 +210,109 @@ export default function LeadsPage() {
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Headphones className="w-4 h-4 mr-2" />
-                VoIP Center
+                {t('callcenter:leads.voipCenter')}
               </Button>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-green-600 hover:bg-green-700 text-white">
                     <Plus className="w-4 h-4 mr-2" />
-                    Add New Lead
+                    {t('callcenter:leads.addNewLead')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
-                    <DialogTitle>Add New Lead</DialogTitle>
+                    <DialogTitle>{t('callcenter:leads.createNewLead')}</DialogTitle>
                     <DialogDescription>
-                      Create a new lead entry for potential students
+                      {t('callcenter:leads.createNewLeadDesc')}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="firstName">{t('callcenter:leads.firstName')} *</Label>
                       <Input
                         id="firstName"
                         value={newLeadData.firstName}
                         onChange={(e) => setNewLeadData({ ...newLeadData, firstName: e.target.value })}
-                        placeholder="Enter first name"
+                        placeholder={t('callcenter:leads.enterFirstName')}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="lastName">{t('callcenter:leads.lastName')} *</Label>
                       <Input
                         id="lastName"
                         value={newLeadData.lastName}
                         onChange={(e) => setNewLeadData({ ...newLeadData, lastName: e.target.value })}
-                        placeholder="Enter last name"
+                        placeholder={t('callcenter:leads.enterLastName')}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">{t('callcenter:leads.email')}</Label>
                       <Input
                         id="email"
                         type="email"
                         value={newLeadData.email}
                         onChange={(e) => setNewLeadData({ ...newLeadData, email: e.target.value })}
-                        placeholder="Enter email address"
+                        placeholder={t('callcenter:leads.enterEmail')}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone">Phone</Label>
+                      <Label htmlFor="phone">{t('callcenter:leads.phoneNumber')} *</Label>
                       <Input
                         id="phone"
                         value={newLeadData.phone}
                         onChange={(e) => setNewLeadData({ ...newLeadData, phone: e.target.value })}
-                        placeholder="Enter phone number"
+                        placeholder={t('callcenter:leads.enterPhone')}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="source">Source</Label>
+                      <Label htmlFor="source">{t('callcenter:leads.source')}</Label>
                       <Select value={newLeadData.source} onValueChange={(value) => setNewLeadData({ ...newLeadData, source: value })}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select source" />
+                          <SelectValue placeholder={t('callcenter:leads.selectSource')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="website">Website</SelectItem>
-                          <SelectItem value="social-media">Social Media</SelectItem>
-                          <SelectItem value="referral">Referral</SelectItem>
-                          <SelectItem value="cold-call">Cold Call</SelectItem>
-                          <SelectItem value="email-campaign">Email Campaign</SelectItem>
-                          <SelectItem value="event">Event</SelectItem>
+                          <SelectItem value="website">{t('callcenter:leads.sources.website')}</SelectItem>
+                          <SelectItem value="social-media">{t('callcenter:leads.sources.socialMedia')}</SelectItem>
+                          <SelectItem value="referral">{t('callcenter:leads.sources.referral')}</SelectItem>
+                          <SelectItem value="cold-call">{t('callcenter:leads.sources.coldCall')}</SelectItem>
+                          <SelectItem value="email-campaign">{t('callcenter:leads.sources.emailCampaign')}</SelectItem>
+                          <SelectItem value="event">{t('callcenter:leads.sources.event')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="priority">Priority</Label>
-                      <Select value={newLeadData.priority} onValueChange={(value) => setNewLeadData({ ...newLeadData, priority: value })}>
+                      <Label htmlFor="priority">{t('callcenter:leads.priority')}</Label>
+                      <Select value={newLeadData.priority} onValueChange={(value) => setNewLeadData({ ...newLeadData, priority: value as 'low' | 'medium' | 'high' })}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
+                          <SelectValue placeholder={t('callcenter:leads.selectPriority')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="low">{t('callcenter:leads.priorities.low')}</SelectItem>
+                          <SelectItem value="medium">{t('callcenter:leads.priorities.medium')}</SelectItem>
+                          <SelectItem value="high">{t('callcenter:leads.priorities.high')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor="notes">Notes</Label>
+                      <Label htmlFor="notes">{t('callcenter:leads.notes')}</Label>
                       <Textarea
                         id="notes"
                         value={newLeadData.notes}
                         onChange={(e) => setNewLeadData({ ...newLeadData, notes: e.target.value })}
-                        placeholder="Enter any additional notes about the lead"
+                        placeholder={t('callcenter:leads.additionalNotes')}
                         rows={3}
                       />
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 mt-4">
                     <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                      Cancel
+                      {t('common:actions.cancel')}
                     </Button>
                     <Button 
                       onClick={() => createLeadMutation.mutate(newLeadData)}
                       disabled={createLeadMutation.isPending}
                     >
-                      {createLeadMutation.isPending ? 'Creating...' : 'Create Lead'}
+                      {createLeadMutation.isPending ? t('callcenter:leads.creating') : t('callcenter:leads.createLead')}
                     </Button>
                   </div>
                 </DialogContent>
