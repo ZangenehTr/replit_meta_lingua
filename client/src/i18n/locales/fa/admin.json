@@ -378,7 +378,14 @@
     "enterGuardianPhone": "شماره تلفن سرپرست را وارد کنید",
     "active": "فعال",
     "inactive": "غیرفعال",
-    "pending": "در انتظار"
+    "pending": "در انتظار",
+    "phone": "شماره تلفن",
+    "notes": "یادداشت‌ها",
+    "selectedCourses": "دوره‌های انتخاب شده",
+    "totalFee": "کل هزینه",
+    "courseRegistration": "ثبت‌نام دوره",
+    "selectCoursesDesc": "دوره‌های دانشجو را انتخاب کنید",
+    "updateStudent": "به‌روزرسانی دانشجو"
   },
   "courses": {
     "title": "مدیریت دوره‌ها",
