@@ -552,6 +552,7 @@ export class MemStorage implements IStorage {
       lastName: "Rezaei",
       role: "student",
       phoneNumber: "+989123456789",
+      phone: "+989123456789", // Compatibility alias
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
       isActive: true,
       preferences: { theme: "light", language: "en", notifications: true },
@@ -565,6 +566,36 @@ export class MemStorage implements IStorage {
     };
     this.users.set(1, defaultUser);
 
+    // Add admin user for testing
+    const testAdmin: User = {
+      id: 4,
+      email: "admin@test.com",
+      password: "$2b$10$mHRVMjXhOHQpGYrZg3sWH.Z8nFYJy4E8V6QJeF8kVpRhT1UhKG9tO", // password123
+      firstName: "Admin",
+      lastName: "User",
+      role: "Admin",
+      phoneNumber: "+98-912-345-6789",
+      phone: "+98-912-345-6789", // Compatibility alias
+      avatar: null,
+      isActive: true,
+      preferences: { theme: "light", language: "en", notifications: true },
+      walletBalance: 0,
+      totalCredits: 0,
+      memberTier: "diamond",
+      streakDays: 0,
+      totalLessons: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.users.set(4, testAdmin);
+    
+    // Update user schema compatibility for database 
+    this.users.forEach((user, id) => {
+      if (!user.phone && user.phoneNumber) {
+        user.phone = user.phoneNumber; // Add phone compatibility field
+      }
+    });
+
     // Add some tutors
     const tutor1: User = {
       id: 2,
@@ -574,6 +605,7 @@ export class MemStorage implements IStorage {
       lastName: "Johnson",
       role: "teacher",
       phoneNumber: "+1234567890",
+      phone: "+1234567890", // Compatibility alias
       avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
       isActive: true,
       preferences: { theme: "light", language: "en", notifications: true },
@@ -595,6 +627,7 @@ export class MemStorage implements IStorage {
       lastName: "Chen",
       role: "teacher",
       phoneNumber: "+1234567891",
+      phone: "+1234567891", // Compatibility alias
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
       isActive: true,
       preferences: { theme: "light", language: "en", notifications: true },
@@ -725,7 +758,7 @@ export class MemStorage implements IStorage {
       updatedAt: new Date()
     };
 
-    this.currentId = 4;
+    this.currentId = 43;
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -1300,6 +1333,28 @@ export class MemStorage implements IStorage {
 
   async createStudentProfile(profile: InsertUserProfile): Promise<UserProfile> {
     return this.createUserProfile(profile);
+  }
+
+  // Add missing methods required by server/routes.ts
+  async getPaymentHistory(userId?: number): Promise<Payment[]> {
+    if (userId) {
+      return Array.from(this.payments.values()).filter(p => p.userId === userId);
+    }
+    return Array.from(this.payments.values());
+  }
+
+  async getTeachers(): Promise<User[]> {
+    return Array.from(this.users.values()).filter(user => 
+      user.role === "Teacher" || user.role === "teacher" && user.isActive
+    );
+  }
+
+  async getUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async getSessions(): Promise<Session[]> {
+    return this.getAllSessions();
   }
 
   async updateStudentProfile(id: number, updates: Partial<UserProfile>): Promise<UserProfile | undefined> {
