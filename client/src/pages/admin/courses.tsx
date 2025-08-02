@@ -421,7 +421,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                         {t('admin:courses.active')}
                       </FormLabel>
                       <p className="text-sm text-muted-foreground">
-                        Make this course available for enrollment
+                        {t('admin:courses.makeAvailableForEnrollment')}
                       </p>
                     </div>
                     <FormControl>
@@ -444,7 +444,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                         {t('admin:courses.featured')}
                       </FormLabel>
                       <p className="text-sm text-muted-foreground">
-                        Highlight this course in featured section
+                        {t('admin:courses.highlightInFeaturedSection')}
                       </p>
                     </div>
                     <FormControl>
@@ -461,9 +461,9 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
             {/* Scheduling Section - Conditional based on delivery mode */}
             {form.watch('deliveryMode') !== 'callern' && (
               <div className="space-y-4 border-t pt-6">
-                <h3 className="text-lg font-semibold">Class Schedule Settings</h3>
+                <h3 className="text-lg font-semibold">{t('admin:courses.classScheduleSettings')}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Set the days and times when this course will be held
+                  {t('admin:courses.setDaysAndTimes')}
                 </p>
                 
                 {/* Weekdays Selection */}
@@ -472,26 +472,34 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                   name="weekdays"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Class Days</FormLabel>
+                      <FormLabel>{t('admin:courses.classDays')}</FormLabel>
                       <div className="grid grid-cols-4 gap-2">
-                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                          <div key={day} className="flex items-center space-x-2">
+                        {[
+                          { key: 'Monday', label: t('admin:courses.monday'), short: t('admin:courses.mon') },
+                          { key: 'Tuesday', label: t('admin:courses.tuesday'), short: t('admin:courses.tue') },
+                          { key: 'Wednesday', label: t('admin:courses.wednesday'), short: t('admin:courses.wed') },
+                          { key: 'Thursday', label: t('admin:courses.thursday'), short: t('admin:courses.thu') },
+                          { key: 'Friday', label: t('admin:courses.friday'), short: t('admin:courses.fri') },
+                          { key: 'Saturday', label: t('admin:courses.saturday'), short: t('admin:courses.sat') },
+                          { key: 'Sunday', label: t('admin:courses.sunday'), short: t('admin:courses.sun') }
+                        ].map((day) => (
+                          <div key={day.key} className="flex items-center space-x-2">
                             <input
                               type="checkbox"
-                              id={day}
-                              checked={field.value?.includes(day.toLowerCase()) || false}
+                              id={day.key}
+                              checked={field.value?.includes(day.key.toLowerCase()) || false}
                               onChange={(e) => {
                                 const currentDays = field.value || [];
                                 if (e.target.checked) {
-                                  field.onChange([...currentDays, day.toLowerCase()]);
+                                  field.onChange([...currentDays, day.key.toLowerCase()]);
                                 } else {
-                                  field.onChange(currentDays.filter(d => d !== day.toLowerCase()));
+                                  field.onChange(currentDays.filter(d => d !== day.key.toLowerCase()));
                                 }
                               }}
                               className="h-4 w-4 rounded border-gray-300"
                             />
-                            <label htmlFor={day} className="text-sm font-medium">
-                              {day.substring(0, 3)}
+                            <label htmlFor={day.key} className="text-sm font-medium">
+                              {day.short}
                             </label>
                           </div>
                         ))}
@@ -508,7 +516,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                     name="startTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Start Time</FormLabel>
+                        <FormLabel>{t('admin:courses.startTime')}</FormLabel>
                         <FormControl>
                           <Input type="time" {...field} />
                         </FormControl>
@@ -522,7 +530,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                     name="endTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>End Time</FormLabel>
+                        <FormLabel>{t('admin:courses.endTime')}</FormLabel>
                         <FormControl>
                           <Input type="time" {...field} />
                         </FormControl>
@@ -536,7 +544,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                     name="firstSessionDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Session Date</FormLabel>
+                        <FormLabel>{t('admin:courses.firstSessionDate')}</FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>
