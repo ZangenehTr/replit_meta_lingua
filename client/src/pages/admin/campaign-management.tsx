@@ -81,6 +81,16 @@ export default function CampaignManagementPage() {
   const [emailContent, setEmailContent] = useState('');
   const [telegramContent, setTelegramContent] = useState('');
   const [aiResponse, setAIResponse] = useState('');
+  const [newCampaignData, setNewCampaignData] = useState({
+    name: '',
+    type: 'enrollment' as const,
+    targetAudience: 'persian_learners',
+    budget: 10000000,
+    channels: [] as string[],
+    startDate: '',
+    endDate: '',
+    description: ''
+  });
 
   // Fetch campaigns data
   const { data: campaigns = [], isLoading } = useQuery<Campaign[]>({
@@ -116,6 +126,7 @@ export default function CampaignManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/campaigns'] });
       toast({ title: t('common:toast.newCampaignCreated') });
       setShowNewCampaignDialog(false);
+      resetNewCampaignForm();
     },
     onError: () => {
       toast({ title: t('common:toast.failedToCreateCampaign'), variant: "destructive" });
@@ -179,14 +190,32 @@ export default function CampaignManagementPage() {
 
   // Button event handlers for campaign management operations
   const handleNewCampaign = () => {
-    const newCampaignData = {
-      name: `کمپین جدید ${Date.now()}`, // New Campaign with timestamp
+    setShowNewCampaignDialog(true);
+  };
+
+  const handleCreateCampaign = () => {
+    if (!newCampaignData.name.trim()) {
+      toast({ title: t('admin:campaigns.pleaseEnterCampaignName'), variant: "destructive" });
+      return;
+    }
+    if (newCampaignData.channels.length === 0) {
+      toast({ title: t('admin:campaigns.pleaseSelectChannels'), variant: "destructive" });
+      return;
+    }
+    createCampaignMutation.mutate(newCampaignData);
+  };
+
+  const resetNewCampaignForm = () => {
+    setNewCampaignData({
+      name: '',
       type: 'enrollment',
       targetAudience: 'persian_learners',
-      budget: 10000000, // 10M IRR default budget
-      channels: ['Instagram', 'Telegram']
-    };
-    createCampaignMutation.mutate(newCampaignData);
+      budget: 10000000,
+      channels: [],
+      startDate: '',
+      endDate: '',
+      description: ''
+    });
   };
 
   const handleSocialMediaAction = (platform: string, action: string) => {
@@ -995,6 +1024,28 @@ export default function CampaignManagementPage() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* New Campaign Creation Dialog */}
+      <Dialog open={showNewCampaignDialog} onOpenChange={setShowNewCampaignDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t('admin:campaigns.createNewCampaign')}</DialogTitle>
+            <DialogDescription>
+              {t('admin:campaigns.createNewCampaignDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          <NewCampaignForm 
+            campaignData={newCampaignData}
+            onDataChange={setNewCampaignData}
+            onSave={handleCreateCampaign}
+            onCancel={() => {
+              setShowNewCampaignDialog(false);
+              resetNewCampaignForm();
+            }}
+            isLoading={createCampaignMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1151,6 +1202,153 @@ function ToolConfigurationForm({
         </Button>
         <Button onClick={handleSave} disabled={isLoading}>
           {isLoading ? t('common:actions.saving') : t('common:actions.save')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// New Campaign Form Component
+function NewCampaignForm({ 
+  campaignData, 
+  onDataChange, 
+  onSave, 
+  onCancel, 
+  isLoading 
+}: { 
+  campaignData: any; 
+  onDataChange: (data: any) => void; 
+  onSave: () => void; 
+  onCancel: () => void; 
+  isLoading: boolean;
+}) {
+  const { t } = useTranslation(['admin', 'common']);
+
+  const updateField = (field: string, value: any) => {
+    onDataChange({ ...campaignData, [field]: value });
+  };
+
+  const toggleChannel = (channel: string) => {
+    const channels = campaignData.channels.includes(channel)
+      ? campaignData.channels.filter((ch: string) => ch !== channel)
+      : [...campaignData.channels, channel];
+    updateField('channels', channels);
+  };
+
+  const availableChannels = ['Instagram', 'Telegram', 'YouTube', 'LinkedIn', 'Email', 'Google Ads'];
+  
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="campaignName">{t('admin:campaigns.campaignName')} *</Label>
+          <Input
+            id="campaignName"
+            placeholder={t('admin:campaigns.enterCampaignName')}
+            value={campaignData.name}
+            onChange={(e) => updateField('name', e.target.value)}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="campaignType">{t('admin:campaigns.campaignType')}</Label>
+          <Select value={campaignData.type} onValueChange={(value) => updateField('type', value)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="enrollment">{t('admin:campaigns.campaignTypes.enrollment')}</SelectItem>
+              <SelectItem value="retention">{t('admin:campaigns.campaignTypes.retention')}</SelectItem>
+              <SelectItem value="referral">{t('admin:campaigns.campaignTypes.referral')}</SelectItem>
+              <SelectItem value="awareness">{t('admin:campaigns.campaignTypes.awareness')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">{t('admin:campaigns.description')}</Label>
+        <Textarea
+          id="description"
+          placeholder={t('admin:campaigns.enterDescription')}
+          value={campaignData.description}
+          onChange={(e) => updateField('description', e.target.value)}
+          rows={3}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="budget">{t('admin:campaigns.budget')} (IRR)</Label>
+          <Input
+            id="budget"
+            type="number"
+            placeholder="10,000,000"
+            value={campaignData.budget}
+            onChange={(e) => updateField('budget', parseInt(e.target.value) || 0)}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="targetAudience">{t('admin:campaigns.targetAudience')}</Label>
+          <Select value={campaignData.targetAudience} onValueChange={(value) => updateField('targetAudience', value)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="persian_learners">{t('admin:campaigns.persianLearners')}</SelectItem>
+              <SelectItem value="new_students">{t('admin:campaigns.newStudents')}</SelectItem>
+              <SelectItem value="existing_students">{t('admin:campaigns.existingStudents')}</SelectItem>
+              <SelectItem value="all_users">{t('admin:campaigns.allUsers')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="startDate">{t('admin:campaigns.startDate')}</Label>
+          <Input
+            id="startDate"
+            type="date"
+            value={campaignData.startDate}
+            onChange={(e) => updateField('startDate', e.target.value)}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="endDate">{t('admin:campaigns.endDate')}</Label>
+          <Input
+            id="endDate"
+            type="date"
+            value={campaignData.endDate}
+            onChange={(e) => updateField('endDate', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>{t('admin:campaigns.marketingChannels')} *</Label>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {availableChannels.map(channel => (
+            <div key={channel} className="flex items-center space-x-2">
+              <Switch
+                id={channel}
+                checked={campaignData.channels.includes(channel)}
+                onCheckedChange={() => toggleChannel(channel)}
+              />
+              <Label htmlFor={channel} className="text-sm">{channel}</Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-end space-x-2 pt-4 border-t">
+        <Button variant="outline" onClick={onCancel}>
+          {t('common:actions.cancel')}
+        </Button>
+        <Button onClick={onSave} disabled={isLoading}>
+          {isLoading ? t('common:actions.creating') : t('admin:campaigns.createCampaign')}
         </Button>
       </div>
     </div>
