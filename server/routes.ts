@@ -2,6 +2,9 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { 
   filterTeachers, 
   filterActiveTeachers,
@@ -4561,14 +4564,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get available teachers
+  // Get available teachers - directly from database 
   app.get("/api/admin/teachers", authenticateToken, async (req: any, res) => {
     try {
-      const users = await storage.getAllUsers();
-      const allTeachers = filterTeachers(users);
-      console.log(`Found ${allTeachers.length} teachers total`);
+      // Direct database query to get all teachers (bypassing storage layer compatibility issues)
+      const dbTeachers = await db.select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        role: users.role,
+        isActive: users.isActive,
+        phoneNumber: users.phoneNumber
+      })
+      .from(users)
+      .where(eq(users.role, 'teacher'));
       
-      const teachers = allTeachers
+      console.log(`Found ${dbTeachers.length} teachers directly from database`);
+      
+      const teachers = dbTeachers
         .filter(teacher => teacher.isActive) // Only active teachers
         .map(teacher => ({
           id: teacher.id,

@@ -287,7 +287,13 @@
     "day": "روز",
     "week": "هفته",
     "month": "ماه",
-    "today": "امروز"
+    "today": "امروز",
+    "scheduleClass": "زمان‌بندی کلاس",
+    "allLevels": "همه سطوح",
+    "allRooms": "همه اتاق‌ها", 
+    "allTeachers": "همه مدرسان",
+    "allTypes": "همه انواع",
+    "classScheduling": "زمان‌بندی کلاس"
   },
   "forms": {
     "firstName": "نام",
