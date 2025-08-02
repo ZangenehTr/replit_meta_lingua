@@ -570,7 +570,7 @@ export class MemStorage implements IStorage {
     const testAdmin: User = {
       id: 4,
       email: "admin@test.com",
-      password: "$2b$10$mHRVMjXhOHQpGYrZg3sWH.Z8nFYJy4E8V6QJeF8kVpRhT1UhKG9tO", // password123
+      password: "$2b$10$tO5lVOUKjyeG4Kv39wvYcO4dIhOkxxh6iFezQmMApZt39r2crgFmy", // password123 (same hash as defaultUser)
       firstName: "Admin",
       lastName: "User",
       role: "Admin",
@@ -2388,4 +2388,4 @@ export class MemStorage implements IStorage {
 
 import { DatabaseStorage } from "./database-storage";
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage(); // Temporarily using MemStorage until database schema is updated
