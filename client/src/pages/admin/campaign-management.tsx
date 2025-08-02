@@ -272,7 +272,7 @@ export default function CampaignManagementPage() {
     mutationFn: async (emailData: { recipients: string[], subject: string, content: string }) => {
       return apiRequest('/api/admin/send-email', {
         method: 'POST',
-        body: emailData
+        body: JSON.stringify(emailData)
       });
     },
     onSuccess: () => {
@@ -290,7 +290,7 @@ export default function CampaignManagementPage() {
     mutationFn: async (telegramData: { channelId: string, message: string, autoReply: boolean }) => {
       return apiRequest('/api/admin/telegram-automation', {
         method: 'POST',
-        body: telegramData
+        body: JSON.stringify(telegramData)
       });
     },
     onSuccess: () => {
@@ -308,7 +308,7 @@ export default function CampaignManagementPage() {
     mutationFn: async (query: string) => {
       return apiRequest('/api/admin/ai-assistant', {
         method: 'POST',
-        body: { query }
+        body: JSON.stringify({ query })
       });
     },
     onSuccess: (data) => {
@@ -610,7 +610,7 @@ export default function CampaignManagementPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {campaigns.map((campaign) => (
+                  {(campaigns || []).map((campaign) => (
                   <Card key={campaign.id} className="border-l-4 border-l-blue-500">
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start">
@@ -657,7 +657,7 @@ export default function CampaignManagementPage() {
                           </div>
                           
                           <div className="flex space-x-2">
-                            {campaign.channels.map((channel) => (
+                            {(campaign.channels || []).map((channel) => (
                               <Badge key={channel} variant="outline" className="text-xs">
                                 {channel}
                               </Badge>
