@@ -4565,15 +4565,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/teachers", authenticateToken, async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
-      const teachers = filterTeachers(users)
+      const allTeachers = filterTeachers(users);
+      console.log(`Found ${allTeachers.length} teachers total`);
+      
+      const teachers = allTeachers
+        .filter(teacher => teacher.isActive) // Only active teachers
         .map(teacher => ({
           id: teacher.id,
           name: `${teacher.firstName} ${teacher.lastName}`,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName,
+          email: teacher.email,
+          role: teacher.role,
           specializations: ['Persian', 'English', 'Arabic'], // Mock data
           availability: [],
           rating: 4.5 + Math.random() * 0.5 // Mock rating
         }));
 
+      console.log(`Returning ${teachers.length} active teachers:`, teachers.map(t => t.name));
       res.json(teachers);
     } catch (error) {
       console.error('Error fetching teachers:', error);
