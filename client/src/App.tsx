@@ -269,6 +269,11 @@ function Router() {
           <AdminTeacherManagement />
         </ProtectedRoute>
       </Route>
+      <Route path="/admin/teacher-management">
+        <ProtectedRoute>
+          <AdminTeacherManagement />
+        </ProtectedRoute>
+      </Route>
       <Route path="/callcenter">
         <ProtectedRoute>
           <CallCenterDashboard />
