@@ -214,9 +214,9 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="English">English</SelectItem>
-                        <SelectItem value="Persian">Persian</SelectItem>
-                        <SelectItem value="Arabic">Arabic</SelectItem>
+                        <SelectItem value="English">{t('admin:courses.english')}</SelectItem>
+                        <SelectItem value="Persian">{t('admin:courses.persian')}</SelectItem>
+                        <SelectItem value="Arabic">{t('admin:courses.arabic')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -229,18 +229,18 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="targetLanguage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Target Language</FormLabel>
+                    <FormLabel>{t('admin:courses.targetLanguage')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select target language" />
+                          <SelectValue placeholder={t('admin:courses.selectTargetLanguage')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="persian">Persian</SelectItem>
-                        <SelectItem value="english">English</SelectItem>
-                        <SelectItem value="arabic">Arabic</SelectItem>
-                        <SelectItem value="french">French</SelectItem>
+                        <SelectItem value="persian">{t('admin:courses.persian')}</SelectItem>
+                        <SelectItem value="english">{t('admin:courses.english')}</SelectItem>
+                        <SelectItem value="arabic">{t('admin:courses.arabic')}</SelectItem>
+                        <SelectItem value="french">{t('admin:courses.french')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -253,17 +253,17 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="level"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Course Level</FormLabel>
+                    <FormLabel>{t('admin:courses.level')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select level" />
+                          <SelectValue placeholder={t('admin:courses.selectLevel')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="advanced">Advanced</SelectItem>
+                        <SelectItem value="beginner">{t('admin:courses.beginner')}</SelectItem>
+                        <SelectItem value="intermediate">{t('admin:courses.intermediate')}</SelectItem>
+                        <SelectItem value="advanced">{t('admin:courses.advanced')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -279,7 +279,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="totalSessions"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Total Sessions</FormLabel>
+                    <FormLabel>{t('admin:courses.totalSessions')}</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="12" {...field} />
                     </FormControl>
@@ -293,18 +293,18 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="sessionDuration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Session Duration (minutes)</FormLabel>
+                    <FormLabel>{t('admin:courses.sessionDuration')}</FormLabel>
                     <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select duration" />
+                          <SelectValue placeholder={t('admin:courses.selectDuration')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="60">60 minutes</SelectItem>
-                        <SelectItem value="90">90 minutes</SelectItem>
-                        <SelectItem value="120">120 minutes</SelectItem>
-                        <SelectItem value="180">180 minutes</SelectItem>
+                        <SelectItem value="60">{t('admin:courses.minutes60')}</SelectItem>
+                        <SelectItem value="90">{t('admin:courses.minutes90')}</SelectItem>
+                        <SelectItem value="120">{t('admin:courses.minutes120')}</SelectItem>
+                        <SelectItem value="180">{t('admin:courses.minutes180')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -317,7 +317,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price (IRR)</FormLabel>
+                    <FormLabel>{t('admin:courses.price')}</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="0" {...field} />
                     </FormControl>
@@ -334,18 +334,18 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="deliveryMode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Delivery Mode</FormLabel>
+                    <FormLabel>{t('admin:courses.deliveryMode')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select delivery mode" />
+                          <SelectValue placeholder={t('admin:courses.selectDeliveryMode')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="online">Online</SelectItem>
-                        <SelectItem value="in_person">In-Person</SelectItem>
-                        <SelectItem value="self_paced">Self-Paced</SelectItem>
-                        <SelectItem value="callern">Callern (On-Demand)</SelectItem>
+                        <SelectItem value="online">{t('admin:courses.online')}</SelectItem>
+                        <SelectItem value="in_person">{t('admin:courses.inPerson')}</SelectItem>
+                        <SelectItem value="self_paced">{t('admin:courses.selfPaced')}</SelectItem>
+                        <SelectItem value="callern">{t('admin:courses.callern')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -358,16 +358,16 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="classFormat"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Class Format</FormLabel>
+                    <FormLabel>{t('admin:courses.classFormat')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select format" />
+                          <SelectValue placeholder={t('admin:courses.selectClassFormat')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="group">Group Class</SelectItem>
-                        <SelectItem value="one_on_one">One-on-One</SelectItem>
+                        <SelectItem value="group">{t('admin:courses.groupClass')}</SelectItem>
+                        <SelectItem value="one_on_one">{t('admin:courses.oneOnOne')}</SelectItem>
                         <SelectItem value="callern_package">Callern Package</SelectItem>
                       </SelectContent>
                     </Select>
@@ -381,7 +381,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                 name="maxStudents"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Max Students (Optional)</FormLabel>
+                    <FormLabel>{t('admin:courses.maxStudents')}</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="30" {...field} />
                     </FormControl>
@@ -396,10 +396,10 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Course Description</FormLabel>
+                  <FormLabel>{t('admin:courses.courseDescription')}</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Detailed course description..." 
+                      placeholder={t('admin:courses.courseDescriptionPlaceholder')} 
                       rows={4} 
                       {...field} 
                     />
@@ -418,7 +418,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
-                        Active Course
+                        {t('admin:courses.active')}
                       </FormLabel>
                       <p className="text-sm text-muted-foreground">
                         Make this course available for enrollment
@@ -441,7 +441,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">
-                        Featured Course
+                        {t('admin:courses.featured')}
                       </FormLabel>
                       <p className="text-sm text-muted-foreground">
                         Highlight this course in featured section
@@ -610,10 +610,10 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
             
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-                Cancel
+                {t('admin:courses.cancel')}
               </Button>
               <Button type="submit" disabled={createCourseMutation.isPending}>
-                {createCourseMutation.isPending ? "Creating..." : "Create Course"}
+                {createCourseMutation.isPending ? "Creating..." : t('admin:courses.save')}
               </Button>
             </div>
           </form>
