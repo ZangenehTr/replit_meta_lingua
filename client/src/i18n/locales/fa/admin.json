@@ -582,7 +582,25 @@
       "active": "فعال",
       "paused": "متوقف",
       "completed": "تکمیل شده"
-    }
+    },
+    "configureTool": "پیکربندی {{tool}}",
+    "configureToolDesc": "تنظیمات و پیکربندی {{tool}} را انجام دهید",
+    "accessToken": "توکن دسترسی",
+    "enterAccessToken": "توکن دسترسی خود را وارد کنید",
+    "accountHandle": "نام کاربری حساب",
+    "enableAutoPosting": "فعال‌سازی پست خودکار",
+    "smtpHost": "میزبان SMTP",
+    "smtpPort": "پورت SMTP",
+    "fromEmail": "ایمیل فرستنده",
+    "customDomain": "دامنه سفارشی",
+    "defaultTemplate": "قالب پیش‌فرض",
+    "selectTemplate": "انتخاب قالب",
+    "modernTemplate": "قالب مدرن",
+    "classicTemplate": "قالب کلاسیک",
+    "persianTemplate": "قالب فارسی",
+    "enableRtlSupport": "فعال‌سازی پشتیبانی راست به چپ",
+    "configuration": "پیکربندی",
+    "enterConfiguration": "تنظیمات پیکربندی را وارد کنید"
   },
   "userManagement": {
     "title": "مدیریت کاربران",
