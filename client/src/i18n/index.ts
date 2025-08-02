@@ -100,6 +100,8 @@ i18n
     
     defaultNS: 'common',
     ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant'],
+    keySeparator: '.',
+    nsSeparator: ':',
   });
 
 export default i18n;
