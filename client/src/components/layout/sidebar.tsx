@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Link, useLocation } from "wouter";
 import { getNavigationForRole } from "@/lib/role-based-navigation";
@@ -81,7 +82,8 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
   // Get navigation items based on user role according to PRD specifications
   const navigationItems = user ? getNavigationForRole(user.role, t) : [];
   
-  // Navigation translation system is now working
+  // Translation system debugging
+  console.log('Sidebar: Testing translation for dashboard:', t('navigation.dashboard'));
 
   return (
     <aside className="w-64 md:w-64 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 fixed top-14 left-0 h-[calc(100vh-3.5rem)] overflow-y-auto z-30">

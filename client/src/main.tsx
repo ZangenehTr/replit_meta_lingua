@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import "./i18n";
+import "./i18n/index-new";
 
 // Global error handlers to prevent runtime error plugin from triggering
 window.addEventListener('unhandledrejection', (event) => {
