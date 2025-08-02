@@ -190,40 +190,40 @@ export default function MentorMatchingPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Teacher-Student Bundles</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:mentorMatching.teacherStudentBundles')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{Array.isArray(bundles) ? bundles.length : 0}</div>
-            <p className="text-xs text-muted-foreground">Need mentors</p>
+            <p className="text-xs text-muted-foreground">{t('admin:mentorMatching.needMentors')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available Mentors</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:mentorMatching.availableMentors')}</CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{Array.isArray(mentors) ? mentors.length : 0}</div>
-            <p className="text-xs text-muted-foreground">Have capacity</p>
+            <p className="text-xs text-muted-foreground">{t('admin:mentorMatching.haveCapacity')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Matches</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:mentorMatching.activeMatches')}</CardTitle>
             <Link2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{Array.isArray(assignments) ? assignments.filter((a: any) => a.status === 'active').length : 0}</div>
-            <p className="text-xs text-muted-foreground">Ongoing mentorships</p>
+            <p className="text-xs text-muted-foreground">{t('admin:mentorMatching.ongoingMentorships')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:mentorMatching.successRate')}</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -232,7 +232,7 @@ export default function MentorMatchingPage() {
                 ? `${Math.round((assignments.filter((a: any) => a.status === 'active').length / assignments.length) * 100)}%`
                 : 'N/A'}
             </div>
-            <p className="text-xs text-muted-foreground">Match success</p>
+            <p className="text-xs text-muted-foreground">{t('admin:mentorMatching.matchSuccess')}</p>
           </CardContent>
         </Card>
       </div>
@@ -240,15 +240,15 @@ export default function MentorMatchingPage() {
       {/* Search and Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Find Teacher-Student Bundles</CardTitle>
-          <CardDescription>Search and filter teacher-student pairs that need mentors</CardDescription>
+          <CardTitle>{t('admin:mentorMatching.findTeacherStudentBundles')}</CardTitle>
+          <CardDescription>{t('admin:mentorMatching.searchFilterDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search students..."
+                placeholder={t('admin:mentorMatching.searchStudents')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -257,22 +257,22 @@ export default function MentorMatchingPage() {
             
             <Select value={filterLevel} onValueChange={setFilterLevel}>
               <SelectTrigger>
-                <SelectValue placeholder="All Levels" />
+                <SelectValue placeholder={t('admin:mentorMatching.allLevels')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="beginner">Beginner</SelectItem>
-                <SelectItem value="intermediate">Intermediate</SelectItem>
-                <SelectItem value="advanced">Advanced</SelectItem>
+                <SelectItem value="all">{t('admin:mentorMatching.allLevels')}</SelectItem>
+                <SelectItem value="beginner">{t('admin:mentorMatching.beginner')}</SelectItem>
+                <SelectItem value="intermediate">{t('admin:mentorMatching.intermediate')}</SelectItem>
+                <SelectItem value="advanced">{t('admin:mentorMatching.advanced')}</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={filterLanguage} onValueChange={setFilterLanguage}>
               <SelectTrigger>
-                <SelectValue placeholder="All Languages" />
+                <SelectValue placeholder={t('admin:mentorMatching.allLanguages')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Languages</SelectItem>
+                <SelectItem value="all">{t('admin:mentorMatching.allLanguages')}</SelectItem>
                 <SelectItem value="Persian">Persian</SelectItem>
                 <SelectItem value="English">English</SelectItem>
                 <SelectItem value="Arabic">Arabic</SelectItem>
@@ -281,7 +281,7 @@ export default function MentorMatchingPage() {
 
             <Button variant="outline" className="border-teal-200 hover:bg-teal-50">
               <Filter className="h-4 w-4 mr-2" />
-              More Filters
+{t('admin:mentorMatching.moreFilters')}
             </Button>
           </div>
         </CardContent>
@@ -289,14 +289,14 @@ export default function MentorMatchingPage() {
 
       {/* Teacher-Student Bundles List */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Teacher-Student Bundles Needing Mentors</h2>
+        <h2 className="text-xl font-semibold">{t('admin:mentorMatching.bundlesNeedingMentors')}</h2>
         {bundlesLoading ? (
-          <div className="text-center py-8">Loading bundles...</div>
+          <div className="text-center py-8">{t('admin:mentorMatching.loadingBundles')}</div>
         ) : filteredBundles.length === 0 ? (
           <Card>
             <CardContent className="text-center py-8">
               <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No teacher-student bundles found needing mentors</p>
+              <p className="text-gray-600">{t('admin:mentorMatching.noBundlesFound')}</p>
             </CardContent>
           </Card>
         ) : (
@@ -311,7 +311,7 @@ export default function MentorMatchingPage() {
               >
                 <CardContent className="p-4">
                   <div className="mb-3 pb-3 border-b">
-                    <p className="text-xs text-gray-500 mb-1">Teacher</p>
+                    <p className="text-xs text-gray-500 mb-1">{t('admin:mentorMatching.teacher')}</p>
                     <div className="flex items-center space-x-2">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="text-xs">
@@ -328,7 +328,7 @@ export default function MentorMatchingPage() {
                   </div>
                   
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Student</p>
+                    <p className="text-xs text-gray-500 mb-1">{t('admin:mentorMatching.student')}</p>
                     <div className="flex items-center space-x-3">
                       <Avatar>
                         <AvatarFallback>
