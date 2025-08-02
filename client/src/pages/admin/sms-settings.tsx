@@ -189,7 +189,7 @@ export default function SMSSettingsPage() {
                 variant="outline"
                 size="sm"
                 className="mt-2"
-                onClick={() => window.location.href = '/admin/iranian-compliance-settings'}
+                onClick={() => window.location.href = '/admin/iranian-compliance'}
               >
                 <Settings className="h-4 w-4 mr-2" />
 {t('admin:smsSettings.configureSenderApi')}
