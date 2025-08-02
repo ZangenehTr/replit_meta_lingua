@@ -20,14 +20,15 @@ interface CreateClassModalProps {
   children: React.ReactNode;
 }
 
-interface TeacherAvailability {
+interface Teacher {
   id: number;
   name: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
   specializations: string[];
-  competencyLevel: string;
-  availableSlots: string[];
-  currentLoad: number;
-  maxCapacity: number;
+  availability: any[];
   rating: number;
 }
 
@@ -50,9 +51,8 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
   const queryClient = useQueryClient();
   const { t } = useTranslation(['admin', 'common']);
 
-  const { data: availableTeachers } = useQuery<TeacherAvailability[]>({
-    queryKey: ['/api/manager/available-teachers', courseType, level, selectedDays, timeSlot],
-    enabled: !!courseType && !!level,
+  const { data: availableTeachers = [] } = useQuery<Teacher[]>({
+    queryKey: ['/api/admin/teachers'],
   });
 
   const createClass = useMutation({
@@ -102,18 +102,13 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
     );
   };
 
-  const getTeacherCompatibility = (teacher: TeacherAvailability) => {
+  const getTeacherCompatibility = (teacher: Teacher) => {
     const isSpecialized = teacher.specializations.some(spec => 
-      spec.toLowerCase().includes(courseType.toLowerCase())
+      spec.toLowerCase().includes(courseType.toLowerCase() || '')
     );
-    const hasCapacity = teacher.currentLoad < teacher.maxCapacity;
-    const hasRequiredLevel = teacher.competencyLevel === level || 
-      (teacher.competencyLevel === 'advanced' && level !== 'advanced');
     
-    if (isSpecialized && hasCapacity && hasRequiredLevel) return 'excellent';
-    if (hasCapacity && hasRequiredLevel) return 'good';
-    if (hasCapacity) return 'fair';
-    return 'poor';
+    if (isSpecialized) return 'excellent';
+    return 'good'; // All active teachers are considered available
   };
 
   const getCompatibilityColor = (compatibility: string) => {
@@ -399,8 +394,7 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
                               {teacher.specializations.join(', ')}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {t('classScheduling.capacity')}: {teacher.currentLoad}/{teacher.maxCapacity} کلاس
-                              • {t('classScheduling.rating')}: {teacher.rating}★
+                              {teacher.role} • {t('classScheduling.rating')}: {teacher.rating}★
                             </div>
                           </div>
                         </div>
