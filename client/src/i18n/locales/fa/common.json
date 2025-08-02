@@ -149,6 +149,7 @@
     "voipTestSuccessful": "تست VoIP موفق بود",
     "voipTest": "تست VoIP",
     "voipTestFailed": "تست VoIP ناموفق بود",
+    "total": "کل",
     "shetabTest": "تست شتاب",
     "backupCreated": "پشتیبان گیری ایجاد شد",
     "configurationExported": "پیکربندی صادر شد",
