@@ -56,13 +56,13 @@ export function IranianComplianceSettings() {
       const recommendations = response.recommendations;
       
       toast({ 
-        title: response.success ? "VoIP Diagnostic Complete" : "VoIP Diagnostic Issues Found", 
-        description: `${summary.testsPassed}/${summary.testsRun} tests passed. Server: ${summary.serverInfo}. ${recommendations.length > 0 ? 'Check console for recommendations.' : ''}`,
+        title: response.success ? t('admin:iranianCompliance.voipDiagnosticComplete') : t('admin:iranianCompliance.voipDiagnosticIssues'), 
+        description: `${summary.testsPassed}/${summary.testsRun} tests passed. Server: ${summary.serverInfo}. ${recommendations.length > 0 ? t('admin:iranianCompliance.checkConsoleRecommendations') : ''}`,
         variant: response.success ? "default" : "destructive"
       });
       
       if (recommendations.length > 0) {
-        console.log('VoIP Server Recommendations:');
+        console.log(t('admin:iranianCompliance.voipServerRecommendations'));
         recommendations.forEach((rec: string, i: number) => console.log(`${i + 1}. ${rec}`));
       }
     },
@@ -139,7 +139,7 @@ export function IranianComplianceSettings() {
       console.log('VoIP call test success:', data);
       const response = data as any;
       toast({ 
-        title: "VoIP Call Test Successful", 
+        title: t('admin:iranianCompliance.voipCallTestSuccessful'), 
         description: `Test call initiated successfully. Call ID: ${response.callId}. Recording: ${response.recordingEnabled ? 'enabled' : 'disabled'}` 
       });
     },
@@ -149,7 +149,7 @@ export function IranianComplianceSettings() {
       if (errorMessage.includes('not configured')) {
         errorMessage = "Please save VoIP settings first, then try the test call";
       }
-      toast({ title: "VoIP Call Test Failed", description: errorMessage, variant: "destructive" });
+      toast({ title: t('admin:iranianCompliance.voipCallTestFailed'), description: errorMessage, variant: "destructive" });
     }
   });
 
@@ -174,24 +174,24 @@ export function IranianComplianceSettings() {
         </div>
         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
           <CheckCircle2 className="h-3 w-3 mr-1" />
-          Self-Hosted Ready
+{t('admin:iranianCompliance.selfHostedReady')}
         </Badge>
       </div>
 
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          All configurations are stored locally for Iranian market compliance. No external dependencies required.
+          {t('admin:iranianCompliance.localComplianceMessage')}
         </AlertDescription>
       </Alert>
 
       {/* Navigation Tabs */}
       <div className="flex space-x-1 bg-muted p-1 rounded-lg">
         {[
-          { key: "voip", label: "Isabel VoIP", icon: Phone },
-          { key: "shetab", label: "Shetab Banking", icon: CreditCard },
-          { key: "sms", label: "Kavenegar SMS", icon: MessageSquare },
-          { key: "general", label: "General", icon: Settings }
+          { key: "voip", label: t('admin:iranianCompliance.voipTab'), icon: Phone },
+          { key: "shetab", label: t('admin:iranianCompliance.shetabTab'), icon: CreditCard },
+          { key: "sms", label: t('admin:iranianCompliance.smsTab'), icon: MessageSquare },
+          { key: "general", label: t('admin:iranianCompliance.generalTab'), icon: Settings }
         ].map(({ key, label, icon: Icon }) => (
           <Button
             key={key}
@@ -211,14 +211,14 @@ export function IranianComplianceSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Phone className="h-5 w-5" />
-              Isabel VoIP Line Configuration
+              {t('admin:iranianCompliance.voipConfiguration')}
             </CardTitle>
-            <CardDescription>Configure your Isabel VoIP line for call recording and management</CardDescription>
+            <CardDescription>{t('admin:iranianCompliance.voipDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="voip-server">VoIP Server Address</Label>
+                <Label htmlFor="voip-server">{t('admin:iranianCompliance.voipServerAddress')}</Label>
                 <Input
                   id="voip-server"
                   placeholder="sip.isabel.ir"
@@ -226,7 +226,7 @@ export function IranianComplianceSettings() {
                 />
               </div>
               <div>
-                <Label htmlFor="voip-port">Port</Label>
+                <Label htmlFor="voip-port">{t('admin:iranianCompliance.port')}</Label>
                 <Input
                   id="voip-port"
                   type="number"
@@ -235,7 +235,7 @@ export function IranianComplianceSettings() {
                 />
               </div>
               <div>
-                <Label htmlFor="voip-username">Username</Label>
+                <Label htmlFor="voip-username">{t('admin:iranianCompliance.username')}</Label>
                 <Input
                   id="voip-username"
                   placeholder="Your Isabel username"
@@ -243,7 +243,7 @@ export function IranianComplianceSettings() {
                 />
               </div>
               <div>
-                <Label htmlFor="voip-password">Password</Label>
+                <Label htmlFor="voip-password">{t('admin:iranianCompliance.password')}</Label>
                 <Input
                   id="voip-password"
                   type="password"
@@ -258,7 +258,7 @@ export function IranianComplianceSettings() {
                 id="voip-enabled"
                 defaultChecked={settings?.voipEnabled || false}
               />
-              <Label htmlFor="voip-enabled">Enable VoIP Integration</Label>
+              <Label htmlFor="voip-enabled">{t('admin:iranianCompliance.enableVoipIntegration')}</Label>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -266,13 +266,13 @@ export function IranianComplianceSettings() {
                 id="call-recording"
                 defaultChecked={settings?.callRecordingEnabled || false}
               />
-              <Label htmlFor="call-recording">Enable Call Recording</Label>
+              <Label htmlFor="call-recording">{t('admin:iranianCompliance.enableCallRecording')}</Label>
             </div>
 
             <Separator />
 
             <div>
-              <Label htmlFor="recording-storage">Recording Storage Path</Label>
+              <Label htmlFor="recording-storage">{t('admin:iranianCompliance.recordingStoragePath')}</Label>
               <Input
                 id="recording-storage"
                 placeholder="/var/recordings"
@@ -283,7 +283,7 @@ export function IranianComplianceSettings() {
             <Separator />
 
             <div className="space-y-3">
-              <Label htmlFor="test-phone-number">Test Phone Number</Label>
+              <Label htmlFor="test-phone-number">{t('admin:iranianCompliance.testPhoneNumber')}</Label>
               <div className="flex gap-2">
                 <Input
                   id="test-phone-number"
@@ -295,7 +295,7 @@ export function IranianComplianceSettings() {
                   onClick={() => {
                     const phoneNumber = (document.getElementById("test-phone-number") as HTMLInputElement)?.value;
                     if (!phoneNumber || phoneNumber.length < 10) {
-                      toast({ title: "Invalid Phone Number", description: "Please enter a valid phone number", variant: "destructive" });
+                      toast({ title: t('admin:iranianCompliance.invalidPhoneNumber'), description: t('admin:iranianCompliance.enterValidPhoneNumber'), variant: "destructive" });
                       return;
                     }
                     testVoipCall.mutate(phoneNumber);
@@ -305,11 +305,11 @@ export function IranianComplianceSettings() {
                   className="min-w-[140px]"
                 >
                   <Phone className="h-4 w-4 mr-2" />
-                  Test Call
+                  {t('admin:iranianCompliance.testCall')}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Enter a phone number to test Isabel VoIP calling capability. Format: +989123456789
+                {t('admin:iranianCompliance.phoneNumberInstructions')}
               </p>
             </div>
 
@@ -321,7 +321,7 @@ export function IranianComplianceSettings() {
                 className="bg-blue-50 border-blue-200 hover:bg-blue-100"
               >
                 <TestTube className="h-4 w-4 mr-2" />
-                {diagnosticVoipConnection.isPending ? 'Diagnosing...' : 'Full Diagnostic'}
+                {diagnosticVoipConnection.isPending ? t('admin:iranianCompliance.diagnosing') : t('admin:iranianCompliance.fullDiagnostic')}
               </Button>
               <Button 
                 onClick={() => testVoipConnection.mutate()}
@@ -329,7 +329,7 @@ export function IranianComplianceSettings() {
                 variant="outline"
               >
                 <TestTube className="h-4 w-4 mr-2" />
-                Test Connection
+                {t('admin:iranianCompliance.testConnection')}
               </Button>
               <Button 
                 onClick={() => handleSave("voip", {
@@ -344,7 +344,7 @@ export function IranianComplianceSettings() {
                 disabled={updateSettings.isPending}
               >
                 <Save className="h-4 w-4 mr-2" />
-                Save VoIP Settings
+                {t('admin:iranianCompliance.saveVoipSettings')}
               </Button>
             </div>
           </CardContent>
@@ -357,14 +357,14 @@ export function IranianComplianceSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
-              Shetab Payment Gateway Configuration
+              {t('admin:iranianCompliance.shetabConfiguration')}
             </CardTitle>
-            <CardDescription>Configure Shetab banking integration for Iranian payment processing</CardDescription>
+            <CardDescription>{t('admin:iranianCompliance.shetabDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="shetab-merchant-id">Merchant ID</Label>
+                <Label htmlFor="shetab-merchant-id">{t('admin:iranianCompliance.merchantId')}</Label>
                 <Input
                   id="shetab-merchant-id"
                   placeholder="Your Shetab merchant ID"
@@ -372,7 +372,7 @@ export function IranianComplianceSettings() {
                 />
               </div>
               <div>
-                <Label htmlFor="shetab-terminal-id">Terminal ID</Label>
+                <Label htmlFor="shetab-terminal-id">{t('admin:iranianCompliance.terminalId')}</Label>
                 <Input
                   id="shetab-terminal-id"
                   placeholder="Your terminal ID"
@@ -380,7 +380,7 @@ export function IranianComplianceSettings() {
                 />
               </div>
               <div>
-                <Label htmlFor="shetab-api-key">API Key</Label>
+                <Label htmlFor="shetab-api-key">{t('admin:iranianCompliance.apiKey')}</Label>
                 <Input
                   id="shetab-api-key"
                   type="password"
@@ -389,7 +389,7 @@ export function IranianComplianceSettings() {
                 />
               </div>
               <div>
-                <Label htmlFor="shetab-secret-key">Secret Key</Label>
+                <Label htmlFor="shetab-secret-key">{t('admin:iranianCompliance.secretKey')}</Label>
                 <Input
                   id="shetab-secret-key"
                   type="password"
@@ -400,14 +400,14 @@ export function IranianComplianceSettings() {
             </div>
 
             <div>
-              <Label htmlFor="shetab-environment">Environment</Label>
+              <Label htmlFor="shetab-environment">{t('admin:iranianCompliance.environment')}</Label>
               <Select defaultValue={settings?.shetabEnvironment || "production"}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select environment" />
+                  <SelectValue placeholder={t('admin:iranianCompliance.selectEnvironment')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="production">Production</SelectItem>
-                  <SelectItem value="sandbox">Sandbox (Testing)</SelectItem>
+                  <SelectItem value="production">{t('admin:iranianCompliance.production')}</SelectItem>
+                  <SelectItem value="sandbox">{t('admin:iranianCompliance.sandbox')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -417,13 +417,13 @@ export function IranianComplianceSettings() {
                 id="shetab-enabled"
                 defaultChecked={settings?.shetabEnabled || false}
               />
-              <Label htmlFor="shetab-enabled">Enable Shetab Integration</Label>
+              <Label htmlFor="shetab-enabled">{t('admin:iranianCompliance.enableShetabIntegration')}</Label>
             </div>
 
             <Separator />
 
             <div>
-              <Label htmlFor="callback-url">Callback URL</Label>
+              <Label htmlFor="callback-url">{t('admin:iranianCompliance.callbackUrl')}</Label>
               <Input
                 id="callback-url"
                 placeholder="https://your-domain.com/api/payment/callback"
@@ -432,7 +432,7 @@ export function IranianComplianceSettings() {
             </div>
 
             <div>
-              <Label htmlFor="return-url">Return URL</Label>
+              <Label htmlFor="return-url">{t('admin:iranianCompliance.returnUrl')}</Label>
               <Input
                 id="return-url"
                 placeholder="https://your-domain.com/payment/success"
@@ -447,7 +447,7 @@ export function IranianComplianceSettings() {
                 variant="outline"
               >
                 <TestTube className="h-4 w-4 mr-2" />
-                Test Connection
+                {t('admin:iranianCompliance.testConnection')}
               </Button>
               <Button 
                 onClick={() => handleSave("shetab", {
@@ -462,7 +462,7 @@ export function IranianComplianceSettings() {
                 disabled={updateSettings.isPending}
               >
                 <Save className="h-4 w-4 mr-2" />
-                Save Shetab Settings
+                {t('admin:iranianCompliance.saveShetabSettings')}
               </Button>
             </div>
           </CardContent>
@@ -475,17 +475,17 @@ export function IranianComplianceSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
-              SMS Service Status
+              {t('admin:iranianCompliance.smsServiceStatus')}
             </CardTitle>
-            <CardDescription>Overview of Kavenegar SMS service integration for Iranian mobile communications</CardDescription>
+            <CardDescription>{t('admin:iranianCompliance.kavenegarDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium text-blue-900 dark:text-blue-100">Kavenegar SMS Integration</h3>
+                  <h3 className="font-medium text-blue-900 dark:text-blue-100">{t('admin:iranianCompliance.kavenegarIntegration')}</h3>
                   <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                    SMS service is {settings?.kavenegarEnabled ? 'enabled' : 'disabled'} for Iranian market compliance
+                    {settings?.kavenegarEnabled ? t('admin:iranianCompliance.smsServiceEnabled') : t('admin:iranianCompliance.smsServiceDisabled')}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -500,7 +500,7 @@ export function IranianComplianceSettings() {
                     size="sm"
                   >
                     <Settings className="h-4 w-4 mr-2" />
-                    Manage SMS Settings
+                    {t('admin:iranianCompliance.manageSmsSettings')}
                   </Button>
                 </div>
               </div>
@@ -508,19 +508,19 @@ export function IranianComplianceSettings() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-sm text-gray-600 dark:text-gray-400">Service Status</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('admin:iranianCompliance.serviceStatus')}</div>
                 <div className="font-medium">
-                  {settings?.kavenegarEnabled ? 'Active' : 'Inactive'}
+                  {settings?.kavenegarEnabled ? t('admin:iranianCompliance.active') : t('admin:iranianCompliance.inactive')}
                 </div>
               </div>
               <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-sm text-gray-600 dark:text-gray-400">Sender Number</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('admin:iranianCompliance.senderNumber')}</div>
                 <div className="font-medium">
-                  {settings?.kavenegarSender || 'Not configured'}
+                  {settings?.kavenegarSender || t('admin:iranianCompliance.notConfigured')}
                 </div>
               </div>
               <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-sm text-gray-600 dark:text-gray-400">Provider</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">{t('admin:iranianCompliance.provider')}</div>
                 <div className="font-medium">Kavenegar</div>
               </div>
             </div>
@@ -529,10 +529,10 @@ export function IranianComplianceSettings() {
 
             {/* SMS API Configuration */}
             <div className="space-y-4">
-              <h4 className="font-medium text-sm">SMS API Configuration</h4>
+              <h4 className="font-medium text-sm">{t('admin:iranianCompliance.smsApiConfiguration')}</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="kavenegar-api-key">Kavenegar API Key</Label>
+                  <Label htmlFor="kavenegar-api-key">{t('admin:iranianCompliance.kavenegarApiKey')}</Label>
                   <div className="relative">
                     <Input
                       id="kavenegar-api-key"
@@ -560,7 +560,7 @@ export function IranianComplianceSettings() {
                   </p>
                 </div>
                 <div>
-                  <Label htmlFor="kavenegar-sender">Sender Number</Label>
+                  <Label htmlFor="kavenegar-sender">{t('admin:iranianCompliance.senderNumber')}</Label>
                   <Input
                     id="kavenegar-sender"
                     placeholder="10008663"
@@ -577,7 +577,7 @@ export function IranianComplianceSettings() {
                   id="kavenegar-enabled"
                   defaultChecked={settings?.kavenegarEnabled || false}
                 />
-                <Label htmlFor="kavenegar-enabled">Enable Kavenegar SMS Service</Label>
+                <Label htmlFor="kavenegar-enabled">{t('admin:iranianCompliance.enableKavenegarSms')}</Label>
               </div>
 
               <div className="flex gap-2">
@@ -587,7 +587,7 @@ export function IranianComplianceSettings() {
                   variant="outline"
                 >
                   <TestTube className="h-4 w-4 mr-2" />
-                  Test SMS Connection
+{t('admin:iranianCompliance.testSmsConnection')}
                 </Button>
                 <Button 
                   onClick={() => handleSave("sms", {
@@ -598,7 +598,7 @@ export function IranianComplianceSettings() {
                   disabled={updateSettings.isPending}
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  Save SMS Settings
+{t('admin:iranianCompliance.saveSmsSettings')}
                 </Button>
               </div>
             </div>
@@ -618,13 +618,13 @@ export function IranianComplianceSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              General Iranian Market Settings
+              {t('admin:iranianCompliance.generalIranianSettings')}
             </CardTitle>
-            <CardDescription>Configure general settings for Iranian market compliance</CardDescription>
+            <CardDescription>{t('admin:iranianCompliance.generalIranianDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="institute-name">Institute Name (Persian)</Label>
+              <Label htmlFor="institute-name">{t('admin:iranianCompliance.instituteNamePersian')}</Label>
               <Input
                 id="institute-name"
                 placeholder="مؤسسه زبان‌های خارجی متالینگوآ"
@@ -633,7 +633,7 @@ export function IranianComplianceSettings() {
             </div>
 
             <div>
-              <Label htmlFor="institute-name-english">Institute Name (English)</Label>
+              <Label htmlFor="institute-name-english">{t('admin:iranianCompliance.instituteNameEnglish')}</Label>
               <Input
                 id="institute-name-english"
                 placeholder="Meta Lingua Language Institute"
@@ -642,7 +642,7 @@ export function IranianComplianceSettings() {
             </div>
 
             <div>
-              <Label htmlFor="business-license">Business License Number</Label>
+              <Label htmlFor="business-license">{t('admin:iranianCompliance.businessLicense')}</Label>
               <Input
                 id="business-license"
                 placeholder="Iran business license number"
@@ -651,7 +651,7 @@ export function IranianComplianceSettings() {
             </div>
 
             <div>
-              <Label htmlFor="tax-id">Tax ID</Label>
+              <Label htmlFor="tax-id">{t('admin:iranianCompliance.taxId')}</Label>
               <Input
                 id="tax-id"
                 placeholder="Iranian tax identification number"
@@ -660,7 +660,7 @@ export function IranianComplianceSettings() {
             </div>
 
             <div>
-              <Label htmlFor="default-currency">Default Currency</Label>
+              <Label htmlFor="default-currency">{t('admin:iranianCompliance.defaultCurrency')}</Label>
               <Select defaultValue={settings?.defaultCurrency || "IRR"}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select currency" />
@@ -673,7 +673,7 @@ export function IranianComplianceSettings() {
             </div>
 
             <div>
-              <Label htmlFor="timezone">Timezone</Label>
+              <Label htmlFor="timezone">{t('admin:iranianCompliance.timezone')}</Label>
               <Select defaultValue={settings?.timezone || "Asia/Tehran"}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select timezone" />
@@ -689,7 +689,7 @@ export function IranianComplianceSettings() {
                 id="persian-calendar"
                 defaultChecked={settings?.persianCalendarEnabled || false}
               />
-              <Label htmlFor="persian-calendar">Enable Persian Calendar</Label>
+              <Label htmlFor="persian-calendar">{t('admin:iranianCompliance.enablePersianCalendar')}</Label>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -697,13 +697,13 @@ export function IranianComplianceSettings() {
                 id="rtl-layout"
                 defaultChecked={settings?.rtlLayoutEnabled || false}
               />
-              <Label htmlFor="rtl-layout">Enable RTL Layout for Persian</Label>
+              <Label htmlFor="rtl-layout">{t('admin:iranianCompliance.enableRtlLayout')}</Label>
             </div>
 
             <Separator />
 
             <div>
-              <Label htmlFor="contact-address">Contact Address (Persian)</Label>
+              <Label htmlFor="contact-address">{t('admin:iranianCompliance.contactAddressPersian')}</Label>
               <Textarea
                 id="contact-address"
                 placeholder="آدرس دفتر مرکزی مؤسسه در ایران"
@@ -713,7 +713,7 @@ export function IranianComplianceSettings() {
             </div>
 
             <div>
-              <Label htmlFor="support-phone">Support Phone</Label>
+              <Label htmlFor="support-phone">{t('admin:iranianCompliance.supportPhone')}</Label>
               <Input
                 id="support-phone"
                 placeholder="+98 21 1234 5678"
@@ -737,7 +737,7 @@ export function IranianComplianceSettings() {
               disabled={updateSettings.isPending}
             >
               <Save className="h-4 w-4 mr-2" />
-              Save General Settings
+{t('admin:iranianCompliance.saveGeneralSettings')}
             </Button>
           </CardContent>
         </Card>
@@ -746,8 +746,8 @@ export function IranianComplianceSettings() {
       {/* Status Summary */}
       <Card>
         <CardHeader>
-          <CardTitle>Third Party Services Status</CardTitle>
-          <CardDescription>Current status of all Iranian market integrations</CardDescription>
+          <CardTitle>{t('admin:iranianCompliance.thirdPartyServicesStatus')}</CardTitle>
+          <CardDescription>{t('admin:iranianCompliance.currentStatusIntegrations')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -765,7 +765,7 @@ export function IranianComplianceSettings() {
             </div>
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${settings?.persianCalendarEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
-              <span className="text-sm">Persian Calendar</span>
+              <span className="text-sm">{t('admin:iranianCompliance.persianCalendar')}</span>
             </div>
           </div>
         </CardContent>
