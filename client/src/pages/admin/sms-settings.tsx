@@ -104,41 +104,41 @@ export default function SMSSettingsPage() {
   });
 
   const eventTypes = [
-    { key: 'enrollment', label: 'Student Enrollment', recipients: ['Student', 'Parent', 'Teacher'] },
-    { key: 'session_reminder', label: 'Session Reminder', recipients: ['Student', 'Teacher'] },
-    { key: 'homework_assigned', label: 'Homework Assigned', recipients: ['Student', 'Parent'] },
-    { key: 'homework_overdue', label: 'Homework Overdue', recipients: ['Student', 'Parent'] },
-    { key: 'payment_due', label: 'Payment Due', recipients: ['Student', 'Parent'] },
-    { key: 'payment_received', label: 'Payment Received', recipients: ['Student', 'Parent'] },
-    { key: 'teacher_evaluation', label: 'Teacher Evaluation Complete', recipients: ['Teacher'] },
-    { key: 'progress_report', label: 'Progress Report Ready', recipients: ['Student', 'Parent'] },
-    { key: 'session_cancelled', label: 'Session Cancelled', recipients: ['Student', 'Teacher'] },
-    { key: 'absence_warning', label: 'Absence Warning', recipients: ['Student', 'Parent'] },
-    { key: 'certificate_ready', label: 'Certificate Ready', recipients: ['Student', 'Parent'] }
+    { key: 'enrollment', label: t('admin:smsSettings.eventTypes.enrollment'), recipients: [t('admin:smsSettings.recipients.student'), t('admin:smsSettings.recipients.parent'), t('admin:smsSettings.recipients.teacher')] },
+    { key: 'session_reminder', label: t('admin:smsSettings.eventTypes.sessionReminder'), recipients: [t('admin:smsSettings.recipients.student'), t('admin:smsSettings.recipients.teacher')] },
+    { key: 'homework_assigned', label: t('admin:smsSettings.eventTypes.homeworkAssigned'), recipients: [t('admin:smsSettings.recipients.student'), t('admin:smsSettings.recipients.parent')] },
+    { key: 'homework_overdue', label: t('admin:smsSettings.eventTypes.homeworkOverdue'), recipients: [t('admin:smsSettings.recipients.student'), t('admin:smsSettings.recipients.parent')] },
+    { key: 'payment_due', label: t('admin:smsSettings.eventTypes.paymentDue'), recipients: [t('admin:smsSettings.recipients.student'), t('admin:smsSettings.recipients.parent')] },
+    { key: 'payment_received', label: t('admin:smsSettings.eventTypes.paymentReceived'), recipients: [t('admin:smsSettings.recipients.student'), t('admin:smsSettings.recipients.parent')] },
+    { key: 'teacher_evaluation', label: t('admin:smsSettings.eventTypes.teacherEvaluation'), recipients: [t('admin:smsSettings.recipients.teacher')] },
+    { key: 'progress_report', label: t('admin:smsSettings.eventTypes.progressReport'), recipients: [t('admin:smsSettings.recipients.student'), t('admin:smsSettings.recipients.parent')] },
+    { key: 'session_cancelled', label: t('admin:smsSettings.eventTypes.sessionCancelled'), recipients: [t('admin:smsSettings.recipients.student'), t('admin:smsSettings.recipients.teacher')] },
+    { key: 'absence_warning', label: t('admin:smsSettings.eventTypes.absenceWarning'), recipients: [t('admin:smsSettings.recipients.student'), t('admin:smsSettings.recipients.parent')] },
+    { key: 'certificate_ready', label: t('admin:smsSettings.eventTypes.certificateReady'), recipients: [t('admin:smsSettings.recipients.student'), t('admin:smsSettings.recipients.parent')] }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6 space-y-6" dir={direction}>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             {t('admin:smsSettings.title')}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {t('common:configureService')}
+            مدیریت تنظیمات سرویس پیامک Kavenegar و قالب‌های پیام
           </p>
         </div>
-        <div className="flex space-x-2">
+        <div className={`flex ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
           <Button variant="outline" onClick={() => window.location.href = '/admin/sms-test'}>
             <TestTube className="h-4 w-4 mr-2" />
-            {t('common:testSMS')}
+            تست SMS
           </Button>
           <Button 
             onClick={() => saveKavenegarMutation.mutate(kavenegarData)}
             disabled={saveKavenegarMutation.isPending}
           >
             <Save className="h-4 w-4 mr-2" />
-            {saveKavenegarMutation.isPending ? t('common:saving') : t('common:saveSettings')}
+{saveKavenegarMutation.isPending ? 'در حال ذخیره...' : 'ذخیره تنظیمات'}
           </Button>
         </div>
       </div>
@@ -151,40 +151,39 @@ export default function SMSSettingsPage() {
             {t('admin:smsSettings.kavenegarSettings')}
           </CardTitle>
           <CardDescription>
-            {t('common:configureSMSService')}
+            پیکربندی سرویس SMS Kavenegar برای ارسال پیام‌ها
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>API Key Status</Label>
+              <Label>{t('admin:smsSettings.apiKeyStatus')}</Label>
               <div className="flex items-center gap-2 mt-1">
                 {kavenegarSettings?.isConfigured ? (
                   <>
                     <CheckCircle className="h-4 w-4 text-green-600" />
-                    <span className="text-sm text-green-600">Configured</span>
+                    <span className="text-sm text-green-600">{t('admin:smsSettings.configured')}</span>
                     <Badge variant="outline">{kavenegarSettings?.apiKey}</Badge>
                   </>
                 ) : (
                   <>
                     <AlertCircle className="h-4 w-4 text-red-600" />
-                    <span className="text-sm text-red-600">Not Configured</span>
+                    <span className="text-sm text-red-600">{t('admin:smsSettings.notConfigured')}</span>
                   </>
                 )}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                API key is set via environment variable for security
+                {t('admin:smsSettings.apiKeySecurityNote')}
               </p>
             </div>
 
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
               <div className="flex items-center gap-2 mb-2">
                 <Settings className="h-4 w-4 text-blue-600" />
-                <span className="font-medium text-blue-900 dark:text-blue-100">Sender Configuration</span>
+                <span className="font-medium text-blue-900 dark:text-blue-100">{t('admin:smsSettings.senderConfiguration')}</span>
               </div>
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                Sender number and API key are configured in <strong>Third Party Settings → SMS</strong>. 
-                Use this page to manage SMS templates and daily limits only.
+                {t('admin:smsSettings.senderConfigNote')}
               </p>
               <Button
                 variant="outline"
@@ -193,12 +192,12 @@ export default function SMSSettingsPage() {
                 onClick={() => window.location.href = '/admin/iranian-compliance-settings'}
               >
                 <Settings className="h-4 w-4 mr-2" />
-                Configure Sender & API
+{t('admin:smsSettings.configureSenderApi')}
               </Button>
             </div>
 
             <div>
-              <Label htmlFor="dailyLimit">Daily SMS Limit</Label>
+              <Label htmlFor="dailyLimit">{t('admin:smsSettings.dailySmsLimit')}</Label>
               <Input
                 id="dailyLimit"
                 type="number"
@@ -207,13 +206,13 @@ export default function SMSSettingsPage() {
               />
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
               <Switch
                 id="smsEnabled"
                 checked={kavenegarData.isEnabled}
                 onCheckedChange={(checked) => setKavenegarData({ ...kavenegarData, isEnabled: checked })}
               />
-              <Label htmlFor="smsEnabled">Enable SMS Service</Label>
+              <Label htmlFor="smsEnabled">{t('admin:smsSettings.enableSmsService')}</Label>
             </div>
           </div>
         </CardContent>
@@ -224,14 +223,14 @@ export default function SMSSettingsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              SMS Sent Today
+              {t('admin:smsSettings.smsSentToday')}
             </CardTitle>
             <Send className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">127</div>
             <p className="text-xs text-muted-foreground">
-              +23% from yesterday
+              +23% نسبت به دیروز
             </p>
           </CardContent>
         </Card>
@@ -239,14 +238,14 @@ export default function SMSSettingsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Delivery Rate
+              {t('admin:smsSettings.deliveryRate')}
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">98.4%</div>
             <p className="text-xs text-muted-foreground">
-              Excellent delivery
+              {t('admin:smsSettings.excellentDelivery')}
             </p>
           </CardContent>
         </Card>
@@ -254,14 +253,14 @@ export default function SMSSettingsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Templates
+              {t('admin:smsSettings.activeTemplates')}
             </CardTitle>
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">24</div>
             <p className="text-xs text-muted-foreground">
-              11 events covered
+              11 {t('admin:smsSettings.eventsCovered')}
             </p>
           </CardContent>
         </Card>
@@ -269,7 +268,7 @@ export default function SMSSettingsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Account Balance
+              {t('admin:smsSettings.accountBalance')}
             </CardTitle>
             <Phone className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -278,7 +277,7 @@ export default function SMSSettingsPage() {
               {kavenegarSettings?.balance || '---'}
             </div>
             <p className="text-xs text-muted-foreground">
-              SMS credits remaining
+              {t('admin:smsSettings.smsCreditsRemaining')}
             </p>
           </CardContent>
         </Card>
@@ -286,16 +285,16 @@ export default function SMSSettingsPage() {
 
       <Tabs defaultValue="sms-templates" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="sms-templates">SMS Templates</TabsTrigger>
-          <TabsTrigger value="automation">Automation Rules</TabsTrigger>
+          <TabsTrigger value="sms-templates">{t('admin:smsSettings.smsTemplatesTab')}</TabsTrigger>
+          <TabsTrigger value="automation">{t('admin:smsSettings.automationTab')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="sms-templates">
           <Card>
             <CardHeader>
-              <CardTitle>SMS Event Templates</CardTitle>
+              <CardTitle>{t('admin:smsSettings.smsEventTemplates')}</CardTitle>
               <CardDescription>
-                Configure SMS messages for different events and user roles
+                {t('admin:smsSettings.smsEventTemplatesDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -326,22 +325,22 @@ export default function SMSSettingsPage() {
                         {eventType.recipients.map((recipient) => (
                           <div key={recipient} className="border rounded-lg p-3 bg-gray-50">
                             <div className="flex justify-between items-center mb-2">
-                              <Label className="text-sm font-medium">Template for {recipient}</Label>
-                              <Badge className="text-xs bg-green-100 text-green-800">Persian/English</Badge>
+                              <Label className="text-sm font-medium">{t('admin:smsSettings.templateFor')} {recipient}</Label>
+                              <Badge className="text-xs bg-green-100 text-green-800">فارسی/انگلیسی</Badge>
                             </div>
                             
                             <div className="space-y-2">
                               <div>
-                                <Label className="text-xs text-gray-600">Persian Template</Label>
+                                <Label className="text-xs text-gray-600">{t('admin:smsSettings.persianTemplate')}</Label>
                                 <textarea 
                                   className="w-full text-sm border rounded p-2 bg-white" 
                                   rows={2}
-                                  placeholder="Persian SMS template..."
+                                  placeholder="قالب پیامک فارسی..."
                                   defaultValue={getDefaultTemplate(eventType.key, recipient, 'persian')}
                                 />
                               </div>
                               <div>
-                                <Label className="text-xs text-gray-600">English Template</Label>
+                                <Label className="text-xs text-gray-600">{t('admin:smsSettings.englishTemplate')}</Label>
                                 <textarea 
                                   className="w-full text-sm border rounded p-2 bg-white" 
                                   rows={2}
@@ -352,7 +351,7 @@ export default function SMSSettingsPage() {
                             </div>
                             
                             <div className="mt-2 text-xs text-gray-500">
-                              Available variables: {'{student_name}'}, {'{course_name}'}, {'{date}'}, {'{time}'}, {'{teacher_name}'}, {'{amount}'}
+                              {t('admin:smsSettings.availableVariables')}: {'{student_name}'}, {'{course_name}'}, {'{date}'}, {'{time}'}, {'{teacher_name}'}, {'{amount}'}
                             </div>
                           </div>
                         ))}
@@ -370,56 +369,56 @@ export default function SMSSettingsPage() {
         <TabsContent value="automation">
           <Card>
             <CardHeader>
-              <CardTitle>SMS Automation Rules</CardTitle>
+              <CardTitle>{t('admin:smsSettings.smsAutomationRules')}</CardTitle>
               <CardDescription>
-                Configure when and how SMS messages are sent automatically
+                {t('admin:smsSettings.smsAutomationDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label>Session Reminder Timing</Label>
+                    <Label>{t('admin:smsSettings.sessionReminderTiming')}</Label>
                     <select className="w-full mt-2 p-2 border rounded">
-                      <option>24 hours before session</option>
-                      <option>12 hours before session</option>
-                      <option>2 hours before session</option>
-                      <option>1 hour before session</option>
+                      <option>{t('admin:smsSettings.timingOptions.24HoursBefore')}</option>
+                      <option>{t('admin:smsSettings.timingOptions.12HoursBefore')}</option>
+                      <option>{t('admin:smsSettings.timingOptions.2HoursBefore')}</option>
+                      <option>{t('admin:smsSettings.timingOptions.1HourBefore')}</option>
                     </select>
                   </div>
                   
                   <div>
-                    <Label>Payment Reminder Frequency</Label>
+                    <Label>{t('admin:smsSettings.paymentReminderFrequency')}</Label>
                     <select className="w-full mt-2 p-2 border rounded">
-                      <option>3 days before due date</option>
-                      <option>1 day before due date</option>
-                      <option>On due date</option>
-                      <option>1 day after due date</option>
+                      <option>{t('admin:smsSettings.timingOptions.3DaysBefore')}</option>
+                      <option>{t('admin:smsSettings.timingOptions.1DayBefore')}</option>
+                      <option>{t('admin:smsSettings.timingOptions.onDueDate')}</option>
+                      <option>{t('admin:smsSettings.timingOptions.1DayAfter')}</option>
                     </select>
                   </div>
                   
                   <div>
-                    <Label>Homework Overdue Alerts</Label>
+                    <Label>{t('admin:smsSettings.homeworkOverdueAlerts')}</Label>
                     <select className="w-full mt-2 p-2 border rounded">
-                      <option>1 day after deadline</option>
-                      <option>3 days after deadline</option>
-                      <option>1 week after deadline</option>
+                      <option>{t('admin:smsSettings.timingOptions.1DayAfterDeadline')}</option>
+                      <option>{t('admin:smsSettings.timingOptions.3DaysAfterDeadline')}</option>
+                      <option>{t('admin:smsSettings.timingOptions.1WeekAfterDeadline')}</option>
                     </select>
                   </div>
                   
                   <div>
-                    <Label>Absence Tracking</Label>
+                    <Label>{t('admin:smsSettings.absenceTracking')}</Label>
                     <select className="w-full mt-2 p-2 border rounded">
-                      <option>After 2 consecutive absences</option>
-                      <option>After 3 consecutive absences</option>
-                      <option>After 5 total absences</option>
+                      <option>{t('admin:smsSettings.timingOptions.after2ConsecutiveAbsences')}</option>
+                      <option>{t('admin:smsSettings.timingOptions.after3ConsecutiveAbsences')}</option>
+                      <option>{t('admin:smsSettings.timingOptions.after5TotalAbsences')}</option>
                     </select>
                   </div>
                 </div>
                 
                 <div className="flex items-center space-x-2 mt-6">
                   <Switch defaultChecked />
-                  <Label>Enable automatic SMS sending</Label>
+                  <Label>{t('admin:smsSettings.enableAutomaticSms')}</Label>
                 </div>
               </div>
             </CardContent>
