@@ -72,7 +72,15 @@ interface TeacherAssignment {
   notes?: string;
 }
 
-const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAYS_OF_WEEK = [
+  'Monday', // Could be translated but used for API consistency
+  'Tuesday', 
+  'Wednesday', 
+  'Thursday', 
+  'Friday', 
+  'Saturday', 
+  'Sunday'
+];
 
 // Time overlap detection utility function
 function isTimeOverlap(slot1: any, slot2: any): boolean {
@@ -306,46 +314,46 @@ export default function TeacherStudentMatchingPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-100">Students Needing Teachers</CardTitle>
+              <CardTitle className="text-sm font-medium text-blue-100">{t('admin:teacherStudentMatching.unassignedStudents')}</CardTitle>
               <Users className="h-5 w-5 text-blue-200" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{oneOnOneStudents.length}</div>
-              <p className="text-xs text-blue-100">Awaiting assignment</p>
+              <p className="text-xs text-blue-100">{t('admin:teacherStudentMatching.awaitingAssignment', { defaultValue: 'در انتظار تخصیص' })}</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-100">Available Teachers</CardTitle>
+              <CardTitle className="text-sm font-medium text-green-100">{t('admin:teacherStudentMatching.availableTeachers')}</CardTitle>
               <UserPlus className="h-5 w-5 text-green-200" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{teachers.length}</div>
-              <p className="text-xs text-green-100">Have capacity</p>
+              <p className="text-xs text-green-100">{t('admin:teacherStudentMatching.teachersCapacityAvailable')}</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-100">Private Classes</CardTitle>
+              <CardTitle className="text-sm font-medium text-purple-100">{t('admin:teacherStudentMatching.privateClasses', { defaultValue: 'کلاس‌های خصوصی' })}</CardTitle>
               <Target className="h-5 w-5 text-purple-200" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
                 {oneOnOneStudents.filter((s: any) => s.preferredClassType === 'private' || s.preferredClassType === 'both').length}
               </div>
-              <p className="text-xs text-purple-100">Students prefer 1-on-1</p>
+              <p className="text-xs text-purple-100">{t('admin:teacherStudentMatching.studentsPreferOneOnOne')}</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-indigo-100">Online Classes</CardTitle>
+              <CardTitle className="text-sm font-medium text-indigo-100">{t('admin:teacherStudentMatching.onlineClasses')}</CardTitle>
               <Video className="h-5 w-5 text-indigo-200" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
                 {oneOnOneStudents.filter((s: any) => s.preferredMode === 'online' || s.preferredMode === 'both').length}
               </div>
-              <p className="text-xs text-indigo-100">Prefer virtual</p>
+              <p className="text-xs text-indigo-100">{t('admin:teacherStudentMatching.preferVirtual')}</p>
             </CardContent>
           </Card>
         </div>
@@ -355,7 +363,7 @@ export default function TeacherStudentMatchingPage() {
           <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-lg">
             <CardTitle className="flex items-center text-gray-800">
               <Filter className="h-5 w-5 mr-2 text-blue-600" />
-              Filters
+{t('admin:teacherStudentMatching.filters')}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -363,7 +371,7 @@ export default function TeacherStudentMatchingPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search students..."
+                  placeholder={t('admin:teacherStudentMatching.searchStudents')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
@@ -371,44 +379,44 @@ export default function TeacherStudentMatchingPage() {
               </div>
               <Select value={filterLevel} onValueChange={setFilterLevel}>
                 <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500">
-                  <SelectValue placeholder="Select Level" />
+                  <SelectValue placeholder={t('admin:teacherStudentMatching.selectLevel')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="intermediate">Intermediate</SelectItem>
-                  <SelectItem value="advanced">Advanced</SelectItem>
+                  <SelectItem value="all">{t('admin:teacherStudentMatching.allLevels')}</SelectItem>
+                  <SelectItem value="beginner">{t('admin:teacherStudentMatching.beginner')}</SelectItem>
+                  <SelectItem value="intermediate">{t('admin:teacherStudentMatching.intermediate')}</SelectItem>
+                  <SelectItem value="advanced">{t('admin:teacherStudentMatching.advanced')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={filterLanguage} onValueChange={setFilterLanguage}>
                 <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500">
-                  <SelectValue placeholder="Select Language" />
+                  <SelectValue placeholder={t('admin:teacherStudentMatching.selectLanguage')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Languages</SelectItem>
-                  <SelectItem value="persian">Persian</SelectItem>
-                  <SelectItem value="english">English</SelectItem>
-                  <SelectItem value="arabic">Arabic</SelectItem>
+                  <SelectItem value="all">{t('admin:teacherStudentMatching.allLanguages')}</SelectItem>
+                  <SelectItem value="persian">فارسی</SelectItem>
+                  <SelectItem value="english">انگلیسی</SelectItem>
+                  <SelectItem value="arabic">عربی</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={filterClassType} onValueChange={setFilterClassType}>
                 <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500">
-                  <SelectValue placeholder="Select Type" />
+                  <SelectValue placeholder={t('admin:teacherStudentMatching.selectClassType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="private">Private Only</SelectItem>
-                  <SelectItem value="group">Group Only</SelectItem>
+                  <SelectItem value="all">{t('admin:teacherStudentMatching.allClassTypes')}</SelectItem>
+                  <SelectItem value="private">{t('admin:teacherStudentMatching.private')}</SelectItem>
+                  <SelectItem value="group">{t('admin:teacherStudentMatching.group')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={filterMode} onValueChange={setFilterMode}>
                 <SelectTrigger className="h-11 border-gray-200 focus:border-blue-500">
-                  <SelectValue placeholder="Select Mode" />
+                  <SelectValue placeholder={t('admin:teacherStudentMatching.selectMode')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Modes</SelectItem>
-                  <SelectItem value="online">Online</SelectItem>
-                  <SelectItem value="in-person">In-Person</SelectItem>
+                  <SelectItem value="all">{t('admin:teacherStudentMatching.allModes')}</SelectItem>
+                  <SelectItem value="online">{t('admin:teacherStudentMatching.online')}</SelectItem>
+                  <SelectItem value="in-person">{t('admin:teacherStudentMatching.inPerson')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -420,8 +428,8 @@ export default function TeacherStudentMatchingPage() {
           <CardContent className="p-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="one-on-one">One-on-One Students</TabsTrigger>
-                <TabsTrigger value="group-classes">Group Classes</TabsTrigger>
+                <TabsTrigger value="one-on-one">{t('admin:teacherStudentMatching.oneOnOneTab')}</TabsTrigger>
+                <TabsTrigger value="group-classes">{t('admin:teacherStudentMatching.groupClassesTab')}</TabsTrigger>
               </TabsList>
               
               {/* Tab Content */}
@@ -433,15 +441,15 @@ export default function TeacherStudentMatchingPage() {
                       <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
                         <CardTitle className="flex items-center text-blue-900">
                           <Users className="h-5 w-5 mr-2" />
-                          One-on-One Students ({oneOnOneStudents.length})
+                          {t('admin:teacherStudentMatching.oneOnOneTab')} ({oneOnOneStudents.length})
                         </CardTitle>
-                        <CardDescription>Students needing private teacher assignment</CardDescription>
+                        <CardDescription>{t('admin:teacherStudentMatching.studentsNeedingPrivateTeacher', { defaultValue: 'دانشجویان نیازمند تخصیص مدرس خصوصی' })}</CardDescription>
                       </CardHeader>
                       <CardContent className="p-4 max-h-96 overflow-y-auto">
                         {oneOnOneLoading ? (
-                          <div className="text-center py-8 text-gray-500">Loading students...</div>
+                          <div className="text-center py-8 text-gray-500">{t('admin:common.loading', { defaultValue: 'در حال بارگذاری...' })}</div>
                         ) : oneOnOneStudents.length === 0 ? (
-                          <div className="text-center py-8 text-gray-500">No one-on-one students found</div>
+                          <div className="text-center py-8 text-gray-500">{t('admin:teacherStudentMatching.noStudentsUnassigned')}</div>
                         ) : (
                           <div className="space-y-3">
                             {oneOnOneStudents.map((student: any) => (
@@ -456,7 +464,7 @@ export default function TeacherStudentMatchingPage() {
                                     </div>
                                   </div>
                                   <Button size="sm" variant="outline">
-                                    Assign Teacher
+                                    {t('admin:teacherStudentMatching.assignTeacher')}
                                   </Button>
                                 </div>
                               </div>
@@ -471,15 +479,15 @@ export default function TeacherStudentMatchingPage() {
                       <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
                         <CardTitle className="flex items-center text-green-900">
                           <UserPlus className="h-5 w-5 mr-2" />
-                          Available Teachers ({teachers.length})
+                          {t('admin:teacherStudentMatching.availableTeachers')} ({teachers.length})
                         </CardTitle>
-                        <CardDescription>Teachers available for one-on-one assignments</CardDescription>
+                        <CardDescription>{t('admin:teacherStudentMatching.teachersAvailableForOneOnOne', { defaultValue: 'مدرسان در دسترس برای تخصیص فردی' })}</CardDescription>
                       </CardHeader>
                       <CardContent className="p-4 max-h-96 overflow-y-auto">
                         {teachersLoading ? (
-                          <div className="text-center py-8 text-gray-500">Loading teachers...</div>
+                          <div className="text-center py-8 text-gray-500">{t('admin:common.loading', { defaultValue: 'در حال بارگذاری...' })}</div>
                         ) : teachers.length === 0 ? (
-                          <div className="text-center py-8 text-gray-500">No available teachers found</div>
+                          <div className="text-center py-8 text-gray-500">{t('admin:teacherStudentMatching.noAvailableTeachers')}</div>
                         ) : (
                           <div className="space-y-3">
                             {teachers.map((teacher: any) => (
@@ -489,13 +497,13 @@ export default function TeacherStudentMatchingPage() {
                                     <div className="font-medium">{teacher.firstName} {teacher.lastName}</div>
                                     <div className="text-sm text-gray-500">{teacher.email}</div>
                                     <div className="flex gap-2 mt-1">
-                                      <Badge variant="outline">{teacher.specialization || 'Persian'}</Badge>
-                                      <Badge variant="secondary">Available</Badge>
+                                      <Badge variant="outline">{teacher.specialization || t('admin:teacherStudentMatching.defaultSpecialization', { defaultValue: 'فارسی' })}</Badge>
+                                      <Badge variant="secondary">{t('admin:teacherStudentMatching.available')}</Badge>
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-sm font-medium">{teacher.hourlyRate ? `${teacher.hourlyRate.toLocaleString()} IRR/hr` : 'Rate TBD'}</div>
-                                    <div className="text-xs text-gray-500">Experience: {teacher.experience || 'N/A'}</div>
+                                    <div className="text-sm font-medium">{teacher.hourlyRate ? `${teacher.hourlyRate.toLocaleString()} IRR/hr` : t('admin:teacherStudentMatching.rateTBD', { defaultValue: 'نرخ تعیین نشده' })}</div>
+                                    <div className="text-xs text-gray-500">{t('admin:teacherStudentMatching.experience', { defaultValue: 'تجربه' })}: {teacher.experience || 'N/A'}</div>
                                   </div>
                                 </div>
                               </div>
@@ -514,15 +522,15 @@ export default function TeacherStudentMatchingPage() {
                       <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50">
                         <CardTitle className="flex items-center text-purple-900">
                           <Target className="h-5 w-5 mr-2" />
-                          Group Classes ({groupClasses.length})
+                          {t('admin:teacherStudentMatching.groupClassesTab')} ({groupClasses.length})
                         </CardTitle>
-                        <CardDescription>Group classes awaiting teacher assignment</CardDescription>
+                        <CardDescription>{t('admin:teacherStudentMatching.groupClassesNeedingTeachers')}</CardDescription>
                       </CardHeader>
                       <CardContent className="p-4 max-h-96 overflow-y-auto">
                         {groupClassesLoading ? (
-                          <div className="text-center py-8 text-gray-500">Loading group classes...</div>
+                          <div className="text-center py-8 text-gray-500">{t('admin:common.loading', { defaultValue: 'در حال بارگذاری...' })}</div>
                         ) : groupClasses.length === 0 ? (
-                          <div className="text-center py-8 text-gray-500">No group classes awaiting teachers</div>
+                          <div className="text-center py-8 text-gray-500">{t('admin:teacherStudentMatching.noGroupClassesFound')}</div>
                         ) : (
                           <div className="space-y-3">
                             {groupClasses.map((groupClass: any) => (
@@ -533,7 +541,7 @@ export default function TeacherStudentMatchingPage() {
                                     <div className="text-sm text-gray-500">{groupClass.language} - {groupClass.level}</div>
                                     <div className="flex gap-2 mt-1">
                                       <Badge variant="outline">{groupClass.deliveryMode}</Badge>
-                                      <Badge variant="outline">Max: {groupClass.maxStudents}</Badge>
+                                      <Badge variant="outline">{t('admin:teacherStudentMatching.capacityLimit', { defaultValue: 'حداکثر' })}: {groupClass.maxStudents}</Badge>
                                       <Badge variant="secondary">{groupClass.status}</Badge>
                                     </div>
                                     {groupClass.scheduledDays?.length > 0 && (
@@ -543,7 +551,7 @@ export default function TeacherStudentMatchingPage() {
                                     )}
                                   </div>
                                   <Button size="sm" variant="outline">
-                                    Assign Teacher
+                                    {t('admin:teacherStudentMatching.assignTeacher')}
                                   </Button>
                                 </div>
                               </div>
@@ -560,13 +568,13 @@ export default function TeacherStudentMatchingPage() {
                           <UserPlus className="h-5 w-5 mr-2" />
                           Available Teachers ({teachers.length})
                         </CardTitle>
-                        <CardDescription>Teachers available for group class assignments</CardDescription>
+                        <CardDescription>{t('admin:teacherStudentMatching.teachersAvailableForGroupClasses', { defaultValue: 'مدرسان در دسترس برای تخصیص کلاس گروهی' })}</CardDescription>
                       </CardHeader>
                       <CardContent className="p-4 max-h-96 overflow-y-auto">
                         {teachersLoading ? (
-                          <div className="text-center py-8 text-gray-500">Loading teachers...</div>
+                          <div className="text-center py-8 text-gray-500">{t('admin:common.loading', { defaultValue: 'در حال بارگذاری...' })}</div>
                         ) : teachers.length === 0 ? (
-                          <div className="text-center py-8 text-gray-500">No available teachers found</div>
+                          <div className="text-center py-8 text-gray-500">{t('admin:teacherStudentMatching.noAvailableTeachers')}</div>
                         ) : (
                           <div className="space-y-3">
                             {teachers.map((teacher: any) => (
@@ -576,13 +584,13 @@ export default function TeacherStudentMatchingPage() {
                                     <div className="font-medium">{teacher.firstName} {teacher.lastName}</div>
                                     <div className="text-sm text-gray-500">{teacher.email}</div>
                                     <div className="flex gap-2 mt-1">
-                                      <Badge variant="outline">{teacher.specialization || 'Persian'}</Badge>
-                                      <Badge variant="secondary">Available</Badge>
+                                      <Badge variant="outline">{teacher.specialization || t('admin:teacherStudentMatching.defaultSpecialization', { defaultValue: 'فارسی' })}</Badge>
+                                      <Badge variant="secondary">{t('admin:teacherStudentMatching.available')}</Badge>
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-sm font-medium">Group Rate: {teacher.hourlyRate ? `${Math.floor(teacher.hourlyRate * 0.8).toLocaleString()} IRR/hr` : 'TBD'}</div>
-                                    <div className="text-xs text-gray-500">Group Experience: {teacher.experience || 'N/A'}</div>
+                                    <div className="text-sm font-medium">{t('admin:teacherStudentMatching.groupRate', { defaultValue: 'نرخ گروهی' })}: {teacher.hourlyRate ? `${Math.floor(teacher.hourlyRate * 0.8).toLocaleString()} IRR/hr` : 'TBD'}</div>
+                                    <div className="text-xs text-gray-500">{t('admin:teacherStudentMatching.groupExperience', { defaultValue: 'تجربه گروهی' })}: {teacher.experience || 'N/A'}</div>
                                   </div>
                                 </div>
                               </div>

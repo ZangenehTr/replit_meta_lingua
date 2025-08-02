@@ -59,15 +59,15 @@ import {
 } from "lucide-react";
 
 const teacherSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Valid email is required"),
+  firstName: z.string().min(1, "نام الزامی است"),
+  lastName: z.string().min(1, "نام خانوادگی الزامی است"),
+  email: z.string().email("ایمیل معتبر الزامی است"),
   phone: z.string().optional(),
-  specialization: z.string().min(1, "Specialization is required"),
-  qualifications: z.string().min(1, "Qualifications are required"),
-  experience: z.string().min(1, "Experience is required"),
-  languages: z.string().min(1, "Languages taught are required"),
-  hourlyRate: z.number().min(1, "Hourly rate must be greater than 0"),
+  specialization: z.string().min(1, "تخصص الزامی است"),
+  qualifications: z.string().min(1, "مدارک الزامی است"),
+  experience: z.string().min(1, "تجربه الزامی است"),
+  languages: z.string().min(1, "زبان‌های تدریس الزامی است"),
+  hourlyRate: z.number().min(1, "نرخ ساعتی باید بیشتر از 0 باشد"),
   bio: z.string().optional(),
   status: z.enum(["active", "inactive"]).default("active"),
 });
@@ -227,8 +227,8 @@ export function AdminTeacherManagement() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">{t('admin:teachers.title')}</h1>
-          <p className="text-muted-foreground mt-2">{t('admin:teachers.subtitle')}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">{t('admin:teacherManagement.title')}</h1>
+          <p className="text-muted-foreground mt-2">{t('admin:teacherManagement.description', { defaultValue: 'مدیریت کادر آموزشی و پروفایل‌های آن‌ها' })}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex border rounded-lg overflow-hidden border-emerald-200">
@@ -239,7 +239,7 @@ export function AdminTeacherManagement() {
               className="rounded-none border-0 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
             >
               <GraduationCap className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Cards</span>
+              <span className="hidden sm:inline">{t('admin:teacherManagement.viewCards', { defaultValue: 'کارت‌ها' })}</span>
             </Button>
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
@@ -248,22 +248,22 @@ export function AdminTeacherManagement() {
               className="rounded-none border-0 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
             >
               <Users className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">List</span>
+              <span className="hidden sm:inline">{t('admin:teacherManagement.viewList', { defaultValue: 'فهرست' })}</span>
             </Button>
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700">
                 <Plus className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Add Teacher</span>
-                <span className="sm:hidden">Add</span>
+                <span className="hidden sm:inline">{t('admin:teacherManagement.addTeacher')}</span>
+                <span className="sm:hidden">{t('admin:teacherManagement.add', { defaultValue: 'افزودن' })}</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Add New Teacher</DialogTitle>
+                <DialogTitle>{t('admin:teacherManagement.addTeacher')}</DialogTitle>
                 <DialogDescription>
-                  Create a new instructor account and profile
+                  {t('admin:teacherManagement.createNewInstructor', { defaultValue: 'ایجاد حساب کاربری و پروفایل جدید برای مدرس' })}
                 </DialogDescription>
               </DialogHeader>
               
@@ -275,9 +275,9 @@ export function AdminTeacherManagement() {
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>First Name</FormLabel>
+                          <FormLabel>{t('admin:teacherManagement.form.firstName')}</FormLabel>
                           <FormControl>
-                            <Input placeholder="John" {...field} />
+                            <Input placeholder={t('admin:teacherManagement.form.firstNamePlaceholder', { defaultValue: 'احمد' })} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -289,9 +289,9 @@ export function AdminTeacherManagement() {
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Last Name</FormLabel>
+                          <FormLabel>{t('admin:teacherManagement.form.lastName')}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Doe" {...field} />
+                            <Input placeholder={t('admin:teacherManagement.form.lastNamePlaceholder', { defaultValue: 'احمدی' })} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -305,9 +305,9 @@ export function AdminTeacherManagement() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>{t('admin:teacherManagement.form.email')}</FormLabel>
                           <FormControl>
-                            <Input type="email" placeholder="teacher@institute.com" {...field} />
+                            <Input type="email" placeholder={t('admin:teacherManagement.form.emailPlaceholder', { defaultValue: 'ahmad@institute.com' })} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -319,9 +319,9 @@ export function AdminTeacherManagement() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone (Optional)</FormLabel>
+                          <FormLabel>{t('admin:teacherManagement.form.phone')}</FormLabel>
                           <FormControl>
-                            <Input placeholder="+98 912 345 6789" {...field} />
+                            <Input placeholder={t('admin:teacherManagement.form.phonePlaceholder', { defaultValue: '+98 912 345 6789' })} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -335,20 +335,20 @@ export function AdminTeacherManagement() {
                       name="specialization"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Specialization</FormLabel>
+                          <FormLabel>{t('admin:teacherManagement.form.specialization')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select specialization" />
+                                <SelectValue placeholder={t('admin:teacherManagement.form.selectSpecialization')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Persian Language">Persian Language</SelectItem>
-                              <SelectItem value="English Language">English Language</SelectItem>
-                              <SelectItem value="Arabic Language">Arabic Language</SelectItem>
-                              <SelectItem value="French Language">French Language</SelectItem>
-                              <SelectItem value="Mathematics">Mathematics</SelectItem>
-                              <SelectItem value="Literature">Literature</SelectItem>
+                              <SelectItem value="Persian Language">{t('admin:teacherManagement.form.persianLanguage', { defaultValue: 'زبان فارسی' })}</SelectItem>
+                              <SelectItem value="English Language">{t('admin:teacherManagement.form.englishLanguage', { defaultValue: 'زبان انگلیسی' })}</SelectItem>
+                              <SelectItem value="Arabic Language">{t('admin:teacherManagement.form.arabicLanguage', { defaultValue: 'زبان عربی' })}</SelectItem>
+                              <SelectItem value="French Language">{t('admin:teacherManagement.form.frenchLanguage', { defaultValue: 'زبان فرانسوی' })}</SelectItem>
+                              <SelectItem value="Mathematics">{t('admin:teacherManagement.form.mathematics')}</SelectItem>
+                              <SelectItem value="Literature">{t('admin:teacherManagement.form.literature')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -361,18 +361,18 @@ export function AdminTeacherManagement() {
                       name="experience"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Experience</FormLabel>
+                          <FormLabel>{t('admin:teacherManagement.form.experience')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Years of experience" />
+                                <SelectValue placeholder={t('admin:teacherManagement.form.yearsOfExperience')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="1-2 years">1-2 years</SelectItem>
-                              <SelectItem value="3-5 years">3-5 years</SelectItem>
-                              <SelectItem value="5-10 years">5-10 years</SelectItem>
-                              <SelectItem value="10+ years">10+ years</SelectItem>
+                              <SelectItem value="1-2 years">{t('admin:teacherManagement.form.experience1-2', { defaultValue: '۱-۲ سال' })}</SelectItem>
+                              <SelectItem value="3-5 years">{t('admin:teacherManagement.form.experience3-5', { defaultValue: '۳-۵ سال' })}</SelectItem>
+                              <SelectItem value="5-10 years">{t('admin:teacherManagement.form.experience5-10', { defaultValue: '۵-۱۰ سال' })}</SelectItem>
+                              <SelectItem value="10+ years">{t('admin:teacherManagement.form.experience10plus', { defaultValue: '۱۰+ سال' })}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -387,9 +387,9 @@ export function AdminTeacherManagement() {
                       name="languages"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Languages Taught</FormLabel>
+                          <FormLabel>{t('admin:teacherManagement.form.languagesTaught')}</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., Persian, English" {...field} />
+                            <Input placeholder={t('admin:teacherManagement.form.languagesTaughtPlaceholder', { defaultValue: 'مثلاً فارسی، انگلیسی' })} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -401,11 +401,11 @@ export function AdminTeacherManagement() {
                       name="hourlyRate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Hourly Rate (Toman)</FormLabel>
+                          <FormLabel>{t('admin:teacherManagement.form.hourlyRate')}</FormLabel>
                           <FormControl>
                             <Input 
                               type="number" 
-                              placeholder="500000"
+                              placeholder={t('admin:teacherManagement.form.hourlyRatePlaceholder', { defaultValue: '500000' })}
                               {...field}
                               onChange={(e) => field.onChange(Number(e.target.value))}
                             />
@@ -421,10 +421,10 @@ export function AdminTeacherManagement() {
                     name="qualifications"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Qualifications</FormLabel>
+                        <FormLabel>{t('admin:teacherManagement.form.qualifications')}</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="Degree, certifications, and relevant qualifications..."
+                            placeholder={t('admin:teacherManagement.form.qualificationsPlaceholder', { defaultValue: 'مدارک تحصیلی، گواهی‌نامه‌ها و صلاحیت‌های مرتبط...' })}
                             {...field}
                           />
                         </FormControl>
@@ -438,10 +438,10 @@ export function AdminTeacherManagement() {
                     name="bio"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Bio (Optional)</FormLabel>
+                        <FormLabel>{t('admin:teacherManagement.form.bio')}</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="Brief description of teaching approach and background..."
+                            placeholder={t('admin:teacherManagement.form.bioPlaceholder', { defaultValue: 'توضیح مختصری از روش تدریس و سابقه کاری...' })}
                             {...field}
                           />
                         </FormControl>
@@ -456,13 +456,13 @@ export function AdminTeacherManagement() {
                       variant="outline" 
                       onClick={() => setIsCreateDialogOpen(false)}
                     >
-                      Cancel
+                      {t('admin:teacherManagement.form.cancel')}
                     </Button>
                     <Button 
                       type="submit" 
                       disabled={createTeacherMutation.isPending}
                     >
-                      {createTeacherMutation.isPending ? "Creating..." : "Create Teacher"}
+                      {createTeacherMutation.isPending ? t('admin:teacherManagement.form.creating', { defaultValue: 'در حال ایجاد...' }) : t('admin:teacherManagement.form.saveTeacher')}
                     </Button>
                   </div>
                 </form>
@@ -476,7 +476,7 @@ export function AdminTeacherManagement() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:teacherManagement.statsTotal', { defaultValue: 'کل مدرسان' })}</CardTitle>
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -489,7 +489,7 @@ export function AdminTeacherManagement() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Teachers</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:teacherManagement.statsActive', { defaultValue: 'مدرسان فعال' })}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -497,7 +497,7 @@ export function AdminTeacherManagement() {
               {Array.isArray(teachers) ? teachers.filter((t: any) => t.isActive !== false).length : 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              94% active rate
+              {t('admin:teacherManagement.activeRate', { defaultValue: '94% نرخ فعالیت' })}
             </p>
           </CardContent>
         </Card>
@@ -535,7 +535,7 @@ export function AdminTeacherManagement() {
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search teachers..."
+              placeholder={t('admin:teacherManagement.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8"
@@ -548,9 +548,9 @@ export function AdminTeacherManagement() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Teachers</SelectItem>
-            <SelectItem value="active">Active Only</SelectItem>
-            <SelectItem value="inactive">Inactive Only</SelectItem>
+            <SelectItem value="all">{t('admin:teacherManagement.filterAll', { defaultValue: 'همه مدرسان' })}</SelectItem>
+            <SelectItem value="active">{t('admin:teacherManagement.filterActive', { defaultValue: 'فقط فعال' })}</SelectItem>
+            <SelectItem value="inactive">{t('admin:teacherManagement.filterInactive', { defaultValue: 'فقط غیرفعال' })}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -567,9 +567,9 @@ export function AdminTeacherManagement() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-medium text-destructive">Failed to load teachers</h3>
+                  <h3 className="font-medium text-destructive">{t('admin:teacherManagement.failedToLoad')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {error.message || 'An error occurred while fetching teacher data'}
+                    {error.message || t('admin:teacherManagement.errorLoading')}
                   </p>
                 </div>
               </div>
@@ -578,7 +578,7 @@ export function AdminTeacherManagement() {
                 onClick={() => refetch()}
                 disabled={teachersLoading}
               >
-                {teachersLoading ? "Retrying..." : "Retry"}
+                {teachersLoading ? t('admin:teacherManagement.retrying') : t('admin:teacherManagement.retry')}
               </Button>
             </div>
           </CardContent>
@@ -658,7 +658,7 @@ export function AdminTeacherManagement() {
                           {teacher.firstName} {teacher.lastName}
                         </CardTitle>
                         <Badge variant={teacher.isActive !== false ? "default" : "secondary"}>
-                          {teacher.isActive !== false ? "Active" : "Inactive"}
+                          {teacher.isActive !== false ? t('admin:teacherManagement.status.active') : t('admin:teacherManagement.status.inactive')}
                         </Badge>
                       </div>
                     </div>
@@ -699,29 +699,29 @@ export function AdminTeacherManagement() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm">
                       <BookOpen className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Specialization:</span>
-                      <span>{teacher.specialization || 'Not specified'}</span>
+                      <span className="font-medium">{t('admin:teacherManagement.labels.specialization')}:</span>
+                      <span>{teacher.specialization || t('admin:teacherManagement.notSpecified')}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Experience:</span>
-                      <span>{teacher.experience || 'Not specified'}</span>
+                      <span className="font-medium">{t('admin:teacherManagement.labels.experience')}:</span>
+                      <span>{teacher.experience || t('admin:teacherManagement.notSpecified')}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Rate:</span>
+                      <span className="font-medium">{t('admin:teacherManagement.labels.rate')}:</span>
                       <span>{new Intl.NumberFormat('fa-IR').format(teacher.hourlyRate || 500000)} تومان/ساعت</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Star className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Rating:</span>
+                      <span className="font-medium">{t('admin:teacherManagement.labels.rating')}:</span>
                       <span>4.8/5.0</span>
                     </div>
                   </div>
                   {teacher.qualifications && (
                     <div className="mt-3 pt-3 border-t">
                       <p className="text-sm text-muted-foreground">
-                        <strong>Qualifications:</strong> {teacher.qualifications}
+                        <strong>{t('admin:teacherManagement.labels.qualifications')}:</strong> {teacher.qualifications}
                       </p>
                     </div>
                   )}
@@ -737,13 +737,13 @@ export function AdminTeacherManagement() {
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="text-left p-4 font-medium">Name</th>
-                    <th className="text-left p-4 font-medium">Email</th>
-                    <th className="text-left p-4 font-medium">Specialization</th>
-                    <th className="text-left p-4 font-medium">Experience</th>
-                    <th className="text-left p-4 font-medium">Rate</th>
-                    <th className="text-left p-4 font-medium">Status</th>
-                    <th className="text-left p-4 font-medium">Actions</th>
+                    <th className="text-left p-4 font-medium">{t('admin:teacherManagement.table.name')}</th>
+                    <th className="text-left p-4 font-medium">{t('admin:teacherManagement.table.email')}</th>
+                    <th className="text-left p-4 font-medium">{t('admin:teacherManagement.table.specialization')}</th>
+                    <th className="text-left p-4 font-medium">{t('admin:teacherManagement.table.experience')}</th>
+                    <th className="text-left p-4 font-medium">{t('admin:teacherManagement.table.rate')}</th>
+                    <th className="text-left p-4 font-medium">{t('admin:teacherManagement.table.status')}</th>
+                    <th className="text-left p-4 font-medium">{t('admin:teacherManagement.table.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -769,14 +769,14 @@ export function AdminTeacherManagement() {
                           </div>
                         </td>
                         <td className="p-4 text-sm">{teacher.email}</td>
-                        <td className="p-4 text-sm">{teacher.specialization || 'Not specified'}</td>
-                        <td className="p-4 text-sm">{teacher.experience || 'Not specified'}</td>
+                        <td className="p-4 text-sm">{teacher.specialization || t('admin:teacherManagement.notSpecified')}</td>
+                        <td className="p-4 text-sm">{teacher.experience || t('admin:teacherManagement.notSpecified')}</td>
                         <td className="p-4 text-sm">
                           {new Intl.NumberFormat('fa-IR').format(teacher.hourlyRate || 500000)} تومان
                         </td>
                         <td className="p-4">
                           <Badge variant={teacher.isActive !== false ? "default" : "secondary"}>
-                            {teacher.isActive !== false ? "Active" : "Inactive"}
+                            {teacher.isActive !== false ? t('admin:teacherManagement.status.active') : t('admin:teacherManagement.status.inactive')}
                           </Badge>
                         </td>
                         <td className="p-4">
@@ -815,9 +815,11 @@ export function AdminTeacherManagement() {
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Teacher Details</DialogTitle>
+            <DialogTitle>{t('admin:teacherManagement.dialogs.viewTitle')}</DialogTitle>
             <DialogDescription>
-              View complete information for {selectedTeacher?.firstName} {selectedTeacher?.lastName}
+              {t('admin:teacherManagement.dialogs.viewDescription', { 
+                name: `${selectedTeacher?.firstName} ${selectedTeacher?.lastName}` 
+              })}
             </DialogDescription>
           </DialogHeader>
           
@@ -830,20 +832,20 @@ export function AdminTeacherManagement() {
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Email</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin:teacherManagement.labels.email')}</label>
                   <p>{selectedTeacher.email}</p>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Phone</label>
-                  <p>{selectedTeacher.phoneNumber || 'Not provided'}</p>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin:teacherManagement.labels.phone')}</label>
+                  <p>{selectedTeacher.phoneNumber || t('admin:teacherManagement.notSpecified')}</p>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin:teacherManagement.labels.status')}</label>
                   <div className="mt-1">
                     <Badge variant={selectedTeacher.isActive !== false ? "default" : "secondary"}>
-                      {selectedTeacher.isActive !== false ? "Active" : "Inactive"}
+                      {selectedTeacher.isActive !== false ? t('admin:teacherManagement.status.active') : t('admin:teacherManagement.status.inactive')}
                     </Badge>
                   </div>
                 </div>
@@ -851,43 +853,43 @@ export function AdminTeacherManagement() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Specialization</label>
-                  <p>{selectedTeacher.specialization || 'Not specified'}</p>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin:teacherManagement.labels.specialization')}</label>
+                  <p>{selectedTeacher.specialization || t('admin:teacherManagement.notSpecified')}</p>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Experience</label>
-                  <p>{selectedTeacher.experience || 'Not specified'}</p>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin:teacherManagement.labels.experience')}</label>
+                  <p>{selectedTeacher.experience || t('admin:teacherManagement.notSpecified')}</p>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Hourly Rate</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin:teacherManagement.labels.hourlyRate')}</label>
                   <p className="text-lg font-medium">
                     {new Intl.NumberFormat('fa-IR').format(selectedTeacher.hourlyRate || 500000)} تومان/ساعت
                   </p>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Languages</label>
-                  <p>{selectedTeacher.languages || 'Not specified'}</p>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin:teacherManagement.labels.languages')}</label>
+                  <p>{selectedTeacher.languages || t('admin:teacherManagement.notSpecified')}</p>
                 </div>
               </div>
               
               <div className="col-span-2 space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Qualifications</label>
-                  <p className="mt-1 text-sm">{selectedTeacher.qualifications || 'Not specified'}</p>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin:teacherManagement.labels.qualifications')}</label>
+                  <p className="mt-1 text-sm">{selectedTeacher.qualifications || t('admin:teacherManagement.notSpecified')}</p>
                 </div>
                 
                 {selectedTeacher.bio && (
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Biography</label>
+                    <label className="text-sm font-medium text-muted-foreground">{t('admin:teacherManagement.labels.biography')}</label>
                     <p className="mt-1 text-sm">{selectedTeacher.bio}</p>
                   </div>
                 )}
                 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Member Since</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin:teacherManagement.labels.memberSince')}</label>
                   <p className="text-sm">{new Date(selectedTeacher.createdAt).toLocaleDateString('fa-IR')}</p>
                 </div>
               </div>
@@ -896,14 +898,14 @@ export function AdminTeacherManagement() {
           
           <div className="flex justify-end gap-3 mt-6">
             <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
-              Close
+              {t('admin:teacherManagement.actions.close')}
             </Button>
             <Button onClick={() => {
               setIsViewDialogOpen(false);
               setIsEditDialogOpen(true);
             }}>
               <Edit3 className="h-4 w-4 mr-2" />
-              Edit Teacher
+              {t('admin:teacherManagement.actions.editTeacher')}
             </Button>
           </div>
         </DialogContent>
@@ -913,9 +915,11 @@ export function AdminTeacherManagement() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Teacher</DialogTitle>
+            <DialogTitle>{t('admin:teacherManagement.dialogs.editTitle')}</DialogTitle>
             <DialogDescription>
-              Update information for {selectedTeacher?.firstName} {selectedTeacher?.lastName}
+              {t('admin:teacherManagement.dialogs.editDescription', { 
+                name: `${selectedTeacher?.firstName} ${selectedTeacher?.lastName}` 
+              })}
             </DialogDescription>
           </DialogHeader>
           
@@ -927,9 +931,9 @@ export function AdminTeacherManagement() {
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First Name</FormLabel>
+                      <FormLabel>{t('admin:teacherManagement.form.firstName')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="John" {...field} />
+                        <Input placeholder={t('admin:teacherManagement.form.firstNamePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -941,9 +945,9 @@ export function AdminTeacherManagement() {
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Last Name</FormLabel>
+                      <FormLabel>{t('admin:teacherManagement.form.lastName')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Doe" {...field} />
+                        <Input placeholder={t('admin:teacherManagement.form.lastNamePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -957,9 +961,9 @@ export function AdminTeacherManagement() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>{t('admin:teacherManagement.form.email')}</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="teacher@institute.com" {...field} />
+                        <Input type="email" placeholder={t('admin:teacherManagement.emailPlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -971,9 +975,9 @@ export function AdminTeacherManagement() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone (Optional)</FormLabel>
+                      <FormLabel>{t('admin:teacherManagement.form.phone')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="+98 912 345 6789" {...field} />
+                        <Input placeholder={t('admin:teacherManagement.phonePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -987,20 +991,20 @@ export function AdminTeacherManagement() {
                   name="specialization"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Specialization</FormLabel>
+                      <FormLabel>{t('admin:teacherManagement.form.specialization')}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select specialization" />
+                            <SelectValue placeholder={t('admin:teacherManagement.form.specializationPlaceholder')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Persian Language">Persian Language</SelectItem>
-                          <SelectItem value="English Language">English Language</SelectItem>
-                          <SelectItem value="Arabic Language">Arabic Language</SelectItem>
-                          <SelectItem value="French Language">French Language</SelectItem>
-                          <SelectItem value="Mathematics">Mathematics</SelectItem>
-                          <SelectItem value="Literature">Literature</SelectItem>
+                          <SelectItem value="Persian Language">{t('admin:teacherManagement.persianLanguage')}</SelectItem>
+                          <SelectItem value="English Language">{t('admin:teacherManagement.englishLanguage')}</SelectItem>
+                          <SelectItem value="Arabic Language">{t('admin:teacherManagement.arabicLanguage')}</SelectItem>
+                          <SelectItem value="French Language">{t('admin:teacherManagement.frenchLanguage')}</SelectItem>
+                          <SelectItem value="Mathematics">{t('admin:teacherManagement.mathematics')}</SelectItem>
+                          <SelectItem value="Literature">{t('admin:teacherManagement.literature')}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -1013,18 +1017,18 @@ export function AdminTeacherManagement() {
                   name="experience"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Experience</FormLabel>
+                      <FormLabel>{t('admin:teacherManagement.form.experience')}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Years of experience" />
+                            <SelectValue placeholder={t('admin:teacherManagement.form.experiencePlaceholder')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="1-2 years">1-2 years</SelectItem>
-                          <SelectItem value="3-5 years">3-5 years</SelectItem>
-                          <SelectItem value="5-10 years">5-10 years</SelectItem>
-                          <SelectItem value="10+ years">10+ years</SelectItem>
+                          <SelectItem value="1-2 years">{t('admin:teacherManagement.experience1-2')}</SelectItem>
+                          <SelectItem value="3-5 years">{t('admin:teacherManagement.experience3-5')}</SelectItem>
+                          <SelectItem value="5-10 years">{t('admin:teacherManagement.experience5-10')}</SelectItem>
+                          <SelectItem value="10+ years">{t('admin:teacherManagement.experience10plus')}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -1039,9 +1043,9 @@ export function AdminTeacherManagement() {
                   name="languages"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Languages Taught</FormLabel>
+                      <FormLabel>{t('admin:teacherManagement.form.languagesTaught')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Persian, English" {...field} />
+                        <Input placeholder={t('admin:teacherManagement.languagesTaughtPlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1053,11 +1057,11 @@ export function AdminTeacherManagement() {
                   name="hourlyRate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Hourly Rate (Toman)</FormLabel>
+                      <FormLabel>{t('admin:teacherManagement.form.hourlyRate')}</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
-                          placeholder="500000"
+                          placeholder={t('admin:teacherManagement.hourlyRatePlaceholder')}
                           {...field}
                           onChange={(e) => field.onChange(Number(e.target.value))}
                         />
@@ -1073,10 +1077,10 @@ export function AdminTeacherManagement() {
                 name="qualifications"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Qualifications</FormLabel>
+                    <FormLabel>{t('admin:teacherManagement.form.qualifications')}</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Degree, certifications, and relevant qualifications..."
+                        placeholder={t('admin:teacherManagement.qualificationsPlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -1090,10 +1094,10 @@ export function AdminTeacherManagement() {
                 name="bio"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Bio (Optional)</FormLabel>
+                    <FormLabel>{t('admin:teacherManagement.form.bio')}</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Brief description of teaching approach and background..."
+                        placeholder={t('admin:teacherManagement.bioPlaceholder')}
                         {...field}
                       />
                     </FormControl>
@@ -1107,7 +1111,7 @@ export function AdminTeacherManagement() {
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
+                    <FormLabel>{t('admin:teacherManagement.form.status')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -1115,8 +1119,8 @@ export function AdminTeacherManagement() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="active">{t('admin:teacherManagement.status.active')}</SelectItem>
+                        <SelectItem value="inactive">{t('admin:teacherManagement.status.inactive')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -1126,10 +1130,10 @@ export function AdminTeacherManagement() {
 
               <div className="flex justify-end gap-3 mt-6">
                 <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
+                  {t('admin:teacherManagement.form.cancel')}
                 </Button>
                 <Button type="submit" disabled={updateTeacherMutation.isPending}>
-                  {updateTeacherMutation.isPending ? "Saving..." : "Save Changes"}
+                  {updateTeacherMutation.isPending ? t('admin:teacherManagement.form.saving', { defaultValue: 'در حال ذخیره...' }) : t('admin:teacherManagement.form.saveChanges')}
                 </Button>
               </div>
             </form>
