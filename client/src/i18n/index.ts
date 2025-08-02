@@ -12,11 +12,6 @@ import enCommon from './locales/en/common.json';
 import faCommon from './locales/fa/common.json';
 import arCommon from './locales/ar/common.json';
 
-// Debug resource loading
-console.log('Loading translations...');
-console.log('English Common navigation keys:', Object.keys(enCommon.navigation || {}));
-console.log('Persian Common navigation keys:', Object.keys(faCommon.navigation || {}));
-
 // Import additional namespaces
 import enAdmin from './locales/en/admin.json';
 import faAdmin from './locales/fa/admin.json';
@@ -58,7 +53,7 @@ i18n
   .init({
     detection: detectionOptions,
     fallbackLng: 'en',
-    debug: true,
+    debug: false,
     
     interpolation: {
       escapeValue: false, // React already escapes values
@@ -105,8 +100,6 @@ i18n
     
     defaultNS: 'common',
     ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant'],
-    keySeparator: '.',
-    nsSeparator: ':',
   });
 
 export default i18n;
