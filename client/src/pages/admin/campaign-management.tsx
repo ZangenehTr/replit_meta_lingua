@@ -76,6 +76,8 @@ export default function CampaignManagementPage() {
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [showTelegramDialog, setShowTelegramDialog] = useState(false);
   const [showAIDialog, setShowAIDialog] = useState(false);
+  const [showToolConfigDialog, setShowToolConfigDialog] = useState(false);
+  const [selectedTool, setSelectedTool] = useState<string>('');
   const [emailContent, setEmailContent] = useState('');
   const [telegramContent, setTelegramContent] = useState('');
   const [aiResponse, setAIResponse] = useState('');
@@ -152,13 +154,15 @@ export default function CampaignManagementPage() {
 
   // Marketing tools operation mutation
   const marketingToolMutation = useMutation({
-    mutationFn: async ({ toolName, action }: { toolName: string; action: string }) => {
+    mutationFn: async ({ toolName, action, config }: { toolName: string; action: string; config?: any }) => {
       return apiRequest(`/api/admin/marketing-tools/${encodeURIComponent(toolName)}/${action}`, {
-        method: 'POST'
+        method: 'POST',
+        body: config ? JSON.stringify(config) : undefined
       });
     },
     onSuccess: (data, variables) => {
-      toast({ title: `${variables.action} ${variables.toolName} successfully` });
+      toast({ title: `${variables.action} completed for ${variables.toolName}` });
+      setShowToolConfigDialog(false);
     },
     onError: (error, variables) => {
       toast({ title: `Failed to ${variables.action} ${variables.toolName}`, variant: "destructive" });
@@ -190,7 +194,20 @@ export default function CampaignManagementPage() {
   };
 
   const handleMarketingTool = (toolName: string, action: string = 'configure') => {
-    marketingToolMutation.mutate({ toolName, action });
+    if (action === 'configure') {
+      setSelectedTool(toolName);
+      setShowToolConfigDialog(true);
+    } else {
+      marketingToolMutation.mutate({ toolName, action });
+    }
+  };
+
+  const saveToolConfiguration = (config: any) => {
+    marketingToolMutation.mutate({ 
+      toolName: selectedTool, 
+      action: 'configure',
+      config 
+    });
   };
 
   const handleCrossplatformTool = (toolType: string) => {
@@ -960,6 +977,182 @@ export default function CampaignManagementPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Tool Configuration Dialog */}
+      <Dialog open={showToolConfigDialog} onOpenChange={setShowToolConfigDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t('admin:campaigns.configureTool', { tool: selectedTool })}</DialogTitle>
+            <DialogDescription>
+              {t('admin:campaigns.configureToolDesc', { tool: selectedTool })}
+            </DialogDescription>
+          </DialogHeader>
+          <ToolConfigurationForm 
+            toolName={selectedTool}
+            onSave={saveToolConfiguration}
+            onCancel={() => setShowToolConfigDialog(false)}
+            isLoading={marketingToolMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Tool Configuration Form Component
+function ToolConfigurationForm({ 
+  toolName, 
+  onSave, 
+  onCancel, 
+  isLoading 
+}: { 
+  toolName: string; 
+  onSave: (config: any) => void; 
+  onCancel: () => void; 
+  isLoading: boolean;
+}) {
+  const { t } = useTranslation(['admin', 'common']);
+  const [config, setConfig] = useState<any>({});
+
+  const handleSave = () => {
+    onSave(config);
+  };
+
+  const renderConfigForm = () => {
+    switch (toolName) {
+      case 'Instagram Integration':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="instagramToken">{t('admin:campaigns.accessToken')}</Label>
+              <Input
+                id="instagramToken"
+                type="password"
+                placeholder={t('admin:campaigns.enterAccessToken')}
+                value={config.accessToken || ''}
+                onChange={(e) => setConfig({...config, accessToken: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="instagramAccount">{t('admin:campaigns.accountHandle')}</Label>
+              <Input
+                id="instagramAccount"
+                placeholder="@your_account"
+                value={config.accountHandle || ''}
+                onChange={(e) => setConfig({...config, accountHandle: e.target.value})}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="autoPost"
+                checked={config.autoPost || false}
+                onCheckedChange={(checked) => setConfig({...config, autoPost: checked})}
+              />
+              <Label htmlFor="autoPost">{t('admin:campaigns.enableAutoPosting')}</Label>
+            </div>
+          </div>
+        );
+      
+      case 'Email Marketing':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="smtpHost">{t('admin:campaigns.smtpHost')}</Label>
+              <Input
+                id="smtpHost"
+                placeholder="smtp.gmail.com"
+                value={config.smtpHost || ''}
+                onChange={(e) => setConfig({...config, smtpHost: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="smtpPort">{t('admin:campaigns.smtpPort')}</Label>
+              <Input
+                id="smtpPort"
+                type="number"
+                placeholder="587"
+                value={config.smtpPort || ''}
+                onChange={(e) => setConfig({...config, smtpPort: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="emailFrom">{t('admin:campaigns.fromEmail')}</Label>
+              <Input
+                id="emailFrom"
+                type="email"
+                placeholder="noreply@metalingua.com"
+                value={config.fromEmail || ''}
+                onChange={(e) => setConfig({...config, fromEmail: e.target.value})}
+              />
+            </div>
+          </div>
+        );
+      
+      case 'Landing Page Builder':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="domain">{t('admin:campaigns.customDomain')}</Label>
+              <Input
+                id="domain"
+                placeholder="pages.metalingua.com"
+                value={config.domain || ''}
+                onChange={(e) => setConfig({...config, domain: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="template">{t('admin:campaigns.defaultTemplate')}</Label>
+              <Select value={config.template || ''} onValueChange={(value) => setConfig({...config, template: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('admin:campaigns.selectTemplate')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="modern">{t('admin:campaigns.modernTemplate')}</SelectItem>
+                  <SelectItem value="classic">{t('admin:campaigns.classicTemplate')}</SelectItem>
+                  <SelectItem value="persian">{t('admin:campaigns.persianTemplate')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="rtlSupport"
+                checked={config.rtlSupport || false}
+                onCheckedChange={(checked) => setConfig({...config, rtlSupport: checked})}
+              />
+              <Label htmlFor="rtlSupport">{t('admin:campaigns.enableRtlSupport')}</Label>
+            </div>
+          </div>
+        );
+      
+      default:
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="generalConfig">{t('admin:campaigns.configuration')}</Label>
+              <Textarea
+                id="generalConfig"
+                placeholder={t('admin:campaigns.enterConfiguration')}
+                value={config.general || ''}
+                onChange={(e) => setConfig({...config, general: e.target.value})}
+                rows={4}
+              />
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {renderConfigForm()}
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={onCancel}>
+          {t('common:actions.cancel')}
+        </Button>
+        <Button onClick={handleSave} disabled={isLoading}>
+          {isLoading ? t('common:actions.saving') : t('common:actions.save')}
+        </Button>
       </div>
+    </div>
   );
 }
