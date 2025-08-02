@@ -48,7 +48,7 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['admin', 'common']);
 
   const { data: availableTeachers } = useQuery<TeacherAvailability[]>({
     queryKey: ['/api/manager/available-teachers', courseType, level, selectedDays, timeSlot],
