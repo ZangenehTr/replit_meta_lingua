@@ -64,8 +64,11 @@ interface ClassSession {
 interface Teacher {
   id: number;
   name: string;
+  firstName: string;
+  lastName: string;
   specializations: string[];
   availability: any[];
+  availabilityPeriods?: any[];
   rating: number;
 }
 
@@ -850,13 +853,13 @@ function ClassScheduleForm({
           checked={formData.isRecurring}
           onCheckedChange={(v) => setFormData({ ...formData, isRecurring: v })}
         />
-        <Label htmlFor="recurring">Recurring Class</Label>
+        <Label htmlFor="recurring">{t('classScheduling.recurringClass')}</Label>
       </div>
 
       {formData.isRecurring && (
         <div className="grid grid-cols-2 gap-4 pl-8">
           <div className="space-y-2">
-            <Label htmlFor="recurringPattern">Repeat</Label>
+            <Label htmlFor="recurringPattern">{t('classScheduling.repeat')}</Label>
             <Select 
               value={formData.recurringPattern} 
               onValueChange={(v) => setFormData({ ...formData, recurringPattern: v })}
@@ -865,16 +868,16 @@ function ClassScheduleForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="daily">{t('classScheduling.daily')}</SelectItem>
+                <SelectItem value="weekly">{t('classScheduling.weekly')}</SelectItem>
+                <SelectItem value="biweekly">{t('classScheduling.biweekly')}</SelectItem>
+                <SelectItem value="monthly">{t('classScheduling.monthly')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="recurringEnd">End Date</Label>
+            <Label htmlFor="recurringEnd">{t('classScheduling.endDate')}</Label>
             <Input
               id="recurringEnd"
               type="date"

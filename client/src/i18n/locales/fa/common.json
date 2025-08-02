@@ -407,7 +407,13 @@
       "good": "خوب", 
       "fair": "متوسط",
       "poor": "ضعیف"
-    }
+    },
+    "repeat": "تکرار",
+    "endDate": "تاریخ پایان",
+    "daily": "روزانه",
+    "weekly": "هفتگی",
+    "biweekly": "دو هفته‌ای",
+    "monthly": "ماهانه"
   },
   "filters": {
     "allTeachers": "همه معلمان",

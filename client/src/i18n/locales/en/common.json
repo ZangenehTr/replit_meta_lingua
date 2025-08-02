@@ -948,6 +948,13 @@
     "sessionNotes": "Any specific notes for this session (e.g., guest speaker, special topic)..."
   },
   "classScheduling": {
+    "recurringClass": "Recurring Class",
+    "repeat": "Repeat",
+    "endDate": "End Date", 
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "biweekly": "Bi-weekly",
+    "monthly": "Monthly",
     "scheduleNewClass": "Schedule New Class",
     "course": "Course",
     "selectCourseToSchedule": "Select course to schedule",

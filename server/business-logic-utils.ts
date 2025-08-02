@@ -7,7 +7,7 @@ import { User } from '../shared/schema';
  * TEACHER FILTERING UTILITIES
  * Consolidates 10+ teacher filtering duplications across routes.ts
  */
-export const TEACHER_ROLES = ['Teacher/Tutor', 'instructor'] as const;
+export const TEACHER_ROLES = ['Teacher/Tutor', 'instructor', 'teacher', 'Teacher'] as const;
 
 export function filterTeachers(users: User[]): User[] {
   return users.filter(user => TEACHER_ROLES.includes(user.role as any));
