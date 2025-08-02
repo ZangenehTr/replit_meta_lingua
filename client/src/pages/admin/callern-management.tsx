@@ -149,15 +149,15 @@ export function CallernManagement() {
       // Check if error message contains schedule conflict details
       if (error.message.includes('scheduled sessions:')) {
         toast({
-          title: "Schedule Conflict - Cannot Add Teacher",
+          title: t('admin:callernManagement.scheduleConflict'),
           description: error.message,
           variant: "destructive",
           duration: 7000 // Longer duration for conflict messages
         });
       } else if (error.message.includes('Authentication failed')) {
         toast({
-          title: "Authentication Error",
-          description: "Please log in again",
+          title: t('admin:callernManagement.authenticationError'),
+          description: t('admin:callernManagement.pleaseLoginAgain'),
           variant: "destructive"
         });
         // Redirect to login
@@ -230,21 +230,21 @@ export function CallernManagement() {
       <div className={`min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 p-4 sm:p-6 flex items-center justify-center ${isRTL ? 'rtl' : 'ltr'}`}>
         <Card className="max-w-md text-center">
           <CardHeader>
-            <CardTitle className="text-red-600">Access Denied</CardTitle>
+            <CardTitle className="text-red-600">{t('admin:callernManagement.accessDenied')}</CardTitle>
             <CardDescription>
-              Only administrators and supervisors can access Callern Management. Your current role is: {user.role}
+              {t('admin:callernManagement.adminSupervisorOnly')} {t('admin:callernManagement.yourCurrentRole')}: {user.role}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Please log in with an admin or supervisor account to manage Callern settings.
+              {t('admin:callernManagement.pleaseLoginAgain')}
             </p>
             <Button 
               variant="outline" 
               className="mt-4"
               onClick={() => window.location.href = '/login'}
             >
-              Switch Account
+              {t('admin:callernManagement.switchAccount')}
             </Button>
           </CardContent>
         </Card>
@@ -257,20 +257,20 @@ export function CallernManagement() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{t('admin:callern.title')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{t('admin:callernManagement.title')}</h1>
           <p className="text-muted-foreground mt-2">
-            {t('admin:callern.subtitle')}
+            {t('admin:callernManagement.subtitle')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="flex items-center gap-1 border-purple-200">
             <Phone className="h-3 w-3" />
-            <span className="hidden sm:inline">{Array.isArray(teacherAvailability) ? teacherAvailability.filter(t => t.isOnline)?.length : 0} Online</span>
+            <span className="hidden sm:inline">{Array.isArray(teacherAvailability) ? teacherAvailability.filter(t => t.isOnline)?.length : 0} {t('admin:callernManagement.online')}</span>
             <span className="sm:hidden">{Array.isArray(teacherAvailability) ? teacherAvailability.filter(t => t.isOnline)?.length : 0}</span>
           </Badge>
           <Badge variant="outline" className="flex items-center gap-1 border-indigo-200">
             <Users className="h-3 w-3" />
-            <span className="hidden sm:inline">{Array.isArray(teacherAvailability) ? teacherAvailability.length : 0} Total</span>
+            <span className="hidden sm:inline">{Array.isArray(teacherAvailability) ? teacherAvailability.length : 0} {t('common:total')}</span>
             <span className="sm:hidden">{Array.isArray(teacherAvailability) ? teacherAvailability.length : 0}</span>
           </Badge>
         </div>
@@ -279,23 +279,23 @@ export function CallernManagement() {
       <Tabs defaultValue="availability" className="w-full">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10">
           <TabsTrigger value="availability" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">Teacher Availability</span>
-            <span className="sm:hidden">Availability</span>
+            <span className="hidden sm:inline">{t('admin:callernManagement.teacherAvailability')}</span>
+            <span className="sm:hidden">{t('admin:callernManagement.availableTeachers')}</span>
           </TabsTrigger>
           <TabsTrigger value="packages" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">Callern Packages</span>
-            <span className="sm:hidden">Packages</span>
+            <span className="hidden sm:inline">{t('admin:callernManagement.callernPackages')}</span>
+            <span className="sm:hidden">{t('admin:callernManagement.callernPackages')}</span>
           </TabsTrigger>
           <TabsTrigger value="assignments" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">Duty Assignments</span>
-            <span className="sm:hidden">Assignments</span>
+            <span className="hidden sm:inline">{t('admin:callernManagement.teacherManagement')}</span>
+            <span className="sm:hidden">{t('admin:callernManagement.teacherManagement')}</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="availability" className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {loadingAvailability ? (
-              <div className="col-span-3 text-center py-8">Loading teacher availability...</div>
+              <div className="col-span-3 text-center py-8">{t('common:loading')}</div>
             ) : (
               Array.isArray(teacherAvailability) ? teacherAvailability?.map((teacher) => (
                 <Card key={teacher.id} className="hover:shadow-md transition-shadow">
@@ -312,14 +312,14 @@ export function CallernManagement() {
                       <div className="flex items-center gap-2">
                         {getOnlineStatusIcon(teacher.isOnline)}
                         <Badge className={getOnlineStatusColor(teacher.isOnline)}>
-                          {teacher.isOnline ? 'Online' : 'Offline'}
+                          {teacher.isOnline ? t('admin:callernManagement.online') : t('admin:callernManagement.offline')}
                         </Badge>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">Available for Calls</Label>
+                      <Label className="text-sm font-medium">{t('admin:callernManagement.toggleOnlineStatus')}</Label>
                       <Switch
                         checked={teacher.isOnline}
                         onCheckedChange={() => toggleTeacherOnline(teacher.teacherId, teacher.isOnline)}
@@ -329,14 +329,14 @@ export function CallernManagement() {
                     
                     {teacher.hourlyRate && (
                       <div className="text-sm">
-                        <span className="text-gray-500">Hourly Rate:</span>
+                        <span className="text-gray-500">{t('admin:callernManagement.hourlyRate')}:</span>
                         <span className="font-medium ml-1">{teacher.hourlyRate} IRR</span>
                       </div>
                     )}
                     
                     {teacher.lastActiveAt && (
                       <div className="text-sm text-gray-500">
-                        Last Active: {new Date(teacher.lastActiveAt).toLocaleDateString()}
+                        {t('admin:callernManagement.lastActive')}: {new Date(teacher.lastActiveAt).toLocaleDateString()}
                       </div>
                     )}
                     
@@ -358,12 +358,12 @@ export function CallernManagement() {
                       }}
                     >
                       <Settings className="h-3 w-3 mr-1" />
-                      Configure
+                      {t('admin:callernManagement.configure')}
                     </Button>
                   </CardContent>
                 </Card>
               )) : (
-                <div className="col-span-3 text-center py-8 text-muted-foreground">No teacher availability data.</div>
+                <div className="col-span-3 text-center py-8 text-muted-foreground">{t('admin:callernManagement.noAvailabilityData')}</div>
               )
             )}
           </div>
@@ -375,29 +375,29 @@ export function CallernManagement() {
                 <DialogTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2">
                     <Plus className="h-4 w-4" />
-                    Add Teacher to Callern
+                    {t('admin:callernManagement.addTeacherToCallern')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add Teacher to Callern</DialogTitle>
+                    <DialogTitle>{t('admin:callernManagement.addTeacherToCallern')}</DialogTitle>
                     <DialogDescription>
-                      Select a teacher to enable for on-demand Callern video calls
+                      {t('admin:callernManagement.enableForOnDemandCalls')}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label>Select Teacher</Label>
+                      <Label>{t('admin:callernManagement.selectATeacher')}</Label>
                       <Select 
                         value={newTeacherForm.teacherId} 
                         onValueChange={(value) => setNewTeacherForm(prev => ({...prev, teacherId: value}))}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose a teacher" />
+                          <SelectValue placeholder={t('admin:callernManagement.chooseTeacher')} />
                         </SelectTrigger>
                         <SelectContent>
                           {loadingTeachers ? (
-                            <SelectItem value="loading" disabled>Loading teachers...</SelectItem>
+                            <SelectItem value="loading" disabled>{t('admin:callernManagement.loadingTeachers')}</SelectItem>
                           ) : (
                             Array.isArray(availableTeachers) && availableTeachers.length > 0 ? 
                             availableTeachers.map((teacher) => (
@@ -405,7 +405,7 @@ export function CallernManagement() {
                                 {teacher.firstName} {teacher.lastName}
                               </SelectItem>
                             )) : (
-                              <SelectItem value="no-teachers" disabled>No teachers available</SelectItem>
+                              <SelectItem value="no-teachers" disabled>{t('admin:callernManagement.noTeachersAvailable')}</SelectItem>
                             )
                           )}
                         </SelectContent>
@@ -413,7 +413,7 @@ export function CallernManagement() {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label>Hourly Rate (IRR)</Label>
+                      <Label>{t('admin:callernManagement.hourlyRate')} (IRR)</Label>
                       <Input 
                         type="number" 
                         placeholder="500000"
@@ -423,7 +423,7 @@ export function CallernManagement() {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label>Available Hours</Label>
+                      <Label>{t('admin:callernManagement.availableHours')}</Label>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="flex items-center space-x-2">
                           <input 
@@ -432,7 +432,7 @@ export function CallernManagement() {
                             checked={newTeacherForm.availableHours.includes('08:00-12:00')}
                             onChange={(e) => handleAvailableHourChange('morning', e.target.checked)}
                           />
-                          <Label htmlFor="morning" className="text-sm">Morning (08:00-12:00)</Label>
+                          <Label htmlFor="morning" className="text-sm">{t('admin:callernManagement.morning')} (08:00-12:00)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <input 
@@ -441,7 +441,7 @@ export function CallernManagement() {
                             checked={newTeacherForm.availableHours.includes('12:00-18:00')}
                             onChange={(e) => handleAvailableHourChange('afternoon', e.target.checked)}
                           />
-                          <Label htmlFor="afternoon" className="text-sm">Afternoon (12:00-18:00)</Label>
+                          <Label htmlFor="afternoon" className="text-sm">{t('admin:callernManagement.afternoon')} (12:00-18:00)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <input 
@@ -450,7 +450,7 @@ export function CallernManagement() {
                             checked={newTeacherForm.availableHours.includes('18:00-24:00')}
                             onChange={(e) => handleAvailableHourChange('evening', e.target.checked)}
                           />
-                          <Label htmlFor="evening" className="text-sm">Evening (18:00-24:00)</Label>
+                          <Label htmlFor="evening" className="text-sm">{t('admin:callernManagement.evening')} (18:00-24:00)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <input 
@@ -459,11 +459,11 @@ export function CallernManagement() {
                             checked={newTeacherForm.availableHours.includes('00:00-08:00')}
                             onChange={(e) => handleAvailableHourChange('overnight', e.target.checked)}
                           />
-                          <Label htmlFor="overnight" className="text-sm">Overnight (00:00-08:00)</Label>
+                          <Label htmlFor="overnight" className="text-sm">{t('admin:callernManagement.overnight')} (00:00-08:00)</Label>
                         </div>
                       </div>
                       <div className="text-xs text-muted-foreground mt-2">
-                        💡 Tip: If you get schedule conflicts, try different hours that don't overlap with the teacher's existing classes
+                        {t('admin:callernManagement.scheduleConflictTip')}
                       </div>
                     </div>
                     
@@ -472,7 +472,7 @@ export function CallernManagement() {
                       onClick={handleSubmitNewTeacher}
                       disabled={addTeacherMutation.isPending}
                     >
-                      {addTeacherMutation.isPending ? 'Adding...' : 'Add Teacher'}
+                      {addTeacherMutation.isPending ? t('common:loading') : t('admin:callernManagement.addTeacher')}
                     </Button>
                   </div>
                 </DialogContent>
@@ -484,7 +484,7 @@ export function CallernManagement() {
         <TabsContent value="packages" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {loadingPackages ? (
-              <div className="col-span-3 text-center py-8">Loading Callern packages...</div>
+              <div className="col-span-3 text-center py-8">{t('common:loading')}</div>
             ) : (
               Array.isArray(callernPackages) && callernPackages?.map((pkg) => (
                 <Card key={pkg.id}>
