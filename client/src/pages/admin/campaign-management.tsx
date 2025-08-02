@@ -639,18 +639,20 @@ export default function CampaignManagementPage() {
                             </div>
                             <div>
                               <p className="text-xs text-gray-500">Conversions</p>
-                              <p className="text-sm font-medium">{campaign.metrics.conversions}</p>
+                              <p className="text-sm font-medium">{campaign.metrics?.conversions || 0}</p>
                               <p className="text-xs text-gray-400">
-                                {((campaign.metrics.conversions / campaign.metrics.clicks) * 100).toFixed(1)}% rate
+                                {campaign.metrics?.clicks && campaign.metrics?.conversions 
+                                  ? ((campaign.metrics.conversions / campaign.metrics.clicks) * 100).toFixed(1)
+                                  : '0.0'}% rate
                               </p>
                             </div>
                             <div>
                               <p className="text-xs text-gray-500">Cost per Lead</p>
-                              <p className="text-sm font-medium">{campaign.metrics.cost_per_lead.toLocaleString()} IRR</p>
+                              <p className="text-sm font-medium">{(campaign.metrics?.cost_per_lead || 0).toLocaleString()} IRR</p>
                             </div>
                             <div>
                               <p className="text-xs text-gray-500">ROI</p>
-                              <p className="text-sm font-medium text-green-600">{campaign.metrics.roi}%</p>
+                              <p className="text-sm font-medium text-green-600">{campaign.metrics?.roi || 0}%</p>
                             </div>
                           </div>
                           
