@@ -934,5 +934,49 @@
   "saveSettings": "Save Settings",
   "totalRevenue": "Total Revenue",
   "fromLastMonth": "from last month",
-  "thisMonth": "this month"
+  "thisMonth": "this month",
+  "beginner": "Beginner",
+  "intermediate": "Intermediate",
+  "advanced": "Advanced",
+  "selectLevel": "Select level",
+  "placeholders": {
+    "selectLevel": "Select level"
+  },
+  "classScheduling": {
+    "scheduleNewClass": "Schedule New Class",
+    "course": "Course",
+    "selectCourseToSchedule": "Select course to schedule",
+    "room": "Room",
+    "selectRoom": "Select room",
+    "availableTeachers": "Available Teachers",
+    "selectAvailableTeacher": "Select available teacher",
+    "date": "Date",
+    "classType": "Class Type",
+    "online": "Online",
+    "inPerson": "In-Person",
+    "hybrid": "Hybrid",
+    "duration": "Duration",
+    "durationMinutes": "Duration (minutes)",
+    "minutes": "minutes",
+    "time": "Time",
+    "maxStudents": "Max Students",
+    "sessionNote": "Session Note",
+    "sessionNoteOptional": "Session Note (Optional)",
+    "sessionNotePlaceholder": "Any specific notes for this session (e.g., guest speaker, special topic)",
+    "recurringClass": "Recurring Class",
+    "scheduleClass": "Schedule Class",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "createClass": "Create Class",
+    "selectDate": "Select date",
+    "selectTime": "Select time",
+    "capacity": "Capacity",
+    "rating": "Rating",
+    "teacherCompatibility": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor"
+    }
+  }
 }

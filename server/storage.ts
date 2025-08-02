@@ -2030,6 +2030,14 @@ export class MemStorage implements IStorage {
     return [];
   }
 
+  async getRooms(): Promise<any[]> {
+    return [
+      { id: 1, name: "Room A1", capacity: 20, equipment: ["Projector", "Whiteboard"] },
+      { id: 2, name: "Room B2", capacity: 15, equipment: ["Computer", "Audio System"] },
+      { id: 3, name: "Virtual Room 1", capacity: 50, equipment: ["Video Conference", "Screen Share"] }
+    ];
+  }
+
   async getTeacherPerformance(teacherId?: number): Promise<any[]> {
     return [];
   }
