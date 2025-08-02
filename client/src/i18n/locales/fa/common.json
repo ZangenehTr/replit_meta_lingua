@@ -283,7 +283,11 @@
     "notes": "یادداشت‌ها",
     "beginner": "مقدماتی",
     "intermediate": "متوسط",
-    "advanced": "پیشرفته"
+    "advanced": "پیشرفته",
+    "day": "روز",
+    "week": "هفته",
+    "month": "ماه",
+    "today": "امروز"
   },
   "forms": {
     "firstName": "نام",
@@ -365,7 +369,8 @@
     "sessionTitle": "مثال: دستور زبان فارسی - جملات شرطی",
     "dayPlaceholder": "روز",
     "monthPlaceholder": "ماه",
-    "yearPlaceholder": "سال"
+    "yearPlaceholder": "سال",
+    "sessionNotes": "یادداشت‌های خاص برای این جلسه (مثل: مهمان ویژه، موضوع خاص)..."
   },
   "classScheduling": {
     "scheduleNewClass": "برنامه‌ریزی کلاس جدید",
@@ -403,5 +408,9 @@
       "fair": "متوسط",
       "poor": "ضعیف"
     }
+  },
+  "filters": {
+    "allTeachers": "همه معلمان",
+    "allRooms": "همه اتاق‌ها"
   }
 }
