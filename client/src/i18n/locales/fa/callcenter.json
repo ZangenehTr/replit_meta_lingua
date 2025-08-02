@@ -16,6 +16,60 @@
   },
   "leads": {
     "title": "مدیریت مشتریان بالقوه",
+    "subtitle": "مدیریت و پیگیری دانشجویان بالقوه و مشتریان احتمالی",
+    "addNewLead": "افزودن مشتری بالقوه جدید",
+    "createNewLead": "ایجاد مشتری بالقوه جدید",
+    "createNewLeadDesc": "افزودن مشتری بالقوه جدید به سیستم برای پیگیری و تبدیل",
+    "firstName": "نام",
+    "lastName": "نام خانوادگی",
+    "email": "ایمیل",
+    "phone": "تلفن",
+    "phoneNumber": "شماره تلفن",
+    "source": "منبع",
+    "priority": "اولویت",
+    "level": "سطح",
+    "interestedLanguage": "زبان مورد علاقه",
+    "budget": "بودجه",
+    "preferredFormat": "فرمت ترجیحی",
+    "notes": "یادداشت‌ها",
+    "enterFirstName": "نام را وارد کنید",
+    "enterLastName": "نام خانوادگی را وارد کنید",
+    "enterEmail": "آدرس ایمیل را وارد کنید",
+    "enterPhone": "شماره تلفن را وارد کنید",
+    "selectSource": "منبع را انتخاب کنید",
+    "selectPriority": "اولویت را انتخاب کنید",
+    "selectLevel": "سطح را انتخاب کنید",
+    "selectLanguage": "زبان را انتخاب کنید",
+    "selectFormat": "فرمت را انتخاب کنید",
+    "additionalNotes": "یادداشت‌های اضافی درباره مشتری",
+    "sources": {
+      "website": "وب‌سایت",
+      "socialMedia": "شبکه‌های اجتماعی",
+      "referral": "معرفی",
+      "coldCall": "تماس سرد",
+      "emailCampaign": "کمپین ایمیل",
+      "event": "رویداد"
+    },
+    "priorities": {
+      "low": "کم",
+      "medium": "متوسط",
+      "high": "زیاد"
+    },
+    "levels": {
+      "beginner": "مبتدی",
+      "intermediate": "متوسط",
+      "advanced": "پیشرفته"
+    },
+    "languages": {
+      "persian": "فارسی",
+      "english": "انگلیسی",
+      "arabic": "عربی"
+    },
+    "formats": {
+      "online": "آنلاین",
+      "inPerson": "حضوری",
+      "hybrid": "ترکیبی"
+    },
     "new": "جدید",
     "contacted": "تماس گرفته شده",
     "interested": "علاقه‌مند",
@@ -28,7 +82,18 @@
     "scheduleMeeting": "برنامه‌ریزی جلسه",
     "sendEmail": "ارسال ایمیل",
     "updateStatus": "به‌روزرسانی وضعیت",
-    "addNotes": "افزودن یادداشت"
+    "addNotes": "افزودن یادداشت",
+    "createLead": "ایجاد مشتری",
+    "creating": "در حال ایجاد...",
+    "voipCenter": "مرکز VoIP",
+    "leadCreated": "مشتری ایجاد شد",
+    "leadCreatedDesc": "مشتری جدید با موفقیت اضافه شد.",
+    "voipCallInitiated": "تماس VoIP برقرار شد",
+    "callInitiatedTo": "تماس با {{contactName}} برقرار شد",
+    "callFailed": "تماس ناموفق",
+    "callFailedDesc": "برقراری تماس VoIP ناموفق بود. لطفاً اتصال خود را بررسی کنید.",
+    "noPhoneNumber": "شماره تلفن موجود نیست",
+    "noPhoneNumberDesc": "{{firstName}} {{lastName}} شماره تلفن ندارد."
   },
   "calls": {
     "title": "سیستم تماس",
