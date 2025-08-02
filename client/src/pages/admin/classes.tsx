@@ -226,7 +226,7 @@ export default function AdminClassesPage() {
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" onClick={() => setSelectedDate(new Date())}>
-                    Today
+                    {t('common.today')}
                   </Button>
                 </div>
                 
@@ -240,9 +240,9 @@ export default function AdminClassesPage() {
               {/* View Mode Tabs */}
               <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)}>
                 <TabsList>
-                  <TabsTrigger value="day">Day</TabsTrigger>
-                  <TabsTrigger value="week">Week</TabsTrigger>
-                  <TabsTrigger value="month">Month</TabsTrigger>
+                  <TabsTrigger value="day">{t('common.day')}</TabsTrigger>
+                  <TabsTrigger value="week">{t('common.week')}</TabsTrigger>
+                  <TabsTrigger value="month">{t('common.month')}</TabsTrigger>
                 </TabsList>
               </Tabs>
 
@@ -252,12 +252,12 @@ export default function AdminClassesPage() {
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
-                      Schedule Class
+                      {t('classScheduling.scheduleClass')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                      <DialogTitle>Schedule New Class</DialogTitle>
+                      <DialogTitle>{t('classScheduling.scheduleNewClass')}</DialogTitle>
                     </DialogHeader>
                     <ClassScheduleForm 
                       teachers={teachers}
@@ -281,10 +281,10 @@ export default function AdminClassesPage() {
             <div className="mt-4 pt-4 border-t flex flex-wrap gap-4">
               <Select value={filters.teacher} onValueChange={(v) => setFilters({ ...filters, teacher: v })}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="All Teachers" />
+                  <SelectValue placeholder={t('filters.allTeachers')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Teachers</SelectItem>
+                  <SelectItem value="all">{t('filters.allTeachers')}</SelectItem>
                   {(teachers as Teacher[] || []).map((teacher: Teacher) => (
                     <SelectItem key={teacher.id} value={teacher.id.toString()}>
                       {teacher.firstName} {teacher.lastName}
@@ -295,10 +295,10 @@ export default function AdminClassesPage() {
 
               <Select value={filters.room} onValueChange={(v) => setFilters({ ...filters, room: v })}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="All Rooms" />
+                  <SelectValue placeholder={t('filters.allRooms')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Rooms</SelectItem>
+                  <SelectItem value="all">{t('filters.allRooms')}</SelectItem>
                   {(rooms as ClassRoom[] || []).map((room: ClassRoom) => (
                     <SelectItem key={room.id} value={room.id}>
                       {room.name}
@@ -653,6 +653,7 @@ function ClassScheduleForm({
   isPending,
   initialData = null
 }: any) {
+  const { t } = useTranslation();
   // Fetch available courses
   const { data: courses = [] } = useQuery({
     queryKey: ['/api/admin/courses'],
@@ -692,13 +693,13 @@ function ClassScheduleForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2 col-span-2">
-          <Label htmlFor="course">Course*</Label>
+          <Label htmlFor="course">{t('classScheduling.course')}*</Label>
           <Select 
             value={formData.courseId} 
             onValueChange={(v) => setFormData({ ...formData, courseId: v })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select course to schedule" />
+              <SelectValue placeholder={t('classScheduling.selectCourseToSchedule')} />
             </SelectTrigger>
             <SelectContent>
               {courses.map((course: any) => (
@@ -716,13 +717,13 @@ function ClassScheduleForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="teacher">Available Teachers</Label>
+          <Label htmlFor="teacher">{t('classScheduling.availableTeachers')}</Label>
           <Select 
             value={formData.teacherId} 
             onValueChange={(v) => setFormData({ ...formData, teacherId: v })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select available teacher" />
+              <SelectValue placeholder={t('classScheduling.selectAvailableTeacher')} />
             </SelectTrigger>
             <SelectContent>
               {teachers.map((teacher: Teacher) => (
@@ -741,13 +742,13 @@ function ClassScheduleForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="room">Room</Label>
+          <Label htmlFor="room">{t('classScheduling.room')}</Label>
           <Select 
             value={formData.roomId} 
             onValueChange={(v) => setFormData({ ...formData, roomId: v })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select room" />
+              <SelectValue placeholder={t('classScheduling.selectRoom')} />
             </SelectTrigger>
             <SelectContent>
               {rooms.map((room: ClassRoom) => (
@@ -760,7 +761,7 @@ function ClassScheduleForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="type">Class Type</Label>
+          <Label htmlFor="type">{t('classScheduling.classType')}</Label>
           <Select 
             value={formData.type} 
             onValueChange={(v) => setFormData({ ...formData, type: v })}
@@ -769,15 +770,15 @@ function ClassScheduleForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="online">Online</SelectItem>
-              <SelectItem value="in-person">In-Person</SelectItem>
-              <SelectItem value="hybrid">Hybrid</SelectItem>
+              <SelectItem value="online">{t('classScheduling.online')}</SelectItem>
+              <SelectItem value="in-person">{t('classScheduling.inPerson')}</SelectItem>
+              <SelectItem value="hybrid">{t('classScheduling.hybrid')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="startDate">Date</Label>
+          <Label htmlFor="startDate">{t('classScheduling.date')}</Label>
           <Input
             id="startDate"
             type="date"
@@ -788,7 +789,7 @@ function ClassScheduleForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="startTime">Time</Label>
+          <Label htmlFor="startTime">{t('classScheduling.time')}</Label>
           <Input
             id="startTime"
             type="time"
@@ -799,7 +800,7 @@ function ClassScheduleForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="duration">Duration (minutes)</Label>
+          <Label htmlFor="duration">{t('classScheduling.durationMinutes')}</Label>
           <Select 
             value={formData.duration} 
             onValueChange={(v) => setFormData({ ...formData, duration: v })}
@@ -808,17 +809,17 @@ function ClassScheduleForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="30">30 minutes</SelectItem>
-              <SelectItem value="45">45 minutes</SelectItem>
-              <SelectItem value="60">60 minutes</SelectItem>
-              <SelectItem value="90">90 minutes</SelectItem>
-              <SelectItem value="120">120 minutes</SelectItem>
+              <SelectItem value="30">30 {t('classScheduling.minutes')}</SelectItem>
+              <SelectItem value="45">45 {t('classScheduling.minutes')}</SelectItem>
+              <SelectItem value="60">60 {t('classScheduling.minutes')}</SelectItem>
+              <SelectItem value="90">90 {t('classScheduling.minutes')}</SelectItem>
+              <SelectItem value="120">120 {t('classScheduling.minutes')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="maxStudents">Max Students</Label>
+          <Label htmlFor="maxStudents">{t('classScheduling.maxStudents')}</Label>
           <Input
             id="maxStudents"
             type="number"
@@ -833,12 +834,12 @@ function ClassScheduleForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="sessionNote">Session Note (Optional)</Label>
+        <Label htmlFor="sessionNote">{t('classScheduling.sessionNote')}</Label>
         <Textarea
           id="sessionNote"
           value={formData.sessionNote}
           onChange={(e) => setFormData({ ...formData, sessionNote: e.target.value })}
-          placeholder="Any specific notes for this session (e.g., guest speaker, special topic)..."
+          placeholder={t('placeholders.sessionNotes')}
           rows={2}
         />
       </div>

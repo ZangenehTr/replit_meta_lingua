@@ -939,8 +939,13 @@
   "intermediate": "Intermediate",
   "advanced": "Advanced",
   "selectLevel": "Select level",
+  "day": "Day",
+  "week": "Week", 
+  "month": "Month",
+  "today": "Today",
   "placeholders": {
-    "selectLevel": "Select level"
+    "selectLevel": "Select level",
+    "sessionNotes": "Any specific notes for this session (e.g., guest speaker, special topic)..."
   },
   "classScheduling": {
     "scheduleNewClass": "Schedule New Class",
@@ -978,5 +983,9 @@
       "fair": "Fair",
       "poor": "Poor"
     }
+  },
+  "filters": {
+    "allTeachers": "All Teachers",
+    "allRooms": "All Rooms"
   }
 }
