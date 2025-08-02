@@ -679,9 +679,9 @@ export default function CampaignManagementPage() {
                             <div>
                               <p className="text-xs text-gray-500">{t('admin:campaigns.budgetSpent')}</p>
                               <p className="text-sm font-medium">
-                                {campaign.spent.toLocaleString()} / {campaign.budget.toLocaleString()} IRR
+                                {(campaign.spent || 0).toLocaleString()} / {(campaign.budget || 0).toLocaleString()} IRR
                               </p>
-                              <Progress value={(campaign.spent / campaign.budget) * 100} className="h-2 mt-1" />
+                              <Progress value={campaign.budget ? ((campaign.spent || 0) / campaign.budget) * 100 : 0} className="h-2 mt-1" />
                             </div>
                             <div>
                               <p className="text-xs text-gray-500">{t('admin:campaigns.conversions')}</p>
@@ -1044,6 +1044,52 @@ export default function CampaignManagementPage() {
             }}
             isLoading={createCampaignMutation.isPending}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Campaign Settings/Edit Dialog */}
+      <Dialog open={!!selectedCampaign} onOpenChange={() => setSelectedCampaign(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t('admin:campaigns.editCampaign')}</DialogTitle>
+            <DialogDescription>
+              {t('admin:campaigns.editCampaignDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedCampaign && (
+            <NewCampaignForm 
+              campaignData={{
+                name: selectedCampaign.name,
+                type: selectedCampaign.type,
+                targetAudience: selectedCampaign.targetAudience,
+                budget: selectedCampaign.budget,
+                channels: selectedCampaign.channels || [],
+                startDate: selectedCampaign.startDate,
+                endDate: selectedCampaign.endDate,
+                description: '' // Add description if available
+              }}
+              onDataChange={(data) => {
+                setSelectedCampaign({...selectedCampaign, ...data});
+              }}
+              onSave={() => {
+                updateCampaignMutation.mutate({ 
+                  id: selectedCampaign.id, 
+                  updates: {
+                    name: selectedCampaign.name,
+                    type: selectedCampaign.type,
+                    targetAudience: selectedCampaign.targetAudience,
+                    budget: selectedCampaign.budget,
+                    channels: selectedCampaign.channels,
+                    startDate: selectedCampaign.startDate,
+                    endDate: selectedCampaign.endDate
+                  } 
+                });
+                setSelectedCampaign(null);
+              }}
+              onCancel={() => setSelectedCampaign(null)}
+              isLoading={updateCampaignMutation.isPending}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
