@@ -619,7 +619,9 @@
     "existingStudents": "دانشجویان فعلی",
     "allUsers": "همه کاربران",
     "pleaseEnterCampaignName": "لطفاً نام کمپین را وارد کنید",
-    "pleaseSelectChannels": "لطفاً حداقل یک کانال بازاریابی انتخاب کنید"
+    "pleaseSelectChannels": "لطفاً حداقل یک کانال بازاریابی انتخاب کنید",
+    "editCampaign": "ویرایش کمپین",
+    "editCampaignDesc": "تنظیمات و جزئیات کمپین تبلیغاتی را ویرایش کنید"
   },
   "userManagement": {
     "title": "مدیریت کاربران",

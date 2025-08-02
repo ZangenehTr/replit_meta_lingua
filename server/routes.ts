@@ -11136,7 +11136,15 @@ Return JSON format:
         ...req.body,
         createdAt: new Date(),
         updatedAt: new Date(),
-        status: 'active'
+        status: req.body.status || 'draft',
+        spent: 0,
+        metrics: {
+          impressions: 0,
+          clicks: 0,
+          conversions: 0,
+          cost_per_lead: 0,
+          roi: 0
+        }
       };
       const campaign = await storage.createMarketingCampaign(campaignData);
       res.status(201).json({ 
