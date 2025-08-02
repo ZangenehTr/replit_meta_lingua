@@ -162,34 +162,34 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-right">ایجاد کلاس جدید / Create New Class</DialogTitle>
+          <DialogTitle className="text-right">{t('classScheduling.scheduleNewClass')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="className">نام کلاس / Class Name *</Label>
+              <Label htmlFor="className">{t('classScheduling.course')} *</Label>
               <Input
                 id="className"
                 value={className}
                 onChange={(e) => setClassName(e.target.value)}
-                placeholder="دستور زبان فارسی - مقدماتی / Persian Grammar - Beginner"
+                placeholder={t('placeholders.sessionTitle')}
                 className="text-right"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="courseType">نوع دوره / Course Type *</Label>
+              <Label htmlFor="courseType">{t('classScheduling.course')} *</Label>
               <Select value={courseType} onValueChange={setCourseType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="انتخاب نوع دوره / Select course type" />
+                  <SelectValue placeholder={t('classScheduling.selectCourseToSchedule')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="persian-grammar">دستور زبان فارسی / Persian Grammar</SelectItem>
-                  <SelectItem value="persian-literature">ادبیات فارسی / Persian Literature</SelectItem>
-                  <SelectItem value="business-english">انگلیسی تجاری / Business English</SelectItem>
-                  <SelectItem value="arabic-basics">عربی مقدماتی / Arabic Basics</SelectItem>
-                  <SelectItem value="conversation">مکالمه / Conversation</SelectItem>
-                  <SelectItem value="writing">نگارش / Writing</SelectItem>
+                  <SelectItem value="persian-grammar">دستور زبان فارسی</SelectItem>
+                  <SelectItem value="persian-literature">ادبیات فارسی</SelectItem>
+                  <SelectItem value="business-english">انگلیسی تجاری</SelectItem>
+                  <SelectItem value="arabic-basics">عربی مقدماتی</SelectItem>
+                  <SelectItem value="conversation">مکالمه</SelectItem>
+                  <SelectItem value="writing">نگارش</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -197,20 +197,20 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="level">سطح / Level *</Label>
+              <Label htmlFor="level">{t('common.level')} *</Label>
               <Select value={level} onValueChange={setLevel}>
                 <SelectTrigger>
-                  <SelectValue placeholder="انتخاب سطح / Select level" />
+                  <SelectValue placeholder={t('placeholders.selectLevel')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="beginner">مقدماتی / Beginner</SelectItem>
-                  <SelectItem value="intermediate">متوسط / Intermediate</SelectItem>
-                  <SelectItem value="advanced">پیشرفته / Advanced</SelectItem>
+                  <SelectItem value="beginner">{t('common.beginner')}</SelectItem>
+                  <SelectItem value="intermediate">{t('common.intermediate')}</SelectItem>
+                  <SelectItem value="advanced">{t('common.advanced')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="maxStudents">حداکثر دانش‌آموز / Max Students</Label>
+              <Label htmlFor="maxStudents">{t('classScheduling.maxStudents')}</Label>
               <Input
                 id="maxStudents"
                 type="number"
@@ -222,27 +222,29 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="duration">مدت جلسه (دقیقه) / Duration (min)</Label>
+              <Label htmlFor="duration">{t('classScheduling.durationMinutes')}</Label>
               <Select value={duration} onValueChange={setDuration}>
                 <SelectTrigger>
-                  <SelectValue placeholder="انتخاب مدت / Select duration" />
+                  <SelectValue placeholder={t('placeholders.selectDuration')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="60">60 دقیقه / 60 minutes</SelectItem>
-                  <SelectItem value="90">90 دقیقه / 90 minutes</SelectItem>
-                  <SelectItem value="120">120 دقیقه / 120 minutes</SelectItem>
+                  <SelectItem value="30">30 {t('classScheduling.minutes')}</SelectItem>
+                  <SelectItem value="45">45 {t('classScheduling.minutes')}</SelectItem>
+                  <SelectItem value="60">60 {t('classScheduling.minutes')}</SelectItem>
+                  <SelectItem value="90">90 {t('classScheduling.minutes')}</SelectItem>
+                  <SelectItem value="120">120 {t('classScheduling.minutes')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">توضیحات / Description</Label>
+            <Label htmlFor="description">{t('common.description')}</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="توضیحات کلاس و اهداف یادگیری / Class description and learning objectives"
+              placeholder={t('placeholders.sessionDescription')}
               rows={3}
               className="text-right"
             />
@@ -324,7 +326,7 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
 
           {/* Schedule Selection */}
           <div className="space-y-4">
-            <Label>روزهای هفته / Days of Week *</Label>
+            <Label>{t('classScheduling.date')} *</Label>
             <div className="grid grid-cols-3 md:grid-cols-7 gap-2">
               {[
                 { en: 'Saturday', fa: 'شنبه' },
@@ -342,7 +344,7 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
                     onCheckedChange={() => handleDayToggle(day.en)}
                   />
                   <Label htmlFor={day.en} className="text-sm">
-                    {day.fa} / {day.en}
+                    {day.fa}
                   </Label>
                 </div>
               ))}
@@ -350,18 +352,18 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="timeSlot">زمان کلاس / Class Time *</Label>
+            <Label htmlFor="timeSlot">{t('classScheduling.time')} *</Label>
             <Select value={timeSlot} onValueChange={setTimeSlot}>
               <SelectTrigger>
-                <SelectValue placeholder="انتخاب زمان / Select time" />
+                <SelectValue placeholder={t('classScheduling.selectTime')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="08:00">08:00 صبح / 8:00 AM</SelectItem>
-                <SelectItem value="10:00">10:00 صبح / 10:00 AM</SelectItem>
-                <SelectItem value="14:00">14:00 بعدازظهر / 2:00 PM</SelectItem>
-                <SelectItem value="16:00">16:00 بعدازظهر / 4:00 PM</SelectItem>
-                <SelectItem value="18:00">18:00 عصر / 6:00 PM</SelectItem>
-                <SelectItem value="20:00">20:00 شب / 8:00 PM</SelectItem>
+                <SelectItem value="08:00">08:00</SelectItem>
+                <SelectItem value="10:00">10:00</SelectItem>
+                <SelectItem value="14:00">14:00</SelectItem>
+                <SelectItem value="16:00">16:00</SelectItem>
+                <SelectItem value="18:00">18:00</SelectItem>
+                <SelectItem value="20:00">20:00</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -369,7 +371,7 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
           {/* Teacher Assignment Based on Competency */}
           {availableTeachers && availableTeachers.length > 0 && (
             <div className="space-y-4">
-              <Label>انتخاب معلم / Teacher Assignment *</Label>
+              <Label>{t('classScheduling.availableTeachers')} *</Label>
               <div className="space-y-3 max-h-60 overflow-y-auto border rounded-lg p-4">
                 {availableTeachers.map((teacher) => {
                   const compatibility = getTeacherCompatibility(teacher);
@@ -397,16 +399,16 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
                               {teacher.specializations.join(', ')}
                             </div>
                             <div className="text-xs text-gray-500">
-                              ظرفیت: {teacher.currentLoad}/{teacher.maxCapacity} کلاس
-                              • امتیاز: {teacher.rating}★
+                              {t('classScheduling.capacity')}: {teacher.currentLoad}/{teacher.maxCapacity} کلاس
+                              • {t('classScheduling.rating')}: {teacher.rating}★
                             </div>
                           </div>
                         </div>
                         <div className={`px-2 py-1 rounded text-xs font-medium ${getCompatibilityColor(compatibility)}`}>
-                          {compatibility === 'excellent' && 'عالی / Excellent'}
-                          {compatibility === 'good' && 'خوب / Good'}
-                          {compatibility === 'fair' && 'متوسط / Fair'}
-                          {compatibility === 'poor' && 'ضعیف / Poor'}
+                          {compatibility === 'excellent' && t('classScheduling.teacherCompatibility.excellent')}
+                          {compatibility === 'good' && t('classScheduling.teacherCompatibility.good')}
+                          {compatibility === 'fair' && t('classScheduling.teacherCompatibility.fair')}
+                          {compatibility === 'poor' && t('classScheduling.teacherCompatibility.poor')}
                         </div>
                       </div>
                     </div>
@@ -418,10 +420,10 @@ export function CreateClassModal({ children }: CreateClassModalProps) {
 
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              انصراف / Cancel
+              {t('classScheduling.cancel')}
             </Button>
             <Button type="submit" disabled={createClass.isPending}>
-              {createClass.isPending ? "در حال ایجاد... / Creating..." : "ایجاد کلاس / Create Class"}
+              {createClass.isPending ? t('classScheduling.creating') : t('classScheduling.createClass')}
             </Button>
           </div>
         </form>

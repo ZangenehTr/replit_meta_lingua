@@ -280,7 +280,10 @@
     "amount": "مقدار",
     "price": "قیمت",
     "description": "توضیحات",
-    "notes": "یادداشت‌ها"
+    "notes": "یادداشت‌ها",
+    "beginner": "مقدماتی",
+    "intermediate": "متوسط",
+    "advanced": "پیشرفته"
   },
   "forms": {
     "firstName": "نام",
@@ -355,6 +358,7 @@
     "selectCourse": "دوره را انتخاب کنید",
     "selectDate": "تاریخ را انتخاب کنید",
     "selectDuration": "مدت زمان را انتخاب کنید",
+    "selectLevel": "انتخاب سطح",
     "enterDescription": "توضیحات را وارد کنید",
     "enterTitle": "عنوان را وارد کنید",
     "sessionDescription": "توضیح مختصری از آنچه در این جلسه پوشش داده می‌شود",
@@ -362,5 +366,42 @@
     "dayPlaceholder": "روز",
     "monthPlaceholder": "ماه",
     "yearPlaceholder": "سال"
+  },
+  "classScheduling": {
+    "scheduleNewClass": "برنامه‌ریزی کلاس جدید",
+    "course": "دوره",
+    "selectCourseToSchedule": "انتخاب دوره برای برنامه‌ریزی",
+    "room": "اتاق",
+    "selectRoom": "انتخاب اتاق",
+    "availableTeachers": "مدرسان موجود",
+    "selectAvailableTeacher": "انتخاب مدرس موجود",
+    "date": "تاریخ",
+    "classType": "نوع کلاس",
+    "online": "آنلاین",
+    "inPerson": "حضوری",
+    "hybrid": "ترکیبی",
+    "duration": "مدت زمان",
+    "durationMinutes": "مدت زمان (دقیقه)",
+    "minutes": "دقیقه",
+    "time": "زمان",
+    "maxStudents": "حداکثر دانشجویان",
+    "sessionNote": "یادداشت جلسه",
+    "sessionNoteOptional": "یادداشت جلسه (اختیاری)",
+    "sessionNotePlaceholder": "یادداشت‌های خاص برای این جلسه (مثلاً سخنران مهمان، موضوع ویژه)",
+    "recurringClass": "کلاس تکراری",
+    "scheduleClass": "برنامه‌ریزی کلاس",
+    "cancel": "انصراف",
+    "creating": "در حال ایجاد...",
+    "createClass": "ایجاد کلاس",
+    "selectDate": "انتخاب تاریخ",
+    "selectTime": "انتخاب زمان",
+    "capacity": "ظرفیت",
+    "rating": "امتیاز",
+    "teacherCompatibility": {
+      "excellent": "عالی",
+      "good": "خوب", 
+      "fair": "متوسط",
+      "poor": "ضعیف"
+    }
   }
 }
