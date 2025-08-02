@@ -147,6 +147,14 @@
     "assignTeacher": "تخصیص مدرس",
     "viewStudents": "مشاهده دانشجویان"
   },
+  "classes": {
+    "title": "مدیریت کلاس‌ها",
+    "subtitle": "برنامه‌ریزی و مدیریت جلسات کلاسی",
+    "createClass": "ایجاد کلاس جدید",
+    "online": "آنلاین",
+    "inPerson": "حضوری",
+    "hybrid": "ترکیبی"
+  },
   "financial": {
     "title": "مدیریت مالی",
     "overview": "نمای کلی",

@@ -312,25 +312,25 @@ export default function AdminClassesPage() {
 
               <Select value={filters.level} onValueChange={(v) => setFilters({ ...filters, level: v })}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="All Levels" />
+                  <SelectValue placeholder={t('common:allLevels')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="intermediate">Intermediate</SelectItem>
-                  <SelectItem value="advanced">Advanced</SelectItem>
+                  <SelectItem value="all">{t('common:allLevels')}</SelectItem>
+                  <SelectItem value="beginner">{t('common:beginner')}</SelectItem>
+                  <SelectItem value="intermediate">{t('common:intermediate')}</SelectItem>
+                  <SelectItem value="advanced">{t('common:advanced')}</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={filters.type} onValueChange={(v) => setFilters({ ...filters, type: v })}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="All Types" />
+                  <SelectValue placeholder={t('common:allTypes')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="online">Online</SelectItem>
-                  <SelectItem value="in-person">In-Person</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="all">{t('common:allTypes')}</SelectItem>
+                  <SelectItem value="online">{t('admin:classes.online')}</SelectItem>
+                  <SelectItem value="in-person">{t('admin:classes.inPerson')}</SelectItem>
+                  <SelectItem value="hybrid">{t('admin:classes.hybrid')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
