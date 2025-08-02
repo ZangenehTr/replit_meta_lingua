@@ -146,7 +146,7 @@ export default function AdminClassesPage() {
   });
 
   // Filter sessions based on selected filters
-  const filteredSessions = sessions.filter((session: ClassSession) => {
+  const filteredSessions = (sessions as ClassSession[] || []).filter((session: ClassSession) => {
     if (filters.teacher && filters.teacher !== 'all' && session.teacherId !== parseInt(filters.teacher)) return false;
     if (filters.room && filters.room !== 'all' && session.roomId !== filters.room) return false;
     if (filters.level && filters.level !== 'all' && session.level !== filters.level) return false;
@@ -173,7 +173,7 @@ export default function AdminClassesPage() {
 
   // Get sessions for a specific day
   const getSessionsForDay = (date: Date) => {
-    return filteredSessions.filter((session: ClassSession) => 
+    return (filteredSessions || []).filter((session: ClassSession) => 
       isSameDay(new Date(session.startTime), date)
     );
   };
@@ -285,9 +285,9 @@ export default function AdminClassesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Teachers</SelectItem>
-                  {teachers.map((teacher: Teacher) => (
+                  {(teachers as Teacher[] || []).map((teacher: Teacher) => (
                     <SelectItem key={teacher.id} value={teacher.id.toString()}>
-                      {teacher.name}
+                      {teacher.firstName} {teacher.lastName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -299,7 +299,7 @@ export default function AdminClassesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Rooms</SelectItem>
-                  {rooms.map((room: ClassRoom) => (
+                  {(rooms as ClassRoom[] || []).map((room: ClassRoom) => (
                     <SelectItem key={room.id} value={room.id}>
                       {room.name}
                     </SelectItem>

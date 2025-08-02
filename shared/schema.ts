@@ -11,6 +11,15 @@ export const users = pgTable("users", {
   lastName: text("last_name").notNull(),
   role: text("role").notNull().default("Student"), // Admin, Teacher/Tutor, Mentor, Student, Supervisor, Call Center Agent, Accountant
   phoneNumber: text("phone_number"),
+  phone: text("phone"), // Alias for phoneNumber compatibility
+  nationalId: text("national_id"), // Student identification
+  birthday: date("birthday"), // Birth date for age calculation
+  guardianName: text("guardian_name"), // For minor students
+  guardianPhone: text("guardian_phone"), // Guardian contact
+  notes: text("notes"), // Additional notes
+  profileImage: text("profile_image"), // Profile picture URL
+  level: text("level"), // Current proficiency level
+  status: text("status").default("active"), // Account status
   avatar: text("avatar"),
   isActive: boolean("is_active").default(true),
   preferences: jsonb("preferences"), // theme, language, notifications
@@ -47,9 +56,9 @@ export const userProfiles = pgTable("user_profiles", {
   targetLanguage: text("target_language"), // "persian", "english", "arabic", "german", etc.
   currentProficiency: text("current_proficiency"), // "beginner", "intermediate", "advanced"
   
-  // Student-specific fields
+  // Student-specific fields (moved to users table for compatibility)
   nationalId: text("national_id"),
-  dateOfBirth: date("date_of_birth"),
+  birthday: date("birthday"), // Changed from dateOfBirth for consistency
   guardianName: text("guardian_name"),
   guardianPhone: text("guardian_phone"),
   notes: text("notes"),
@@ -103,6 +112,7 @@ export const courses = pgTable("courses", {
   deliveryMode: text("delivery_mode").notNull(), // "online", "in_person", "self_paced", "callern"
   classFormat: text("class_format").notNull(), // "group", "one_on_one", "callern_package" (not applicable for self_paced)
   maxStudents: integer("max_students"), // null for one-on-one, number for group classes
+  rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"), // Course rating
   
   // Scheduling (not applicable for self_paced)
   firstSessionDate: date("first_session_date"), // Start date of the course

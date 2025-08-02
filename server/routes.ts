@@ -3448,9 +3448,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if amount is in valid increments
-      if (amount % settings.walletTopupIncrement !== 0) {
+      const increment = (settings as any)?.walletTopupIncrement || 10000;
+      if (amount % increment !== 0) {
         return res.status(400).json({ 
-          message: `Amount must be in increments of ${settings.walletTopupIncrement} IRR` 
+          message: `Amount must be in increments of ${increment} IRR` 
         });
       }
 
