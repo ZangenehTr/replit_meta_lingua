@@ -1725,68 +1725,68 @@ export function AdminStudents() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add New Student</DialogTitle>
+            <DialogTitle>{t('admin:students.addNewStudent')}</DialogTitle>
             <DialogDescription>
-              Create a new student profile and enrollment
+              {t('admin:students.createStudentProfile')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
+              <Label htmlFor="firstName">{t('admin:students.firstName')}</Label>
               <Input 
                 id="firstName" 
-                placeholder="Enter first name"
+                placeholder={t('admin:students.enterFirstName')}
                 value={newStudentData.firstName}
                 onChange={(e) => setNewStudentData({...newStudentData, firstName: e.target.value})}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
+              <Label htmlFor="lastName">{t('admin:students.lastName')}</Label>
               <Input 
                 id="lastName" 
-                placeholder="Enter last name"
+                placeholder={t('admin:students.enterLastName')}
                 value={newStudentData.lastName}
                 onChange={(e) => setNewStudentData({...newStudentData, lastName: e.target.value})}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('admin:students.email')}</Label>
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="Enter email address"
+                placeholder={t('admin:students.enterEmail')}
                 value={newStudentData.email}
                 onChange={(e) => setNewStudentData({...newStudentData, email: e.target.value})}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="phone">{t('admin:students.phoneNumber')}</Label>
               <Input 
                 id="phone" 
                 type="tel" 
-                placeholder="Enter phone number"
+                placeholder={t('admin:students.enterPhone')}
                 value={newStudentData.phone}
                 onChange={(e) => setNewStudentData({...newStudentData, phone: e.target.value})}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="level">Level</Label>
+              <Label htmlFor="level">{t('admin:students.level')}</Label>
               <Select value={newStudentData.level} onValueChange={(value) => setNewStudentData({...newStudentData, level: value})}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select level" />
+                  <SelectValue placeholder={t('admin:students.selectLevel')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Beginner">Beginner</SelectItem>
-                  <SelectItem value="Intermediate">Intermediate</SelectItem>
-                  <SelectItem value="Advanced">Advanced</SelectItem>
+                  <SelectItem value="Beginner">{t('admin:students.levels.beginner')}</SelectItem>
+                  <SelectItem value="Intermediate">{t('admin:students.levels.intermediate')}</SelectItem>
+                  <SelectItem value="Advanced">{t('admin:students.levels.advanced')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="courses">Course</Label>
+              <Label htmlFor="courses">{t('admin:students.course')}</Label>
               <Select value="" onValueChange={handleAddCourse}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select courses" />
+                  <SelectValue placeholder={t('admin:students.selectCourses')} />
                 </SelectTrigger>
                 <SelectContent>
                   {availableCourses.map((course) => (
@@ -1802,7 +1802,7 @@ export function AdminStudents() {
           {/* Selected Courses */}
           {newStudentData.courses && newStudentData.courses.length > 0 && (
             <div className="space-y-2">
-              <Label>Selected Courses</Label>
+              <Label>{t('admin:students.selectedCourses')}</Label>
               <div className="flex flex-wrap gap-2">
                 {newStudentData.courses.map((course, index) => (
                   <Badge key={index} variant="outline" className="flex items-center gap-1">
