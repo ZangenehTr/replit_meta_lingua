@@ -9,112 +9,71 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Enhanced RTL Support */
-.rtl, [dir="rtl"], body.rtl, body.rtl * {
-  direction: rtl !important;
-  text-align: right !important;
-}
-
-/* Force RTL for Persian language */
-body.lang-fa, body.lang-fa *, [lang="fa"], [lang="fa"] * {
-  direction: rtl !important;
-  text-align: right !important;
-}
-
-/* Ensure proper text alignment for RTL languages */
-.rtl .text-left, [dir="rtl"] .text-left {
-  text-align: right !important;
-}
-
-.rtl .text-right, [dir="rtl"] .text-right {
-  text-align: left !important;
-}
-
-/* Fix margin and padding for RTL */
-.rtl .ml-auto, [dir="rtl"] .ml-auto {
-  margin-left: unset !important;
-  margin-right: auto !important;
-}
-
-.rtl .mr-auto, [dir="rtl"] .mr-auto {
-  margin-right: unset !important;
-  margin-left: auto !important;
-}
-
-/* Fix flex alignment for RTL */
-.rtl .justify-start, [dir="rtl"] .justify-start {
-  justify-content: flex-end !important;
-}
-
-.rtl .justify-end, [dir="rtl"] .justify-end {
-  justify-content: flex-start !important;
-}
-
-/* Fix flex direction for RTL */
-.rtl .flex-row, [dir="rtl"] .flex-row {
-  flex-direction: row-reverse !important;
-}
-
-/* RTL Grid Layout Fixes */
-.rtl .grid, [dir="rtl"] .grid {
+/* Clean RTL Support - Removed conflicting !important overrides */
+.rtl, [dir="rtl"] {
   direction: rtl;
 }
 
-/* RTL Table Fixes */
-.rtl table, [dir="rtl"] table {
+/* Persian language RTL */
+body.lang-fa, [lang="fa"] {
   direction: rtl;
 }
 
-.rtl th, [dir="rtl"] th,
-.rtl td, [dir="rtl"] td {
-  text-align: right !important;
+/* Clean text alignment for RTL */
+.rtl .text-left {
+  text-align: right;
 }
 
-/* Force RTL for all content */
+.rtl .text-right {
+  text-align: left;
+}
+
+/* Clean margin fixes for RTL */
+.rtl .ml-auto {
+  margin-left: unset;
+  margin-right: auto;
+}
+
+.rtl .mr-auto {
+  margin-right: unset;
+  margin-left: auto;
+}
+
+/* Clean flex alignment for RTL */
+.rtl .justify-start {
+  justify-content: flex-end;
+}
+
+.rtl .justify-end {
+  justify-content: flex-start;
+}
+
+/* Clean RTL table styling */
+.rtl table {
+  direction: rtl;
+}
+
+.rtl th,
+.rtl td {
+  text-align: right;
+}
+
+/* Clean RTL text elements */
 body.rtl h1, body.rtl h2, body.rtl h3, body.rtl h4, body.rtl h5, body.rtl h6,
 body.rtl p, body.rtl div, body.rtl span {
-  text-align: right !important;
-  direction: rtl !important;
+  direction: rtl;
 }
 
-/* Desktop specific margin fixes */
+/* Clean desktop layout for RTL/LTR */
 @media (min-width: 768px) {
   .rtl-main-content {
-    margin-right: 256px !important;
-    margin-left: 0 !important;
+    margin-right: 256px;
+    margin-left: 0;
   }
   
   .ltr-main-content {
-    margin-left: 256px !important;
-    margin-right: 0 !important;
-  }
-  
-  /* Force sidebar positioning for RTL */
-  body.rtl .sidebar-container {
-    right: 0 !important;
-    left: auto !important;
-    transform: translateX(0) !important;
-  }
-  
-  body.ltr .sidebar-container {
-    left: 0 !important;
-    right: auto !important;
-    transform: translateX(0) !important;
-  }
-  
-  /* Force main content spacing */
-  body.rtl main {
-    margin-right: 256px !important;
-    margin-left: 0 !important;
-    padding-right: 0 !important;
-    padding-left: 0 !important;
-  }
-  
-  body.ltr main {
-    margin-left: 256px !important;
-    margin-right: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    margin-left: 256px;
+    margin-right: 0;
   }
 }
 
@@ -151,7 +110,7 @@ body.rtl p, body.rtl div, body.rtl span {
 
 /* RTL Support */
 [dir="rtl"] {
-  font-family: 'Almarai', 'Noto Kufi Arabic', 'Tahoma', 'Arial', sans-serif !important;
+  font-family: 'Almarai', 'Noto Kufi Arabic', 'Tahoma', 'Arial', sans-serif;
 }
 
 [dir="ltr"] {
