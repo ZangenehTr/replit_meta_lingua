@@ -124,15 +124,7 @@ export default function Auth() {
           
           <CardContent className="space-y-4">
             <Button 
-              onClick={() => {
-                if (user.role === 'admin') {
-                  setLocation("/admin");
-                } else if (user.role === 'teacher') {
-                  setLocation("/teacher");
-                } else {
-                  setLocation("/dashboard");
-                }
-              }}
+              onClick={() => setLocation("/dashboard")}
               className="w-full"
             >
               Go to Dashboard
