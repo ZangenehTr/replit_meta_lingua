@@ -533,6 +533,11 @@ export class MemStorage implements IStorage {
   private userAchievements: Map<number, UserAchievement>;
   private userStats: Map<number, UserStats>;
   private dailyGoals: Map<number, DailyGoal>;
+  private adminSettings: any;
+  private chatConversations: Map<number, any>;
+  private supportTickets: Map<number, any>;
+  private pushNotifications: Map<number, any>;
+  private rooms: Map<number, any>;
   private currentId: number;
 
   constructor() {
@@ -548,6 +553,11 @@ export class MemStorage implements IStorage {
     this.userAchievements = new Map();
     this.userStats = new Map();
     this.dailyGoals = new Map();
+    this.adminSettings = null;
+    this.chatConversations = new Map();
+    this.supportTickets = new Map();
+    this.pushNotifications = new Map();
+    this.rooms = new Map();
     this.currentId = 1;
     this.initializeData();
   }
@@ -2022,6 +2032,433 @@ export class MemStorage implements IStorage {
 
   async getSupervisorReports(filters: any): Promise<any> {
     return [];
+  }
+
+  // CRITICAL MISSING METHODS - Admin Settings
+  async getAdminSettings(): Promise<any> {
+    if (!this.adminSettings) {
+      this.adminSettings = {
+        id: 1,
+        instituteName: "Meta Lingua",
+        timezone: "Asia/Tehran",
+        emailEnabled: false,
+        emailSmtpHost: "",
+        emailSmtpPort: 587,
+        emailUsername: "",
+        emailPassword: "",
+        smsEnabled: false,
+        smsProvider: "kavenegar",
+        kavenegarEnabled: false,
+        kavenegarApiKey: "",
+        kavenegarSender: "",
+        voipEnabled: false,
+        voipProvider: "isabel",
+        isabelVoipEnabled: false,
+        isabelServerAddress: "",
+        isabelSipPort: 5060,
+        isabelUsername: "",
+        isabelPassword: "",
+        callRecordingEnabled: false,
+        backupEnabled: false,
+        maintenanceMode: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+    }
+    return this.adminSettings;
+  }
+
+  async updateAdminSettings(updates: any): Promise<any> {
+    if (!this.adminSettings) {
+      await this.getAdminSettings();
+    }
+    this.adminSettings = { ...this.adminSettings, ...updates, updatedAt: new Date() };
+    return this.adminSettings;
+  }
+
+  // CRITICAL MISSING METHODS - Course Management
+  async updateCourse(id: number, updates: Partial<Course>): Promise<Course | undefined> {
+    const course = this.courses.get(id);
+    if (course) {
+      const updatedCourse = { ...course, ...updates, updatedAt: new Date() };
+      this.courses.set(id, updatedCourse);
+      return updatedCourse;
+    }
+    return undefined;
+  }
+
+  async deleteCourse(id: number): Promise<void> {
+    this.courses.delete(id);
+  }
+
+  async getCourseEnrollments(courseId: number): Promise<any[]> {
+    return Array.from(this.enrollments.values()).filter(e => e.courseId === courseId);
+  }
+
+  async getCourseModules(courseId: number): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async getModuleLessons(moduleId: number): Promise<VideoLesson[]> {
+    return []; // Mock implementation
+  }
+
+  // CRITICAL MISSING METHODS - Chat Conversations
+  async getChatConversations(userId: number): Promise<any[]> {
+    return Array.from(this.chatConversations.values()).filter(c => c.userId === userId);
+  }
+
+  async getChatConversation(id: number): Promise<any | undefined> {
+    return this.chatConversations.get(id);
+  }
+
+  async createChatConversation(conversation: any): Promise<any> {
+    const id = this.currentId++;
+    const newConversation = {
+      id,
+      ...conversation,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.chatConversations.set(id, newConversation);
+    return newConversation;
+  }
+
+  async updateChatConversation(id: number, updates: any): Promise<any> {
+    const conversation = this.chatConversations.get(id);
+    if (conversation) {
+      const updated = { ...conversation, ...updates, updatedAt: new Date() };
+      this.chatConversations.set(id, updated);
+      return updated;
+    }
+    return undefined;
+  }
+
+  // CRITICAL MISSING METHODS - Support Tickets
+  async getSupportTickets(filters?: any): Promise<any[]> {
+    return Array.from(this.supportTickets.values());
+  }
+
+  async getSupportTicket(id: number): Promise<any | undefined> {
+    return this.supportTickets.get(id);
+  }
+
+  async createSupportTicket(ticket: any): Promise<any> {
+    const id = this.currentId++;
+    const newTicket = {
+      id,
+      ...ticket,
+      status: ticket.status || 'open',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.supportTickets.set(id, newTicket);
+    return newTicket;
+  }
+
+  async updateSupportTicket(id: number, updates: any): Promise<any> {
+    const ticket = this.supportTickets.get(id);
+    if (ticket) {
+      const updated = { ...ticket, ...updates, updatedAt: new Date() };
+      this.supportTickets.set(id, updated);
+      return updated;
+    }
+    return undefined;
+  }
+
+  async deleteSupportTicket(id: number): Promise<void> {
+    this.supportTickets.delete(id);
+  }
+
+  // CRITICAL MISSING METHODS - Push Notifications  
+  async getPushNotifications(filters?: any): Promise<any[]> {
+    return Array.from(this.pushNotifications.values());
+  }
+
+  async getPushNotification(id: number): Promise<any | undefined> {
+    return this.pushNotifications.get(id);
+  }
+
+  async createPushNotification(notification: any): Promise<any> {
+    const id = this.currentId++;
+    const newNotification = {
+      id,
+      ...notification,
+      status: notification.status || 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.pushNotifications.set(id, newNotification);
+    return newNotification;
+  }
+
+  async updatePushNotification(id: number, updates: any): Promise<any> {
+    const notification = this.pushNotifications.get(id);
+    if (notification) {
+      const updated = { ...notification, ...updates, updatedAt: new Date() };
+      this.pushNotifications.set(id, updated);
+      return updated;
+    }
+    return undefined;
+  }
+
+  async deletePushNotification(id: number): Promise<void> {
+    this.pushNotifications.delete(id);
+  }
+
+  // CRITICAL MISSING METHODS - Room Management
+  async getRooms(): Promise<Room[]> {
+    return Array.from(this.rooms.values());
+  }
+
+  async getRoomById(id: number): Promise<Room | undefined> {
+    return this.rooms.get(id);
+  }
+
+  async createRoom(room: any): Promise<Room> {
+    const id = this.currentId++;
+    const newRoom = {
+      id,
+      ...room,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.rooms.set(id, newRoom);
+    return newRoom;
+  }
+
+  async updateRoom(id: number, updates: any): Promise<Room | undefined> {
+    const room = this.rooms.get(id);
+    if (room) {
+      const updated = { ...room, ...updates, updatedAt: new Date() };
+      this.rooms.set(id, updated);
+      return updated;
+    }
+    return undefined;
+  }
+
+  async deleteRoom(id: number): Promise<boolean> {
+    return this.rooms.delete(id);
+  }
+
+  async getActiveRooms(): Promise<Room[]> {
+    return Array.from(this.rooms.values()).filter(r => r.isActive);
+  }
+
+  // CRITICAL MISSING METHODS - Teacher Management
+  async getTeacherAvailability(teacherId: number): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async createTeacherAvailability(availabilityData: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...availabilityData, createdAt: new Date() };
+  }
+
+  async getTeacherAvailabilitySlot(slotId: number): Promise<any | undefined> {
+    return undefined; // Mock implementation
+  }
+
+  async updateTeacherAvailability(slotId: number, updates: any): Promise<any> {
+    return { id: slotId, ...updates, updatedAt: new Date() };
+  }
+
+  async deleteTeacherAvailability(slotId: number): Promise<void> {
+    // Mock implementation
+  }
+
+  async getTeacherClasses(teacherId: number): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async getTeacherClass(classId: number, teacherId?: number): Promise<any | undefined> {
+    return undefined; // Mock implementation
+  }
+
+  async getClassMessages(classId: number): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async createClassMessage(messageData: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...messageData, createdAt: new Date() };
+  }
+
+  // Additional critical missing methods from LSP errors
+  async getTeacherAvailabilityPeriods(teacherId?: number): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async createTeacherAvailabilityPeriod(periodData: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...periodData, createdAt: new Date() };
+  }
+
+  async updateTeacherAvailabilityPeriod(id: number, updates: any): Promise<any> {
+    return { id, ...updates, updatedAt: new Date() };
+  }
+
+  async deleteTeacherAvailabilityPeriod(id: number): Promise<void> {
+    // Mock implementation
+  }
+
+  async checkTeacherScheduleConflict(teacherId: number, timeSlot: any): Promise<any> {
+    return { hasConflict: false, conflicts: [] };
+  }
+
+  async assignTeacherToClass(assignmentData: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...assignmentData, createdAt: new Date() };
+  }
+
+  async getAvailableTeachers(filters?: any): Promise<any[]> {
+    return Array.from(this.users.values()).filter(u => u.role === 'teacher');
+  }
+
+  async getAvailableCoursesForUser(userId: number): Promise<any[]> {
+    return Array.from(this.courses.values());
+  }
+
+  async getUserWalletData(userId: number): Promise<any> {
+    const user = this.users.get(userId);
+    return {
+      id: userId,
+      balance: user?.walletBalance || 0,
+      currency: 'IRT',
+      transactions: []
+    };
+  }
+
+  async getUserWalletTransactions(userId: number): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async createWalletTransaction(transaction: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...transaction, createdAt: new Date() };
+  }
+
+  async updateWalletTransactionStatus(id: number, status: string): Promise<any> {
+    return { id, status, updatedAt: new Date() };
+  }
+
+  async calculateCoursePrice(courseId: number, userId: number): Promise<any> {
+    return { price: 5000000, currency: 'IRT', discounts: [] };
+  }
+
+  async createCoursePayment(paymentData: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...paymentData, createdAt: new Date() };
+  }
+
+  async updateCoursePaymentStatus(id: number, status: string): Promise<any> {
+    return { id, status, updatedAt: new Date() };
+  }
+
+  async getEnrollments(): Promise<any[]> {
+    return Array.from(this.enrollments.values());
+  }
+
+  async getPlacementTests(): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async createPlacementTest(test: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...test, createdAt: new Date() };
+  }
+
+  async getPlacementTestAttempts(testId: number): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async updatePlacementTest(id: number, updates: any): Promise<any> {
+    return { id, ...updates, updatedAt: new Date() };
+  }
+
+  async deletePlacementTest(id: number): Promise<void> {
+    // Mock implementation
+  }
+
+  async getCommunicationTemplates(): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async createCommunicationTemplate(template: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...template, createdAt: new Date() };
+  }
+
+  async getCampaigns(): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async createCampaign(campaign: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...campaign, createdAt: new Date() };
+  }
+
+  async getAutomationRules(): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async createAutomationRule(rule: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...rule, createdAt: new Date() };
+  }
+
+  async getCallCenterLogs(): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async logCallCompletion(callData: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...callData, createdAt: new Date() };
+  }
+
+  async getTeacherSessions(teacherId: number): Promise<any[]> {
+    return Array.from(this.sessions.values()).filter(s => s.tutorId === teacherId);
+  }
+
+  async getStudentSessionPackages(studentId: number): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async createSessionPackage(packageData: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...packageData, createdAt: new Date() };
+  }
+
+  async getTeacherAssignments(teacherId: number): Promise<any[]> {
+    return []; // Mock implementation
+  }
+
+  async updateHomework(id: number, updates: any): Promise<any> {
+    const homework = this.homework.get(id);
+    if (homework) {
+      const updated = { ...homework, ...updates, updatedAt: new Date() };
+      this.homework.set(id, updated);
+      return updated;
+    }
+    return undefined;
+  }
+
+  async createReferralLink(linkData: any): Promise<any> {
+    const id = this.currentId++;
+    return { id, ...linkData, createdAt: new Date() };
+  }
+
+  async updateReferralLink(id: number, updates: any): Promise<any> {
+    return { id, ...updates, updatedAt: new Date() };
+  }
+
+  async getReferralStats(userId: number): Promise<any> {
+    return {
+      totalReferrals: 0,
+      successfulReferrals: 0,
+      totalEarnings: 0,
+      pendingEarnings: 0
+    };
   }
 
   async createSupervisorReport(report: any): Promise<any> {
