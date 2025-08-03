@@ -5127,7 +5127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: user.isActive ? 'active' : 'inactive',
           level: profile?.currentLevel || profile?.proficiencyLevel || 'Beginner',
           nationalId: user.nationalId || profile?.nationalId || '',
-          birthday: user.birthday ? new Date(user.birthday).toISOString() : (profile?.dateOfBirth ? (typeof profile.dateOfBirth === 'string' ? profile.dateOfBirth : new Date(profile.dateOfBirth).toISOString()) : null),
+          birthday: user.birthday ? new Date(user.birthday).toISOString() : (profile?.birthday ? (typeof profile.birthday === 'string' ? profile.birthday : new Date(profile.birthday).toISOString()) : null),
           guardianName: user.guardianName || profile?.guardianName || '',
           guardianPhone: user.guardianPhone || profile?.guardianPhone || '',
           notes: user.notes || profile?.notes || '',

@@ -176,7 +176,6 @@ export interface Translations {
   challenges: string;
   leaderboard: string;
   with: string;
-  today: string;
   daysAgo: string;
   hoursAgo: string;
   justNow: string;
@@ -233,7 +232,6 @@ export interface Translations {
   noCoursesAvailableAtMoment: string;
   
   // Course Management Keys
-  courseManagement: string;
   advancedCourseBuilder: string;
   enrolledStudents: string;
   totalStudents: string;
@@ -244,7 +242,6 @@ export interface Translations {
   studentInformationSystem: string;
   courseManagement: string;
   classScheduling: string;
-  teacherManagement: string;
   financialManagement: string;
   reportsAnalytics: string;
   communicationCenter: string;
@@ -256,6 +253,7 @@ export interface Translations {
   mentees: string;
   mentoringSessions: string;
   progressTracking: string;
+  liveVirtualClassroom: string;
 }
 
 export const translations: Record<Language, Translations> = {

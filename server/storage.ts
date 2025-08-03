@@ -4,7 +4,29 @@ import {
   communicationLogs, achievements, userAchievements,
   userStats, dailyGoals, skillAssessments, learningActivities, progressSnapshots,
   moodEntries, moodRecommendations, learningAdaptations, attendanceRecords, rooms,
-  studentQuestionnaires, questionnaireResponses,
+  studentQuestionnaires, questionnaireResponses, userProfiles, rolePermissions, userSessions,
+  sessionPackages, walletTransactions, coursePayments, mentorAssignments, mentoringSessions,
+  // Testing subsystem tables
+  tests, testQuestions, testAttempts, testAnswers,
+  // Gamification tables
+  games, gameLevels, userGameProgress, gameSessions, gameLeaderboards,
+  // Video learning tables
+  videoLessons, videoProgress, videoNotes, videoBookmarks,
+  // LMS tables
+  forumCategories, forumThreads, forumPosts, gradebookEntries, contentLibrary,
+  // AI tracking tables
+  aiProgressTracking, aiActivitySessions, aiVocabularyTracking, aiGrammarTracking, aiPronunciationAnalysis,
+  // Callern tables
+  callernPackages, studentCallernPackages, teacherCallernAvailability, callernCallHistory,
+  // Supervision observation tables
+  supervisionObservations, teacherObservationResponses,
+  // Additional tables
+  teacherAvailability, paymentTransactions, teacherEvaluations, classObservations, systemMetrics,
+  courseSessions, levelAssessmentQuestions, levelAssessmentResults, systemConfig, customRoles,
+  institutes, departments, studentGroups, studentGroupMembers, teacherAssignments,
+  studentNotes, parentGuardians, studentReports, referralSettings, courseReferrals,
+  referralCommissions, adminSettings, aiTrainingData, aiKnowledgeBase,
+  // Types
   type User, type InsertUser, type Course, type InsertCourse,
   type Enrollment, type InsertEnrollment, type Session, type InsertSession,
   type Message, type InsertMessage, type Homework, type InsertHomework,
@@ -28,34 +50,27 @@ import {
   type StudentQuestionnaire, type InsertStudentQuestionnaire,
   type QuestionnaireResponse, type InsertQuestionnaireResponse,
   // Testing subsystem types
-  tests, testQuestions, testAttempts, testAnswers,
   type Test, type InsertTest, type TestQuestion, type InsertTestQuestion,
   type TestAttempt, type InsertTestAttempt, type TestAnswer, type InsertTestAnswer,
   // Gamification types
-  games, gameLevels, userGameProgress, gameSessions, gameLeaderboards,
   type Game, type InsertGame, type GameLevel, type InsertGameLevel,
   type UserGameProgress, type InsertUserGameProgress, type GameSession, type InsertGameSession,
   type GameLeaderboard, type InsertGameLeaderboard,
   // Video learning types
-  videoLessons, videoProgress, videoNotes, videoBookmarks,
   type VideoLesson, type InsertVideoLesson, type VideoProgress, type InsertVideoProgress,
   type VideoNote, type InsertVideoNote, type VideoBookmark, type InsertVideoBookmark,
   // LMS types
-  forumCategories, forumThreads, forumPosts, gradebookEntries, contentLibrary,
   type ForumCategory, type InsertForumCategory, type ForumThread, type InsertForumThread,
   type ForumPost, type InsertForumPost, type GradebookEntry, type InsertGradebookEntry,
   type ContentLibraryItem, type InsertContentLibraryItem,
   // AI tracking types
-  aiProgressTracking, aiActivitySessions, aiVocabularyTracking, aiGrammarTracking, aiPronunciationAnalysis,
   type AiProgressTracking, type InsertAiProgressTracking, type AiActivitySession, type InsertAiActivitySession,
   type AiVocabularyTracking, type InsertAiVocabularyTracking, type AiGrammarTracking, type InsertAiGrammarTracking,
   type AiPronunciationAnalysis, type InsertAiPronunciationAnalysis,
   // Callern types
-  callernPackages, studentCallernPackages, teacherCallernAvailability, callernCallHistory,
   type CallernPackage, type InsertCallernPackage, type StudentCallernPackage, type InsertStudentCallernPackage,
   type TeacherCallernAvailability, type InsertTeacherCallernAvailability, type CallernCallHistory, type InsertCallernCallHistory,
   // Supervision observation types
-  supervisionObservations, teacherObservationResponses,
   type SupervisionObservation, type InsertSupervisionObservation,
   type TeacherObservationResponse, type InsertTeacherObservationResponse
 } from "@shared/schema";
@@ -302,6 +317,29 @@ export interface IStorage {
   getSystemMetrics(): Promise<any>;
   createSystemMetric(metric: any): Promise<any>;
   
+  // Student-specific methods
+  getStudentAssignments(studentId: number): Promise<any[]>;
+  getStudentGoals(studentId: number): Promise<any[]>;
+  getStudentHomework(studentId: number): Promise<any[]>;
+  getAllPayments(): Promise<Payment[]>;
+  deleteGame(gameId: number): Promise<void>;
+  getUserReferralCommissions(userId: number): Promise<any[]>;
+  getReferralLinkByCode(code: string): Promise<any | undefined>;
+  trackReferralActivity(activity: any): Promise<any>;
+  getSupervisionObservations(): Promise<any[]>;
+  getSupervisorDailyIncome(supervisorId: number): Promise<any>;
+  getTeachersNeedingAttention(): Promise<any[]>;
+  getStudentsNeedingAttention(): Promise<any[]>;
+  getUpcomingSessionsForObservation(): Promise<any[]>;
+  getEnhancedSupervisorStats(supervisorId: number): Promise<any>;
+  getSupervisorTargets(supervisorId: number): Promise<any[]>;
+  createSupervisorTarget(target: any): Promise<any>;
+  updateSupervisorTarget(targetId: number, updates: any): Promise<any>;
+  getObservationsBySessionAndTeacher(sessionId: number, teacherId: number): Promise<any[]>;
+  getTeacherPaymentHistory(teacherId: number): Promise<any[]>;
+  createTeacherStudentAssignment(assignment: any): Promise<any>;
+  getAllMentorAssignments(): Promise<any[]>;
+
   // Mood-Based Learning Recommendation System Methods
   createMoodEntry(entry: InsertMoodEntry): Promise<MoodEntry>;
   getMoodHistory(userId: number, days?: number): Promise<MoodEntry[]>;
