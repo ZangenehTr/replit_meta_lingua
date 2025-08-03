@@ -171,6 +171,13 @@
     "performanceReview": "بررسی عملکرد"
   },
   "teacherManagement": {
+    "title": "مدیریت مدرسان",
+    "description": "مدیریت کادر آموزشی و پروفایل‌های آن‌ها",
+    "viewCards": "کارت‌ها",
+    "viewList": "فهرست",
+    "addTeacher": "افزودن مدرس",
+    "add": "افزودن",
+    "createNewInstructor": "ایجاد حساب کاربری و پروفایل جدید برای مدرس",
     "dialogs": {
       "viewTitle": "مشاهده اطلاعات مدرس",
       "viewDescription": "جزئیات کامل اطلاعات مدرس",
@@ -178,6 +185,7 @@
       "editDescription": "ویرایش اطلاعات پروفایل مدرس"
     },
     "labels": {
+      "fullName": "نام کامل",
       "specialization": "تخصص",
       "experience": "تجربه",
       "hourlyRate": "نرخ ساعتی",
@@ -199,7 +207,17 @@
       "languages": "زبان‌های تدریس",
       "qualifications": "مدارک",
       "bio": "بیوگرافی",
-      "status": "وضعیت"
+      "status": "وضعیت",
+      "firstNamePlaceholder": "احمد",
+      "lastNamePlaceholder": "محمدی",
+      "emailPlaceholder": "ahmad@example.com",
+      "phonePlaceholder": "09123456789",
+      "specializationPlaceholder": "فارسی",
+      "experiencePlaceholder": "۵ سال",
+      "hourlyRatePlaceholder": "۵۰۰۰۰۰",
+      "languagesPlaceholder": "فارسی، انگلیسی",
+      "qualificationsPlaceholder": "کارشناسی ادبیات فارسی",
+      "bioPlaceholder": "معرفی کوتاه از خود"
     },
     "actions": {
       "editTeacher": "ویرایش مدرس",
