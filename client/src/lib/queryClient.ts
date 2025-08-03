@@ -2,7 +2,7 @@ import { QueryClient, QueryKey } from "@tanstack/react-query";
 
 const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
   const [url, params] = queryKey as [string, Record<string, any>?];
-  
+
   // Ensure URL is properly formatted
   if (!url || typeof url !== 'string') {
     throw new Error('Invalid URL provided to query');
@@ -12,7 +12,7 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
-  
+
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -34,7 +34,7 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
   // Enhanced retry logic with progressive timeout
   const maxRetries = 3;
   let lastError;
-  
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const controller = new AbortController();
@@ -96,7 +96,7 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
         } catch (parseError) {
           errorText = `HTTP ${response.status} ${response.statusText}`;
         }
-        
+
         // Handle auth errors specially to prevent unhandled rejections
         if (response.status === 401 || response.status === 403) {
           console.debug('Authentication error, not retrying:', response.status);
@@ -104,7 +104,7 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
           authError.name = 'AuthenticationError';
           throw authError;
         }
-        
+
         throw new Error(`${response.status}: ${errorText}`);
       }
 
@@ -124,12 +124,12 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
       return result;
     } catch (error) {
       lastError = error;
-      
+
       // Don't retry for client errors (4xx) or auth issues
       if (error instanceof Error && error.message.includes('403:') || error.message.includes('401:')) {
         throw error;
       }
-      
+
       // Don't retry for AbortError (timeout) or signal errors
       if (error instanceof Error && (
         error.name === 'AbortError' || 
@@ -140,36 +140,35 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
         console.debug('Request aborted:', error);
         throw new Error('Request timeout: Server took too long to respond. Please try again.');
       }
-      
-      // Enhanced retry logic for various network errors
-      const isNetworkError = (
-        (error instanceof TypeError && error.message === 'Failed to fetch') ||
-        (error instanceof Error && error.message.includes('NetworkError')) ||
-        (error instanceof Error && error.message.includes('fetch'))
-      );
-      
-      if (isNetworkError && attempt < maxRetries) {
+
+      // Network connectivity issues - retry with exponential backoff
+      if (error.message.includes('Failed to fetch') || 
+          error.message.includes('NetworkError') || 
+          error.message.includes('Connection reset') ||
+          error.message.includes('ECONNRESET') ||
+          error.code === 'ECONNRESET' ||
+          error.message.includes('fetch')) {
         // Progressive backoff: 500ms, 1.5s, 3s
         const backoffTime = 500 * Math.pow(2.5, attempt);
         console.warn(`Network error on attempt ${attempt + 1}/${maxRetries + 1} for ${finalUrl}. Retrying in ${backoffTime}ms...`);
         await new Promise(resolve => setTimeout(resolve, backoffTime));
         continue;
       }
-      
+
       if (isNetworkError) {
         throw new Error(`Network connectivity issue: Unable to reach server after ${maxRetries + 1} attempts. Please check your internet connection and try refreshing the page.`);
       }
-      
+
       // Other errors, don't retry
       throw error;
     }
   }
-  
+
   // If we get here, all retries failed
   if (lastError) {
     throw lastError;
   }
-  
+
   throw new Error('Unexpected error in fetch operation');
 };
 
@@ -227,21 +226,21 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
     if (!url || typeof url !== 'string') {
       throw new Error('Invalid URL provided');
     }
-    
+
     // Ensure URL is properly formatted as relative path
     const finalUrl = url.startsWith('/') ? url : `/${url}`;
-    
+
     const token = localStorage.getItem('auth_token');
-    
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...((options.headers as Record<string, string>) || {}),
     };
-    
+
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // Handle request body serialization
     const requestOptions: RequestInit = {
       ...options,
@@ -273,14 +272,14 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
     } catch (fetchError: any) {
       // Handle fetch error gracefully
       console.error('Fetch error details:', fetchError);
-      
+
       if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
         throw new Error('Network error: Unable to connect to server. Please check your connection and try again.');
       }
       if (fetchError.name === 'AbortError') {
         throw new Error('Request timeout: Server took too long to respond. Please try again.');
       }
-      
+
       // Additional error handling for common network issues
       if (fetchError.message.includes('ECONNREFUSED')) {
         throw new Error('Connection refused: Server is not responding. Please try again later.');
@@ -288,7 +287,7 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
       if (fetchError.message.includes('NetworkError')) {
         throw new Error('Network error: Please check your internet connection.');
       }
-      
+
       throw new Error(`Network error: ${fetchError.message || 'Failed to fetch'}`);
     }
 
@@ -318,7 +317,7 @@ export const apiRequest = async (url: string, options: RequestInit = {}) => {
       // Return empty object if JSON parsing fails but response was successful
       return {};
     }
-    
+
     console.log('Successful response:', result);
     return result;
   } catch (error) {

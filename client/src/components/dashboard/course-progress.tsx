@@ -32,28 +32,18 @@ export function CourseProgress() {
 
   const shareViaSMS = async (courseId: number, courseTitle: string) => {
     try {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(`/api/courses/${courseId}/refer`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
+      const baseUrl = window.location.origin;
+      const referralLink = `${baseUrl}/courses/${courseId}?ref=${encodeURIComponent(courseTitle)}`;
+      const message = `بیا این دوره رو ببین: ${courseTitle}\n${referralLink}`;
+      const encodedMessage = encodeURIComponent(message);
+      
+      // Open SMS app with pre-filled message
+      window.open(`sms:?body=${encodedMessage}`, '_self');
+      
+      toast({
+        title: t('toast.referralLinkReady'),
+        description: "پیام در اپلیکیشن پیامک شما آماده شده است",
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        const message = `بیا این دوره رو ببین: ${courseTitle}\n${data.referralLink}`;
-        const encodedMessage = encodeURIComponent(message);
-        
-        // Open SMS app with pre-filled message
-        window.open(`sms:?body=${encodedMessage}`, '_self');
-        
-        toast({
-          title: t('toast.referralLinkReady'),
-          description: "پیام در اپلیکیشن پیامک شما آماده شده است",
-        });
-      }
     } catch (error) {
       toast({
         title: t('toast.error'),

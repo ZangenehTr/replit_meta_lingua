@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { 
   Home, 
   BookOpen, 
@@ -73,11 +74,16 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onNavigate }: SidebarProps = {}) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const { language, setLanguage } = useLanguage();
+  const [isRTL, setIsRTL] = useState(['fa', 'ar'].includes(language));
+
+  useEffect(() => {
+    setIsRTL(['fa', 'ar'].includes(language));
+  }, [language]);
   const { t } = useTranslation();
-  const { isRTL } = useLanguage();
   const [location, setLocation] = useLocation();
-  
+
   // Use react-i18next translation function with correct namespace
   const navigationItems = user ? getNavigationForRole(user.role, t) : [];
 
@@ -88,7 +94,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
           {navigationItems.map((item) => {
             const isActive = location === item.path;
             const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
-            
+
             return (
               <Link key={item.path} href={item.path}>
                 <Button
@@ -117,7 +123,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
             );
           })}
         </nav>
-        
+
         {/* Profile section removed - handled by global header dropdown to eliminate redundancy */}
       </div>
     </aside>
