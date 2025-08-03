@@ -827,7 +827,7 @@ export function AdminTeacherManagement() {
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                  <label className="text-sm font-medium text-muted-foreground">{t('admin:teacherManagement.labels.fullName', 'نام کامل')}</label>
                   <p className="text-lg font-medium">{selectedTeacher.firstName} {selectedTeacher.lastName}</p>
                 </div>
                 
