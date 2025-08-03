@@ -340,6 +340,25 @@ export interface IStorage {
   createTeacherStudentAssignment(assignment: any): Promise<any>;
   getAllMentorAssignments(): Promise<any[]>;
 
+  // Callern Integration Methods
+  getCallernPackages(): Promise<any[]>;
+  getTeacherCallernAvailability(teacherId?: number): Promise<any[]>;
+  getTeachersForCallern(): Promise<any[]>;
+  createCallernPackage(pkg: any): Promise<any>;
+  getCallernPackage(id: number): Promise<any>;
+  setTeacherCallernAvailability(teacherId: number, availability: any): Promise<any>;
+  
+  // Additional missing supervision methods
+  getSupervisionStats(supervisorId?: number): Promise<any>;
+  getLiveClassSessions(filters?: any): Promise<any[]>;
+  getTeacherRetentionData(filters?: any): Promise<any>;
+  getOverdueObservations(): Promise<any[]>;
+  getPendingObservations(): Promise<any[]>;
+  getScheduledObservations(): Promise<any[]>;
+  
+  // Overload for setTeacherCallernAvailability
+  setTeacherCallernAvailability(availabilityData: any): Promise<any>;
+
   // Mood-Based Learning Recommendation System Methods
   createMoodEntry(entry: InsertMoodEntry): Promise<MoodEntry>;
   getMoodHistory(userId: number, days?: number): Promise<MoodEntry[]>;
@@ -3059,6 +3078,72 @@ export class MemStorage implements IStorage {
 
   async getPushNotifications(): Promise<any[]> {
     return []; // Return empty array for notifications
+  }
+
+  // Callern Integration Methods Implementation
+  async getCallernPackages(): Promise<any[]> {
+    return [];
+  }
+
+  async getTeacherCallernAvailability(teacherId?: number): Promise<any[]> {
+    return [];
+  }
+
+  async getTeachersForCallern(): Promise<any[]> {
+    return Array.from(this.users.values()).filter(u => u.role === 'Teacher');
+  }
+
+  async createCallernPackage(pkg: any): Promise<any> {
+    return { id: 1, ...pkg, createdAt: new Date() };
+  }
+
+  async getCallernPackage(id: number): Promise<any> {
+    return null;
+  }
+
+  async setTeacherCallernAvailability(teacherId: number, availability: any): Promise<any>;
+  async setTeacherCallernAvailability(availabilityData: any): Promise<any>;
+  async setTeacherCallernAvailability(teacherIdOrData: any, availability?: any): Promise<any> {
+    if (typeof teacherIdOrData === 'number') {
+      return { id: 1, teacherId: teacherIdOrData, ...availability, updatedAt: new Date() };
+    } else {
+      return { id: 1, ...teacherIdOrData, updatedAt: new Date() };
+    }
+  }
+
+  // Additional supervision methods implementation
+  async getSupervisionStats(supervisorId?: number): Promise<any> {
+    return {
+      totalObservations: 0,
+      pendingObservations: 0,
+      completedObservations: 0,
+      teachersObserved: 0,
+      averageRating: 0
+    };
+  }
+
+  async getLiveClassSessions(filters?: any): Promise<any[]> {
+    return [];
+  }
+
+  async getTeacherRetentionData(filters?: any): Promise<any> {
+    return {
+      totalTeachers: 0,
+      activeTeachers: 0,
+      retentionRate: 0
+    };
+  }
+
+  async getOverdueObservations(): Promise<any[]> {
+    return [];
+  }
+
+  async getPendingObservations(): Promise<any[]> {
+    return [];
+  }
+
+  async getScheduledObservations(): Promise<any[]> {
+    return [];
   }
 }
 
