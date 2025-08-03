@@ -1,44 +1,37 @@
-// Global error handler to prevent runtime error plugin interference
-export function setupErrorHandling() {
-  // Handle unhandled promise rejections
-  window.addEventListener('unhandledrejection', (event) => {
-    console.debug('Unhandled promise rejection caught:', event.reason);
-    
-    // Prevent runtime error plugin from showing for network/timeout issues
-    if (event.reason && typeof event.reason === 'string') {
-      if (event.reason.includes('timeout') || 
-          event.reason.includes('abort') || 
-          event.reason.includes('Request timeout') ||
-          event.reason.includes('fetch')) {
-        event.preventDefault();
-        return;
-      }
-    }
-    
-    // Handle Error objects
-    if (event.reason instanceof Error) {
-      if (event.reason.message.includes('timeout') ||
-          event.reason.message.includes('abort') ||
-          event.reason.message.includes('fetch') ||
-          event.reason.name === 'AbortError') {
-        event.preventDefault();
-        return;
-      }
-    }
-  });
 
-  // Handle regular errors
-  window.addEventListener('error', (event) => {
-    console.debug('Unhandled error caught:', event.error);
-    
-    if (event.error && event.error.message) {
-      if (event.error.message.includes('timeout') ||
-          event.error.message.includes('abort') ||
-          event.error.message.includes('fetch') ||
-          event.error.name === 'AbortError') {
-        event.preventDefault();
-        return;
+// Global error handler for the application
+export class ErrorHandler {
+  static init() {
+    // Handle unhandled promise rejections
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      
+      // Prevent default browser behavior
+      event.preventDefault();
+      
+      // Log to console for debugging
+      if (event.reason?.message) {
+        console.error('Error message:', event.reason.message);
       }
+      
+      // Optionally show user-friendly error
+      if (event.reason?.message?.includes('Failed to fetch')) {
+        console.warn('Network error detected - check internet connection');
+      }
+    });
+
+    // Handle general errors
+    window.addEventListener('error', (event) => {
+      console.error('Global error:', event.error);
+    });
+
+    // Handle React errors (development only)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Error handler initialized for development');
     }
-  });
+  }
+
+  static logError(error: Error, context?: string) {
+    console.error(`[${context || 'App'}] Error:`, error);
+  }
 }

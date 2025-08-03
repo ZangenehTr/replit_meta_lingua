@@ -11,27 +11,33 @@ export function RTLLayout({ children }: RTLLayoutProps) {
   const isRTL = language === 'fa' || language === 'ar';
 
   useEffect(() => {
-    // Apply RTL/LTR direction to document
-    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-    document.documentElement.lang = language;
-    
-    // Add language-specific classes to body
-    document.body.className = document.body.className
-      .replace(/\b(rtl|ltr|lang-\w+)\b/g, '')
-      .trim();
-    
-    if (isRTL) {
-      document.body.classList.add('rtl');
-      document.body.style.direction = 'rtl';
-      document.body.style.textAlign = 'right';
-    } else {
-      document.body.classList.add('ltr');
-      document.body.style.direction = 'ltr';
-      document.body.style.textAlign = 'left';
-    }
-    
-    document.body.classList.add(`lang-${language}`);
-  }, [language, isRTL]);
+    const updateLayout = () => {
+      const isRTL = ['fa', 'ar'].includes(language);
+      console.log(`Applied ${isRTL ? 'RTL' : 'LTR'} for language: ${language}`);
+
+      const html = document.documentElement;
+      html.dir = isRTL ? 'rtl' : 'ltr';
+      html.lang = language;
+
+      // Clear both classes first to prevent conflicts
+      html.classList.remove('rtl', 'ltr');
+
+      if (isRTL) {
+        html.classList.add('rtl');
+        console.log(`Applied RTL styles for ${language}`);
+      } else {
+        html.classList.add('ltr');
+        console.log(`Applied LTR styles for ${language}`);
+      }
+
+      // Force a small reflow to ensure styles are applied
+      requestAnimationFrame(() => {
+        document.body.style.direction = isRTL ? 'rtl' : 'ltr';
+      });
+    };
+
+    updateLayout();
+  }, [language]);
 
   return (
     <div className={`${isRTL ? 'rtl' : 'ltr'} lang-${language}`} dir={isRTL ? 'rtl' : 'ltr'}>

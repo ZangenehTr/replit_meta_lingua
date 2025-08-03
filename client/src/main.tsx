@@ -1,3 +1,12 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+import "./i18n";
+import { ErrorHandler } from "./error-handler";
+
+// Initialize error handling
+ErrorHandler.init();
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
@@ -6,7 +15,7 @@ import "./i18n";
 // Global error handlers to prevent runtime error plugin from triggering
 window.addEventListener('unhandledrejection', (event) => {
   const reason = event.reason;
-  
+
   // Handle authentication and network errors gracefully
   if (reason?.message?.includes('Authentication error') || 
       reason?.message?.includes('401') || 
@@ -21,14 +30,14 @@ window.addEventListener('unhandledrejection', (event) => {
     event.preventDefault(); // Prevent the runtime error overlay
     return;
   }
-  
+
   // Let other errors through for debugging
   console.error('Unhandled promise rejection:', reason);
 });
 
 window.addEventListener('error', (event) => {
   const error = event.error;
-  
+
   // Handle certain types of errors gracefully  
   if (error?.message?.includes('Authentication error') ||
       error?.message?.includes('Request timeout') ||
