@@ -43,7 +43,7 @@ export default function UnifiedDashboard() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -65,27 +65,27 @@ export default function UnifiedDashboard() {
   switch (user.role) {
     case 'Admin':
       return <AdminDashboard />;
-    
+
     case 'Supervisor':
       return <SupervisorDashboard />;
-    
+
     case 'Teacher/Tutor':
       return <TeacherDashboard />;
-    
+
     case 'Call Center Agent':
       return <CallCenterDashboard />;
-    
+
     case 'Mentor':
       return <MentorDashboard />;
-    
+
     case 'Student':
       return <StudentDashboard />;
-    
+
     case 'Accountant':
       // For now, accountants use admin dashboard with filtered permissions
       // TODO: Create dedicated accountant dashboard with financial focus
       return <AdminDashboard />;
-    
+
     default:
       // Fallback to student dashboard for unknown roles
       console.warn(`Unknown user role: ${user.role}, falling back to student dashboard`);

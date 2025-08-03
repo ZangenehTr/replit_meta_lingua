@@ -1248,6 +1248,42 @@
     "languagesTaughtPlaceholder": "مثلاً فارسی، انگلیسی",
     "hourlyRatePlaceholder": "500000",
     "qualificationsPlaceholder": "مدارک تحصیلی، گواهی‌نامه‌ها و صلاحیت‌های مرتبط...",
+    "bioPlaceholder": "توضیح مختصری از روش تدریس و سابقه کاری..."
+    },
+    "status": {
+      "active": "فعال",
+      "inactive": "غیرفعال"
+    },
+    "profileDetails": {
+      "contact": "اطلاعات تماس",
+      "professional": "اطلاعات حرفه‌ای",
+      "notProvided": "ارائه نشده",
+      "notSpecified": "مشخص نشده"
+    },
+    "messages": {
+      "uploadSuccess": "عکس پروفایل با موفقیت بارگذاری شد",
+      "uploadFailed": "بارگذاری عکس پروفایل با شکست مواجه شد"
+    },
+    "description": "مدیریت کادر آموزشی و پروفایل‌های آن‌ها",
+    "viewCards": "کارت‌ها",
+    "viewList": "فهرست",
+    "add": "افزودن",
+    "createNewInstructor": "ایجاد حساب کاربری و پروفایل جدید برای مدرس",
+    "firstNamePlaceholder": "احمد",
+    "lastNamePlaceholder": "احمدی",
+    "emailPlaceholder": "ahmad@institute.com",
+    "phonePlaceholder": "+98 912 345 6789",
+    "persianLanguage": "زبان فارسی",
+    "englishLanguage": "زبان انگلیسی",
+    "arabicLanguage": "زبان عربی",
+    "frenchLanguage": "زبان فرانسوی",
+    "experience1-2": "۱-۲ سال",
+    "experience3-5": "۳-۵ سال",
+    "experience5-10": "۵-۱۰ سال",
+    "experience10plus": "۱۰+ سال",
+    "languagesTaughtPlaceholder": "مثلاً فارسی، انگلیسی",
+    "hourlyRatePlaceholder": "500000",
+    "qualificationsPlaceholder": "مدارک تحصیلی،گواهی‌نامه‌ها و صلاحیت‌های مرتبط...",
     "bioPlaceholder": "توضیح مختصری از روش تدریس و سابقه کاری...",
     "creating": "در حال ایجاد...",
     "saving": "در حال ذخیره...",
@@ -1410,5 +1446,15 @@
     "fri": "ج",
     "sat": "ش",
     "sun": "ی"
+  },
+  "dashboard": {
+    "title": "داشبورد مدیریت",
+    "overview": "نمای کلی",
+    "performanceImprovementNeeded": "نیاز به بهبود عملکرد",
+    "studentRetentionAnalysis": "تحلیل نگهداری دانشجویان",
+    "newStudent3mo": "دانشجویان جدید ۳ ماهه",
+    "totalRetention": "نگهداری کل",
+    "activeStudents": "دانشجویان فعال",
+    "completionRate": "نرخ تکمیل"
   }
 }
