@@ -28,13 +28,15 @@ import { Link, useLocation, Redirect } from "wouter";
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/use-language";
 import { useAuth } from "@/hooks/use-auth";
+import { AdminDashboard as EnhancedAdminDashboard } from "@/pages/admin/admin-dashboard";
 
 export default function Dashboard() {
   const { user } = useAuth();
   
-  // Redirect users to their role-specific dashboards
+  // Show role-specific dashboard components within unified layout
+  // Admin users now use unified dashboard with admin features
   if (user?.role === 'Admin') {
-    return <Redirect to="/admin" />;
+    return <EnhancedAdminDashboard />;
   }
   if (user?.role === 'Supervisor') {
     return <Redirect to="/supervisor/dashboard" />;

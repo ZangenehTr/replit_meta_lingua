@@ -172,14 +172,10 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/admin">
-        <ProtectedRoute>
-          <EnhancedAdminDashboard />
-        </ProtectedRoute>
+        <Redirect to="/dashboard" />
       </Route>
       <Route path="/admin/dashboard">
-        <ProtectedRoute>
-          <EnhancedAdminDashboard />
-        </ProtectedRoute>
+        <Redirect to="/dashboard" />
       </Route>
       <Route path="/admin/students">
         <ProtectedRoute>

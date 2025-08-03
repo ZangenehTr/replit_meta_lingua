@@ -127,8 +127,8 @@ export const getNavigationForRole = (role: string, t: any): NavigationItem[] => 
       return getMentorNavigation(t);
     case "Admin":
       return [
-        // Dashboard - Primary navigation item for Admin
-        { path: "/admin/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Admin"] },
+        // Dashboard - Primary navigation item for Admin (unified dashboard)
+        { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Admin"] },
         ...getInstituteManagementNavigation(t),
         ...getCallCenterNavigation(t)
       ];
