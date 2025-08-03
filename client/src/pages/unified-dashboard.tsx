@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/use-language";
 
 // Role-specific dashboard imports
-import { AdminDashboard } from "@/pages/admin/admin-dashboard";
-import { MobileAdminDashboard } from "@/pages/admin/mobile-admin-dashboard";
+import { SimpleAdminDashboard } from "@/pages/admin/simple-admin-dashboard";
 import SupervisorDashboard from "@/pages/supervisor/supervisor-dashboard";
 import TeacherDashboard from "@/pages/teacher/dashboard";
 import CallCenterDashboard from "@/pages/callcenter/dashboard";
@@ -65,8 +64,7 @@ export default function UnifiedDashboard() {
   // Render role-specific dashboard content within unified layout
   switch (user.role) {
     case 'Admin':
-      // Force mobile dashboard for now to fix blank page issue
-      return <MobileAdminDashboard />;
+      return <SimpleAdminDashboard />;
     
     case 'Supervisor':
       return <SupervisorDashboard />;
