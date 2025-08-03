@@ -97,17 +97,8 @@ export function AppLayout({ children }: AppLayoutProps) {
               variant="ghost" 
               size="sm"
               onClick={() => {
-                if (user.role === 'Admin' || user.role === 'Supervisor') {
-                  setLocation("/admin");
-                } else if (user.role === 'Teacher/Tutor') {
-                  setLocation("/teacher");
-                } else if (user.role === 'Call Center Agent') {
-                  setLocation("/callcenter");
-                } else if (user.role === 'Mentor') {
-                  setLocation("/mentor");
-                } else {
-                  setLocation("/dashboard");
-                }
+                // All roles go to unified dashboard
+                setLocation("/dashboard");
               }}
               className="flex items-center gap-2 touch-target"
             >

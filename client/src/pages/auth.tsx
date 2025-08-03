@@ -47,21 +47,8 @@ export default function Auth() {
   // Redirect based on user role when user data is available (unless forcing login)
   useEffect(() => {
     if (user && !forceLogin) {
-      if (user.role === 'admin') {
-        setLocation("/admin");
-      } else if (user.role === 'teacher') {
-        setLocation("/teacher/dashboard");
-      } else if (user.role === 'supervisor') {
-        setLocation("/supervisor/dashboard");
-      } else if (user.role === 'mentor') {
-        setLocation("/mentor/dashboard");
-      } else if (user.role === 'accountant') {
-        setLocation("/accountant");
-      } else if (user.role === 'call-center-agent') {
-        setLocation("/callcenter");
-      } else {
-        setLocation("/dashboard");
-      }
+      // All roles redirect to unified dashboard page
+      setLocation("/dashboard");
     }
   }, [user, setLocation, forceLogin]);
 
