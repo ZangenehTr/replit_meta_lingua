@@ -28,7 +28,7 @@ export const getStudentNavigation = (t: any): NavigationItem[] => [
 
 // Teacher/Tutor navigation
 export const getTeacherNavigation = (t: any): NavigationItem[] => [
-  { path: "/teacher/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Teacher/Tutor"] },
+  { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Teacher/Tutor"] },
   { path: "/teacher/classes", icon: "Users", label: t('common:navigation.myClasses'), roles: ["Teacher/Tutor"] },
   { path: "/teacher/schedule", icon: "Calendar", label: t('common:navigation.schedule'), roles: ["Teacher/Tutor"] },
   { path: "/teacher/assignments", icon: "ClipboardCheck", label: t('common:navigation.assignments'), roles: ["Teacher/Tutor"] },
@@ -110,7 +110,7 @@ export const getCallCenterNavigation = (t: any): NavigationItem[] => [
 
 // Mentor-specific navigation
 export const getMentorNavigation = (t: any): NavigationItem[] => [
-  { path: "/mentor/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Mentor"] },
+  { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Mentor"] },
   { path: "/mentor/students", icon: "Users", label: t('common:navigation.mentees'), roles: ["Mentor"] },
   { path: "/mentor/sessions", icon: "Calendar", label: t('common:navigation.mentoringSessions'), roles: ["Mentor"] },
   { path: "/mentor/progress", icon: "TrendingUp", label: t('common:navigation.progressTracking'), roles: ["Mentor"] },
@@ -134,21 +134,21 @@ export const getNavigationForRole = (role: string, t: any): NavigationItem[] => 
       ];
     case "Supervisor":
       return [
-        // Dashboard - Primary navigation item for Supervisor  
-        { path: "/supervisor/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Supervisor"] },
+        // Dashboard - Primary navigation item for Supervisor (unified dashboard)
+        { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Supervisor"] },
         ...getInstituteManagementNavigation(t),
         ...getCallCenterNavigation(t)
       ];
     case "Call Center Agent":
       return [
-        // Dashboard - Primary navigation item for Call Center Agent
-        { path: "/callcenter/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Call Center Agent"] },
+        // Dashboard - Primary navigation item for Call Center Agent (unified dashboard)
+        { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Call Center Agent"] },
         ...getCallCenterNavigation(t)
       ];
     case "Accountant":
       return [
-        // Dashboard - Primary navigation item for Accountant
-        { path: "/accountant/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Accountant"] },
+        // Dashboard - Primary navigation item for Accountant (unified dashboard)
+        { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Accountant"] },
         ...getInstituteManagementNavigation(t).filter(item => 
           item.roles.includes("Accountant") || item.roles.includes("Admin")
         )
