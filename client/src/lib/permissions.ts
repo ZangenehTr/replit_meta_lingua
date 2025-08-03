@@ -136,7 +136,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
 };
 
 export const DASHBOARD_ROUTES: Record<UserRole, string> = {
-  admin: '/admin',
+  admin: '/dashboard',
   manager: '/manager',
   supervisor: '/supervisor', 
   teacher: '/teacher',
