@@ -82,9 +82,9 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
   const navigationItems = user ? getNavigationForRole(user.role, t) : [];
 
   return (
-    <aside className={`w-64 md:w-64 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 ${isRTL ? 'border-l' : 'border-r'} border-gray-200 dark:border-gray-700 fixed top-14 ${isRTL ? 'right-0' : 'left-0'} h-[calc(100vh-3.5rem)] overflow-y-auto z-30`}>
+    <aside className={`w-64 md:w-64 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 ${isRTL ? 'border-l' : 'border-r'} border-gray-200 dark:border-gray-700 fixed top-14 ${isRTL ? 'right-0' : 'left-0'} h-[calc(100vh-3.5rem)] overflow-y-auto z-30`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="p-6">
-        <nav className="space-y-2">
+        <nav className="space-y-2" dir={isRTL ? 'rtl' : 'ltr'}>
           {navigationItems.map((item) => {
             const isActive = location === item.path;
             const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
@@ -93,7 +93,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
               <Link key={item.path} href={item.path}>
                 <Button
                   variant={isActive ? "default" : "ghost"}
-                  className={`w-full justify-start ${
+                  className={`w-full ${isRTL ? 'justify-start text-right' : 'justify-start text-left'} ${
                     isActive 
                       ? "bg-primary text-primary-foreground" 
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -102,9 +102,10 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                     setLocation(item.path);
                     onNavigate?.();
                   }}
+                  dir={isRTL ? 'rtl' : 'ltr'}
                 >
                   <Icon className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  <span>{item.label}</span>
+                  <span className={isRTL ? 'text-right' : 'text-left'}>{item.label}</span>
                   {item.badge && (
                     <Badge className={isRTL ? 'mr-auto' : 'ml-auto'} variant="secondary">
                       {item.badge}
