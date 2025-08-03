@@ -117,9 +117,9 @@ export function AdminDashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">{t('admin:dashboard.title')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t('admin:dashboard.title', 'داشبورد')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base">
-            {t('admin:dashboard.managerSubtitle')}
+            {t('admin:dashboard.subtitle', 'پنل مدیریت موسسه')}
           </p>
         </div>
       </div>
