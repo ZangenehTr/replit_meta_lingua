@@ -93,7 +93,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
               <Link key={item.path} href={item.path}>
                 <Button
                   variant={isActive ? "default" : "ghost"}
-                  className={`w-full ${isRTL ? 'justify-start text-right' : 'justify-start text-left'} ${
+                  className={`w-full ${isRTL ? 'justify-end flex-row-reverse' : 'justify-start'} ${
                     isActive 
                       ? "bg-primary text-primary-foreground" 
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -103,9 +103,10 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                     onNavigate?.();
                   }}
                   dir={isRTL ? 'rtl' : 'ltr'}
+                  style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
                 >
                   <Icon className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  <span className={isRTL ? 'text-right' : 'text-left'}>{item.label}</span>
+                  <span className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>{item.label}</span>
                   {item.badge && (
                     <Badge className={isRTL ? 'mr-auto' : 'ml-auto'} variant="secondary">
                       {item.badge}
