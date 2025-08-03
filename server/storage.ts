@@ -539,6 +539,8 @@ export class MemStorage implements IStorage {
   private supportTickets: Map<number, any>;
   private pushNotifications: Map<number, any>;
   private rooms: Map<number, any>;
+  private games: Map<number, any>;
+  private gameSessions: Map<number, any>;
   private currentId: number;
 
   constructor() {
@@ -559,6 +561,8 @@ export class MemStorage implements IStorage {
     this.supportTickets = new Map();
     this.pushNotifications = new Map();
     this.rooms = new Map();
+    this.games = new Map();
+    this.gameSessions = new Map();
     this.currentId = 1;
     this.initializeData();
   }

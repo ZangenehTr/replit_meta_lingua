@@ -176,43 +176,50 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: defaultQueryFn,
-      staleTime: 30000, // 30 seconds
       retry: (failureCount, error) => {
-        // Don't retry auth errors
-        if (error instanceof Error && (
-          error.message.includes('401') || 
-          error.message.includes('403') ||
-          error.name === 'AuthenticationError'
-        )) {
-          return false;
+        // Don't retry on 4xx errors (client errors)
+        if (error && typeof error === 'object' && 'status' in error) {
+          const status = error.status as number;
+          if (status >= 400 && status < 500) {
+            return false;
+          }
         }
-        // Retry network errors up to 2 times
-        if (error instanceof Error && error.message.includes('Network')) {
-          return failureCount < 2;
+
+        // Don't retry network errors too aggressively
+        if (error && typeof error === 'object' && 'message' in error) {
+          const message = error.message as string;
+          if (message.includes('Failed to fetch') || 
+              message.includes('Network request failed') ||
+              message.includes('ECONNREFUSED')) {
+            return failureCount < 1; // Only retry once for network errors
+          }
         }
-        // Default retry for other errors
-        return failureCount < 1;
+
+        // Retry up to 3 times for other errors
+        return failureCount < 3;
       },
-      throwOnError: false, // Prevent unhandled promise rejections
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+      staleTime: 30000, // 30 seconds
+      gcTime: 1000 * 60 * 10, // 10 minutes
+      onError: (error) => {
+        console.error('Query error:', error);
+      },
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
     },
     mutations: {
       retry: (failureCount, error) => {
-        // Never retry mutations for auth errors
-        if (error instanceof Error && (
-          error.message.includes('401') || 
-          error.message.includes('403') ||
-          error.name === 'AuthenticationError'
-        )) {
-          return false;
+        // Don't retry mutations on client errors
+        if (error && typeof error === 'object' && 'status' in error) {
+          const status = error.status as number;
+          if (status >= 400 && status < 500) {
+            return false;
+          }
         }
-        // Only retry network errors for mutations
-        if (error instanceof Error && error.message.includes('Network')) {
-          return failureCount < 1;
-        }
-        return false;
+        return failureCount < 1;
+      },
+      onError: (error) => {
+        console.error('Mutation error:', error);
       },
       throwOnError: false, // Also prevent mutation errors from causing runtime errors
     },

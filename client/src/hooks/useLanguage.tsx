@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type Language = 'en' | 'fa' | 'ar';
@@ -32,7 +32,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [i18n]);
 
   const direction: Direction = RTL_LANGUAGES.includes(language) ? 'rtl' : 'ltr';
-  const isRTL = direction === 'rtl';
+  const isRTL = useMemo(() => {
+    const rtlLanguages = ['fa', 'ar', 'he', 'ur'];
+    return rtlLanguages.includes(language);
+  }, [language]);
 
   const setLanguage = useCallback((newLanguage: Language) => {
     console.log(`Setting language to: ${newLanguage}`);

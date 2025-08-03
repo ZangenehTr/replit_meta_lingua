@@ -26,7 +26,7 @@ interface Course {
 }
 
 export function CourseProgress() {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'student']);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -41,12 +41,12 @@ export function CourseProgress() {
       window.open(`sms:?body=${encodedMessage}`, '_self');
       
       toast({
-        title: t('toast.referralLinkReady'),
+        title: "Referral Link Ready",
         description: "پیام در اپلیکیشن پیامک شما آماده شده است",
       });
     } catch (error) {
       toast({
-        title: t('toast.error'),
+        title: "Error",
         description: "مشکلی در ایجاد لینک معرفی پیش آمد",
         variant: "destructive",
       });
@@ -132,7 +132,7 @@ export function CourseProgress() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <BookOpen className="h-5 w-5" />
-          {t('courseProgress')}
+          Course Progress
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6">
@@ -178,7 +178,7 @@ export function CourseProgress() {
                     })}
                     disabled={progressMutation.isPending}
                   >
-                    {progressMutation.isPending ? t('updating') : t('continueLearning')}
+                    {progressMutation.isPending ? 'Updating...' : 'Continue Learning'}
                     <ArrowRight className="ml-1 h-3 w-3" />
                   </Button>
                   <Button
@@ -198,7 +198,7 @@ export function CourseProgress() {
         {/* Available Courses */}
         {availableCourses && (
           <div className="space-y-4">
-            <h3 className="font-medium text-sm text-muted-foreground">{t('availableCourses').toUpperCase()}</h3>
+            <h3 className="font-medium text-sm text-muted-foreground">AVAILABLE COURSES</h3>
             {availableCourses
               .filter(course => !courses?.some(enrolled => enrolled.id === course.id))
               .map((course) => (
@@ -239,7 +239,7 @@ export function CourseProgress() {
                     size="sm"
                     className="w-full sm:w-auto"
                   >
-                    {enrollMutation.isPending && enrollMutation.variables === course.id ? t('enrolling') : t('enrollNow')}
+                    {enrollMutation.isPending && enrollMutation.variables === course.id ? 'Enrolling...' : 'Enroll Now'}
                   </Button>
                 </div>
               </div>
