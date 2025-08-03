@@ -379,6 +379,7 @@ export interface IStorage {
   
   // ===== GAMIFICATION SUBSYSTEM =====
   // Games
+  getAllGames(): Promise<Game[]>;
   createGame(game: InsertGame): Promise<Game>;
   getGameById(id: number): Promise<Game | undefined>;
   getGamesByAgeGroup(ageGroup: string): Promise<Game[]>;
@@ -2933,6 +2934,76 @@ export class MemStorage implements IStorage {
       totalSessions: this.sessions.size,
       averageSessionsPerTeacher: this.sessions.size / teachers.length
     };
+  }
+
+  // ===== GAMIFICATION METHODS =====
+  async getAllGames(): Promise<Game[]> {
+    return Array.from(this.games.values());
+  }
+
+  async createGame(game: InsertGame): Promise<Game> {
+    const id = this.currentId++;
+    const newGame = {
+      id,
+      ...game,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.games.set(id, newGame);
+    return newGame;
+  }
+
+  async getGameById(id: number): Promise<Game | undefined> {
+    return this.games.get(id);
+  }
+
+  async getGamesByAgeGroup(ageGroup: string): Promise<Game[]> {
+    return Array.from(this.games.values()).filter(g => g.ageGroup === ageGroup);
+  }
+
+  async getGamesByLevel(level: string): Promise<Game[]> {
+    return Array.from(this.games.values()).filter(g => g.level === level);
+  }
+
+  async getGamesByFilters(filters: { ageGroup?: string, gameType?: string, level?: string, language?: string }): Promise<Game[]> {
+    let filteredGames = Array.from(this.games.values());
+    
+    if (filters.ageGroup) {
+      filteredGames = filteredGames.filter(g => g.ageGroup === filters.ageGroup);
+    }
+    if (filters.gameType) {
+      filteredGames = filteredGames.filter(g => g.gameType === filters.gameType);
+    }
+    if (filters.level) {
+      filteredGames = filteredGames.filter(g => g.level === filters.level);
+    }
+    if (filters.language) {
+      filteredGames = filteredGames.filter(g => g.language === filters.language);
+    }
+    
+    return filteredGames;
+  }
+
+  async updateGame(id: number, game: Partial<InsertGame>): Promise<Game | undefined> {
+    const existingGame = this.games.get(id);
+    if (existingGame) {
+      const updatedGame = { ...existingGame, ...game, updatedAt: new Date() };
+      this.games.set(id, updatedGame);
+      return updatedGame;
+    }
+    return undefined;
+  }
+
+  async createGameSession(session: InsertGameSession): Promise<GameSession> {
+    const id = this.currentId++;
+    const newSession = {
+      id,
+      ...session,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.gameSessions.set(id, newSession);
+    return newSession;
   }
 
   // Communication methods (missing from interface)
