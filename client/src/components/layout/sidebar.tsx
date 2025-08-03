@@ -82,7 +82,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
   const navigationItems = user ? getNavigationForRole(user.role, t) : [];
 
   return (
-    <aside className="w-64 md:w-64 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 fixed top-14 left-0 h-[calc(100vh-3.5rem)] overflow-y-auto z-30">
+    <aside className={`w-64 md:w-64 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 ${isRTL ? 'border-l' : 'border-r'} border-gray-200 dark:border-gray-700 fixed top-14 ${isRTL ? 'right-0' : 'left-0'} h-[calc(100vh-3.5rem)] overflow-y-auto z-30`}>
       <div className="p-6">
         <nav className="space-y-2">
           {navigationItems.map((item) => {
@@ -103,10 +103,10 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                     onNavigate?.();
                   }}
                 >
-                  <Icon className="h-4 w-4 mr-3" />
+                  <Icon className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
                   <span>{item.label}</span>
                   {item.badge && (
-                    <Badge className="ml-auto" variant="secondary">
+                    <Badge className={isRTL ? 'mr-auto' : 'ml-auto'} variant="secondary">
                       {item.badge}
                     </Badge>
                   )}
