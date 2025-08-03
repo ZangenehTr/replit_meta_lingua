@@ -828,7 +828,11 @@
   },
   "dashboard": {
     "title": "Admin Dashboard",
-    "subtitle": "Administrative overview and system metrics"
+    "subtitle": "Administrative overview and system metrics",
+    "performanceImprovementNeeded": "Performance Improvement Needed",
+    "studentRetentionAnalysis": "Student Retention Analysis",
+    "newStudent3mo": "New Student 3mo",
+    "retention": "Total Retention"
   },
   "campaigns": {
     "title": "Campaign Management",

@@ -25,8 +25,10 @@ window.addEventListener('unhandledrejection', (event) => {
       reason?.message?.includes('Failed to fetch') ||
       reason?.message?.includes('NetworkError') ||
       reason?.message?.includes('Connection reset') ||
+      reason?.message?.includes('Vite') ||
+      reason?.message?.includes('HMR') ||
       reason?.code === 'ECONNRESET' ||
-      (typeof reason === 'string' && (reason.includes('Request timeout') || reason.includes('connection')))) {
+      (typeof reason === 'string' && (reason.includes('Request timeout') || reason.includes('connection') || reason.includes('vite')))) {
     console.debug('Handled error gracefully:', reason?.message || reason);
     event.preventDefault(); // Prevent the runtime error overlay
     return;

@@ -32,7 +32,8 @@ import StudentDashboard from "@/pages/student/dashboard";
 export default function UnifiedDashboard() {
   const { user } = useAuth();
   const { t } = useTranslation(['common']);
-  const { isRTL } = useLanguage();
+  const { language, setLanguage, isRTL } = useLanguage();
+  const { t } = useTranslation(['common', 'admin', 'student']);
   const [isMobile, setIsMobile] = useState(false);
 
   // Add debug logging
