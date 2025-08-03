@@ -45,6 +45,7 @@ Preferred communication style: Simple, everyday language.
 - **Check-First Protocol**: Mandatory validation for data integrity and conflict prevention.
 - **Business Logic Consolidation**: Centralized utilities for filtering, calculations, and data integrity.
 - **Complete i18n Implementation**: Comprehensive Persian/Arabic/English translation system with RTL support across all admin dialogs and forms. Student management and course creation dialogs fully translated with proper RTL layout handling.
+- **Unified Dashboard System**: All 7 user roles land on `/dashboard` URL but see role-appropriate content. Eliminates infinite redirect loops while preserving all existing functionality and API endpoints. Each role maintains their specific dashboard features through role-based content routing.
 
 ### Deployment Strategy
 - **Development**: Replit hosting, environment variables via Replit Secrets.
