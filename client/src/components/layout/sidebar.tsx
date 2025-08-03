@@ -74,7 +74,7 @@ interface SidebarProps {
 
 export function Sidebar({ onNavigate }: SidebarProps = {}) {
   const { user, logout } = useAuth();
-  const { t } = useTranslation(['common', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant']);
+  const { t } = useTranslation();
   const { isRTL } = useLanguage();
   const [location, setLocation] = useLocation();
   
