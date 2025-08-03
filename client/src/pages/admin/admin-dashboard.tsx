@@ -112,20 +112,19 @@ export function AdminDashboard() {
     queryKey: ['/api/admin/class-observations']
   });
 
+  // Mobile-first simple layout
   return (
-    <div className={`p-4 sm:p-6 space-y-4 sm:space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">{t('admin:dashboard.title', 'داشبورد')}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base">
-            {t('admin:dashboard.subtitle', 'پنل مدیریت موسسه')}
-          </p>
-        </div>
+    <div className={`min-h-screen p-4 space-y-4 ${isRTL ? 'rtl' : 'ltr'}`}>
+      {/* Simple Mobile Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-1">{t('admin:dashboard.title', 'داشبورد')}</h1>
+        <p className="text-muted-foreground text-sm">
+          {t('admin:dashboard.subtitle', 'پنل مدیریت موسسه')}
+        </p>
       </div>
 
-      {/* Critical System Status */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Simple Mobile Metrics */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
         {/* Server Uptime */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
