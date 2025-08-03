@@ -106,7 +106,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
                   style={isRTL ? { textAlign: 'right' } : { textAlign: 'left' }}
                 >
                   <Icon className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
-                  <span className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>{item.label}</span>
+                  <span className={isRTL ? 'flex-1 text-right' : ''}>{item.label}</span>
                   {item.badge && (
                     <Badge className={isRTL ? 'mr-auto' : 'ml-auto'} variant="secondary">
                       {item.badge}
