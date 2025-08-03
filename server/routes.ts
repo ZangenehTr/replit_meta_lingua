@@ -5757,7 +5757,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }
 
-      const ollamaData = await ollamaResponse.json();
       const content = ollamaData.response;
 
       // Determine emotion based on response content
