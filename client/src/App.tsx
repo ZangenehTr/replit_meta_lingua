@@ -14,7 +14,7 @@ import { RTLLayout } from "@/components/rtl-layout";
 import NotFound from "@/pages/not-found";
 import Auth from "@/pages/auth";
 import SimpleAuth from "@/pages/simple-auth";
-import Dashboard from "@/pages/dashboard";
+import UnifiedDashboard from "@/pages/unified-dashboard";
 import DemoDashboard from "@/pages/demo-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import ManagerDashboard from "@/pages/manager-dashboard";
@@ -585,7 +585,7 @@ function Router() {
 
       <Route path="/dashboard">
         <ProtectedRoute>
-          <Dashboard />
+          <UnifiedDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/">
@@ -607,22 +607,8 @@ function Router() {
             return <Redirect to="/auth" />;
           }
           
-          // Redirect authenticated users based on their role
-          if (user.role === 'Admin') {
-            return <Redirect to="/admin/dashboard" />;
-          } else if (user.role === 'Teacher/Tutor') {
-            return <Redirect to="/teacher/dashboard" />;
-          } else if (user.role === 'Supervisor') {
-            return <Redirect to="/supervisor/dashboard" />;
-          } else if (user.role === 'Mentor') {
-            return <Redirect to="/mentor/dashboard" />;
-          } else if (user.role === 'Accountant') {
-            return <Redirect to="/accountant" />;
-          } else if (user.role === 'Call Center Agent') {
-            return <Redirect to="/callcenter" />;
-          } else {
-            return <Redirect to="/dashboard" />;
-          }
+          // All authenticated users redirect to unified dashboard
+          return <Redirect to="/dashboard" />;
         })()}
       </Route>
       <Route component={NotFound} />

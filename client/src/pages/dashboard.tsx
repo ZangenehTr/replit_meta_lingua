@@ -33,29 +33,22 @@ import { AdminDashboard as EnhancedAdminDashboard } from "@/pages/admin/admin-da
 export default function Dashboard() {
   const { user } = useAuth();
   
-  // Show role-specific dashboard components within unified layout
-  // Admin users now use unified dashboard with admin features
-  if (user?.role === 'Admin') {
-    return <EnhancedAdminDashboard />;
+  // DEPRECATED: This component is being replaced by UnifiedDashboard
+  // This exists only for backward compatibility
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
   }
-  if (user?.role === 'Supervisor') {
-    return <Redirect to="/supervisor/dashboard" />;
-  }
-  if (user?.role === 'Teacher/Tutor') {
-    return <Redirect to="/teacher" />;
-  }
-  if (user?.role === 'Call Center Agent') {
-    return <Redirect to="/callcenter" />;
-  }
-  if (user?.role === 'Mentor') {
-    return <Redirect to="/mentor" />;
-  }
-  if (user?.role === 'Accountant') {
-    return <Redirect to="/accountant" />;
-  }
-  if (user?.role === 'Student') {
-    return <Redirect to="/student" />;
-  }
+  
+  // This should not happen since we're using UnifiedDashboard now
+  // Fallback to student dashboard for safety
+  console.warn("Old dashboard.tsx accessed - should be using UnifiedDashboard");
   const [companionVisible, setCompanionVisible] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { t } = useTranslation(['student', 'common']);
