@@ -39,6 +39,24 @@ export function RTLLayout({ children }: RTLLayoutProps) {
     updateLayout();
   }, [language]);
 
+  useEffect(() => {
+    const isRTL = language === 'fa' || language === 'ar';
+    const currentDir = document.documentElement.getAttribute('dir');
+
+    // Only update if direction actually changed
+    if ((isRTL && currentDir !== 'rtl') || (!isRTL && currentDir !== 'ltr')) {
+      if (isRTL) {
+        document.documentElement.setAttribute('dir', 'rtl');
+        document.documentElement.classList.add('rtl');
+        console.log(`Applied RTL styles for ${language}`);
+      } else {
+        document.documentElement.setAttribute('dir', 'ltr');
+        document.documentElement.classList.remove('rtl');
+        console.log(`Applied LTR styles for ${language}`);
+      }
+    }
+  }, [language]);
+
   return (
     <div className={`${isRTL ? 'rtl' : 'ltr'} lang-${language}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {children}

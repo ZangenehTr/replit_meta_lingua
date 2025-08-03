@@ -2194,6 +2194,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Games Management API
+  app.get("/api/games", async (req: any, res) => {
+    try {
+      const games = [
+        {
+          id: 1,
+          title: "Vocabulary Challenge",
+          description: "Test your vocabulary skills",
+          category: "vocabulary",
+          difficulty: "beginner",
+          image: "/assets/games/vocab-challenge.png",
+          isActive: true,
+          playCount: 1250,
+          averageScore: 78,
+          duration: 300
+        },
+        {
+          id: 2,
+          title: "Grammar Quest",
+          description: "Master Persian grammar rules",
+          category: "grammar",
+          difficulty: "intermediate",
+          image: "/assets/games/grammar-quest.png",
+          isActive: true,
+          playCount: 890,
+          averageScore: 82,
+          duration: 450
+        },
+        {
+          id: 3,
+          title: "Conversation Practice",
+          description: "Practice real-world conversations",
+          category: "speaking",
+          difficulty: "advanced",
+          image: "/assets/games/conversation-practice.png",
+          isActive: true,
+          playCount: 567,
+          averageScore: 75,
+          duration: 600
+        }
+      ];
+      
+      res.json(games);
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      res.status(500).json({ message: "Failed to fetch games" });
+    }
+  });
+
   // Gamification Daily Challenges API (replacing hardcoded challenges)
   app.get("/api/gamification/daily-challenges", authenticateToken, async (req: any, res) => {
     try {
