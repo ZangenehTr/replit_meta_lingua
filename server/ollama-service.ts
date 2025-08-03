@@ -29,12 +29,18 @@ export class OllamaService {
 
   private async checkAvailability(): Promise<void> {
     try {
-      const response = await axios.get(`${this.baseUrl}/api/tags`, { timeout: 5000 });
+      const response = await axios.get(`${this.baseUrl}/api/tags`, { 
+        timeout: 3000,
+        validateStatus: (status) => status === 200
+      });
       this.isAvailable = response.status === 200;
       console.log('Ollama service is available:', this.isAvailable);
-    } catch (error) {
+    } catch (error: any) {
       this.isAvailable = false;
-      console.log('Ollama service not available:', error.message);
+      // Don't log connection refused errors as they're expected in dev
+      if (!error.message?.includes('ECONNREFUSED')) {
+        console.log('Ollama service not available:', error.message);
+      }
     }
   }
 

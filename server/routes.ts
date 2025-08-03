@@ -5722,26 +5722,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userPrompt = `Student level: ${studentLevel}. Current lesson: ${currentLesson}. Message: ${message}`;
       const fullPrompt = `${systemPrompt}\n\nUser: ${userPrompt}\nLexi:`;
 
-      // Make request to Ollama server
+      // Make request to Ollama server with fallback
       const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434';
-      const ollamaResponse = await fetch(`${ollamaUrl}/api/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'llama3.2',
-          prompt: fullPrompt,
-          stream: false,
-          options: {
-            temperature: 0.7,
-            num_predict: 200
-          }
-        })
-      });
+      let ollamaData;
+      
+      try {
+        const ollamaResponse = await fetch(`${ollamaUrl}/api/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama3.2',
+            prompt: fullPrompt,
+            stream: false,
+            options: {
+              temperature: 0.7,
+              num_predict: 200
+            }
+          }),
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
 
-      if (!ollamaResponse.ok) {
-        throw new Error(`Ollama server error: ${ollamaResponse.status}`);
+        if (!ollamaResponse.ok) {
+          throw new Error(`Ollama server error: ${ollamaResponse.status}`);
+        }
+        
+        ollamaData = await ollamaResponse.json();
+      } catch (error: any) {
+        // Fallback response when Ollama is not available
+        console.log('Ollama not available, using fallback response');
+        ollamaData = {
+          response: "سلام! من لکسی هستم، دستیار زبان فارسی شما. چطور می‌تونم کمکتون کنم؟"
+        };
       }
 
       const ollamaData = await ollamaResponse.json();
