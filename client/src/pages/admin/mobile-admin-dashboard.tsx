@@ -86,9 +86,9 @@ export function MobileAdminDashboard() {
     <div className={`min-h-screen bg-background p-4 pb-20 ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Mobile Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">{t('admin:dashboard.title', 'داشبورد')}</h1>
+        <h1 className="text-2xl font-bold mb-1">Admin Dashboard</h1>
         <p className="text-muted-foreground text-sm">
-          {t('admin:dashboard.subtitle', 'پنل مدیریت موسسه')}
+          Administrative overview and system metrics
         </p>
       </div>
 
@@ -102,7 +102,7 @@ export function MobileAdminDashboard() {
           <div className="text-xl font-bold">
             {isPersian ? formatPersianNumber((stats as any)?.totalStudents || 0) : ((stats as any)?.totalStudents || 0)}
           </div>
-          <p className="text-xs text-muted-foreground">{t('admin:dashboard.totalStudents')}</p>
+          <p className="text-xs text-muted-foreground">Total Students</p>
         </Card>
 
         <Card className="p-4">
@@ -113,7 +113,7 @@ export function MobileAdminDashboard() {
           <div className="text-xl font-bold">
             {isPersian ? formatPersianNumber((stats as any)?.totalTeachers || 0) : ((stats as any)?.totalTeachers || 0)}
           </div>
-          <p className="text-xs text-muted-foreground">{t('admin:dashboard.totalTeachers')}</p>
+          <p className="text-xs text-muted-foreground">Total Teachers</p>
         </Card>
 
         <Card className="p-4">
@@ -124,7 +124,7 @@ export function MobileAdminDashboard() {
           <div className="text-xl font-bold">
             {isPersian ? formatPersianCurrency((financialKPIs as any)?.totalRevenue || '0') : `$${(financialKPIs as any)?.totalRevenue || '0'}`}
           </div>
-          <p className="text-xs text-muted-foreground">{t('admin:dashboard.monthlyRevenue')}</p>
+          <p className="text-xs text-muted-foreground">Monthly Revenue</p>
         </Card>
 
         <Card className="p-4">
@@ -135,7 +135,7 @@ export function MobileAdminDashboard() {
           <div className="text-xl font-bold">
             {isPersian ? formatPersianPercentage((callCenterStats as any)?.responseRate || '0') : `${(callCenterStats as any)?.responseRate || '0'}%`}
           </div>
-          <p className="text-xs text-muted-foreground">{t('admin:dashboard.callResponseRate')}</p>
+          <p className="text-xs text-muted-foreground">Call Response Rate</p>
         </Card>
       </div>
 
