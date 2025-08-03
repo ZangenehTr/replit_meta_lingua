@@ -199,20 +199,36 @@ export function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Call Center Performance Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('admin:dashboard.callCenterPerformance')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={(callCenterStats as any)?.weeklyData || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" />
-                <YAxis tickFormatter={(value) => isPersian ? formatPersianNumber(value.toString()) : value} />
+      {/* Mobile-Optimized Charts Section */}
+      <div className="grid grid-cols-1 gap-3 sm:gap-6">
+        {/* Call Center Performance Chart - Mobile Optimized */}
+        <Card className="p-3 sm:p-6">
+          <div className="mb-3 sm:mb-4">
+            <h3 className="text-sm sm:text-lg font-semibold">{t('admin:dashboard.callCenterPerformance')}</h3>
+          </div>
+          <div className="h-48 sm:h-64 md:h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={(callCenterStats as any)?.weeklyData || []} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="2 2" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="day" 
+                  fontSize={10}
+                  tick={{ fontSize: 10 }}
+                  axisLine={{ stroke: '#e0e0e0' }}
+                />
+                <YAxis 
+                  fontSize={10}
+                  tick={{ fontSize: 10 }}
+                  axisLine={{ stroke: '#e0e0e0' }}
+                  tickFormatter={(value) => isPersian ? formatPersianNumber(value.toString()) : value} 
+                />
                 <Tooltip 
+                  contentStyle={{ 
+                    fontSize: '12px', 
+                    padding: '8px',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '6px'
+                  }}
                   formatter={(value, name) => [
                     isPersian ? formatPersianNumber(value.toString()) : value,
                     name
@@ -222,61 +238,77 @@ export function AdminDashboard() {
                 <Area type="monotone" dataKey="answered" stackId="2" stroke="#10B981" fill="#10B981" fillOpacity={0.6} />
               </AreaChart>
             </ResponsiveContainer>
-          </CardContent>
+          </div>
         </Card>
 
-        {/* Revenue Analytics */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('admin:dashboard.revenueAnalyticsLast6Months')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={(revenueData as any)?.monthlyTrend || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => isPersian ? formatPersianNumber(value.toString()) : value} />
-                <Tooltip formatter={(value) => [
-                  isPersian ? formatPersianCurrency(value.toString()) : `$${value}`, 
-                  ''
-                ]} />
-                <Line type="monotone" dataKey="daily" stroke="#F59E0B" strokeWidth={2} name={t('admin:dashboard.dailyAvg')} />
-                <Line type="monotone" dataKey="weekly" stroke="#8B5CF6" strokeWidth={2} name={t('admin:dashboard.weeklyAvg')} />
-                <Line type="monotone" dataKey="monthly" stroke="#EF4444" strokeWidth={2} name={t('admin:dashboard.monthlyTotal')} />
+        {/* Revenue Analytics - Mobile Optimized */}
+        <Card className="p-3 sm:p-6">
+          <div className="mb-3 sm:mb-4">
+            <h3 className="text-sm sm:text-lg font-semibold">{t('admin:dashboard.revenueAnalyticsLast6Months')}</h3>
+          </div>
+          <div className="h-48 sm:h-64 md:h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={(revenueData as any)?.monthlyTrend || []} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="2 2" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="month" 
+                  fontSize={10}
+                  tick={{ fontSize: 10 }}
+                  axisLine={{ stroke: '#e0e0e0' }}
+                />
+                <YAxis 
+                  fontSize={10}
+                  tick={{ fontSize: 10 }}
+                  axisLine={{ stroke: '#e0e0e0' }}
+                  tickFormatter={(value) => isPersian ? formatPersianNumber(value.toString()) : value} 
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    fontSize: '12px', 
+                    padding: '8px',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '6px'
+                  }}
+                  formatter={(value) => [
+                    isPersian ? formatPersianCurrency(value.toString()) : `$${value}`, 
+                    ''
+                  ]} 
+                />
+                <Line type="monotone" dataKey="daily" stroke="#F59E0B" strokeWidth={1.5} name={t('admin:dashboard.dailyAvg')} />
+                <Line type="monotone" dataKey="weekly" stroke="#8B5CF6" strokeWidth={1.5} name={t('admin:dashboard.weeklyAvg')} />
+                <Line type="monotone" dataKey="monthly" stroke="#EF4444" strokeWidth={1.5} name={t('admin:dashboard.monthlyTotal')} />
               </LineChart>
             </ResponsiveContainer>
-          </CardContent>
+          </div>
         </Card>
       </div>
 
-      {/* Teacher Performance Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Top Performers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-yellow-600" />
-{t('admin:dashboard.topPerformingTeachers')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-green-600 mb-2">
-{t('admin:dashboard.lowestAttritionRates')}
+      {/* Mobile-Optimized Teacher Performance Analytics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+        {/* Top Performers - Mobile Optimized */}
+        <Card className="p-3 sm:p-6">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+            <Award className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
+            <h3 className="text-sm sm:text-base font-semibold">{t('admin:dashboard.topPerformingTeachers')}</h3>
+          </div>
+          <div>
+            <div className="space-y-2 sm:space-y-3">
+              <h4 className="text-xs sm:text-sm font-semibold text-green-600 mb-1 sm:mb-2">
+                {t('admin:dashboard.lowestAttritionRates')}
               </h4>
               <div className="space-y-1">
                 {((teacherPerformance as any)?.lowestAttrition || []).map((teacher: any, index: number) => (
                   <div key={index} className="flex justify-between items-center">
-                    <span className="text-sm">{teacher.name}</span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-green-600">{teacher.rate}</Badge>
-                      <span className="text-xs text-green-600">{teacher.improvement}</span>
+                    <span className="text-xs sm:text-sm truncate flex-1">{teacher.name}</span>
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                      <Badge variant="outline" className="text-green-600 text-xs">{teacher.rate}</Badge>
+                      <span className="text-xs text-green-600 hidden sm:inline">{teacher.improvement}</span>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
         {/* Retention Champions */}
