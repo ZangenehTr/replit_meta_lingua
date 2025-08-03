@@ -2497,6 +2497,19 @@ export class MemStorage implements IStorage {
       averageSessionsPerTeacher: this.sessions.size / teachers.length
     };
   }
+
+  // Communication methods (missing from interface)
+  async getChatConversations(): Promise<any[]> {
+    return []; // Return empty array for communication features
+  }
+
+  async getSupportTickets(): Promise<any[]> {
+    return []; // Return empty array for support tickets
+  }
+
+  async getPushNotifications(): Promise<any[]> {
+    return []; // Return empty array for notifications
+  }
 }
 
 import { DatabaseStorage } from "./database-storage";
