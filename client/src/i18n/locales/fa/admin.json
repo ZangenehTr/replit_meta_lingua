@@ -170,6 +170,48 @@
     "paymentManagement": "مدیریت پرداخت‌ها",
     "performanceReview": "بررسی عملکرد"
   },
+  "teacherManagement": {
+    "dialogs": {
+      "viewTitle": "مشاهده اطلاعات مدرس",
+      "viewDescription": "جزئیات کامل اطلاعات مدرس",
+      "editTitle": "ویرایش اطلاعات مدرس",
+      "editDescription": "ویرایش اطلاعات پروفایل مدرس"
+    },
+    "labels": {
+      "specialization": "تخصص",
+      "experience": "تجربه",
+      "hourlyRate": "نرخ ساعتی",
+      "languages": "زبان‌های تدریس",
+      "status": "وضعیت",
+      "email": "ایمیل",
+      "phone": "تلفن",
+      "qualifications": "مدارک و صلاحیت‌ها",
+      "memberSince": "عضویت از"
+    },
+    "form": {
+      "firstName": "نام",
+      "lastName": "نام خانوادگی",
+      "email": "ایمیل",
+      "phone": "تلفن",
+      "specialization": "تخصص",
+      "experience": "تجربه",
+      "hourlyRate": "نرخ ساعتی",
+      "languages": "زبان‌های تدریس",
+      "qualifications": "مدارک",
+      "bio": "بیوگرافی",
+      "status": "وضعیت"
+    },
+    "actions": {
+      "editTeacher": "ویرایش مدرس",
+      "close": "بستن",
+      "saveChanges": "ذخیره تغییرات"
+    },
+    "status": {
+      "active": "فعال",
+      "inactive": "غیرفعال"
+    },
+    "notSpecified": "مشخص نشده"
+  },
   "courses": {
     "title": "مدیریت دوره‌ها",
     "createCourse": "ایجاد دوره",
