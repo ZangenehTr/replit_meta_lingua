@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from "@/hooks/use-language";
 
 // Role-specific dashboard imports
-import { SimpleAdminDashboard } from "@/pages/admin/simple-admin-dashboard";
+import { AdminDashboard } from "@/pages/admin/admin-dashboard";
 import SupervisorDashboard from "@/pages/supervisor/supervisor-dashboard";
 import TeacherDashboard from "@/pages/teacher/dashboard";
 import CallCenterDashboard from "@/pages/callcenter/dashboard";
@@ -64,7 +64,7 @@ export default function UnifiedDashboard() {
   // Render role-specific dashboard content within unified layout
   switch (user.role) {
     case 'Admin':
-      return <SimpleAdminDashboard />;
+      return <AdminDashboard />;
     
     case 'Supervisor':
       return <SupervisorDashboard />;
@@ -84,7 +84,7 @@ export default function UnifiedDashboard() {
     case 'Accountant':
       // For now, accountants use admin dashboard with filtered permissions
       // TODO: Create dedicated accountant dashboard with financial focus
-      return <SimpleAdminDashboard />;
+      return <AdminDashboard />;
     
     default:
       // Fallback to student dashboard for unknown roles
