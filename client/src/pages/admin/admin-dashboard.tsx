@@ -392,7 +392,7 @@ export function AdminDashboard() {
                 </div>
               </div>
               <div className="space-y-2">
-                {(courseCompletion?.byCourse || []).map((course, index) => (
+                {((courseCompletion as any)?.byCourse || []).map((course, index) => (
                   <div key={index} className="flex justify-between items-center">
                     <span className="text-sm truncate">{course.name}</span>
                     <div className="flex items-center gap-2">
@@ -449,7 +449,7 @@ export function AdminDashboard() {
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
-                  data={marketingMetrics?.sources || []}
+                  data={(marketingMetrics as any)?.sources || []}
                   cx="50%"
                   cy="50%"
                   outerRadius={60}
@@ -645,7 +645,7 @@ export function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {(overduePayments?.details || []).map((payment, index) => (
+                {((overduePayments as any)?.details || []).map((payment, index) => (
                   <tr key={index} className="border-b hover:bg-gray-50">
                     <td className="p-2 font-medium">{payment.name}</td>
                     <td className="p-2 text-red-600 font-semibold">{payment.amount}</td>

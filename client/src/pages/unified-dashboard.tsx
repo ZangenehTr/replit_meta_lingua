@@ -5,6 +5,7 @@ import { useLanguage } from "@/hooks/use-language";
 
 // Role-specific dashboard imports
 import { AdminDashboard } from "@/pages/admin/admin-dashboard";
+import { MobileAdminDashboard } from "@/pages/admin/mobile-admin-dashboard";
 import SupervisorDashboard from "@/pages/supervisor/supervisor-dashboard";
 import TeacherDashboard from "@/pages/teacher/dashboard";
 import CallCenterDashboard from "@/pages/callcenter/dashboard";
@@ -46,10 +47,13 @@ export default function UnifiedDashboard() {
     );
   }
 
+  // Check if mobile viewport
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   // Render role-specific dashboard content within unified layout
   switch (user.role) {
     case 'Admin':
-      return <AdminDashboard />;
+      return isMobile ? <MobileAdminDashboard /> : <AdminDashboard />;
     
     case 'Supervisor':
       return <SupervisorDashboard />;
