@@ -19,7 +19,7 @@ export function StatsCards() {
   const stats = dashboardData?.stats;
 
   const formatNextSession = (nextSession: string | null) => {
-    if (!nextSession) return t('student:dashboard.noSessions');
+    if (!nextSession) return 'No upcoming sessions';
     
     const sessionTime = new Date(nextSession);
     const now = new Date();
@@ -36,8 +36,8 @@ export function StatsCards() {
         <CardContent className="p-3 sm:p-4 md:p-6">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">{t('student:dashboard.learningStreak')}</p>
-              <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.streak || 0} <span className="text-sm sm:text-base">{t('common:ui.days')}</span></p>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Learning Streak</p>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.streak || 0} <span className="text-sm sm:text-base">days</span></p>
             </div>
             <div className="p-2 sm:p-3 bg-green-100 dark:bg-green-900/20 rounded-lg ml-2">
               <Flame className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-green-600" />
@@ -50,7 +50,7 @@ export function StatsCards() {
         <CardContent className="p-3 sm:p-4 md:p-6">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">{t('student:dashboard.courseProgress')}</p>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Course Progress</p>
               <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.progress || 0}%</p>
             </div>
             <div className="p-2 sm:p-3 bg-primary/10 rounded-lg ml-2">
@@ -64,7 +64,7 @@ export function StatsCards() {
         <CardContent className="p-3 sm:p-4 md:p-6">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">{t('student:dashboard.availableCredits')}</p>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Available Credits</p>
               <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.credits || 0}</p>
             </div>
             <div className="p-2 sm:p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg ml-2">
@@ -78,7 +78,7 @@ export function StatsCards() {
         <CardContent className="p-3 sm:p-4 md:p-6">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">{t('student:dashboard.nextSession')}</p>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium truncate">Next Session</p>
               <p className="text-sm sm:text-lg md:text-2xl font-bold truncate">{formatNextSession(stats?.nextSession || null)}</p>
             </div>
             <div className="p-2 sm:p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg ml-2">
