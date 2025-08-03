@@ -309,6 +309,11 @@ function Router() {
           <StudentDashboard />
         </ProtectedRoute>
       </Route>
+      <Route path="/student/dashboard">
+        <ProtectedRoute>
+          <StudentDashboard />
+        </ProtectedRoute>
+      </Route>
       <Route path="/courses">
         <ProtectedRoute>
           <Courses />
