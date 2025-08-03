@@ -47,6 +47,9 @@ export function MobileAdminDashboard() {
     queryKey: ['/api/admin/financial-kpis']
   });
 
+  // Add debug logging
+  console.log('MobileAdminDashboard rendering:', { isLoading, stats, user });
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
