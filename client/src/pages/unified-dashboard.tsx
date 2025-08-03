@@ -84,7 +84,7 @@ export default function UnifiedDashboard() {
     case 'Accountant':
       // For now, accountants use admin dashboard with filtered permissions
       // TODO: Create dedicated accountant dashboard with financial focus
-      return <AdminDashboard />;
+      return <SimpleAdminDashboard />;
     
     default:
       // Fallback to student dashboard for unknown roles
