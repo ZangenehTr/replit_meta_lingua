@@ -1,5 +1,6 @@
+
 import React from "react";
-import ReactDOM from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import "./i18n";
@@ -7,10 +8,6 @@ import { ErrorHandler } from "./error-handler";
 
 // Initialize error handling
 ErrorHandler.init();
-import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./index.css";
-import "./i18n";
 
 // Global error handlers to prevent runtime error plugin from triggering
 window.addEventListener('unhandledrejection', (event) => {
