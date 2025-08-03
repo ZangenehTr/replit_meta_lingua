@@ -74,12 +74,12 @@ interface SidebarProps {
 
 export function Sidebar({ onNavigate }: SidebarProps = {}) {
   const { user, logout } = useAuth();
-  const { t: i18nT } = useTranslation();
-  const { isRTL, t: langT } = useLanguage();
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [location, setLocation] = useLocation();
   
-  // Use the language hook's translation function instead of i18n
-  const navigationItems = user ? getNavigationForRole(user.role, langT) : [];
+  // Use react-i18next translation function with correct namespace
+  const navigationItems = user ? getNavigationForRole(user.role, t) : [];
 
   return (
     <aside className={`w-64 md:w-64 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 ${isRTL ? 'border-l' : 'border-r'} border-gray-200 dark:border-gray-700 fixed top-14 ${isRTL ? 'right-0' : 'left-0'} h-[calc(100vh-3.5rem)] overflow-y-auto z-30`} dir={isRTL ? 'rtl' : 'ltr'}>
