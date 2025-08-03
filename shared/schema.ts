@@ -1985,76 +1985,21 @@ export type InsertMentorAssignment = z.infer<typeof insertMentorAssignmentSchema
 export type MentoringSession = typeof mentoringSessions.$inferSelect;
 export type InsertMentoringSession = z.infer<typeof insertMentoringSessionSchema>;
 
-// Mood-Based Learning Recommendation System - Iranian Compliant (Offline-First)
-export const moodEntries = pgTable('mood_entries', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id).notNull(),
-  moodScore: integer('mood_score').notNull(), // 1-10 scale
-  moodCategory: text('mood_category').notNull(), // happy, sad, stressed, motivated, tired, etc.
-  energyLevel: integer('energy_level').notNull(), // 1-10 scale
-  motivationLevel: integer('motivation_level').notNull(), // 1-10 scale
-  stressLevel: integer('stress_level').notNull(), // 1-10 scale
-  focusLevel: integer('focus_level').notNull(), // 1-10 scale
-  context: text('context'), // what triggered this mood (lesson difficulty, personal life, etc.)
-  notes: text('notes'), // user's optional notes
-  detectedFrom: text('detected_from').default('manual'), // manual, voice_analysis, behavioral_patterns
-  metadata: jsonb('metadata'), // additional mood analysis data
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
-export const moodRecommendations = pgTable('mood_recommendations', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id).notNull(),
-  moodEntryId: integer('mood_entry_id').references(() => moodEntries.id).notNull(),
-  recommendationType: text('recommendation_type').notNull(), // content, activity, break, challenge
-  contentType: text('content_type'), // lesson, exercise, game, meditation, review
-  difficulty: text('difficulty'), // easy, medium, hard
-  duration: integer('duration'), // in minutes
-  title: text('title').notNull(),
-  description: text('description').notNull(),
-  reasoning: text('reasoning').notNull(), // AI explanation for why this was recommended
-  priority: integer('priority').default(5), // 1-10 priority score
-  isAccepted: boolean('is_accepted'),
-  completedAt: timestamp('completed_at'),
-  effectivenessRating: integer('effectiveness_rating'), // 1-5 user feedback
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
-export const learningAdaptations = pgTable('learning_adaptations', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').references(() => users.id).notNull(),
-  moodPattern: text('mood_pattern').notNull(), // low_energy, high_stress, motivated, etc.
-  adaptationStrategy: text('adaptation_strategy').notNull(),
-  preferredContentTypes: jsonb('preferred_content_types'),
-  optimalDuration: integer('optimal_duration'),
-  bestTimeOfDay: text('best_time_of_day'),
-  successRate: integer('success_rate').default(0), // percentage
-  lastUpdated: timestamp('last_updated').defaultNow().notNull(),
-});
-
-// Mood system schemas and types
-export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertMoodRecommendationSchema = createInsertSchema(moodRecommendations).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertLearningAdaptationSchema = createInsertSchema(learningAdaptations).omit({
-  id: true,
-  lastUpdated: true,
-});
-
-// Mood system types
-export type MoodEntry = typeof moodEntries.$inferSelect;
-export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;
-export type MoodRecommendation = typeof moodRecommendations.$inferSelect;
-export type InsertMoodRecommendation = z.infer<typeof insertMoodRecommendationSchema>;
-export type LearningAdaptation = typeof learningAdaptations.$inferSelect;
-export type InsertLearningAdaptation = z.infer<typeof insertLearningAdaptationSchema>;
+// Import mood tables from separate schema file to avoid duplication
+export { 
+  moodEntries, 
+  moodRecommendations, 
+  learningAdaptations,
+  insertMoodEntrySchema,
+  insertMoodRecommendationSchema,
+  insertLearningAdaptationSchema,
+  type MoodEntry,
+  type InsertMoodEntry,
+  type MoodRecommendation,
+  type InsertMoodRecommendation,
+  type LearningAdaptation,
+  type InsertLearningAdaptation
+} from "./mood-schema";
 
 // Testing subsystem insert schemas
 export const insertTestSchema = createInsertSchema(tests).omit({
