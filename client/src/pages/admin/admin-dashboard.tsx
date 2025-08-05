@@ -204,7 +204,7 @@ export function AdminDashboard() {
         {/* Call Center Performance Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:dashboard.callCenterPerformance')}</CardTitle>
+            <CardTitle>{t('common:dashboard.callCenterPerformance')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -228,7 +228,7 @@ export function AdminDashboard() {
         {/* Revenue Analytics */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:dashboard.revenueAnalyticsLast6Months')}</CardTitle>
+            <CardTitle>{t('common:dashboard.revenueAnalyticsLast6Months')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -256,13 +256,13 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5 text-yellow-600" />
-{t('admin:dashboard.topPerformingTeachers')}
+{t('common:dashboard.topPerformingTeachers')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-green-600 mb-2">
-{t('admin:dashboard.lowestAttritionRates')}
+{t('common:dashboard.lowestAttritionRates')}
               </h4>
               <div className="space-y-1">
                 {((teacherPerformance as any)?.lowestAttrition || []).map((teacher: any, index: number) => (
@@ -284,13 +284,13 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-600" />
-{t('admin:dashboard.studentRetentionChampions')}
+{t('common:dashboard.studentRetentionChampions')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-blue-600 mb-2">
-{t('admin:dashboard.highestRetentionRates')}
+{t('common:dashboard.highestRetentionRates')}
               </h4>
               <div className="space-y-1">
                 {((teacherPerformance as any)?.highestRetention || []).map((teacher: any, index: number) => (
@@ -312,13 +312,13 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ThumbsDown className="h-5 w-5 text-red-600" />
-{t('admin:dashboard.performanceImprovementNeeded')}
+{t('common:dashboard.performanceImprovementNeeded')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-red-600 mb-2">
-{t('admin:dashboard.lowestStudentScores')}
+{t('common:dashboard.lowestStudentScores')}
               </h4>
               <div className="space-y-1">
                 {((teacherPerformance as any)?.lowestScores || []).map((teacher: any, index: number) => (
@@ -341,7 +341,7 @@ export function AdminDashboard() {
         {/* Student Retention Metrics */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:dashboard.studentRetentionAnalysis')}</CardTitle>
+            <CardTitle>{t('common:dashboard.studentRetentionAnalysis')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -350,13 +350,13 @@ export function AdminDashboard() {
                   <div className="text-2xl font-bold text-blue-600">
                     {isPersian ? formatPersianPercentage((studentRetention as any)?.overall || '0.0') : `${(studentRetention as any)?.overall || '0.0'}%`}
                   </div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.overallRetention')}</p>
+                  <p className="text-xs text-muted-foreground">{t('common:dashboard.overallRetention')}</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
                     {isPersian ? formatPersianPercentage((studentRetention as any)?.newStudents || '0.0') : `${(studentRetention as any)?.newStudents || '0.0'}%`}
                   </div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.newStudent3mo')}</p>
+                  <p className="text-xs text-muted-foreground">{t('common:dashboard.newStudent3mo')}</p>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={200}>
@@ -381,7 +381,7 @@ export function AdminDashboard() {
         {/* Course Completion Rates */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:dashboard.courseCompletionAnalytics')}</CardTitle>
+            <CardTitle>{t('common:dashboard.courseCompletionAnalytics')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -390,13 +390,13 @@ export function AdminDashboard() {
                   <div className="text-2xl font-bold text-purple-600">
                     {isPersian ? formatPersianPercentage((courseCompletion as any)?.average || '0.0') : `${(courseCompletion as any)?.average || '0.0'}%`}
                   </div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.avgCompletion')}</p>
+                  <p className="text-xs text-muted-foreground">{t('common:dashboard.avgCompletion')}</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-orange-600">
                     {isPersian ? formatPersianPercentage((courseCompletion as any)?.onTime || '0.0') : `${(courseCompletion as any)?.onTime || '0.0'}%`}
                   </div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.onTimeCompletion')}</p>
+                  <p className="text-xs text-muted-foreground">{t('common:dashboard.onTimeCompletion')}</p>
                 </div>
               </div>
               <div className="space-y-2">
@@ -427,7 +427,7 @@ export function AdminDashboard() {
         {/* Lead Conversion Funnel */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:dashboard.leadConversionFunnel')}</CardTitle>
+            <CardTitle>{t('common:dashboard.leadConversionFunnel')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -451,7 +451,7 @@ export function AdminDashboard() {
         {/* Acquisition Channels */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:dashboard.studentAcquisitionSources')}</CardTitle>
+            <CardTitle>{t('common:dashboard.studentAcquisitionSources')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
@@ -481,36 +481,36 @@ export function AdminDashboard() {
         {/* Customer Lifetime Value */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:dashboard.financialKPIs')}</CardTitle>
+            <CardTitle>{t('common:dashboard.financialKPIs')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm">{t('admin:dashboard.avgCustomerLTV')}</span>
+                <span className="text-sm">{t('common:dashboard.avgCustomerLTV')}</span>
                 <span className="font-semibold">
                   {isPersian ? formatPersianCurrency((financialKPIs as any)?.averageLTV || '2847') : `$${(financialKPIs as any)?.averageLTV || '2,847'}`}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">{t('admin:dashboard.costPerAcquisition')}</span>
+                <span className="text-sm">{t('common:dashboard.costPerAcquisition')}</span>
                 <span className="font-semibold">
                   {isPersian ? formatPersianCurrency((financialKPIs as any)?.costPerAcquisition || '185') : `$${(financialKPIs as any)?.costPerAcquisition || '185'}`}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">{t('admin:dashboard.monthlyChurnRate')}</span>
+                <span className="text-sm">{t('common:dashboard.monthlyChurnRate')}</span>
                 <span className="font-semibold text-red-600">
                   {isPersian ? formatPersianPercentage((financialKPIs as any)?.churnRate || '4.2') : `${(financialKPIs as any)?.churnRate || '4.2'}%`}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">{t('admin:dashboard.revenuePerStudent')}</span>
+                <span className="text-sm">{t('common:dashboard.revenuePerStudent')}</span>
                 <span className="font-semibold">
                   {isPersian ? formatPersianCurrency((financialKPIs as any)?.revenuePerStudent || '287') : `$${(financialKPIs as any)?.revenuePerStudent || '287'}`}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">{t('admin:dashboard.profitMargin')}</span>
+                <span className="text-sm">{t('common:dashboard.profitMargin')}</span>
                 <span className="font-semibold text-green-600">
                   {isPersian ? formatPersianPercentage((financialKPIs as any)?.profitMargin || '34.7') : `${(financialKPIs as any)?.profitMargin || '34.7'}%`}
                 </span>
@@ -525,7 +525,7 @@ export function AdminDashboard() {
         {/* Class Utilization */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:dashboard.operationalMetrics')}</CardTitle>
+            <CardTitle>{t('common:dashboard.operationalMetrics')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -534,36 +534,36 @@ export function AdminDashboard() {
                   <div className="text-2xl font-bold text-blue-600">
                     {isPersian ? formatPersianPercentage((operationalMetrics as any)?.classUtilization || '89.3') : `${(operationalMetrics as any)?.classUtilization || '89.3'}%`}
                   </div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.classUtilization')}</p>
+                  <p className="text-xs text-muted-foreground">{t('common:dashboard.classUtilization')}</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
                     {isPersian ? formatPersianPercentage((operationalMetrics as any)?.teacherUtilization || '76.8') : `${(operationalMetrics as any)?.teacherUtilization || '76.8'}%`}
                   </div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.teacherUtilization')}</p>
+                  <p className="text-xs text-muted-foreground">{t('common:dashboard.teacherUtilization')}</p>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.peakHours')}</span>
+                  <span className="text-sm">{t('common:dashboard.peakHours')}</span>
                   <Badge variant="outline">
                     {isPersian ? formatPersianText("full 95.2%") : "95.2% full"}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.morningClasses')}</span>
+                  <span className="text-sm">{t('common:dashboard.morningClasses')}</span>
                   <Badge variant="outline">
                     {isPersian ? formatPersianText("full 67.4%") : "67.4% full"}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.weekendSessions')}</span>
+                  <span className="text-sm">{t('common:dashboard.weekendSessions')}</span>
                   <Badge variant="outline">
                     {isPersian ? formatPersianText("full 82.1%") : "82.1% full"}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.onlineCapacity')}</span>
+                  <span className="text-sm">{t('common:dashboard.onlineCapacity')}</span>
                   <Badge variant="outline">
                     {isPersian ? formatPersianText("used 91.8%") : "91.8% used"}
                   </Badge>
@@ -576,7 +576,7 @@ export function AdminDashboard() {
         {/* Quality & Satisfaction Metrics */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('admin:dashboard.qualitySatisfactionMetrics')}</CardTitle>
+            <CardTitle>{t('common:dashboard.qualitySatisfactionMetrics')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -585,18 +585,18 @@ export function AdminDashboard() {
                   <div className="text-2xl font-bold text-yellow-600">
                     {isPersian ? `${formatPersianNumber((operationalMetrics as any)?.studentSatisfaction || '4.6')}/۵` : `${(operationalMetrics as any)?.studentSatisfaction || '4.6'}/5`}
                   </div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.studentSatisfaction')}</p>
+                  <p className="text-xs text-muted-foreground">{t('common:dashboard.studentSatisfaction')}</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-600">
                     {isPersian ? formatPersianNumber((operationalMetrics as any)?.nps || '+47') : (operationalMetrics as any)?.nps || '+47'}
                   </div>
-                  <p className="text-xs text-muted-foreground">{t('admin:dashboard.netPromoterScore')}</p>
+                  <p className="text-xs text-muted-foreground">{t('common:dashboard.netPromoterScore')}</p>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.courseMaterialQuality')}</span>
+                  <span className="text-sm">{t('common:dashboard.courseMaterialQuality')}</span>
                   <div className="flex">
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -607,7 +607,7 @@ export function AdminDashboard() {
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.teachingQuality')}</span>
+                  <span className="text-sm">{t('common:dashboard.teachingQuality')}</span>
                   <div className="flex">
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -618,12 +618,12 @@ export function AdminDashboard() {
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.supportResponseTime')}</span>
-                  <Badge variant="outline">{t('admin:dashboard.hours2Plus')}</Badge>
+                  <span className="text-sm">{t('common:dashboard.supportResponseTime')}</span>
+                  <Badge variant="outline">{t('common:dashboard.hours2Plus')}</Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">{t('admin:dashboard.technicalIssues')}</span>
-                  <Badge variant="outline" className="text-green-600">{t('admin:dashboard.sessions08Percent')}</Badge>
+                  <span className="text-sm">{t('common:dashboard.technicalIssues')}</span>
+                  <Badge variant="outline" className="text-green-600">{t('common:dashboard.sessions08Percent')}</Badge>
                 </div>
               </div>
             </div>
@@ -636,7 +636,7 @@ export function AdminDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center">
             <AlertCircle className="h-5 w-5 mr-2 text-red-600" />
-{t('admin:dashboard.criticalOverduePayments')}
+{t('common:dashboard.criticalOverduePayments')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -644,10 +644,10 @@ export function AdminDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2">{t('admin:dashboard.studentName')}</th>
-                  <th className="text-left p-2">{t('admin:dashboard.amountDue')}</th>
-                  <th className="text-left p-2">{t('admin:dashboard.daysOverdue')}</th>
-                  <th className="text-left p-2">{t('admin:dashboard.course')}</th>
+                  <th className="text-left p-2">{t('common:dashboard.studentName')}</th>
+                  <th className="text-left p-2">{t('common:dashboard.amountDue')}</th>
+                  <th className="text-left p-2">{t('common:dashboard.daysOverdue')}</th>
+                  <th className="text-left p-2">{t('common:dashboard.course')}</th>
                   <th className="text-left p-2">{t('common:dashboard.contact')}</th>
                   <th className="text-left p-2">{t('common:dashboard.action')}</th>
                 </tr>
@@ -659,7 +659,7 @@ export function AdminDashboard() {
                     <td className="p-2 text-red-600 font-semibold">{payment.amount}</td>
                     <td className="p-2">
                       <Badge variant={payment.days > 14 ? "destructive" : "secondary"}>
-{payment.days} {t('admin:dashboard.days')}
+{payment.days} {t('admin:days')}
                       </Badge>
                     </td>
                     <td className="p-2">{payment.course}</td>
