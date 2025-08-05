@@ -416,11 +416,11 @@ export default function AdminCommunicationsPage() {
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button onClick={() => setNewTicketDialog(true)} size="sm" className="w-full sm:w-auto">
               <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              <span className="text-xs md:text-sm">New Ticket</span>
+              <span className="text-xs md:text-sm">{t('admin:communications.newTicket')}</span>
             </Button>
             <Button variant="outline" onClick={() => setNotificationDialog(true)} size="sm" className="w-full sm:w-auto">
               <Bell className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
-              <span className="text-xs md:text-sm">Send Notification</span>
+              <span className="text-xs md:text-sm">{t('admin:communications.sendNotification')}</span>
             </Button>
           </div>
         </div>
@@ -431,7 +431,7 @@ export default function AdminCommunicationsPage() {
             <CardContent className="p-3 md:p-4 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">Open Tickets</p>
+                  <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">{t('admin:communications.openTickets')}</p>
                   <p className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
                     {ticketsData.filter(t => t.status === 'open').length}
                   </p>
@@ -445,7 +445,7 @@ export default function AdminCommunicationsPage() {
             <CardContent className="p-3 md:p-4 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">Active Chats</p>
+                  <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">{t('admin:communications.activeChats')}</p>
                   <p className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
                     {conversationsData.filter(c => c.unreadCount > 0).length}
                   </p>
@@ -459,7 +459,7 @@ export default function AdminCommunicationsPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Today's Notifications</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('admin:communications.todaysNotifications')}</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {notificationsData.filter(n => n.sentAt && new Date(n.sentAt).toDateString() === new Date().toDateString()).length}
                   </p>
@@ -473,7 +473,7 @@ export default function AdminCommunicationsPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Response Rate</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('admin:communications.responseRate')}</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">94.2%</p>
                 </div>
                 <Zap className="h-8 w-8 text-purple-500" />
@@ -487,22 +487,22 @@ export default function AdminCommunicationsPage() {
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-1 md:gap-0 bg-white dark:bg-gray-800 p-1 rounded-lg shadow-sm">
             <TabsTrigger value="tickets" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
               <HeadphonesIcon className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Support Tickets</span>
+              <span className="hidden sm:inline">{t('admin:communications.supportTickets')}</span>
               <span className="sm:hidden">Support</span>
             </TabsTrigger>
             <TabsTrigger value="chat" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
               <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Live Chat</span>
+              <span className="hidden sm:inline">{t('admin:communications.liveChat')}</span>
               <span className="sm:hidden">Chat</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
               <Bell className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Push Notifications</span>
+              <span className="hidden sm:inline">{t('admin:communications.pushNotifications')}</span>
               <span className="sm:hidden">Notify</span>
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm p-2 md:p-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-md transition-all">
               <Globe className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Analytics</span>
+              <span className="hidden sm:inline">{t('admin:communications.analytics')}</span>
               <span className="sm:hidden">Data</span>
             </TabsTrigger>
           </TabsList>
@@ -519,7 +519,7 @@ export default function AdminCommunicationsPage() {
                   <SelectValue placeholder="Filter status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Tickets</SelectItem>
+                  <SelectItem value="all">{t('admin:communications.allTickets')}</SelectItem>
                   <SelectItem value="open">Open</SelectItem>
                   <SelectItem value="in_progress">In Progress</SelectItem>
                   <SelectItem value="resolved">Resolved</SelectItem>
@@ -531,7 +531,7 @@ export default function AdminCommunicationsPage() {
               {/* Tickets List */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Support Tickets</CardTitle>
+                  <CardTitle>{t('admin:communications.supportTickets')}</CardTitle>
                   <CardDescription>Manage student support requests</CardDescription>
                 </CardHeader>
                 <CardContent>

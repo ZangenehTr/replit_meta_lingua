@@ -235,7 +235,7 @@ export default function Supervision() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Video className="h-5 w-5" />
-                Live Classes Monitoring
+                {t('admin:supervision.liveClassesMonitoring')}
               </CardTitle>
               <Badge variant="secondary">{liveSessions?.length || 0} Live</Badge>
             </CardHeader>
@@ -290,7 +290,7 @@ export default function Supervision() {
                 </Table>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  No live classes currently in session
+                  {t('admin:supervision.noLiveClasses')}
                 </div>
               )}
             </CardContent>
@@ -374,7 +374,7 @@ export default function Supervision() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                In-person Teacher Evaluations
+                {t('admin:supervision.teacherEvaluations')}
               </CardTitle>
               <Dialog open={observationDialogOpen} onOpenChange={setObservationDialogOpen}>
                 <DialogTrigger asChild>
@@ -696,7 +696,7 @@ export default function Supervision() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Automated Student Questionnaires
+                {t('admin:supervision.automatedQuestionnaires')}
               </CardTitle>
               <Dialog open={questionnaireDialogOpen} onOpenChange={setQuestionnaireDialogOpen}>
                 <DialogTrigger asChild>
