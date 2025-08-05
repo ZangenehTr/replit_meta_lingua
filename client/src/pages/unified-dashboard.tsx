@@ -10,9 +10,7 @@ import TeacherDashboard from "@/pages/teacher/dashboard";
 import CallCenterDashboard from "@/pages/callcenter/dashboard";
 import MentorDashboard from "@/pages/mentor/dashboard";
 import StudentDashboard from "@/pages/student/dashboard";
-
-// Accountant dashboard import (same as admin for now)
-// Will be replaced with dedicated accountant dashboard when available
+import AccountantDashboard from "@/pages/accountant/dashboard";
 
 /**
  * Unified Dashboard Component
@@ -82,9 +80,7 @@ export default function UnifiedDashboard() {
       return <StudentDashboard />;
 
     case 'Accountant':
-      // For now, accountants use admin dashboard with filtered permissions
-      // TODO: Create dedicated accountant dashboard with financial focus
-      return <AdminDashboard />;
+      return <AccountantDashboard />;
 
     default:
       // Fallback to student dashboard for unknown roles
