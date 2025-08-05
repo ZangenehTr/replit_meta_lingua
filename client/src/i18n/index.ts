@@ -56,6 +56,7 @@ i18n
     debug: true,
     returnNull: false,
     returnEmptyString: false,
+    load: 'languageOnly',
     
     interpolation: {
       escapeValue: false, // React already escapes values
