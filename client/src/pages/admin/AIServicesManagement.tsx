@@ -293,7 +293,7 @@ export default function AIServicesManagement() {
               ) : (
                 <>
                   <Download className="h-4 w-4 mr-2" />
-                  Test Installation (Development Only)
+                  {t('admin:aiServices.testInstallation')}
                 </>
               )}
             </Button>
@@ -305,9 +305,9 @@ export default function AIServicesManagement() {
       {ollamaStatus?.isInstalled && !ollamaStatus?.isRunning && (
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
-            <CardTitle className="text-blue-800">Start Ollama Service</CardTitle>
+            <CardTitle className="text-blue-800">{t('admin:aiServices.startOllamaService')}</CardTitle>
             <CardDescription className="text-blue-700">
-              Ollama is installed but not running. Start the service to enable AI features.
+              {t('admin:aiServices.startServiceDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -319,12 +319,12 @@ export default function AIServicesManagement() {
               {startOllamaMutation.isPending ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Starting Service...
+                  {t('admin:aiServices.startingService')}
                 </>
               ) : (
                 <>
                   <Activity className="h-4 w-4 mr-2" />
-                  Start Ollama Service
+                  {t('admin:aiServices.startService')}
                 </>
               )}
             </Button>
