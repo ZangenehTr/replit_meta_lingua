@@ -127,7 +127,13 @@
     "fromLastMonth": "از ماه گذشته",
     "dailyAvg": "میانگین روزانه",
     "weeklyAvg": "میانگین هفتگی",
-    "monthlyTotal": "مجموع ماهانه"
+    "monthlyTotal": "مجموع ماهانه",
+    "leads": "مشتریان بالقوه",
+    "prospects": "مشتریان احتمالی", 
+    "qualified": "واجد شرایط",
+    "contacted": "تماس گرفته شده",
+    "enrolled": "ثبت نام شده",
+    "conversion": "تبدیل"
   },
   "days": "روز",
   "toast": {
