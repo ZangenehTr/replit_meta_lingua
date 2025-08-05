@@ -224,7 +224,22 @@
     "challenges": "Challenges",
     "whatsMyLevel": "What's my level",
     "myProgress": "My Progress",
-    "myProfile": "My Profile"
+    "myProfile": "My Profile",
+    "welcome": "Welcome",
+    "statistics": "Statistics",
+    "quickActions": "Quick Actions",
+    "recentActivity": "Recent Activity",
+    "upcomingTasks": "Upcoming Tasks",
+    "progress": "Progress",
+    "performance": "Performance",
+    "currentLevel": "Current Level",
+    "nextLevelXP": "Next Level XP",
+    "walletBalance": "Wallet Balance",
+    "memberTier": "Member Tier",
+    "studyTimeThisWeek": "Study Time This Week",
+    "weeklyGoalHours": "Weekly Goal Hours",
+    "peakHours": "Peak Hours",
+    "morningClasses": "Morning Classes"
   },
   "teacher": {
     "dashboard": "Teacher Dashboard",
@@ -465,10 +480,6 @@
   "wallet": {
     "title": "Wallet",
     "subtitle": "Manage wallet, account top-up and course enrollment"
-  },
-  "navigation": {
-    "siteName": "Meta Lingua",
-    "tagline": "Language Learning Platform"
   },
   "ui": {
     "days": "days",
@@ -878,22 +889,6 @@
     "unableToInitiateCall": "Unable to initiate call",
     "callEnded": "Call Ended",
     "callRecordingSaved": "Call recording saved to student history"
-  },
-  "dashboard": {
-    "welcome": "Welcome",
-    "overview": "Overview",
-    "statistics": "Statistics",
-    "quickActions": "Quick Actions",
-    "recentActivity": "Recent Activity",
-    "upcomingTasks": "Upcoming Tasks",
-    "progress": "Progress",
-    "performance": "Performance",
-    "currentLevel": "Current Level",
-    "nextLevelXP": "Next Level XP",
-    "walletBalance": "Wallet Balance",
-    "memberTier": "Member Tier",
-    "studyTimeThisWeek": "Study Time This Week",
-    "weeklyGoalHours": "Weekly Goal Hours"
   },
   "teacher": {
     "dashboard": "Teacher Dashboard",
