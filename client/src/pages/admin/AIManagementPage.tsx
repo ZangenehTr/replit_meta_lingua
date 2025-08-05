@@ -123,17 +123,17 @@ export function AIManagementPage() {
           disabled={isLoading}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh Status
+          {t('common:ui.refreshStatus')}
         </Button>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="models">Models</TabsTrigger>
+          <TabsTrigger value="overview">{t('admin:aiServices.overview')}</TabsTrigger>
+          <TabsTrigger value="models">{t('admin:aiServices.models')}</TabsTrigger>
           <TabsTrigger value="testing">
             <TestTube className="h-4 w-4 mr-2" />
-            Testing
+            {t('admin:aiServices.testing')}
           </TabsTrigger>
         </TabsList>
 
@@ -142,22 +142,22 @@ export function AIManagementPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Server className="h-5 w-5" />
-                Ollama Service Status
+                {t('admin:aiServices.serviceStatus')}
               </CardTitle>
-              <CardDescription>Current status of local AI processing service</CardDescription>
+              <CardDescription>{t('admin:aiServices.currentStatus')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Status</div>
+                  <div className="text-sm text-muted-foreground">{t('admin:aiServices.status')}</div>
                   <StatusIndicator status={ollamaStatus?.status || 'offline'} />
                 </div>
                 <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Models Installed</div>
-                  <div className="text-2xl font-bold">{availableModels.length}</div>
+                  <div className="text-sm text-muted-foreground">{t('admin:aiServices.modelsInstalled')}</div>
+                  <div className="text-2xl font-bold">{(availableModels as string[])?.length || 0}</div>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Endpoint</div>
+                  <div className="text-sm text-muted-foreground">{t('admin:aiServices.endpoint')}</div>
                   <div className="text-sm font-mono">http://localhost:11434</div>
                 </div>
               </div>
@@ -168,32 +168,32 @@ export function AIManagementPage() {
         <TabsContent value="models" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Available Models</CardTitle>
-              <CardDescription>Currently installed AI models</CardDescription>
+              <CardTitle>{t('admin:aiServices.availableModels')}</CardTitle>
+              <CardDescription>{t('admin:aiServices.currentlyInstalledModels')}</CardDescription>
             </CardHeader>
             <CardContent>
-              {availableModels.length ? (
+              {(availableModels as string[])?.length ? (
                 <div className="space-y-3">
-                  {availableModels.map((model, index) => (
+                  {(availableModels as string[])?.map((model: string, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <Bot className="h-5 w-5 text-blue-500" />
                         <div>
                           <div className="font-medium">{model}</div>
                           <div className="text-sm text-muted-foreground">
-                            Ready for AI processing
+                            {t('admin:aiServices.readyForProcessing')}
                           </div>
                         </div>
                       </div>
-                      <Badge variant="default">Installed</Badge>
+                      <Badge variant="default">{t('admin:aiServices.installed')}</Badge>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No models installed</p>
-                  <p className="text-sm">Install Ollama to enable local AI processing</p>
+                  <p>{t('admin:aiServices.noModelsInstalled')}</p>
+                  <p className="text-sm">{t('admin:aiServices.installOllamaToEnable')}</p>
                 </div>
               )}
             </CardContent>
@@ -205,23 +205,23 @@ export function AIManagementPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TestTube className="h-5 w-5" />
-                Model Testing
+                {t('admin:aiServices.modelTesting')}
               </CardTitle>
               <CardDescription>
-                Test AI models instantly to verify performance
+                {t('admin:aiServices.testModelsInstantly')}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {availableModels.length > 0 ? (
+              {(availableModels as string[])?.length > 0 ? (
                 <>
                   <div className="space-y-4">
-                    <Label className="text-base">Select Model to Test</Label>
+                    <Label className="text-base">{t('admin:aiServices.selectModelToTest')}</Label>
                     <Select value={selectedModel} onValueChange={setSelectedModel}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose a model" />
+                        <SelectValue placeholder={t('admin:aiServices.chooseModel')} />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableModels.map((model) => (
+                        {(availableModels as string[])?.map((model) => (
                           <SelectItem key={model} value={model}>
                             {model}
                           </SelectItem>
@@ -231,38 +231,38 @@ export function AIManagementPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-base">Test Prompt</Label>
+                    <Label className="text-base">{t('admin:aiServices.testPrompt')}</Label>
                     <Textarea
                       value={testPrompt}
                       onChange={(e) => setTestPrompt(e.target.value)}
-                      placeholder="Enter a test prompt to evaluate the model..."
+                      placeholder={t('admin:aiServices.enterTestPrompt')}
                       rows={4}
                       className="min-h-[100px]"
                     />
                     
                     <div className="space-y-2">
-                      <Label className="text-sm text-muted-foreground">Quick Test Examples:</Label>
+                      <Label className="text-sm text-muted-foreground">{t('admin:aiServices.quickTestExamples')}</Label>
                       <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setTestPrompt("Translate this English sentence to Persian: 'Hello, how are you today?'")}
                         >
-                          Translation Test
+                          {t('admin:aiServices.translationTest')}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setTestPrompt("Explain the basic grammar rules for Persian sentence structure.")}
                         >
-                          Grammar Test
+                          {t('admin:aiServices.grammarTest')}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setTestPrompt("Create a conversation scenario for ordering food in a Persian restaurant.")}
                         >
-                          Conversation Test
+                          {t('admin:aiServices.conversationTest')}
                         </Button>
                         <Button
                           variant="outline"

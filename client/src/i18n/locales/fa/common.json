@@ -425,5 +425,34 @@
   "filters": {
     "allTeachers": "همه معلمان",
     "allRooms": "همه اتاق‌ها"
+  },
+  "ui": {
+    "refreshStatus": "تازه‌سازی وضعیت",
+    "loading": "در حال بارگذاری...",
+    "save": "ذخیره",
+    "cancel": "انصراف",
+    "edit": "ویرایش",
+    "delete": "حذف",
+    "add": "افزودن",
+    "update": "به‌روزرسانی",
+    "create": "ایجاد",
+    "view": "مشاهده",
+    "back": "بازگشت",
+    "next": "بعدی",
+    "previous": "قبلی",
+    "close": "بستن",
+    "open": "باز کردن",
+    "confirm": "تأیید",
+    "submit": "ارسال",
+    "search": "جستجو",
+    "filter": "فیلتر",
+    "clear": "پاک کردن",
+    "reset": "بازنشانی",
+    "export": "خروجی",
+    "import": "ورودی",
+    "download": "دانلود",
+    "upload": "آپلود",
+    "print": "چاپ",
+    "share": "اشتراک"
   }
 }
