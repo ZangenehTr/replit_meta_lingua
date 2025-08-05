@@ -125,7 +125,7 @@ export default function UserManagement() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <UserPlus className="h-4 w-4 mr-2" />
+              <UserPlus className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
               {t('admin:users.createUser')}
             </Button>
           </DialogTrigger>
@@ -181,7 +181,7 @@ export default function UserManagement() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phoneNumber">{t('admin:userManagement.phoneNumber')} (اختیاری)</Label>
+                <Label htmlFor="phoneNumber">{t('admin:userManagement.phoneNumber')} ({t('admin:userManagement.optional')})</Label>
                 <Input
                   id="phoneNumber"
                   value={newUser.phoneNumber}
@@ -205,10 +205,10 @@ export default function UserManagement() {
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-gray-500">
-                  {newUser.role === 'Mentor' && "منتورها می‌توانند دانشجویان را راهنمایی و پشتیبانی کنند"}
-                  {newUser.role === 'Teacher' && "مدرسان می‌توانند دوره‌ها ایجاد کرده و کلاس‌ها را مدیریت کنند"}
-                  {newUser.role === 'Admin' && "مدیران دسترسی کامل به سیستم دارند"}
-                  {newUser.role === 'Student' && "دانشجویان می‌توانند در دوره‌ها ثبت‌نام کرده و پیشرفت خود را دنبال کنند"}
+                  {newUser.role === 'Mentor' && t('admin:userManagement.mentorDescription')}
+                  {newUser.role === 'Teacher' && t('admin:userManagement.teacherDescription')}
+                  {newUser.role === 'Admin' && t('admin:userManagement.adminDescription')}
+                  {newUser.role === 'Student' && t('admin:userManagement.studentDescription')}
                 </p>
               </div>
             </div>
@@ -220,7 +220,7 @@ export default function UserManagement() {
                 onClick={handleCreateUser} 
                 disabled={createUserMutation.isPending || !newUser.email || !newUser.firstName || !newUser.lastName || !newUser.password}
               >
-                {createUserMutation.isPending ? "در حال ایجاد..." : t('admin:userManagement.createUser')}
+                {createUserMutation.isPending ? t('admin:userManagement.creating') : t('admin:userManagement.createUser')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -269,7 +269,7 @@ export default function UserManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users.filter(u => u.role === 'Student').length}</div>
-            <p className="text-xs text-muted-foreground">دانشجویان ثبت‌نام شده</p>
+            <p className="text-xs text-muted-foreground">{t('admin:userManagement.registeredStudents')}</p>
           </CardContent>
         </Card>
       </div>
@@ -277,18 +277,18 @@ export default function UserManagement() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>همه کاربران</CardTitle>
-          <CardDescription>جستجو و فیلتر کاربران بر اساس نام، ایمیل یا نقش</CardDescription>
+          <CardTitle>{t('admin:userManagement.allUsers')}</CardTitle>
+          <CardDescription>{t('admin:userManagement.searchAndFilter')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute ltr:left-3 rtl:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder={t('admin:userManagement.searchUsers')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="ltr:pl-10 rtl:pr-10"
               />
             </div>
             <Select value={selectedRole} onValueChange={setSelectedRole}>
@@ -308,27 +308,27 @@ export default function UserManagement() {
 
           {/* Users Table */}
           {isLoading ? (
-            <div className="text-center py-8">بارگذاری کاربران...</div>
+            <div className="text-center py-8">{t('admin:userManagement.loadingUsers')}</div>
           ) : filteredUsers.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">کاربری یافت نشد</div>
+            <div className="text-center py-8 text-gray-500">{t('admin:userManagement.noUsersFound')}</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left pb-3 font-medium">کاربر</th>
-                    <th className="text-left pb-3 font-medium">ایمیل</th>
-                    <th className="text-left pb-3 font-medium">نقش</th>
-                    <th className="text-left pb-3 font-medium">وضعیت</th>
-                    <th className="text-left pb-3 font-medium">ایجاد شده</th>
-                    <th className="text-right pb-3 font-medium">عملیات</th>
+                    <th className="text-start pb-3 font-medium">{t('admin:userManagement.user')}</th>
+                    <th className="text-start pb-3 font-medium">{t('admin:userManagement.email')}</th>
+                    <th className="text-start pb-3 font-medium">{t('admin:userManagement.role')}</th>
+                    <th className="text-start pb-3 font-medium">{t('admin:userManagement.status')}</th>
+                    <th className="text-start pb-3 font-medium">{t('admin:userManagement.createdDate')}</th>
+                    <th className="text-end pb-3 font-medium">{t('admin:userManagement.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.map((user) => (
                     <tr key={user.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
                       <td className="py-4">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3 rtl:flex-row-reverse">
                           <Avatar>
                             <AvatarFallback>
                               {user.firstName[0]}{user.lastName[0]}
@@ -337,8 +337,8 @@ export default function UserManagement() {
                           <div>
                             <p className="font-medium">{user.firstName} {user.lastName}</p>
                             {user.phoneNumber && (
-                              <p className="text-sm text-gray-500 flex items-center">
-                                <Phone className="h-3 w-3 mr-1" />
+                              <p className="text-sm text-gray-500 flex items-center rtl:flex-row-reverse">
+                                <Phone className="h-3 w-3 mx-1" />
                                 {user.phoneNumber}
                               </p>
                             )}
@@ -346,8 +346,8 @@ export default function UserManagement() {
                         </div>
                       </td>
                       <td className="py-4">
-                        <span className="flex items-center text-sm">
-                          <Mail className="h-3 w-3 mr-1 text-gray-400" />
+                        <span className="flex items-center text-sm rtl:flex-row-reverse">
+                          <Mail className="h-3 w-3 mx-1 text-gray-400" />
                           {user.email}
                         </span>
                       </td>
@@ -364,11 +364,11 @@ export default function UserManagement() {
                       <td className="py-4 text-sm text-gray-500">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="py-4 text-right">
-                        <Button variant="ghost" size="sm" className="mr-2">
+                      <td className="py-4 text-end">
+                        <Button variant="ghost" size="sm" className="mx-1">
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" className="mx-1">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </td>

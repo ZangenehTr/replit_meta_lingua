@@ -59,7 +59,12 @@
     "websiteBuilder": "سازنده وب‌سایت",
     "myClasses": "کلاس‌های من",
     "schedule": "برنامه زمانی",
-    "resources": "منابع"
+    "resources": "منابع",
+    "homework": "تکالیف",
+    "messages": "پیام‌ها",
+    "myDashboard": "داشبورد من",
+    "myCourses": "دوره‌های من",
+    "paymentCredits": "پرداخت و اعتبارات"
   },
   "dashboard": {
     "title": "داشبورد مدیریت",
