@@ -116,9 +116,9 @@ export function AdminDashboard() {
     <div className={`min-h-screen p-3 sm:p-6 space-y-3 sm:space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
       {/* Mobile-Optimized Header */}
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">{t('admin:dashboard.title', 'داشبورد')}</h1>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">{t('common:dashboard.title', 'داشبورد مدیریت')}</h1>
         <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-          {t('admin:dashboard.subtitle', 'پنل مدیریت موسسه')}
+          {t('common:dashboard.subtitle', 'نمای کلی عملیات و معیارهای سیستم')}
         </p>
       </div>
 
@@ -129,7 +129,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between mb-2">
             <Server className="h-4 w-4 text-green-600" />
             <div className="text-xs text-muted-foreground hidden sm:block">
-              {t('admin:dashboard.systemHealth')}
+              {t('common:dashboard.systemHealth')}
             </div>
           </div>
           <div className="text-lg sm:text-2xl font-bold text-green-600 mb-1">
@@ -137,7 +137,7 @@ export function AdminDashboard() {
           </div>
           <p className="text-xs text-muted-foreground">
             <span className="sm:hidden">سلامت</span>
-            <span className="hidden sm:inline">{t('admin:dashboard.last30Days')}</span>
+            <span className="hidden sm:inline">{t('common:dashboard.last30Days')}</span>
           </p>
         </Card>
 
@@ -146,7 +146,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between mb-2">
             <Phone className="h-4 w-4 text-blue-600" />
             <div className="text-xs text-muted-foreground hidden sm:block">
-              {t('admin:dashboard.callResponseRate')}
+              {t('common:dashboard.callResponseRate')}
             </div>
           </div>
           <div className="text-lg sm:text-2xl font-bold text-blue-600 mb-1">
@@ -155,7 +155,7 @@ export function AdminDashboard() {
           <p className="text-xs text-muted-foreground">
             <span className="sm:hidden">تماس</span>
             <span className="hidden sm:inline">
-              {isPersian ? `+۲.۳% ${t('admin:dashboard.fromLastWeek')}` : `+2.3% ${t('admin:dashboard.fromLastWeek')}`}
+              {isPersian ? `+۲.۳% ${t('common:dashboard.fromLastWeek')}` : `+2.3% ${t('common:dashboard.fromLastWeek')}`}
             </span>
           </p>
         </Card>
@@ -165,7 +165,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between mb-2">
             <AlertCircle className="h-4 w-4 text-red-600" />
             <div className="text-xs text-muted-foreground hidden sm:block">
-              {t('admin:dashboard.overduePayments')}
+              {t('common:dashboard.overduePayments')}
             </div>
           </div>
           <div className="text-lg sm:text-2xl font-bold text-red-600 mb-1">
@@ -174,7 +174,7 @@ export function AdminDashboard() {
           <p className="text-xs text-muted-foreground">
             <span className="sm:hidden">معوقه</span>
             <span className="hidden sm:inline">
-              {isPersian ? `${formatPersianCurrency((overduePayments as any)?.totalAmount || '0')} ${t('admin:dashboard.total')}` : `$${(overduePayments as any)?.totalAmount || '0'} ${t('admin:dashboard.total')}`}
+              {isPersian ? `${formatPersianCurrency((overduePayments as any)?.totalAmount || '0')} ${t('common:dashboard.total')}` : `$${(overduePayments as any)?.totalAmount || '0'} ${t('common:dashboard.total')}`}
             </span>
           </p>
         </Card>
@@ -184,7 +184,7 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between mb-2">
             <DollarSign className="h-4 w-4 text-green-600" />
             <div className="text-xs text-muted-foreground hidden sm:block">
-              {t('admin:dashboard.monthlyRevenue')}
+              {t('common:dashboard.monthlyRevenue')}
             </div>
           </div>
           <div className="text-lg sm:text-2xl font-bold text-green-600 mb-1">
@@ -193,7 +193,7 @@ export function AdminDashboard() {
           <p className="text-xs text-muted-foreground">
             <span className="sm:hidden">درآمد</span>
             <span className="hidden sm:inline">
-              {isPersian ? `+۱۵.۳% ${t('admin:dashboard.fromLastMonth')}` : `+15.3% ${t('admin:dashboard.fromLastMonth')}`}
+              {isPersian ? `+۱۵.۳% ${t('common:dashboard.fromLastMonth')}` : `+15.3% ${t('common:dashboard.fromLastMonth')}`}
             </span>
           </p>
         </Card>
@@ -240,9 +240,9 @@ export function AdminDashboard() {
                   isPersian ? formatPersianCurrency(value.toString()) : `$${value}`, 
                   ''
                 ]} />
-                <Line type="monotone" dataKey="daily" stroke="#F59E0B" strokeWidth={2} name={t('admin:dashboard.dailyAvg')} />
-                <Line type="monotone" dataKey="weekly" stroke="#8B5CF6" strokeWidth={2} name={t('admin:dashboard.weeklyAvg')} />
-                <Line type="monotone" dataKey="monthly" stroke="#EF4444" strokeWidth={2} name={t('admin:dashboard.monthlyTotal')} />
+                <Line type="monotone" dataKey="daily" stroke="#F59E0B" strokeWidth={2} name={t('common:dashboard.dailyAvg')} />
+                <Line type="monotone" dataKey="weekly" stroke="#8B5CF6" strokeWidth={2} name={t('common:dashboard.weeklyAvg')} />
+                <Line type="monotone" dataKey="monthly" stroke="#EF4444" strokeWidth={2} name={t('common:dashboard.monthlyTotal')} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -433,7 +433,7 @@ export function AdminDashboard() {
             <div className="space-y-3">
               {((marketingMetrics as any)?.funnel || []).map((stage: any, index: number) => (
                 <div key={index} className="flex justify-between items-center">
-                  <span className="text-sm">{t(`admin:dashboard.${stage.stage}`)}</span>
+                  <span className="text-sm">{t(`common:dashboard.${stage.stage}`)}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold">
                       {isPersian ? formatPersianNumber(stage.count) : stage.count}
@@ -659,7 +659,7 @@ export function AdminDashboard() {
                     <td className="p-2 text-red-600 font-semibold">{payment.amount}</td>
                     <td className="p-2">
                       <Badge variant={payment.days > 14 ? "destructive" : "secondary"}>
-{payment.days} {t('admin:days')}
+{payment.days} {t('common:days')}
                       </Badge>
                     </td>
                     <td className="p-2">{payment.course}</td>
