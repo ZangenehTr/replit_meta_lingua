@@ -114,8 +114,22 @@
     "monthlyChurnRate": "نرخ رها کردن ماهانه",
     "revenuePerStudent": "درآمد هر دانشجو",
     "contact": "تماس",
-    "action": "عملیات"
+    "action": "عملیات",
+    "title": "داشبورد مدیریت",
+    "subtitle": "نمای کلی عملیات و معیارهای سیستم",
+    "systemHealth": "سلامت سیستم",
+    "last30Days": "۳۰ روز گذشته",
+    "callResponseRate": "نرخ پاسخ تماس",
+    "fromLastWeek": "از هفته گذشته",
+    "overduePayments": "پرداخت های معوقه",
+    "total": "کل",
+    "monthlyRevenue": "درآمد ماهانه",
+    "fromLastMonth": "از ماه گذشته",
+    "dailyAvg": "میانگین روزانه",
+    "weeklyAvg": "میانگین هفتگی",
+    "monthlyTotal": "مجموع ماهانه"
   },
+  "days": "روز",
   "toast": {
     "success": "موفق",
     "error": "خطا", 
