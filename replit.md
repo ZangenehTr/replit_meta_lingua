@@ -5,6 +5,7 @@ Meta Lingua is an AI-enhanced multilingual language learning and institute manag
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
+Work sessions: User prefers to have work logged so they can resume from where we left off.
 
 ## System Architecture
 
