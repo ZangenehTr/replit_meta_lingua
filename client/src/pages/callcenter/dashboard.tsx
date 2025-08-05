@@ -267,9 +267,9 @@ function CallCenterDashboard() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">{t('dashboard.title')}</h1>
+            <h1 className="text-3xl font-bold">{t('dashboard.title', { ns: 'common' })}</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {t('dashboard.welcome')}
+              {t('dashboard.welcome', { ns: 'common' })}
             </p>
           </div>
         </div>
@@ -328,10 +328,10 @@ function CallCenterDashboard() {
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">{t('dashboard.overview')}</TabsTrigger>
-            <TabsTrigger value="leads">{t('dashboard.leads')}</TabsTrigger>
-            <TabsTrigger value="calls">{t('dashboard.calls')}</TabsTrigger>
-            <TabsTrigger value="performance">{t('dashboard.performance')}</TabsTrigger>
+            <TabsTrigger value="overview">{t('dashboard.overview', { ns: 'common' })}</TabsTrigger>
+            <TabsTrigger value="leads">{t('dashboard.leads', { ns: 'common' })}</TabsTrigger>
+            <TabsTrigger value="calls">{t('dashboard.calls', { ns: 'common' })}</TabsTrigger>
+            <TabsTrigger value="performance">{t('dashboard.performance', { ns: 'common' })}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview">

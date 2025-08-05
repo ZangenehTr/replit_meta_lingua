@@ -62,6 +62,8 @@
     "resources": "منابع"
   },
   "dashboard": {
+    "title": "داشبورد مدیریت",
+    "subtitle": "نمای کلی عملیات و معیارهای سیستم",
     "profitMargin": "حاشیه سود",
     "financialKPIs": "شاخص‌های کلیدی مالی",
     "studentAcquisitionSources": "منابع جذب دانشجو",
@@ -387,18 +389,6 @@
     "invalidEmail": "ایمیل نامعتبر",
     "passwordTooShort": "رمز عبور خیلی کوتاه است",
     "passwordsDoNotMatch": "رمزهای عبور مطابقت ندارند"
-  },
-  "dashboard": {
-    "welcome": "خوش آمدید",
-    "overview": "نمای کلی",
-    "statistics": "آمار",
-    "quickActions": "اقدامات سریع",
-    "recentActivity": "فعالیت‌های اخیر",
-    "upcomingTasks": "وظایف آینده",
-    "performance": "عملکرد",
-    "progress": "پیشرفت",
-    "contact": "تماس",
-    "action": "عملیات"
   },
   "toast": {
     "success": "موفقیت",
