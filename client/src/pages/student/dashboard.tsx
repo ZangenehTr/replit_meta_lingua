@@ -257,7 +257,7 @@ function StudentDashboard() {
             <Link href="/video-courses">
               <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md">
                 <Video className="h-4 w-4 mr-2" />
-                {t('common:dashboard.liveVideoClasses')}
+                {t('dashboard.liveVideoClasses', { ns: 'common' })}
               </Button>
             </Link>
             <Link href="/games">
@@ -269,7 +269,7 @@ function StudentDashboard() {
             <Link href="/level-assessment">
               <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
                 <Target className="h-4 w-4 mr-2" />
-                {t('common:dashboard.whatsMyLevel')}
+                {t('dashboard.whatsMyLevel', { ns: 'common' })}
               </Button>
             </Link>
           </div>
@@ -338,7 +338,7 @@ function StudentDashboard() {
         {/* Main Content Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
           <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="overview">{t('dashboard.overview')}</TabsTrigger>
+            <TabsTrigger value="overview">{t('dashboard.overview', { ns: 'common' })}</TabsTrigger>
             <TabsTrigger value="courses">{t('student.courses')}</TabsTrigger>
             <TabsTrigger value="assignments">{t('student.assignments')}</TabsTrigger>
             <TabsTrigger value="schedule">{t('student.schedule')}</TabsTrigger>
@@ -354,7 +354,7 @@ function StudentDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Video className="h-5 w-5" />
-                    {t('dashboard.upcomingTasks')}
+                    {t('dashboard.upcomingTasks', { ns: 'common' })}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">

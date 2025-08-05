@@ -53,7 +53,9 @@ i18n
   .init({
     detection: detectionOptions,
     fallbackLng: 'en',
-    debug: false,
+    debug: true,
+    returnNull: false,
+    returnEmptyString: false,
     
     interpolation: {
       escapeValue: false, // React already escapes values

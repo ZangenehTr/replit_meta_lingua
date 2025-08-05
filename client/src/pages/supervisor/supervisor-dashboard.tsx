@@ -487,7 +487,7 @@ export default function SupervisorDashboard() {
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="overview">{t('common:dashboard.overview')}</TabsTrigger>
+            <TabsTrigger value="overview">{t('dashboard.overview', { ns: 'common' })}</TabsTrigger>
             <TabsTrigger value="teachers">{t('supervisor:evaluations.performance')}</TabsTrigger>
           </TabsList>
 
