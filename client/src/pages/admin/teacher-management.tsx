@@ -482,7 +482,7 @@ export function AdminTeacherManagement() {
           <CardContent>
             <div className="text-2xl font-bold">{Array.isArray(teachers) ? teachers.length : 0}</div>
             <p className="text-xs text-muted-foreground">
-              +2 from last month
+              +2 {t('admin:teacherManagement.fromLastMonth')}
             </p>
           </CardContent>
         </Card>
@@ -504,26 +504,26 @@ export function AdminTeacherManagement() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:teacherManagement.avgRating')}</CardTitle>
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">4.8</div>
             <p className="text-xs text-muted-foreground">
-              +0.2 from last month
+              +0.2 {t('admin:teacherManagement.fromLastMonth')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:teacherManagement.totalHours')}</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">2,847</div>
             <p className="text-xs text-muted-foreground">
-              Teaching hours this month
+              {t('admin:teacherManagement.teachingHoursThisMonth')}
             </p>
           </CardContent>
         </Card>

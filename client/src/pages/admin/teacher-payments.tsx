@@ -308,11 +308,11 @@ export default function TeacherPaymentsPage() {
                   </div>
                   <div>
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                      Teacher Payment Management
+                      {t('admin:teacherPayments.title')}
                     </h1>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm text-gray-500 font-medium">Live System Active</span>
+                      <span className="text-sm text-gray-500 font-medium">{t('admin:teacherPayments.liveSystemActive')}</span>
                     </div>
                   </div>
                 </div>
@@ -325,8 +325,8 @@ export default function TeacherPaymentsPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white text-center shadow-lg min-w-[140px]">
                   <div className="text-3xl font-bold mb-1">1,250,000</div>
-                  <div className="text-green-100 font-medium text-sm">IRR Pending</div>
-                  <div className="text-xs text-green-200 mt-1">5 Teachers</div>
+                  <div className="text-green-100 font-medium text-sm">{t('admin:teacherPayments.irrPending')}</div>
+                  <div className="text-xs text-green-200 mt-1">5 {t('admin:teacherPayments.teachers')}</div>
                 </div>
                 <div className="bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl p-6 text-white text-center shadow-lg min-w-[140px]">
                   <div className="text-3xl font-bold mb-1">156</div>
@@ -342,7 +342,7 @@ export default function TeacherPaymentsPage() {
             <Card className="group hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 border-0 shadow-lg hover:scale-105">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                 <CardTitle className="text-sm font-semibold text-green-800">
-                  Total Pending
+                  {t('admin:teacherPayments.totalPending')}
                 </CardTitle>
                 <div className="p-2 bg-green-500/10 rounded-xl">
                   <Clock className="h-5 w-5 text-green-600" />
@@ -360,7 +360,7 @@ export default function TeacherPaymentsPage() {
             <Card className="group hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100 border-0 shadow-lg hover:scale-105">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                 <CardTitle className="text-sm font-semibold text-blue-800">
-                  Sessions This Month
+                  {t('admin:teacherPayments.sessionsThisMonth')}
                 </CardTitle>
                 <div className="p-2 bg-blue-500/10 rounded-xl">
                   <CheckCircle className="h-5 w-5 text-blue-600" />
@@ -377,7 +377,7 @@ export default function TeacherPaymentsPage() {
             <Card className="group hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100 border-0 shadow-lg hover:scale-105">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                 <CardTitle className="text-sm font-semibold text-purple-800">
-                  Average Hourly Rate
+                  {t('admin:teacherPayments.averageHourlyRate')}
                 </CardTitle>
                 <div className="p-2 bg-purple-500/10 rounded-xl">
                   <DollarSign className="h-5 w-5 text-purple-600" />
@@ -395,7 +395,7 @@ export default function TeacherPaymentsPage() {
             <Card className="group hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 border-0 shadow-lg hover:scale-105">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                 <CardTitle className="text-sm font-semibold text-orange-800">
-                  Payment Issues
+                  {t('admin:teacherPayments.paymentIssues')}
                 </CardTitle>
                 <div className="p-2 bg-orange-500/10 rounded-xl">
                   <AlertCircle className="h-5 w-5 text-orange-600" />
@@ -916,7 +916,7 @@ export default function TeacherPaymentsPage() {
                       <SelectValue placeholder="Select Teacher" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Teachers</SelectItem>
+                      <SelectItem value="all">{t('common:allTeachers')}</SelectItem>
                       {teachers.map((teacher) => (
                         <SelectItem key={teacher.id} value={teacher.id.toString()}>
                           {teacher.name}

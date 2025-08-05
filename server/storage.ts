@@ -3145,6 +3145,97 @@ export class MemStorage implements IStorage {
   async getScheduledObservations(): Promise<any[]> {
     return [];
   }
+
+  // Missing supervision observation methods
+  async getSupervisionObservations(): Promise<any[]> {
+    // Return mock supervision observations data
+    return [
+      {
+        id: 1,
+        supervisorId: 1,
+        teacherId: 1,
+        sessionId: 1,
+        observationType: 'live',
+        rating: 4.5,
+        scores: {
+          teaching: 5,
+          engagement: 4,
+          timeManagement: 4,
+          languageAccuracy: 5
+        },
+        notes: 'Excellent teaching methodology',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+  }
+
+  // Student questionnaire methods
+  async getStudentQuestionnaires(courseId?: number): Promise<StudentQuestionnaire[]> {
+    // Return mock questionnaires
+    return [
+      {
+        id: 1,
+        title: 'Course Feedback',
+        description: 'Please provide feedback on your learning experience',
+        courseId: courseId || 1,
+        triggerType: 'session',
+        triggerSessionNumber: 5,
+        questions: [
+          {
+            id: '1',
+            text: 'How would you rate your teacher?',
+            type: 'rating',
+            required: true
+          }
+        ],
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ] as StudentQuestionnaire[];
+  }
+
+  async createStudentQuestionnaire(questionnaire: InsertStudentQuestionnaire): Promise<StudentQuestionnaire> {
+    const id = this.currentId++;
+    const newQuestionnaire = {
+      id,
+      ...questionnaire,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as StudentQuestionnaire;
+    return newQuestionnaire;
+  }
+
+  async updateStudentQuestionnaire(id: number, updates: Partial<StudentQuestionnaire>): Promise<StudentQuestionnaire | undefined> {
+    // Mock implementation
+    return {
+      id,
+      ...updates,
+      updatedAt: new Date()
+    } as StudentQuestionnaire;
+  }
+
+  async deleteStudentQuestionnaire(id: number): Promise<void> {
+    // Mock implementation
+  }
+
+  async getQuestionnaireResponses(questionnaireId?: number, teacherId?: number): Promise<QuestionnaireResponse[]> {
+    return [];
+  }
+
+  async createQuestionnaireResponse(response: InsertQuestionnaireResponse): Promise<QuestionnaireResponse> {
+    const id = this.currentId++;
+    return {
+      id,
+      ...response,
+      createdAt: new Date()
+    } as QuestionnaireResponse;
+  }
+
+  async updateQuestionnaireResponse(id: number, updates: Partial<QuestionnaireResponse>): Promise<QuestionnaireResponse | undefined> {
+    return undefined;
+  }
 }
 
 import { DatabaseStorage } from "./database-storage";

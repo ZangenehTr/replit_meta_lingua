@@ -299,7 +299,11 @@
     "viewDetails": "View Details",
     "editTeacher": "Edit Teacher",
     "createTeacher": "Create Teacher",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "avgRating": "Avg Rating",
+    "totalHours": "Total Hours",
+    "fromLastMonth": "from last month",
+    "teachingHoursThisMonth": "Teaching hours this month"
   },
   "settings": {
     "title": "Admin Settings",
@@ -635,7 +639,13 @@
     "type": "Type",
     "status": "Status",
     "score": "Score",
-    "actions": "Actions"
+    "actions": "Actions",
+    "liveClassesMonitoring": "Live Classes Monitoring",
+    "teacherEvaluations": "In-person Teacher Evaluations",
+    "automatedQuestionnaires": "Automated Student Questionnaires",
+    "teachersSupervised": "Teachers Supervised",
+    "retentionTrend": "Retention Trend",
+    "noLiveClasses": "No live classes currently in session"
   },
   "teacherPayments": {
     "title": "Teacher Payment Management",
@@ -656,7 +666,14 @@
     "calculate": "Calculate",
     "approve": "Approve",
     "sendSMS": "Send SMS",
-    "download": "Download"
+    "download": "Download",
+    "totalPending": "Total Pending",
+    "sessionsThisMonth": "Sessions This Month",
+    "liveSystemActive": "Live System Active",
+    "irrPending": "IRR Pending",
+    "teachers": "Teachers",
+    "paymentIssues": "Payment Issues",
+    "averageHourlyRate": "Average Hourly Rate"
   },
   "smsSettings": {
     "title": "SMS Management",
@@ -732,7 +749,18 @@
   },
   "communications": {
     "title": "Communication Hub",
-    "subtitle": "Modern ticketing, real-time chat, and push notifications"
+    "subtitle": "Modern ticketing, real-time chat, and push notifications",
+    "sendNotification": "Send Notification",
+    "newTicket": "New Ticket",
+    "openTickets": "Open Tickets",
+    "activeChats": "Active Chats",
+    "todaysNotifications": "Today's Notifications",
+    "responseRate": "Response Rate",
+    "analytics": "Analytics",
+    "pushNotifications": "Push Notifications",
+    "liveChat": "Live Chat",
+    "supportTickets": "Support Tickets",
+    "allTickets": "All Tickets"
   },
   "userManagement": {
     "title": "User Management",
