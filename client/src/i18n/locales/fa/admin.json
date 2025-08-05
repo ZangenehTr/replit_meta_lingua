@@ -371,9 +371,23 @@
     "notSpecified": "مشخص نشده"
   },
   "classes": {
-    "title": "مدیریت کلاس‌ها",
-    "subtitle": "برنامه‌ریزی و مدیریت جلسات کلاسی",
+    "title": "برنامه‌ریزی کلاس",
+    "subtitle": "برنامه‌ریزی زمان و مکان ارائه دوره‌ها",
     "createClass": "ایجاد کلاس جدید",
+    "online": "آنلاین",
+    "inPerson": "حضوری",
+    "hybrid": "ترکیبی"
+  },
+  "classScheduling": {
+    "scheduleClass": "برنامه‌ریزی کلاس",
+    "scheduleNewClass": "برنامه‌ریزی کلاس جدید",
+    "course": "دوره",
+    "selectCourseToSchedule": "دوره برای برنامه‌ریزی انتخاب کنید",
+    "availableTeachers": "مدرسان در دسترس",
+    "selectAvailableTeacher": "مدرس در دسترس انتخاب کنید",
+    "room": "اتاق",
+    "selectRoom": "اتاق انتخاب کنید",
+    "classType": "نوع کلاس",
     "online": "آنلاین",
     "inPerson": "حضوری",
     "hybrid": "ترکیبی"
