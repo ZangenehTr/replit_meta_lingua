@@ -770,6 +770,20 @@
     "title": "Class Scheduling",
     "subtitle": "Schedule when and where courses are delivered with teacher and room assignments"
   },
+  "classScheduling": {
+    "scheduleClass": "Schedule Class",
+    "scheduleNewClass": "Schedule New Class",
+    "course": "Course",
+    "selectCourseToSchedule": "Select course to schedule",
+    "availableTeachers": "Available Teachers",
+    "selectAvailableTeacher": "Select available teacher",
+    "room": "Room",
+    "selectRoom": "Select room",
+    "classType": "Class Type",
+    "online": "Online",
+    "inPerson": "In-Person",
+    "hybrid": "Hybrid"
+  },
   "campaigns": {
     "title": "Campaign Management",
     "subtitle": "Manage marketing campaigns across all channels"
