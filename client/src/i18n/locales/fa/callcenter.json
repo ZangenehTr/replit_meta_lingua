@@ -106,6 +106,24 @@
     "holdCall": "نگهداری تماس",
     "voipCenter": "مرکز VoIP"
   },
+  "voip": {
+    "voipCenter": "مرکز تماس VoIP",
+    "makeReceiveCalls": "برقراری و دریافت تماس‌ها با استفاده از خط VoIP ایزابل (+۹۸۴۸۳۲۵)",
+    "audioReady": "صدا آماده",
+    "builtInAudio": "صدای داخلی",
+    "noAudioAccess": "بدون دسترسی صوتی",
+    "voipConnected": "VoIP متصل",
+    "voipOffline": "VoIP آفلاین",
+    "phoneDialer": "شماره‌گیر تلفن",
+    "studentDirectory": "دایرکتوری دانش‌آموزان",
+    "callHistory": "تاریخچه تماس‌ها",
+    "recordings": "ضبط‌ها",
+    "manualDialer": "شماره‌گیر دستی",
+    "dialAnyNumber": "شماره‌گیری هر شماره با استفاده از خط VoIP ایزابل",
+    "audioConfiguration": "پیکربندی صوتی",
+    "microphoneInput": "ورودی میکروفون",
+    "default": "پیش‌فرض"
+  },
   "performance": {
     "title": "عملکرد مرکز تماس",
     "dailyStats": "آمار روزانه",
