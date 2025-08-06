@@ -108,32 +108,32 @@ function SessionDetailsSection({ teacherId, period }: { teacherId: number; perio
           variant="ghost"
           className="w-full flex justify-between items-center p-4 h-auto text-left font-semibold hover:bg-gray-50"
         >
-          <span>Session Details ({sessions.length} sessions)</span>
+          <span>{t('admin:teacherPayments.sessionDetailsSection')} ({sessions.length} {t('admin:teacherPayments.sessions')})</span>
           {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className="px-4 pb-4">
         {isLoading ? (
-          <div className="text-center py-4">Loading sessions...</div>
+          <div className="text-center py-4">{t('admin:teacherPayments.loadingSessions')}</div>
         ) : error ? (
           <div className="text-center py-4 text-amber-600">
-            <p className="mb-2">Session details temporarily unavailable</p>
-            <p className="text-sm text-gray-500">Payment calculations remain accurate</p>
+            <p className="mb-2">{t('admin:teacherPayments.sessionUnavailable')}</p>
+            <p className="text-sm text-gray-500">{t('admin:teacherPayments.paymentAccurate')}</p>
           </div>
         ) : sessions.length === 0 ? (
-          <div className="text-center py-4 text-gray-500">No sessions found for this period</div>
+          <div className="text-center py-4 text-gray-500">{t('admin:teacherPayments.noSessionsFound')}</div>
         ) : (
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {sessions.map((session, index) => (
               <div key={index} className={`border-l-4 ${getSessionColor(session.type)} pl-4 py-2`}>
                 <div className="font-medium">
-                  {session.date} - {session.type === '1-on-1' ? '1-on-1 Session' : 
-                                    session.type === 'group' ? 'Group Class' : 'Callern Session'}
+                  {session.date} - {session.type === '1-on-1' ? t('admin:teacherPayments.oneOnOneSession') : 
+                                    session.type === 'group' ? t('admin:teacherPayments.groupClass') : t('admin:teacherPayments.callernSession')}
                 </div>
                 <div className="text-sm text-gray-600">
-                  {session.type === '1-on-1' ? `Student: ${session.studentName}` :
+                  {session.type === '1-on-1' ? `${t('admin:teacherPayments.student')}: ${session.studentName}` :
                    session.type === 'group' ? session.groupDetails :
-                   `Student: ${session.studentName}`}
+                   `${t('admin:teacherPayments.student')}: ${session.studentName}`}
                 </div>
                 <div className="text-sm text-gray-500">
                   {session.startTime}-{session.endTime} ({session.duration} hrs) - {session.platform}
@@ -317,7 +317,7 @@ export default function TeacherPaymentsPage() {
                   </div>
                 </div>
                 <p className="text-lg text-gray-600 max-w-2xl leading-relaxed">
-                  Automated session-based payment calculation with real-time recalculation and comprehensive payslip management
+                  {t('admin:teacherPayments.automatedDescription')}
                 </p>
               </div>
               
@@ -326,12 +326,12 @@ export default function TeacherPaymentsPage() {
                 <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white text-center shadow-lg min-w-[140px]">
                   <div className="text-3xl font-bold mb-1">1,250,000</div>
                   <div className="text-green-100 font-medium text-sm">{t('admin:teacherPayments.irrPending')}</div>
-                  <div className="text-xs text-green-200 mt-1">5 {t('admin:teacherPayments.teachers')}</div>
+                  <div className="text-xs text-green-200 mt-1">5 {t('admin:teacherPayments.sessionsPending')}</div>
                 </div>
                 <div className="bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl p-6 text-white text-center shadow-lg min-w-[140px]">
                   <div className="text-3xl font-bold mb-1">156</div>
-                  <div className="text-blue-100 font-medium text-sm">Sessions</div>
-                  <div className="text-xs text-blue-200 mt-1">This Month</div>
+                  <div className="text-blue-100 font-medium text-sm">{t('admin:teacherPayments.sessions')}</div>
+                  <div className="text-xs text-blue-200 mt-1">{t('admin:teacherPayments.fromLastMonth')}</div>
                 </div>
               </div>
             </div>
@@ -352,7 +352,7 @@ export default function TeacherPaymentsPage() {
                 <div className="text-2xl font-bold text-green-700 mb-1">1,250,000</div>
                 <div className="text-lg font-medium text-green-700 mb-2">IRR</div>
                 <p className="text-xs text-green-600 font-medium">
-                  5 teachers pending
+                  5 {t('admin:teacherPayments.teachers')} {t('admin:teacherPayments.sessionsPending')}
                 </p>
               </CardContent>
             </Card>
@@ -369,7 +369,7 @@ export default function TeacherPaymentsPage() {
               <CardContent className="pt-0">
                 <div className="text-3xl font-bold text-blue-700 mb-2">156</div>
                 <p className="text-xs text-blue-600 font-medium">
-                  +12% from last month
+                  +12% {t('admin:teacherPayments.fromLastMonth')}
                 </p>
               </CardContent>
             </Card>
@@ -387,7 +387,7 @@ export default function TeacherPaymentsPage() {
                 <div className="text-2xl font-bold text-purple-700 mb-1">75,000</div>
                 <div className="text-lg font-medium text-purple-700 mb-2">IRR</div>
                 <p className="text-xs text-purple-600 font-medium">
-                  Persian language standard
+                  {t('admin:teacherPayments.persianLanguageStandard')}
                 </p>
               </CardContent>
             </Card>
@@ -404,7 +404,7 @@ export default function TeacherPaymentsPage() {
               <CardContent className="pt-0">
                 <div className="text-3xl font-bold text-orange-700 mb-2">2</div>
                 <p className="text-xs text-orange-600 font-medium">
-                  Requires review
+                  {t('admin:teacherPayments.requiresReview')}
                 </p>
               </CardContent>
             </Card>
@@ -416,25 +416,25 @@ export default function TeacherPaymentsPage() {
                 <TabsTrigger value="payments" className="rounded-xl py-3 px-4 text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4" />
-                    Payment Overview
+                    {t('admin:teacherPayments.paymentOverview')}
                   </div>
                 </TabsTrigger>
                 <TabsTrigger value="sessions" className="rounded-xl py-3 px-4 text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    Session Details
+                    {t('admin:teacherPayments.sessionDetails')}
                   </div>
                 </TabsTrigger>
                 <TabsTrigger value="history" className="rounded-xl py-3 px-4 text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    Payment History
+                    {t('admin:teacherPayments.paymentHistory')}
                   </div>
                 </TabsTrigger>
                 <TabsTrigger value="reports" className="rounded-xl py-3 px-4 text-sm font-medium transition-all duration-200 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
-                    Payment Reports
+                    {t('admin:teacherPayments.paymentReports')}
                   </div>
                 </TabsTrigger>
               </TabsList>
@@ -469,7 +469,7 @@ export default function TeacherPaymentsPage() {
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-                            <Calculator className="h-5 w-5 mr-2" />
+                            <Calculator className="h-5 w-5" />
                             {t('admin:teacherPayments.calculatePayments')}
                           </Button>
                         </DialogTrigger>
@@ -516,7 +516,7 @@ export default function TeacherPaymentsPage() {
                       <div className="text-center py-4 text-red-500">Error loading payments: {error?.message}</div>
                     ) : payments?.length === 0 ? (
                       <div className="text-center py-4 text-gray-500">
-                    No teacher payments found for {selectedPeriod}. 
+                    {t('admin:teacherPayments.noPaymentsFound')} {selectedPeriod}. 
                     <br />
                     <Button 
                       variant="outline" 
@@ -524,7 +524,7 @@ export default function TeacherPaymentsPage() {
                       className="mt-2"
                       onClick={() => calculatePaymentsMutation.mutate(selectedPeriod)}
                     >
-                      Calculate Payments for This Period
+                      {t('admin:teacherPayments.calculateForPeriod')}
                       </Button>
                       </div>
                     ) : (
@@ -541,7 +541,7 @@ export default function TeacherPaymentsPage() {
                       {payments?.map((payment) => (
                         <TableRow key={payment.id} className="hover:bg-blue-50 transition-colors">
                           <TableCell className="py-4">
-                            <div className="flex items-center space-x-4">
+                            <div className="flex items-center gap-4">
                               <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
                                 <img 
                                   src={`/uploads/teacher-photos/${payment.teacherId}.jpg`}
@@ -558,7 +558,7 @@ export default function TeacherPaymentsPage() {
                               </div>
                               <div>
                                 <div className="font-semibold text-gray-900 text-lg">{payment.teacherName}</div>
-                                <div className="text-sm text-gray-500">ID: {payment.teacherId}</div>
+                                <div className="text-sm text-gray-500">{t('admin:teacherPayments.id')}: {payment.teacherId}</div>
                               </div>
                             </div>
                           </TableCell>
@@ -585,22 +585,22 @@ export default function TeacherPaymentsPage() {
                               <Dialog>
                                 <DialogTrigger asChild>
                                   <Button variant="outline" size="sm">
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Payslip Details
+                                    <FileText className="h-4 w-4" />
+                                    <span>{t('admin:teacherPayments.payslipDetails')}</span>
                                   </Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-4xl">
                                   <DialogHeader>
-                                    <DialogTitle>Payslip Details - {payment.teacherName}</DialogTitle>
+                                    <DialogTitle>{t('admin:teacherPayments.payslipDetails')} - {payment.teacherName}</DialogTitle>
                                     <DialogDescription>
-                                      Complete breakdown of payment calculation for {payment.period}
+                                      {t('admin:teacherPayments.completeBreakdown')} {payment.period}
                                     </DialogDescription>
                                   </DialogHeader>
                                   
                                   <div className="space-y-6">
                                     {/* Teacher Info with Photo */}
                                     <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-                                      <div className="flex items-center space-x-3">
+                                      <div className="flex items-center gap-3">
                                         <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
                                           <img 
                                             src={`/uploads/teacher-photos/${payment.teacherId}.jpg`}
@@ -612,20 +612,20 @@ export default function TeacherPaymentsPage() {
                                             }}
                                           />
                                           <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs" style={{display: 'none'}}>
-                                            No Photo
+                                            {t('admin:teacherPayments.noPhoto')}
                                           </div>
                                         </div>
                                         <div>
-                                          <Label className="text-xs text-gray-500">Teacher</Label>
+                                          <Label className="text-xs text-gray-500">{t('admin:teacherPayments.teacher')}</Label>
                                           <div className="font-medium">{payment.teacherName}</div>
                                         </div>
                                       </div>
                                       <div>
-                                        <Label className="text-xs text-gray-500">Period</Label>
+                                        <Label className="text-xs text-gray-500">{t('admin:teacherPayments.period')}</Label>
                                         <div className="font-medium">{payment.period}</div>
                                       </div>
                                       <div>
-                                        <Label className="text-xs text-gray-500">Payment Status</Label>
+                                        <Label className="text-xs text-gray-500">{t('admin:teacherPayments.paymentStatus')}</Label>
                                         <Badge className={getStatusColor(payment.status)}>
                                           {payment.status}
                                         </Badge>
@@ -635,15 +635,15 @@ export default function TeacherPaymentsPage() {
                                     {/* Session Details */}
                                     <div className="grid grid-cols-3 gap-4">
                                       <div>
-                                        <Label className="text-xs text-gray-500">Total Sessions</Label>
+                                        <Label className="text-xs text-gray-500">{t('admin:teacherPayments.totalSessions')}</Label>
                                         <div className="text-2xl font-bold">{payment.totalSessions}</div>
                                       </div>
                                       <div>
-                                        <Label className="text-xs text-gray-500">Total Hours</Label>
+                                        <Label className="text-xs text-gray-500">{t('admin:teacherPayments.totalHours')}</Label>
                                         <div className="text-2xl font-bold">{payment.totalHours}</div>
                                       </div>
                                       <div>
-                                        <Label className="text-xs text-gray-500">Hourly Rate</Label>
+                                        <Label className="text-xs text-gray-500">{t('admin:teacherPayments.hourlyRate')}</Label>
                                         <div className="text-2xl font-bold">{payment.hourlyRate?.toLocaleString()} IRR</div>
                                       </div>
                                     </div>
@@ -656,28 +656,28 @@ export default function TeacherPaymentsPage() {
 
                                     {/* Payment Breakdown */}
                                     <div className="border rounded-lg p-4">
-                                      <h3 className="font-semibold mb-3">Payment Calculation</h3>
+                                      <h3 className="font-semibold mb-3">{t('admin:teacherPayments.paymentCalculation')}</h3>
                                       <div className="space-y-2">
                                         <div className="flex justify-between">
-                                          <span>Regular Sessions ({payment.totalHours - (payment.callernHours || 0)} hours × {payment.hourlyRate?.toLocaleString()} IRR)</span>
+                                          <span>{t('admin:teacherPayments.regularSessions')} ({payment.totalHours - (payment.callernHours || 0)} {t('admin:teacherPayments.hours')} × {payment.hourlyRate?.toLocaleString()} IRR)</span>
                                           <span className="font-medium">{((payment.totalHours - (payment.callernHours || 0)) * (payment.hourlyRate || 0))?.toLocaleString()} IRR</span>
                                         </div>
                                         {payment.callernHours && (
                                           <div className="flex justify-between">
-                                            <span>Callern Sessions ({payment.callernHours} hours × 850,000 IRR)</span>
+                                            <span>{t('admin:teacherPayments.callernSessions')} ({payment.callernHours} {t('admin:teacherPayments.hours')} × 850,000 IRR)</span>
                                             <span className="font-medium">{(payment.callernHours * 850000)?.toLocaleString()} IRR</span>
                                           </div>
                                         )}
                                         <div className="flex justify-between text-green-600">
-                                          <span>Performance Bonuses</span>
+                                          <span>{t('admin:teacherPayments.performanceBonuses')}</span>
                                           <span className="font-medium">+{payment.bonuses?.toLocaleString()} IRR</span>
                                         </div>
                                         <div className="flex justify-between text-red-600">
-                                          <span>Administrative Deductions</span>
+                                          <span>{t('admin:teacherPayments.administrativeDeductions')}</span>
                                           <span className="font-medium">-{payment.deductions?.toLocaleString()} IRR</span>
                                         </div>
                                         <div className="border-t pt-2 flex justify-between text-lg font-bold">
-                                          <span>Final Payment Amount</span>
+                                          <span>{t('admin:teacherPayments.finalPaymentAmount')}</span>
                                           <span>{payment.finalAmount?.toLocaleString()} IRR</span>
                                         </div>
                                       </div>
@@ -688,30 +688,30 @@ export default function TeacherPaymentsPage() {
                                     <Dialog>
                                       <DialogTrigger asChild>
                                         <Button variant="outline">
-                                          <Edit className="h-4 w-4 mr-2" />
-                                          Edit Payslip
+                                          <Edit className="h-4 w-4" />
+                                          <span className="ms-2">{t('admin:teacherPayments.editPayslip')}</span>
                                         </Button>
                                       </DialogTrigger>
                                       <DialogContent className="max-w-2xl">
                                         <DialogHeader>
-                                          <DialogTitle>Edit Payslip - {payment.teacherName}</DialogTitle>
+                                          <DialogTitle>{t('admin:teacherPayments.editPayslipTitle')} - {payment.teacherName}</DialogTitle>
                                           <DialogDescription>
-                                            Modify payment details for this period
+                                            {t('admin:teacherPayments.modifyPaymentDetails')}
                                           </DialogDescription>
                                         </DialogHeader>
                                         <div className="space-y-6">
                                           {/* Current Payslip Summary */}
                                           <div className="bg-gray-50 rounded-lg p-4 border">
-                                            <h4 className="font-semibold text-gray-800 mb-2">Current Payslip</h4>
+                                            <h4 className="font-semibold text-gray-800 mb-2">{t('admin:teacherPayments.currentPayslip')}</h4>
                                             <div className="grid grid-cols-2 gap-4 text-sm">
-                                              <div>Base Pay: <span className="font-medium">{payment.basePay?.toLocaleString()} IRR</span></div>
-                                              <div>Hours: <span className="font-medium">{payment.totalHours}</span></div>
-                                              <div>Hourly Rate: <span className="font-medium">{payment.hourlyRate?.toLocaleString()} IRR</span></div>
-                                              <div>Payment Period: <span className="font-medium">{payment.period}</span></div>
-                                              <div>Bonuses: <span className="font-medium text-green-600">+{payment.bonuses?.toLocaleString()} IRR</span></div>
-                                              <div>Deductions: <span className="font-medium text-red-600">-{payment.deductions?.toLocaleString()} IRR</span></div>
+                                              <div>{t('admin:teacherPayments.basePay')}: <span className="font-medium">{payment.basePay?.toLocaleString()} IRR</span></div>
+                                              <div>{t('admin:teacherPayments.hours')}: <span className="font-medium">{payment.totalHours}</span></div>
+                                              <div>{t('admin:teacherPayments.hourlyRate')}: <span className="font-medium">{payment.hourlyRate?.toLocaleString()} IRR</span></div>
+                                              <div>{t('admin:teacherPayments.paymentPeriod')}: <span className="font-medium">{payment.period}</span></div>
+                                              <div>{t('admin:teacherPayments.bonuses')}: <span className="font-medium text-green-600">+{payment.bonuses?.toLocaleString()} IRR</span></div>
+                                              <div>{t('admin:teacherPayments.deductions')}: <span className="font-medium text-red-600">-{payment.deductions?.toLocaleString()} IRR</span></div>
                                               <div className="col-span-2 pt-2 border-t">
-                                                <span className="text-lg font-bold">Total: {payment.finalAmount?.toLocaleString()} IRR</span>
+                                                <span className="text-lg font-bold">{t('admin:teacherPayments.total')}: {payment.finalAmount?.toLocaleString()} IRR</span>
                                               </div>
                                             </div>
                                           </div>
@@ -760,9 +760,9 @@ export default function TeacherPaymentsPage() {
                                             
                                             {/* Live Calculation Preview */}
                                             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                                              <h5 className="font-medium text-blue-800 mb-2">💡 Live Calculation Preview</h5>
+                                              <h5 className="font-medium text-blue-800 mb-2">💡 {t('admin:teacherPayments.liveCalculationPreview')}</h5>
                                               <p className="text-sm text-blue-600">
-                                                Changes will recalculate the total amount and generate a new payslip with updated values.
+                                                {t('admin:teacherPayments.changesWillRecalculate')}
                                               </p>
                                             </div>
                                           </form>
@@ -817,8 +817,8 @@ export default function TeacherPaymentsPage() {
                                                 });
                                               }
                                             }}>
-                                              <Calculator className="h-4 w-4 mr-2" />
-                                              Recalculate & Save
+                                              <Calculator className="h-4 w-4" />
+                                              <span className="ms-2">{t('admin:teacherPayments.recalculateAndSave')}</span>
                                             </Button>
                                           </div>
                                         </div>
@@ -855,8 +855,8 @@ export default function TeacherPaymentsPage() {
                                       }}
                                       disabled={payment.status === 'approved' || approvePaymentMutation.isPending}
                                     >
-                                      <CheckCircle className="h-4 w-4 mr-2" />
-                                      {payment.status === 'approved' ? 'Already Approved' : 'Approve & Send SMS'}
+                                      <CheckCircle className="h-4 w-4" />
+                                      <span className="ms-2">{payment.status === 'approved' ? t('admin:teacherPayments.alreadyApproved') : t('admin:teacherPayments.approveAndSendSMS')}</span>
                                     </Button>
                                   </div>
                                 </DialogContent>
@@ -876,20 +876,20 @@ export default function TeacherPaymentsPage() {
         <TabsContent value="sessions">
           <Card>
             <CardHeader>
-              <CardTitle>Session-Based Payment Details</CardTitle>
+              <CardTitle>{t('admin:teacherPayments.sessionBasedPaymentDetails')}</CardTitle>
               <CardDescription>
-                Detailed breakdown of sessions and their payment impact
+                {t('admin:teacherPayments.detailedBreakdown')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-12 text-gray-500">
-                Session payment details with automatic calculation based on:
+                {t('admin:teacherPayments.sessionPaymentDetails')}
                 <ul className="mt-4 space-y-2 text-left max-w-md mx-auto">
-                  <li>• Session completion status</li>
-                  <li>• Session duration (actual vs planned)</li>
-                  <li>• Student attendance</li>
-                  <li>• Performance bonuses</li>
-                  <li>• Iranian labor compliance</li>
+                  <li>• {t('admin:teacherPayments.sessionCompletionStatus')}</li>
+                  <li>• {t('admin:teacherPayments.sessionDuration')}</li>
+                  <li>• {t('admin:teacherPayments.studentAttendance')}</li>
+                  <li>• {t('admin:teacherPayments.performanceBonuses')}</li>
+                  <li>• {t('admin:teacherPayments.iranianLaborCompliance')}</li>
                 </ul>
               </div>
             </CardContent>
@@ -903,9 +903,9 @@ export default function TeacherPaymentsPage() {
         <TabsContent value="history">
           <Card>
             <CardHeader>
-              <CardTitle>Payment History</CardTitle>
+              <CardTitle>{t('admin:teacherPayments.paymentHistory')}</CardTitle>
               <CardDescription>
-                Historical payment records for all teachers (Admin & Supervisor Access)
+                {t('admin:teacherPayments.historicalRecords')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -913,7 +913,7 @@ export default function TeacherPaymentsPage() {
                 <div className="flex gap-4 items-center">
                   <Select defaultValue="all" value={selectedTeacherForHistory} onValueChange={setSelectedTeacherForHistory}>
                     <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Select Teacher" />
+                      <SelectValue placeholder={t('admin:teacherPayments.selectTeacher')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">{t('common:allTeachers')}</SelectItem>
@@ -933,32 +933,32 @@ export default function TeacherPaymentsPage() {
                         .then(data => {
                           console.log('Payment history:', data);
                           toast({
-                            title: "Payment History",
-                            description: `Retrieved ${data.payments.length} payment records for ${teachers.find(t => t.id === teacherId)?.name || 'teacher'}`,
+                            title: t('admin:teacherPayments.paymentHistory'),
+                            description: `${t('admin:teacherPayments.retrievedRecords')} ${data.payments.length} ${teachers.find(t => t.id === teacherId)?.name || 'teacher'}`,
                           });
                         })
                         .catch(err => {
                           toast({
                             title: "Error",
-                            description: "Failed to fetch payment history",
+                            description: t('admin:teacherPayments.failedToFetchHistory'),
                             variant: "destructive"
                           });
                         });
                     }}
                   >
-                    Load History
+                    {t('admin:teacherPayments.loadHistory')}
                   </Button>
                 </div>
                 
                 <div className="border rounded-lg">
                   <div className="grid grid-cols-7 gap-4 p-4 border-b bg-gray-50 font-medium text-sm">
-                    <div>Period</div>
-                    <div>Sessions</div>
-                    <div>Hours</div>
-                    <div>Gross Amount</div>
-                    <div>Deductions</div>
-                    <div>Net Amount</div>
-                    <div>Status</div>
+                    <div>{t('admin:teacherPayments.period')}</div>
+                    <div>{t('admin:teacherPayments.sessions')}</div>
+                    <div>{t('admin:teacherPayments.hours')}</div>
+                    <div>{t('admin:teacherPayments.grossAmount')}</div>
+                    <div>{t('admin:teacherPayments.deductions')}</div>
+                    <div>{t('admin:teacherPayments.netAmount')}</div>
+                    <div>{t('admin:teacherPayments.status')}</div>
                   </div>
                   
                   {/* Sample payment history rows */}
@@ -990,9 +990,9 @@ export default function TeacherPaymentsPage() {
         <TabsContent value="reports">
           <Card>
             <CardHeader>
-              <CardTitle>Payment Reports</CardTitle>
+              <CardTitle>{t('admin:teacherPayments.paymentReports')}</CardTitle>
               <CardDescription>
-                Generate financial reports for Iranian tax compliance
+                {t('admin:teacherPayments.generateFinancialReports')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1003,16 +1003,16 @@ export default function TeacherPaymentsPage() {
                     onClick={() => downloadReportMutation.mutate()}
                     disabled={downloadReportMutation.isPending}
                   >
-                    <Download className="h-4 w-4 mr-2" />
-                    {downloadReportMutation.isPending ? 'Generating...' : 'Download Monthly Report'}
+                    <Download className="h-4 w-4" />
+                    <span className="ms-2">{downloadReportMutation.isPending ? t('admin:teacherPayments.generating') : t('admin:teacherPayments.downloadMonthlyReport')}</span>
                   </Button>
                   <Button 
                     variant="outline"
                     onClick={() => sendToAccountingMutation.mutate()}
                     disabled={sendToAccountingMutation.isPending}
                   >
-                    <Send className="h-4 w-4 mr-2" />
-                    {sendToAccountingMutation.isPending ? 'Sending...' : 'Send to Accounting'}
+                    <Send className="h-4 w-4" />
+                    <span className="ms-2">{sendToAccountingMutation.isPending ? t('admin:teacherPayments.sending') : t('admin:teacherPayments.sendToAccounting')}</span>
                   </Button>
                 </div>
               </div>
