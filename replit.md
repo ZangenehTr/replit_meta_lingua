@@ -34,7 +34,7 @@ Work sessions: User prefers to have work logged so they can resume from where we
 - **Student Management**: CRUD operations, course enrollment, progress tracking, cultural profiling.
 - **Payment & Wallet System**: IRR-based wallet, member tiers, Shetab payment gateway integration, transaction tracking.
 - **Course Management**: Creation, teacher assignment, session scheduling, progress monitoring. Includes video courses and Callern on-demand video tutoring service.
-- **Callern Service**: 24/7 on-demand video tutoring system where students purchase hour packages and connect instantly with available teachers for any language.
+- **Callern Service**: 24/7 on-demand video tutoring system where students purchase hour packages and connect instantly with available teachers for any language. Features WebRTC-based video calling with real-time peer-to-peer connections, screen sharing, and call recording capabilities.
 - **Gamification Features**: XP/level system, achievements, daily challenges, age-based games with localized content.
 - **VoIP Integration**: Isabel VoIP line for call recording and call center functionality. Supports Bluetooth headset integration.
 - **Teacher vs Mentor System**: Differentiated roles for direct instruction (Teachers) and progress monitoring/support (Mentors).
@@ -63,4 +63,5 @@ Work sessions: User prefers to have work logged so they can resume from where we
 - **AI Services**: OpenAI API (personalization, development), Ollama server (local AI processing, production).
 - **Testing**: Playwright (E2E), Vitest (unit).
 - **Fonts**: Self-hosted Arabic/Persian fonts.
-- **WebRTC**: Google STUN servers, OpenRelay free TURN servers, custom TURN server support.
+- **WebRTC**: Google STUN servers, OpenRelay free TURN servers, custom TURN server support. Integrated with Socket.io for signaling and Simple Peer for peer-to-peer connections.
+- **Real-time Communication**: Socket.io for WebSocket connections, Simple Peer for WebRTC, RecordRTC for call recording.

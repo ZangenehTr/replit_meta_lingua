@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/layout/app-layout";
+import { VideoCall } from "@/components/callern/VideoCall";
+import { useAuth } from "@/hooks/use-auth";
 import { 
   Video, 
   Clock, 
@@ -16,7 +18,9 @@ import {
   Star,
   CheckCircle,
   XCircle,
-  PlayCircle
+  PlayCircle,
+  Globe,
+  Zap
 } from "lucide-react";
 import {
   Table,
@@ -69,10 +73,27 @@ interface CallHistory {
   recordingUrl?: string;
 }
 
+interface AvailableTeacher {
+  id: number;
+  firstName: string;
+  lastName: string;
+  languages: string[];
+  specializations: string[];
+  rating: number;
+  hourlyRate: number;
+  isOnline: boolean;
+  profileImageUrl?: string;
+}
+
 export default function CallernSystem() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [selectedPackage, setSelectedPackage] = useState<CallernPackage | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const [isInCall, setIsInCall] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<AvailableTeacher | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
+  const [activeCallConfig, setActiveCallConfig] = useState<any>(null);
 
   // Fetch available Callern packages
   const { data: packages = [], isLoading: packagesLoading } = useQuery({
@@ -87,6 +108,49 @@ export default function CallernSystem() {
   // Fetch call history
   const { data: callHistory = [], isLoading: historyLoading } = useQuery({
     queryKey: ["/api/student/callern-history"],
+  });
+
+  // Fetch available teachers
+  const { data: availableTeachers = [], isLoading: teachersLoading } = useQuery({
+    queryKey: ["/api/student/callern-teachers", selectedLanguage],
+    queryFn: async () => {
+      // Mock data for now - replace with actual API call
+      return [
+        {
+          id: 1,
+          firstName: "Sarah",
+          lastName: "Johnson",
+          languages: ["English", "Spanish"],
+          specializations: ["Business", "Conversational"],
+          rating: 4.8,
+          hourlyRate: 25,
+          isOnline: true,
+          profileImageUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b547?w=100"
+        },
+        {
+          id: 2,
+          firstName: "Ahmed",
+          lastName: "Hassan",
+          languages: ["Arabic", "English"],
+          specializations: ["Academic", "Grammar"],
+          rating: 4.9,
+          hourlyRate: 30,
+          isOnline: true,
+          profileImageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100"
+        },
+        {
+          id: 3,
+          firstName: "Maria",
+          lastName: "Garcia",
+          languages: ["Spanish", "Portuguese", "English"],
+          specializations: ["Conversational", "Travel"],
+          rating: 4.7,
+          hourlyRate: 22,
+          isOnline: false,
+          profileImageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100"
+        }
+      ];
+    }
   });
 
   // Purchase package mutation
@@ -125,6 +189,49 @@ export default function CallernSystem() {
     }
   };
 
+  const handleStartCall = (teacher: AvailableTeacher) => {
+    // Check if student has active package with minutes
+    const activePackage = studentPackages.find(
+      (pkg: StudentCallernPackage) => pkg.status === 'active' && pkg.remainingMinutes > 0
+    );
+
+    if (!activePackage) {
+      toast({
+        title: "No Active Package",
+        description: "Please purchase a package to start video calls.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Generate room ID
+    const roomId = `callern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Set up call configuration
+    setActiveCallConfig({
+      roomId,
+      studentId: user?.id || 0,
+      teacherId: teacher.id,
+      packageId: activePackage.packageId,
+      language: selectedLanguage,
+      teacherName: `${teacher.firstName} ${teacher.lastName}`,
+      studentName: user?.firstName || 'Student',
+    });
+
+    setSelectedTeacher(teacher);
+    setIsInCall(true);
+  };
+
+  const handleEndCall = () => {
+    setIsInCall(false);
+    setSelectedTeacher(null);
+    setActiveCallConfig(null);
+    
+    // Refresh packages and history
+    queryClient.invalidateQueries({ queryKey: ["/api/student/my-callern-packages"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/student/callern-history"] });
+  };
+
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -138,6 +245,16 @@ export default function CallernSystem() {
       minimumFractionDigits: 0,
     }).format(price);
   };
+
+  // Show video call interface when in call
+  if (isInCall && activeCallConfig) {
+    return (
+      <VideoCall
+        {...activeCallConfig}
+        onCallEnd={handleEndCall}
+      />
+    );
+  }
 
   return (
     <AppLayout>
@@ -376,6 +493,122 @@ export default function CallernSystem() {
                   ))}
                 </TableBody>
               </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Available Teachers */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5" />
+                Available Teachers Now
+              </div>
+              <div className="flex items-center gap-2">
+                <label htmlFor="language-select" className="text-sm font-normal">
+                  Language:
+                </label>
+                <select
+                  id="language-select"
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                  className="px-3 py-1 border rounded-md text-sm"
+                >
+                  <option value="English">English</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="French">French</option>
+                  <option value="German">German</option>
+                  <option value="Arabic">Arabic</option>
+                  <option value="Persian">Persian</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Korean">Korean</option>
+                  <option value="Portuguese">Portuguese</option>
+                  <option value="Italian">Italian</option>
+                  <option value="Russian">Russian</option>
+                </select>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {teachersLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                <p>Finding available teachers...</p>
+              </div>
+            ) : availableTeachers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No teachers available for {selectedLanguage} at the moment. Please try again later.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {availableTeachers
+                  .filter((teacher: AvailableTeacher) => 
+                    teacher.languages.includes(selectedLanguage)
+                  )
+                  .map((teacher: AvailableTeacher) => (
+                  <div key={teacher.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                          {teacher.firstName[0]}{teacher.lastName[0]}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">
+                            {teacher.firstName} {teacher.lastName}
+                          </h4>
+                          <div className="flex items-center gap-1 text-sm">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            <span>{teacher.rating}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <Badge 
+                        variant={teacher.isOnline ? "default" : "secondary"}
+                        className="animate-pulse"
+                      >
+                        {teacher.isOnline ? "Online" : "Offline"}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Languages: </span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {teacher.languages.map(lang => (
+                            <Badge key={lang} variant="outline" className="text-xs">
+                              <Globe className="h-3 w-3 mr-1" />
+                              {lang}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Specializations: </span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {teacher.specializations.map(spec => (
+                            <Badge key={spec} variant="secondary" className="text-xs">
+                              {spec}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center pt-2">
+                        <span className="font-semibold">${teacher.hourlyRate}/hour</span>
+                        <Button
+                          size="sm"
+                          disabled={!teacher.isOnline}
+                          onClick={() => handleStartCall(teacher)}
+                        >
+                          <Video className="mr-1 h-4 w-4" />
+                          Start Call
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
