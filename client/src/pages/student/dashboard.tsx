@@ -221,6 +221,34 @@ function StudentDashboard() {
   return (
     <AppLayout>
       <div className="space-y-6">
+        {/* Welcome Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-xl p-6 md:p-8 text-white shadow-xl"
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left">
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                {t('student:welcome', 'Welcome')}, {user?.firstName || t('student:student', 'Student')}! 👋
+              </h1>
+              <p className="text-sm md:text-base opacity-90">
+                {t('student:welcomeMessage', 'Ready to continue your learning journey? Let\'s make today count!')}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center">
+                <p className="text-xs opacity-90">{t('student:currentStreak', 'Current Streak')}</p>
+                <p className="text-xl font-bold">🔥 {studentStats?.streak || 0} {t('common:days', 'days')}</p>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center">
+                <p className="text-xs opacity-90">{t('student:totalXP', 'Total XP')}</p>
+                <p className="text-xl font-bold">⭐ {studentStats?.totalXP || 0}</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Professional Header with Gamification */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

@@ -259,60 +259,86 @@ export default function CallernSystem() {
   return (
     <AppLayout>
       <div className="container mx-auto py-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Callern Video Call System</h1>
-            <p className="text-muted-foreground mt-2">
-              One-on-one video calls with professional language teachers
-            </p>
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl p-6 md:p-8 text-white shadow-xl">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                Welcome to Callern! 🎥
+              </h1>
+              <p className="text-sm md:text-base opacity-90">
+                Connect instantly with professional language teachers for personalized 1-on-1 video sessions
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+                <p className="text-xs opacity-90">Available Balance</p>
+                <p className="text-xl font-bold">
+                  {studentPackages.reduce((total: number, pkg: StudentCallernPackage) => 
+                    total + (pkg.status === 'active' ? pkg.remainingMinutes : 0), 0
+                  )} minutes
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
+        {/* Stats Cards with Beautiful Gradients */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Packages</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Active Packages</CardTitle>
+              <div className="bg-blue-500 p-2 rounded-lg">
+                <Package className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
                 {studentPackages.filter((pkg: StudentCallernPackage) => pkg.status === 'active').length}
               </div>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Packages available</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Available Minutes</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Available Minutes</CardTitle>
+              <div className="bg-green-500 p-2 rounded-lg">
+                <Clock className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-green-900 dark:text-green-100">
                 {studentPackages.reduce((total: number, pkg: StudentCallernPackage) => 
                   total + (pkg.status === 'active' ? pkg.remainingMinutes : 0), 0
                 )}
               </div>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">Minutes remaining</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Calls</CardTitle>
-              <Phone className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Total Calls</CardTitle>
+              <div className="bg-purple-500 p-2 rounded-lg">
+                <Phone className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{callHistory.length}</div>
+              <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{callHistory.length}</div>
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">Calls completed</p>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Month</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">This Month</CardTitle>
+              <div className="bg-orange-500 p-2 rounded-lg">
+                <Calendar className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-orange-900 dark:text-orange-100">
                 {callHistory.filter((call: CallHistory) => {
                   const callDate = new Date(call.startedAt);
                   const thisMonth = new Date();
@@ -320,6 +346,7 @@ export default function CallernSystem() {
                          callDate.getFullYear() === thisMonth.getFullYear();
                 }).length}
               </div>
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">Monthly calls</p>
             </CardContent>
           </Card>
         </div>
