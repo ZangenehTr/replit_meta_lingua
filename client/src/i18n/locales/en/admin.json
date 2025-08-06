@@ -1283,5 +1283,32 @@
     "fromLastWeek": "from last week",
     "qualifiedLeads": "Qualified Leads",
     "pendingFollowUp": "Pending Follow-up"
+  },
+  "supervision": {
+    "title": "Supervision System",
+    "subtitle": "Comprehensive quality assurance and teacher observation system",
+    "teachersSupervised": "Teachers Supervised",
+    "retentionTrend": "Retention Trend",
+    "score": "Score",
+    "liveObservations": "Live Observations",
+    "questionnaires": "Questionnaires",
+    "liveClassesMonitoring": "Live Classes Monitoring",
+    "teacherEvaluations": "Teacher Evaluations",
+    "automatedQuestionnaires": "Automated Questionnaires",
+    "createObservation": "Create Observation",
+    "recordedSessions": "Recorded Sessions",
+    "activeThisMonth": "Active this month",
+    "stable": "stable",
+    "currentlyInSession": "Currently in session",
+    "outOf": "Out of",
+    "actions": "Actions",
+    "status": "Status",
+    "startTime": "Start Time",
+    "type": "Type",
+    "teacher": "Teacher",
+    "classTitle": "Class Title",
+    "live": "Live",
+    "noLiveClasses": "No live classes currently in session",
+    "selfHostedReady": "Self-hosted ready"
   }
 }
