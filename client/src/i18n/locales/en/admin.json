@@ -1161,7 +1161,12 @@
   },
   "callernManagement": {
     "title": "Callern Management",
-    "subtitle": "Manage on-demand teacher availability and video calls"
+    "subtitle": "Manage on-demand teacher availability and video calls",
+    "accessDenied": "Access Denied",
+    "adminSupervisorOnly": "Only Admin and Supervisor can access Callern System",
+    "yourCurrentRole": "Your current role",
+    "pleaseLoginAgain": "Please login with an Admin or Supervisor account",
+    "switchAccount": "Switch Account"
   },
   "mentorMatching": {
     "title": "Mentor Matching",
