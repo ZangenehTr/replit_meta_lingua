@@ -42,6 +42,10 @@ import SMSSettingsPage from "@/pages/admin/sms-settings";
 import SMSTestPage from "@/pages/admin/sms-test";
 import CampaignManagementPage from "@/pages/admin/campaign-management";
 import WebsiteBuilderPage from "@/pages/admin/website-builder";
+import AdminLeadsPage from "@/pages/admin/leads";
+import AdminCampaignsPage from "@/pages/admin/campaigns";
+import AdminProspectsPage from "@/pages/admin/prospects";
+import AdminCallsPage from "@/pages/admin/calls";
 import WalletPage from "@/pages/wallet";
 import ReferralsPage from "@/pages/referrals";
 import Courses from "@/pages/courses";
@@ -200,6 +204,26 @@ function Router() {
       <Route path="/admin/iranian-compliance">
         <ProtectedRoute>
           <IranianComplianceSettings />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/leads">
+        <ProtectedRoute>
+          <AdminLeadsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/campaigns">
+        <ProtectedRoute>
+          <AdminCampaignsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/prospects">
+        <ProtectedRoute>
+          <AdminProspectsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/calls">
+        <ProtectedRoute>
+          <AdminCallsPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/settings">
