@@ -32,25 +32,30 @@ interface BottomNavItem {
 
 // Role-based navigation configurations
 const getRoleNavigation = (role: string, t: (key: string) => string): BottomNavItem[] => {
-  switch (role) {
-    case 'Admin':
-    case 'Supervisor':
+  // Normalize role to handle both lowercase and capitalized versions
+  const normalizedRole = role.toLowerCase();
+  
+  switch (normalizedRole) {
+    case 'admin':
+    case 'supervisor':
       return [
-        { route: "/admin", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
+        { route: "/dashboard", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
         { route: "/admin/students", icon: Users, label: t('common:navigation.students') },
         { route: "/admin/communications", icon: MessageSquare, label: t('common:navigation.chat') },
         { route: "/admin/system", icon: Settings, label: t('common:navigation.settings') }
       ];
       
-    case 'Teacher/Tutor':
+    case 'teacher/tutor':
+    case 'teacher':
+    case 'tutor':
       return [
-        { route: "/teacher", icon: Home, label: t('common:navigation.dashboard') },
+        { route: "/dashboard", icon: Home, label: t('common:navigation.dashboard') },
         { route: "/teacher/classes", icon: GraduationCap, label: t('common:navigation.classes') },
         { route: "/teacher/assignments", icon: ClipboardList, label: t('common:navigation.assignments') },
         { route: "/teacher/students", icon: Users, label: t('common:navigation.students') }
       ];
       
-    case 'Student':
+    case 'student':
       return [
         { route: "/dashboard", icon: Home, label: t('common:navigation.dashboard') },
         { route: "/courses", icon: BookOpen, label: t('common:navigation.courses') },
@@ -58,31 +63,34 @@ const getRoleNavigation = (role: string, t: (key: string) => string): BottomNavI
         { route: "/progress", icon: TrendingUp, label: t('common:navigation.progress') }
       ];
       
-    case 'Call Center Agent':
+    case 'call center agent':
+    case 'callcenter':
+    case 'call center':
       return [
-        { route: "/callcenter", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
+        { route: "/dashboard", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
         { route: "/callcenter/leads", icon: Target, label: t('common:navigation.leads') },
         { route: "/callcenter/voip", icon: Phone, label: t('common:navigation.calls') },
         { route: "/callcenter/performance", icon: BarChart3, label: t('common:navigation.performance') }
       ];
       
-    case 'Mentor':
+    case 'mentor':
       return [
-        { route: "/mentor", icon: Home, label: t('common:navigation.dashboard') },
+        { route: "/dashboard", icon: Home, label: t('common:navigation.dashboard') },
         { route: "/mentor/students", icon: Users, label: t('common:navigation.students') },
         { route: "/mentor/sessions", icon: Calendar, label: t('common:navigation.sessions') },
         { route: "/mentor/progress", icon: TrendingUp, label: t('common:navigation.progress') }
       ];
       
-    case 'Accountant':
+    case 'accountant':
       return [
-        { route: "/accountant", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
+        { route: "/dashboard", icon: LayoutDashboard, label: t('common:navigation.dashboard') },
         { route: "/accountant/payments", icon: DollarSign, label: t('common:navigation.payments') },
         { route: "/accountant/reports", icon: BarChart3, label: t('common:navigation.reports') },
         { route: "/accountant/compliance", icon: Shield, label: t('common:navigation.compliance') }
       ];
       
     default:
+      console.warn(`Unknown role in mobile nav: ${role}, falling back to student navigation`);
       return [
         { route: "/dashboard", icon: Home, label: t('common:navigation.dashboard') },
         { route: "/courses", icon: BookOpen, label: t('common:navigation.courses') },
