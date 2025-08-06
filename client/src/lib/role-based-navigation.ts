@@ -118,34 +118,41 @@ export const getMentorNavigation = (t: any): NavigationItem[] => [
 
 // Get navigation based on user role
 export const getNavigationForRole = (role: string, t: any): NavigationItem[] => {
-  switch (role) {
-    case "Student":
+  // Normalize role to handle both lowercase and capitalized versions
+  const normalizedRole = role.toLowerCase();
+  
+  switch (normalizedRole) {
+    case "student":
       return getStudentNavigation(t);
-    case "Teacher/Tutor":
+    case "teacher/tutor":
+    case "teacher":
+    case "tutor":
       return getTeacherNavigation(t);
-    case "Mentor":
+    case "mentor":
       return getMentorNavigation(t);
-    case "Admin":
+    case "admin":
       return [
         // Dashboard - Primary navigation item for Admin (unified dashboard)
         { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Admin"] },
         ...getInstituteManagementNavigation(t),
         ...getCallCenterNavigation(t)
       ];
-    case "Supervisor":
+    case "supervisor":
       return [
         // Dashboard - Primary navigation item for Supervisor (unified dashboard)
         { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Supervisor"] },
         ...getInstituteManagementNavigation(t),
         ...getCallCenterNavigation(t)
       ];
-    case "Call Center Agent":
+    case "call center agent":
+    case "callcenter":
+    case "call center":
       return [
         // Dashboard - Primary navigation item for Call Center Agent (unified dashboard)
         { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Call Center Agent"] },
         ...getCallCenterNavigation(t)
       ];
-    case "Accountant":
+    case "accountant":
       return [
         // Dashboard - Primary navigation item for Accountant (unified dashboard)
         { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Accountant"] },
@@ -154,6 +161,7 @@ export const getNavigationForRole = (role: string, t: any): NavigationItem[] => 
         )
       ];
     default:
+      console.warn(`Unknown role in navigation: ${role}, falling back to student navigation`);
       return getStudentNavigation(t);
   }
 };

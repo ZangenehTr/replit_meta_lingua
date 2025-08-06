@@ -7,6 +7,16 @@ Meta Lingua is an AI-enhanced multilingual language learning and institute manag
 Preferred communication style: Simple, everyday language.
 Work sessions: User prefers to have work logged so they can resume from where we left off.
 
+## Test Accounts
+All 7 roles have test accounts with the following credentials:
+- **Admin**: admin@test.com / admin123
+- **Teacher**: teacher@test.com / teacher123  
+- **Student**: student@test.com / student123
+- **Mentor**: mentor@test.com / mentor123
+- **Supervisor**: supervisor@test.com / supervisor123
+- **Call Center**: callcenter@test.com / callcenter123
+- **Accountant**: accountant@test.com / accountant123
+
 ## System Architecture
 
 ### Frontend Architecture
