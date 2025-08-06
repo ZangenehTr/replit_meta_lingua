@@ -279,9 +279,9 @@ export default function MentorMatchingPage() {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" className="border-teal-200 hover:bg-teal-50">
-              <Filter className="h-4 w-4 mr-2" />
-{t('admin:mentorMatching.moreFilters')}
+            <Button variant="outline" className="border-teal-200 hover:bg-teal-50 flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              {t('admin:mentorMatching.moreFilters')}
             </Button>
           </div>
         </CardContent>
@@ -312,7 +312,7 @@ export default function MentorMatchingPage() {
                 <CardContent className="p-4">
                   <div className="mb-3 pb-3 border-b">
                     <p className="text-xs text-gray-500 mb-1">{t('admin:mentorMatching.teacher')}</p>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="text-xs">
                           {bundle.teacher.firstName[0]}{bundle.teacher.lastName[0]}
@@ -329,7 +329,7 @@ export default function MentorMatchingPage() {
                   
                   <div>
                     <p className="text-xs text-gray-500 mb-1">{t('admin:mentorMatching.student')}</p>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-3">
                       <Avatar>
                         <AvatarFallback>
                           {bundle.student.firstName[0]}{bundle.student.lastName[0]}
@@ -357,8 +357,8 @@ export default function MentorMatchingPage() {
                         }}
                         className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700"
                       >
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        Match
+                        <UserPlus className="h-4 w-4" />
+                        <span>Match</span>
                       </Button>
                     </div>
                   </div>

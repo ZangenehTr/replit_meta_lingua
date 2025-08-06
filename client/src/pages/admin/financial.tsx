@@ -180,15 +180,15 @@ export function AdminFinancial() {
           <p className="text-muted-foreground mt-2">{t('admin:financial.overview')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="border-green-200 hover:bg-green-50">
-            <Download className="h-4 w-4 mr-2" />
+          <Button variant="outline" className="border-green-200 hover:bg-green-50 flex items-center gap-2">
+            <Download className="h-4 w-4" />
             <span className="hidden sm:inline">{t('admin:financial.exportData')}</span>
             <span className="sm:hidden">{t('admin:financial.export')}</span>
           </Button>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
-                <Plus className="h-4 w-4 mr-2" />
+              <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 flex items-center gap-2">
+                <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">{t('admin:financial.manualTransaction')}</span>
                 <span className="sm:hidden">{t('admin:financial.add')}</span>
               </Button>
@@ -259,8 +259,8 @@ export function AdminFinancial() {
       {/* Filter Controls */}
       <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
         <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-full sm:w-48 border-green-200">
-            <Calendar className="h-4 w-4 mr-2" />
+          <SelectTrigger className="w-full sm:w-48 border-green-200 flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -271,8 +271,8 @@ export function AdminFinancial() {
           </SelectContent>
         </Select>
         <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-full sm:w-48 border-green-200">
-            <Filter className="h-4 w-4 mr-2" />
+          <SelectTrigger className="w-full sm:w-48 border-green-200 flex items-center gap-2">
+            <Filter className="h-4 w-4" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -299,8 +299,8 @@ export function AdminFinancial() {
                 <div className="flex items-center gap-2 mt-1">
                   <span className={`text-xs flex items-center ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
                     {stat.trend === 'up' ? 
-                      <TrendingUp className="h-3 w-3 mr-1" /> : 
-                      <TrendingDown className="h-3 w-3 mr-1" />
+                      <TrendingUp className="h-3 w-3" /> : 
+                      <TrendingDown className="h-3 w-3" />
                     }
                     {stat.change}
                   </span>

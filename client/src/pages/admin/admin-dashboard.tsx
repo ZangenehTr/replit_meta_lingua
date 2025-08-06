@@ -597,22 +597,22 @@ export function AdminDashboard() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-sm">{t('dashboard.courseMaterialQuality', { ns: 'common' })}</span>
-                  <div className="flex">
+                  <div className="flex items-center gap-1">
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     ))}
-                    <span className="ml-1 text-xs">
+                    <span className="text-xs">
                       {isPersian ? formatPersianNumber("4.7") : "4.7"}
                     </span>
                   </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm">{t('dashboard.teachingQuality', { ns: 'common' })}</span>
-                  <div className="flex">
+                  <div className="flex items-center gap-1">
                     {[1,2,3,4,5].map(star => (
                       <Star key={star} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     ))}
-                    <span className="ml-1 text-xs">
+                    <span className="text-xs">
                       {isPersian ? formatPersianNumber("4.5") : "4.5"}
                     </span>
                   </div>
@@ -634,9 +634,9 @@ export function AdminDashboard() {
       {/* Overdue Payments Detail */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <AlertCircle className="h-5 w-5 mr-2 text-red-600" />
-{t('dashboard.criticalOverduePayments', { ns: 'common' })}
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-red-600" />
+            {t('dashboard.criticalOverduePayments', { ns: 'common' })}
           </CardTitle>
         </CardHeader>
         <CardContent>

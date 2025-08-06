@@ -328,9 +328,9 @@ export function CallernManagement() {
                     </div>
                     
                     {teacher.hourlyRate && (
-                      <div className="text-sm">
+                      <div className="text-sm flex items-center gap-1">
                         <span className="text-gray-500">{t('admin:callernManagement.hourlyRate')}:</span>
-                        <span className="font-medium ml-1">{teacher.hourlyRate} IRR</span>
+                        <span className="font-medium">{teacher.hourlyRate} IRR</span>
                       </div>
                     )}
                     
@@ -357,8 +357,8 @@ export function CallernManagement() {
                         setIsConfigDialogOpen(true);
                       }}
                     >
-                      <Settings className="h-3 w-3 mr-1" />
-                      {t('admin:callernManagement.configure')}
+                      <Settings className="h-3 w-3" />
+                      <span>{t('admin:callernManagement.configure')}</span>
                     </Button>
                   </CardContent>
                 </Card>
@@ -425,7 +425,7 @@ export function CallernManagement() {
                     <div className="space-y-2">
                       <Label>{t('admin:callernManagement.availableHours')}</Label>
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <input 
                             type="checkbox" 
                             id="morning"
@@ -434,7 +434,7 @@ export function CallernManagement() {
                           />
                           <Label htmlFor="morning" className="text-sm">{t('admin:callernManagement.morning')} (08:00-12:00)</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <input 
                             type="checkbox" 
                             id="afternoon"
@@ -443,7 +443,7 @@ export function CallernManagement() {
                           />
                           <Label htmlFor="afternoon" className="text-sm">{t('admin:callernManagement.afternoon')} (12:00-18:00)</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <input 
                             type="checkbox" 
                             id="evening"
@@ -452,7 +452,7 @@ export function CallernManagement() {
                           />
                           <Label htmlFor="evening" className="text-sm">{t('admin:callernManagement.evening')} (18:00-24:00)</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <input 
                             type="checkbox" 
                             id="overnight"
@@ -546,8 +546,8 @@ export function CallernManagement() {
                         <Badge variant="outline" className="text-xs">Sara H.</Badge>
                       </div>
                       <Button variant="ghost" size="sm" className="w-full mt-2 text-xs">
-                        <Plus className="h-3 w-3 mr-1" />
-                        Assign
+                        <Plus className="h-3 w-3" />
+                        <span>Assign</span>
                       </Button>
                     </Card>
                   ))}
@@ -582,7 +582,7 @@ export function CallernManagement() {
               <div className="space-y-2">
                 <Label>Available Hours</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <input 
                       type="checkbox" 
                       id="config-morning"
@@ -590,7 +590,7 @@ export function CallernManagement() {
                     />
                     <Label htmlFor="config-morning" className="text-sm">Morning (08:00-12:00)</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <input 
                       type="checkbox" 
                       id="config-afternoon"
@@ -598,7 +598,7 @@ export function CallernManagement() {
                     />
                     <Label htmlFor="config-afternoon" className="text-sm">Afternoon (12:00-18:00)</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <input 
                       type="checkbox" 
                       id="config-evening"
@@ -606,7 +606,7 @@ export function CallernManagement() {
                     />
                     <Label htmlFor="config-evening" className="text-sm">Evening (18:00-24:00)</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <input 
                       type="checkbox" 
                       id="config-overnight"

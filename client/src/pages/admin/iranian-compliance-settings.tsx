@@ -172,9 +172,9 @@ export function IranianComplianceSettings() {
           <h1 className="text-2xl font-bold">{t('admin:iranianCompliance.title')}</h1>
           <p className="text-muted-foreground mt-1">{t('admin:iranianCompliance.subtitle')}</p>
         </div>
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-          <CheckCircle2 className="h-3 w-3 mr-1" />
-{t('admin:iranianCompliance.selfHostedReady')}
+        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
+          <CheckCircle2 className="h-3 w-3" />
+          {t('admin:iranianCompliance.selfHostedReady')}
         </Badge>
       </div>
 
@@ -186,7 +186,7 @@ export function IranianComplianceSettings() {
       </Alert>
 
       {/* Navigation Tabs */}
-      <div className="flex space-x-1 bg-muted p-1 rounded-lg">
+      <div className="flex gap-1 bg-muted p-1 rounded-lg">
         {[
           { key: "voip", label: t('admin:iranianCompliance.voipTab'), icon: Phone },
           { key: "shetab", label: t('admin:iranianCompliance.shetabTab'), icon: CreditCard },
@@ -253,7 +253,7 @@ export function IranianComplianceSettings() {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Switch
                 id="voip-enabled"
                 defaultChecked={settings?.voipEnabled || false}
@@ -261,7 +261,7 @@ export function IranianComplianceSettings() {
               <Label htmlFor="voip-enabled">{t('admin:iranianCompliance.enableVoipIntegration')}</Label>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Switch
                 id="call-recording"
                 defaultChecked={settings?.callRecordingEnabled || false}
@@ -304,8 +304,8 @@ export function IranianComplianceSettings() {
                   variant="outline"
                   className="min-w-[140px]"
                 >
-                  <Phone className="h-4 w-4 mr-2" />
-                  {t('admin:iranianCompliance.testCall')}
+                  <Phone className="h-4 w-4" />
+                  <span>{t('admin:iranianCompliance.testCall')}</span>
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -320,16 +320,16 @@ export function IranianComplianceSettings() {
                 variant="outline"
                 className="bg-blue-50 border-blue-200 hover:bg-blue-100"
               >
-                <TestTube className="h-4 w-4 mr-2" />
-                {diagnosticVoipConnection.isPending ? t('admin:iranianCompliance.diagnosing') : t('admin:iranianCompliance.fullDiagnostic')}
+                <TestTube className="h-4 w-4" />
+                <span>{diagnosticVoipConnection.isPending ? t('admin:iranianCompliance.diagnosing') : t('admin:iranianCompliance.fullDiagnostic')}</span>
               </Button>
               <Button 
                 onClick={() => testVoipConnection.mutate()}
                 disabled={testVoipConnection.isPending}
                 variant="outline"
               >
-                <TestTube className="h-4 w-4 mr-2" />
-                {t('admin:iranianCompliance.testConnection')}
+                <TestTube className="h-4 w-4" />
+                <span>{t('admin:iranianCompliance.testConnection')}</span>
               </Button>
               <Button 
                 onClick={() => handleSave("voip", {
@@ -343,8 +343,8 @@ export function IranianComplianceSettings() {
                 })}
                 disabled={updateSettings.isPending}
               >
-                <Save className="h-4 w-4 mr-2" />
-                {t('admin:iranianCompliance.saveVoipSettings')}
+                <Save className="h-4 w-4" />
+                <span>{t('admin:iranianCompliance.saveVoipSettings')}</span>
               </Button>
             </div>
           </CardContent>
@@ -412,7 +412,7 @@ export function IranianComplianceSettings() {
               </Select>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Switch
                 id="shetab-enabled"
                 defaultChecked={settings?.shetabEnabled || false}
@@ -446,8 +446,8 @@ export function IranianComplianceSettings() {
                 disabled={testShetabConnection.isPending}
                 variant="outline"
               >
-                <TestTube className="h-4 w-4 mr-2" />
-                {t('admin:iranianCompliance.testConnection')}
+                <TestTube className="h-4 w-4" />
+                <span>{t('admin:iranianCompliance.testConnection')}</span>
               </Button>
               <Button 
                 onClick={() => handleSave("shetab", {
@@ -461,8 +461,8 @@ export function IranianComplianceSettings() {
                 })}
                 disabled={updateSettings.isPending}
               >
-                <Save className="h-4 w-4 mr-2" />
-                {t('admin:iranianCompliance.saveShetabSettings')}
+                <Save className="h-4 w-4" />
+                <span>{t('admin:iranianCompliance.saveShetabSettings')}</span>
               </Button>
             </div>
           </CardContent>
@@ -499,8 +499,8 @@ export function IranianComplianceSettings() {
                     variant="outline"
                     size="sm"
                   >
-                    <Settings className="h-4 w-4 mr-2" />
-                    {t('admin:iranianCompliance.manageSmsSettings')}
+                    <Settings className="h-4 w-4" />
+                    <span>{t('admin:iranianCompliance.manageSmsSettings')}</span>
                   </Button>
                 </div>
               </div>
@@ -572,7 +572,7 @@ export function IranianComplianceSettings() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Switch
                   id="kavenegar-enabled"
                   defaultChecked={settings?.kavenegarEnabled || false}
@@ -586,8 +586,8 @@ export function IranianComplianceSettings() {
                   disabled={testSmsConnection.isPending}
                   variant="outline"
                 >
-                  <TestTube className="h-4 w-4 mr-2" />
-{t('admin:iranianCompliance.testSmsConnection')}
+                  <TestTube className="h-4 w-4" />
+                  <span>{t('admin:iranianCompliance.testSmsConnection')}</span>
                 </Button>
                 <Button 
                   onClick={() => handleSave("sms", {
@@ -597,8 +597,8 @@ export function IranianComplianceSettings() {
                   })}
                   disabled={updateSettings.isPending}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-{t('admin:iranianCompliance.saveSmsSettings')}
+                  <Save className="h-4 w-4" />
+                  <span>{t('admin:iranianCompliance.saveSmsSettings')}</span>
                 </Button>
               </div>
             </div>
@@ -684,7 +684,7 @@ export function IranianComplianceSettings() {
               </Select>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Switch
                 id="persian-calendar"
                 defaultChecked={settings?.persianCalendarEnabled || false}
@@ -692,7 +692,7 @@ export function IranianComplianceSettings() {
               <Label htmlFor="persian-calendar">{t('admin:iranianCompliance.enablePersianCalendar')}</Label>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Switch
                 id="rtl-layout"
                 defaultChecked={settings?.rtlLayoutEnabled || false}
@@ -736,8 +736,8 @@ export function IranianComplianceSettings() {
               })}
               disabled={updateSettings.isPending}
             >
-              <Save className="h-4 w-4 mr-2" />
-{t('admin:iranianCompliance.saveGeneralSettings')}
+              <Save className="h-4 w-4" />
+              <span>{t('admin:iranianCompliance.saveGeneralSettings')}</span>
             </Button>
           </CardContent>
         </Card>

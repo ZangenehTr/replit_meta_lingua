@@ -205,7 +205,7 @@ export default function AdminSettings() {
         <div className="flex items-center gap-4 mb-6">
           <BackButton href="/dashboard" />
         </div>
-        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
+        <div className="flex items-center gap-4">
           <Settings className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-3xl font-bold">{t('admin:settings.title')}</h1>
@@ -356,8 +356,8 @@ export default function AdminSettings() {
                   disabled={testShetabMutation.isPending}
                   variant="outline"
                 >
-                  <TestTube className="h-4 w-4 mr-2" />
-                  {testShetabMutation.isPending ? "Testing..." : "Test Connection"}
+                  <TestTube className="h-4 w-4" />
+                  <span>{testShetabMutation.isPending ? "Testing..." : "Test Connection"}</span>
                 </Button>
                 <Badge variant={settings?.shetabEnabled ? "default" : "secondary"}>
                   {settings?.shetabEnabled ? "Enabled" : "Disabled"}
@@ -434,8 +434,8 @@ export default function AdminSettings() {
                   disabled={testKavehnegarMutation.isPending}
                   variant="outline"
                 >
-                  <TestTube className="h-4 w-4 mr-2" />
-                  {testKavehnegarMutation.isPending ? "Testing..." : "Test SMS Service"}
+                  <TestTube className="h-4 w-4" />
+                  <span>{testKavehnegarMutation.isPending ? "Testing..." : "Test SMS Service"}</span>
                 </Button>
               </CardContent>
             </Card>
@@ -536,8 +536,8 @@ export default function AdminSettings() {
                   disabled={testEmailMutation.isPending}
                   variant="outline"
                 >
-                  <TestTube className="h-4 w-4 mr-2" />
-                  {testEmailMutation.isPending ? "Testing..." : "Test Email Service"}
+                  <TestTube className="h-4 w-4" />
+                  <span>{testEmailMutation.isPending ? "Testing..." : "Test Email Service"}</span>
                 </Button>
               </CardContent>
             </Card>
