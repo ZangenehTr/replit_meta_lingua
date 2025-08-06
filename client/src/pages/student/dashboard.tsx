@@ -40,6 +40,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 interface StudentStats {
   totalLessons: number;

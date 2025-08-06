@@ -60,26 +60,32 @@ export default function UnifiedDashboard() {
   }
 
   // Render role-specific dashboard content within unified layout
-  switch (user.role) {
-    case 'Admin':
+  // Handle both lowercase and capitalized role names
+  const normalizedRole = user.role.toLowerCase();
+  
+  switch (normalizedRole) {
+    case 'admin':
       return <AdminDashboard />;
 
-    case 'Supervisor':
+    case 'supervisor':
       return <SupervisorDashboard />;
 
-    case 'Teacher/Tutor':
+    case 'teacher/tutor':
+    case 'teacher':
+    case 'tutor':
       return <TeacherDashboard />;
 
-    case 'Call Center Agent':
+    case 'call center agent':
+    case 'callcenter':
       return <CallCenterDashboard />;
 
-    case 'Mentor':
+    case 'mentor':
       return <MentorDashboard />;
 
-    case 'Student':
+    case 'student':
       return <StudentDashboard />;
 
-    case 'Accountant':
+    case 'accountant':
       return <AccountantDashboard />;
 
     default:
