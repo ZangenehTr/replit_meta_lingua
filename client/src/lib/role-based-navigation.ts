@@ -101,12 +101,18 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => [
 ];
 
 // Lead Management & Call Center CRM
-export const getCallCenterNavigation = (t: any): NavigationItem[] => [
-  { path: "/callcenter/leads", icon: "UserPlus", label: t('common:navigation.leadManagement'), roles: ["Call Center Agent", "Admin", "Supervisor"] },
-  { path: "/callcenter/calls", icon: "Phone", label: t('common:navigation.callLogs'), roles: ["Call Center Agent", "Admin"] },
-  { path: "/callcenter/prospects", icon: "Target", label: t('common:navigation.prospects'), roles: ["Call Center Agent", "Admin"] },
-  { path: "/callcenter/campaigns", icon: "Megaphone", label: t('common:navigation.campaigns'), roles: ["Call Center Agent", "Admin"] },
-];
+export const getCallCenterNavigation = (t: any, userRole?: string): NavigationItem[] => {
+  // For admin and supervisor, use admin routes. For call center agents, use callcenter routes
+  const isAdmin = userRole && ['admin', 'supervisor'].includes(userRole.toLowerCase());
+  const basePath = isAdmin ? '/admin' : '/callcenter';
+  
+  return [
+    { path: `${basePath}/leads`, icon: "UserPlus", label: t('common:navigation.leadManagement'), roles: ["Call Center Agent", "Admin", "Supervisor"] },
+    { path: `${basePath}/calls`, icon: "Phone", label: t('common:navigation.callLogs'), roles: ["Call Center Agent", "Admin"] },
+    { path: `${basePath}/prospects`, icon: "Target", label: t('common:navigation.prospects'), roles: ["Call Center Agent", "Admin"] },
+    { path: `${basePath}/campaigns`, icon: "Megaphone", label: t('common:navigation.campaigns'), roles: ["Call Center Agent", "Admin"] },
+  ];
+};
 
 // Mentor-specific navigation
 export const getMentorNavigation = (t: any): NavigationItem[] => [
@@ -135,14 +141,14 @@ export const getNavigationForRole = (role: string, t: any): NavigationItem[] => 
         // Dashboard - Primary navigation item for Admin (unified dashboard)
         { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Admin"] },
         ...getInstituteManagementNavigation(t),
-        ...getCallCenterNavigation(t)
+        ...getCallCenterNavigation(t, "admin")
       ];
     case "supervisor":
       return [
         // Dashboard - Primary navigation item for Supervisor (unified dashboard)
         { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Supervisor"] },
         ...getInstituteManagementNavigation(t),
-        ...getCallCenterNavigation(t)
+        ...getCallCenterNavigation(t, "supervisor")
       ];
     case "call center agent":
     case "callcenter":
@@ -150,7 +156,7 @@ export const getNavigationForRole = (role: string, t: any): NavigationItem[] => 
       return [
         // Dashboard - Primary navigation item for Call Center Agent (unified dashboard)
         { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Call Center Agent"] },
-        ...getCallCenterNavigation(t)
+        ...getCallCenterNavigation(t, "callcenter")
       ];
     case "accountant":
       return [
