@@ -80,8 +80,12 @@ export function useAuth() {
       return data;
     },
     onSuccess: async (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
+      // Immediately invalidate and refetch the user data
+      await queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
       await queryClient.refetchQueries({ queryKey: ["/api/users/me"] });
+      
+      // Force a hard refresh to ensure the app is in the correct state
+      window.location.href = "/dashboard";
     },
   });
 
