@@ -1,7 +1,7 @@
 # Meta Lingua Platform
 
 ## Overview
-Meta Lingua is an AI-enhanced multilingual language learning and institute management platform. It's built for Persian language instruction, designed to be self-hostable, and independent of services blocked in Iran. The platform provides a comprehensive admin system, student management, course enrollment, VoIP integration, and a wallet-based payment system. Its vision is to offer a robust, self-contained solution for language institutes, particularly in regions with internet restrictions, enabling effective Persian language education and efficient institute operations.
+Meta Lingua is an AI-enhanced multilingual language learning and institute management platform. It's designed for teaching ALL languages (English, Persian, Arabic, Spanish, French, German, Chinese, etc.), built to be self-hostable, and independent of services blocked in certain regions. The platform provides a comprehensive admin system, student management, course enrollment, VoIP integration, and a wallet-based payment system. Its vision is to offer a robust, self-contained solution for language institutes globally, enabling effective language education in any language and efficient institute operations.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -15,7 +15,7 @@ Work sessions: User prefers to have work logged so they can resume from where we
 - **State Management**: TanStack React Query for server state
 - **Routing**: Wouter for client-side navigation
 - **Build Tool**: Vite
-- **Language Support**: Multi-language support (English, Persian, Arabic) with RTL layout handling. Implements comprehensive i18n with Persian number formatting.
+- **Language Support**: Multi-language support for ALL languages (English, Persian, Arabic, Spanish, French, German, Chinese, Japanese, Korean, etc.) with RTL/LTR layout handling. Implements comprehensive i18n with localized number formatting.
 - **UI/UX Decisions**: Modern gradient backgrounds, professional layouts, responsive design using a mobile-first approach, touch-optimized components, and role-based UI patterns. Features resizable panels and a comprehensive mobile design system with bottom navigation.
 
 ### Backend Architecture
@@ -33,7 +33,8 @@ Work sessions: User prefers to have work logged so they can resume from where we
 - **Authentication System**: JWT-based with role-based authorization.
 - **Student Management**: CRUD operations, course enrollment, progress tracking, cultural profiling.
 - **Payment & Wallet System**: IRR-based wallet, member tiers, Shetab payment gateway integration, transaction tracking.
-- **Course Management**: Creation, teacher assignment, session scheduling, progress monitoring. Includes video courses and Callern time-free video call integration.
+- **Course Management**: Creation, teacher assignment, session scheduling, progress monitoring. Includes video courses and Callern on-demand video tutoring service.
+- **Callern Service**: 24/7 on-demand video tutoring system where students purchase hour packages and connect instantly with available teachers for any language.
 - **Gamification Features**: XP/level system, achievements, daily challenges, age-based games with localized content.
 - **VoIP Integration**: Isabel VoIP line for call recording and call center functionality. Supports Bluetooth headset integration.
 - **Teacher vs Mentor System**: Differentiated roles for direct instruction (Teachers) and progress monitoring/support (Mentors).
@@ -42,7 +43,7 @@ Work sessions: User prefers to have work logged so they can resume from where we
 - **Unified Class Scheduling Interface**: Multi-view calendar, drag-and-drop scheduling, real-time availability.
 - **Session Packages**: For private students to purchase bundles of sessions.
 - **Communication System**: Support ticket management, internal chat, push notifications (email, SMS).
-- **Ollama AI Services**: Local AI processing for Persian language support, model management, and data sovereignty.
+- **Ollama AI Services**: Local AI processing for multilingual language support (all languages), model management, and data sovereignty.
 - **Check-First Protocol**: Mandatory validation for data integrity and conflict prevention.
 - **Business Logic Consolidation**: Centralized utilities for filtering, calculations, and data integrity.
 - **Complete i18n Implementation**: Comprehensive Persian/Arabic/English translation system with RTL support across all admin dialogs and forms. Student management and course creation dialogs fully translated with proper RTL layout handling.
