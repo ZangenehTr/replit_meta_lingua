@@ -30,6 +30,25 @@
 - All 7 roles now have role-proper dashboard content (COMPLETED)
 
 ### Latest Progress (2025-08-06)
+
+#### Completed i18n Implementation:
+- **teacher-payments.tsx**: FULLY COMPLETED
+  - Added 100+ translation keys in both English and Persian
+  - Fixed all RTL layout issues (mr-/ml- to me-/ms-)
+  - Translated all sections: payment overview, sessions, history, reports
+  - Added comprehensive Persian translations for all payment-related functionality
+
+#### Missing Translation Keys Identified:
+- admin:commission
+- admin:platformCommissionRates  
+- admin:newTeachers
+- admin:experiencedTeachers
+- admin:premiumTeachers
+- admin:updateCommissionRates
+- common:form.question
+- common:actions.close
+
+### Latest Progress (2025-08-06)
 - Fixed RTL issues in AIManagementPage.tsx - replaced mr-2 with me-2
 - Fixed RTL issues in admin-dashboard.tsx - replaced ml-1 and mr-2 with RTL-compatible classes
 - Fixed RTL issues in callern-management.tsx - replaced all space-x and mr/ml classes with gap
