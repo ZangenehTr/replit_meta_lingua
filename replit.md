@@ -63,5 +63,6 @@ Work sessions: User prefers to have work logged so they can resume from where we
 - **AI Services**: OpenAI API (personalization, development), Ollama server (local AI processing, production).
 - **Testing**: Playwright (E2E), Vitest (unit).
 - **Fonts**: Self-hosted Arabic/Persian fonts.
-- **WebRTC**: Google STUN servers, OpenRelay free TURN servers, custom TURN server support. Integrated with Socket.io for signaling and Simple Peer for peer-to-peer connections.
+- **WebRTC**: Self-hosted TURN/STUN server support only (no external dependencies). Works on local networks or with configured TURN servers. Integrated with Socket.io for signaling and Simple Peer for peer-to-peer connections.
 - **Real-time Communication**: Socket.io for WebSocket connections, Simple Peer for WebRTC, RecordRTC for call recording.
+- **Self-Hosting**: Complete independence from external services outside Iran. All features work within local network or with self-hosted infrastructure.
