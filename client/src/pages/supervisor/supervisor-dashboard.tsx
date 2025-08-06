@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import { useAuth } from '@/hooks/use-auth';
 import { 
   Users, 
   GraduationCap, 
@@ -78,6 +80,7 @@ const targetSchema = z.object({
 
 export default function SupervisorDashboard() {
   const { t } = useTranslation(['supervisor', 'common']);
+  const { user } = useAuth();
   const [observationDialogOpen, setObservationDialogOpen] = useState(false);
   const [targetDialogOpen, setTargetDialogOpen] = useState(false);
   const [teachersAttentionDialogOpen, setTeachersAttentionDialogOpen] = useState(false);
@@ -397,6 +400,34 @@ export default function SupervisorDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Welcome Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 rounded-xl p-6 md:p-8 text-white shadow-xl"
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left">
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                {t('supervisor:welcome', 'Welcome')}, {user?.firstName || t('supervisor:supervisor', 'Supervisor')}! 🔍
+              </h1>
+              <p className="text-sm md:text-base opacity-90">
+                {t('supervisor:welcomeMessage', 'Monitor excellence, guide success, and ensure quality education!')}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center">
+                <p className="text-xs opacity-90">{t('supervisor:totalTeachers', 'Total Teachers')}</p>
+                <p className="text-xl font-bold">👩‍🏫 {stats?.totalTeachers || 0}</p>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center">
+                <p className="text-xs opacity-90">{t('supervisor:qualityScore', 'Quality Score')}</p>
+                <p className="text-xl font-bold">📊 {stats?.qualityScore || 95}%</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

@@ -40,6 +40,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 interface MentorStats {
   totalMentees: number;
@@ -244,15 +245,33 @@ function MentorDashboard() {
   return (
     <AppLayout>
       <div className={`p-6 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">{t('dashboard.title', { ns: 'common' })}</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {t('dashboard.welcome', { ns: 'common' })}
-            </p>
+        {/* Welcome Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 rounded-xl p-6 md:p-8 text-white shadow-xl"
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left">
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                {t('mentor:welcome', 'Welcome')}, {user?.firstName || t('mentor:mentor', 'Mentor')}! 🌟
+              </h1>
+              <p className="text-sm md:text-base opacity-90">
+                {t('mentor:welcomeMessage', 'Guide, inspire, and support your mentees on their learning journey!')}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center">
+                <p className="text-xs opacity-90">{t('mentor:activeMentees', 'Active Mentees')}</p>
+                <p className="text-xl font-bold">👥 {mentorStats?.activeMentees || 0}</p>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center">
+                <p className="text-xs opacity-90">{t('mentor:rating', 'Rating')}</p>
+                <p className="text-xl font-bold">⭐ {mentorStats?.averageRating || 5.0}</p>
+              </div>
+            </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

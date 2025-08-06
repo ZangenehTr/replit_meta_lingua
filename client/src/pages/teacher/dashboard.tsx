@@ -10,6 +10,8 @@ import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
+import { motion } from 'framer-motion';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -17,6 +19,7 @@ export default function TeacherDashboard() {
   const { toast } = useToast();
   const { t } = useTranslation(['teacher', 'common']);
   const { isRTL } = useLanguage();
+  const { user } = useAuth();
 
   // Fetch teacher dashboard stats
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -118,27 +121,35 @@ export default function TeacherDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Header Section */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('teacher:dashboard.title')}</h1>
-              <p className="text-gray-600">{t('teacher:dashboard.welcomeMessage')}</p>
+      {/* Welcome Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 shadow-xl"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-center md:text-left text-white">
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                {t('teacher:welcome', 'Welcome')}, {user?.firstName || t('teacher:teacher', 'Teacher')}! 🎓
+              </h1>
+              <p className="text-sm md:text-base opacity-90">
+                {t('teacher:welcomeMessage', 'Your classroom awaits. Let\'s inspire and educate today!')}
+              </p>
             </div>
-            <div className="mt-4 lg:mt-0 flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Star className="w-5 h-5 text-yellow-500" />
-                <span className="font-semibold text-gray-900">{(stats as any)?.overview?.rating || 4.8}</span>
-                <span className="text-gray-600">({(stats as any)?.overview?.totalReviews || 156} reviews)</span>
+            <div className="flex gap-3">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center text-white">
+                <p className="text-xs opacity-90">{t('teacher:totalClasses', 'Total Classes')}</p>
+                <p className="text-xl font-bold">📚 {(stats as any)?.overview?.totalClasses || 0}</p>
               </div>
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                {t('teacher:activeTeacher')}
-              </Badge>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center text-white">
+                <p className="text-xs opacity-90">{t('teacher:rating', 'Rating')}</p>
+                <p className="text-xl font-bold">⭐ {(stats as any)?.overview?.rating || 4.8}</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Overview Cards */}
