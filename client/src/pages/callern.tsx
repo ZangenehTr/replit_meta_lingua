@@ -125,7 +125,7 @@ export default function CallernSystem() {
           rating: 4.8,
           hourlyRate: 25,
           isOnline: true,
-          profileImageUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b547?w=100"
+          profileImageUrl: ""
         },
         {
           id: 2,
@@ -136,7 +136,7 @@ export default function CallernSystem() {
           rating: 4.9,
           hourlyRate: 30,
           isOnline: true,
-          profileImageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100"
+          profileImageUrl: ""
         },
         {
           id: 3,
@@ -147,7 +147,7 @@ export default function CallernSystem() {
           rating: 4.7,
           hourlyRate: 22,
           isOnline: false,
-          profileImageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100"
+          profileImageUrl: ""
         }
       ];
     }

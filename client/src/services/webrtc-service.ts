@@ -184,15 +184,22 @@ export class WebRTCService {
   }
 
   private createPeerConnection(initiator: boolean, roomId: string) {
-    const iceServers = [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      {
-        urls: 'turn:openrelay.metered.ca:80',
-        username: 'openrelayproject',
-        credential: 'openrelayproject',
-      },
+    // Self-hosted configuration - no external dependencies
+    // For production: deploy your own TURN server (e.g., coturn)
+    // and configure it here with your internal IP addresses
+    const iceServers: RTCIceServer[] = [
+      // Example for self-hosted TURN server (uncomment and configure):
+      // {
+      //   urls: 'turn:your-server.local:3478',
+      //   username: 'your-username',
+      //   credential: 'your-password',
+      // }
     ];
+
+    // Note: Without STUN/TURN servers, WebRTC will only work:
+    // 1. On the same local network
+    // 2. When both parties have public IP addresses
+    // 3. When proper port forwarding is configured
 
     this.peer = new SimplePeer({
       initiator,
