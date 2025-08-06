@@ -253,8 +253,8 @@ export default function AdminClassesPage() {
               <div className="flex items-center gap-2">
                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
+                    <Button className="flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
                       {t('classScheduling.scheduleClass')}
                     </Button>
                   </DialogTrigger>
@@ -402,8 +402,8 @@ export default function AdminClassesPage() {
                   </div>
                 )}
                 <div className="flex justify-end gap-2 pt-4">
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <Edit className="h-4 w-4" />
                     Edit
                   </Button>
                   <Button 
@@ -415,8 +415,9 @@ export default function AdminClassesPage() {
                         setSelectedSession(null);
                       }
                     }}
+                    className="flex items-center gap-2"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="h-4 w-4" />
                     Delete
                   </Button>
                 </div>
@@ -847,7 +848,7 @@ function ClassScheduleForm({
         />
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2">
         <Switch
           id="recurring"
           checked={formData.isRecurring}

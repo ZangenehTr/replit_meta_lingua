@@ -121,8 +121,9 @@ export function AIManagementPage() {
           variant="outline"
           onClick={() => refetch()}
           disabled={isLoading}
+          className="flex items-center gap-2"
         >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           {t('common:ui.refreshStatus')}
         </Button>
       </div>
@@ -131,8 +132,8 @@ export function AIManagementPage() {
         <TabsList>
           <TabsTrigger value="overview">{t('admin:aiServices.overview')}</TabsTrigger>
           <TabsTrigger value="models">{t('admin:aiServices.models')}</TabsTrigger>
-          <TabsTrigger value="testing">
-            <TestTube className="h-4 w-4 mr-2" />
+          <TabsTrigger value="testing" className="flex items-center gap-2">
+            <TestTube className="h-4 w-4" />
             {t('admin:aiServices.testing')}
           </TabsTrigger>
         </TabsList>
@@ -277,21 +278,22 @@ export function AIManagementPage() {
 
                   <div className="flex gap-4">
                     <Button 
-                      className="flex-1" 
+                      className="flex-1 flex items-center justify-center gap-2" 
                       onClick={testModel}
                       disabled={testingModel || !testPrompt.trim()}
                     >
-                      <Send className="h-4 w-4 mr-2" />
+                      <Send className="h-4 w-4" />
                       {testingModel ? "Testing..." : "Test Model"}
                     </Button>
                     <Button 
                       variant="outline"
+                      className="flex items-center gap-2"
                       onClick={() => {
                         setTestPrompt('');
                         setTestResponse('');
                       }}
                     >
-                      <RefreshCw className="h-4 w-4 mr-2" />
+                      <RefreshCw className="h-4 w-4" />
                       Clear
                     </Button>
                   </div>

@@ -132,9 +132,9 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-{t('admin:courses.createCourse')}
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          {t('admin:courses.createCourse')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -483,7 +483,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
                           { key: 'Saturday', label: t('admin:courses.saturday'), short: t('admin:courses.sat') },
                           { key: 'Sunday', label: t('admin:courses.sunday'), short: t('admin:courses.sun') }
                         ].map((day) => (
-                          <div key={day.key} className="flex items-center space-x-2">
+                          <div key={day.key} className="flex items-center gap-2">
                             <input
                               type="checkbox"
                               id={day.key}
@@ -616,7 +616,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
               </div>
             )}
             
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                 {t('admin:courses.cancel')}
               </Button>
@@ -714,8 +714,8 @@ export function AdminCourses() {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline">
-            <Upload className="h-4 w-4 mr-2" />
+          <Button variant="outline" className="flex items-center gap-2">
+            <Upload className="h-4 w-4" />
             Import Course
           </Button>
           <CreateCourseDialog queryClient={queryClient} />
@@ -735,7 +735,7 @@ export function AdminCourses() {
         </div>
         <Select value={filterCategory} onValueChange={setFilterCategory}>
           <SelectTrigger className="w-48">
-            <Filter className="h-4 w-4 mr-2" />
+            <Filter className="h-4 w-4" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -769,22 +769,22 @@ export function AdminCourses() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Level:</span>
-                  <Badge className={`ml-2 ${getLevelColor(course.level)}`}>
+                  <Badge className={`ms-2 ${getLevelColor(course.level)}`}>
                     {course.level}
                   </Badge>
                 </div>
                 <div>
                   <span className="text-gray-600">Duration:</span>
-                  <span className="ml-2 font-medium">{course.duration}</span>
+                  <span className="ms-2 font-medium">{course.duration}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">{t('students')}:</span>
-                  <span className="ml-2 font-bold">{course.enrolledStudents || 0}</span>
+                  <span className="ms-2 font-bold">{course.enrolledStudents || 0}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">{t('rating')}:</span>
-                  <span className="ml-2 font-bold flex items-center">
-                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
+                  <span className="ms-2 font-bold flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     {course.rating || 'N/A'}
                   </span>
                 </div>
@@ -795,12 +795,12 @@ export function AdminCourses() {
                   {course.price || 0} IRR
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-4 w-4 mr-1" />
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Eye className="h-4 w-4" />
                     View
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <Edit3 className="h-4 w-4 mr-1" />
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Edit3 className="h-4 w-4" />
                     Edit
                   </Button>
                 </div>
