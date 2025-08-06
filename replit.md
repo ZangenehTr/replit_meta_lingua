@@ -6,6 +6,7 @@ Meta Lingua is an AI-enhanced multilingual language learning and institute manag
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Work sessions: User prefers to have work logged so they can resume from where we left off.
+Critical issue: Translation system has severe regression problems - translations that previously worked keep breaking. Must ensure all Persian translations are maintained and never regress.
 
 ## Test Accounts
 All 7 roles have test accounts with the following credentials:
