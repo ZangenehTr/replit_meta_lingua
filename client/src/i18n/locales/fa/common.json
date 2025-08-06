@@ -133,6 +133,10 @@
     "monthlyRevenue": "درآمد ماهانه",
     "fromLastMonth": "از ماه گذشته",
     "dailyAvg": "میانگین روزانه",
+    "websiteVisitors": "بازدیدکنندگان وب‌سایت",
+    "inquiries": "پرس‌وجوها",
+    "consultations": "مشاوره‌ها",
+    "enrollments": "ثبت‌نام‌ها",
     "weeklyAvg": "میانگین هفتگی",
     "monthlyTotal": "مجموع ماهانه",
     "leads": "مشتریان بالقوه",
@@ -528,6 +532,10 @@
     "download": "دانلود",
     "upload": "آپلود",
     "print": "چاپ",
-    "share": "اشتراک"
+    "share": "اشتراک",
+    "month": "ماه",
+    "week": "هفته",
+    "day": "روز",
+    "today": "امروز"
   }
 }
