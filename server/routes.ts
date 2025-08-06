@@ -3,6 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db } from "./db";
+import { CallernWebSocketServer } from "./websocket-server";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { 
@@ -15271,6 +15272,10 @@ Meta Lingua Academy`;
   });
 
   const httpServer = createServer(app);
+  
+  // Initialize Callern WebSocket server
+  const callernWS = new CallernWebSocketServer(httpServer);
+  console.log('Callern WebSocket server initialized');
   
   return httpServer;
 }
