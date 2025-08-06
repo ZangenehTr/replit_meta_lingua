@@ -85,7 +85,7 @@ export default function AdminProspectsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -158,6 +158,7 @@ export default function AdminProspectsPage() {
           {isLoading ? (
             <div className="text-center py-8">{t('common:loading')}</div>
           ) : prospects.length > 0 ? (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -186,11 +187,11 @@ export default function AdminProspectsPage() {
                     <TableCell>{prospect.level}</TableCell>
                     <TableCell>{prospect.interest}</TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
+                      <div className="flex gap-1 sm:gap-2">
+                        <Button size="sm" variant="outline" className="text-xs sm:text-sm px-2 sm:px-3">
                           {t('callcenter:prospects.view')}
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" className="text-xs sm:text-sm px-2 sm:px-3">
                           {t('callcenter:prospects.contact')}
                         </Button>
                       </div>
@@ -199,6 +200,7 @@ export default function AdminProspectsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               {t('callcenter:prospects.noProspects')}
