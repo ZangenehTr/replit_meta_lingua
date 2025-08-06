@@ -134,9 +134,38 @@ const authenticateToken = async (req: any, res: any, next: any) => {
 // Role-based authorization middleware
 const requireRole = (roles: string[]) => {
   return (req: any, res: any, next: any) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user) {
+      return res.status(403).json({ message: 'User not authenticated' });
+    }
+    
+    // Normalize role comparison - handle both lowercase and capitalized versions
+    const userRole = req.user.role.toLowerCase();
+    const normalizedRoles = roles.map(r => r.toLowerCase());
+    
+    // Also handle special role mappings
+    const roleMapping: { [key: string]: string[] } = {
+      'admin': ['admin'],
+      'supervisor': ['supervisor'],
+      'teacher': ['teacher', 'teacher/tutor', 'tutor'],
+      'teacher/tutor': ['teacher', 'teacher/tutor', 'tutor'],
+      'student': ['student'],
+      'mentor': ['mentor'],
+      'callcenter': ['callcenter', 'call center agent'],
+      'call center agent': ['callcenter', 'call center agent'],
+      'accountant': ['accountant']
+    };
+    
+    // Check if user's role (or its mapped equivalents) matches any required role
+    const userRoleEquivalents = roleMapping[userRole] || [userRole];
+    const hasPermission = userRoleEquivalents.some(role => 
+      normalizedRoles.includes(role)
+    );
+    
+    if (!hasPermission) {
+      console.log(`Role check failed: User role '${req.user.role}' not in required roles [${roles.join(', ')}]`);
       return res.status(403).json({ message: 'Insufficient permissions' });
     }
+    
     next();
   };
 };
@@ -5483,7 +5512,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Leads Management API - accessible by admin and call center roles
   app.get("/api/leads", authenticateToken, async (req: any, res) => {
-    if (!['Admin', 'callcenter', 'Supervisor'].includes(req.user.role)) {
+    const userRole = req.user.role.toLowerCase();
+    if (!['admin', 'callcenter', 'supervisor', 'call center agent'].includes(userRole)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -5499,7 +5529,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Removed duplicate - using the enhanced lead endpoint below
 
   app.put("/api/leads/:id", authenticateToken, async (req: any, res) => {
-    if (!['Admin', 'callcenter', 'Supervisor'].includes(req.user.role)) {
+    const userRole = req.user.role.toLowerCase();
+    if (!['admin', 'callcenter', 'supervisor', 'call center agent'].includes(userRole)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
