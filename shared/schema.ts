@@ -11,7 +11,6 @@ export const users = pgTable("users", {
   lastName: text("last_name").notNull(),
   role: text("role").notNull().default("Student"), // Admin, Teacher/Tutor, Mentor, Student, Supervisor, Call Center Agent, Accountant
   phoneNumber: text("phone_number"),
-  phone: text("phone"), // Alias for phoneNumber compatibility
   nationalId: text("national_id"), // Student identification
   birthday: date("birthday"), // Birth date for age calculation
   guardianName: text("guardian_name"), // For minor students
