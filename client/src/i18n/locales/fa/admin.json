@@ -276,7 +276,21 @@
     "saveVoipSettings": "ذخیره تنظیمات VoIP",
     "thirdPartyServicesStatus": "وضعیت سرویس‌های شخص ثالث",
     "currentStatusIntegrations": "وضعیت فعلی یکپارچه‌سازی‌ها",
-    "persianCalendar": "تقویم فارسی"
+    "persianCalendar": "تقویم فارسی",
+    "shetabConfiguration": "پیکربندی شتاب",
+    "shetabDescription": "تنظیمات درگاه پرداخت شتاب",
+    "merchantId": "شناسه پذیرنده",
+    "terminalId": "شناسه ترمینال",
+    "apiKey": "کلید API",
+    "secretKey": "کلید محرمانه",
+    "environment": "محیط",
+    "selectEnvironment": "انتخاب محیط",
+    "production": "تولید",
+    "sandbox": "آزمایشی",
+    "enableShetabIntegration": "فعال‌سازی یکپارچه‌سازی شتاب",
+    "callbackUrl": "آدرس بازگشت",
+    "returnUrl": "آدرس برگشت",
+    "saveShetabSettings": "ذخیره تنظیمات شتاب"
   },
   "smsSettings": {
     "title": "تنظیمات پیامک",
