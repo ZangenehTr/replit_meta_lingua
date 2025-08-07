@@ -688,6 +688,22 @@
     "oneOnOneSession": "جلسه خصوصی",
     "groupClass": "کلاس گروهی",
     "callernSession": "جلسه کالرن",
-    "student": "دانش‌آموز"
+    "student": "دانش‌آموز",
+    "id": "شناسه",
+    "teacherName": "نام معلم",
+    "payslipDetails": "جزئیات فیش حقوقی",
+    "completeBreakdown": "تفکیک کامل برای",
+    "noPhoto": "بدون عکس",
+    "teacher": "معلم",
+    "period": "دوره",
+    "paymentStatus": "وضعیت پرداخت",
+    "totalSessions": "مجموع جلسات",
+    "totalHours": "مجموع ساعات",
+    "hourlyRate": "نرخ ساعتی",
+    "hours": "ساعت",
+    "callernSessions": "جلسات کالرن",
+    "noPaymentsFound": "هیچ پرداختی یافت نشد برای",
+    "calculateForPeriod": "محاسبه برای این دوره",
+    "calculating": "در حال محاسبه"
   }
 }

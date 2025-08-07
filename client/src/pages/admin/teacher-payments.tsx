@@ -86,10 +86,7 @@ function SessionDetailsSection({ teacherId, period }: { teacherId: number; perio
     queryFn: () => apiRequest(`/api/admin/teacher-payments/${teacherId}/sessions/${encodeURIComponent(formattedPeriod)}`),
     enabled: !!teacherId && !!formattedPeriod,
     retry: 1,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    onError: (error) => {
-      console.error('Sessions fetch error:', error);
-    }
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 
   const getSessionColor = (type: string) => {
@@ -108,7 +105,7 @@ function SessionDetailsSection({ teacherId, period }: { teacherId: number; perio
           variant="ghost"
           className="w-full flex justify-between items-center p-4 h-auto text-left font-semibold hover:bg-gray-50"
         >
-          <span>{t('admin:teacherPayments.sessionDetailsSection')} ({sessions.length} {t('admin:teacherPayments.sessions')})</span>
+          <span>{t('admin:teacherPayments.sessionDetailsSection')} ({(sessions as TeacherSession[]).length} {t('admin:teacherPayments.sessions')})</span>
           {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </Button>
       </CollapsibleTrigger>
@@ -120,11 +117,11 @@ function SessionDetailsSection({ teacherId, period }: { teacherId: number; perio
             <p className="mb-2">{t('admin:teacherPayments.sessionUnavailable')}</p>
             <p className="text-sm text-gray-500">{t('admin:teacherPayments.paymentAccurate')}</p>
           </div>
-        ) : sessions.length === 0 ? (
+        ) : (sessions as TeacherSession[]).length === 0 ? (
           <div className="text-center py-4 text-gray-500">{t('admin:teacherPayments.noSessionsFound')}</div>
         ) : (
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {sessions.map((session, index) => (
+            {(sessions as TeacherSession[]).map((session, index) => (
               <div key={index} className={`border-l-4 ${getSessionColor(session.type)} pl-4 py-2`}>
                 <div className="font-medium">
                   {session.date} - {session.type === '1-on-1' ? t('admin:teacherPayments.oneOnOneSession') : 
@@ -514,7 +511,7 @@ export default function TeacherPaymentsPage() {
                       <div className="text-center py-4">{t('common:loadingPaymentData')}</div>
                     ) : error ? (
                       <div className="text-center py-4 text-red-500">Error loading payments: {error?.message}</div>
-                    ) : payments?.length === 0 ? (
+                    ) : (payments as TeacherPayment[])?.length === 0 ? (
                       <div className="text-center py-4 text-gray-500">
                     {t('admin:teacherPayments.noPaymentsFound')} {selectedPeriod}. 
                     <br />
@@ -538,7 +535,7 @@ export default function TeacherPaymentsPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                      {payments?.map((payment) => (
+                      {(payments as TeacherPayment[])?.map((payment) => (
                         <TableRow key={payment.id} className="hover:bg-blue-50 transition-colors">
                           <TableCell className="py-4">
                             <div className="flex items-center gap-4">
@@ -549,7 +546,10 @@ export default function TeacherPaymentsPage() {
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';
-                                    e.currentTarget.nextElementSibling.style.display = 'flex';
+                                    const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (nextElement) {
+                                      nextElement.style.display = 'flex';
+                                    }
                                   }}
                                 />
                                 <div className="w-full h-full flex items-center justify-center text-white text-xs font-semibold" style={{display: 'none'}}>
@@ -608,7 +608,10 @@ export default function TeacherPaymentsPage() {
                                             className="w-full h-full object-cover"
                                             onError={(e) => {
                                               e.currentTarget.style.display = 'none';
-                                              e.currentTarget.nextElementSibling.style.display = 'flex';
+                                              const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                              if (nextElement) {
+                                                nextElement.style.display = 'flex';
+                                              }
                                             }}
                                           />
                                           <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs" style={{display: 'none'}}>
