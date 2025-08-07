@@ -141,11 +141,11 @@ export function AdminDashboard() {
           <div className="flex gap-3">
             <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center">
               <p className="text-xs opacity-90">{t('admin:totalStudents', 'Total Students')}</p>
-              <p className="text-xl font-bold">📚 {stats?.totalStudents || 0}</p>
+              <p className="text-xl font-bold">📚 {(stats as any)?.totalStudents || 0}</p>
             </div>
             <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center">
               <p className="text-xs opacity-90">{t('admin:monthlyRevenue', 'This Month')}</p>
-              <p className="text-xl font-bold">💰 {isPersian ? formatPersianCurrency(stats?.revenue || 0) : formatCurrency(stats?.revenue || 0)}</p>
+              <p className="text-xl font-bold">💰 {isPersian ? formatPersianCurrency((stats as any)?.revenue || 0) : formatCurrency((stats as any)?.revenue || 0)}</p>
             </div>
           </div>
         </div>
