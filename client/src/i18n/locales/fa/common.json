@@ -1,4 +1,6 @@
 {
+  "loading": "در حال بارگذاری...",
+  "allTeachers": "همه معلمان",
   "navigation": {
     "dashboard": "داشبورد",
     "students": "دانشجویان",
@@ -439,7 +441,12 @@
     "replyFailed": "ارسال پاسخ ناموفق",
     "conversationStarted": "مکالمه آغاز شد",
     "conversationFailed": "آغاز مکالمه ناموفق",
-    "campaignUpdated": "کمپین با موفقیت به‌روزرسانی شد"
+    "campaignUpdated": "کمپین با موفقیت به‌روزرسانی شد",
+    "paymentsCalculated": "پرداخت‌ها محاسبه شد",
+    "rateUpdated": "نرخ به‌روزرسانی شد",
+    "paymentApproved": "پرداخت تایید شد",
+    "reportDownloaded": "گزارش دانلود شد",
+    "sentToAccounting": "به حسابداری ارسال شد"
   },
   "placeholders": {
     "enterAmount": "مبلغ را وارد کنید",

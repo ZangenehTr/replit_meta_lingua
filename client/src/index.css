@@ -103,74 +103,87 @@ body.rtl p, body.rtl div, body.rtl span {
   margin-right: 0;
 }
 
-/* RTL Font support for Persian and Arabic */
-.rtl * {
-  font-family: 'Vazirmatn', 'Noto Sans Arabic', sans-serif;
+/* Language-specific font families with improved typography */
+/* Persian (Farsi) Typography */
+.lang-fa, .lang-fa *, [lang="fa"], [lang="fa"] * {
+  font-family: 'Vazirmatn', 'IRANSansX', 'Tahoma', sans-serif !important;
+  line-height: 1.8;
+  letter-spacing: 0.02em;
 }
 
-/* RTL Support */
-[dir="rtl"] {
-  font-family: 'Almarai', 'Noto Kufi Arabic', 'Tahoma', 'Arial', sans-serif;
+/* Arabic Typography */
+.lang-ar, .lang-ar *, [lang="ar"], [lang="ar"] * {
+  font-family: 'Noto Kufi Arabic', 'Almarai', 'Arial', sans-serif !important;
+  line-height: 1.8;
+  letter-spacing: 0.01em;
 }
 
-[dir="ltr"] {
-  font-family: 'Inter', 'Arial', sans-serif !important;
+/* English Typography */
+.lang-en, .lang-en *, [lang="en"], [lang="en"] * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
 }
 
-/* RTL specific styles */
-.rtl {
+/* RTL Layout (for Persian and Arabic) */
+.rtl, [dir="rtl"] {
   direction: rtl;
   text-align: right;
-  font-family: 'Almarai', 'Noto Kufi Arabic', 'Tahoma', 'Arial', sans-serif !important;
 }
 
-.ltr {
+/* LTR Layout (for English and other LTR languages) */
+.ltr, [dir="ltr"] {
   direction: ltr;
   text-align: left;
-  font-family: 'Inter', 'Arial', sans-serif !important;
 }
 
-/* Language-specific font families */
-.lang-fa {
-  font-family: 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
+/* Improved spacing for Farsi headings */
+.lang-fa h1, .lang-fa h2, .lang-fa h3, 
+.lang-fa h4, .lang-fa h5, .lang-fa h6 {
+  font-weight: 700;
+  line-height: 1.5;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
 }
 
-.lang-ar {
-  font-family: 'Noto Kufi Arabic', 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
+/* Improved spacing for Arabic headings */
+.lang-ar h1, .lang-ar h2, .lang-ar h3,
+.lang-ar h4, .lang-ar h5, .lang-ar h6 {
+  font-weight: 700;
+  line-height: 1.5;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
 }
 
-.lang-en {
-  font-family: 'Inter', 'Arial', sans-serif !important;
+/* Improved paragraph spacing for RTL languages */
+.lang-fa p, .lang-ar p {
+  line-height: 2;
+  margin-bottom: 1.2em;
 }
 
-/* Force proper font for all RTL elements */
-[dir="rtl"] *, .rtl * {
-  font-family: 'Almarai', 'Noto Kufi Arabic', 'Tahoma', 'Arial', sans-serif !important;
+/* Button text spacing for RTL */
+.rtl button, .rtl .btn {
+  letter-spacing: 0.03em;
+  padding-left: 1.2em;
+  padding-right: 1.2em;
 }
 
-/* Force proper font for Arabic content */
-.lang-ar *, [lang="ar"] *, [data-lang="ar"] * {
-  font-family: 'Noto Kufi Arabic', 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
+/* Form input spacing for RTL */
+.rtl input, .rtl textarea, .rtl select {
+  padding-right: 0.75rem;
+  padding-left: 0.75rem;
+  line-height: 1.8;
 }
 
-/* Force proper font for Persian content */
-.lang-fa *, [lang="fa"] *, [data-lang="fa"] * {
-  font-family: 'Almarai', 'Tahoma', 'Arial', sans-serif !important;
+/* Table cell spacing for RTL */
+.rtl td, .rtl th {
+  padding: 0.75rem 1rem;
 }
 
-/* Force proper font for English content */
-.lang-en *, [lang="en"] *, [data-lang="en"] * {
-  font-family: 'Inter', 'Arial', sans-serif !important;
-}
-
-/* Ensure all elements inherit proper fonts */
-* {
-  font-family: inherit;
-}
-
-/* Force Inter font for all LTR elements */
-[dir="ltr"] *, .ltr * {
-  font-family: 'Inter', 'Arial', sans-serif !important;
+/* List item spacing for RTL */
+.rtl li {
+  line-height: 1.8;
+  margin-bottom: 0.5em;
 }
 
 /* Mobile-First Design System */
