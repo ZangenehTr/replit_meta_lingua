@@ -39,6 +39,11 @@ import enAccountant from './locales/en/accountant.json';
 import faAccountant from './locales/fa/accountant.json';
 import arAccountant from './locales/ar/accountant.json';
 
+// Import auth namespace
+import enAuth from './locales/en/auth.json';
+import faAuth from './locales/fa/auth.json';
+import arAuth from './locales/ar/auth.json';
+
 // Language detection options
 const detectionOptions = {
   order: ['localStorage', 'navigator', 'htmlTag'],
@@ -74,6 +79,7 @@ i18n
         supervisor: enSupervisor,
         callcenter: enCallcenter,
         accountant: enAccountant,
+        auth: enAuth,
       },
       fa: {
         common: faCommon,
@@ -86,6 +92,7 @@ i18n
         supervisor: faSupervisor,
         callcenter: faCallcenter,
         accountant: faAccountant,
+        auth: faAuth,
       },
       ar: {
         common: arCommon,
@@ -98,11 +105,12 @@ i18n
         supervisor: arSupervisor,
         callcenter: arCallcenter,
         accountant: arAccountant,
+        auth: arAuth,
       },
     },
     
     defaultNS: 'common',
-    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant'],
+    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'auth'],
   });
 
 export default i18n;

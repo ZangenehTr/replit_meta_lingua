@@ -11,23 +11,28 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Loader2, GraduationCap } from "lucide-react";
-
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-const registerSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
-type RegisterFormData = z.infer<typeof registerSchema>;
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 
 export default function Auth() {
+  const { t } = useTranslation(['auth', 'common']);
+  const { isRTL } = useLanguage();
+  
+  const loginSchema = z.object({
+    email: z.string().email(t('auth:invalidEmail')),
+    password: z.string().min(6, t('auth:passwordMinLength')),
+  });
+  
+  const registerSchema = z.object({
+    email: z.string().email(t('auth:invalidEmail')),
+    password: z.string().min(6, t('auth:passwordMinLength')),
+    firstName: z.string().min(2, t('auth:firstNameMinLength')),
+    lastName: z.string().min(2, t('auth:lastNameMinLength')),
+  });
+  
+  type LoginFormData = z.infer<typeof loginSchema>;
+  type RegisterFormData = z.infer<typeof registerSchema>;
+  
   const [, setLocation] = useLocation();
   const { user, login, register: registerUser, loginLoading, registerLoading, logout } = useAuth();
   const [authError, setAuthError] = useState<string>("");
@@ -80,7 +85,7 @@ export default function Auth() {
       // Login doesn't return user directly, we need to wait for the user query to refetch
       // The redirect will happen in a useEffect that watches for user changes
     } catch (error: any) {
-      setAuthError(error.message || "Login failed. Please check your credentials.");
+      setAuthError(error.message || t('auth:loginFailed'));
     }
   };
 
@@ -96,7 +101,7 @@ export default function Auth() {
       });
       setLocation("/dashboard");
     } catch (error: any) {
-      setAuthError(error.message || "Registration failed. Please try again.");
+      setAuthError(error.message || t('auth:registrationFailed'));
     }
   };
 
@@ -108,17 +113,17 @@ export default function Auth() {
   // Show logout option if user is logged in and not forcing login
   if (user && !forceLogin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
                 <GraduationCap className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold">Meta Lingua</h1>
+              <h1 className="text-2xl font-bold">{t('auth:metaLingua')}</h1>
             </div>
             <CardDescription>
-              You are logged in as {user.firstName} {user.lastName} ({user.role})
+              {t('auth:loggedInAs', { firstName: user.firstName, lastName: user.lastName, role: user.role })}
             </CardDescription>
           </CardHeader>
           
@@ -127,7 +132,7 @@ export default function Auth() {
               onClick={() => setLocation("/dashboard")}
               className="w-full"
             >
-              Go to Dashboard
+              {t('auth:goToDashboard')}
             </Button>
             
             <Button 
@@ -135,7 +140,7 @@ export default function Auth() {
               onClick={handleLogout}
               className="w-full"
             >
-              Switch Account
+              {t('auth:switchAccount')}
             </Button>
           </CardContent>
         </Card>
@@ -144,17 +149,17 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold">Meta Lingua</h1>
+            <h1 className="text-2xl font-bold">{t('auth:metaLingua')}</h1>
           </div>
           <CardDescription>
-            Welcome to your language learning journey
+            {t('auth:welcomeMessage')}
           </CardDescription>
         </CardHeader>
         
@@ -167,18 +172,18 @@ export default function Auth() {
 
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Sign In</TabsTrigger>
-              <TabsTrigger value="register">Sign Up</TabsTrigger>
+              <TabsTrigger value="login">{t('auth:signIn')}</TabsTrigger>
+              <TabsTrigger value="register">{t('auth:signUp')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login">
               <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-email">{t('auth:email')}</Label>
                   <Input
                     id="login-email"
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder={t('auth:emailPlaceholder')}
                     {...loginForm.register("email")}
                   />
                   {loginForm.formState.errors.email && (
@@ -189,11 +194,11 @@ export default function Auth() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
+                  <Label htmlFor="login-password">{t('auth:password')}</Label>
                   <Input
                     id="login-password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder={t('auth:passwordPlaceholder')}
                     {...loginForm.register("password")}
                   />
                   {loginForm.formState.errors.password && (
@@ -205,7 +210,7 @@ export default function Auth() {
                 
                 <Button type="submit" className="w-full" disabled={loginLoading}>
                   {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Sign In
+                  {t('auth:signIn')}
                 </Button>
               </form>
             </TabsContent>
@@ -214,10 +219,10 @@ export default function Auth() {
               <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName">{t('auth:firstName')}</Label>
                     <Input
                       id="firstName"
-                      placeholder="Ahmad"
+                      placeholder={t('auth:firstNamePlaceholder')}
                       {...registerForm.register("firstName")}
                     />
                     {registerForm.formState.errors.firstName && (
@@ -228,10 +233,10 @@ export default function Auth() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName">{t('auth:lastName')}</Label>
                     <Input
                       id="lastName"
-                      placeholder="Rezaei"
+                      placeholder={t('auth:lastNamePlaceholder')}
                       {...registerForm.register("lastName")}
                     />
                     {registerForm.formState.errors.lastName && (
@@ -243,11 +248,11 @@ export default function Auth() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="register-email">Email</Label>
+                  <Label htmlFor="register-email">{t('auth:email')}</Label>
                   <Input
                     id="register-email"
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder={t('auth:emailPlaceholder')}
                     {...registerForm.register("email")}
                   />
                   {registerForm.formState.errors.email && (
@@ -258,11 +263,11 @@ export default function Auth() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="register-password">Password</Label>
+                  <Label htmlFor="register-password">{t('auth:password')}</Label>
                   <Input
                     id="register-password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder={t('auth:passwordPlaceholder')}
                     {...registerForm.register("password")}
                   />
                   {registerForm.formState.errors.password && (
@@ -274,7 +279,7 @@ export default function Auth() {
                 
                 <Button type="submit" className="w-full" disabled={registerLoading}>
                   {registerLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Account
+                  {t('auth:createAccount')}
                 </Button>
               </form>
             </TabsContent>
