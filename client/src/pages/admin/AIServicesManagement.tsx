@@ -21,11 +21,11 @@ import {
 } from "lucide-react";
 
 // Define only the 5 high-quality models for English/Farsi communication
-const RECOMMENDED_MODELS = [
+const RECOMMENDED_MODELS = (t: any) => [
   { 
     id: "llama3.2:3b", 
     name: "Llama 3.2 (3B)",
-    description: "Balanced model for English/Farsi conversations",
+    description: t('admin:aiServices.balancedModel'),
     size: "2.0 GB",
     languages: ["English", "Farsi"],
     recommended: true
@@ -33,7 +33,7 @@ const RECOMMENDED_MODELS = [
   { 
     id: "llama3:8b", 
     name: "Llama 3 (8B)",
-    description: "High-quality multilingual conversations",
+    description: t('admin:aiServices.highQuality'),
     size: "4.7 GB",
     languages: ["English", "Farsi", "Arabic"],
     recommended: true
@@ -41,7 +41,7 @@ const RECOMMENDED_MODELS = [
   { 
     id: "mistral:7b", 
     name: "Mistral (7B)",
-    description: "Efficient for language learning tasks",
+    description: t('admin:aiServices.efficientTasks'),
     size: "4.1 GB",
     languages: ["English", "Farsi"],
     recommended: false
@@ -49,7 +49,7 @@ const RECOMMENDED_MODELS = [
   { 
     id: "mixtral:8x7b", 
     name: "Mixtral (8x7B)",
-    description: "Advanced model for complex conversations",
+    description: t('admin:aiServices.advancedConversations'),
     size: "26 GB",
     languages: ["English", "Farsi", "Arabic"],
     recommended: false
@@ -57,7 +57,7 @@ const RECOMMENDED_MODELS = [
   { 
     id: "persian-llm:latest", 
     name: "Persian LLM",
-    description: "Specialized for Persian/Farsi language",
+    description: t('admin:aiServices.specializedPersian'),
     size: "3.5 GB",
     languages: ["Farsi", "English"],
     recommended: true
@@ -70,16 +70,28 @@ export default function AIServicesManagement() {
   const queryClient = useQueryClient();
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [downloadingModel, setDownloadingModel] = useState<string | null>(null);
-  const [testPrompt, setTestPrompt] = useState<string>("Hello, please introduce yourself in both English and Persian.");
+  const [testPrompt, setTestPrompt] = useState<string>("");
+
+  // Type definitions
+  type OllamaStatus = {
+    isInstalled: boolean;
+    isRunning: boolean;
+    installationPath?: string;
+    baseUrl?: string;
+  };
+
+  type ModelsData = {
+    models: string[];
+  };
 
   // Ollama Status Query
-  const { data: ollamaStatus, isLoading: statusLoading } = useQuery({
+  const { data: ollamaStatus, isLoading: statusLoading } = useQuery<OllamaStatus>({
     queryKey: ["/api/admin/ollama/status"],
     refetchInterval: 10000 // Check every 10 seconds
   });
 
   // Installed Models Query
-  const { data: modelsData, isLoading: modelsLoading } = useQuery({
+  const { data: modelsData, isLoading: modelsLoading } = useQuery<ModelsData>({
     queryKey: ["/api/admin/ollama/models"],
     enabled: ollamaStatus?.isRunning,
     refetchInterval: 30000
@@ -92,12 +104,12 @@ export default function AIServicesManagement() {
       const isReplitError = data.message?.includes('Replit') || data.message?.includes('permission');
       
       toast({
-        title: isReplitError ? "Development Environment Notice" : "Ollama Installation",
+        title: isReplitError ? t('admin:aiServices.developmentNotice') : t('admin:aiServices.ollamaInstallation'),
         description: isReplitError 
-          ? "Ollama installation requires a production server environment. This interface will work correctly when deployed."
+          ? t('admin:aiServices.requiresProduction')
           : data.success 
-            ? "Ollama installed successfully" 
-            : `Installation failed: ${data.message}`,
+            ? t('admin:aiServices.installSuccess')
+            : `${t('admin:aiServices.installFailed')}: ${data.message}`,
         variant: isReplitError ? "default" : (data.success ? "default" : "destructive")
       });
       
@@ -110,8 +122,8 @@ export default function AIServicesManagement() {
     mutationFn: () => apiRequest("/api/admin/ollama/start", { method: "POST" }),
     onSuccess: (data) => {
       toast({
-        title: t('common:toast.ollamaService'),
-        description: data.success ? "Service started successfully" : `Failed to start: ${data.message}`,
+        title: t('admin:aiServices.startOllamaService'),
+        description: data.success ? t('admin:aiServices.installSuccess') : `${t('admin:aiServices.installFailed')}: ${data.message}`,
         variant: data.success ? "default" : "destructive"
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/status"] });
@@ -127,8 +139,8 @@ export default function AIServicesManagement() {
     onSuccess: (data, modelName) => {
       setDownloadingModel(null);
       toast({
-        title: t('common:toast.modelDownload'),
-        description: data.success ? `${modelName} downloaded successfully` : `Download failed: ${data.message}`,
+        title: t('admin:aiServices.modelManagement'),
+        description: data.success ? `${modelName} ${t('admin:aiServices.installSuccess')}` : `${t('admin:aiServices.installFailed')}: ${data.message}`,
         variant: data.success ? "default" : "destructive"
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
@@ -143,8 +155,8 @@ export default function AIServicesManagement() {
     mutationFn: (modelName: string) => apiRequest(`/api/admin/ollama/models/${modelName}`, { method: "DELETE" }),
     onSuccess: (data, modelName) => {
       toast({
-        title: t('common:toast.modelRemoval'),
-        description: data.success ? `${modelName} removed successfully` : `Removal failed: ${data.message}`,
+        title: t('admin:aiServices.modelManagement'),
+        description: data.success ? `${modelName} ${t('admin:aiServices.remove')} ${t('admin:aiServices.installSuccess')}` : `${t('admin:aiServices.installFailed')}: ${data.message}`,
         variant: data.success ? "default" : "destructive"
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/ollama/models"] });
@@ -156,19 +168,19 @@ export default function AIServicesManagement() {
     mutationFn: ({ prompt, model }: { prompt: string; model: string }) => 
       apiRequest("/api/admin/ollama/generate", { 
         method: "POST", 
-        body: { prompt, model } 
+        body: JSON.stringify({ prompt, model })
       }),
     onSuccess: (data) => {
       toast({
-        title: t('common:toast.aiTestSuccessful'),
-        description: "Model responded correctly. Check console for full response.",
+        title: t('admin:aiServices.testAIGeneration'),
+        description: t('admin:aiServices.installSuccess'),
         variant: "default"
       });
       console.log("AI Response:", data.response);
     },
     onError: (error) => {
       toast({
-        title: t('common:toast.aiTestFailed'),
+        title: t('admin:aiServices.testAIGeneration'),
         description: error.message,
         variant: "destructive"
       });
@@ -184,7 +196,7 @@ export default function AIServicesManagement() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ollama Status</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:aiServices.ollamaStatus')}</CardTitle>
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -197,12 +209,12 @@ export default function AIServicesManagement() {
                 <XCircle className="h-4 w-4 text-red-600" />
               )}
               <span className="text-sm">
-                {statusLoading ? "Checking..." : ollamaStatus?.isInstalled ? "Installed" : "Not Installed"}
+                {statusLoading ? t('admin:aiServices.checking') : ollamaStatus?.isInstalled ? t('admin:aiServices.installed') : t('admin:aiServices.notInstalled')}
               </span>
             </div>
             {ollamaStatus?.installationPath && (
               <p className="text-xs text-muted-foreground mt-1">
-                Path: {ollamaStatus.installationPath}
+                {t('admin:aiServices.path')}: {ollamaStatus.installationPath}
               </p>
             )}
           </CardContent>
@@ -210,7 +222,7 @@ export default function AIServicesManagement() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Service Status</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:aiServices.serviceStatus')}</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -221,24 +233,24 @@ export default function AIServicesManagement() {
                 <XCircle className="h-4 w-4 text-red-600" />
               )}
               <span className="text-sm">
-                {ollamaStatus?.isRunning ? "Running" : "Stopped"}
+                {ollamaStatus?.isRunning ? t('admin:aiServices.running') : t('admin:aiServices.stopped')}
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              URL: {ollamaStatus?.baseUrl || "http://localhost:11434"}
+              {t('admin:aiServices.url')}: {ollamaStatus?.baseUrl || "http://localhost:11434"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available Models</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('admin:aiServices.availableModels')}</CardTitle>
             <Bot className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{availableModels.length}</div>
             <p className="text-xs text-muted-foreground">
-              {availableModels.length > 0 ? `${availableModels[0]} ready` : "No models installed"}
+              {availableModels.length > 0 ? `${availableModels[0]} ${t('admin:aiServices.ready')}` : t('admin:aiServices.noModelsInstalled')}
             </p>
           </CardContent>
         </Card>
@@ -250,33 +262,33 @@ export default function AIServicesManagement() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-orange-800">
               <Rocket className="h-5 w-5" />
-              Bootstrap Ollama AI Services
+              {t('admin:aiServices.bootstrapTitle')}
             </CardTitle>
             <CardDescription className="text-orange-700">
-              Install and configure Ollama for local AI processing and Iranian compliance
+              {t('admin:aiServices.bootstrapDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-orange-100 p-4 rounded-lg">
-              <h4 className="font-medium text-orange-800 mb-2">Why Ollama?</h4>
+              <h4 className="font-medium text-orange-800 mb-2">{t('admin:aiServices.whyOllama')}</h4>
               <ul className="text-sm text-orange-700 space-y-1">
-                <li>• Complete data sovereignty - no external AI dependencies</li>
-                <li>• Persian/Farsi language support for Iranian students</li>
-                <li>• Self-hosted AI processing for privacy and compliance</li>
-                <li>• Cost-effective - no per-request charges</li>
+                <li>• {t('admin:aiServices.dataSovereignty')}</li>
+                <li>• {t('admin:aiServices.persianSupport')}</li>
+                <li>• {t('admin:aiServices.selfHosted')}</li>
+                <li>• {t('admin:aiServices.costEffective')}</li>
               </ul>
             </div>
             
             <div className="bg-blue-100 p-4 rounded-lg">
-              <h4 className="font-medium text-blue-800 mb-2">🚀 Production Deployment</h4>
+              <h4 className="font-medium text-blue-800 mb-2">🚀 {t('admin:aiServices.productionDeployment')}</h4>
               <p className="text-sm text-blue-700 mb-2">
-                For production deployment on your server, run this command:
+                {t('admin:aiServices.productionInstructions')}
               </p>
               <code className="bg-blue-200 text-blue-900 px-2 py-1 rounded text-xs">
                 curl -fsSL https://ollama.ai/install.sh | sh
               </code>
               <p className="text-xs text-blue-600 mt-2">
-                This interface will work automatically once Ollama is installed on your production server.
+                {t('admin:aiServices.interfaceAutoWork')}
               </p>
             </div>
             
@@ -288,7 +300,7 @@ export default function AIServicesManagement() {
               {installOllamaMutation.isPending ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Installing Ollama...
+                  {t('admin:aiServices.installingOllama')}
                 </>
               ) : (
                 <>
@@ -336,17 +348,17 @@ export default function AIServicesManagement() {
       {isOllamaReady && (
         <Card>
           <CardHeader>
-            <CardTitle>AI Model Management</CardTitle>
+            <CardTitle>{t('admin:aiServices.modelManagement')}</CardTitle>
             <CardDescription>
-              Download and manage AI models for Persian language learning
+              {t('admin:aiServices.modelManagementDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Available Models */}
             <div>
-              <h4 className="font-medium mb-4">Available Models for Download</h4>
+              <h4 className="font-medium mb-4">{t('admin:aiServices.availableForDownload')}</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {RECOMMENDED_MODELS.map((model) => {
+                {RECOMMENDED_MODELS(t).map((model) => {
                   const isInstalled = availableModels.includes(model.id);
                   const isDownloading = downloadingModel === model.id;
                   
@@ -356,20 +368,20 @@ export default function AIServicesManagement() {
                         <div className="flex items-center justify-between mb-2">
                           <h5 className="font-medium">{model.name}</h5>
                           {model.recommended && (
-                            <Badge variant="secondary">Recommended</Badge>
+                            <Badge variant="secondary">{t('admin:aiServices.recommended')}</Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">{model.description}</p>
                         <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-                          <span>Size: {model.size}</span>
-                          <span>Languages: {model.languages.join(", ")}</span>
+                          <span>{t('admin:aiServices.size')}: {model.size}</span>
+                          <span>{t('admin:aiServices.languages')}: {model.languages.join(", ")}</span>
                         </div>
                         
                         {isInstalled ? (
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <CheckCircle className="h-4 w-4 text-green-600" />
-                              <span className="text-sm text-green-700">Installed</span>
+                              <span className="text-sm text-green-700">{t('admin:aiServices.installed')}</span>
                             </div>
                             <Button
                               variant="outline"
@@ -377,7 +389,7 @@ export default function AIServicesManagement() {
                               onClick={() => removeModelMutation.mutate(model.id)}
                               disabled={removeModelMutation.isPending}
                             >
-                              Remove
+                              {t('admin:aiServices.remove')}
                             </Button>
                           </div>
                         ) : (
@@ -390,12 +402,12 @@ export default function AIServicesManagement() {
                             {isDownloading ? (
                               <>
                                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                Downloading...
+                                {t('admin:aiServices.downloading')}
                               </>
                             ) : (
                               <>
                                 <Download className="h-4 w-4 mr-2" />
-                                Download {model.size}
+                                {t('admin:aiServices.download')} {model.size}
                               </>
                             )}
                           </Button>
@@ -410,13 +422,13 @@ export default function AIServicesManagement() {
             {/* Test AI Generation */}
             {availableModels.length > 0 && (
               <div className="border-t pt-6">
-                <h4 className="font-medium mb-4">Test AI Generation</h4>
+                <h4 className="font-medium mb-4">{t('admin:aiServices.testAIGeneration')}</h4>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="model-select">Select Model</Label>
+                    <Label htmlFor="model-select">{t('admin:aiServices.selectModel')}</Label>
                     <Select value={selectedModel} onValueChange={setSelectedModel}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose a model to test" />
+                        <SelectValue placeholder={t('admin:aiServices.chooseModel')} />
                       </SelectTrigger>
                       <SelectContent>
                         {availableModels.map((model) => (
@@ -429,13 +441,13 @@ export default function AIServicesManagement() {
                   </div>
                   
                   <div>
-                    <Label htmlFor="test-prompt">Test Prompt</Label>
+                    <Label htmlFor="test-prompt">{t('admin:aiServices.testPrompt')}</Label>
                     <textarea
                       id="test-prompt"
                       className="w-full h-20 p-3 border rounded-md resize-none"
                       value={testPrompt}
                       onChange={(e) => setTestPrompt(e.target.value)}
-                      placeholder="Enter a test prompt..."
+                      placeholder={t('admin:aiServices.enterTestPrompt')}
                     />
                   </div>
                   
@@ -447,12 +459,12 @@ export default function AIServicesManagement() {
                     {testGenerationMutation.isPending ? (
                       <>
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Generating...
+                        {t('admin:aiServices.generating')}
                       </>
                     ) : (
                       <>
                         <Bot className="h-4 w-4 mr-2" />
-                        Test AI Generation
+                        {t('admin:aiServices.testGeneration')}
                       </>
                     )}
                   </Button>
@@ -466,26 +478,26 @@ export default function AIServicesManagement() {
       {/* Iranian Compliance Information */}
       <Card className="border-green-200 bg-green-50">
         <CardHeader>
-          <CardTitle className="text-green-800">Iranian Market Compliance</CardTitle>
+          <CardTitle className="text-green-800">{t('admin:aiServices.iranianCompliance')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <h5 className="font-medium text-green-800 mb-2">✅ Compliance Features</h5>
+              <h5 className="font-medium text-green-800 mb-2">✅ {t('admin:aiServices.complianceFeatures')}</h5>
               <ul className="space-y-1 text-green-700">
-                <li>• Complete data sovereignty</li>
-                <li>• No external AI service dependencies</li>
-                <li>• Persian/Farsi language processing</li>
-                <li>• Local model storage and execution</li>
+                <li>• {t('admin:aiServices.completeSovereignty')}</li>
+                <li>• {t('admin:aiServices.noExternalDependencies')}</li>
+                <li>• {t('admin:aiServices.persianProcessing')}</li>
+                <li>• {t('admin:aiServices.localModelStorage')}</li>
               </ul>
             </div>
             <div>
-              <h5 className="font-medium text-green-800 mb-2">🚀 Recommended Setup</h5>
+              <h5 className="font-medium text-green-800 mb-2">🚀 {t('admin:aiServices.recommendedSetup')}</h5>
               <ul className="space-y-1 text-green-700">
-                <li>• Start with Llama 3.2 (3B) model</li>
-                <li>• Download Persian LLM for best results</li>
-                <li>• Test generation before student use</li>
-                <li>• Monitor performance and upgrade as needed</li>
+                <li>• {t('admin:aiServices.startWithLlama')}</li>
+                <li>• {t('admin:aiServices.downloadPersianLLM')}</li>
+                <li>• {t('admin:aiServices.testBeforeUse')}</li>
+                <li>• {t('admin:aiServices.monitorPerformance')}</li>
               </ul>
             </div>
           </div>
