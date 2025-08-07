@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/layout/app-layout";
 import { VideoCall } from "@/components/callern/VideoCall";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
 import { 
   Video, 
   Clock, 
@@ -88,6 +89,7 @@ interface AvailableTeacher {
 export default function CallernSystem() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation(['callern', 'common']);
   const [selectedPackage, setSelectedPackage] = useState<CallernPackage | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
   const [isInCall, setIsInCall] = useState(false);
@@ -163,15 +165,15 @@ export default function CallernSystem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/student/my-callern-packages"] });
       toast({
-        title: "Package Purchased",
-        description: "Callern package purchased successfully!",
+        title: t('callern:packagePurchased'),
+        description: t('callern:packagePurchasedDescription'),
       });
       setIsPurchaseDialogOpen(false);
       setSelectedPackage(null);
     },
     onError: (error) => {
       toast({
-        title: "Purchase Failed",
+        title: t('callern:purchaseFailed'),
         description: error.message,
         variant: "destructive",
       });
@@ -197,8 +199,8 @@ export default function CallernSystem() {
 
     if (!activePackage) {
       toast({
-        title: "No Active Package",
-        description: "Please purchase a package to start video calls.",
+        title: t('callern:noActivePackage'),
+        description: t('callern:noActivePackageDescription'),
         variant: "destructive",
       });
       return;
@@ -264,19 +266,19 @@ export default function CallernSystem() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                Welcome to Callern! 🎥
+                {t('callern:welcomeTitle')}
               </h1>
               <p className="text-sm md:text-base opacity-90">
-                Connect instantly with professional language teachers for personalized 1-on-1 video sessions
+                {t('callern:welcomeDescription')}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                <p className="text-xs opacity-90">Available Balance</p>
+                <p className="text-xs opacity-90">{t('callern:availableBalance')}</p>
                 <p className="text-xl font-bold">
                   {studentPackages.reduce((total: number, pkg: StudentCallernPackage) => 
                     total + (pkg.status === 'active' ? pkg.remainingMinutes : 0), 0
-                  )} minutes
+                  )} {t('callern:minutes')}
                 </p>
               </div>
             </div>
@@ -287,7 +289,7 @@ export default function CallernSystem() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Active Packages</CardTitle>
+              <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">{t('callern:activePackages')}</CardTitle>
               <div className="bg-blue-500 p-2 rounded-lg">
                 <Package className="h-4 w-4 text-white" />
               </div>
@@ -296,13 +298,13 @@ export default function CallernSystem() {
               <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
                 {studentPackages.filter((pkg: StudentCallernPackage) => pkg.status === 'active').length}
               </div>
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Packages available</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{t('callern:packagesAvailable')}</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Available Minutes</CardTitle>
+              <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">{t('callern:availableMinutes')}</CardTitle>
               <div className="bg-green-500 p-2 rounded-lg">
                 <Clock className="h-4 w-4 text-white" />
               </div>
@@ -313,26 +315,26 @@ export default function CallernSystem() {
                   total + (pkg.status === 'active' ? pkg.remainingMinutes : 0), 0
                 )}
               </div>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">Minutes remaining</p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">{t('callern:minutesRemaining')}</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Total Calls</CardTitle>
+              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">{t('callern:totalCalls')}</CardTitle>
               <div className="bg-purple-500 p-2 rounded-lg">
                 <Phone className="h-4 w-4 text-white" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{callHistory.length}</div>
-              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">Calls completed</p>
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">{t('callern:callsCompleted')}</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">This Month</CardTitle>
+              <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">{t('callern:thisMonth')}</CardTitle>
               <div className="bg-orange-500 p-2 rounded-lg">
                 <Calendar className="h-4 w-4 text-white" />
               </div>
@@ -346,7 +348,7 @@ export default function CallernSystem() {
                          callDate.getFullYear() === thisMonth.getFullYear();
                 }).length}
               </div>
-              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">Monthly calls</p>
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">{t('callern:monthlyCalls')}</p>
             </CardContent>
           </Card>
         </div>
@@ -357,19 +359,19 @@ export default function CallernSystem() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                Available Packages
+                {t('callern:availablePackagesTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {packagesLoading ? (
-                <div className="text-center py-4">Loading packages...</div>
+                <div className="text-center py-4">{t('callern:loadingPackages')}</div>
               ) : (
                 <div className="space-y-4">
                   {packages.map((pkg: CallernPackage) => (
                     <div key={pkg.id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-semibold">{pkg.packageName}</h3>
-                        <Badge variant="outline">{pkg.totalHours} hours</Badge>
+                        <Badge variant="outline">{pkg.totalHours} {t('callern:hours')}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-3">{pkg.description}</p>
                       <div className="flex justify-between items-center">
@@ -381,7 +383,7 @@ export default function CallernSystem() {
                           onClick={() => handlePurchasePackage(pkg)}
                           disabled={purchasePackageMutation.isPending}
                         >
-                          Purchase
+                          {t('callern:purchase')}
                         </Button>
                       </div>
                     </div>
@@ -396,15 +398,15 @@ export default function CallernSystem() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Video className="h-5 w-5" />
-                My Callern Packages
+                {t('callern:myPackages')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {studentPackagesLoading ? (
-                <div className="text-center py-4">Loading your packages...</div>
+                <div className="text-center py-4">{t('callern:loadingMyPackages')}</div>
               ) : studentPackages.length === 0 ? (
                 <div className="text-center py-4 text-muted-foreground">
-                  No packages purchased yet. Purchase a package to start your video calls!
+                  {t('callern:noPackagesYet')}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -418,23 +420,23 @@ export default function CallernSystem() {
                           {pkg.status === 'active' ? (
                             <>
                               <CheckCircle className="mr-1 h-3 w-3" />
-                              Active
+                              {t('callern:active')}
                             </>
                           ) : (
                             <>
                               <XCircle className="mr-1 h-3 w-3" />
-                              {pkg.status}
+                              {t(`callern:${pkg.status}`)}
                             </>
                           )}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="text-muted-foreground">Remaining:</span>
+                          <span className="text-muted-foreground">{t('callern:remaining')}:</span>
                           <div className="font-medium">{formatDuration(pkg.remainingMinutes)}</div>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Used:</span>
+                          <span className="text-muted-foreground">{t('common:used')}:</span>
                           <div className="font-medium">{formatDuration(pkg.usedMinutes)}</div>
                         </div>
                       </div>
@@ -461,26 +463,26 @@ export default function CallernSystem() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Phone className="h-5 w-5" />
-              Call History
+              {t('callern:callHistory')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {historyLoading ? (
-              <div className="text-center py-4">Loading call history...</div>
+              <div className="text-center py-4">{t('callern:loadingHistory')}</div>
             ) : callHistory.length === 0 ? (
               <div className="text-center py-4 text-muted-foreground">
-                No calls yet. Purchase a package and schedule your first call!
+                {t('callern:noCallsYet')}
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Teacher</TableHead>
-                    <TableHead>Date & Time</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Recording</TableHead>
+                    <TableHead>{t('callern:teacher')}</TableHead>
+                    <TableHead>{t('callern:date')}</TableHead>
+                    <TableHead>{t('callern:duration')}</TableHead>
+                    <TableHead>{t('common:type')}</TableHead>
+                    <TableHead>{t('callern:status')}</TableHead>
+                    <TableHead>{t('callern:recording')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -510,7 +512,7 @@ export default function CallernSystem() {
                         {call.recordingUrl ? (
                           <Button size="sm" variant="outline">
                             <PlayCircle className="mr-1 h-4 w-4" />
-                            Watch
+                            {t('callern:viewRecording')}
                           </Button>
                         ) : (
                           <span className="text-muted-foreground">-</span>
@@ -530,11 +532,11 @@ export default function CallernSystem() {
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5" />
-                Available Teachers Now
+                {t('callern:availableTeachers')}
               </div>
               <div className="flex items-center gap-2">
                 <label htmlFor="language-select" className="text-sm font-normal">
-                  Language:
+                  {t('callern:selectLanguage')}:
                 </label>
                 <select
                   id="language-select"
@@ -562,11 +564,11 @@ export default function CallernSystem() {
             {teachersLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                <p>Finding available teachers...</p>
+                <p>{t('callern:loadingTeachers')}</p>
               </div>
             ) : availableTeachers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No teachers available for {selectedLanguage} at the moment. Please try again later.
+                {t('callern:noTeachersAvailable', { language: selectedLanguage })}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -595,13 +597,13 @@ export default function CallernSystem() {
                         variant={teacher.isOnline ? "default" : "secondary"}
                         className="animate-pulse"
                       >
-                        {teacher.isOnline ? "Online" : "Offline"}
+                        {teacher.isOnline ? t('callern:online') : t('callern:offline')}
                       </Badge>
                     </div>
 
                     <div className="space-y-2 text-sm">
                       <div>
-                        <span className="text-muted-foreground">Languages: </span>
+                        <span className="text-muted-foreground">{t('callern:languages')}: </span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {teacher.languages.map(lang => (
                             <Badge key={lang} variant="outline" className="text-xs">
@@ -612,7 +614,7 @@ export default function CallernSystem() {
                         </div>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Specializations: </span>
+                        <span className="text-muted-foreground">{t('callern:specializations')}: </span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {teacher.specializations.map(spec => (
                             <Badge key={spec} variant="secondary" className="text-xs">
@@ -622,14 +624,14 @@ export default function CallernSystem() {
                         </div>
                       </div>
                       <div className="flex justify-between items-center pt-2">
-                        <span className="font-semibold">${teacher.hourlyRate}/hour</span>
+                        <span className="font-semibold">${teacher.hourlyRate}{t('callern:perHour')}</span>
                         <Button
                           size="sm"
                           disabled={!teacher.isOnline}
                           onClick={() => handleStartCall(teacher)}
                         >
                           <Video className="mr-1 h-4 w-4" />
-                          Start Call
+                          {t('callern:startVideoCall')}
                         </Button>
                       </div>
                     </div>
@@ -644,9 +646,13 @@ export default function CallernSystem() {
         <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Confirm Package Purchase</DialogTitle>
+              <DialogTitle>{t('callern:confirmPurchase')}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to purchase this Callern package?
+                {selectedPackage && t('callern:confirmPurchaseDescription', {
+                  packageName: selectedPackage.packageName,
+                  hours: selectedPackage.totalHours,
+                  price: formatPrice(selectedPackage.price)
+                })}
               </DialogDescription>
             </DialogHeader>
             
@@ -656,7 +662,7 @@ export default function CallernSystem() {
                   <h3 className="font-semibold text-lg">{selectedPackage.packageName}</h3>
                   <p className="text-muted-foreground">{selectedPackage.description}</p>
                   <div className="mt-2 flex justify-between items-center">
-                    <span>Duration: {selectedPackage.totalHours} hours</span>
+                    <span>{t('callern:duration')}: {selectedPackage.totalHours} {t('callern:hours')}</span>
                     <span className="text-2xl font-bold text-primary">
                       {formatPrice(selectedPackage.price)}
                     </span>
@@ -670,13 +676,13 @@ export default function CallernSystem() {
                 variant="outline" 
                 onClick={() => setIsPurchaseDialogOpen(false)}
               >
-                Cancel
+                {t('callern:cancel')}
               </Button>
               <Button 
                 onClick={confirmPurchase}
                 disabled={purchasePackageMutation.isPending}
               >
-                {purchasePackageMutation.isPending ? "Processing..." : "Confirm Purchase"}
+                {purchasePackageMutation.isPending ? t('common:processing') : t('callern:confirmPurchase')}
               </Button>
             </DialogFooter>
           </DialogContent>
