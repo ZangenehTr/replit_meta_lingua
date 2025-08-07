@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,8 @@ interface BrandingSettings {
 
 export default function BrandingManagement() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentLanguage, isRTL } = useLanguage();
+  const { language, isRTL } = useLanguage();
+  const { t } = useTranslation(['admin', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -52,7 +54,7 @@ export default function BrandingManagement() {
   });
 
   // Update form when branding data loads
-  useState(() => {
+  React.useEffect(() => {
     if (branding) {
       setFormData(branding);
     }
@@ -62,24 +64,20 @@ export default function BrandingManagement() {
     mutationFn: (data: Partial<BrandingSettings>) => 
       apiRequest("/api/branding", {
         method: "PUT",
-        body: data
+        body: JSON.stringify(data)
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/branding"] });
       toast({
-        title: currentLanguage === 'fa' ? "تغییرات ذخیره شد" : "Changes Saved",
-        description: currentLanguage === 'fa' 
-          ? "تنظیمات برندینگ با موفقیت به‌روزرسانی شد"
-          : "Branding settings have been updated successfully"
+        title: t('admin:branding.changesSaved'),
+        description: t('admin:branding.changesSavedDescription')
       });
     },
     onError: () => {
       toast({
         variant: "destructive",
-        title: currentLanguage === 'fa' ? "خطا" : "Error",
-        description: currentLanguage === 'fa' 
-          ? "خطا در به‌روزرسانی تنظیمات برندینگ"
-          : "Failed to update branding settings"
+        title: t('admin:branding.error'),
+        description: t('admin:branding.errorDescription')
       });
     }
   });
@@ -108,7 +106,7 @@ export default function BrandingManagement() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>{currentLanguage === 'fa' ? 'در حال بارگذاری...' : 'Loading...'}</p>
+          <p>{t('admin:branding.loading')}</p>
         </div>
       </div>
     );
@@ -117,19 +115,16 @@ export default function BrandingManagement() {
   return (
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${isRTL ? 'rtl' : 'ltr'}`}>
       <div className="flex">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar onNavigate={() => setSidebarOpen(false)} />
         
         <main className="flex-1 p-4 md:p-6 lg:p-8 space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                {currentLanguage === 'fa' ? 'مدیریت برندینگ' : 'Branding Management'}
+                {t('admin:branding.title')}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                {currentLanguage === 'fa' 
-                  ? 'تنظیمات ظاهری و برندینگ موسسه خود را شخصی‌سازی کنید'
-                  : 'Customize your institute\'s appearance and branding settings'
-                }
+                {t('admin:branding.description')}
               </p>
             </div>
             <Button 
@@ -139,8 +134,8 @@ export default function BrandingManagement() {
             >
               <Save className="h-4 w-4" />
               {updateBrandingMutation.isPending 
-                ? (currentLanguage === 'fa' ? 'در حال ذخیره...' : 'Saving...') 
-                : (currentLanguage === 'fa' ? 'ذخیره تغییرات' : 'Save Changes')
+                ? t('admin:branding.saving')
+                : t('admin:branding.saveChanges')
               }
             </Button>
           </div>
@@ -152,43 +147,43 @@ export default function BrandingManagement() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Palette className="h-5 w-5" />
-                    {currentLanguage === 'fa' ? 'تنظیمات پایه' : 'Basic Settings'}
+                    {t('admin:branding.basicSettings')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="name">
-                      {currentLanguage === 'fa' ? 'نام موسسه' : 'Institute Name'}
+                      {t('admin:branding.instituteName')}
                     </Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder={currentLanguage === 'fa' ? 'نام موسسه را وارد کنید' : 'Enter institute name'}
+                      placeholder={t('admin:branding.instituteNamePlaceholder')}
                     />
                   </div>
 
                   <div>
                     <Label htmlFor="logo">
-                      {currentLanguage === 'fa' ? 'لوگو (URL)' : 'Logo (URL)'}
+                      {t('admin:branding.logoUrl')}
                     </Label>
                     <Input
                       id="logo"
                       value={formData.logo || ''}
                       onChange={(e) => handleInputChange('logo', e.target.value)}
-                      placeholder={currentLanguage === 'fa' ? 'آدرس URL لوگو' : 'Logo URL'}
+                      placeholder={t('admin:branding.logoUrlPlaceholder')}
                     />
                   </div>
 
                   <div>
                     <Label htmlFor="favicon">
-                      {currentLanguage === 'fa' ? 'آیکون (Favicon)' : 'Favicon (URL)'}
+                      {t('admin:branding.faviconUrl')}
                     </Label>
                     <Input
                       id="favicon"
                       value={formData.favicon || ''}
                       onChange={(e) => handleInputChange('favicon', e.target.value)}
-                      placeholder={currentLanguage === 'fa' ? 'آدرس URL آیکون' : 'Favicon URL'}
+                      placeholder={t('admin:branding.faviconUrlPlaceholder')}
                     />
                   </div>
                 </CardContent>
@@ -197,14 +192,14 @@ export default function BrandingManagement() {
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    {currentLanguage === 'fa' ? 'رنگ‌های تم' : 'Theme Colors'}
+                    {t('admin:branding.themeColors')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="primaryColor">
-                        {currentLanguage === 'fa' ? 'رنگ اصلی' : 'Primary Color'}
+                        {t('admin:branding.primaryColor')}
                       </Label>
                       <div className="flex gap-2">
                         <Input
@@ -224,7 +219,7 @@ export default function BrandingManagement() {
 
                     <div>
                       <Label htmlFor="secondaryColor">
-                        {currentLanguage === 'fa' ? 'رنگ ثانویه' : 'Secondary Color'}
+                        {t('admin:branding.secondaryColor')}
                       </Label>
                       <div className="flex gap-2">
                         <Input
@@ -244,7 +239,7 @@ export default function BrandingManagement() {
 
                     <div>
                       <Label htmlFor="accentColor">
-                        {currentLanguage === 'fa' ? 'رنگ تاکیدی' : 'Accent Color'}
+                        {t('admin:branding.accentColor')}
                       </Label>
                       <div className="flex gap-2">
                         <Input
@@ -264,7 +259,7 @@ export default function BrandingManagement() {
 
                     <div>
                       <Label htmlFor="backgroundColor">
-                        {currentLanguage === 'fa' ? 'رنگ پس‌زمینه' : 'Background Color'}
+                        {t('admin:branding.backgroundColor')}
                       </Label>
                       <div className="flex gap-2">
                         <Input
@@ -288,13 +283,13 @@ export default function BrandingManagement() {
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    {currentLanguage === 'fa' ? 'تنظیمات ظاهری' : 'Appearance Settings'}
+                    {t('admin:branding.typography')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="fontFamily">
-                      {currentLanguage === 'fa' ? 'فونت' : 'Font Family'}
+                      {t('admin:branding.fontFamily')}
                     </Label>
                     <Input
                       id="fontFamily"
@@ -306,7 +301,7 @@ export default function BrandingManagement() {
 
                   <div>
                     <Label htmlFor="borderRadius">
-                      {currentLanguage === 'fa' ? 'گردی گوشه‌ها' : 'Border Radius'}
+                      {t('admin:branding.borderRadius')}
                     </Label>
                     <Input
                       id="borderRadius"
@@ -318,13 +313,13 @@ export default function BrandingManagement() {
 
                   <div>
                     <Label htmlFor="loginBackground">
-                      {currentLanguage === 'fa' ? 'پس‌زمینه صفحه ورود' : 'Login Background Image'}
+                      {t('admin:branding.loginBackground')}
                     </Label>
                     <Input
                       id="loginBackground"
                       value={formData.loginBackgroundImage || ''}
                       onChange={(e) => handleInputChange('loginBackgroundImage', e.target.value)}
-                      placeholder={currentLanguage === 'fa' ? 'آدرس URL تصویر پس‌زمینه' : 'Background image URL'}
+                      placeholder={t('admin:branding.loginBackgroundPlaceholder')}
                     />
                   </div>
                 </CardContent>
@@ -337,7 +332,7 @@ export default function BrandingManagement() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Eye className="h-5 w-5" />
-                    {currentLanguage === 'fa' ? 'پیش‌نمایش زنده' : 'Live Preview'}
+                    {t('admin:branding.livePreview')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -350,7 +345,7 @@ export default function BrandingManagement() {
                         className="text-2xl font-bold"
                         style={{ color: formData.textColor, fontFamily: formData.fontFamily }}
                       >
-                        {formData.name || (currentLanguage === 'fa' ? 'نام موسسه' : 'Institute Name')}
+                        {formData.name || t('admin:branding.instituteName')}
                       </div>
                       
                       {formData.logo && (
@@ -373,7 +368,7 @@ export default function BrandingManagement() {
                             fontFamily: formData.fontFamily
                           }}
                         >
-                          {currentLanguage === 'fa' ? 'دکمه اصلی' : 'Primary Button'}
+                          {t('admin:branding.sampleButton')}
                         </div>
                         <div 
                           className="px-4 py-2 rounded text-white text-sm"
@@ -383,7 +378,7 @@ export default function BrandingManagement() {
                             fontFamily: formData.fontFamily
                           }}
                         >
-                          {currentLanguage === 'fa' ? 'دکمه ثانویه' : 'Secondary Button'}
+                          {t('admin:branding.sampleButton')}
                         </div>
                       </div>
 
@@ -397,10 +392,7 @@ export default function BrandingManagement() {
                           fontFamily: formData.fontFamily
                         }}
                       >
-                        {currentLanguage === 'fa' 
-                          ? 'این یک نمونه کارت با تنظیمات جدید است.'
-                          : 'This is a sample card with the new settings.'
-                        }
+                        {t('admin:branding.sampleText')}
                       </div>
                     </div>
                   </div>
@@ -410,33 +402,12 @@ export default function BrandingManagement() {
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    {currentLanguage === 'fa' ? 'راهنمای استفاده' : 'Usage Guide'}
+                    {t('admin:branding.preview')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
-                  <p>
-                    {currentLanguage === 'fa' 
-                      ? '• تغییرات به‌صورت خودکار در کل سیستم اعمال می‌شود'
-                      : '• Changes will be applied automatically across the entire system'
-                    }
-                  </p>
-                  <p>
-                    {currentLanguage === 'fa' 
-                      ? '• برای لوگو و آیکون از فرمت‌های PNG، JPG، SVG استفاده کنید'
-                      : '• Use PNG, JPG, or SVG formats for logos and icons'
-                    }
-                  </p>
-                  <p>
-                    {currentLanguage === 'fa' 
-                      ? '• رنگ‌ها باید در فرمت HEX باشند (مثال: #3B82F6)'
-                      : '• Colors should be in HEX format (example: #3B82F6)'
-                    }
-                  </p>
-                  <p>
-                    {currentLanguage === 'fa' 
-                      ? '• تصاویر را روی سرویس میزبانی آپلود کرده و URL آن‌ها را استفاده کنید'
-                      : '• Upload images to a hosting service and use their URLs'
-                    }
+                  <p className="text-muted-foreground">
+                    {t('admin:branding.previewDescription')}
                   </p>
                 </CardContent>
               </Card>
