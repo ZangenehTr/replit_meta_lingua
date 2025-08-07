@@ -49,6 +49,11 @@ import enCallern from './locales/en/callern.json';
 import faCallern from './locales/fa/callern.json';
 import arCallern from './locales/ar/callern.json';
 
+// Import coursePlayer namespace
+import enCoursePlayer from './locales/en/coursePlayer.json';
+import faCoursePlayer from './locales/fa/coursePlayer.json';
+import arCoursePlayer from './locales/ar/coursePlayer.json';
+
 // Language detection options
 const detectionOptions = {
   order: ['localStorage', 'navigator', 'htmlTag'],
@@ -86,6 +91,7 @@ i18n
         accountant: enAccountant,
         auth: enAuth,
         callern: enCallern,
+        coursePlayer: enCoursePlayer,
       },
       fa: {
         common: faCommon,
@@ -100,6 +106,7 @@ i18n
         accountant: faAccountant,
         auth: faAuth,
         callern: faCallern,
+        coursePlayer: faCoursePlayer,
       },
       ar: {
         common: arCommon,
@@ -114,11 +121,12 @@ i18n
         accountant: arAccountant,
         auth: arAuth,
         callern: arCallern,
+        coursePlayer: arCoursePlayer,
       },
     },
     
     defaultNS: 'common',
-    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'auth', 'callern'],
+    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'auth', 'callern', 'coursePlayer'],
   });
 
 export default i18n;
