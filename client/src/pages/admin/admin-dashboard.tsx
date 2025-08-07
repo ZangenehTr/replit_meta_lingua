@@ -173,7 +173,7 @@ export function AdminDashboard() {
             {isPersian ? formatPersianPercentage((systemMetrics as any)?.uptime || '99.8') : `${(systemMetrics as any)?.uptime || '99.8'}%`}
           </div>
           <p className="text-xs text-muted-foreground">
-            <span className="sm:hidden">سلامت</span>
+            <span className="sm:hidden">{t('dashboard.healthShort', { ns: 'common' })}</span>
             <span className="hidden sm:inline">{t('dashboard.last30Days', { ns: 'common' })}</span>
           </p>
         </Card>
@@ -190,7 +190,7 @@ export function AdminDashboard() {
             {isPersian ? formatPersianPercentage((callCenterStats as any)?.responseRate || '96.0') : `${(callCenterStats as any)?.responseRate || '96.0'}%`}
           </div>
           <p className="text-xs text-muted-foreground">
-            <span className="sm:hidden">تماس</span>
+            <span className="sm:hidden">{t('dashboard.callShort', { ns: 'common' })}</span>
             <span className="hidden sm:inline">
               {isPersian ? `+۲.۳% ${t('dashboard.fromLastWeek', { ns: 'common' })}` : `+2.3% ${t('dashboard.fromLastWeek', { ns: 'common' })}`}
             </span>
@@ -209,7 +209,7 @@ export function AdminDashboard() {
             {isPersian ? formatPersianNumber((overduePayments as any)?.count || 0) : ((overduePayments as any)?.count || 0)}
           </div>
           <p className="text-xs text-muted-foreground">
-            <span className="sm:hidden">معوقه</span>
+            <span className="sm:hidden">{t('dashboard.overdueShort', { ns: 'common' })}</span>
             <span className="hidden sm:inline">
               {isPersian ? `${formatPersianCurrency((overduePayments as any)?.totalAmount || '0')} ${t('dashboard.total', { ns: 'common' })}` : `$${(overduePayments as any)?.totalAmount || '0'} ${t('dashboard.total', { ns: 'common' })}`}
             </span>
@@ -228,7 +228,7 @@ export function AdminDashboard() {
             {isPersian ? formatPersianCurrency((revenueData as any)?.monthly || '0') : `$${(revenueData as any)?.monthly || '0'}`}
           </div>
           <p className="text-xs text-muted-foreground">
-            <span className="sm:hidden">درآمد</span>
+            <span className="sm:hidden">{t('dashboard.revenueShort', { ns: 'common' })}</span>
             <span className="hidden sm:inline">
               {isPersian ? `+۱۵.۳% ${t('dashboard.fromLastMonth', { ns: 'common' })}` : `+15.3% ${t('dashboard.fromLastMonth', { ns: 'common' })}`}
             </span>
