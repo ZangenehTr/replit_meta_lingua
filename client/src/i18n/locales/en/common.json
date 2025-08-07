@@ -143,6 +143,10 @@
   "dashboard": {
     "title": "Management Dashboard",
     "subtitle": "Overview of system operations and metrics",
+    "healthShort": "Health",
+    "callShort": "Call",
+    "overdueShort": "Overdue",
+    "revenueShort": "Revenue",
     "systemHealth": "System Health",
     "last30Days": "Last 30 Days",
     "callResponseRate": "Call Response Rate",

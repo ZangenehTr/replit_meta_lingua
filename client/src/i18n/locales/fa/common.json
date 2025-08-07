@@ -71,6 +71,10 @@
   "dashboard": {
     "title": "داشبورد مدیریت",
     "subtitle": "نمای کلی عملیات و معیارهای سیستم",
+    "healthShort": "سلامت",
+    "callShort": "تماس",
+    "overdueShort": "معوقه",
+    "revenueShort": "درآمد",
     "profitMargin": "حاشیه سود",
     "financialKPIs": "شاخص‌های کلیدی مالی",
     "studentAcquisitionSources": "منابع جذب دانشجو",

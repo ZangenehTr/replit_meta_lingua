@@ -26,6 +26,10 @@ Recent session (2025-01-07):
 - Fully internationalized CoursePlayer.tsx component replacing all dual-language hardcoded text with proper i18n translations
 - Added coursePlayer namespace to i18n configuration and resources
 - Updated all Course Player UI elements including video controls, tabs, lesson navigation, bookmarks, resources, and course information with proper translations
+- Fully internationalized AdminDashboard component with complete mobile-responsive translations
+- Added mobile-specific short labels (healthShort, callShort, overdueShort, revenueShort) for compact views
+- Extended dashboard translations in common.json for all three languages (Persian, English, Arabic) with 70+ dashboard-related keys
+- Replaced all hardcoded Persian text in mobile views with proper i18n translations
 
 ## Test Accounts
 All 7 roles have test accounts with the following credentials:
