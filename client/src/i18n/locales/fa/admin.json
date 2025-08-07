@@ -593,6 +593,7 @@
   "teacherPayments": {
     "title": "پرداخت‌های معلمان",
     "subtitle": "مدیریت پرداخت‌ها و محاسبات حقوق معلمان",
+    "filterByTeacher": "فیلتر بر اساس معلم",
     "paymentCalculation": "محاسبه پرداخت",
     "calculatePaymentsForTeachers": "محاسبه پرداخت‌ها برای معلمان",
     "selectTeacher": "انتخاب معلم",
