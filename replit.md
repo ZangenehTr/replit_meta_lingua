@@ -18,6 +18,10 @@ Recent session (2025-01-07):
 - Fully internationalized Auth.tsx component with proper RTL support and dynamic language detection
 - Fixed i18n configuration to include auth namespace in all language resources
 - Resolved TypeScript errors in admin-dashboard.tsx by adding proper type assertions
+- Created comprehensive Callern system translations for all three languages (Persian, English, Arabic) with 60+ translation keys
+- Fully internationalized Callern.tsx component with all hardcoded English text replaced with i18n translations
+- Added callern namespace to i18n configuration and resources
+- Updated all UI elements in Callern system including welcome banner, stats cards, package management, teacher listings, call history, and purchase dialogs with proper translations
 
 ## Test Accounts
 All 7 roles have test accounts with the following credentials:

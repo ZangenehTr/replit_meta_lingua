@@ -44,6 +44,11 @@ import enAuth from './locales/en/auth.json';
 import faAuth from './locales/fa/auth.json';
 import arAuth from './locales/ar/auth.json';
 
+// Import callern namespace
+import enCallern from './locales/en/callern.json';
+import faCallern from './locales/fa/callern.json';
+import arCallern from './locales/ar/callern.json';
+
 // Language detection options
 const detectionOptions = {
   order: ['localStorage', 'navigator', 'htmlTag'],
@@ -80,6 +85,7 @@ i18n
         callcenter: enCallcenter,
         accountant: enAccountant,
         auth: enAuth,
+        callern: enCallern,
       },
       fa: {
         common: faCommon,
@@ -93,6 +99,7 @@ i18n
         callcenter: faCallcenter,
         accountant: faAccountant,
         auth: faAuth,
+        callern: faCallern,
       },
       ar: {
         common: arCommon,
@@ -106,11 +113,12 @@ i18n
         callcenter: arCallcenter,
         accountant: arAccountant,
         auth: arAuth,
+        callern: arCallern,
       },
     },
     
     defaultNS: 'common',
-    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'auth'],
+    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'auth', 'callern'],
   });
 
 export default i18n;
