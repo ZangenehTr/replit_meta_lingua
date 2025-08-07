@@ -22,6 +22,10 @@ Recent session (2025-01-07):
 - Fully internationalized Callern.tsx component with all hardcoded English text replaced with i18n translations
 - Added callern namespace to i18n configuration and resources
 - Updated all UI elements in Callern system including welcome banner, stats cards, package management, teacher listings, call history, and purchase dialogs with proper translations
+- Created comprehensive Course Player translations for all three languages (Persian, English, Arabic) with 80+ translation keys
+- Fully internationalized CoursePlayer.tsx component replacing all dual-language hardcoded text with proper i18n translations
+- Added coursePlayer namespace to i18n configuration and resources
+- Updated all Course Player UI elements including video controls, tabs, lesson navigation, bookmarks, resources, and course information with proper translations
 
 ## Test Accounts
 All 7 roles have test accounts with the following credentials:

@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { BackButton } from "@/components/ui/back-button";
 import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from "react-i18next";
 
 interface CoursePlayerProps {
   courseId: string;
@@ -84,6 +85,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currentLanguage, isRTL } = useLanguage();
+  const { t } = useTranslation();
 
   // Fetch course data
   const { data: course, isLoading } = useQuery<Course>({
@@ -124,8 +126,8 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/courses', courseId] });
       toast({
-        title: "درس تکمیل شد! / Lesson Completed!",
-        description: "پیشرفت شما ذخیره شد / Your progress has been saved",
+        title: t('coursePlayer:lessonCompleted'),
+        description: t('coursePlayer:progressSaved'),
       });
     },
   });
@@ -200,8 +202,8 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
     const newBookmarks = [...bookmarks, currentTime];
     setBookmarks(newBookmarks);
     toast({
-      title: "نشانه‌گذاری اضافه شد / Bookmark Added",
-      description: `در زمان ${Math.floor(currentTime / 60)}:${Math.floor(currentTime % 60)} / At ${Math.floor(currentTime / 60)}:${Math.floor(currentTime % 60)}`,
+      title: t('coursePlayer:bookmarkAdded'),
+      description: `${t('coursePlayer:atTime')} ${formatTime(currentTime)}`,
     });
   };
 
@@ -227,7 +229,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading course content...</p>
+          <p>{t('coursePlayer:loadingCourse')}</p>
         </div>
       </div>
     );
@@ -241,9 +243,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
           <div className="flex items-center space-x-4">
             <BackButton 
               href="/dashboard" 
-              label={currentLanguage === 'fa' ? 'بازگشت به دوره' :
-                     currentLanguage === 'ar' ? 'العودة إلى الدورة' :
-                     'Back to Course'}
+              label={t('coursePlayer:backToCourse')}
             />
             <div>
               <h1 className="text-xl font-bold">{course.title}</h1>
@@ -254,11 +254,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
           </div>
           <div className="flex items-center space-x-2">
             <Badge variant="secondary">
-              {course.completedLessons} / {course.totalLessons} {
-                currentLanguage === 'fa' ? 'دروس' :
-                currentLanguage === 'ar' ? 'الدروس' :
-                'lessons'
-              }
+              {course.completedLessons} / {course.totalLessons} {t('coursePlayer:lessons')}
             </Badge>
             <Progress value={course.progress} className="w-32" />
           </div>
@@ -401,10 +397,10 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
             {/* Lesson Content Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview">نمای کلی / Overview</TabsTrigger>
-                <TabsTrigger value="transcript">متن / Transcript</TabsTrigger>
-                <TabsTrigger value="notes">یادداشت‌ها / Notes</TabsTrigger>
-                <TabsTrigger value="resources">منابع / Resources</TabsTrigger>
+                <TabsTrigger value="overview">{t('coursePlayer:overview')}</TabsTrigger>
+                <TabsTrigger value="transcript">{t('coursePlayer:transcript')}</TabsTrigger>
+                <TabsTrigger value="notes">{t('coursePlayer:notes')}</TabsTrigger>
+                <TabsTrigger value="resources">{t('coursePlayer:resources')}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="overview" className="space-y-4">
@@ -419,7 +415,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <div className="flex items-center">
                         <Clock className="h-4 w-4 mr-1" />
-                        {Math.floor(currentLesson.duration / 60)} دقیقه
+                        {Math.floor(currentLesson.duration / 60)} {t('coursePlayer:minutes')}
                       </div>
                       <div className="flex items-center">
                         {currentLesson.isCompleted ? (
@@ -427,7 +423,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                         ) : (
                           <Circle className="h-4 w-4 mr-1" />
                         )}
-                        {currentLesson.isCompleted ? 'تکمیل شده' : 'در حال مطالعه'}
+                        {currentLesson.isCompleted ? t('coursePlayer:completed') : t('coursePlayer:inProgress')}
                       </div>
                     </div>
                   </CardContent>
@@ -437,14 +433,14 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
               <TabsContent value="transcript">
                 <Card>
                   <CardHeader>
-                    <CardTitle>متن درس / Lesson Transcript</CardTitle>
+                    <CardTitle>{t('coursePlayer:lessonTranscript')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="prose dark:prose-invert max-w-none">
                       {currentLesson.transcript ? (
                         <p className="whitespace-pre-wrap">{currentLesson.transcript}</p>
                       ) : (
-                        <p className="text-gray-500">متن این درس در دسترس نیست / Transcript not available for this lesson</p>
+                        <p className="text-gray-500">{t('coursePlayer:transcriptNotAvailable')}</p>
                       )}
                     </div>
                   </CardContent>
@@ -454,29 +450,29 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
               <TabsContent value="notes">
                 <Card>
                   <CardHeader>
-                    <CardTitle>یادداشت‌های شخصی / Personal Notes</CardTitle>
+                    <CardTitle>{t('coursePlayer:personalNotes')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Textarea
-                      placeholder="یادداشت‌های خود را اینجا بنویسید / Write your notes here..."
+                      placeholder={t('coursePlayer:writeNotesHere')}
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       rows={10}
                     />
                     <div className="mt-4">
-                      <h4 className="font-medium mb-2">نشانه‌گذاری‌ها / Bookmarks</h4>
+                      <h4 className="font-medium mb-2">{t('coursePlayer:bookmarks')}</h4>
                       <div className="space-y-2">
                         {bookmarks.map((bookmark, index) => (
                           <div key={index} className="flex items-center justify-between p-2 border rounded">
                             <span onClick={() => handleSeek(bookmark)} className="cursor-pointer hover:text-blue-600">
-                              زمان {formatTime(bookmark)} / Time {formatTime(bookmark)}
+                              {t('coursePlayer:time')} {formatTime(bookmark)}
                             </span>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => setBookmarks(bookmarks.filter((_, i) => i !== index))}
                             >
-                              حذف / Remove
+                              {t('coursePlayer:remove')}
                             </Button>
                           </div>
                         ))}
@@ -489,7 +485,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
               <TabsContent value="resources">
                 <Card>
                   <CardHeader>
-                    <CardTitle>منابع و فایل‌ها / Resources & Files</CardTitle>
+                    <CardTitle>{t('coursePlayer:resourcesAndFiles')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
@@ -502,12 +498,12 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                             </div>
                             <Button variant="outline" size="sm">
                               <Download className="h-4 w-4 mr-2" />
-                              دانلود / Download
+                              {t('coursePlayer:download')}
                             </Button>
                           </div>
                         ))
                       ) : (
-                        <p className="text-gray-500">منابع اضافی برای این درس موجود نیست / No additional resources available</p>
+                        <p className="text-gray-500">{t('coursePlayer:noResourcesAvailable')}</p>
                       )}
                     </div>
                   </CardContent>
@@ -520,7 +516,7 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>فهرست دروس / Course Lessons</CardTitle>
+                <CardTitle>{t('coursePlayer:courseLessons')}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="max-h-96 overflow-y-auto">
@@ -546,13 +542,13 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
                               {index + 1}. {lesson.title}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {Math.floor(lesson.duration / 60)} دقیقه
+                              {Math.floor(lesson.duration / 60)} {t('coursePlayer:minutes')}
                             </p>
                           </div>
                         </div>
                         {lesson.isPreview && (
                           <Badge variant="secondary" className="text-xs">
-                            پیش‌نمایش / Preview
+                            {t('coursePlayer:preview')}
                           </Badge>
                         )}
                       </div>
@@ -564,25 +560,25 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
 
             <Card>
               <CardHeader>
-                <CardTitle>اطلاعات دوره / Course Info</CardTitle>
+                <CardTitle>{t('coursePlayer:courseInfo')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">مدرس / Instructor:</span>
+                  <span className="text-sm text-gray-600">{t('coursePlayer:instructor')}:</span>
                   <span className="text-sm font-medium">{course.instructor}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">سطح / Level:</span>
+                  <span className="text-sm text-gray-600">{t('coursePlayer:level')}:</span>
                   <Badge variant="outline">{course.level}</Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">زبان / Language:</span>
+                  <span className="text-sm text-gray-600">{t('coursePlayer:language')}:</span>
                   <span className="text-sm">{course.language}</span>
                 </div>
                 <Separator />
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>پیشرفت / Progress:</span>
+                    <span>{t('coursePlayer:progress')}:</span>
                     <span>{course.progress}%</span>
                   </div>
                   <Progress value={course.progress} />
