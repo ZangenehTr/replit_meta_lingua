@@ -171,37 +171,30 @@ export function AppLayout({ children }: AppLayoutProps) {
       </header>
 
       {/* Main Layout with Sidebar */}
-      <div className="flex min-h-[calc(100vh-3.5rem)]" dir={direction}>
+      <div className="flex min-h-[calc(100vh-4rem)]" dir={direction}>
         {/* Desktop Sidebar - hidden on mobile */}
-        <div 
-          className={`sidebar-container hidden md:block md:fixed md:top-16 md:h-[calc(100vh-4rem)] md:w-64 md:z-30 border-r border-border bg-background ${direction === 'rtl' ? 'rtl-sidebar' : 'ltr-sidebar'}`}
-          style={{
-            position: 'fixed',
-            top: '64px',
-            width: '256px',
-            height: 'calc(100vh - 64px)',
-            zIndex: 30,
-            ...(direction === 'rtl' ? { right: '0px', left: 'auto' } : { left: '0px', right: 'auto' })
-          }}
+        <aside 
+          className={`hidden md:block md:w-64 flex-shrink-0 ${
+            direction === 'rtl' ? 'order-last' : 'order-first'
+          }`}
         >
-          <Sidebar />
-        </div>
+          <div className={`fixed top-16 w-64 h-[calc(100vh-4rem)] overflow-y-auto ${
+            direction === 'rtl' 
+              ? 'right-0 border-l border-border' 
+              : 'left-0 border-r border-border'
+          } bg-background`}>
+            <Sidebar />
+          </div>
+        </aside>
         
         {/* Main Content - properly spaced for sidebar and bottom nav */}
         <main 
-          className="flex-1 overflow-y-auto pb-20 md:pb-8"
+          className={`flex-1 w-full md:w-[calc(100%-16rem)] overflow-y-auto pb-20 md:pb-8 ${
+            direction === 'rtl' ? 'md:mr-64' : 'md:ml-64'
+          }`}
           dir={direction} 
-          style={{
-            position: 'relative',
-            minHeight: '100vh',
-            direction: direction,
-            textAlign: direction === 'rtl' ? 'right' : 'left',
-            marginLeft: direction === 'ltr' ? '256px' : '0',
-            marginRight: direction === 'rtl' ? '256px' : '0',
-            width: 'calc(100vw - 256px)'
-          }}
         >
-          <div className="min-h-full p-4 sm:p-6 lg:p-8" style={{direction: direction, textAlign: direction === 'rtl' ? 'right' : 'left'}}>
+          <div className="min-h-full p-4 sm:p-6 lg:p-8">
             {children}
           </div>
         </main>
