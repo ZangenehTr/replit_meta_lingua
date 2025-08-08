@@ -5964,13 +5964,13 @@ export class DatabaseStorage implements IStorage {
     try {
       // Get enrollment statistics by course type
       const registrationsByType = await db.select({
-        deliveryMode: courses.deliveryMode,
-        classType: courses.classType,
+        deliveryMode: courses.delivery_mode,
+        classFormat: courses.class_format,
         count: sql<number>`count(*)`
       }).from(enrollments)
         .leftJoin(courses, eq(enrollments.courseId, courses.id))
-        .where(gte(enrollments.enrollmentDate, sql`current_date - interval '1 month'`))
-        .groupBy(courses.deliveryMode, courses.classType);
+        .where(gte(enrollments.enrolledAt, sql`current_date - interval '1 month'`))
+        .groupBy(courses.delivery_mode, courses.class_format);
 
       // Transform data to match chart format
       const byType = [
@@ -5983,15 +5983,15 @@ export class DatabaseStorage implements IStorage {
       ];
 
       registrationsByType.forEach(reg => {
-        if (reg.deliveryMode === 'in-person' && reg.classType === 'group') {
+        if (reg.deliveryMode === 'in_person' && reg.classFormat === 'group') {
           byType[0].value += reg.count;
-        } else if (reg.deliveryMode === 'online' && reg.classType === 'group') {
+        } else if (reg.deliveryMode === 'online' && reg.classFormat === 'group') {
           byType[1].value += reg.count;
-        } else if (reg.deliveryMode === 'in-person' && reg.classType === 'private') {
+        } else if (reg.deliveryMode === 'in_person' && reg.classFormat === 'one_on_one') {
           byType[2].value += reg.count;
-        } else if (reg.deliveryMode === 'online' && reg.classType === 'private') {
+        } else if (reg.deliveryMode === 'online' && reg.classFormat === 'one_on_one') {
           byType[3].value += reg.count;
-        } else if (reg.deliveryMode === 'hybrid') {
+        } else if (reg.deliveryMode === 'self_paced') {
           byType[4].value += reg.count;
         }
       });
