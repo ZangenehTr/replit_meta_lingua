@@ -174,14 +174,14 @@ export default function WhiteLabelPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Success Rate
+              {t('admin:whiteLabel.successRate')}
             </CardTitle>
             <Settings className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">94.2%</div>
             <p className="text-xs text-muted-foreground">
-              Institute satisfaction
+              {t('admin:whiteLabel.instituteSatisfaction')}
             </p>
           </CardContent>
         </Card>
@@ -189,18 +189,18 @@ export default function WhiteLabelPage() {
 
       <Tabs defaultValue="institutes" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="institutes">Institute Overview</TabsTrigger>
-          <TabsTrigger value="branding">Branding Settings</TabsTrigger>
-          <TabsTrigger value="features">Feature Management</TabsTrigger>
-          <TabsTrigger value="deployment">Deployment Tools</TabsTrigger>
+          <TabsTrigger value="institutes">{t('admin:whiteLabel.instituteOverview')}</TabsTrigger>
+          <TabsTrigger value="branding">{t('admin:whiteLabel.brandingSettings')}</TabsTrigger>
+          <TabsTrigger value="features">{t('admin:whiteLabel.featureManagement')}</TabsTrigger>
+          <TabsTrigger value="deployment">{t('admin:whiteLabel.deploymentTools')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="institutes">
           <Card>
             <CardHeader>
-              <CardTitle>Institute Management</CardTitle>
+              <CardTitle>{t('admin:whiteLabel.instituteManagement')}</CardTitle>
               <CardDescription>
-                Manage all white-label institute deployments
+                {t('admin:whiteLabel.manageDeployments')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -252,11 +252,11 @@ export default function WhiteLabelPage() {
                         </p>
                         <div className="flex items-center space-x-2 mt-1">
                           <span className="text-xs text-gray-400">
-                            {institute.studentsCount} students
+                            {institute.studentsCount} {t('admin:whiteLabel.students')}
                           </span>
                           <span className="text-xs text-gray-400">•</span>
                           <span className="text-xs text-gray-400">
-                            {institute.teachersCount} teachers
+                            {institute.teachersCount} {t('admin:whiteLabel.teachers')}
                           </span>
                         </div>
                       </div>
@@ -271,7 +271,7 @@ export default function WhiteLabelPage() {
                         </Badge>
                       </div>
                       <p className="text-sm font-medium">
-                        {institute.monthlyRevenue.toLocaleString()} IRR/month
+                        {institute.monthlyRevenue.toLocaleString()} {t('admin:whiteLabel.irrPerMonth')}
                       </p>
                       <div className="flex space-x-1">
                         <Button size="sm" variant="outline">
@@ -295,38 +295,38 @@ export default function WhiteLabelPage() {
         <TabsContent value="branding">
           <Card>
             <CardHeader>
-              <CardTitle>Custom Branding Configuration</CardTitle>
+              <CardTitle>{t('admin:whiteLabel.customBranding')}</CardTitle>
               <CardDescription>
-                Customize appearance for each institute
+                {t('admin:whiteLabel.customizeAppearance')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <Label>Institute Logo</Label>
+                  <Label>{t('admin:whiteLabel.instituteLogo')}</Label>
                   <div className="flex items-center space-x-4">
                     <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
                       <Building2 className="h-8 w-8 text-gray-600" />
                     </div>
                     <Button variant="outline">
                       <Upload className="h-4 w-4 mr-2" />
-                      Upload Logo
+                      {t('admin:whiteLabel.uploadLogo')}
                     </Button>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <Label>Color Scheme</Label>
+                  <Label>{t('admin:whiteLabel.colorScheme')}</Label>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm">Primary Color</Label>
+                      <Label className="text-sm">{t('admin:whiteLabel.primaryColor')}</Label>
                       <div className="flex items-center space-x-2">
                         <Input type="color" value="#3B82F6" className="w-12 h-8" />
                         <Input value="#3B82F6" />
                       </div>
                     </div>
                     <div>
-                      <Label className="text-sm">Secondary Color</Label>
+                      <Label className="text-sm">{t('admin:whiteLabel.secondaryColor')}</Label>
                       <div className="flex items-center space-x-2">
                         <Input type="color" value="#6366F1" className="w-12 h-8" />
                         <Input value="#6366F1" />
@@ -337,20 +337,20 @@ export default function WhiteLabelPage() {
               </div>
 
               <div className="space-y-4">
-                <Label>Custom Domain Settings</Label>
+                <Label>{t('admin:whiteLabel.customDomainSettings')}</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm">Subdomain</Label>
-                    <Input placeholder="institute-name" />
+                    <Label className="text-sm">{t('admin:whiteLabel.subdomain')}</Label>
+                    <Input placeholder={t('admin:whiteLabel.subdomainPlaceholder')} />
                     <p className="text-xs text-gray-500 mt-1">
-                      Will create: institute-name.metalingua.com
+                      {t('admin:whiteLabel.willCreate')}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm">Custom Domain (Optional)</Label>
-                    <Input placeholder="www.institute.com" />
+                    <Label className="text-sm">{t('admin:whiteLabel.customDomainOptional')}</Label>
+                    <Input placeholder={t('admin:whiteLabel.customDomainPlaceholder')} />
                     <p className="text-xs text-gray-500 mt-1">
-                      Requires DNS configuration
+                      {t('admin:whiteLabel.requiresDNS')}
                     </p>
                   </div>
                 </div>
@@ -362,9 +362,9 @@ export default function WhiteLabelPage() {
         <TabsContent value="features">
           <Card>
             <CardHeader>
-              <CardTitle>Feature Management</CardTitle>
+              <CardTitle>{t('admin:whiteLabel.featureManagement')}</CardTitle>
               <CardDescription>
-                Control which features are available for each subscription plan
+                {t('admin:whiteLabel.controlFeatures')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -372,35 +372,35 @@ export default function WhiteLabelPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[
                     {
-                      plan: 'Basic',
-                      price: '2,500,000 IRR/month',
+                      plan: t('admin:whiteLabel.planBasic'),
+                      price: `2,500,000 ${t('admin:whiteLabel.irrPerMonth')}`,
                       features: [
-                        'Up to 50 students',
-                        'Basic course management',
-                        'Email support',
-                        'Standard branding'
+                        t('admin:whiteLabel.feature50Students'),
+                        t('admin:whiteLabel.featureBasicCourses'),
+                        t('admin:whiteLabel.featureEmailSupport'),
+                        t('admin:whiteLabel.featureStandardBranding')
                       ]
                     },
                     {
-                      plan: 'Professional', 
-                      price: '7,500,000 IRR/month',
+                      plan: t('admin:whiteLabel.planProfessional'), 
+                      price: `7,500,000 ${t('admin:whiteLabel.irrPerMonth')}`,
                       features: [
-                        'Up to 200 students',
-                        'Advanced analytics',
-                        'SMS notifications',
-                        'Custom domain',
-                        'Priority support'
+                        t('admin:whiteLabel.feature200Students'),
+                        t('admin:whiteLabel.featureAdvancedAnalytics'),
+                        t('admin:whiteLabel.featureSMSNotifications'),
+                        t('admin:whiteLabel.featureCustomDomain'),
+                        t('admin:whiteLabel.featurePrioritySupport')
                       ]
                     },
                     {
-                      plan: 'Enterprise',
-                      price: '15,000,000 IRR/month',
+                      plan: t('admin:whiteLabel.planEnterprise'),
+                      price: `15,000,000 ${t('admin:whiteLabel.irrPerMonth')}`,
                       features: [
-                        'Unlimited students',
-                        'White-label API access',
-                        'Multi-location support',
-                        'Custom integrations',
-                        'Dedicated support'
+                        t('admin:whiteLabel.featureUnlimitedStudents'),
+                        t('admin:whiteLabel.featureAPIAccess'),
+                        t('admin:whiteLabel.featureMultiLocation'),
+                        t('admin:whiteLabel.featureCustomIntegrations'),
+                        t('admin:whiteLabel.featureDedicatedSupport')
                       ]
                     }
                   ].map((plan, index) => (
@@ -432,9 +432,9 @@ export default function WhiteLabelPage() {
         <TabsContent value="deployment">
           <Card>
             <CardHeader>
-              <CardTitle>Deployment Tools</CardTitle>
+              <CardTitle>{t('admin:whiteLabel.deploymentTools')}</CardTitle>
               <CardDescription>
-                One-click deployment and management tools
+                {t('admin:whiteLabel.oneClickDeployment')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -442,43 +442,43 @@ export default function WhiteLabelPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Quick Deploy</CardTitle>
+                      <CardTitle className="text-lg">{t('admin:whiteLabel.quickDeploy')}</CardTitle>
                       <CardDescription>
-                        Deploy a new institute in minutes
+                        {t('admin:whiteLabel.deployInMinutes')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <Button className="w-full">
                         <Zap className="h-4 w-4 mr-2" />
-                        One-Click Deploy
+                        {t('admin:whiteLabel.oneClickDeployButton')}
                       </Button>
                       <p className="text-sm text-gray-500">
-                        Automatically sets up database, subdomain, and default configuration
+                        {t('admin:whiteLabel.automaticSetup')}
                       </p>
                     </CardContent>
                   </Card>
 
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Export Package</CardTitle>
+                      <CardTitle className="text-lg">{t('admin:whiteLabel.exportPackage')}</CardTitle>
                       <CardDescription>
-                        Generate self-hosted package
+                        {t('admin:whiteLabel.generateSelfHosted')}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <Button variant="outline" className="w-full">
                         <Download className="h-4 w-4 mr-2" />
-                        Download Package
+                        {t('admin:whiteLabel.downloadPackage')}
                       </Button>
                       <p className="text-sm text-gray-500">
-                        Complete installation package for local deployment
+                        {t('admin:whiteLabel.completePackage')}
                       </p>
                     </CardContent>
                   </Card>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-medium mb-4">API Integration</h3>
+                  <h3 className="text-lg font-medium mb-4">{t('admin:whiteLabel.apiIntegration')}</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <pre className="text-sm whitespace-pre-wrap">
 {`curl -X POST https://api.metalingua.com/v1/institutes \\
