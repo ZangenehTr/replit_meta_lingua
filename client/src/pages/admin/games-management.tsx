@@ -204,7 +204,7 @@ export default function GamesManagement() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this game?')) {
+    if (confirm(t('admin:games.confirmDelete'))) {
       deleteGameMutation.mutate(id);
     }
   };
@@ -235,9 +235,9 @@ export default function GamesManagement() {
             name="gameName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Game Name</FormLabel>
+                <FormLabel>{t('admin:games.gameName')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter game name" {...field} />
+                  <Input placeholder={t('admin:games.gameNamePlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -248,9 +248,9 @@ export default function GamesManagement() {
             name="gameCode"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Game Code</FormLabel>
+                <FormLabel>{t('admin:games.gameCode')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter game code" {...field} />
+                  <Input placeholder={t('admin:games.gameCodePlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -263,9 +263,9 @@ export default function GamesManagement() {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>{t('admin:games.description')}</FormLabel>
               <FormControl>
-                <Textarea placeholder="Enter game description" {...field} />
+                <Textarea placeholder={t('admin:games.descriptionPlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -278,20 +278,20 @@ export default function GamesManagement() {
             name="gameType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Game Type</FormLabel>
+                <FormLabel>{t('admin:games.gameType')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select game type" />
+                      <SelectValue placeholder={t('admin:games.selectGameType')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="vocabulary">Vocabulary</SelectItem>
-                    <SelectItem value="grammar">Grammar</SelectItem>
-                    <SelectItem value="listening">Listening</SelectItem>
-                    <SelectItem value="speaking">Speaking</SelectItem>
-                    <SelectItem value="reading">Reading</SelectItem>
-                    <SelectItem value="writing">Writing</SelectItem>
+                    <SelectItem value="vocabulary">{t('admin:games.vocabulary')}</SelectItem>
+                    <SelectItem value="grammar">{t('admin:games.grammar')}</SelectItem>
+                    <SelectItem value="listening">{t('admin:games.listening')}</SelectItem>
+                    <SelectItem value="speaking">{t('admin:games.speaking')}</SelectItem>
+                    <SelectItem value="reading">{t('admin:games.reading')}</SelectItem>
+                    <SelectItem value="writing">{t('admin:games.writing')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -303,11 +303,11 @@ export default function GamesManagement() {
             name="ageGroup"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Age Group</FormLabel>
+                <FormLabel>{t('admin:games.ageGroup')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select age group" />
+                      <SelectValue placeholder={t('admin:games.selectAgeGroup')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -326,16 +326,16 @@ export default function GamesManagement() {
             name="language"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Language</FormLabel>
+                <FormLabel>{t('admin:games.language')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select language" />
+                      <SelectValue placeholder={t('admin:games.selectLanguage')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="fa">Persian</SelectItem>
+                    <SelectItem value="en">{t('admin:games.english')}</SelectItem>
+                    <SelectItem value="fa">{t('admin:games.persian')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -350,11 +350,11 @@ export default function GamesManagement() {
             name="minLevel"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Min Level</FormLabel>
+                <FormLabel>{t('admin:games.minLevel')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select min level" />
+                      <SelectValue placeholder={t('admin:games.selectMinLevel')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -375,11 +375,11 @@ export default function GamesManagement() {
             name="maxLevel"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Max Level</FormLabel>
+                <FormLabel>{t('admin:games.maxLevel')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select max level" />
+                      <SelectValue placeholder={t('admin:games.selectMaxLevel')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -403,7 +403,7 @@ export default function GamesManagement() {
             name="duration"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Duration (minutes)</FormLabel>
+                <FormLabel>{t('admin:games.duration')}</FormLabel>
                 <FormControl>
                   <Input type="number" min={5} {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                 </FormControl>
@@ -416,7 +416,7 @@ export default function GamesManagement() {
             name="pointsPerCorrect"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Points per Correct</FormLabel>
+                <FormLabel>{t('admin:games.pointsPerCorrect')}</FormLabel>
                 <FormControl>
                   <Input type="number" min={1} {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                 </FormControl>
@@ -429,7 +429,7 @@ export default function GamesManagement() {
             name="totalLevels"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Total Levels</FormLabel>
+                <FormLabel>{t('admin:games.totalLevels')}</FormLabel>
                 <FormControl>
                   <Input type="number" min={1} {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                 </FormControl>
@@ -444,9 +444,9 @@ export default function GamesManagement() {
           name="thumbnailUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Thumbnail URL (optional)</FormLabel>
+              <FormLabel>{t('admin:games.thumbnailUrl')}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter thumbnail URL" {...field} />
+                <Input placeholder={t('admin:games.thumbnailUrlPlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -459,10 +459,10 @@ export default function GamesManagement() {
             setIsEditDialogOpen(false);
             setSelectedGame(null);
           }}>
-            Cancel
+            {t('admin:games.cancel')}
           </Button>
           <Button type="submit" disabled={createGameMutation.isPending || updateGameMutation.isPending}>
-            {createGameMutation.isPending || updateGameMutation.isPending ? 'Saving...' : selectedGame ? 'Update Game' : 'Create Game'}
+            {createGameMutation.isPending || updateGameMutation.isPending ? t('admin:games.saving') : selectedGame ? t('admin:games.updateGame') : t('admin:games.createGame')}
           </Button>
         </div>
         </form>
@@ -486,9 +486,9 @@ export default function GamesManagement() {
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Create New Game</DialogTitle>
+              <DialogTitle>{t('admin:games.addGame')}</DialogTitle>
               <DialogDescription>
-                Add a new educational game to the platform
+                {t('admin:games.description')}
               </DialogDescription>
             </DialogHeader>
             {GameFormComponent}
