@@ -5941,7 +5941,7 @@ export class DatabaseStorage implements IStorage {
           )
         );
 
-      const monthly = currentMonthRevenue[0]?.total || 89420;
+      const monthly = Number(currentMonthRevenue[0]?.total) || 89420;
 
       return {
         monthly: monthly.toFixed(0),
@@ -6029,7 +6029,7 @@ export class DatabaseStorage implements IStorage {
         teacherId: users.id,
         teacherName: sql<string>`concat(${users.firstName}, ' ', ${users.lastName})`,
         totalSessions: sql<number>`count(${sessions.id})`,
-        completedSessions: sql<number>`count(*) filter (where ${sessions.status} = 'completed')`,
+        completedSessions: sql<number>`sum(case when ${sessions.status} = 'completed' then 1 else 0 end)`,
         avgRating: sql<number>`avg(case when ${sessions.teacherRating} > 0 then ${sessions.teacherRating} else null end)`
       }).from(users)
         .leftJoin(sessions, eq(users.id, sessions.teacherId))
@@ -6107,7 +6107,7 @@ export class DatabaseStorage implements IStorage {
       }).from(users).where(eq(users.role, 'Student'));
 
       const activeStudents = await db.select({
-        count: sql<number>`count(distinct ${enrollments.studentId})`
+        count: sql<number>`count(distinct student_id)`
       }).from(enrollments)
         .leftJoin(sessions, eq(enrollments.courseId, sessions.courseId))
         .where(gte(sessions.sessionDate, sql`current_date - interval '3 months'`));
@@ -6155,7 +6155,7 @@ export class DatabaseStorage implements IStorage {
         courseName: courses.title,
         totalEnrollments: sql<number>`count(${enrollments.id})`,
         completedEnrollments: sql<number>`sum(case when ${enrollments.status} = 'completed' then 1 else 0 end)`,
-        totalStudents: sql<number>`count(distinct ${enrollments.studentId})`
+        totalStudents: sql<number>`count(distinct student_id)`
       }).from(courses)
         .leftJoin(enrollments, eq(courses.id, enrollments.courseId))
         .groupBy(courses.id, courses.title)

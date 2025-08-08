@@ -640,10 +640,10 @@ export function AdminStudents() {
           </Button>
           
           <div className="text-right">
-            <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               {t('admin:students.title')}
             </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
+            <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block mt-1">
               {t('admin:students.subtitle')}
             </p>
           </div>

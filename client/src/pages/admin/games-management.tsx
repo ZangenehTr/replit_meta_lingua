@@ -531,7 +531,7 @@ export default function GamesManagement() {
                           {game.ageGroup}
                         </Badge>
                         <Badge variant={game.isActive ? "default" : "secondary"}>
-                          {game.isActive ? "Active" : "Inactive"}
+                          {game.isActive ? t('admin:games.active') : t('admin:games.inactive')}
                         </Badge>
                       </div>
                     </div>
@@ -562,7 +562,7 @@ export default function GamesManagement() {
                         className="flex-1"
                       >
                         <Edit className="w-4 h-4 mr-1" />
-                        Edit
+                        {t('admin:games.edit')}
                       </Button>
                       <Button
                         variant="outline"
@@ -571,7 +571,7 @@ export default function GamesManagement() {
                         className="flex-1"
                       >
                         <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
+                        {t('admin:games.delete')}
                       </Button>
                     </div>
                   </CardContent>
@@ -584,11 +584,11 @@ export default function GamesManagement() {
         <TabsContent value="configuration" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Game Configuration</CardTitle>
-              <CardDescription>Configure game settings and parameters</CardDescription>
+              <CardTitle>{t('admin:games.gameConfiguration')}</CardTitle>
+              <CardDescription>{t('admin:games.configureSettings')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Game configuration options coming soon...</p>
+              <p className="text-gray-600">{t('admin:games.configurationComingSoon')}</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -596,11 +596,11 @@ export default function GamesManagement() {
         <TabsContent value="analytics" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Game Analytics</CardTitle>
-              <CardDescription>View game performance and user engagement metrics</CardDescription>
+              <CardTitle>{t('admin:games.gameAnalytics')}</CardTitle>
+              <CardDescription>{t('admin:games.viewPerformance')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">Analytics dashboard coming soon...</p>
+              <p className="text-gray-600">{t('admin:games.analyticsComingSoon')}</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -610,9 +610,9 @@ export default function GamesManagement() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Game</DialogTitle>
+            <DialogTitle>{t('admin:games.editGame')}</DialogTitle>
             <DialogDescription>
-              Update game information and settings
+              {t('admin:games.updateGameInfo')}
             </DialogDescription>
           </DialogHeader>
           {GameFormComponent}
