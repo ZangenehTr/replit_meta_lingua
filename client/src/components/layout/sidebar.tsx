@@ -88,7 +88,7 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
   const navigationItems = user ? getNavigationForRole(user.role, t) : [];
 
   return (
-    <aside className={`w-64 md:w-64 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 ${isRTL ? 'border-l' : 'border-r'} border-gray-200 dark:border-gray-700 fixed top-14 ${isRTL ? 'right-0' : 'left-0'} h-[calc(100vh-3.5rem)] overflow-y-auto z-30`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`w-full h-full bg-white dark:bg-gray-800`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="p-6">
         <nav className="space-y-2" dir={isRTL ? 'rtl' : 'ltr'}>
           {navigationItems.map((item) => {
@@ -126,6 +126,6 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
 
         {/* Profile section removed - handled by global header dropdown to eliminate redundancy */}
       </div>
-    </aside>
+    </div>
   );
 }
