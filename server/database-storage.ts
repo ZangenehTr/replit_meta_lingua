@@ -6028,14 +6028,14 @@ export class DatabaseStorage implements IStorage {
       const teacherStats = await db.select({
         teacherId: users.id,
         teacherName: sql<string>`concat(${users.firstName}, ' ', ${users.lastName})`,
-        totalSessions: sql<number>`count(${sessions.id})`,
-        completedSessions: sql<number>`sum(case when ${sessions.status} = 'completed' then 1 else 0 end)`,
-        avgRating: sql<number>`avg(case when ${sessions.teacherRating} > 0 then ${sessions.teacherRating} else null end)`
+        totalSessions: sql<number>`count(*)`,
+        completedSessions: sql<number>`sum(case when sessions.status = 'completed' then 1 else 0 end)`,
+        avgRating: sql<number>`0` // No teacher_rating column in sessions table
       }).from(users)
-        .leftJoin(sessions, eq(users.id, sessions.teacherId))
+        .leftJoin(sessions, eq(users.id, sessions.tutorId))
         .where(eq(users.role, 'Teacher'))
         .groupBy(users.id, users.firstName, users.lastName)
-        .having(sql`count(${sessions.id}) > 0`);
+        .having(sql`count(*) > 0`);
 
       // Calculate metrics with real data or fallbacks
       let lowestAttrition = [];
@@ -6110,7 +6110,7 @@ export class DatabaseStorage implements IStorage {
         count: sql<number>`count(distinct student_id)`
       }).from(enrollments)
         .leftJoin(sessions, eq(enrollments.courseId, sessions.courseId))
-        .where(gte(sessions.sessionDate, sql`current_date - interval '3 months'`));
+        .where(sql`sessions.scheduled_at >= current_date - interval '3 months'`);
 
       const total = totalStudents[0]?.count || 0;
       const active = activeStudents[0]?.count || 0;
@@ -6119,8 +6119,8 @@ export class DatabaseStorage implements IStorage {
       // Get retention by course level (real data only)
       const levelRetention = await db.select({
         level: courses.level,
-        totalEnrollments: sql<number>`count(${enrollments.id})`,
-        activeEnrollments: sql<number>`sum(case when ${enrollments.status} = 'active' then 1 else 0 end)`
+        totalEnrollments: sql<number>`count(*)`,
+        activeEnrollments: sql<number>`sum(case when enrollments.completed_at IS NULL then 1 else 0 end)`
       }).from(courses)
         .leftJoin(enrollments, eq(courses.id, enrollments.courseId))
         .groupBy(courses.level);
@@ -6153,13 +6153,13 @@ export class DatabaseStorage implements IStorage {
       const completionStats = await db.select({
         courseId: courses.id,
         courseName: courses.title,
-        totalEnrollments: sql<number>`count(${enrollments.id})`,
-        completedEnrollments: sql<number>`sum(case when ${enrollments.status} = 'completed' then 1 else 0 end)`,
-        totalStudents: sql<number>`count(distinct student_id)`
+        totalEnrollments: sql<number>`count(*)`,
+        completedEnrollments: sql<number>`sum(case when enrollments.completed_at IS NOT NULL then 1 else 0 end)`,
+        totalStudents: sql<number>`count(distinct user_id)`
       }).from(courses)
         .leftJoin(enrollments, eq(courses.id, enrollments.courseId))
         .groupBy(courses.id, courses.title)
-        .having(sql`count(${enrollments.id}) > 0`);
+        .having(sql`count(*) > 0`);
 
       const totalEnrolled = completionStats.reduce((sum, course) => sum + course.totalEnrollments, 0);
       const totalCompleted = completionStats.reduce((sum, course) => sum + course.completedEnrollments, 0);
