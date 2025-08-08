@@ -6120,7 +6120,7 @@ export class DatabaseStorage implements IStorage {
       const levelRetention = await db.select({
         level: courses.level,
         totalEnrollments: sql<number>`count(${enrollments.id})`,
-        activeEnrollments: sql<number>`count(*) filter (where ${enrollments.status} = 'active')`
+        activeEnrollments: sql<number>`sum(case when ${enrollments.status} = 'active' then 1 else 0 end)`
       }).from(courses)
         .leftJoin(enrollments, eq(courses.id, enrollments.courseId))
         .groupBy(courses.level);
@@ -6154,7 +6154,7 @@ export class DatabaseStorage implements IStorage {
         courseId: courses.id,
         courseName: courses.title,
         totalEnrollments: sql<number>`count(${enrollments.id})`,
-        completedEnrollments: sql<number>`count(*) filter (where ${enrollments.status} = 'completed')`,
+        completedEnrollments: sql<number>`sum(case when ${enrollments.status} = 'completed' then 1 else 0 end)`,
         totalStudents: sql<number>`count(distinct ${enrollments.studentId})`
       }).from(courses)
         .leftJoin(enrollments, eq(courses.id, enrollments.courseId))
