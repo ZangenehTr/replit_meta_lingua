@@ -532,16 +532,16 @@ export default function AdminCommunicationsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>{t('admin:communications.supportTickets')}</CardTitle>
-                  <CardDescription>Manage student support requests</CardDescription>
+                  <CardDescription>{t('admin:communications.manageStudentRequests')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[500px]">
                     <div className="space-y-4">
                       {ticketsLoading ? (
-                        <div className="text-center py-8">Loading tickets...</div>
+                        <div className="text-center py-8">{t('admin:communications.loadingTickets')}</div>
                       ) : ticketsData.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
-                          No support tickets yet
+                          {t('admin:communications.noTickets')}
                         </div>
                       ) : (
                         ticketsData.map((ticket) => (
@@ -581,9 +581,9 @@ export default function AdminCommunicationsPage() {
               {/* Ticket Details */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Ticket Details</CardTitle>
+                  <CardTitle>{t('admin:communications.ticketDetails')}</CardTitle>
                   <CardDescription>
-                    {selectedTicket ? `Ticket #${selectedTicket.id}` : 'Select a ticket to view details'}
+                    {selectedTicket ? `${t('admin:communications.ticketNumber')} #${selectedTicket.id}` : t('admin:communications.selectTicket')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -607,7 +607,7 @@ export default function AdminCommunicationsPage() {
                       </div>
 
                       <div className="border-t pt-4">
-                        <h4 className="font-medium mb-3">Messages</h4>
+                        <h4 className="font-medium mb-3">{t('admin:communications.messages')}</h4>
                         <ScrollArea className="h-[200px]">
                           <div className="space-y-3">
                             {selectedTicket.messages.map((message) => (
@@ -631,7 +631,7 @@ export default function AdminCommunicationsPage() {
 
                       <div className="border-t pt-4">
                         <Textarea 
-                          placeholder="Type your response..." 
+                          placeholder={t('admin:communications.typeMessage')} 
                           className="mb-2"
                           value={ticketReply}
                           onChange={(e) => setTicketReply(e.target.value)}
@@ -639,7 +639,7 @@ export default function AdminCommunicationsPage() {
                         <div className="flex flex-col sm:flex-row justify-between gap-3">
                           <Button variant="outline" size="sm" className="w-full sm:w-auto h-10">
                             <Paperclip className="h-4 w-4 mr-2" />
-                            Attach File
+                            {t('admin:communications.attachFile')}
                           </Button>
                           <Button 
                             size="sm"
@@ -655,14 +655,14 @@ export default function AdminCommunicationsPage() {
                             disabled={!ticketReply.trim() || sendTicketReplyMutation.isPending}
                           >
                             <Send className="h-4 w-4 mr-2" />
-                            {sendTicketReplyMutation.isPending ? 'Sending...' : 'Send Reply'}
+                            {sendTicketReplyMutation.isPending ? t('admin:communications.sending') : t('admin:communications.sendReply')}
                           </Button>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="text-center py-12 text-gray-500">
-                      Select a ticket to view details and respond
+                      {t('admin:communications.selectTicketToRespond')}
                     </div>
                   )}
                 </CardContent>

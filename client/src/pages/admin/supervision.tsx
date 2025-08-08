@@ -237,19 +237,19 @@ export default function Supervision() {
                 <Video className="h-5 w-5" />
                 {t('admin:supervision.liveClassesMonitoring')}
               </CardTitle>
-              <Badge variant="secondary">{liveSessions?.length || 0} Live</Badge>
+              <Badge variant="secondary">{liveSessions?.length || 0} {t('admin:supervision.live')}</Badge>
             </CardHeader>
             <CardContent>
               {liveSessions && liveSessions.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Class Title</TableHead>
-                      <TableHead>Teacher</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Start Time</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t('admin:supervision.classTitle')}</TableHead>
+                      <TableHead>{t('admin:supervision.teacher')}</TableHead>
+                      <TableHead>{t('admin:supervision.type')}</TableHead>
+                      <TableHead>{t('admin:supervision.startTime')}</TableHead>
+                      <TableHead>{t('admin:supervision.status')}</TableHead>
+                      <TableHead>{t('admin:supervision.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -274,13 +274,13 @@ export default function Supervision() {
                               <Button size="sm" variant="outline" asChild>
                                 <a href={session.meetingUrl} target="_blank" rel="noopener noreferrer">
                                   <ExternalLink className="h-4 w-4" />
-                                  Join
+                                  {t('common:join')}
                                 </a>
                               </Button>
                             )}
                             <Button size="sm" variant="outline">
                               <Eye className="h-4 w-4" />
-                              Observe
+                              {t('common:observe')}
                             </Button>
                           </div>
                         </TableCell>
@@ -302,21 +302,21 @@ export default function Supervision() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Play className="h-5 w-5" />
-                Recorded Classes Archive
+                {t('admin:supervision.recordedSessions')}
               </CardTitle>
-              <Badge variant="outline">{recordedSessions?.length || 0} Archived</Badge>
+              <Badge variant="outline">{recordedSessions?.length || 0} {t('common:archived')}</Badge>
             </CardHeader>
             <CardContent>
               {recordedSessions && recordedSessions.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Class Title</TableHead>
-                      <TableHead>Teacher</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Duration</TableHead>
-                      <TableHead>Quality Score</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t('admin:supervision.classTitle')}</TableHead>
+                      <TableHead>{t('admin:supervision.teacher')}</TableHead>
+                      <TableHead>{t('admin:supervision.date')}</TableHead>
+                      <TableHead>{t('common:duration')}</TableHead>
+                      <TableHead>{t('admin:supervision.qualityAssurance')}</TableHead>
+                      <TableHead>{t('admin:supervision.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -337,7 +337,7 @@ export default function Supervision() {
                               {session.qualityScore}/5
                             </Badge>
                           ) : (
-                            <Badge variant="outline">Not Rated</Badge>
+                            <Badge variant="outline">{t('common:notRated')}</Badge>
                           )}
                         </TableCell>
                         <TableCell>
@@ -346,13 +346,13 @@ export default function Supervision() {
                               <Button size="sm" variant="outline" asChild>
                                 <a href={session.recordingUrl} target="_blank" rel="noopener noreferrer">
                                   <Play className="h-4 w-4" />
-                                  Watch
+                                  {t('common:watch')}
                                 </a>
                               </Button>
                             )}
                             <Button size="sm" variant="outline">
                               <Eye className="h-4 w-4" />
-                              Review
+                              {t('common:review')}
                             </Button>
                           </div>
                         </TableCell>
@@ -362,7 +362,7 @@ export default function Supervision() {
                 </Table>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  No recorded classes available for review
+                  {t('admin:supervision.noRecordedClasses')}
                 </div>
               )}
             </CardContent>
@@ -380,12 +380,12 @@ export default function Supervision() {
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
-                    New Evaluation
+                    {t('admin:supervision.createTeacherEvaluation')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-3xl">
                   <DialogHeader>
-                    <DialogTitle>Create Teacher Evaluation</DialogTitle>
+                    <DialogTitle>{t('admin:supervision.createTeacherEvaluation')}</DialogTitle>
                   </DialogHeader>
                   <Form {...observationForm}>
                     <form onSubmit={observationForm.handleSubmit(onObservationSubmit)} className="space-y-4">
@@ -395,11 +395,11 @@ export default function Supervision() {
                           name="sessionId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Session</FormLabel>
+                              <FormLabel>{t('admin:supervision.session')}</FormLabel>
                               <Select onValueChange={value => field.onChange(+value)}>
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Select session" />
+                                    <SelectValue placeholder={t('admin:supervision.session')} />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -419,17 +419,17 @@ export default function Supervision() {
                           name="observationType"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Observation Type</FormLabel>
+                              <FormLabel>{t('admin:supervision.observationType')}</FormLabel>
                               <Select onValueChange={field.onChange}>
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Select type" />
+                                    <SelectValue placeholder={t('admin:supervision.selectObservationType')} />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="live_in_person">Live In-person</SelectItem>
-                                  <SelectItem value="live_online">Live Online</SelectItem>
-                                  <SelectItem value="recorded">Recorded Review</SelectItem>
+                                  <SelectItem value="live_in_person">{t('admin:supervision.liveInPerson')}</SelectItem>
+                                  <SelectItem value="live_online">{t('admin:supervision.liveOnline')}</SelectItem>
+                                  <SelectItem value="recorded">{t('admin:supervision.recorded')}</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -444,7 +444,7 @@ export default function Supervision() {
                           name="scores.teachingMethodology"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Teaching Methodology</FormLabel>
+                              <FormLabel>{t('admin:supervision.teachingMethodology')}</FormLabel>
                               <FormControl>
                                 <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
                               </FormControl>
@@ -457,7 +457,7 @@ export default function Supervision() {
                           name="scores.classroomManagement"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Classroom Management</FormLabel>
+                              <FormLabel>{t('admin:supervision.classroomManagement')}</FormLabel>
                               <FormControl>
                                 <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
                               </FormControl>
@@ -470,7 +470,7 @@ export default function Supervision() {
                           name="scores.studentEngagement"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Student Engagement</FormLabel>
+                              <FormLabel>{t('admin:supervision.studentEngagement')}</FormLabel>
                               <FormControl>
                                 <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
                               </FormControl>
@@ -483,7 +483,7 @@ export default function Supervision() {
                           name="scores.contentDelivery"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Content Delivery</FormLabel>
+                              <FormLabel>{t('admin:supervision.contentDelivery')}</FormLabel>
                               <FormControl>
                                 <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
                               </FormControl>
@@ -496,7 +496,7 @@ export default function Supervision() {
                           name="scores.languageSkills"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Language Skills</FormLabel>
+                              <FormLabel>{t('admin:supervision.languageSkills')}</FormLabel>
                               <FormControl>
                                 <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
                               </FormControl>
@@ -509,7 +509,7 @@ export default function Supervision() {
                           name="scores.timeManagement"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Time Management</FormLabel>
+                              <FormLabel>{t('admin:supervision.timeManagement')}</FormLabel>
                               <FormControl>
                                 <Input type="number" min="1" max="5" placeholder="1-5" {...field} onChange={e => field.onChange(+e.target.value)} />
                               </FormControl>
@@ -525,9 +525,9 @@ export default function Supervision() {
                           name="strengths"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Strengths</FormLabel>
+                              <FormLabel>{t('admin:supervision.strengths')}</FormLabel>
                               <FormControl>
-                                <Textarea placeholder="Note the teacher's strengths and positive observations..." {...field} />
+                                <Textarea placeholder={t('admin:supervision.noteTeacherStrengths')} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -538,9 +538,9 @@ export default function Supervision() {
                           name="areasForImprovement"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Areas for Improvement</FormLabel>
+                              <FormLabel>{t('admin:supervision.areasForImprovement')}</FormLabel>
                               <FormControl>
-                                <Textarea placeholder="Identify areas where the teacher can improve..." {...field} />
+                                <Textarea placeholder={t('admin:supervision.identifyAreasForImprovement')} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -551,9 +551,9 @@ export default function Supervision() {
                           name="actionItems"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Action Items</FormLabel>
+                              <FormLabel>{t('admin:supervision.actionItems')}</FormLabel>
                               <FormControl>
-                                <Textarea placeholder="Specific action items and recommendations..." {...field} />
+                                <Textarea placeholder={t('admin:supervision.specificActionItems')} {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -563,10 +563,10 @@ export default function Supervision() {
 
                       <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => setObservationDialogOpen(false)}>
-                          Cancel
+                          {t('admin:supervision.cancel')}
                         </Button>
                         <Button type="submit" disabled={createObservationMutation.isPending}>
-                          {createObservationMutation.isPending ? "Creating..." : "Create Evaluation"}
+                          {createObservationMutation.isPending ? t('admin:supervision.creatingEvaluation') : t('admin:supervision.createEvaluation')}
                         </Button>
                       </div>
                     </form>
@@ -579,12 +579,12 @@ export default function Supervision() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Teacher</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Overall Score</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Follow-up Required</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t('admin:supervision.teacher')}</TableHead>
+                      <TableHead>{t('admin:supervision.type')}</TableHead>
+                      <TableHead>{t('admin:supervision.overallScore')}</TableHead>
+                      <TableHead>{t('admin:supervision.date')}</TableHead>
+                      <TableHead>{t('admin:supervision.followUpRequired')}</TableHead>
+                      <TableHead>{t('admin:supervision.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -604,15 +604,15 @@ export default function Supervision() {
                         <TableCell>{new Date(observation.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>
                           {observation.followUpRequired ? (
-                            <Badge variant="destructive">Required</Badge>
+                            <Badge variant="destructive">{t('admin:supervision.required')}</Badge>
                           ) : (
-                            <Badge variant="outline">No</Badge>
+                            <Badge variant="outline">{t('admin:supervision.no')}</Badge>
                           )}
                         </TableCell>
                         <TableCell>
                           <Button size="sm" variant="outline">
                             <Eye className="h-4 w-4" />
-                            View Details
+                            {t('admin:supervision.viewDetails')}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -621,7 +621,7 @@ export default function Supervision() {
                 </Table>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  No teacher evaluations have been completed yet
+                  {t('admin:supervision.noTeacherEvaluations')}
                 </div>
               )}
             </CardContent>

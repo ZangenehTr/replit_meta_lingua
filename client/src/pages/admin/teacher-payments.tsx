@@ -510,7 +510,7 @@ export default function TeacherPaymentsPage() {
                     {isLoading ? (
                       <div className="text-center py-4">{t('common:loadingPaymentData')}</div>
                     ) : error ? (
-                      <div className="text-center py-4 text-red-500">Error loading payments: {error?.message}</div>
+                      <div className="text-center py-4 text-red-500">{t('admin:teacherPayments.errorLoadingPayments')}: {error?.message}</div>
                     ) : (payments as TeacherPayment[])?.length === 0 ? (
                       <div className="text-center py-4 text-gray-500">
                     {t('admin:teacherPayments.noPaymentsFound')} {selectedPeriod}. 
