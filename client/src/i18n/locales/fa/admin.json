@@ -287,7 +287,16 @@
     "roi": "بازگشت سرمایه",
     "costPerLead": "هزینه هر سرنخ",
     "conversions": "تبدیل‌ها",
-    "budgetSpent": "بودجه مصرف شده"
+    "budgetSpent": "بودجه مصرف شده",
+    "telegramChannelAutomation": "اتوماسیون کانال تلگرام",
+    "sendEmailToAllStudents": "ارسال ایمیل به همه دانش‌آموزان",
+    "configure": "پیکربندی",
+    "sending": "در حال ارسال...",
+    "telegramPlaceholder": "پیام تلگرام را وارد کنید...",
+    "enterTelegramMessage": "پیام تلگرامی خود را وارد کنید",
+    "enableAutoReply": "فعال‌سازی پاسخ خودکار",
+    "emailContentPlaceholder": "محتوای ایمیل را وارد کنید...",
+    "sendEmail": "ارسال ایمیل"
   },
   "iranianCompliance": {
     "title": "انطباق ایرانی",
@@ -338,7 +347,17 @@
     "smsAutomationRules": "قوانین خودکارسازی پیامک",
     "smsAutomationDesc": "تنظیم ارسال خودکار پیامک براساس رویدادها",
     "eventTypes": {
-      "enrollment": "ثبت‌نام"
+      "enrollment": "ثبت‌نام",
+      "sessionReminder": "یادآوری جلسه",
+      "homeworkAssigned": "تکلیف جدید",
+      "homeworkOverdue": "تاخیر در تکلیف",
+      "paymentDue": "موعد پرداخت",
+      "paymentReceived": "دریافت پرداخت",
+      "teacherEvaluation": "ارزیابی معلم",
+      "progressReport": "گزارش پیشرفت",
+      "sessionCancelled": "لغو جلسه",
+      "absenceWarning": "هشدار غیبت",
+      "certificateReady": "آماده بودن گواهی"
     },
     "recipients": {
       "teacher": "معلم",
