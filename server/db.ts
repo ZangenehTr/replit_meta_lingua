@@ -1,36 +1,34 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
-import { existsSync, mkdirSync } from 'fs';
-import { dirname } from 'path';
 
-// Create data directory if it doesn't exist
-const dbPath = process.env.DATABASE_PATH || './data/metalingua.db';
-const dbDir = dirname(dbPath);
-if (!existsSync(dbDir)) {
-  mkdirSync(dbDir, { recursive: true });
+// For self-hosting: Use local PostgreSQL or provided DATABASE_URL
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/metalingua';
+
+if (!process.env.DATABASE_URL) {
+  console.warn('DATABASE_URL not set, using default local PostgreSQL connection');
+  console.log('For production self-hosting, set DATABASE_URL to your PostgreSQL instance');
 }
 
-// Initialize SQLite database
-const sqlite = new Database(dbPath);
+// Configure connection pool with better settings
+export const pool = new Pool({ 
+  connectionString: DATABASE_URL,
+  max: 5,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+});
 
-// Enable foreign keys and WAL mode for better performance
-sqlite.pragma('foreign_keys = ON');
-sqlite.pragma('journal_mode = WAL');
-
-export const db = drizzle(sqlite, { schema });
-
-console.log(`SQLite database initialized at: ${dbPath}`);
+export const db = drizzle(pool, { schema });
 
 // Add graceful shutdown handling
-process.on('SIGINT', () => {
-  console.log('Gracefully shutting down database...');
-  sqlite.close();
+process.on('SIGINT', async () => {
+  console.log('Gracefully shutting down database connections...');
+  await pool.end();
   process.exit(0);
 });
 
-process.on('SIGTERM', () => {
-  console.log('Gracefully shutting down database...');
-  sqlite.close();
+process.on('SIGTERM', async () => {
+  console.log('Gracefully shutting down database connections...');
+  await pool.end();
   process.exit(0);
 });
