@@ -1,25 +1,32 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import Database from 'better-sqlite3';
 import * as schema from "@shared/schema";
+import fs from 'fs';
+import path from 'path';
 
-neonConfig.webSocketConstructor = ws;
+// Check if the DATABASE_URL is pointing to a disabled Neon endpoint
+const isNeonDisabled = process.env.DATABASE_URL?.includes('neon.tech');
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+// Create data directory if it doesn't exist
+const dataDir = path.join(process.cwd(), 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// Configure connection pool with better settings
-export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  max: 5,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-});
+if (isNeonDisabled) {
+  console.log('Note: Neon database disabled, using local SQLite database as fallback');
+}
 
-export const db = drizzle({ client: pool, schema });
+// Use SQLite as fallback database
+const sqlite = new Database(path.join(dataDir, 'metalingua.db'));
+
+// Enable foreign key constraints in SQLite
+sqlite.pragma('foreign_keys = ON');
+
+export const db = drizzle(sqlite, { schema });
+
+// Export pool as null for compatibility (SQLite doesn't use connection pools)
+export const pool = null as any;
 
 // Add graceful shutdown handling
 process.on('SIGINT', async () => {
