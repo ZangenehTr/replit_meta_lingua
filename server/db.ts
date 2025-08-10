@@ -2,12 +2,12 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// For self-hosting: Use local PostgreSQL or provided DATABASE_URL
-const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/metalingua';
+// Use Replit's provided DATABASE_URL or fallback for local development
+const DATABASE_URL = process.env.DATABASE_URL;
 
-if (!process.env.DATABASE_URL) {
-  console.warn('DATABASE_URL not set, using default local PostgreSQL connection');
-  console.log('For production self-hosting, set DATABASE_URL to your PostgreSQL instance');
+if (!DATABASE_URL) {
+  console.error('DATABASE_URL environment variable is required');
+  process.exit(1);
 }
 
 // Configure connection pool with better settings
