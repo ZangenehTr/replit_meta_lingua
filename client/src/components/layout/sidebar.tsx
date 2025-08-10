@@ -87,10 +87,13 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
   // Use react-i18next translation function with correct namespace
   const navigationItems = user ? getNavigationForRole(user.role, t) : [];
 
+  console.log('Sidebar rendering with items:', navigationItems.length, 'items');
+  console.log('Callern items:', navigationItems.filter(item => item.path.includes('callern')));
+  
   return (
-    <div className={`w-full h-full bg-white dark:bg-gray-800`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="p-6">
-        <nav className="space-y-2" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`w-full h-full bg-white dark:bg-gray-800 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="p-4">
+        <nav className="space-y-1" dir={isRTL ? 'rtl' : 'ltr'}>
           {navigationItems.map((item) => {
             const isActive = location === item.path;
             const Icon = iconMap[item.icon as keyof typeof iconMap] || Home;
