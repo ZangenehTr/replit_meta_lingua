@@ -224,8 +224,9 @@ export function CallernManagement() {
     return isOnline ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />;
   };
 
-  // Check if user has admin or supervisor access
-  if (user && !['Admin', 'Supervisor'].includes(user.role)) {
+  // Check if user has admin or supervisor access (case-insensitive)
+  const normalizedRole = user?.role?.toLowerCase();
+  if (user && !['admin', 'supervisor'].includes(normalizedRole)) {
     return (
       <div className={`min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 p-4 sm:p-6 flex items-center justify-center ${isRTL ? 'rtl' : 'ltr'}`}>
         <Card className="max-w-md text-center">
