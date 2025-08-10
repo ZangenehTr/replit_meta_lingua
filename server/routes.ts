@@ -12859,6 +12859,30 @@ Return JSON format:
     }
   });
 
+  // Create Callern package
+  app.post("/api/admin/callern/packages", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { packageName, totalHours, price, description, isActive } = req.body;
+      
+      if (!packageName || !totalHours || !price) {
+        return res.status(400).json({ message: "Package name, total hours, and price are required" });
+      }
+
+      const newPackage = await storage.createCallernPackage({
+        packageName,
+        totalHours,
+        price,
+        description,
+        isActive: isActive !== undefined ? isActive : true
+      });
+
+      res.status(201).json(newPackage);
+    } catch (error) {
+      console.error('Error creating Callern package:', error);
+      res.status(500).json({ message: "Failed to create Callern package" });
+    }
+  });
+
   // Student endpoints for Callern
   app.get("/api/student/callern/packages", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
