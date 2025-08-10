@@ -8,7 +8,11 @@ Preferred communication style: Simple, everyday language.
 Work sessions: User prefers to have work logged so they can resume from where we left off.
 Critical requirement: Self-hosting in Iran with zero external dependencies. Must follow check-first protocol.
 Database strategy: Use Replit/Neon for development only, migrate to self-hosted PostgreSQL for production in Iran.
-Recent session (2025-01-10): Resolved database connectivity issues, confirmed Neon working for development, prepared migration guides for self-hosting.
+Recent session (2025-01-10): 
+- Resolved database connectivity issues, confirmed Neon working for development, prepared migration guides for self-hosting
+- Fixed Callern Management authorization issue (case-insensitive role checks)
+- Added complete Persian translations for Callern Management interface
+- Implemented full create Callern packages functionality (UI dialog + backend API)
 Previous session (2025-01-09): 
 - Previous session (2025-01-08): Complete translation overhaul of ALL admin components with form translations (200+ new keys)
 - MAJOR TRANSLATION FIX: Resolved missing campaigns, smsSettings, and iranianCompliance translations across all languages

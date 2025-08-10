@@ -36,10 +36,18 @@ export function CallernManagement() {
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isCreatePackageDialogOpen, setIsCreatePackageDialogOpen] = useState(false);
   const [newTeacherForm, setNewTeacherForm] = useState({
     teacherId: '',
     hourlyRate: '',
     availableHours: []
+  });
+  const [newPackageForm, setNewPackageForm] = useState({
+    packageName: '',
+    totalHours: '',
+    price: '',
+    description: '',
+    isActive: true
   });
 
   // Fetch teacher availability data
@@ -117,6 +125,38 @@ export function CallernManagement() {
       toast({
         title: t('common:toast.error'),
         description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Create Callern package mutation
+  const createPackageMutation = useMutation({
+    mutationFn: async (packageData: any) => {
+      return await apiRequest('/api/admin/callern/packages', {
+        method: 'POST',
+        body: packageData
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: t('common:toast.success'),
+        description: t('admin:callernManagement.packageCreatedSuccessfully')
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/callern/packages'] });
+      setIsCreatePackageDialogOpen(false);
+      setNewPackageForm({
+        packageName: '',
+        totalHours: '',
+        price: '',
+        description: '',
+        isActive: true
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common:toast.error'),
+        description: error.message || t('admin:callernManagement.packageCreationFailed'),
         variant: "destructive"
       });
     }
@@ -491,7 +531,10 @@ export function CallernManagement() {
                   <CardTitle>{t('admin:callernManagement.callernPackages')}</CardTitle>
                   <CardDescription>{t('admin:callernManagement.managePackages')}</CardDescription>
                 </div>
-                <Button className="flex items-center gap-2">
+                <Button 
+                  className="flex items-center gap-2"
+                  onClick={() => setIsCreatePackageDialogOpen(true)}
+                >
                   <Plus className="h-4 w-4" />
                   {t('admin:callernManagement.createPackage')}
                 </Button>
@@ -579,6 +622,90 @@ export function CallernManagement() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Create Package Dialog */}
+      <Dialog open={isCreatePackageDialogOpen} onOpenChange={setIsCreatePackageDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin:callernManagement.createPackage')}</DialogTitle>
+            <DialogDescription>
+              {t('admin:callernManagement.createPackageDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{t('admin:callernManagement.packageName')}</Label>
+              <Input 
+                placeholder={t('admin:callernManagement.packageNamePlaceholder')}
+                value={newPackageForm.packageName}
+                onChange={(e) => setNewPackageForm(prev => ({...prev, packageName: e.target.value}))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>{t('admin:callernManagement.hours')}</Label>
+              <Input 
+                type="number" 
+                placeholder="10"
+                value={newPackageForm.totalHours}
+                onChange={(e) => setNewPackageForm(prev => ({...prev, totalHours: e.target.value}))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>{t('admin:callernManagement.price')} (IRR)</Label>
+              <Input 
+                type="number" 
+                placeholder="5000000"
+                value={newPackageForm.price}
+                onChange={(e) => setNewPackageForm(prev => ({...prev, price: e.target.value}))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>{t('admin:callernManagement.description')}</Label>
+              <Input 
+                placeholder={t('admin:callernManagement.descriptionPlaceholder')}
+                value={newPackageForm.description}
+                onChange={(e) => setNewPackageForm(prev => ({...prev, description: e.target.value}))}
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Switch 
+                id="package-active"
+                checked={newPackageForm.isActive}
+                onCheckedChange={(checked) => setNewPackageForm(prev => ({...prev, isActive: checked}))}
+              />
+              <Label htmlFor="package-active">{t('admin:callernManagement.active')}</Label>
+            </div>
+            
+            <Button 
+              className="w-full"
+              onClick={() => {
+                if (!newPackageForm.packageName || !newPackageForm.totalHours || !newPackageForm.price) {
+                  toast({
+                    title: t('common:toast.error'),
+                    description: t('admin:callernManagement.fillRequiredFields'),
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                createPackageMutation.mutate({
+                  packageName: newPackageForm.packageName,
+                  totalHours: parseInt(newPackageForm.totalHours),
+                  price: parseFloat(newPackageForm.price),
+                  description: newPackageForm.description,
+                  isActive: newPackageForm.isActive
+                });
+              }}
+              disabled={createPackageMutation.isPending}
+            >
+              {createPackageMutation.isPending ? t('common:loading') : t('admin:callernManagement.createPackage')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Configuration Dialog */}
       <Dialog open={isConfigDialogOpen} onOpenChange={setIsConfigDialogOpen}>
