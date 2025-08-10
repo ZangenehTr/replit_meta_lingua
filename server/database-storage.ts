@@ -5962,15 +5962,15 @@ export class DatabaseStorage implements IStorage {
 
   async getRegistrationAnalytics(): Promise<any> {
     try {
-      // Get enrollment statistics by course type
+      // Get enrollment statistics by course type - using raw SQL to avoid groupBy issues
       const registrationsByType = await db.select({
-        deliveryMode: courses.delivery_mode,
-        classFormat: courses.class_format,
+        deliveryMode: sql<string>`COALESCE(${courses.delivery_mode}, 'unknown')`,
+        classFormat: sql<string>`COALESCE(${courses.class_format}, 'unknown')`,
         count: sql<number>`count(*)`
       }).from(enrollments)
         .leftJoin(courses, eq(enrollments.courseId, courses.id))
         .where(gte(enrollments.enrolledAt, sql`current_date - interval '1 month'`))
-        .groupBy(courses.delivery_mode, courses.class_format);
+        .groupBy(sql`COALESCE(${courses.delivery_mode}, 'unknown')`, sql`COALESCE(${courses.class_format}, 'unknown')`);
 
       // Transform data to match chart format
       const byType = [
