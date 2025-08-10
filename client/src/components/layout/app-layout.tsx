@@ -178,7 +178,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             direction === 'rtl' ? 'order-last' : 'order-first'
           }`}
         >
-          <div className={`fixed top-16 w-64 h-[calc(100vh-4rem)] overflow-y-auto ${
+          <div className={`fixed top-16 w-64 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 ${
             direction === 'rtl' 
               ? 'right-0 border-l border-border' 
               : 'left-0 border-r border-border'
