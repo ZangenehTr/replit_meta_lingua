@@ -483,11 +483,27 @@ export function CallernManagement() {
         </TabsContent>
 
         <TabsContent value="packages" className="space-y-4">
+          {/* Add Package Button */}
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>{t('admin:callernManagement.callernPackages')}</CardTitle>
+                  <CardDescription>{t('admin:callernManagement.managePackages')}</CardDescription>
+                </div>
+                <Button className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  {t('admin:callernManagement.createPackage')}
+                </Button>
+              </div>
+            </CardHeader>
+          </Card>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {loadingPackages ? (
               <div className="col-span-3 text-center py-8">{t('common:loading')}</div>
             ) : (
-              Array.isArray(callernPackages) && callernPackages?.map((pkg) => (
+              Array.isArray(callernPackages) && callernPackages?.length > 0 ? callernPackages?.map((pkg) => (
                 <Card key={pkg.id}>
                   <CardHeader>
                     <CardTitle className="text-lg">{pkg.packageName}</CardTitle>
@@ -510,7 +526,12 @@ export function CallernManagement() {
                     </div>
                   </CardContent>
                 </Card>
-              ))
+              )) : (
+                <div className="col-span-3 text-center py-8">
+                  <p className="text-muted-foreground">{t('admin:callernManagement.noPackagesAvailable')}</p>
+                  <p className="text-sm text-muted-foreground mt-2">{t('admin:callernManagement.createYourFirstPackage')}</p>
+                </div>
+              )
             )}
           </div>
         </TabsContent>
