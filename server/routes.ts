@@ -5195,7 +5195,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create user account for the student
-      const hashedPassword = await bcrypt.hash('student123', 10); // Default password
+      // Generate a unique password: FirstName@BirthYear (e.g., John@2005)
+      const birthYear = birthday ? new Date(birthday).getFullYear() : new Date().getFullYear();
+      const formattedFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+      const uniquePassword = `${formattedFirstName}@${birthYear}`;
+      const hashedPassword = await bcrypt.hash(uniquePassword, 10);
+      
+      console.log(`Student password will be: ${uniquePassword}`); // Log for admin reference
       
       const studentData = {
         firstName,
