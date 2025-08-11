@@ -1204,6 +1204,141 @@ export class DatabaseStorage implements IStorage {
     return await query;
   }
 
+  // CRM - Student Management Optimized Methods
+  async getStudentProfiles(): Promise<(UserProfile & { userName: string, userEmail: string })[]> {
+    try {
+      const profiles = await db.select({
+        id: userProfiles.id,
+        userId: userProfiles.userId,
+        userName: sql<string>`concat(${users.firstName}, ' ', ${users.lastName})`,
+        userEmail: users.email,
+        phoneNumber: userProfiles.phoneNumber,
+        dateOfBirth: userProfiles.dateOfBirth,
+        address: userProfiles.address,
+        emergencyContact: userProfiles.emergencyContact,
+        nationalId: userProfiles.nationalId,
+        preferredLanguage: userProfiles.preferredLanguage,
+        currentLevel: userProfiles.currentLevel,
+        interests: userProfiles.interests,
+        goals: userProfiles.goals,
+        profileImage: userProfiles.profileImage,
+        culturalBackground: userProfiles.culturalBackground,
+        dietaryRestrictions: userProfiles.dietaryRestrictions,
+        medicalNotes: userProfiles.medicalNotes,
+        guardianName: userProfiles.guardianName,
+        guardianPhone: userProfiles.guardianPhone,
+        notes: userProfiles.notes,
+        bio: userProfiles.bio,
+        city: userProfiles.city,
+        timezone: userProfiles.timezone,
+        createdAt: userProfiles.createdAt,
+        updatedAt: userProfiles.updatedAt
+      })
+      .from(userProfiles)
+      .innerJoin(users, eq(userProfiles.userId, users.id))
+      .where(
+        or(
+          eq(users.role, 'student'),
+          eq(users.role, 'Student')
+        )
+      );
+
+      return profiles;
+    } catch (error) {
+      console.error('Error fetching student profiles:', error);
+      return [];
+    }
+  }
+
+  async getStudentsWithProfiles(): Promise<any[]> {
+    try {
+      // Fetch all students with their profiles and enrollments in a single optimized query
+      const studentsData = await db.select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        phoneNumber: users.phoneNumber,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+        avatar: users.avatar,
+        // Profile data
+        profileId: userProfiles.id,
+        nationalId: userProfiles.nationalId,
+        dateOfBirth: userProfiles.dateOfBirth,
+        currentLevel: userProfiles.currentLevel,
+        guardianName: userProfiles.guardianName,
+        guardianPhone: userProfiles.guardianPhone,
+        notes: userProfiles.notes,
+        profileImage: userProfiles.profileImage
+      })
+      .from(users)
+      .leftJoin(userProfiles, eq(users.id, userProfiles.userId))
+      .where(
+        or(
+          eq(users.role, 'student'),
+          eq(users.role, 'Student')
+        )
+      );
+
+      // Fetch course enrollments for all students at once
+      const studentIds = studentsData.map(s => s.id);
+      const enrollmentsData = studentIds.length > 0 ? await db.select({
+        studentId: enrollments.studentId,
+        courseId: enrollments.courseId,
+        courseTitle: courses.title,
+        progress: enrollments.progress,
+        completedLessons: enrollments.completedLessons
+      })
+      .from(enrollments)
+      .innerJoin(courses, eq(enrollments.courseId, courses.id))
+      .where(inArray(enrollments.studentId, studentIds)) : [];
+
+      // Group enrollments by student
+      const enrollmentsByStudent = enrollmentsData.reduce((acc, enrollment) => {
+        if (!acc[enrollment.studentId]) {
+          acc[enrollment.studentId] = [];
+        }
+        acc[enrollment.studentId].push(enrollment);
+        return acc;
+      }, {} as Record<number, typeof enrollmentsData>);
+
+      // Combine student data with enrollments
+      const students = studentsData.map(student => {
+        const userEnrollments = enrollmentsByStudent[student.id] || [];
+        const avgProgress = userEnrollments.length > 0 
+          ? Math.round(userEnrollments.reduce((sum, e) => sum + (e.progress || 0), 0) / userEnrollments.length)
+          : 0;
+
+        return {
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          phone: student.phoneNumber || '',
+          status: student.isActive ? 'active' : 'inactive',
+          level: student.currentLevel || 'Beginner',
+          nationalId: student.nationalId || '',
+          birthday: student.dateOfBirth,
+          guardianName: student.guardianName || '',
+          guardianPhone: student.guardianPhone || '',
+          notes: student.notes || '',
+          progress: avgProgress,
+          attendance: calculateAttendanceRate(userEnrollments.length, userEnrollments.length),
+          courses: userEnrollments.map(e => e.courseTitle),
+          enrollmentDate: student.createdAt,
+          lastActivity: '2 days ago',
+          avatar: student.avatar || student.profileImage || '/api/placeholder/40/40'
+        };
+      });
+
+      return students;
+    } catch (error) {
+      console.error('Error fetching students with profiles:', error);
+      throw error;
+    }
+  }
+
   // Leads Management - Local database operations for Iranian call center staff
   async getLeads(): Promise<Lead[]> {
     return await db.select().from(leads).orderBy(desc(leads.createdAt));
