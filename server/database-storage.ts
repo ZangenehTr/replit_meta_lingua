@@ -366,6 +366,22 @@ export class DatabaseStorage implements IStorage {
     return callernPackage;
   }
 
+  async updateCallernPackage(id: number, updates: any): Promise<CallernPackage | undefined> {
+    const [updated] = await db
+      .update(callernPackages)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(callernPackages.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCallernPackage(id: number): Promise<void> {
+    await db.delete(callernPackages).where(eq(callernPackages.id, id));
+  }
+
   async setTeacherCallernAvailability(availabilityData: any): Promise<TeacherCallernAvailability> {
     const [availability] = await db.insert(teacherCallernAvailability).values({
       teacherId: availabilityData.teacherId,

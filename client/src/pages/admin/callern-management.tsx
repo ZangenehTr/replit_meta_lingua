@@ -25,7 +25,9 @@ import {
   AlertCircle,
   Shield,
   Timer,
-  UserCheck
+  UserCheck,
+  Edit,
+  Trash2
 } from "lucide-react";
 
 export function CallernManagement() {
@@ -49,6 +51,16 @@ export function CallernManagement() {
     description: '',
     isActive: true
   });
+  const [editPackageForm, setEditPackageForm] = useState({
+    id: 0,
+    packageName: '',
+    totalHours: '',
+    price: '',
+    description: '',
+    isActive: true
+  });
+  const [isEditPackageDialogOpen, setIsEditPackageDialogOpen] = useState(false);
+  const [packageToDelete, setPackageToDelete] = useState<number | null>(null);
 
   // Fetch teacher availability data
   const { data: teacherAvailability, isLoading: loadingAvailability } = useQuery({
@@ -157,6 +169,55 @@ export function CallernManagement() {
       toast({
         title: t('common:toast.error'),
         description: error.message || t('admin:callernManagement.packageCreationFailed'),
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Update Callern package mutation
+  const updatePackageMutation = useMutation({
+    mutationFn: async (packageData: any) => {
+      return await apiRequest(`/api/admin/callern/packages/${packageData.id}`, {
+        method: 'PUT',
+        body: packageData
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: t('common:toast.success'),
+        description: t('admin:callernManagement.packageUpdatedSuccessfully')
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/callern/packages'] });
+      setIsEditPackageDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common:toast.error'),
+        description: error.message || t('admin:callernManagement.packageUpdateFailed'),
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete Callern package mutation
+  const deletePackageMutation = useMutation({
+    mutationFn: async (packageId: number) => {
+      return await apiRequest(`/api/admin/callern/packages/${packageId}`, {
+        method: 'DELETE'
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: t('common:toast.success'),
+        description: t('admin:callernManagement.packageDeletedSuccessfully')
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/callern/packages'] });
+      setPackageToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common:toast.error'),
+        description: error.message || t('admin:callernManagement.packageDeletionFailed'),
         variant: "destructive"
       });
     }
@@ -549,22 +610,52 @@ export function CallernManagement() {
               Array.isArray(callernPackages) && callernPackages?.length > 0 ? callernPackages?.map((pkg) => (
                 <Card key={pkg.id}>
                   <CardHeader>
-                    <CardTitle className="text-lg">{pkg.packageName}</CardTitle>
-                    <CardDescription>{pkg.description}</CardDescription>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg">{pkg.packageName}</CardTitle>
+                        <CardDescription>{pkg.description}</CardDescription>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setEditPackageForm({
+                              id: pkg.id,
+                              packageName: pkg.packageName,
+                              totalHours: pkg.totalHours.toString(),
+                              price: pkg.price.toString(),
+                              description: pkg.description || '',
+                              isActive: pkg.isActive
+                            });
+                            setIsEditPackageDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => setPackageToDelete(pkg.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Total Hours:</span>
+                      <span className="text-sm text-gray-500">{t('admin:callernManagement.hours')}:</span>
                       <span className="font-medium">{pkg.totalHours}h</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Price:</span>
+                      <span className="text-sm text-gray-500">{t('admin:callernManagement.price')}:</span>
                       <span className="font-medium">{pkg.price.toLocaleString()} IRR</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Status:</span>
+                      <span className="text-sm text-gray-500">{t('admin:callernManagement.status')}:</span>
                       <Badge className={pkg.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                        {pkg.isActive ? 'Active' : 'Inactive'}
+                        {pkg.isActive ? t('admin:callernManagement.active') : t('admin:callernManagement.inactive')}
                       </Badge>
                     </div>
                   </CardContent>
@@ -622,6 +713,119 @@ export function CallernManagement() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Package Dialog */}
+      <Dialog open={isEditPackageDialogOpen} onOpenChange={setIsEditPackageDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin:callernManagement.editPackage')}</DialogTitle>
+            <DialogDescription>
+              {t('admin:callernManagement.editPackageDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{t('admin:callernManagement.packageName')}</Label>
+              <Input 
+                placeholder={t('admin:callernManagement.packageNamePlaceholder')}
+                value={editPackageForm.packageName}
+                onChange={(e) => setEditPackageForm(prev => ({...prev, packageName: e.target.value}))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>{t('admin:callernManagement.hours')}</Label>
+              <Input 
+                type="number" 
+                placeholder="10"
+                value={editPackageForm.totalHours}
+                onChange={(e) => setEditPackageForm(prev => ({...prev, totalHours: e.target.value}))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>{t('admin:callernManagement.price')} (IRR)</Label>
+              <Input 
+                type="number" 
+                placeholder="5000000"
+                value={editPackageForm.price}
+                onChange={(e) => setEditPackageForm(prev => ({...prev, price: e.target.value}))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>{t('admin:callernManagement.description')}</Label>
+              <Input 
+                placeholder={t('admin:callernManagement.descriptionPlaceholder')}
+                value={editPackageForm.description}
+                onChange={(e) => setEditPackageForm(prev => ({...prev, description: e.target.value}))}
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Switch 
+                id="edit-package-active"
+                checked={editPackageForm.isActive}
+                onCheckedChange={(checked) => setEditPackageForm(prev => ({...prev, isActive: checked}))}
+              />
+              <Label htmlFor="edit-package-active">{t('admin:callernManagement.active')}</Label>
+            </div>
+            
+            <Button 
+              className="w-full"
+              onClick={() => {
+                if (!editPackageForm.packageName || !editPackageForm.totalHours || !editPackageForm.price) {
+                  toast({
+                    title: t('common:toast.error'),
+                    description: t('admin:callernManagement.fillRequiredFields'),
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                updatePackageMutation.mutate({
+                  id: editPackageForm.id,
+                  packageName: editPackageForm.packageName,
+                  totalHours: parseInt(editPackageForm.totalHours),
+                  price: parseFloat(editPackageForm.price),
+                  description: editPackageForm.description,
+                  isActive: editPackageForm.isActive
+                });
+              }}
+              disabled={updatePackageMutation.isPending}
+            >
+              {updatePackageMutation.isPending ? t('common:loading') : t('admin:callernManagement.updatePackage')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={packageToDelete !== null} onOpenChange={(open) => !open && setPackageToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin:callernManagement.deletePackage')}</DialogTitle>
+            <DialogDescription>
+              {t('admin:callernManagement.deletePackageConfirmation')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-4 justify-end">
+            <Button variant="outline" onClick={() => setPackageToDelete(null)}>
+              {t('common:cancel')}
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                if (packageToDelete) {
+                  deletePackageMutation.mutate(packageToDelete);
+                }
+              }}
+              disabled={deletePackageMutation.isPending}
+            >
+              {deletePackageMutation.isPending ? t('common:loading') : t('common:delete')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Package Dialog */}
       <Dialog open={isCreatePackageDialogOpen} onOpenChange={setIsCreatePackageDialogOpen}>
