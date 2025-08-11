@@ -1438,15 +1438,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { email, password } = req.body;
+  // In-memory storage for OTPs
+  const otpStore = new Map<string, {
+    code: string;
+    email: string;
+    phoneNumber: string;
+    expiresAt: Date;
+    attempts: number;
+  }>();
 
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password required" });
+  // Clean expired OTPs every 5 minutes
+  setInterval(() => {
+    const now = new Date();
+    for (const [key, otp] of otpStore.entries()) {
+      if (otp.expiresAt < now) {
+        otpStore.delete(key);
+      }
+    }
+  }, 5 * 60 * 1000);
+
+  // Request OTP endpoint
+  app.post("/api/auth/request-otp", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
       }
 
-      console.log("Login attempt:", { email, passwordLength: password.length });
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if user exists or not for security
+        return res.json({ message: "If the email exists, an OTP has been sent to the registered phone number" });
+      }
+
+      if (!user.phoneNumber) {
+        return res.status(400).json({ message: "No phone number registered for this account" });
+      }
+
+      // Generate 6-digit OTP
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Store OTP with 5-minute expiration
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+      otpStore.set(email, {
+        code: otpCode,
+        email: email,
+        phoneNumber: user.phoneNumber,
+        expiresAt: expiresAt,
+        attempts: 0
+      });
+
+      // Send OTP via SMS
+      try {
+        const settings = await storage.getAdminSettings();
+        const smsTemplate = settings?.otpSmsTemplate || 
+          `Your Meta Lingua login code is: {otp}\n\n` +
+          `This code will expire in 5 minutes.\n` +
+          `Do not share this code with anyone.`;
+        
+        const smsMessage = smsTemplate.replace('{otp}', otpCode);
+        
+        if (settings?.kavenegarEnabled && settings?.kavenegarApiKey) {
+          const { kavenegarService } = await import('./kavenegar-service');
+          await kavenegarService.sendSimpleSMS(user.phoneNumber, smsMessage);
+          console.log(`OTP sent to ${user.phoneNumber} for ${email}`);
+        } else {
+          console.log('SMS not configured - OTP would be:', otpCode);
+        }
+      } catch (smsError) {
+        console.error('Error sending OTP SMS:', smsError);
+        // Continue anyway - user can still use password login
+      }
+
+      res.json({ 
+        message: "OTP sent to registered phone number",
+        expiresIn: "5 minutes"
+      });
+    } catch (error) {
+      console.error("OTP request error:", error);
+      res.status(500).json({ message: "Failed to send OTP" });
+    }
+  });
+
+  // Modified login endpoint to support both password and OTP
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password, otp } = req.body;
+
+      if (!email || (!password && !otp)) {
+        return res.status(400).json({ message: "Email and either password or OTP required" });
+      }
+
+      console.log("Login attempt:", { email, hasPassword: !!password, hasOtp: !!otp });
 
       const user = await storage.getUserByEmail(email);
       if (!user) {
@@ -1454,13 +1539,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      console.log("Found user:", { id: user.id, email: user.email, hashedPassword: user.password });
-      
-      const isValidPassword = await bcrypt.compare(password, user.password);
-      console.log("Password comparison result:", isValidPassword);
-      
-      if (!isValidPassword) {
-        return res.status(401).json({ message: "Invalid credentials" });
+      // Check if using OTP login
+      if (otp) {
+        const storedOtp = otpStore.get(email);
+        
+        if (!storedOtp) {
+          return res.status(401).json({ message: "No OTP requested or OTP expired" });
+        }
+
+        // Check expiration
+        if (storedOtp.expiresAt < new Date()) {
+          otpStore.delete(email);
+          return res.status(401).json({ message: "OTP has expired. Please request a new one." });
+        }
+
+        // Check attempts (max 3)
+        if (storedOtp.attempts >= 3) {
+          otpStore.delete(email);
+          return res.status(401).json({ message: "Too many failed attempts. Please request a new OTP." });
+        }
+
+        // Verify OTP
+        if (storedOtp.code !== otp) {
+          storedOtp.attempts++;
+          return res.status(401).json({ message: "Invalid OTP code" });
+        }
+
+        // OTP is valid, delete it (single use)
+        otpStore.delete(email);
+        console.log("OTP login successful for:", email);
+      } else {
+        // Regular password login
+        console.log("Found user:", { id: user.id, email: user.email });
+        
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        console.log("Password comparison result:", isValidPassword);
+        
+        if (!isValidPassword) {
+          return res.status(401).json({ message: "Invalid credentials" });
+        }
       }
 
       // Generate JWT token
