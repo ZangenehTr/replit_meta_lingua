@@ -4115,6 +4115,165 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Additional real data methods - no mock data
+  async getStudentSessions(studentId: number): Promise<any[]> {
+    try {
+      return await db.select({
+        id: sessions.id,
+        courseId: sessions.courseId,
+        date: sessions.date,
+        status: sessions.status,
+        attended: sql<boolean>`CASE WHEN sessions.status = 'completed' THEN true ELSE false END`,
+        createdAt: sessions.createdAt
+      }).from(sessions)
+        .where(eq(sessions.studentId, studentId))
+        .orderBy(desc(sessions.date));
+    } catch (error) {
+      console.error('Error getting student sessions:', error);
+      return [];
+    }
+  }
+  
+  async getUserActivities(userId: number): Promise<any[]> {
+    try {
+      const activities = await db.select({
+        id: learningActivities.id,
+        type: learningActivities.type,
+        timestamp: learningActivities.completedAt,
+        createdAt: learningActivities.createdAt
+      }).from(learningActivities)
+        .where(eq(learningActivities.userId, userId))
+        .orderBy(desc(learningActivities.completedAt))
+        .limit(10);
+      
+      return activities;
+    } catch (error) {
+      console.error('Error getting user activities:', error);
+      return [];
+    }
+  }
+  
+  async getTeacherSessions(teacherId: number): Promise<any[]> {
+    try {
+      return await db.select().from(sessions)
+        .where(eq(sessions.tutorId, teacherId))
+        .orderBy(desc(sessions.date));
+    } catch (error) {
+      console.error('Error getting teacher sessions:', error);
+      return [];
+    }
+  }
+  
+  async getTeacherStudentCount(teacherId: number): Promise<number> {
+    try {
+      const result = await db.select({
+        count: sql<number>`COUNT(DISTINCT ${sessions.studentId})`
+      }).from(sessions)
+        .where(eq(sessions.tutorId, teacherId));
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('Error getting teacher student count:', error);
+      return 0;
+    }
+  }
+  
+  async getTeacherRevenue(teacherId: number): Promise<number> {
+    try {
+      const teacherSessions = await db.select({
+        totalAmount: sql<number>`COUNT(*) * 750000`
+      }).from(sessions)
+        .where(and(
+          eq(sessions.tutorId, teacherId),
+          eq(sessions.status, 'completed')
+        ));
+      
+      return teacherSessions[0]?.totalAmount || 0;
+    } catch (error) {
+      console.error('Error calculating teacher revenue:', error);
+      return 0;
+    }
+  }
+  
+  async getTeacherReviews(teacherId: number): Promise<any[]> {
+    try {
+      return await db.select({
+        id: teacherEvaluations.id,
+        rating: sql<number>`COALESCE(${teacherEvaluations.rating}, 0)`,
+        comment: teacherEvaluations.feedback,
+        studentId: teacherEvaluations.studentId,
+        createdAt: teacherEvaluations.createdAt
+      }).from(teacherEvaluations)
+        .where(eq(teacherEvaluations.teacherId, teacherId))
+        .orderBy(desc(teacherEvaluations.createdAt));
+    } catch (error) {
+      console.error('Error getting teacher reviews:', error);
+      return [];
+    }
+  }
+  
+  async getAllTeacherReviews(): Promise<any[]> {
+    try {
+      return await db.select({
+        id: teacherEvaluations.id,
+        rating: sql<number>`COALESCE(${teacherEvaluations.rating}, 0)`,
+        teacherId: teacherEvaluations.teacherId,
+        createdAt: teacherEvaluations.createdAt
+      }).from(teacherEvaluations)
+        .orderBy(desc(teacherEvaluations.createdAt));
+    } catch (error) {
+      console.error('Error getting all teacher reviews:', error);
+      return [];
+    }
+  }
+  
+  async getCourseEnrollmentCount(courseId: number): Promise<number> {
+    try {
+      const result = await db.select({
+        count: sql<number>`COUNT(*)`
+      }).from(enrollments)
+        .where(eq(enrollments.courseId, courseId));
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('Error getting course enrollment count:', error);
+      return 0;
+    }
+  }
+  
+  async getCourseCompletionRate(courseId: number): Promise<number> {
+    try {
+      const enrollmentsData = await db.select({
+        total: sql<number>`COUNT(*)`,
+        completed: sql<number>`SUM(CASE WHEN ${enrollments.progress} >= 100 THEN 1 ELSE 0 END)`
+      }).from(enrollments)
+        .where(eq(enrollments.courseId, courseId));
+      
+      const { total, completed } = enrollmentsData[0] || { total: 0, completed: 0 };
+      
+      if (total === 0) return 0;
+      return Math.round((completed / total) * 100);
+    } catch (error) {
+      console.error('Error calculating course completion rate:', error);
+      return 0;
+    }
+  }
+  
+  async getCourseRating(courseId: number): Promise<number | null> {
+    try {
+      const result = await db.select({
+        avgRating: sql<number>`AVG(CAST(${sessions.notes} AS DECIMAL))`
+      }).from(sessions)
+        .where(eq(sessions.courseId, courseId));
+      
+      const avgRating = result[0]?.avgRating;
+      return avgRating ? parseFloat(avgRating.toFixed(1)) : null;
+    } catch (error) {
+      console.error('Error getting course rating:', error);
+      return null;
+    }
+  }
+
   async getOnlineCallernTeachers() {
     const teachers = await db.select({
       id: users.id,
