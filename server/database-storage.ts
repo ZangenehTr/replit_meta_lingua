@@ -4909,31 +4909,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAvailableVideoCourses(filters: any): Promise<Course[]> {
-    let query = db.select().from(courses).innerJoin(
+    // Build conditions array
+    const conditions = [];
+    
+    if (filters.language) {
+      conditions.push(eq(courses.language, filters.language));
+    }
+    if (filters.level) {
+      conditions.push(eq(courses.level, filters.level));
+    }
+    if (filters.skillFocus) {
+      conditions.push(eq(videoLessons.skillFocus, filters.skillFocus));
+    }
+    if (filters.isPublished) {
+      conditions.push(eq(videoLessons.isPublished, true));
+    }
+
+    const query = db.select({
+      course: courses
+    }).from(courses).innerJoin(
       videoLessons,
       eq(courses.id, videoLessons.courseId)
     );
 
-    if (filters.language) {
-      query = query.where(eq(courses.language, filters.language));
-    }
-    if (filters.level) {
-      query = query.where(eq(courses.level, filters.level));
-    }
-    if (filters.skillFocus) {
-      query = query.where(eq(videoLessons.skillFocus, filters.skillFocus));
-    }
-    if (filters.isPublished) {
-      query = query.where(eq(videoLessons.isPublished, true));
-    }
-
-    const results = await query;
+    const results = conditions.length > 0 
+      ? await query.where(and(...conditions))
+      : await query;
     
     // Get unique courses
     const uniqueCourses = new Map<number, Course>();
     results.forEach(row => {
-      if (!uniqueCourses.has(row.courses.id)) {
-        uniqueCourses.set(row.courses.id, row.courses);
+      if (!uniqueCourses.has(row.course.id)) {
+        uniqueCourses.set(row.course.id, row.course);
       }
     });
 
@@ -6638,7 +6645,19 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(homework.dueDate));
 
       return assignments.map(assignment => ({
-        ...assignment,
+        id: assignment.id,
+        title: assignment.title,
+        description: assignment.description,
+        instructions: assignment.instructions,
+        dueDate: assignment.dueDate,
+        status: assignment.status,
+        courseId: assignment.courseId,
+        tutorId: assignment.tutorId,
+        maxScore: assignment.maxScore,
+        submittedAt: assignment.submittedAt,
+        feedback: assignment.feedback,
+        score: assignment.score,
+        attachments: assignment.attachments,
         course: {
           title: assignment.courseName || 'Unknown Course',
           level: assignment.courseLevel || 'Unknown'
@@ -7074,7 +7093,7 @@ export class DatabaseStorage implements IStorage {
       // Use raw SQL to avoid Drizzle ORM issues
       const assignments = await db.execute(sql`
         SELECT * FROM homework 
-        WHERE teacher_id = ${teacherId} 
+        WHERE tutor_id = ${teacherId} 
         ORDER BY due_date DESC NULLS LAST
       `);
 

@@ -6399,13 +6399,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
 
   // Get student courses
-  app.get("/api/student/courses", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
+  app.get("/api/student/courses", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const courses = await storage.getUserCourses(req.user.userId);
+      const courses = await storage.getUserCourses(req.user.id);
       res.json(courses);
     } catch (error) {
       console.error('Error fetching student courses:', error);
@@ -6414,13 +6410,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get student assignments
-  app.get("/api/student/assignments", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
+  app.get("/api/student/assignments", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const assignments = await storage.getStudentAssignments(req.user.userId);
+      const assignments = await storage.getStudentAssignments(req.user.id);
       res.json(assignments);
     } catch (error) {
       console.error('Error fetching student assignments:', error);
@@ -6429,13 +6421,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get student goals
-  app.get("/api/student/goals", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
+  app.get("/api/student/goals", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const goals = await storage.getStudentGoals(req.user.userId);
+      const goals = await storage.getStudentGoals(req.user.id);
       res.json(goals);
     } catch (error) {
       console.error('Error fetching student goals:', error);
@@ -6444,13 +6432,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get student homework
-  app.get("/api/students/homework", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
+  app.get("/api/students/homework", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const homework = await storage.getStudentHomework(req.user.userId);
+      const homework = await storage.getStudentHomework(req.user.id);
       res.json(homework);
     } catch (error) {
       console.error('Error fetching student homework:', error);
@@ -6459,13 +6443,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get upcoming sessions
-  app.get("/api/student/sessions/upcoming", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
+  app.get("/api/student/sessions/upcoming", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
-      const sessions = await storage.getUpcomingSessions(req.user.userId);
+      const sessions = await storage.getUpcomingSessions(req.user.id);
       res.json(sessions);
     } catch (error) {
       console.error('Error fetching upcoming sessions:', error);
@@ -6474,11 +6454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Session Packages endpoints for private students  
-  app.get("/api/student/session-packages", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
+  app.get("/api/student/session-packages", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
       const packages = await storage.getStudentSessionPackages(req.user.id);
       res.json(packages);
@@ -6488,12 +6464,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/student/session-packages/purchase", authenticateToken, async (req: any, res) => {
+  app.post("/api/student/session-packages/purchase", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     console.log('User object in session package purchase:', req.user);
-    
-    if (req.user.role !== 'Student' && req.user.role !== 'Admin') {
-      return res.status(403).json({ message: "Access denied" });
-    }
 
     try {
       const { packageName, totalSessions, sessionDuration, price } = req.body;
