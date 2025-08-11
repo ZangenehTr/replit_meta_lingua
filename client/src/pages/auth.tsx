@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { Loader2, GraduationCap } from "lucide-react";
+import { Loader2, GraduationCap, Phone, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -20,7 +20,11 @@ export default function Auth() {
   
   const loginSchema = z.object({
     email: z.string().email(t('auth:invalidEmail')),
-    password: z.string().min(6, t('auth:passwordMinLength')),
+    password: z.string().optional(),
+    otp: z.string().optional(),
+  }).refine((data) => data.password || data.otp, {
+    message: "Either password or OTP is required",
+    path: ["password"],
   });
   
   const registerSchema = z.object({
@@ -37,6 +41,10 @@ export default function Auth() {
   const { user, login, register: registerUser, loginLoading, registerLoading, logout } = useAuth();
   const [authError, setAuthError] = useState<string>("");
   const [forceLogin, setForceLogin] = useState(false);
+  const [useOtp, setUseOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpMessage, setOtpMessage] = useState("");
 
   // Check for logout parameter in URL
   useEffect(() => {
@@ -62,6 +70,7 @@ export default function Auth() {
     defaultValues: {
       email: "",
       password: "",
+      otp: "",
     },
   });
 
@@ -75,13 +84,50 @@ export default function Auth() {
     },
   });
 
+  const requestOtp = async () => {
+    const email = loginForm.getValues("email");
+    if (!email) {
+      setAuthError(t('auth:emailRequired') || "Email is required");
+      return;
+    }
+
+    setOtpLoading(true);
+    setOtpMessage("");
+    setAuthError("");
+    
+    try {
+      const response = await fetch("/api/auth/request-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        setOtpSent(true);
+        setOtpMessage(result.message || "OTP sent to your registered phone number");
+        setUseOtp(true);
+        loginForm.setValue("password", ""); // Clear password field
+      } else {
+        setAuthError(result.message || "Failed to send OTP");
+      }
+    } catch (error) {
+      setAuthError("Failed to send OTP. Please try again.");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   const handleLogin = async (data: LoginFormData) => {
     setAuthError("");
     try {
-      await login({
-        email: data.email,
-        password: data.password
-      });
+      // Include OTP in login if using OTP
+      const loginData = useOtp 
+        ? { email: data.email, otp: data.otp }
+        : { email: data.email, password: data.password };
+      
+      await login(loginData);
       // Login doesn't return user directly, we need to wait for the user query to refetch
       // The redirect will happen in a useEffect that watches for user changes
     } catch (error: any) {
@@ -193,25 +239,86 @@ export default function Auth() {
                   )}
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">{t('auth:password')}</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder={t('auth:passwordPlaceholder')}
-                    {...loginForm.register("password")}
-                  />
-                  {loginForm.formState.errors.password && (
-                    <p className="text-sm text-red-500">
-                      {loginForm.formState.errors.password.message}
-                    </p>
+                {!useOtp ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">{t('auth:password')}</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder={t('auth:passwordPlaceholder')}
+                      {...loginForm.register("password")}
+                    />
+                    {loginForm.formState.errors.password && (
+                      <p className="text-sm text-red-500">
+                        {loginForm.formState.errors.password.message}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="login-otp">{t('auth:otpCode') || 'Verification Code'}</Label>
+                    <Input
+                      id="login-otp"
+                      type="text"
+                      placeholder="Enter 6-digit code"
+                      maxLength={6}
+                      {...loginForm.register("otp")}
+                    />
+                    {otpMessage && (
+                      <p className="text-sm text-green-600">{otpMessage}</p>
+                    )}
+                  </div>
+                )}
+                
+                <div className="flex gap-2">
+                  {!useOtp ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={requestOtp}
+                      disabled={otpLoading}
+                    >
+                      {otpLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Phone className="mr-2 h-4 w-4" />
+                      )}
+                      {t('auth:loginWithOtp') || 'Login with SMS Code'}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setUseOtp(false);
+                        setOtpSent(false);
+                        loginForm.setValue("otp", "");
+                      }}
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      {t('auth:usePassword') || 'Use Password'}
+                    </Button>
                   )}
+                  
+                  <Button type="submit" className="flex-1" disabled={loginLoading}>
+                    {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {t('auth:signIn')}
+                  </Button>
                 </div>
                 
-                <Button type="submit" className="w-full" disabled={loginLoading}>
-                  {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {t('auth:signIn')}
-                </Button>
+                {useOtp && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={requestOtp}
+                    disabled={otpLoading}
+                  >
+                    {t('auth:resendOtp') || 'Resend Code'}
+                  </Button>
+                )}
               </form>
             </TabsContent>
             

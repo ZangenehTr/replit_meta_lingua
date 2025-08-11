@@ -16,7 +16,8 @@ interface User {
 
 interface LoginCredentials {
   email: string;
-  password: string;
+  password?: string;
+  otp?: string;
 }
 
 interface RegisterData {

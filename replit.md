@@ -8,7 +8,13 @@ Preferred communication style: Simple, everyday language.
 Work sessions: User prefers to have work logged so they can resume from where we left off.
 Critical requirement: Self-hosting in Iran with zero external dependencies. Must follow check-first protocol.
 Database strategy: Use Replit/Neon for development only, migrate to self-hosted PostgreSQL for production in Iran.
-Recent session (2025-01-10): 
+Recent session (2025-01-11):
+- Implemented complete OTP (One-Time Password) login system via SMS for all user roles
+- Users can now login using either password or a 6-digit SMS code
+- OTP codes expire after 5 minutes and are single-use only
+- Added SMS templates for student creation notifications (automatic SMS when students are created)
+- Students' phone numbers are now set as their default password for easy first login
+Previous session (2025-01-10): 
 - Resolved database connectivity issues, confirmed Neon working for development, prepared migration guides for self-hosting
 - Fixed Callern Management authorization issue (case-insensitive role checks)
 - Added complete Persian translations for Callern Management interface
@@ -62,8 +68,8 @@ All 7 roles have test accounts with the following credentials:
 - **Schema**: Comprehensive user management, course system, payment tracking, gamification features, and a mood intelligence system.
 
 ### Key Features
-- **Authentication System**: JWT-based with role-based authorization.
-- **Student Management**: CRUD operations, course enrollment, progress tracking, cultural profiling.
+- **Authentication System**: JWT-based with role-based authorization. Supports both password and OTP (One-Time Password) login via SMS for all roles. Students can use their phone number as default password.
+- **Student Management**: CRUD operations, course enrollment, progress tracking, cultural profiling. Automatic SMS notifications on creation with login credentials.
 - **Payment & Wallet System**: IRR-based wallet, member tiers, Shetab payment gateway integration, transaction tracking.
 - **Course Management**: Creation, teacher assignment, session scheduling, progress monitoring. Includes video courses and Callern on-demand video tutoring service.
 - **Callern Service**: 24/7 on-demand video tutoring system where students purchase hour packages and connect instantly with available teachers for any language. Features WebRTC-based video calling with real-time peer-to-peer connections, screen sharing, and call recording capabilities.
