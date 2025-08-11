@@ -26,6 +26,7 @@ import { ollamaService } from "./ollama-service";
 import { ollamaInstaller } from "./ollama-installer";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { z } from "zod";
 import { 
   insertUserSchema, 
@@ -100,7 +101,7 @@ const studentPhotoStorage = multer.diskStorage({
     cb(null, photoDir);
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex');
     cb(null, `student-${uniqueSuffix}${path.extname(file.originalname)}`);
   }
 });
@@ -1568,8 +1569,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No phone number registered for this account" });
       }
 
-      // Generate 6-digit OTP
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      // Generate secure 6-digit OTP using crypto
+      const otpCode = crypto.randomInt(100000, 999999).toString();
       
       // Store OTP with 5-minute expiration
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
@@ -7964,8 +7965,8 @@ Return JSON format:
       const courseId = parseInt(req.params.courseId);
       const userId = req.user.id;
       
-      // Generate unique referral code
-      const referralCode = `COURSE${courseId}_USER${userId}_${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+      // Generate secure unique referral code
+      const referralCode = `COURSE${courseId}_USER${userId}_${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
       
       // Create referral link entry
       const referralLink = await storage.createReferralLink({
