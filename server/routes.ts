@@ -90,6 +90,33 @@ const uploadPhoto = multer({
   }
 });
 
+// Configure multer for student photo uploads
+const studentPhotoStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const photoDir = path.join(process.cwd(), 'uploads', 'student-photos');
+    if (!fs.existsSync(photoDir)) {
+      fs.mkdirSync(photoDir, { recursive: true });
+    }
+    cb(null, photoDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `student-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+const uploadStudentPhoto = multer({ 
+  storage: studentPhotoStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
+    }
+  }
+});
+
 const audioUpload = multer({ 
   storage: audioStorage,
   limits: {
@@ -175,6 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static audio and photo files
   app.use('/uploads/audio', express.static('uploads/audio'));
   app.use('/uploads/teacher-photos', express.static('uploads/teacher-photos'));
+  app.use('/uploads/student-photos', express.static('uploads/student-photos'));
   
   // Simple in-memory store for downloaded models (in production, use database)
   let downloadedModels: string[] = [
@@ -1335,6 +1363,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching students:', error);
       res.status(500).json({ message: "Failed to get students" });
+    }
+  });
+
+  // Student photo upload endpoint
+  app.post("/api/students/:studentId/photo", authenticateToken, uploadStudentPhoto.single('photo'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No photo uploaded" });
+      }
+
+      const studentId = parseInt(req.params.studentId);
+      const photoUrl = `/uploads/student-photos/${req.file.filename}`;
+      
+      // Update student profileImage in database
+      await storage.updateStudent(studentId, { profileImage: photoUrl });
+      
+      res.json({ 
+        message: "Photo uploaded successfully", 
+        photoUrl 
+      });
+    } catch (error) {
+      console.error("Error uploading student photo:", error);
+      res.status(500).json({ message: "Failed to upload photo" });
     }
   });
 

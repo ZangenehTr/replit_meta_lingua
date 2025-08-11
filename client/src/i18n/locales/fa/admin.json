@@ -1158,6 +1158,8 @@
     "updateGameInfo": "به‌روزرسانی اطلاعات و تنظیمات بازی"
   },
   "students": {
+    "title": "سیستم اطلاعات دانشجو",
+    "subtitle": "مدیریت اطلاعات دانش‌آموزان",
     "add": "افزودن دانش‌آموز",
     "createProfile": "ایجاد پروفایل",
     "newestFirst": "جدیدترین اول",
@@ -1186,10 +1188,12 @@
     "birthday": "تاریخ تولد",
     "selectBirthday": "انتخاب تاریخ تولد",
     "guardianPhone": "تلفن سرپرست",
+    "guardianName": "نام سرپرست",
     "nationalId": "کد ملی",
     "lastName": "نام خانوادگی",
     "firstName": "نام",
     "email": "ایمیل",
+    "phone": "تلفن",
     "phoneNumber": "شماره تلفن",
     "guardian": "سرپرست",
     "level": "سطح",
@@ -1199,7 +1203,15 @@
     "selectStatus": "انتخاب وضعیت",
     "selectCoursesDesc": "دوره‌هایی که دانش‌آموز ثبت‌نام کرده را انتخاب کنید",
     "searchPlaceholder": "جستجوی دانش‌آموزان...",
-    "allStudents": "همه دانش‌آموزان"
+    "allStudents": "همه دانش‌آموزان",
+    "updateStudentInfo": "به‌روزرسانی اطلاعات دانش‌آموز و جزئیات ثبت‌نام",
+    "notes": "یادداشت‌ها",
+    "additionalNotes": "یادداشت‌های اضافی درباره دانش‌آموز",
+    "courseEnrollments": "ثبت‌نام دوره‌ها",
+    "cancel": "انصراف",
+    "saveChanges": "ذخیره تغییرات",
+    "updateStudent": "به‌روزرسانی دانش‌آموز",
+    "updating": "در حال به‌روزرسانی..."
   },
   "users": {
     "title": "مدیریت کاربران",
