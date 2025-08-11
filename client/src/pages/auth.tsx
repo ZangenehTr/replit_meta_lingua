@@ -22,7 +22,8 @@ import {
   ChevronRight,
   Sparkles,
   Languages,
-  Globe2
+  Globe2,
+  RefreshCw
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -338,16 +339,20 @@ export default function Auth() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <Label htmlFor="login-otp">{t('auth:otpCode') || 'Verification Code'}</Label>
-                    <Input
-                      id="login-otp"
-                      type="text"
-                      placeholder="Enter 6-digit code"
-                      maxLength={6}
-                      {...loginForm.register("otp")}
-                    />
+                    <Label htmlFor="login-otp" className="text-white/90 text-sm font-medium">{t('auth:otpCode') || 'Verification Code'}</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                      <Input
+                        id="login-otp"
+                        type="text"
+                        placeholder="Enter 6-digit code"
+                        maxLength={6}
+                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 h-12 rounded-xl focus:bg-white/15 focus:border-white/30"
+                        {...loginForm.register("otp")}
+                      />
+                    </div>
                     {otpMessage && (
-                      <p className="text-sm text-green-600">{otpMessage}</p>
+                      <p className="text-sm text-green-300">{otpMessage}</p>
                     )}
                   </div>
                 )}
@@ -356,8 +361,7 @@ export default function Auth() {
                   {!useOtp ? (
                     <Button
                       type="button"
-                      variant="outline"
-                      className="flex-1"
+                      className="flex-1 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
                       onClick={requestOtp}
                       disabled={otpLoading}
                     >
@@ -371,15 +375,14 @@ export default function Auth() {
                   ) : (
                     <Button
                       type="button"
-                      variant="outline"
-                      className="flex-1"
+                      className="flex-1 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
                       onClick={() => {
                         setUseOtp(false);
                         setOtpSent(false);
                         loginForm.setValue("otp", "");
                       }}
                     >
-                      <Mail className="mr-2 h-4 w-4" />
+                      <Lock className="mr-2 h-4 w-4" />
                       {t('auth:usePassword') || 'Use Password'}
                     </Button>
                   )}
@@ -403,11 +406,11 @@ export default function Auth() {
                 {useOtp && (
                   <Button
                     type="button"
-                    variant="ghost"
-                    className="w-full"
+                    className="w-full h-10 bg-transparent hover:bg-white/10 text-white/70 hover:text-white font-medium rounded-xl transition-all duration-200"
                     onClick={requestOtp}
                     disabled={otpLoading}
                   >
+                    <RefreshCw className="mr-2 h-4 w-4" />
                     {t('auth:resendOtp') || 'Resend Code'}
                   </Button>
                 )}
