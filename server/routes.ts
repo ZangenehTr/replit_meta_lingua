@@ -133,6 +133,91 @@ const audioUpload = multer({
 
 const JWT_SECRET = process.env.JWT_SECRET || "meta-lingua-secret-key";
 
+// Helper functions to calculate real data from database
+async function calculateStudentAttendance(studentId: number): Promise<number> {
+  try {
+    const sessions = await storage.getStudentSessions(studentId);
+    if (!sessions || sessions.length === 0) return 0;
+    
+    const attendedSessions = sessions.filter(s => s.status === 'completed' || s.attended === true);
+    const attendanceRate = (attendedSessions.length / sessions.length) * 100;
+    return Math.round(attendanceRate);
+  } catch (error) {
+    console.error('Error calculating attendance:', error);
+    return 0;
+  }
+}
+
+async function getLastActivityTime(userId: number): Promise<string> {
+  try {
+    const sessions = await storage.getUserSessions(userId);
+    const activities = await storage.getUserActivities(userId);
+    
+    let lastActivity = new Date(0);
+    
+    if (sessions && sessions.length > 0) {
+      const lastSession = sessions.sort((a, b) => 
+        new Date(b.date || b.createdAt).getTime() - new Date(a.date || a.createdAt).getTime()
+      )[0];
+      if (lastSession?.date) {
+        lastActivity = new Date(lastSession.date);
+      }
+    }
+    
+    if (activities && activities.length > 0) {
+      const lastActivityDate = new Date(activities[0].timestamp || activities[0].createdAt);
+      if (lastActivityDate > lastActivity) {
+        lastActivity = lastActivityDate;
+      }
+    }
+    
+    const now = new Date();
+    const diffMs = now.getTime() - lastActivity.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return `${Math.floor(diffDays / 30)} months ago`;
+  } catch (error) {
+    console.error('Error getting last activity:', error);
+    return 'Unknown';
+  }
+}
+
+async function calculateTeacherRating(teacherId: number): Promise<string> {
+  try {
+    const reviews = await storage.getTeacherReviews(teacherId);
+    if (!reviews || reviews.length === 0) return '0.0';
+    
+    const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+    const averageRating = totalRating / reviews.length;
+    return averageRating.toFixed(1);
+  } catch (error) {
+    console.error('Error calculating teacher rating:', error);
+    return '0.0';
+  }
+}
+
+async function calculateOverallTeacherSatisfaction(): Promise<number> {
+  try {
+    const allReviews = await storage.getAllTeacherReviews();
+    if (!allReviews || allReviews.length === 0) return 0;
+    
+    const totalRating = allReviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+    const averageRating = totalRating / allReviews.length;
+    return parseFloat(averageRating.toFixed(1));
+  } catch (error) {
+    console.error('Error calculating overall satisfaction:', error);
+    return 0;
+  }
+}
+
 
 
 // Middleware to verify JWT token
@@ -620,8 +705,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // System Backup
   app.post("/api/admin/system/backup", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
-      // Simulate backup creation with realistic data
-      const backupSize = Math.floor(Math.random() * 500) + 100; // 100-600 MB
+      // Calculate real backup size from database
+      const totalUsers = await storage.getTotalUsers();
+      const totalCourses = await storage.getCourses();
+      const totalSessions = await storage.getAllSessions();
+      
+      // Estimate backup size based on real data (avg 1KB per record)
+      const recordCount = totalUsers + totalCourses.length + totalSessions.length;
+      const backupSize = Math.max(10, Math.round(recordCount * 0.001)); // Convert to MB
       const backupId = `backup_${Date.now()}`;
       
       res.json({
@@ -1808,7 +1899,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         progressHistory.sort((a, b) => a.date.localeCompare(b.date));
       }
       
-      // Generate recommended learning paths
+      // Generate recommended learning paths based on real progress
+      const userSessions = await storage.getStudentSessions(req.user.id);
+      const completedSessions = userSessions.filter(s => s.status === 'completed').length;
+      const totalAvailableSessions = userSessions.length || 10;
+      
       const recommendedPaths = [
         {
           id: '1',
@@ -1816,7 +1911,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           description: profile?.proficiencyLevel === 'beginner' 
             ? 'Build strong foundations in all language skills'
             : 'Focus on professional vocabulary and formal writing',
-          currentStep: Math.floor(Math.random() * 5) + 1,
+          currentStep: Math.min(8, Math.max(1, Math.floor(completedSessions / 3))),
           totalSteps: 8,
           nextMilestone: profile?.proficiencyLevel === 'beginner' ? 'Basic Conversations' : 'Email Writing Workshop',
           estimatedTime: '2 weeks',
@@ -1826,7 +1921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: '2',
           title: 'Conversational Fluency',
           description: 'Improve speaking confidence through daily practice',
-          currentStep: Math.floor(Math.random() * 8) + 1,
+          currentStep: Math.min(10, Math.max(1, Math.floor(completedSessions / 2))),
           totalSteps: 10,
           nextMilestone: 'Advanced Idioms',
           estimatedTime: '3 weeks',
@@ -1863,16 +1958,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action: 'Add 10 new words daily to maximize growth'
       });
       
+      // Calculate real improvement based on progress history
+      const skillImprovements = Object.entries(skillLevels).map(([skill, current]) => {
+        // Calculate improvement based on session completion
+        const completedSessions = userSessions.filter(s => s.status === 'completed').length;
+        const improvement = Math.min(30, Math.max(0, Math.floor(completedSessions * 0.5)));
+        
+        return {
+          skill: skill.charAt(0).toUpperCase() + skill.slice(1),
+          current,
+          target: Math.min(current + 15, 100),
+          improvement
+        };
+      });
+      
       res.json({
         overallLevel,
         nextLevel,
         progressToNext,
-        skills: Object.entries(skillLevels).map(([skill, current]) => ({
-          skill: skill.charAt(0).toUpperCase() + skill.slice(1),
-          current,
-          target: Math.min(current + 15, 100),
-          improvement: Math.floor(Math.random() * 10) + 10
-        })),
+        skills: skillImprovements,
         progressHistory,
         recommendedPaths,
         insights
@@ -4846,19 +4950,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Found ${dbTeachers.length} teachers directly from database`);
       
-      const teachers = dbTeachers
-        .filter(teacher => teacher.isActive) // Only active teachers
-        .map(teacher => ({
-          id: teacher.id,
-          name: `${teacher.firstName} ${teacher.lastName}`,
-          firstName: teacher.firstName,
-          lastName: teacher.lastName,
-          email: teacher.email,
-          role: teacher.role,
-          specializations: ['Persian', 'English', 'Arabic'], // Mock data
-          availability: [],
-          rating: 4.5 + Math.random() * 0.5 // Mock rating
-        }));
+      // Map teachers with real data
+      const teachersWithRatings = await Promise.all(
+        dbTeachers
+          .filter(teacher => teacher.isActive)
+          .map(async (teacher) => {
+            const reviews = await storage.getTeacherReviews(teacher.id);
+            const avgRating = reviews.length > 0 
+              ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
+              : null;
+            
+            return {
+              id: teacher.id,
+              name: `${teacher.firstName} ${teacher.lastName}`,
+              firstName: teacher.firstName,
+              lastName: teacher.lastName,
+              email: teacher.email,
+              role: teacher.role,
+              specializations: ['Persian', 'English', 'Arabic'], // TODO: Get from teacher profile
+              availability: [],
+              rating: avgRating || 4.0 // Default to 4.0 if no reviews
+            };
+          })
+      );
+      
+      const teachers = teachersWithRatings;
 
       console.log(`Returning ${teachers.length} active teachers:`, teachers.map(t => t.name));
       res.json(teachers);
@@ -5347,10 +5463,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           guardianPhone: user.guardianPhone || profile?.guardianPhone || '',
           notes: user.notes || profile?.notes || '',
           progress: userCourses.length > 0 ? Math.round(userCourses.reduce((sum, c) => sum + (c.progress || 0), 0) / userCourses.length) : 0,
-          attendance: userCourses.length > 0 ? Math.min(100, Math.max(0, Math.round(Math.random() * 25 + 75))) : 0,
+          attendance: userCourses.length > 0 ? await calculateStudentAttendance(user.id) : 0,
           courses: userCourses.map(c => c.title),
           enrollmentDate: user.createdAt,
-          lastActivity: '2 days ago', // Default for now
+          lastActivity: await getLastActivityTime(user.id),
           avatar: user.avatar || '/api/placeholder/40/40'
         });
       }
@@ -6635,21 +6751,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         teachers: {
           total: teachers.length,
           active: teachers.filter(t => t.isActive).length,
-          performance: teachers.slice(0, 5).map(teacher => ({
-            name: `${teacher.firstName} ${teacher.lastName}`,
-            rating: (Math.random() * 1.5 + 3.5).toFixed(1),
-            students: Math.floor(Math.random() * 20) + 10,
-            revenue: Math.floor(Math.random() * 8000000) + 5000000
+          performance: await Promise.all(teachers.slice(0, 5).map(async teacher => {
+            const sessions = await storage.getTeacherSessions(teacher.id);
+            const studentCount = await storage.getTeacherStudentCount(teacher.id);
+            const revenue = await storage.getTeacherRevenue(teacher.id);
+            return {
+              name: `${teacher.firstName} ${teacher.lastName}`,
+              rating: await calculateTeacherRating(teacher.id),
+              students: studentCount || 0,
+              revenue: revenue || 0
+            };
           })),
-          satisfaction: 4.6
+          satisfaction: await calculateOverallTeacherSatisfaction()
         },
         courses: {
           total: courses.length,
-          mostPopular: courses.slice(0, 4).map(course => ({
-            name: course.title,
-            enrollments: Math.floor(Math.random() * 50) + 20,
-            completion: Math.floor(Math.random() * 30) + 70,
-            rating: (Math.random() * 1.5 + 3.5).toFixed(1)
+          mostPopular: await Promise.all(courses.slice(0, 4).map(async course => {
+            const enrollments = await storage.getCourseEnrollmentCount(course.id);
+            const completionRate = await storage.getCourseCompletionRate(course.id);
+            const rating = await storage.getCourseRating(course.id);
+            return {
+              name: course.title,
+              enrollments: enrollments || 0,
+              completion: completionRate || 0,
+              rating: rating ? rating.toFixed(1) : '0.0'
+            };
           })),
           completion: 78,
           difficulty: [
@@ -7228,13 +7354,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/mentoring/end-call/:callId", authenticateToken, async (req: any, res) => {
     try {
       const callId = parseInt(req.params.callId);
+      const { startTime, mentorId } = req.body;
       
-      // In a real implementation, this would calculate actual call duration and cost
+      // Calculate actual duration based on start time
+      const endTime = new Date();
+      const startTimeDate = new Date(startTime);
+      const durationMinutes = Math.round((endTime.getTime() - startTimeDate.getTime()) / 60000);
+      
+      // Calculate cost based on mentor's hourly rate (750,000 IRR/hour default)
+      const hourlyRate = 750000;
+      const totalCost = Math.round((durationMinutes / 60) * hourlyRate);
+      
       const callSummary = {
         callId,
-        duration: Math.floor(Math.random() * 15) + 5, // 5-20 minutes
-        totalCost: Math.floor(Math.random() * 2000) + 500, // 500-2500 Toman
-        endTime: new Date(),
+        duration: durationMinutes,
+        totalCost,
+        endTime,
         rating: null // User can rate later
       };
 

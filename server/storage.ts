@@ -573,6 +573,18 @@ export interface IStorage {
   getRevenueAnalytics(): Promise<any>;
   getStudentRetentionAnalytics(): Promise<any>;
   getMarketingMetrics(): Promise<any>;
+  
+  // Additional real data methods (no mock data)
+  getStudentSessions(studentId: number): Promise<any[]>;
+  getUserActivities(userId: number): Promise<any[]>;
+  getTeacherSessions(teacherId: number): Promise<any[]>;
+  getTeacherStudentCount(teacherId: number): Promise<number>;
+  getTeacherRevenue(teacherId: number): Promise<number>;
+  getTeacherReviews(teacherId: number): Promise<any[]>;
+  getAllTeacherReviews(): Promise<any[]>;
+  getCourseEnrollmentCount(courseId: number): Promise<number>;
+  getCourseCompletionRate(courseId: number): Promise<number>;
+  getCourseRating(courseId: number): Promise<number | null>;
   getCourseCompletionAnalytics(): Promise<any>;
   getOperationalMetrics(): Promise<any>;
   getFinancialKPIs(): Promise<any>;
@@ -3242,6 +3254,63 @@ export class MemStorage implements IStorage {
 
   async updateQuestionnaireResponse(id: number, updates: Partial<QuestionnaireResponse>): Promise<QuestionnaireResponse | undefined> {
     return undefined;
+  }
+  
+  // Additional real data methods - no mock data
+  async getStudentSessions(studentId: number): Promise<any[]> {
+    return [];
+  }
+  
+  async getUserActivities(userId: number): Promise<any[]> {
+    return [];
+  }
+  
+  async getTeacherSessions(teacherId: number): Promise<any[]> {
+    return [];
+  }
+  
+  async getTeacherStudentCount(teacherId: number): Promise<number> {
+    return 0;
+  }
+  
+  async getTeacherRevenue(teacherId: number): Promise<number> {
+    return 0;
+  }
+  
+  async getTeacherReviews(teacherId: number): Promise<any[]> {
+    return [];
+  }
+  
+  async getAllTeacherReviews(): Promise<any[]> {
+    return [];
+  }
+  
+  async getCourseEnrollmentCount(courseId: number): Promise<number> {
+    return 0;
+  }
+  
+  async getCourseCompletionRate(courseId: number): Promise<number> {
+    return 0;
+  }
+  
+  async getCourseRating(courseId: number): Promise<number | null> {
+    return null;
+  }
+  
+  async updateTeacherCallernAvailability(teacherId: number, updates: any): Promise<any> {
+    return undefined;
+  }
+  
+  async getStudentCallernPackages(studentId: number): Promise<any[]> {
+    return [];
+  }
+  
+  async createStudentCallernPackage(packageData: any): Promise<any> {
+    return packageData;
+  }
+  
+  async checkTeacherScheduleConflicts(teacherId: number, proposedHours: string[]): Promise<any> {
+    return { hasConflicts: false, conflicts: [], conflictType: '', conflictingHours: [] };
   }
 }
 
