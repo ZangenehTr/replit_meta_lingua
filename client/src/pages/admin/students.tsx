@@ -276,10 +276,38 @@ export function AdminStudents() {
 
   // Create student mutation
   const createStudentMutation = useMutation({
-    mutationFn: (studentData: any) => apiRequest('/api/admin/students', {
-      method: 'POST',
-      body: JSON.stringify(studentData)
-    }),
+    mutationFn: async (studentData: any) => {
+      // Create the student first (without the photo)
+      const response = await apiRequest('/api/admin/students', {
+        method: 'POST',
+        body: JSON.stringify(studentData)
+      });
+      
+      // If there's a profile image, upload it separately
+      if (newStudentData.profileImage && response.id) {
+        const formData = new FormData();
+        formData.append('photo', newStudentData.profileImage);
+        
+        try {
+          const token = localStorage.getItem('auth_token');
+          const photoResponse = await fetch(`/api/students/${response.id}/photo`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          });
+          
+          if (!photoResponse.ok) {
+            console.error('Failed to upload photo:', await photoResponse.text());
+          }
+        } catch (error) {
+          console.error('Error uploading photo:', error);
+        }
+      }
+      
+      return response;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/students/list'] });
       queryClient.refetchQueries({ queryKey: ['/api/students/list'] });
@@ -364,7 +392,7 @@ export function AdminStudents() {
     }
 
     try {
-      // Format the data properly
+      // Format the data properly (excluding profileImage which is handled separately)
       const studentData = {
         firstName: newStudentData.firstName,
         lastName: newStudentData.lastName,
@@ -890,56 +918,56 @@ export function AdminStudents() {
 
       {/* Edit Student Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
           <DialogHeader>
-            <DialogTitle>{t('admin:students.edit')} {t('admin:students.title')}</DialogTitle>
+            <DialogTitle>{t('admin:students.edit')}</DialogTitle>
             <DialogDescription>
-              Update student information and profile details
+              {t('admin:students.updateStudentInfo')}
             </DialogDescription>
           </DialogHeader>
           {editingStudent && (
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="editFirstName">First Name</Label>
+                <Label htmlFor="editFirstName">{t('admin:students.firstName')}</Label>
                 <Input 
                   id="editFirstName" 
-                  placeholder="Enter first name"
+                  placeholder={t('admin:students.enterFirstName')}
                   value={editingStudent.firstName}
                   onChange={(e) => setEditingStudent({...editingStudent, firstName: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editLastName">Last Name</Label>
+                <Label htmlFor="editLastName">{t('admin:students.lastName')}</Label>
                 <Input 
                   id="editLastName" 
-                  placeholder="Enter last name"
+                  placeholder={t('admin:students.enterLastName')}
                   value={editingStudent.lastName}
                   onChange={(e) => setEditingStudent({...editingStudent, lastName: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editEmail">Email</Label>
+                <Label htmlFor="editEmail">{t('admin:students.email')}</Label>
                 <Input 
                   id="editEmail" 
                   type="email" 
-                  placeholder="student@example.com"
+                  placeholder={t('admin:students.enterEmail')}
                   value={editingStudent.email}
                   onChange={(e) => setEditingStudent({...editingStudent, email: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editPhone">Phone</Label>
+                <Label htmlFor="editPhone">{t('admin:students.phone')}</Label>
                 <PhoneInput
                   value={editingStudent.phone}
                   onChange={(value) => setEditingStudent({...editingStudent, phone: value})}
-                  placeholder="Enter phone number"
+                  placeholder={t('admin:students.enterPhone')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editNationalId">National ID</Label>
+                <Label htmlFor="editNationalId">{t('admin:students.nationalId')}</Label>
                 <Input 
                   id="editNationalId" 
-                  placeholder="National ID number"
+                  placeholder={t('admin:students.enterNationalId')}
                   value={editingStudent.nationalId || ''}
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^\d]/g, ''); // Only allow numbers
@@ -949,62 +977,62 @@ export function AdminStudents() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editLevel">Level</Label>
+                <Label htmlFor="editLevel">{t('admin:students.level')}</Label>
                 <Select 
                   value={editingStudent.level} 
                   onValueChange={(value) => setEditingStudent({...editingStudent, level: value})}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select level" />
+                    <SelectValue placeholder={t('admin:students.selectLevel')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Beginner">Beginner</SelectItem>
-                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                    <SelectItem value="Advanced">Advanced</SelectItem>
+                    <SelectItem value="Beginner">{t('admin:students.beginner')}</SelectItem>
+                    <SelectItem value="Intermediate">{t('admin:students.intermediate')}</SelectItem>
+                    <SelectItem value="Advanced">{t('admin:students.advanced')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editGuardianName">Guardian Name</Label>
+                <Label htmlFor="editGuardianName">{t('admin:students.guardianName')}</Label>
                 <Input 
                   id="editGuardianName" 
-                  placeholder="Guardian's full name"
+                  placeholder={t('admin:students.enterGuardian')}
                   value={editingStudent.guardianName || ''}
                   onChange={(e) => setEditingStudent({...editingStudent, guardianName: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editGuardianPhone">Guardian Phone</Label>
+                <Label htmlFor="editGuardianPhone">{t('admin:students.guardianPhone')}</Label>
                 <PhoneInput
                   value={editingStudent.guardianPhone || ''}
                   onChange={(value) => setEditingStudent({...editingStudent, guardianPhone: value})}
-                  placeholder="Enter guardian phone number"
+                  placeholder={t('admin:students.enterGuardianPhone')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editStatus">Status</Label>
+                <Label htmlFor="editStatus">{t('admin:students.status')}</Label>
                 <Select 
                   value={editingStudent.status || 'active'} 
                   onValueChange={(value) => setEditingStudent({...editingStudent, status: value})}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t('admin:students.selectStatus')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="active">{t('admin:students.active')}</SelectItem>
+                    <SelectItem value="inactive">{t('admin:students.inactive')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="editBirthday">Birthday</Label>
+                <Label htmlFor="editBirthday">{t('admin:students.birthday')}</Label>
                 <SimpleDateInput
                   value={editingStudent.birthday}
                   onChange={(date) => setEditingStudent({...editingStudent, birthday: date})}
                 />
               </div>
               <div className="col-span-2 space-y-2">
-                <Label>Course Enrollments</Label>
+                <Label>{t('admin:students.courseEnrollments')}</Label>
                 <div className="border rounded-lg p-4 max-h-32 overflow-y-auto">
                   {coursesList.map((course: any) => (
                     <div key={course.id} className="flex items-center justify-between py-2">
@@ -1028,10 +1056,10 @@ export function AdminStudents() {
                 </div>
               </div>
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="editNotes">Notes</Label>
+                <Label htmlFor="editNotes">{t('admin:students.notes')}</Label>
                 <Textarea 
                   id="editNotes" 
-                  placeholder="Additional notes about the student"
+                  placeholder={t('admin:students.additionalNotes')}
                   value={editingStudent.notes || ''}
                   onChange={(e) => setEditingStudent({...editingStudent, notes: e.target.value})}
                   rows={3}
@@ -1044,13 +1072,13 @@ export function AdminStudents() {
               variant="outline" 
               onClick={() => setIsEditDialogOpen(false)}
             >
-              Cancel
+              {t('admin:students.cancel')}
             </Button>
             <Button 
               onClick={handleUpdateStudent}
               disabled={editStudentMutation.isPending}
             >
-              {editStudentMutation.isPending ? "Updating..." : "Update Student"}
+              {editStudentMutation.isPending ? t('admin:students.updating') : t('admin:students.updateStudent')}
             </Button>
           </div>
         </DialogContent>
@@ -1088,7 +1116,19 @@ export function AdminStudents() {
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4">
               <div className="flex items-center justify-between gap-2 sm:gap-3">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-lg flex-shrink-0">
+                  {student.profileImage ? (
+                    <img 
+                      src={student.profileImage} 
+                      alt={`${student.firstName} ${student.lastName}`}
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-lg flex-shrink-0"
+                      onError={(e) => {
+                        // Fallback to initials if image fails to load
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-lg flex-shrink-0 ${student.profileImage ? 'hidden' : ''}`}>
                     {student.firstName[0]}{student.lastName[0]}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -1378,7 +1418,19 @@ export function AdminStudents() {
                   {/* Student Info */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg">
+                      {student.profileImage ? (
+                        <img 
+                          src={student.profileImage} 
+                          alt={`${student.firstName} ${student.lastName}`}
+                          className="w-8 h-8 rounded-full object-cover shadow-lg"
+                          onError={(e) => {
+                            // Fallback to initials if image fails to load
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-8 h-8 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg ${student.profileImage ? 'hidden' : ''}`}>
                         {student.firstName[0]}{student.lastName[0]}
                       </div>
                       <div>
@@ -1631,83 +1683,83 @@ export function AdminStudents() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={`max-w-3xl max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
           <DialogHeader>
             <DialogTitle>{t('admin:students.edit')}</DialogTitle>
             <DialogDescription>
-              Update student information and enrollment details
+              {t('admin:students.updateStudentInfo')}
             </DialogDescription>
           </DialogHeader>
           {editingStudent && (
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="editFirstName">First Name</Label>
+                <Label htmlFor="editFirstName">{t('admin:students.firstName')}</Label>
                 <Input 
                   id="editFirstName" 
-                  placeholder="Enter first name"
+                  placeholder={t('admin:students.enterFirstName')}
                   value={editingStudent.firstName || ''}
                   onChange={(e) => setEditingStudent({...editingStudent, firstName: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editLastName">Last Name</Label>
+                <Label htmlFor="editLastName">{t('admin:students.lastName')}</Label>
                 <Input 
                   id="editLastName" 
-                  placeholder="Enter last name"
+                  placeholder={t('admin:students.enterLastName')}
                   value={editingStudent.lastName || ''}
                   onChange={(e) => setEditingStudent({...editingStudent, lastName: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editEmail">Email</Label>
+                <Label htmlFor="editEmail">{t('admin:students.email')}</Label>
                 <Input 
                   id="editEmail" 
                   type="email" 
-                  placeholder="Enter email address"
+                  placeholder={t('admin:students.enterEmail')}
                   value={editingStudent.email || ''}
                   onChange={(e) => setEditingStudent({...editingStudent, email: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editPhone">Phone Number</Label>
+                <Label htmlFor="editPhone">{t('admin:students.phoneNumber')}</Label>
                 <Input 
                   id="editPhone" 
                   type="tel" 
-                  placeholder="Enter phone number"
+                  placeholder={t('admin:students.enterPhone')}
                   value={editingStudent.phone || ''}
                   onChange={(e) => setEditingStudent({...editingStudent, phone: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editStatus">Status</Label>
+                <Label htmlFor="editStatus">{t('admin:students.status')}</Label>
                 <Select value={editingStudent.status || 'active'} onValueChange={(value) => setEditingStudent({...editingStudent, status: value})}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t('admin:students.selectStatus')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="active">{t('admin:students.active')}</SelectItem>
+                    <SelectItem value="inactive">{t('admin:students.inactive')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editLevel">Level</Label>
+                <Label htmlFor="editLevel">{t('admin:students.level')}</Label>
                 <Select value={editingStudent.level || 'Beginner'} onValueChange={(value) => setEditingStudent({...editingStudent, level: value})}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select level" />
+                    <SelectValue placeholder={t('admin:students.selectLevel')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Beginner">Beginner</SelectItem>
-                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                    <SelectItem value="Advanced">Advanced</SelectItem>
+                    <SelectItem value="Beginner">{t('admin:students.beginner')}</SelectItem>
+                    <SelectItem value="Intermediate">{t('admin:students.intermediate')}</SelectItem>
+                    <SelectItem value="Advanced">{t('admin:students.advanced')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="editNotes">Notes</Label>
+                <Label htmlFor="editNotes">{t('admin:students.notes')}</Label>
                 <Input 
                   id="editNotes" 
-                  placeholder="Additional notes about the student"
+                  placeholder={t('admin:students.additionalNotes')}
                   value={editingStudent.notes || ''}
                   onChange={(e) => setEditingStudent({...editingStudent, notes: e.target.value})}
                 />
@@ -1715,8 +1767,8 @@ export function AdminStudents() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveEdit} disabled={!editingStudent}>Save Changes</Button>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>{t('admin:students.cancel')}</Button>
+            <Button onClick={handleSaveEdit} disabled={!editingStudent}>{t('admin:students.saveChanges')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
