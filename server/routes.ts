@@ -3876,6 +3876,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SMS Template Configuration endpoints
+  app.get("/api/admin/sms/templates", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const settings = await storage.getAdminSettings();
+      
+      // Default templates for various events
+      const templates = {
+        studentCreation: settings?.studentCreationSmsTemplate || 
+          `Welcome to Meta Lingua Academy!\n\n` +
+          `Your student account has been created.\n` +
+          `Login Information:\n` +
+          `Username: {email}\n` +
+          `Password: {password}\n` +
+          `Classes: {courses}\n\n` +
+          `Please login at: {loginUrl}`,
+        
+        enrollment: settings?.enrollmentSmsTemplate ||
+          `Hello {firstName},\n` +
+          `You have been enrolled in {course}.\n` +
+          `Class starts: {startDate}\n` +
+          `Teacher: {teacherName}\n\n` +
+          `Good luck with your studies!`,
+        
+        sessionReminder: settings?.sessionReminderSmsTemplate ||
+          `Reminder: You have a class tomorrow at {time}.\n` +
+          `Course: {course}\n` +
+          `Teacher: {teacherName}\n` +
+          `Room: {room}`,
+        
+        paymentReceived: settings?.paymentReceivedSmsTemplate ||
+          `Payment received: {amount} IRR\n` +
+          `Transaction ID: {transactionId}\n` +
+          `Thank you for your payment!`
+      };
+      
+      res.json({ templates });
+    } catch (error) {
+      console.error('Error fetching SMS templates:', error);
+      res.status(500).json({ message: "Failed to fetch SMS templates" });
+    }
+  });
+  
+  app.post("/api/admin/sms/templates", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { templateType, templateContent } = req.body;
+      
+      if (!templateType || !templateContent) {
+        return res.status(400).json({ message: "Template type and content are required" });
+      }
+      
+      // Get current settings
+      const settings = await storage.getAdminSettings() || {};
+      
+      // Update the specific template
+      const templateKey = `${templateType}SmsTemplate`;
+      settings[templateKey] = templateContent;
+      
+      // Save updated settings
+      await storage.updateAdminSettings(settings);
+      
+      res.json({ 
+        message: "SMS template updated successfully",
+        template: {
+          type: templateType,
+          content: templateContent
+        }
+      });
+    } catch (error) {
+      console.error('Error updating SMS template:', error);
+      res.status(500).json({ message: "Failed to update SMS template" });
+    }
+  });
+
   // SMS Testing endpoints
   app.post("/api/admin/sms/test", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
@@ -5195,13 +5268,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create user account for the student
-      // Generate a unique password: FirstName@BirthYear (e.g., John@2005)
-      const birthYear = birthday ? new Date(birthday).getFullYear() : new Date().getFullYear();
-      const formattedFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-      const uniquePassword = `${formattedFirstName}@${birthYear}`;
-      const hashedPassword = await bcrypt.hash(uniquePassword, 10);
+      // Use phone number as default password
+      if (!phone) {
+        return res.status(400).json({ message: "Phone number is required for student creation" });
+      }
       
-      console.log(`Student password will be: ${uniquePassword}`); // Log for admin reference
+      // Clean phone number (remove spaces, dashes, etc.) for password
+      const cleanedPhone = phone.replace(/\D/g, '');
+      const defaultPassword = cleanedPhone;
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+      
+      console.log(`Student password set to phone number: ${defaultPassword}`); // Log for admin reference
       
       const studentData = {
         firstName,
@@ -5263,6 +5340,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         courseNames = courses
           .filter(course => selectedCourses.includes(course.id))
           .map(course => course.title);
+      }
+      
+      // Send SMS with login credentials
+      try {
+        // Get SMS template from admin settings or use default
+        const settings = await storage.getAdminSettings();
+        let smsTemplate = settings?.studentCreationSmsTemplate || 
+          `Welcome to Meta Lingua Academy!\n\n` +
+          `Your student account has been created.\n` +
+          `Login Information:\n` +
+          `Username: {email}\n` +
+          `Password: {password}\n` +
+          `Classes: {courses}\n\n` +
+          `Please login at: {loginUrl}`;
+        
+        // Replace placeholders in template
+        const coursesText = courseNames.length > 0 ? courseNames.join(', ') : 'No courses assigned yet';
+        const loginUrl = process.env.FRONTEND_URL || 'https://metalingua.com/login';
+        
+        const smsMessage = smsTemplate
+          .replace('{firstName}', firstName)
+          .replace('{lastName}', lastName)
+          .replace('{email}', email)
+          .replace('{password}', defaultPassword)
+          .replace('{courses}', coursesText)
+          .replace('{loginUrl}', loginUrl);
+        
+        // Send SMS if Kavenegar is configured
+        if (settings?.kavenegarEnabled && settings?.kavenegarApiKey) {
+          const { kavenegarService } = await import('./kavenegar-service');
+          const smsResult = await kavenegarService.sendSimpleSMS(phone, smsMessage);
+          console.log('Student creation SMS sent:', smsResult);
+        } else {
+          console.log('SMS not sent - Kavenegar not configured');
+          console.log('SMS would have been:', smsMessage);
+        }
+      } catch (smsError) {
+        console.error('Error sending student creation SMS:', smsError);
+        // Don't fail the entire creation if SMS fails
       }
       
       res.status(201).json({
