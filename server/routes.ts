@@ -12883,6 +12883,44 @@ Return JSON format:
     }
   });
 
+  // Update Callern package
+  app.put("/api/admin/callern/packages/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { packageName, totalHours, price, description, isActive } = req.body;
+      
+      const updatedPackage = await storage.updateCallernPackage(parseInt(id), {
+        packageName,
+        totalHours,
+        price,
+        description,
+        isActive
+      });
+
+      if (!updatedPackage) {
+        return res.status(404).json({ message: "Package not found" });
+      }
+
+      res.json(updatedPackage);
+    } catch (error) {
+      console.error('Error updating Callern package:', error);
+      res.status(500).json({ message: "Failed to update Callern package" });
+    }
+  });
+
+  // Delete Callern package
+  app.delete("/api/admin/callern/packages/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      await storage.deleteCallernPackage(parseInt(id));
+      res.json({ message: "Package deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting Callern package:', error);
+      res.status(500).json({ message: "Failed to delete Callern package" });
+    }
+  });
+
   // Student endpoints for Callern
   app.get("/api/student/callern/packages", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {

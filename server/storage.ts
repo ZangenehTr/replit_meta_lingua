@@ -346,6 +346,8 @@ export interface IStorage {
   getTeachersForCallern(): Promise<any[]>;
   createCallernPackage(pkg: any): Promise<any>;
   getCallernPackage(id: number): Promise<any>;
+  updateCallernPackage(id: number, updates: any): Promise<any>;
+  deleteCallernPackage(id: number): Promise<void>;
   setTeacherCallernAvailability(teacherId: number, availability: any): Promise<any>;
   
   // Additional missing supervision methods
