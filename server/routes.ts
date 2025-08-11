@@ -1324,69 +1324,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simple students list endpoint (no auth for testing)
+  // Optimized students list endpoint (no auth for testing)
   app.get("/api/students/list", async (req: any, res) => {
     try {
-      const users = await storage.getAllUsers();
-      console.log('All users:', users.length);
-      console.log('User roles:', users.map(u => ({ email: u.email, role: u.role })));
+      // Use optimized query that fetches students with profiles and enrollments in a single query
+      const students = await storage.getStudentsWithProfiles();
       
-      const students = [];
-      const studentUsers = filterStudents(users);
-      
-      for (const student of studentUsers) {
-        try {
-          // Get actual course enrollments for each student with error handling
-          let userCourses = [];
-          let profile = null;
-          
-          try {
-            userCourses = await storage.getUserCourses(student.id);
-          } catch (courseError) {
-            console.error(`Error fetching courses for student ${student.id}:`, courseError);
-            userCourses = [];
-          }
-          
-          try {
-            profile = await storage.getUserProfile(student.id);
-            console.log(`Profile for student ${student.id}:`, profile ? {
-              nationalId: profile.nationalId,
-              currentLevel: profile.currentLevel,
-              guardianName: profile.guardianName,
-              notes: profile.notes
-            } : 'No profile found');
-          } catch (profileError) {
-            console.error(`Error fetching profile for student ${student.id}:`, profileError);
-            profile = null;
-          }
-          
-          students.push({
-            id: student.id,
-            firstName: student.firstName,
-            lastName: student.lastName,
-            email: student.email,
-            phone: student.phoneNumber || '',
-            status: student.isActive ? 'active' : 'inactive',
-            level: profile?.currentLevel || profile?.proficiencyLevel || 'Beginner',
-            nationalId: student.nationalId || profile?.nationalId || '',
-            birthday: student.birthday || profile?.dateOfBirth || null,
-            guardianName: student.guardianName || profile?.guardianName || '',
-            guardianPhone: student.guardianPhone || profile?.guardianPhone || '',
-            notes: student.notes || profile?.notes || '',
-            progress: userCourses.length > 0 ? Math.round(userCourses.reduce((sum, c) => sum + (c.progress || 0), 0) / userCourses.length) : 0,
-            attendance: calculateAttendanceRate(userCourses.length, userCourses.length),
-            courses: userCourses.map(c => c.title),
-            enrollmentDate: student.createdAt,
-            lastActivity: '2 days ago',
-            avatar: student.avatar || '/api/placeholder/40/40'
-          });
-        } catch (studentError) {
-          console.error(`Error processing student ${student.id}:`, studentError);
-          // Continue with next student instead of crashing
-        }
-      }
-      
-      console.log('Filtered students:', students.length);
+      console.log('Fetched students:', students.length);
       res.json(students);
     } catch (error) {
       console.error('Error fetching students:', error);

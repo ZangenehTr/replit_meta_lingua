@@ -202,6 +202,7 @@ export interface IStorage {
 
   // CRM - Student Management
   getStudentProfiles(): Promise<(UserProfile & { userName: string, userEmail: string })[]>;
+  getStudentsWithProfiles(): Promise<any[]>;
   getStudentProfile(userId: number): Promise<UserProfile | undefined>;
   createStudentProfile(profile: InsertUserProfile): Promise<UserProfile>;
   updateStudentProfile(id: number, updates: Partial<UserProfile>): Promise<UserProfile | undefined>;
@@ -1408,6 +1409,10 @@ export class MemStorage implements IStorage {
 
   // CRM - Student Management
   async getStudentProfiles(): Promise<(UserProfile & { userName: string, userEmail: string })[]> {
+    return []; // Mock implementation
+  }
+
+  async getStudentsWithProfiles(): Promise<any[]> {
     return []; // Mock implementation
   }
 
