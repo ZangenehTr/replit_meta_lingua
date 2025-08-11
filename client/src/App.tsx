@@ -376,6 +376,11 @@ function Router() {
           <HomeworkPage />
         </ProtectedRoute>
       </Route>
+      <Route path="/assignments">
+        <ProtectedRoute>
+          <HomeworkPage />
+        </ProtectedRoute>
+      </Route>
       <Route path="/messages">
         <ProtectedRoute>
           <MessagesPage />

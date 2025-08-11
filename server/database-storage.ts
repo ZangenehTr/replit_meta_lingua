@@ -6619,54 +6619,44 @@ export class DatabaseStorage implements IStorage {
     try {
       // Get assignments assigned to this student
       const assignments = await db
-        .select({
-          id: homework.id,
-          title: homework.title,
-          description: homework.description,
-          instructions: homework.instructions,
-          dueDate: homework.dueDate,
-          status: homework.status,
-          courseId: homework.courseId,
-          tutorId: homework.tutorId,
-          maxScore: homework.maxScore,
-          submittedAt: homework.submittedAt,
-          feedback: homework.feedback,
-          score: homework.score,
-          attachments: homework.attachments,
-          courseName: courses.title,
-          courseLevel: courses.level,
-          tutorFirstName: users.firstName,
-          tutorLastName: users.lastName
-        })
+        .select()
         .from(homework)
         .leftJoin(courses, eq(homework.courseId, courses.id))
         .leftJoin(users, eq(homework.tutorId, users.id))
         .where(eq(homework.studentId, userId))
         .orderBy(desc(homework.dueDate));
 
-      return assignments.map(assignment => ({
-        id: assignment.id,
-        title: assignment.title,
-        description: assignment.description,
-        instructions: assignment.instructions,
-        dueDate: assignment.dueDate,
-        status: assignment.status,
-        courseId: assignment.courseId,
-        tutorId: assignment.tutorId,
-        maxScore: assignment.maxScore,
-        submittedAt: assignment.submittedAt,
-        feedback: assignment.feedback,
-        score: assignment.score,
-        attachments: assignment.attachments,
-        course: {
-          title: assignment.courseName || 'Unknown Course',
-          level: assignment.courseLevel || 'Unknown'
-        },
-        tutor: {
-          firstName: assignment.tutorFirstName || 'Unknown',
-          lastName: assignment.tutorLastName || 'Tutor'
-        }
-      }));
+      return assignments.map(row => {
+        const hw = row.homework;
+        const course = row.courses;
+        const tutor = row.users;
+        
+        if (!hw) return null;
+        
+        return {
+          id: hw.id,
+          title: hw.title || '',
+          description: hw.description || '',
+          instructions: hw.instructions || '',
+          dueDate: hw.dueDate,
+          status: hw.status || 'pending',
+          courseId: hw.courseId,
+          tutorId: hw.tutorId,
+          maxScore: hw.maxScore || 100,
+          submittedAt: hw.submittedAt,
+          feedback: hw.feedback,
+          score: hw.score,
+          attachments: hw.attachments || [],
+          course: {
+            title: course?.title || 'Unknown Course',
+            level: course?.level || 'Unknown'
+          },
+          tutor: {
+            firstName: tutor?.firstName || 'Unknown',
+            lastName: tutor?.lastName || 'Tutor'
+          }
+        };
+      }).filter(Boolean);
     } catch (error) {
       console.error('Error fetching student assignments:', error);
       return [];
