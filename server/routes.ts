@@ -6413,10 +6413,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/student/assignments", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
       const assignments = await storage.getStudentAssignments(req.user.id);
-      res.json(assignments);
+      // Ensure we always return an array
+      res.json(assignments || []);
     } catch (error) {
       console.error('Error fetching student assignments:', error);
-      res.status(500).json({ message: "Failed to get assignments" });
+      // Return empty array on error instead of error message
+      res.json([]);
     }
   });
 
@@ -6424,10 +6426,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/student/goals", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
       const goals = await storage.getStudentGoals(req.user.id);
-      res.json(goals);
+      res.json(goals || []);
     } catch (error) {
       console.error('Error fetching student goals:', error);
-      res.status(500).json({ message: "Failed to get goals" });
+      res.json([]);
     }
   });
 

@@ -39,14 +39,20 @@ import {
   ChevronRight,
   GraduationCap,
   BarChart3,
-  Package
+  Package,
+  Sparkles,
+  Bell,
+  Settings,
+  Home,
+  BookMarked,
+  MessageCircle
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -251,22 +257,35 @@ function StudentDashboard() {
   ];
 
   return (
-    <AppLayout>
-      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-        {/* Mobile-First Welcome Header */}
+    <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 h-screen flex flex-col">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl p-4 sm:p-6 text-white shadow-xl"
+          className="bg-white/10 backdrop-blur-lg border-b border-white/20 px-4 py-3 sticky top-0 z-20"
         >
-          <div className="space-y-4">
-            {/* User Info */}
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1">
-                  {t('student:welcome', 'Welcome')}, {user?.firstName || t('student:student', 'Student')}!
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Avatar className="w-10 h-10 border-2 border-white/30">
+                <AvatarImage src={`https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName}&background=6366f1&color=fff`} />
+                <AvatarFallback className="bg-white/20 text-white">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-white font-semibold text-lg">
+                  {t('student:welcome', 'Welcome')}, {user?.firstName}!
                 </h1>
-                <p className="text-sm sm:text-base opacity-90">
+                <p className="text-white/70 text-xs">
                   {t('student:welcomeMessage', 'Ready to continue your learning journey?')}
                 </p>
               </div>
@@ -360,8 +379,15 @@ function StudentDashboard() {
           </div>
         </motion.div>
 
-        {/* Weekly Progress Card - Mobile First */}
-        <Card className="bg-white shadow-sm border-0">
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto pb-20 px-4 pt-4">
+          {/* Weekly Progress Card - Mobile First */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="bg-white/95 backdrop-blur-lg shadow-lg border-0">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base sm:text-lg flex items-center gap-2">
@@ -385,10 +411,11 @@ function StudentDashboard() {
               </p>
             </div>
           </CardContent>
-        </Card>
+            </Card>
+          </motion.div>
 
-        {/* Mobile-Optimized Navigation */}
-        <div className="space-y-4">
+          {/* Mobile-Optimized Navigation */}
+          <div className="space-y-4 mt-4">
           {/* Mobile Tab Selector */}
           <div className="sm:hidden">
             <Select value={selectedTab} onValueChange={setSelectedTab}>
@@ -986,8 +1013,60 @@ function StudentDashboard() {
             </Tabs>
           </div>
         </div>
+        </div>
+
+        {/* Mobile Bottom Navigation */}
+        {isMobile && (
+          <motion.div
+            initial={{ y: 100 }}
+            animate={{ y: 0 }}
+            className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200 px-2 py-2 z-30"
+          >
+            <div className="flex justify-around items-center">
+              <button
+                onClick={() => setSelectedTab('overview')}
+                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-colors ${
+                  selectedTab === 'overview' ? 'text-purple-600 bg-purple-50' : 'text-gray-600'
+                }`}
+              >
+                <Home className="h-5 w-5" />
+                <span className="text-xs mt-1">Home</span>
+              </button>
+              <button
+                onClick={() => setSelectedTab('courses')}
+                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-colors ${
+                  selectedTab === 'courses' ? 'text-purple-600 bg-purple-50' : 'text-gray-600'
+                }`}
+              >
+                <BookOpen className="h-5 w-5" />
+                <span className="text-xs mt-1">Courses</span>
+              </button>
+              <Link href="/callern">
+                <button className="flex flex-col items-center justify-center p-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                  <Phone className="h-5 w-5" />
+                  <span className="text-xs mt-1">Callern</span>
+                </button>
+              </Link>
+              <button
+                onClick={() => setSelectedTab('schedule')}
+                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-colors ${
+                  selectedTab === 'schedule' ? 'text-purple-600 bg-purple-50' : 'text-gray-600'
+                }`}
+              >
+                <Calendar className="h-5 w-5" />
+                <span className="text-xs mt-1">Schedule</span>
+              </button>
+              <Link href="/profile">
+                <button className="flex flex-col items-center justify-center p-2 rounded-lg text-gray-600">
+                  <User className="h-5 w-5" />
+                  <span className="text-xs mt-1">Profile</span>
+                </button>
+              </Link>
+            </div>
+          </motion.div>
+        )}
       </div>
-    </AppLayout>
+    </div>
   );
 }
 
