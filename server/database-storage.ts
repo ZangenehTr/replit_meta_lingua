@@ -1252,59 +1252,70 @@ export class DatabaseStorage implements IStorage {
 
   async getStudentsWithProfiles(): Promise<any[]> {
     try {
-      // Fetch all students with their profiles and enrollments in a single optimized query
-      const studentsData = await db.select({
-        id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        email: users.email,
-        phoneNumber: users.phoneNumber,
-        isActive: users.isActive,
-        createdAt: users.createdAt,
-        avatar: users.avatar,
-        // Profile data
-        profileId: userProfiles.id,
-        nationalId: userProfiles.nationalId,
-        dateOfBirth: userProfiles.dateOfBirth,
-        currentLevel: userProfiles.currentLevel,
-        guardianName: userProfiles.guardianName,
-        guardianPhone: userProfiles.guardianPhone,
-        notes: userProfiles.notes,
-        profileImage: userProfiles.profileImage
-      })
-      .from(users)
-      .leftJoin(userProfiles, eq(users.id, userProfiles.userId))
-      .where(
-        or(
-          eq(users.role, 'student'),
-          eq(users.role, 'Student')
-        )
-      );
+      // Use raw SQL query for better performance and to avoid Drizzle issues
+      const result = await db.execute(sql`
+        SELECT 
+          u.id,
+          u.first_name,
+          u.last_name,
+          u.email,
+          u.phone_number,
+          u.is_active,
+          u.created_at,
+          u.avatar,
+          up.national_id,
+          up.birthday,
+          up.current_level,
+          up.guardian_name,
+          up.guardian_phone,
+          up.notes,
+          up.bio as profile_image
+        FROM users u
+        LEFT JOIN user_profiles up ON u.id = up.user_id
+        WHERE u.role IN ('student', 'Student')
+        ORDER BY u.created_at DESC
+      `);
 
-      // Fetch course enrollments for all students at once
-      const studentIds = studentsData.map(s => s.id);
-      const enrollmentsData = studentIds.length > 0 ? await db.select({
-        studentId: enrollments.studentId,
-        courseId: enrollments.courseId,
-        courseTitle: courses.title,
-        progress: enrollments.progress,
-        completedLessons: enrollments.completedLessons
-      })
-      .from(enrollments)
-      .innerJoin(courses, eq(enrollments.courseId, courses.id))
-      .where(inArray(enrollments.studentId, studentIds)) : [];
+      const studentUsers = result.rows as any[];
+
+      if (studentUsers.length === 0) {
+        return [];
+      }
+
+      // Get student IDs for enrollment query
+      const studentIds = studentUsers.map(s => s.id);
+
+      // Fetch enrollments with course information
+      const enrollmentsResult = studentIds.length > 0 ? await db.execute(sql`
+        SELECT 
+          e.user_id as student_id,
+          e.course_id,
+          c.title as course_title,
+          e.progress,
+          e.completed_at as completed_lessons
+        FROM enrollments e
+        INNER JOIN courses c ON e.course_id = c.id
+        WHERE e.user_id IN (${sql.join(studentIds, sql`, `)})
+      `) : { rows: [] };
+
+      const enrollmentsData = enrollmentsResult.rows as any[];
 
       // Group enrollments by student
       const enrollmentsByStudent = enrollmentsData.reduce((acc, enrollment) => {
-        if (!acc[enrollment.studentId]) {
-          acc[enrollment.studentId] = [];
+        if (!acc[enrollment.student_id]) {
+          acc[enrollment.student_id] = [];
         }
-        acc[enrollment.studentId].push(enrollment);
+        acc[enrollment.student_id].push({
+          courseId: enrollment.course_id,
+          courseTitle: enrollment.course_title,
+          progress: enrollment.progress,
+          completedLessons: enrollment.completed_lessons
+        });
         return acc;
-      }, {} as Record<number, typeof enrollmentsData>);
+      }, {} as Record<number, any[]>);
 
-      // Combine student data with enrollments
-      const students = studentsData.map(student => {
+      // Map students with all their data
+      const students = studentUsers.map(student => {
         const userEnrollments = enrollmentsByStudent[student.id] || [];
         const avgProgress = userEnrollments.length > 0 
           ? Math.round(userEnrollments.reduce((sum, e) => sum + (e.progress || 0), 0) / userEnrollments.length)
@@ -1312,23 +1323,23 @@ export class DatabaseStorage implements IStorage {
 
         return {
           id: student.id,
-          firstName: student.firstName,
-          lastName: student.lastName,
+          firstName: student.first_name,
+          lastName: student.last_name,
           email: student.email,
-          phone: student.phoneNumber || '',
-          status: student.isActive ? 'active' : 'inactive',
-          level: student.currentLevel || 'Beginner',
-          nationalId: student.nationalId || '',
-          birthday: student.dateOfBirth,
-          guardianName: student.guardianName || '',
-          guardianPhone: student.guardianPhone || '',
+          phone: student.phone_number || '',
+          status: student.is_active ? 'active' : 'inactive',
+          level: student.current_level || 'Beginner',
+          nationalId: student.national_id || '',
+          birthday: student.birthday,
+          guardianName: student.guardian_name || '',
+          guardianPhone: student.guardian_phone || '',
           notes: student.notes || '',
           progress: avgProgress,
           attendance: calculateAttendanceRate(userEnrollments.length, userEnrollments.length),
           courses: userEnrollments.map(e => e.courseTitle),
-          enrollmentDate: student.createdAt,
+          enrollmentDate: student.created_at,
           lastActivity: '2 days ago',
-          avatar: student.avatar || student.profileImage || '/api/placeholder/40/40'
+          avatar: student.avatar || student.profile_image || '/api/placeholder/40/40'
         };
       });
 
