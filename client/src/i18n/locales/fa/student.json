@@ -55,6 +55,20 @@
     "weeklyChallenge": "چالش هفتگی",
     "achievements": "دستاوردها"
   },
+  "streak": "پیوستگی",
+  "days": "روز",
+  "totalXP": "کل امتیاز",
+  "weeklyProgress": "پیشرفت هفتگی",
+  "hours": "ساعت",
+  "lessonsCompleted": "درس‌های تکمیل شده",
+  "xpToNextLevel": "امتیاز تا سطح بعد",
+  "joinClass": "پیوستن به کلاس",
+  "myCourses": "دوره‌های من",
+  "walletBalance": "موجودی کیف پول",
+  "progress": "پیشرفت",
+  "goodAfternoon": "عصر بخیر",
+  "goodMorning": "صبح بخیر",
+  "goodEvening": "شب بخیر",
   "videoCourses": {
     "title": "دوره‌های ویدئویی",
     "watchVideo": "تماشای ویدئو",
@@ -93,5 +107,24 @@
     "transactionHistory": "تاریخچه تراکنش‌ها",
     "paymentMethods": "روش‌های پرداخت",
     "balance": "موجودی"
+  },
+  "courses": {
+    "exploreCourses": "کاوش در دوره‌ها",
+    "searchPlaceholder": "جستجوی دوره‌ها...",
+    "online": "آنلاین",
+    "inPerson": "حضوری",
+    "selfPaced": "خودآموز",
+    "noCourses": "دوره‌ای یافت نشد",
+    "instructor": "مدرس",
+    "duration": "مدت زمان",
+    "language": "زبان",
+    "level": "سطح",
+    "schedule": "برنامه",
+    "price": "قیمت",
+    "enrollNow": "ثبت‌نام کنید",
+    "enrollmentSuccess": "ثبت‌نام موفق",
+    "enrollmentSuccessDesc": "شما با موفقیت در دوره ثبت‌نام شدید!",
+    "enrollmentFailed": "ثبت‌نام ناموفق",
+    "enrollmentFailedDesc": "ثبت‌نام در دوره ناموفق بود. لطفا دوباره تلاش کنید."
   }
 }

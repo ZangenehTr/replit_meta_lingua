@@ -81,7 +81,7 @@ export class ActivityTracker {
         .select({
           totalMinutes: sql<number>`COALESCE(SUM(${learningActivities.durationMinutes}), 0)`,
           activeDays: sql<number>`COUNT(DISTINCT DATE(${learningActivities.createdAt}))`,
-          completedLessons: sql<number>`COUNT(CASE WHEN ${learningActivities.completionRate} >= 0.9 THEN 1 END)`
+          completedLessons: sql<number>`COUNT(CASE WHEN ${learningActivities.activityType} = 'lesson' THEN 1 END)`
         })
         .from(learningActivities)
         .where(
