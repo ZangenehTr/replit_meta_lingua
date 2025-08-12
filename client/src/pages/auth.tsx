@@ -31,26 +31,6 @@ import { useLanguage } from "@/hooks/useLanguage";
 export default function Auth() {
   const { t } = useTranslation(['auth', 'common']);
   const { isRTL } = useLanguage();
-  
-  const loginSchema = z.object({
-    email: z.string().email(t('auth:invalidEmail')),
-    password: z.string().optional(),
-    otp: z.string().optional(),
-  }).refine((data) => data.password || data.otp, {
-    message: "Either password or OTP is required",
-    path: ["password"],
-  });
-  
-  const registerSchema = z.object({
-    email: z.string().email(t('auth:invalidEmail')),
-    password: z.string().min(6, t('auth:passwordMinLength')),
-    firstName: z.string().min(2, t('auth:firstNameMinLength')),
-    lastName: z.string().min(2, t('auth:lastNameMinLength')),
-  });
-  
-  type LoginFormData = z.infer<typeof loginSchema>;
-  type RegisterFormData = z.infer<typeof registerSchema>;
-  
   const [, setLocation] = useLocation();
   const { user, login, register: registerUser, loginLoading, registerLoading, logout } = useAuth();
   const [authError, setAuthError] = useState<string>("");
@@ -59,6 +39,48 @@ export default function Auth() {
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpMessage, setOtpMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  
+  // Define schemas with static messages first, then override with translations when available
+  const loginSchema = z.object({
+    email: z.string().email("Invalid email address"),
+    password: z.string().optional(),
+    otp: z.string().optional(),
+  }).refine((data) => data.password || data.otp, {
+    message: "Either password or OTP is required",
+    path: ["password"],
+  });
+  
+  const registerSchema = z.object({
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    firstName: z.string().min(2, "First name must be at least 2 characters"),
+    lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  });
+  
+  type LoginFormData = z.infer<typeof loginSchema>;
+  type RegisterFormData = z.infer<typeof registerSchema>;
+  
+  // Form initialization must happen before any conditional logic
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      otp: "",
+    },
+  });
+
+  const registerForm = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      firstName: "",
+      lastName: "",
+    },
+  });
 
   // Check for logout parameter in URL
   useEffect(() => {
@@ -78,25 +100,6 @@ export default function Auth() {
       setLocation("/dashboard");
     }
   }, [user, setLocation, forceLogin]);
-
-  const loginForm = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      otp: "",
-    },
-  });
-
-  const registerForm = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      firstName: "",
-      lastName: "",
-    },
-  });
 
   const requestOtp = async () => {
     const email = loginForm.getValues("email");
@@ -207,9 +210,6 @@ export default function Auth() {
       </div>
     );
   }
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
