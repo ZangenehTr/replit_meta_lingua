@@ -72,7 +72,6 @@
   "messages": "پیام‌ها",
   "sessions": "جلسات",
   "homework": "تکالیف",
-  "videoCourses": "دوره‌های ویدئویی",
   "searchCourses": "جستجوی دوره‌ها",
   "inProgress": "در حال انجام",
   "noCoursesFound": "دوره‌ای یافت نشد",
@@ -133,5 +132,18 @@
     "enrollmentSuccessDesc": "شما با موفقیت در دوره ثبت‌نام شدید!",
     "enrollmentFailed": "ثبت‌نام ناموفق",
     "enrollmentFailedDesc": "ثبت‌نام در دوره ناموفق بود. لطفا دوباره تلاش کنید."
-  }
+  },
+  "searchSessions": "جستجوی جلسات...",
+  "status": {
+    "all": "همه",
+    "upcoming": "آینده",
+    "ongoing": "در حال انجام",
+    "completed": "تکمیل شده"
+  },
+  "ongoing": "در حال انجام",
+  "upcoming": "آینده",
+  "noSessions": "هیچ جلسه‌ای یافت نشد",
+  "videoCourses": "دوره‌های ویدیویی",
+  "messages": "پیام‌ها",
+  "homework": "تکالیف"
 }
