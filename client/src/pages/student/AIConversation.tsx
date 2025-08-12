@@ -1,301 +1,559 @@
-import { useState, useRef, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { 
-  Mic, 
-  MicOff, 
-  Volume2,
-  Send,
   Bot,
+  Send,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  RefreshCw,
+  Settings,
+  Languages,
+  Brain,
+  Sparkles,
+  MessageSquare,
+  ChevronDown,
+  Info,
+  Copy,
+  ThumbsUp,
+  ThumbsDown,
+  Loader,
   User,
-  Loader2
+  X
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  timestamp: Date;
+  timestamp: string;
+  feedback?: 'positive' | 'negative';
   audioUrl?: string;
+  isTyping?: boolean;
 }
 
-export default function AIConversation() {
-  const { t } = useTranslation(['student', 'common']);
-  const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<'english' | 'farsi'>('english');
-  
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+interface ConversationSettings {
+  language: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  topic: string;
+  voice: 'male' | 'female';
+  speed: number;
+  autoSpeak: boolean;
+}
 
-  // Check if AI service is available
-  const { data: serviceStatus } = useQuery<{ isAvailable: boolean }>({
-    queryKey: ['/api/student/ai/status'],
-    refetchInterval: 10000
+interface ConversationStats {
+  totalMessages: number;
+  totalSessions: number;
+  averageAccuracy: number;
+  vocabularyLearned: number;
+  streak: number;
+}
+
+export default function StudentAIConversation() {
+  const { user } = useAuth();
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settings, setSettings] = useState<ConversationSettings>({
+    language: 'English',
+    difficulty: 'intermediate',
+    topic: 'general',
+    voice: 'female',
+    speed: 1,
+    autoSpeak: true
   });
 
-  // Send audio message mutation
-  const sendAudioMessage = useMutation({
-    mutationFn: async (audioBlob: Blob) => {
-      // Create FormData to send audio file
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
-      formData.append('language', selectedLanguage);
-      
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/student/ai/voice-message', {
+  // Fetch conversation stats
+  const { data: stats } = useQuery<ConversationStats>({
+    queryKey: ['/api/student/ai/stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/student/ai/stats', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) {
+        return {
+          totalMessages: 0,
+          totalSessions: 0,
+          averageAccuracy: 0,
+          vocabularyLearned: 0,
+          streak: 0
+        };
+      }
+      return response.json();
+    }
+  });
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async (message: string) => {
+      const response = await fetch('/api/student/ai/chat', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
-        body: formData
+        body: JSON.stringify({
+          message,
+          settings
+        })
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to send voice message');
-      }
-      
+      if (!response.ok) throw new Error('Failed to send message');
       return response.json();
     },
-    onSuccess: (response) => {
-      // Add user message
+    onMutate: (message) => {
+      // Add user message immediately
       const userMessage: Message = {
         id: Date.now().toString(),
         role: 'user',
-        content: response.transcript || 'Audio message',
-        timestamp: new Date()
+        content: message,
+        timestamp: new Date().toISOString()
       };
+      setMessages(prev => [...prev, userMessage]);
       
-      // Add AI response
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+      // Add typing indicator
+      const typingMessage: Message = {
+        id: 'typing',
         role: 'assistant',
-        content: response.response,
-        timestamp: new Date(),
-        audioUrl: response.audioUrl
+        content: '',
+        timestamp: new Date().toISOString(),
+        isTyping: true
       };
+      setMessages(prev => [...prev, typingMessage]);
+    },
+    onSuccess: (data) => {
+      // Remove typing indicator and add AI response
+      setMessages(prev => {
+        const filtered = prev.filter(m => m.id !== 'typing');
+        const aiMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: data.response,
+          timestamp: new Date().toISOString(),
+          audioUrl: data.audioUrl
+        };
+        return [...filtered, aiMessage];
+      });
       
-      setMessages(prev => [...prev, userMessage, aiMessage]);
-      
-      // Auto-play AI response if audio URL provided
-      if (response.audioUrl) {
-        playAudio(response.audioUrl);
+      // Auto-speak if enabled
+      if (settings.autoSpeak && data.audioUrl) {
+        playAudio(data.audioUrl);
       }
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/student/ai/stats'] });
     },
     onError: () => {
+      // Remove typing indicator
+      setMessages(prev => prev.filter(m => m.id !== 'typing'));
       toast({
-        title: t('common:toast.failedToSendMessage'),
-        description: "Please try again",
-        variant: "destructive"
+        title: t('common:error', 'Error'),
+        description: t('student:messageFailed', 'Failed to send message'),
+        variant: 'destructive'
       });
-    },
-    onSettled: () => {
-      setIsProcessing(false);
     }
   });
 
-  // Start recording
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-      
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        setIsProcessing(true);
-        sendAudioMessage.mutate(audioBlob);
-        
-        // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
-      };
-      
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
+  // Provide feedback mutation
+  const provideFeedbackMutation = useMutation({
+    mutationFn: async ({ messageId, feedback }: { messageId: string; feedback: 'positive' | 'negative' }) => {
+      const response = await fetch(`/api/student/ai/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ messageId, feedback })
+      });
+      if (!response.ok) throw new Error('Failed to provide feedback');
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      setMessages(prev => 
+        prev.map(m => 
+          m.id === variables.messageId 
+            ? { ...m, feedback: variables.feedback } 
+            : m
+        )
+      );
       toast({
-        title: t('common:toast.microphoneAccessDenied'),
-        description: "Please allow microphone access to use voice chat",
-        variant: "destructive"
+        title: t('student:feedbackReceived', 'Feedback Received'),
+        description: t('student:thanksFeedback', 'Thanks for your feedback!'),
       });
     }
+  });
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    if (!inputMessage.trim()) return;
+    
+    sendMessageMutation.mutate(inputMessage);
+    setInputMessage('');
   };
 
-  // Stop recording
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
-  // Play audio
-  const playAudio = (url: string) => {
-    const audio = new Audio(url);
-    audio.play().catch(error => {
-      console.error('Error playing audio:', error);
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: t('student:copied', 'Copied'),
+      description: t('student:textCopied', 'Text copied to clipboard'),
     });
   };
 
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-    }
-  }, [messages]);
+  const playAudio = (url: string) => {
+    const audio = new Audio(url);
+    audio.playbackRate = settings.speed;
+    audio.play();
+    setIsSpeaking(true);
+    audio.onended = () => setIsSpeaking(false);
+  };
+
+  const toggleRecording = () => {
+    setIsRecording(!isRecording);
+    // Voice recording logic would go here
+    toast({
+      title: isRecording ? t('student:recordingStopped', 'Recording Stopped') : t('student:recordingStarted', 'Recording Started'),
+      description: isRecording ? t('student:processingAudio', 'Processing audio...') : t('student:speakNow', 'Speak now...'),
+    });
+  };
+
+  const startNewConversation = () => {
+    setMessages([]);
+    toast({
+      title: t('student:newConversation', 'New Conversation'),
+      description: t('student:conversationReset', 'Conversation has been reset'),
+    });
+  };
+
+  const topics = [
+    { value: 'general', label: t('student:general', 'General Conversation') },
+    { value: 'travel', label: t('student:travel', 'Travel') },
+    { value: 'business', label: t('student:business', 'Business') },
+    { value: 'culture', label: t('student:culture', 'Culture') },
+    { value: 'technology', label: t('student:technology', 'Technology') },
+    { value: 'food', label: t('student:food', 'Food & Dining') }
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">{t('student:aiConversation.title')}</h1>
-        <p className="text-muted-foreground">
-          {t('student:aiConversation.subtitle')}
-        </p>
-      </div>
-
-      {/* Language Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Select Language</CardTitle>
-          <CardDescription>Choose the language you want to practice</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <Button
-              variant={selectedLanguage === 'english' ? 'default' : 'outline'}
-              onClick={() => setSelectedLanguage('english')}
-            >
-              English
-            </Button>
-            <Button
-              variant={selectedLanguage === 'farsi' ? 'default' : 'outline'}
-              onClick={() => setSelectedLanguage('farsi')}
-            >
-              فارسی (Farsi)
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Conversation Area */}
-      <Card className="h-[500px] flex flex-col">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Conversation</CardTitle>
-            {serviceStatus?.isAvailable ? (
-              <Badge variant="outline" className="bg-green-50">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
-                AI Ready
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="bg-red-50">
-                <div className="w-2 h-2 bg-red-500 rounded-full mr-2" />
-                AI Offline
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col p-0">
-          <ScrollArea className="flex-1 p-6" ref={scrollAreaRef}>
-            {messages.length === 0 ? (
-              <div className="text-center text-muted-foreground py-12">
-                <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Start a conversation by holding the microphone button and speaking</p>
+    <div className="mobile-app-container min-h-screen">
+      {/* Animated Gradient Background */}
+      <div className="absolute inset-0 animated-gradient-bg opacity-50" />
+      
+      {/* Content */}
+      <div className="relative z-10 flex flex-col h-screen">
+        {/* Mobile Header */}
+        <motion.header 
+          className="bg-white/10 backdrop-blur-lg border-b border-white/20 px-4 py-3"
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-full bg-gradient-to-br from-purple-500 to-pink-500">
+                <Bot className="w-5 h-5 text-white" />
               </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[70%] ${
-                        message.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      } rounded-lg p-4`}
+              <div>
+                <h1 className="text-white font-bold text-lg">{t('student:aiTutor', 'AI Tutor')}</h1>
+                <p className="text-white/60 text-xs">{settings.language} • {settings.difficulty}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={startNewConversation}
+                className="p-2 rounded-full bg-white/10 backdrop-blur"
+              >
+                <RefreshCw className="w-4 h-4 text-white" />
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowSettings(!showSettings)}
+                className="p-2 rounded-full bg-white/10 backdrop-blur"
+              >
+                <Settings className="w-4 h-4 text-white" />
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Stats Bar */}
+          <div className="flex items-center gap-3 text-white/60 text-xs">
+            <span className="flex items-center gap-1">
+              <MessageSquare className="w-3 h-3" />
+              {stats?.totalMessages || 0} messages
+            </span>
+            <span className="flex items-center gap-1">
+              <Brain className="w-3 h-3" />
+              {stats?.vocabularyLearned || 0} words
+            </span>
+            <span className="flex items-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              {stats?.streak || 0} day streak
+            </span>
+          </div>
+        </motion.header>
+
+        {/* Settings Panel */}
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white/10 backdrop-blur-lg border-b border-white/20 px-4 py-3 overflow-hidden"
+            >
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-white/60 text-xs mb-1 block">{t('student:language', 'Language')}</label>
+                    <select
+                      value={settings.language}
+                      onChange={(e) => setSettings({ ...settings, language: e.target.value })}
+                      className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
                     >
-                      <div className="flex items-start gap-2">
-                        {message.role === 'assistant' && (
-                          <Bot className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                        )}
-                        {message.role === 'user' && (
-                          <User className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                        )}
-                        <div className="flex-1">
-                          <p className="text-sm">{message.content}</p>
-                          {message.audioUrl && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="mt-2 h-8"
-                              onClick={() => playAudio(message.audioUrl!)}
-                            >
-                              <Volume2 className="w-4 h-4 mr-1" />
-                              Play Audio
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                      <option value="English">English</option>
+                      <option value="Spanish">Spanish</option>
+                      <option value="French">French</option>
+                      <option value="German">German</option>
+                      <option value="Chinese">Chinese</option>
+                    </select>
                   </div>
+                  <div>
+                    <label className="text-white/60 text-xs mb-1 block">{t('student:difficulty', 'Difficulty')}</label>
+                    <select
+                      value={settings.difficulty}
+                      onChange={(e) => setSettings({ ...settings, difficulty: e.target.value as any })}
+                      className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
+                    >
+                      <option value="beginner">{t('student:beginner', 'Beginner')}</option>
+                      <option value="intermediate">{t('student:intermediate', 'Intermediate')}</option>
+                      <option value="advanced">{t('student:advanced', 'Advanced')}</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-white/60 text-xs mb-1 block">{t('student:topic', 'Topic')}</label>
+                  <select
+                    value={settings.topic}
+                    onChange={(e) => setSettings({ ...settings, topic: e.target.value })}
+                    className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
+                  >
+                    {topics.map(topic => (
+                      <option key={topic.value} value={topic.value}>{topic.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white/60 text-sm">{t('student:autoSpeak', 'Auto Speak')}</span>
+                  <button
+                    onClick={() => setSettings({ ...settings, autoSpeak: !settings.autoSpeak })}
+                    className={`w-12 h-6 rounded-full transition-colors ${
+                      settings.autoSpeak ? 'bg-purple-500' : 'bg-white/20'
+                    }`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                      settings.autoSpeak ? 'translate-x-6' : 'translate-x-0.5'
+                    }`} />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {messages.length === 0 ? (
+            <motion.div 
+              className="text-center py-12"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Bot className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-white text-xl font-semibold mb-2">
+                {t('student:startConversation', 'Start a Conversation')}
+              </h2>
+              <p className="text-white/60 text-sm mb-6">
+                {t('student:practiceLanguage', 'Practice your language skills with AI')}
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {[
+                  t('student:greeting', 'Hello, how are you?'),
+                  t('student:askQuestion', 'Can you help me learn?'),
+                  t('student:practice', "Let's practice conversation")
+                ].map((suggestion, index) => (
+                  <motion.button
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setInputMessage(suggestion)}
+                    className="px-3 py-1.5 bg-white/10 backdrop-blur rounded-full text-white/80 text-sm hover:bg-white/20"
+                  >
+                    {suggestion}
+                  </motion.button>
                 ))}
               </div>
-            )}
-          </ScrollArea>
-
-          {/* Recording Controls */}
-          <div className="p-6 border-t">
-            <div className="flex items-center justify-center gap-4">
-              <Button
-                size="lg"
-                variant={isRecording ? "destructive" : "default"}
-                className="rounded-full w-20 h-20"
-                onMouseDown={startRecording}
-                onMouseUp={stopRecording}
-                onMouseLeave={stopRecording}
-                onTouchStart={startRecording}
-                onTouchEnd={stopRecording}
-                disabled={!serviceStatus?.isAvailable || isProcessing}
-              >
-                {isProcessing ? (
-                  <Loader2 className="w-8 h-8 animate-spin" />
-                ) : isRecording ? (
-                  <MicOff className="w-8 h-8" />
-                ) : (
-                  <Mic className="w-8 h-8" />
-                )}
-              </Button>
+            </motion.div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message, index) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`max-w-[80%] ${message.role === 'user' ? 'order-2' : 'order-1'}`}>
+                    <div className={`rounded-2xl px-4 py-2 ${
+                      message.role === 'user' 
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' 
+                        : 'glass-card text-white'
+                    }`}>
+                      {message.isTyping ? (
+                        <div className="flex items-center gap-2">
+                          <Loader className="w-4 h-4 animate-spin" />
+                          <span className="text-sm">{t('student:typing', 'Typing...')}</span>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm">{message.content}</p>
+                          {message.role === 'assistant' && (
+                            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/10">
+                              {message.audioUrl && (
+                                <button
+                                  onClick={() => playAudio(message.audioUrl!)}
+                                  className="p-1 hover:bg-white/10 rounded"
+                                >
+                                  {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => copyToClipboard(message.content)}
+                                className="p-1 hover:bg-white/10 rounded"
+                              >
+                                <Copy className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => provideFeedbackMutation.mutate({ 
+                                  messageId: message.id, 
+                                  feedback: 'positive' 
+                                })}
+                                className={`p-1 hover:bg-white/10 rounded ${
+                                  message.feedback === 'positive' ? 'text-green-400' : ''
+                                }`}
+                              >
+                                <ThumbsUp className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => provideFeedbackMutation.mutate({ 
+                                  messageId: message.id, 
+                                  feedback: 'negative' 
+                                })}
+                                className={`p-1 hover:bg-white/10 rounded ${
+                                  message.feedback === 'negative' ? 'text-red-400' : ''
+                                }`}
+                              >
+                                <ThumbsDown className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    <p className={`text-white/40 text-xs mt-1 ${
+                      message.role === 'user' ? 'text-right' : 'text-left'
+                    }`}>
+                      {new Date(message.timestamp).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+              <div ref={messagesEndRef} />
             </div>
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              {isRecording 
-                ? "Release to send your message" 
-                : isProcessing 
-                ? "Processing your message..." 
-                : "Hold to record your message"}
-            </p>
+          )}
+        </div>
+
+        {/* Input Area */}
+        <div className="bg-white/10 backdrop-blur-lg border-t border-white/20 p-4">
+          <div className="flex gap-2">
+            <button
+              onClick={toggleRecording}
+              className={`p-3 rounded-full transition-colors ${
+                isRecording 
+                  ? 'bg-red-500 text-white animate-pulse' 
+                  : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+            >
+              {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            </button>
+            
+            <div className="flex-1 relative">
+              <Textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={t('student:typeMessage', 'Type your message...')}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 resize-none min-h-[48px] max-h-[120px]"
+                rows={1}
+              />
+            </div>
+            
+            <button
+              onClick={handleSendMessage}
+              disabled={!inputMessage.trim() || sendMessageMutation.isPending}
+              className={`p-3 rounded-full transition-colors ${
+                inputMessage.trim() && !sendMessageMutation.isPending
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' 
+                  : 'bg-white/10 text-white/50'
+              }`}
+            >
+              {sendMessageMutation.isPending ? (
+                <Loader className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }

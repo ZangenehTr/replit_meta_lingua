@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { 
   Trophy, 
@@ -19,22 +19,11 @@ import {
   Plus,
   Bell,
   Search,
-  Filter,
-  Wallet,
-  Users,
-  MessageCircle,
-  Video,
-  Mic,
-  Brain,
-  Heart,
-  Package,
-  GraduationCap,
-  Play
+  Filter
 } from "lucide-react";
 import { Link } from "wouter";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 
 interface StudentStats {
   totalLessons: number;
@@ -49,47 +38,22 @@ interface StudentStats {
   weeklyGoalHours: number;
 }
 
-interface Course {
-  id: number;
-  title: string;
-  description: string;
-  language: string;
-  level: string;
-  progress: number;
-  tutorFirstName: string;
-  tutorLastName: string;
-  totalLessons: number;
-  completedLessons: number;
-}
-
-interface UpcomingSession {
-  id: number;
-  title: string;
-  tutorFirstName: string;
-  tutorLastName: string;
-  sessionDate: string;
-  startTime: string;
-  duration: number;
-  type: 'group' | 'individual';
-  sessionUrl?: string;
-  canJoin: boolean;
-}
-
-export default function StudentDashboard() {
+export default function StudentDashboardMobile() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const [selectedTab, setSelectedTab] = useState('overview');
   const [greeting, setGreeting] = useState('');
 
   // Get appropriate greeting based on time
   useEffect(() => {
     const hour = new Date().getHours();
-    if (hour < 12) setGreeting(t('student:goodMorning', 'Good Morning'));
-    else if (hour < 18) setGreeting(t('student:goodAfternoon', 'Good Afternoon'));
-    else setGreeting(t('student:goodEvening', 'Good Evening'));
+    if (hour < 12) setGreeting(t('student:goodMorning'));
+    else if (hour < 18) setGreeting(t('student:goodAfternoon'));
+    else setGreeting(t('student:goodEvening'));
   }, [t]);
 
   // Fetch student stats
-  const { data: stats } = useQuery<StudentStats>({
+  const { data: stats, isLoading: statsLoading } = useQuery<StudentStats>({
     queryKey: ['/api/student/stats'],
     queryFn: async () => {
       const response = await fetch('/api/student/stats', {
@@ -97,27 +61,13 @@ export default function StudentDashboard() {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
-      if (!response.ok) {
-        // Return default stats if API fails
-        return {
-          totalLessons: 0,
-          completedLessons: 0,
-          currentStreak: 0,
-          totalXP: 0,
-          currentLevel: 1,
-          nextLevelXP: 1000,
-          walletBalance: 0,
-          memberTier: 'Bronze',
-          studyTimeThisWeek: 0,
-          weeklyGoalHours: 10
-        };
-      }
+      if (!response.ok) throw new Error('Failed to fetch stats');
       return response.json();
     }
   });
 
   // Fetch courses
-  const { data: courses = [] } = useQuery<Course[]>({
+  const { data: courses = [] } = useQuery({
     queryKey: ['/api/student/courses'],
     queryFn: async () => {
       const response = await fetch('/api/student/courses', {
@@ -125,13 +75,13 @@ export default function StudentDashboard() {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
-      if (!response.ok) return [];
+      if (!response.ok) throw new Error('Failed to fetch courses');
       return response.json();
     }
   });
 
   // Fetch upcoming sessions
-  const { data: upcomingSessions = [] } = useQuery<UpcomingSession[]>({
+  const { data: upcomingSessions = [] } = useQuery({
     queryKey: ['/api/student/sessions/upcoming'],
     queryFn: async () => {
       const response = await fetch('/api/student/sessions/upcoming', {
@@ -139,12 +89,12 @@ export default function StudentDashboard() {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
-      if (!response.ok) return [];
+      if (!response.ok) throw new Error('Failed to fetch sessions');
       return response.json();
     }
   });
 
-  const progressPercentage = stats ? (stats.completedLessons / Math.max(stats.totalLessons, 1)) * 100 : 0;
+  const progressPercentage = stats ? (stats.completedLessons / stats.totalLessons) * 100 : 0;
   const xpProgress = stats ? ((stats.totalXP % 1000) / 1000) * 100 : 0;
 
   return (
@@ -205,9 +155,9 @@ export default function StudentDashboard() {
                   <Flame className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-white/70 text-sm">{t('student:streak', 'Streak')}</p>
+                  <p className="text-white/70 text-sm">{t('student:streak')}</p>
                   <p className="text-white text-2xl font-bold">{stats?.currentStreak || 0}</p>
-                  <p className="text-white/50 text-xs">{t('student:days', 'days')}</p>
+                  <p className="text-white/50 text-xs">{t('student:days')}</p>
                 </div>
               </div>
             </motion.div>
@@ -223,7 +173,7 @@ export default function StudentDashboard() {
                   <Zap className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-white/70 text-sm">{t('student:totalXP', 'Total XP')}</p>
+                  <p className="text-white/70 text-sm">{t('student:totalXP')}</p>
                   <p className="text-white text-2xl font-bold">{stats?.totalXP || 0}</p>
                   <p className="text-white/50 text-xs">Level {stats?.currentLevel || 1}</p>
                 </div>
@@ -239,15 +189,15 @@ export default function StudentDashboard() {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-white font-semibold text-lg">{t('student:weeklyProgress', 'Weekly Progress')}</h2>
+              <h2 className="text-white font-semibold text-lg">{t('student:weeklyProgress')}</h2>
               <span className="text-white/70 text-sm">
-                {stats?.studyTimeThisWeek || 0}/{stats?.weeklyGoalHours || 10} {t('student:hours', 'hours')}
+                {stats?.studyTimeThisWeek || 0}/{stats?.weeklyGoalHours || 10} {t('student:hours')}
               </span>
             </div>
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-white/70">{t('student:lessonsCompleted', 'Lessons Completed')}</span>
+                  <span className="text-white/70">{t('student:lessonsCompleted')}</span>
                   <span className="text-white">{stats?.completedLessons || 0}/{stats?.totalLessons || 0}</span>
                 </div>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden">
@@ -262,7 +212,7 @@ export default function StudentDashboard() {
               
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-white/70">{t('student:xpToNextLevel', 'XP to Next Level')}</span>
+                  <span className="text-white/70">{t('student:xpToNextLevel')}</span>
                   <span className="text-white">{stats?.totalXP % 1000}/1000 XP</span>
                 </div>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden">
@@ -290,7 +240,7 @@ export default function StudentDashboard() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Calendar className="w-8 h-8 text-white mx-auto mb-2" />
-                <p className="text-white/90 text-xs font-medium">{t('student:joinClass', 'Join Class')}</p>
+                <p className="text-white/90 text-xs font-medium">{t('student:joinClass')}</p>
               </motion.div>
             </Link>
             
@@ -300,7 +250,7 @@ export default function StudentDashboard() {
                 whileTap={{ scale: 0.95 }}
               >
                 <BookOpen className="w-8 h-8 text-white mx-auto mb-2" />
-                <p className="text-white/90 text-xs font-medium">{t('student:homework', 'Homework')}</p>
+                <p className="text-white/90 text-xs font-medium">{t('student:homework')}</p>
               </motion.div>
             </Link>
             
@@ -310,7 +260,7 @@ export default function StudentDashboard() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Trophy className="w-8 h-8 text-white mx-auto mb-2" />
-                <p className="text-white/90 text-xs font-medium">{t('student:practice', 'Practice')}</p>
+                <p className="text-white/90 text-xs font-medium">{t('student:practice')}</p>
               </motion.div>
             </Link>
           </motion.div>
@@ -324,16 +274,16 @@ export default function StudentDashboard() {
               transition={{ duration: 0.5, delay: 0.4 }}
             >
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-white font-semibold text-lg">{t('student:upcomingSessions', 'Upcoming Sessions')}</h2>
+                <h2 className="text-white font-semibold text-lg">{t('student:upcomingSessions')}</h2>
                 <Link href="/sessions">
                   <span className="text-white/70 text-sm flex items-center gap-1">
-                    {t('common:viewAll', 'View All')} <ChevronRight className="w-4 h-4" />
+                    {t('common:viewAll')} <ChevronRight className="w-4 h-4" />
                   </span>
                 </Link>
               </div>
               
               <div className="space-y-3">
-                {upcomingSessions.slice(0, 2).map((session, index) => (
+                {upcomingSessions.slice(0, 2).map((session: any, index: number) => (
                   <motion.div 
                     key={session.id}
                     className="glass-card p-4"
@@ -355,15 +305,12 @@ export default function StudentDashboard() {
                           </span>
                         </div>
                       </div>
-                      {session.canJoin && (
-                        <motion.button 
-                          className="px-3 py-1 bg-white/20 rounded-lg text-white text-sm font-medium flex items-center gap-1"
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Play className="w-3 h-3" />
-                          {t('student:join', 'Join')}
-                        </motion.button>
-                      )}
+                      <motion.button 
+                        className="px-3 py-1 bg-white/20 rounded-lg text-white text-sm font-medium"
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {t('student:join')}
+                      </motion.button>
                     </div>
                   </motion.div>
                 ))}
@@ -380,16 +327,16 @@ export default function StudentDashboard() {
               transition={{ duration: 0.5, delay: 0.5 }}
             >
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-white font-semibold text-lg">{t('student:myCourses', 'My Courses')}</h2>
+                <h2 className="text-white font-semibold text-lg">{t('student:myCourses')}</h2>
                 <Link href="/courses">
                   <span className="text-white/70 text-sm flex items-center gap-1">
-                    {t('common:viewAll', 'View All')} <ChevronRight className="w-4 h-4" />
+                    {t('common:viewAll')} <ChevronRight className="w-4 h-4" />
                   </span>
                 </Link>
               </div>
               
               <div className="grid grid-cols-2 gap-3">
-                {courses.slice(0, 4).map((course, index) => (
+                {courses.slice(0, 4).map((course: any, index: number) => (
                   <motion.div 
                     key={course.id}
                     className="mobile-course-card"
@@ -405,7 +352,7 @@ export default function StudentDashboard() {
                     <p className="text-gray-500 text-xs mt-1">{course.level}</p>
                     <div className="mt-3">
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-600">{t('student:progress', 'Progress')}</span>
+                        <span className="text-gray-600">{t('student:progress')}</span>
                         <span className="text-purple-600 font-medium">{course.progress || 0}%</span>
                       </div>
                       <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
@@ -420,35 +367,6 @@ export default function StudentDashboard() {
               </div>
             </motion.div>
           )}
-
-          {/* Wallet Balance Card */}
-          <motion.div 
-            className="glass-card p-5 mb-20"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-gradient-to-br from-green-400 to-blue-500">
-                  <Wallet className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-white/70 text-sm">{t('student:walletBalance', 'Wallet Balance')}</p>
-                  <p className="text-white text-2xl font-bold">
-                    {new Intl.NumberFormat('fa-IR', {
-                      style: 'currency',
-                      currency: 'IRR',
-                      minimumFractionDigits: 0,
-                    }).format(stats?.walletBalance || 0)}
-                  </p>
-                </div>
-              </div>
-              <Badge className="bg-white/20 text-white border-white/30">
-                {stats?.memberTier || 'Bronze'}
-              </Badge>
-            </div>
-          </motion.div>
         </div>
       </div>
 
