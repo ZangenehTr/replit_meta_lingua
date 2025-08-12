@@ -110,7 +110,7 @@ import TeacherStudentMatchingPage from "@/pages/admin/teacher-student-matching";
 import RoomManagement from "@/pages/admin/room-management";
 import { CallernManagement } from "@/pages/admin/callern-management";
 import RoadmapDesigner from "@/pages/admin/roadmap-designer";
-import CallernSystem from "@/pages/callern";
+import CallernMobilePage from "@/pages/callern-mobile";
 import GamificationSystem from "@/pages/games";
 import AIPracticePage from "@/pages/ai-practice";
 
@@ -342,7 +342,7 @@ function Router() {
       </Route>
       <Route path="/callern">
         <ProtectedRoute>
-          <CallernSystem />
+          <CallernMobilePage />
         </ProtectedRoute>
       </Route>
       <Route path="/games">

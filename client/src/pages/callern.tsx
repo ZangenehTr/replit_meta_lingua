@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { AppLayout } from "@/components/layout/app-layout";
 import { VideoCall } from "@/components/callern/VideoCall";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
+import { MobileLayout } from "@/components/mobile/MobileLayout";
+import { MobileCard } from "@/components/mobile/MobileCard";
 import { 
   Video, 
   Clock, 
@@ -21,16 +21,14 @@ import {
   XCircle,
   PlayCircle,
   Globe,
-  Zap
+  Zap,
+  ShoppingCart,
+  History,
+  Users,
+  ChevronRight,
+  Wifi,
+  WifiOff
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -96,6 +94,7 @@ export default function CallernSystem() {
   const [selectedTeacher, setSelectedTeacher] = useState<AvailableTeacher | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
   const [activeCallConfig, setActiveCallConfig] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'packages' | 'teachers' | 'history'>('teachers');
 
   // Fetch available Callern packages
   const { data: packages = [], isLoading: packagesLoading } = useQuery({
