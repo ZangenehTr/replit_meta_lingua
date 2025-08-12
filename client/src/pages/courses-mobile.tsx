@@ -54,7 +54,7 @@ export default function CoursesCatalogMobile() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // Fetch courses
-  const { data: courses = [], isLoading } = useQuery<Course[]>({
+  const { data: rawCourses = [], isLoading } = useQuery({
     queryKey: ['/api/courses'],
     queryFn: async () => {
       const response = await fetch('/api/courses');
@@ -62,6 +62,29 @@ export default function CoursesCatalogMobile() {
       return response.json();
     }
   });
+
+  // Transform API data to match our interface
+  const courses: Course[] = rawCourses.map((course: any) => ({
+    id: course.id,
+    title: course.title || '',
+    description: course.description || '',
+    instructorName: course.instructorName || 'Instructor',
+    language: course.language || course.targetLanguage || 'English',
+    level: (course.level || course.difficulty || 'intermediate').toLowerCase() as any,
+    duration: course.sessionDuration ? `${course.sessionDuration} min` : '90 min',
+    deliveryMode: course.deliveryMode || 'online',
+    price: course.price || 0,
+    thumbnail: course.thumbnail,
+    rating: typeof course.rating === 'string' ? parseFloat(course.rating) : course.rating,
+    currentStudents: course.currentStudents || 0,
+    maxStudents: course.maxStudents,
+    weekdays: course.weekdays,
+    startTime: course.startTime,
+    endTime: course.endTime,
+    location: course.location,
+    startDate: course.startDate || course.firstSessionDate,
+    category: course.category || 'General'
+  }));
 
   const categories = [
     { id: 'all', label: t('common:all'), icon: Sparkles },
@@ -75,7 +98,8 @@ export default function CoursesCatalogMobile() {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           course.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDelivery = deliveryMode === 'all' || course.deliveryMode === deliveryMode;
-    const matchesCategory = selectedCategory === 'all' || course.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || 
+                           course.category?.toLowerCase() === selectedCategory.toLowerCase();
     return matchesSearch && matchesDelivery && matchesCategory;
   });
 
@@ -93,6 +117,7 @@ export default function CoursesCatalogMobile() {
       case 'online': return Globe;
       case 'in_person': return MapPin;
       case 'self_paced': return BookOpen;
+      case 'callern': return Globe;
       default: return BookOpen;
     }
   };
