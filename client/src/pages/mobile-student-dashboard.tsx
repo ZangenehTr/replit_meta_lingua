@@ -284,10 +284,10 @@ export function MobileStudentDashboard() {
       {/* Gamification Widget */}
       {stats && (
         <GamificationWidget 
-          level={stats.currentLevel}
-          xp={stats.xp}
-          nextLevelXp={stats.nextLevelXp}
-          streak={stats.streak}
+          level={`Level ${stats.currentLevel || 1}`}
+          xp={stats.xp || 0}
+          nextLevelXp={stats.nextLevelXp || 1000}
+          streak={stats.streak || 0}
         />
       )}
 

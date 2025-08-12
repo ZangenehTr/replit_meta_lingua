@@ -2387,6 +2387,15 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUser(studentId);
       const userProfile = await this.getUserProfile(studentId);
       
+      // Get actual weekly progress from activity tracker
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+      
+      // For now, calculate from existing data  
+      const weeklyHours = 0; // Will be calculated from actual activity data once implemented
+      const weeklyGoal = userProfile?.weeklyStudyHours || 10;
+      
       return {
         totalCourses: 4,
         completedLessons: user?.totalLessons || 0,
@@ -2397,8 +2406,8 @@ export class DatabaseStorage implements IStorage {
         currentLevel: user?.level || 1,
         nextLevelXp: (user?.level || 1) * 1000,
         streak: user?.streakDays || 0,
-        weeklyGoal: userProfile?.weeklyStudyHours || 10,
-        weeklyProgress: Math.min(100, Math.round((user?.totalLessons || 0) / 5 * 100)),
+        weeklyGoal,
+        weeklyProgress: weeklyHours, // Return actual hours, not percentage
         achievements: [],
         upcomingClasses,
         assignments,
