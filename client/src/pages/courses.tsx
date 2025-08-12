@@ -35,12 +35,8 @@ interface Course {
 }
 
 export default function Courses() {
-  const { user } = useAuth();
-  
-  // If user is a student, show mobile UI
-  if (user?.role === 'Student') {
-    return <CoursesMobile />;
-  }
+  // Always show mobile UI for the course catalog
+  return <CoursesMobile />;
   
   const [searchTerm, setSearchTerm] = useState("");
   const [languageFilter, setLanguageFilter] = useState("all");
