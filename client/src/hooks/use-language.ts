@@ -90,6 +90,11 @@ export function useLanguage() {
       }
     },
     formatNumber: (num: number) => {
+      // Handle null, undefined, or invalid numbers
+      if (num === null || num === undefined || isNaN(num)) {
+        return '0';
+      }
+      
       if (currentLanguage === 'fa') {
         return num.toLocaleString('fa-IR');
       } else if (currentLanguage === 'ar') {

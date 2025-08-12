@@ -109,10 +109,14 @@ export default function GamesPage() {
   // Mock progress and sessions for now (since these endpoints don't exist yet)
   const progress: GameProgress[] = [];
   const sessions: GameSession[] = [];
+  const progressLoading = false;
+  const sessionsLoading = false;
 
   // Mock leaderboard and achievements for now (since these endpoints don't exist yet)  
   const leaderboard: LeaderboardEntry[] = [];
   const achievements: Achievement[] = [];
+  const leaderboardLoading = false;
+  const achievementsLoading = false;
 
   // Fetch user stats
   const { data: userStats, isLoading: statsLoading } = useQuery({
@@ -182,7 +186,7 @@ export default function GamesPage() {
           <div className="flex items-center justify-between text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
-              <span>{game.estimatedDuration} {t.minutes}</span>
+              <span>{game.estimatedDuration} {t('common:time.minutes')}</span>
             </div>
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-500" />
@@ -193,22 +197,22 @@ export default function GamesPage() {
           {gameProgress && (
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span>{t.progress}</span>
+                <span>{t('common:progress')}</span>
                 <span>{completionRate}%</span>
               </div>
               <Progress value={completionRate} className="h-2" />
               <div className="grid grid-cols-3 gap-2 text-xs text-gray-600">
                 <div className="text-center">
                   <div className="font-semibold">{timesPlayed}</div>
-                  <div>{t.timesPlayed}</div>
+                  <div>{t('student:games.timesPlayed')}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-semibold">{bestScore}</div>
-                  <div>{t.bestScore}</div>
+                  <div>{t('student:games.bestScore')}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-semibold">{gameProgress.currentLevel}</div>
-                  <div>{t.currentLevel}</div>
+                  <div>{t('student:games.currentLevel')}</div>
                 </div>
               </div>
             </div>
@@ -318,7 +322,7 @@ export default function GamesPage() {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
               {skillIcons[gameData?.gameType] || <Target className="w-5 h-5" />}
-              <CardTitle className="text-lg">{gameData?.gameName || 'بازی نامشخص'}</CardTitle>
+              <CardTitle className="text-lg">{gameData?.title || 'بازی نامشخص'}</CardTitle>
             </div>
             <div className="flex items-center gap-1">
               {[...Array(session.starsEarned)].map((_, i) => (
@@ -425,9 +429,9 @@ export default function GamesPage() {
   return (
     <div className={`container mx-auto px-4 py-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{t.gamesTitle}</h1>
+        <h1 className="text-3xl font-bold mb-2">{t('student:games.title')}</h1>
         <p className="text-gray-600">
-          {t.gamesDescription}
+          {t('student:games.description')}
         </p>
       </div>
 
@@ -439,8 +443,8 @@ export default function GamesPage() {
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-yellow-500" />
                 <div>
-                  <div className="text-2xl font-bold">{formatNumber(userStats.totalXp)}</div>
-                  <div className="text-sm text-gray-600">{t.totalXp}</div>
+                  <div className="text-2xl font-bold">{formatNumber(userStats.totalXp || 0)}</div>
+                  <div className="text-sm text-gray-600">{t('student:stats.totalXp')}</div>
                 </div>
               </div>
             </CardContent>
@@ -450,8 +454,8 @@ export default function GamesPage() {
               <div className="flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-blue-500" />
                 <div>
-                  <div className="text-2xl font-bold">{formatNumber(userStats.currentLevel)}</div>
-                  <div className="text-sm text-gray-600">{t.currentLevelShort}</div>
+                  <div className="text-2xl font-bold">{formatNumber(userStats.level || userStats.currentLevel || 1)}</div>
+                  <div className="text-sm text-gray-600">{t('student:stats.level')}</div>
                 </div>
               </div>
             </CardContent>
@@ -461,8 +465,8 @@ export default function GamesPage() {
               <div className="flex items-center gap-2">
                 <Target className="w-5 h-5 text-green-500" />
                 <div>
-                  <div className="text-2xl font-bold">{formatNumber(userStats.streakDays)}</div>
-                  <div className="text-sm text-gray-600">{t.streakDays}</div>
+                  <div className="text-2xl font-bold">{formatNumber(userStats.currentStreak || userStats.streakDays || 0)}</div>
+                  <div className="text-sm text-gray-600">{t('student:stats.streak')}</div>
                 </div>
               </div>
             </CardContent>
@@ -473,7 +477,7 @@ export default function GamesPage() {
                 <Users className="w-5 h-5 text-purple-500" />
                 <div>
                   <div className="text-2xl font-bold">{formatNumber(userStats.gamesPlayed || 0)}</div>
-                  <div className="text-sm text-gray-600">{t.gamesPlayed}</div>
+                  <div className="text-sm text-gray-600">{t('student:games.gamesPlayed')}</div>
                 </div>
               </div>
             </CardContent>
@@ -483,21 +487,21 @@ export default function GamesPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="browse">{t.browseGames}</TabsTrigger>
-          <TabsTrigger value="progress">{t.progress}</TabsTrigger>
-          <TabsTrigger value="history">{t.history}</TabsTrigger>
-          <TabsTrigger value="leaderboard">{t.leaderboard}</TabsTrigger>
-          <TabsTrigger value="achievements">{t.achievements}</TabsTrigger>
+          <TabsTrigger value="browse">{t('student:games.browseGames')}</TabsTrigger>
+          <TabsTrigger value="progress">{t('common:progress')}</TabsTrigger>
+          <TabsTrigger value="history">{t('student:games.history')}</TabsTrigger>
+          <TabsTrigger value="leaderboard">{t('student:games.leaderboard')}</TabsTrigger>
+          <TabsTrigger value="achievements">{t('student:games.achievements')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="browse" className="space-y-6">
           <div className="flex flex-wrap gap-4">
             <Select value={selectedAge} onValueChange={setSelectedAge}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder={t.ageGroup} />
+                <SelectValue placeholder={t('student:games.ageGroup')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t.allAgeGroups}</SelectItem>
+                <SelectItem value="all">{t('student:games.allAgeGroups')}</SelectItem>
                 <SelectItem value="5-10">5-10</SelectItem>
                 <SelectItem value="11-14">11-14</SelectItem>
                 <SelectItem value="15-20">15-20</SelectItem>
@@ -507,25 +511,25 @@ export default function GamesPage() {
 
             <Select value={selectedSkill} onValueChange={setSelectedSkill}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder={t.skill} />
+                <SelectValue placeholder={t('student:games.skill')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t.allSkills}</SelectItem>
-                <SelectItem value="vocabulary">{t.vocabulary}</SelectItem>
-                <SelectItem value="grammar">{t.grammar}</SelectItem>
-                <SelectItem value="listening">{t.listening}</SelectItem>
-                <SelectItem value="speaking">{t.speaking}</SelectItem>
-                <SelectItem value="reading">{t.reading}</SelectItem>
-                <SelectItem value="writing">{t.writing}</SelectItem>
+                <SelectItem value="all">{t('student:games.allSkills')}</SelectItem>
+                <SelectItem value="vocabulary">{t('student:games.vocabulary')}</SelectItem>
+                <SelectItem value="grammar">{t('student:games.grammar')}</SelectItem>
+                <SelectItem value="listening">{t('student:games.listening')}</SelectItem>
+                <SelectItem value="speaking">{t('student:games.speaking')}</SelectItem>
+                <SelectItem value="reading">{t('student:games.reading')}</SelectItem>
+                <SelectItem value="writing">{t('student:games.writing')}</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={selectedLevel} onValueChange={setSelectedLevel}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder={t.level} />
+                <SelectValue placeholder={t('student:games.level')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t.allLevels}</SelectItem>
+                <SelectItem value="all">{t('student:games.allLevels')}</SelectItem>
                 <SelectItem value="A1">A1</SelectItem>
                 <SelectItem value="A2">A2</SelectItem>
                 <SelectItem value="B1">B1</SelectItem>
