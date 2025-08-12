@@ -7,6 +7,7 @@ import { CallernWebSocketServer } from "./websocket-server";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
+import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
 import { 
   filterTeachers, 
   filterActiveTeachers,
@@ -15987,6 +15988,9 @@ Meta Lingua Academy`;
   
   // Setup roadmap routes
   setupRoadmapRoutes(app, authenticateToken, requireRole);
+  
+  // Setup Callern enhancement routes
+  setupCallernEnhancementRoutes(app);
 
   const httpServer = createServer(app);
   

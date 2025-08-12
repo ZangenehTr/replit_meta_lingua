@@ -21,6 +21,19 @@ Recent session (2025-01-12):
   - System now tracks: real study time, actual weekly progress, skill progression over time
   - **COMPLETED: Callern page mobile redesign** - Transformed from desktop layout to full mobile theme with glassmorphism cards, gradient backgrounds, tabbed navigation
   - Added missing translations for Callern mobile interface in all three languages
+  - **MAJOR UPDATE: Advanced Callern AI Enhancements** - Implemented comprehensive AI-powered language learning features:
+    - Call recording consent system with dual-party authorization
+    - Live vocabulary suggestions during calls (teacher/AI powered)
+    - Automatic transcript generation and analysis
+    - Rewrite suggestions for grammar improvements
+    - Personal glossary building with spaced repetition (SRS)
+    - Quiz generation from learned vocabulary
+    - Email summaries and weekly recaps
+    - Student preference management
+    - Database: Added 7 new tables and extended callernCallHistory table
+    - Created full service layer with TranscriptParser, SuggestionEngine, RewriteEngine
+    - Built comprehensive UI components for all new features
+    - New enhancement page available at /callern-enhancements
 - **New Features:**
   - Real-time activity recording at /api/activity/record
   - Weekly progress tracking at /api/activity/weekly-progress
