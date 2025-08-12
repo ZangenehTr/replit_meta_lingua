@@ -292,7 +292,7 @@ export default function CoursesCatalogMobile() {
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                           <span className="text-white/60 text-xs">
-                            {course.rating.toFixed(1)}
+                            {typeof course.rating === 'number' ? course.rating.toFixed(1) : course.rating}
                           </span>
                         </div>
                       )}
