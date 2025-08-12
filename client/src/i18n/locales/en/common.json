@@ -3,6 +3,15 @@
   "profile": "Profile",
   "viewAll": "View All",
   "all": "All",
+  "student": {
+    "navigation": {
+      "home": "Home",
+      "courses": "Courses",
+      "callern": "Callern",
+      "messages": "Messages",
+      "profile": "Profile"
+    }
+  },
   "timeframes": {
     "lastDays": "Last 30 days",
     "thisWeek": "This week",

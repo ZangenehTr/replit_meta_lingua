@@ -72,6 +72,15 @@
     "myCourses": "دوره‌های من",
     "paymentCredits": "پرداخت و اعتبارات"
   },
+  "student": {
+    "navigation": {
+      "home": "خانه",
+      "courses": "دوره‌ها",
+      "callern": "کالرن",
+      "messages": "پیام‌ها",
+      "profile": "پروفایل"
+    }
+  },
   "dashboard": {
     "title": "داشبورد مدیریت",
     "subtitle": "نمای کلی عملیات و معیارهای سیستم",
