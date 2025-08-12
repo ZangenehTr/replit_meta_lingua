@@ -69,7 +69,14 @@
   "goodAfternoon": "عصر بخیر",
   "goodMorning": "صبح بخیر",
   "goodEvening": "شب بخیر",
-  "videoCourses": {
+  "messages": "پیام‌ها",
+  "sessions": "جلسات",
+  "homework": "تکالیف",
+  "videoCourses": "دوره‌های ویدئویی",
+  "searchCourses": "جستجوی دوره‌ها",
+  "inProgress": "در حال انجام",
+  "noCoursesFound": "دوره‌ای یافت نشد",
+  "videoCoursesSection": {
     "title": "دوره‌های ویدئویی",
     "watchVideo": "تماشای ویدئو",
     "courseProgress": "پیشرفت دوره",

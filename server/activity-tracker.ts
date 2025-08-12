@@ -1,5 +1,5 @@
 import { db } from './db';
-import { learningActivities, progressSnapshots, skillAssessments, users } from '../shared/schema';
+import { learningActivities, skillAssessments, users } from '../shared/schema';
 import { eq, and, gte, lte, sql, desc } from 'drizzle-orm';
 
 export class ActivityTracker {
@@ -210,7 +210,8 @@ export class ActivityTracker {
       const avgScore = Object.values(skillScores).reduce((sum: any, val: any) => sum + val, 0) / 6;
       const overallLevel = this.calculateLevel(avgScore);
 
-      // Check if snapshot exists for today
+      // TODO: Check if snapshot exists for today when progressSnapshots table is created
+      /*
       const existingSnapshot = await db
         .select()
         .from(progressSnapshots)
@@ -232,6 +233,7 @@ export class ActivityTracker {
           snapshotDate: today.toISOString().split('T')[0]
         });
       }
+      */
     } catch (error) {
       console.error('Error updating progress snapshot:', error);
     }
@@ -280,6 +282,11 @@ export class ActivityTracker {
    */
   async getSkillProgression(userId: number, months: number = 6) {
     try {
+      // Return empty array for now - progress snapshots table will be added later
+      return [];
+      
+      // TODO: Implement when progress_snapshots table is created
+      /*
       const startDate = new Date();
       startDate.setMonth(startDate.getMonth() - months);
 
@@ -295,6 +302,7 @@ export class ActivityTracker {
         .orderBy(progressSnapshots.snapshotDate);
 
       return snapshots;
+      */
     } catch (error) {
       console.error('Error getting skill progression:', error);
       return [];
