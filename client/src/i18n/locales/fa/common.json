@@ -5,6 +5,19 @@
   "home": "خانه",
   "profile": "پروفایل",
   "viewAll": "مشاهده همه",
+  "progress": "پیشرفت",
+  "time": {
+    "minutes": "دقیقه"
+  },
+  "languages": {
+    "all": "همه زبان‌ها",
+    "english": "انگلیسی",
+    "spanish": "اسپانیایی",
+    "french": "فرانسوی",
+    "german": "آلمانی",
+    "persian": "فارسی",
+    "arabic": "عربی"
+  },
   "navigation": {
     "dashboard": "داشبورد",
     "students": "دانشجویان",

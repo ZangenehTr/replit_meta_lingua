@@ -428,6 +428,21 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async getTeachers(): Promise<User[]> {
+    const result = await db.select()
+      .from(users)
+      .where(
+        and(
+          or(
+            eq(users.role, 'Teacher'),
+            eq(users.role, 'teacher')
+          ),
+          eq(users.isActive, true)
+        )
+      );
+    return result;
+  }
+
   async getTeachersForCallern(): Promise<any[]> {
     const teachers = await db
       .select({
