@@ -1,0 +1,33 @@
+You are implementing new features in Meta Lingua (Node/Express + React + PostgreSQL + Drizzle).
+Respect 7 roles: student, teacher, mentor, supervisor, manager, accountant, admin.
+
+TASKS:
+1) DB migrations:
+   - SuggestedTerm, RewriteSuggestion, GlossaryItem, QuizResult, EmailLog columns as spec above.
+   - Extend CallSession with recordingUrl, transcriptUrl, transcriptLang, aiSummaryJson, consentRecordingAt.
+2) APIs:
+   - POST /api/callern/:id/record/start|end (role: teacher or student; require consent flags)
+   - POST /api/callern/:id/transcript (admin/teacher can attach; student allowed if self)
+   - POST /api/callern/:id/summary (server-side AI call; store aiSummaryJson)
+   - POST /api/callern/:id/suggestions/live (teacher/AI posts)
+   - GET  /api/callern/:id/suggestions (role-aware)
+   - POST /api/callern/:id/rewrites/generate; GET /api/callern/:id/rewrites
+   - GET  /api/glossary (student only – own); POST /api/glossary/bulk
+   - POST /api/email/send (templates: CALL_SUMMARY, WEEKLY_RECAP)
+   - All routes must enforce RBAC and record AuditLog.
+3) Services:
+   - TranscriptParser: split utterances with timestamps; detect common errors.
+   - SuggestionEngine: vocab suggestions from keywords; return {term, pos, cefr, example}.
+   - RewriteEngine: improve utterances; keep meaning; return CEFR-tagged rewrites.
+   - EmailService: render templates; log to EmailLog; respect opt-out.
+   - SRS: daily cron to set srsDueAt; simple SM-2 style strength updates.
+4) UI:
+   - Call overlay chip for live suggestions (toggleable in StudentPreference).
+   - Post-call page: Transcript, Vocab (save all), Rewrites (copy), “Email me pack” button.
+   - /me/glossary with SRS “Due Today” queue.
+5) Acceptance tests:
+   - Consent flow blocks recording when off.
+   - Student receives CALL_SUMMARY with vocab+rewrites after end.
+   - Mentor assigned can view; unassigned mentor cannot.
+   - SRS schedules next review after quiz submit.
+Deliver code incrementally with Drizzle migrations, routes, services, and React pages/components.

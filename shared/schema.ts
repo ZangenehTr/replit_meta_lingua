@@ -321,7 +321,7 @@ export const teacherCallernAvailability = pgTable("teacher_callern_availability"
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Callern Call History
+// Callern Call History (extended for new features)
 export const callernCallHistory = pgTable("callern_call_history", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").notNull().references(() => users.id),
@@ -332,6 +332,14 @@ export const callernCallHistory = pgTable("callern_call_history", {
   durationMinutes: integer("duration_minutes"),
   status: varchar("status", { length: 20 }).notNull(), // scheduled, in-progress, completed, cancelled
   notes: text("notes"),
+  // New recording and transcript fields
+  recordingUrl: text("recording_url"),
+  transcriptUrl: text("transcript_url"),
+  transcriptLang: varchar("transcript_lang", { length: 10 }), // e.g., 'en', 'fa', 'ar'
+  aiSummaryJson: jsonb("ai_summary_json"), // AI-generated summary
+  consentRecordingAt: timestamp("consent_recording_at"), // When consent was given
+  studentConsentRecording: boolean("student_consent_recording").default(false),
+  teacherConsentRecording: boolean("teacher_consent_recording").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -359,6 +367,104 @@ export const studentCallernProgress = pgTable("student_callern_progress", {
   completedAt: timestamp("completed_at").defaultNow().notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// ===== NEW CALLERN ENHANCEMENT TABLES =====
+
+// Suggested Terms (vocabulary suggestions during calls)
+export const suggestedTerms = pgTable("suggested_terms", {
+  id: serial("id").primaryKey(),
+  callId: integer("call_id").notNull().references(() => callernCallHistory.id),
+  term: varchar("term", { length: 100 }).notNull(),
+  partOfSpeech: varchar("part_of_speech", { length: 20 }), // noun, verb, adjective, etc.
+  cefrLevel: varchar("cefr_level", { length: 5 }), // A1, A2, B1, B2, C1, C2
+  definition: text("definition"),
+  example: text("example"),
+  suggestedBy: varchar("suggested_by", { length: 20 }).notNull(), // 'teacher' or 'ai'
+  timestamp: integer("timestamp"), // seconds into the call
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Rewrite Suggestions (improved versions of student utterances)
+export const rewriteSuggestions = pgTable("rewrite_suggestions", {
+  id: serial("id").primaryKey(),
+  callId: integer("call_id").notNull().references(() => callernCallHistory.id),
+  originalUtterance: text("original_utterance").notNull(),
+  improvedVersion: text("improved_version").notNull(),
+  cefrLevel: varchar("cefr_level", { length: 5 }), // Target CEFR level
+  timestamp: integer("timestamp"), // seconds into the call
+  notes: text("notes"), // Grammar points or explanations
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Glossary Items (student's personal vocabulary collection)
+export const glossaryItems = pgTable("glossary_items", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => users.id),
+  term: varchar("term", { length: 100 }).notNull(),
+  definition: text("definition").notNull(),
+  partOfSpeech: varchar("part_of_speech", { length: 20 }),
+  cefrLevel: varchar("cefr_level", { length: 5 }),
+  example: text("example"),
+  sourceCallId: integer("source_call_id").references(() => callernCallHistory.id),
+  // SRS (Spaced Repetition System) fields
+  srsStrength: integer("srs_strength").default(0), // 0-5 strength level
+  srsDueAt: timestamp("srs_due_at"),
+  srsLastReviewedAt: timestamp("srs_last_reviewed_at"),
+  srsReviewCount: integer("srs_review_count").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Quiz Results (for SRS vocabulary testing)
+export const quizResults = pgTable("quiz_results", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => users.id),
+  glossaryItemId: integer("glossary_item_id").notNull().references(() => glossaryItems.id),
+  questionType: varchar("question_type", { length: 20 }).notNull(), // 'definition', 'translation', 'fill_blank'
+  wasCorrect: boolean("was_correct").notNull(),
+  responseTime: integer("response_time"), // milliseconds
+  attemptedAt: timestamp("attempted_at").defaultNow().notNull()
+});
+
+// Email Logs (for tracking sent emails)
+export const emailLogs = pgTable("email_logs", {
+  id: serial("id").primaryKey(),
+  recipientId: integer("recipient_id").notNull().references(() => users.id),
+  recipientEmail: varchar("recipient_email", { length: 255 }).notNull(),
+  templateType: varchar("template_type", { length: 50 }).notNull(), // 'CALL_SUMMARY', 'WEEKLY_RECAP'
+  subject: varchar("subject", { length: 255 }).notNull(),
+  contentJson: jsonb("content_json"), // Template data
+  status: varchar("status", { length: 20 }).default('pending'), // pending, sent, failed
+  sentAt: timestamp("sent_at"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Audit Log for tracking all sensitive operations
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  userRole: varchar("user_role", { length: 50 }).notNull(),
+  action: varchar("action", { length: 100 }).notNull(),
+  resourceType: varchar("resource_type", { length: 50 }).notNull(),
+  resourceId: integer("resource_id"),
+  details: jsonb("details"),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Student Preferences for feature toggles
+export const studentPreferences = pgTable("student_preferences", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => users.id).unique(),
+  showLiveSuggestions: boolean("show_live_suggestions").default(true),
+  emailCallSummaries: boolean("email_call_summaries").default(true),
+  emailWeeklyRecap: boolean("email_weekly_recap").default(true),
+  preferredLanguage: varchar("preferred_language", { length: 10 }).default('en'),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
 // Wallet Transactions for incremental top-ups
@@ -2226,6 +2332,43 @@ export const insertCallernCallHistorySchema = createInsertSchema(callernCallHist
   updatedAt: true
 });
 
+export const insertSuggestedTermSchema = createInsertSchema(suggestedTerms).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertRewriteSuggestionSchema = createInsertSchema(rewriteSuggestions).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertGlossaryItemSchema = createInsertSchema(glossaryItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertQuizResultSchema = createInsertSchema(quizResults).omit({
+  id: true,
+  attemptedAt: true
+});
+
+export const insertEmailLogSchema = createInsertSchema(emailLogs).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertStudentPreferencesSchema = createInsertSchema(studentPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 export const insertCallernSyllabusTopicSchema = createInsertSchema(callernSyllabusTopics).omit({
   id: true,
   createdAt: true,
@@ -2246,6 +2389,20 @@ export type TeacherCallernAvailability = typeof teacherCallernAvailability.$infe
 export type InsertTeacherCallernAvailability = z.infer<typeof insertTeacherCallernAvailabilitySchema>;
 export type CallernCallHistory = typeof callernCallHistory.$inferSelect;
 export type InsertCallernCallHistory = z.infer<typeof insertCallernCallHistorySchema>;
+export type SuggestedTerm = typeof suggestedTerms.$inferSelect;
+export type InsertSuggestedTerm = z.infer<typeof insertSuggestedTermSchema>;
+export type RewriteSuggestion = typeof rewriteSuggestions.$inferSelect;
+export type InsertRewriteSuggestion = z.infer<typeof insertRewriteSuggestionSchema>;
+export type GlossaryItem = typeof glossaryItems.$inferSelect;
+export type InsertGlossaryItem = z.infer<typeof insertGlossaryItemSchema>;
+export type QuizResult = typeof quizResults.$inferSelect;
+export type InsertQuizResult = z.infer<typeof insertQuizResultSchema>;
+export type EmailLog = typeof emailLogs.$inferSelect;
+export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type StudentPreferences = typeof studentPreferences.$inferSelect;
+export type InsertStudentPreferences = z.infer<typeof insertStudentPreferencesSchema>;
 export type CallernSyllabusTopics = typeof callernSyllabusTopics.$inferSelect;
 export type InsertCallernSyllabusTopics = z.infer<typeof insertCallernSyllabusTopicSchema>;
 export type StudentCallernProgress = typeof studentCallernProgress.$inferSelect;

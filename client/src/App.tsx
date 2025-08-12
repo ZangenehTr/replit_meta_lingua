@@ -111,6 +111,7 @@ import RoomManagement from "@/pages/admin/room-management";
 import { CallernManagement } from "@/pages/admin/callern-management";
 import RoadmapDesigner from "@/pages/admin/roadmap-designer";
 import CallernMobilePage from "@/pages/callern-mobile";
+import CallernEnhancements from "@/pages/callern-enhancements";
 import GamificationSystem from "@/pages/games";
 import AIPracticePage from "@/pages/ai-practice";
 
@@ -343,6 +344,11 @@ function Router() {
       <Route path="/callern">
         <ProtectedRoute>
           <CallernMobilePage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/callern-enhancements">
+        <ProtectedRoute>
+          <CallernEnhancements />
         </ProtectedRoute>
       </Route>
       <Route path="/games">
