@@ -1,4 +1,10 @@
 {
+  "title": "Callern",
+  "subtitle": "Instant video calls with language teachers",
+  "teachers": "Teachers",
+  "packages": "Packages",
+  "history": "History",
+  "startCall": "Start Call",
   "welcomeTitle": "Welcome to Callern! 🎥",
   "welcomeDescription": "Connect instantly with professional language teachers for personalized 1-on-1 video sessions",
   "availableBalance": "Available Balance",

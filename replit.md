@@ -19,13 +19,16 @@ Recent session (2025-01-12):
   - Created roadmap designer UI for admins/teachers at /admin/roadmap-designer
   - Added endpoints for recording activities, tracking weekly progress, and skill assessments
   - System now tracks: real study time, actual weekly progress, skill progression over time
+  - **COMPLETED: Callern page mobile redesign** - Transformed from desktop layout to full mobile theme with glassmorphism cards, gradient backgrounds, tabbed navigation
+  - Added missing translations for Callern mobile interface in all three languages
 - **New Features:**
   - Real-time activity recording at /api/activity/record
   - Weekly progress tracking at /api/activity/weekly-progress
   - Learning roadmap management at /api/roadmaps
   - Student roadmap enrollment and progress tracking
+  - Mobile-optimized Callern page with teacher browsing, package management, and call history
 - **Outstanding Requirements:**
-  - All student pages need UI redesign with mobile app theme (native app look, not just responsive)
+  - Other student pages still need UI redesign with mobile app theme (native app look, not just responsive)
   - All functions on student and teacher pages need to be corrected and tested
   - Design approach: Full-screen gradients, glassmorphism effects, animated elements, bottom navigation
 - **Previously Completed:**
