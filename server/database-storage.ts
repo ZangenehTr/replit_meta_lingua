@@ -90,9 +90,9 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  // Alias for getUser to maintain compatibility
   async getUserById(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    return this.getUser(id);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
