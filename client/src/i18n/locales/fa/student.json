@@ -96,6 +96,38 @@
     "availability": "دسترسی",
     "specialization": "تخصص"
   },
+  "searchTutors": "جستجوی مدرسین",
+  "favorites": "علاقه‌مندی‌ها",
+  "noTutors": "مدرسی یافت نشد",
+  "games": {
+    "title": "بازی‌ها و فعالیت‌ها",
+    "description": "یادگیری با بازی‌های آموزشی و فعالیت‌های تعاملی",
+    "browseGames": "مرور بازی‌ها",
+    "history": "تاریخچه",
+    "leaderboard": "تابلو امتیازات",
+    "achievements": "دستاوردها",
+    "gamesPlayed": "بازی انجام شده",
+    "timesPlayed": "دفعات بازی",
+    "bestScore": "بهترین امتیاز",
+    "currentLevel": "سطح فعلی",
+    "ageGroup": "گروه سنی",
+    "allAgeGroups": "همه گروه‌های سنی",
+    "skill": "مهارت",
+    "allSkills": "همه مهارت‌ها",
+    "vocabulary": "واژگان",
+    "grammar": "گرامر",
+    "listening": "شنیداری",
+    "speaking": "گفتاری",
+    "reading": "خواندن",
+    "writing": "نوشتن",
+    "level": "سطح",
+    "allLevels": "همه سطوح"
+  },
+  "stats": {
+    "totalXp": "کل امتیاز",
+    "level": "سطح",
+    "streak": "پیوستگی"
+  },
   "homework": {
     "title": "تکالیف",
     "submit": "ارسال",
