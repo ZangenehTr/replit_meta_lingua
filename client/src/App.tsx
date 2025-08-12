@@ -109,6 +109,7 @@ import UserManagement from "@/pages/admin/user-management";
 import TeacherStudentMatchingPage from "@/pages/admin/teacher-student-matching";
 import RoomManagement from "@/pages/admin/room-management";
 import { CallernManagement } from "@/pages/admin/callern-management";
+import RoadmapDesigner from "@/pages/admin/roadmap-designer";
 import CallernSystem from "@/pages/callern";
 import GamificationSystem from "@/pages/games";
 import AIPracticePage from "@/pages/ai-practice";
@@ -609,6 +610,11 @@ function Router() {
       <Route path="/admin/supervision">
         <ProtectedRoute>
           <AdminSupervisionPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/roadmap-designer">
+        <ProtectedRoute>
+          <RoadmapDesigner />
         </ProtectedRoute>
       </Route>
 

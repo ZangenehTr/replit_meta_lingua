@@ -58,6 +58,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
     
     // Callern Video Call Management
     { path: "/admin/callern-management", icon: "Video", label: t('common:navigation.callernManagement'), roles: ["Admin", "Supervisor"] },
+    
+    // Learning Roadmap Designer
+    { path: "/admin/roadmap-designer", icon: "Map", label: t('common:navigation.roadmapDesigner') || 'Learning Roadmaps', roles: ["Admin", "Teacher/Tutor"] },
   
   // Room Management
   { path: "/admin/room-management", icon: "Building2", label: t('common:navigation.roomManagement'), roles: ["Admin", "Supervisor"] },
