@@ -148,52 +148,56 @@ export default function StudentDashboard() {
   const xpProgress = stats ? ((stats.totalXP % 1000) / 1000) * 100 : 0;
 
   return (
-    <div className="mobile-app-container min-h-screen">
-      {/* Animated Gradient Background */}
-      <div className="absolute inset-0 animated-gradient-bg opacity-50" />
-      
-      {/* Content */}
-      <div className="relative z-10">
-        {/* Mobile Header */}
-        <motion.header 
-          className="mobile-header"
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-12 h-12 border-2 border-white/20">
-                <AvatarImage src={user?.avatar} />
-                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-white/70 text-sm">{greeting}</p>
-                <h1 className="text-white font-bold text-lg">
-                  {user?.firstName} {user?.lastName}
-                </h1>
-              </div>
+    <div className="mobile-gradient-primary min-h-screen">
+      {/* Mobile Header with Glassmorphism */}
+      <motion.header 
+        className="mobile-header sticky top-0 z-40"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex items-center gap-3">
+            <Avatar className="w-12 h-12 border-2 border-purple-300/50">
+              <AvatarImage src={user?.avatar} />
+              <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                {user?.firstName?.[0]}{user?.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-gray-600 text-sm">{greeting}</p>
+              <h1 className="text-gray-900 font-bold text-lg">
+                {user?.firstName} {user?.lastName}
+              </h1>
             </div>
+          </div>
+          <div className="flex gap-2">
             <motion.button
               whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-full bg-white/10 backdrop-blur"
+              className="p-2 rounded-full glass-button"
             >
-              <Bell className="w-5 h-5 text-white" />
+              <Search className="w-5 h-5 text-gray-700" />
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              className="p-2 rounded-full glass-button relative"
+            >
+              <Bell className="w-5 h-5 text-gray-700" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </motion.button>
           </div>
-        </motion.header>
+        </div>
+      </motion.header>
 
-        {/* Main Content */}
-        <div className="mobile-content">
-          {/* Stats Overview */}
-          <motion.div 
-            className="grid grid-cols-2 gap-4 mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
+      {/* Main Content */}
+      <div className="mobile-scroll px-5 py-4 pb-24">
+        {/* Stats Overview */}
+        <motion.div 
+          className="grid grid-cols-2 gap-4 mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
             {/* Streak Card */}
             <motion.div 
               className="glass-card p-4"
@@ -284,7 +288,7 @@ export default function StudentDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Link href="/sessions">
+            <Link href="/student/sessions">
               <motion.div 
                 className="glass-card p-4 text-center"
                 whileTap={{ scale: 0.95 }}
@@ -294,7 +298,7 @@ export default function StudentDashboard() {
               </motion.div>
             </Link>
             
-            <Link href="/homework">
+            <Link href="/student/homework">
               <motion.div 
                 className="glass-card p-4 text-center"
                 whileTap={{ scale: 0.95 }}
@@ -304,7 +308,7 @@ export default function StudentDashboard() {
               </motion.div>
             </Link>
             
-            <Link href="/ai-practice">
+            <Link href="/student/AIConversation">
               <motion.div 
                 className="glass-card p-4 text-center"
                 whileTap={{ scale: 0.95 }}
@@ -449,18 +453,17 @@ export default function StudentDashboard() {
               </Badge>
             </div>
           </motion.div>
-        </div>
       </div>
 
       {/* Floating Action Button */}
       <motion.button
-        className="fab-button"
+        className="fab"
         whileTap={{ scale: 0.9 }}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.8 }}
       >
-        <Plus className="w-6 h-6" />
+        <Plus className="w-6 h-6 text-white" />
       </motion.button>
 
       {/* Mobile Bottom Navigation */}
