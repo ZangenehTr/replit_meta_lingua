@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/hooks/use-language";
+import { useAuth } from "@/hooks/use-auth";
+import CoursesMobile from "./courses-mobile";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +35,13 @@ interface Course {
 }
 
 export default function Courses() {
+  const { user } = useAuth();
+  
+  // If user is a student, show mobile UI
+  if (user?.role === 'Student') {
+    return <CoursesMobile />;
+  }
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [languageFilter, setLanguageFilter] = useState("all");
   const [levelFilter, setLevelFilter] = useState("all");

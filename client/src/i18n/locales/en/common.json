@@ -1,4 +1,8 @@
 {
+  "home": "Home",
+  "profile": "Profile",
+  "viewAll": "View All",
+  "all": "All",
   "timeframes": {
     "lastDays": "Last 30 days",
     "thisWeek": "This week",

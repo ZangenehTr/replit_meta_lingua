@@ -3764,11 +3764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(homework);
   });
 
-  // Tutors endpoints
-  app.get("/api/tutors", authenticateToken, async (req: any, res) => {
-    const tutors = await storage.getTutors();
-    res.json(tutors);
-  });
+  // Tutors endpoints - Note: main /api/tutors endpoint is handled separately above with enhanced data
 
   app.get("/api/tutors/featured", authenticateToken, async (req: any, res) => {
     const tutors = await storage.getFeaturedTutors();
@@ -15922,6 +15918,70 @@ Meta Lingua Academy`;
     } catch (error) {
       console.error('Error fetching skill progression:', error);
       res.status(500).json({ message: "Failed to fetch skill progression" });
+    }
+  });
+  
+  // Tutors endpoint - for both general access and student-specific
+  app.get("/api/tutors", async (req: any, res) => {
+    try {
+      // Get all teachers/tutors from the database
+      const tutors = await storage.getTutors();
+      
+      // Transform the data to match the expected format
+      const tutorData = tutors.map(tutor => ({
+        id: tutor.id,
+        firstName: tutor.firstName || 'Teacher',
+        lastName: tutor.lastName || '',
+        email: tutor.email,
+        specialization: tutor.specialization || 'Language Teaching',
+        experience: tutor.experience || 5,
+        hourlyRate: tutor.hourlyRate || 150000,
+        rating: parseFloat(tutor.rating || '4.5'),
+        totalSessions: tutor.totalSessions || 0,
+        languages: ['English', 'Persian', 'Arabic'],
+        availability: 'Available',
+        profileImage: tutor.profileImage || '',
+        bio: tutor.bio || 'Experienced language teacher specializing in personalized learning.',
+        isOnline: Math.random() > 0.5,
+        isFavorite: false
+      }));
+      
+      res.json(tutorData);
+    } catch (error) {
+      console.error('Error fetching tutors:', error);
+      res.status(500).json({ message: "Failed to fetch tutors" });
+    }
+  });
+  
+  // Student tutors endpoint
+  app.get("/api/student/tutors", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      // Get all teachers/tutors from the database
+      const tutors = await storage.getTeachers();
+      
+      // Transform the data to match the expected format
+      const tutorData = tutors.map(tutor => ({
+        id: tutor.id,
+        firstName: tutor.firstName || 'Teacher',
+        lastName: tutor.lastName || '',
+        email: tutor.email,
+        specialization: tutor.specialization || 'Language Teaching',
+        experience: tutor.experience || 5,
+        hourlyRate: tutor.hourlyRate || 150000,
+        rating: parseFloat(tutor.rating || '4.5'),
+        totalSessions: tutor.totalSessions || 0,
+        languages: ['English', 'Persian', 'Arabic'],
+        availability: 'Available',
+        profileImage: tutor.profileImage || '',
+        bio: tutor.bio || 'Experienced language teacher specializing in personalized learning.',
+        isOnline: Math.random() > 0.5,
+        isFavorite: false
+      }));
+      
+      res.json(tutorData);
+    } catch (error) {
+      console.error('Error fetching tutors:', error);
+      res.status(500).json({ message: "Failed to fetch tutors" });
     }
   });
   
