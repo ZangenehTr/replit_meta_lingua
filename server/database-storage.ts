@@ -2332,34 +2332,89 @@ export class DatabaseStorage implements IStorage {
   // Student Dashboard Stats
   async getStudentDashboardStats(studentId: number) {
     try {
-      // Create simplified stats for testing
+      // Get upcoming sessions
+      const upcomingSessions = await this.getUserSessions(studentId);
+      const now = new Date();
+      
+      // Format upcoming classes - include all scheduled sessions for now
+      const upcomingClasses = upcomingSessions
+        .filter(session => session.status === 'scheduled')
+        .slice(0, 3)
+        .map(session => {
+          const sessionDate = new Date(session.scheduledAt);
+          const isValidDate = !isNaN(sessionDate.getTime());
+          
+          // Format the time properly, handling past dates gracefully
+          let timeStr = 'No time set';
+          if (isValidDate) {
+            if (sessionDate > now) {
+              // Future session - show date and time
+              timeStr = `${sessionDate.toLocaleDateString()} at ${sessionDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+            } else {
+              // Past session - show as past
+              timeStr = `Past session - ${sessionDate.toLocaleDateString()}`;
+            }
+          }
+          
+          return {
+            id: session.id,
+            title: session.title || 'Language Session',
+            teacher: session.tutorName || 'Instructor',
+            time: timeStr,
+            type: 'online'
+          };
+        });
+      
+      // Get assignments (placeholder data for now)
+      const assignments = [
+        {
+          id: 1,
+          title: 'Complete Grammar Exercise',
+          dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          status: 'pending',
+          grade: null
+        },
+        {
+          id: 2,
+          title: 'Vocabulary Quiz',
+          dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          status: 'pending',
+          grade: null
+        }
+      ];
+      
+      // Get user stats
+      const user = await this.getUser(studentId);
+      const userProfile = await this.getUserProfile(studentId);
+      
       return {
         totalCourses: 4,
-        completedLessons: 2,
-        streakDays: 7,
-        totalXP: 1250,
-        currentLevel: 3,
+        completedLessons: user?.totalLessons || 0,
+        totalLessons: 20,
+        streakDays: user?.streakDays || 0,
+        totalXp: user?.totalCredits || 0,
+        xp: user?.totalCredits || 0,
+        currentLevel: user?.level || 1,
+        nextLevelXp: (user?.level || 1) * 1000,
+        streak: user?.streakDays || 0,
+        weeklyGoal: userProfile?.weeklyStudyHours || 10,
+        weeklyProgress: Math.min(100, Math.round((user?.totalLessons || 0) / 5 * 100)),
         achievements: [],
-        upcomingSessions: [
-          {
-            id: 17,
-            title: 'Advanced Persian Conversation',
-            scheduledAt: '2025-07-20T16:00:00',
-            duration: 90
-          }
-        ],
+        upcomingClasses,
+        assignments,
+        upcomingSessions: upcomingSessions.slice(0, 3),
         recentActivities: [
           {
             id: 15,
             type: 'lesson',
-            title: 'Persian Grammar Fundamentals',
-            completedAt: '2025-07-10T11:30:00'
+            title: 'Language Practice Session',
+            completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
           },
           {
             id: 16,
             type: 'lesson', 
             title: 'Vocabulary Building Session',
-            completedAt: '2025-07-12T15:00:00'
+            completedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
           }
         ]
       };
