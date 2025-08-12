@@ -54,6 +54,11 @@ import enCoursePlayer from './locales/en/coursePlayer.json';
 import faCoursePlayer from './locales/fa/coursePlayer.json';
 import arCoursePlayer from './locales/ar/coursePlayer.json';
 
+// Import courses namespace
+import enCourses from './locales/en/courses.json';
+import faCourses from './locales/fa/courses.json';
+import arCourses from './locales/ar/courses.json';
+
 // Language detection options
 const detectionOptions = {
   order: ['localStorage', 'navigator', 'htmlTag'],
@@ -92,6 +97,7 @@ i18n
         auth: enAuth,
         callern: enCallern,
         coursePlayer: enCoursePlayer,
+        courses: enCourses,
       },
       fa: {
         common: faCommon,
@@ -107,6 +113,7 @@ i18n
         auth: faAuth,
         callern: faCallern,
         coursePlayer: faCoursePlayer,
+        courses: faCourses,
       },
       ar: {
         common: arCommon,
@@ -122,6 +129,7 @@ i18n
         auth: arAuth,
         callern: arCallern,
         coursePlayer: arCoursePlayer,
+        courses: arCourses,
       },
     },
     

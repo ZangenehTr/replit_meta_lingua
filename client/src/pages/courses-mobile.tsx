@@ -134,7 +134,7 @@ export default function CoursesCatalogMobile() {
     <MobileLayout
       title={t('courses:catalog')}
       showBack={true}
-      gradient="ocean"
+      gradient="cool"
     >
       {/* Hero Section */}
       <motion.div

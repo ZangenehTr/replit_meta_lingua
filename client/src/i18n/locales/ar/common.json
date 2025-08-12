@@ -1,4 +1,13 @@
 {
+  "student": {
+    "navigation": {
+      "home": "الرئيسية",
+      "courses": "الدورات",
+      "callern": "كالرن",
+      "messages": "الرسائل",
+      "profile": "الملف الشخصي"
+    }
+  },
   "navigation": {
     "dashboard": "لوحة التحكم",
     "students": "الطلاب",
