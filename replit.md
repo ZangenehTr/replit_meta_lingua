@@ -8,6 +8,7 @@ Preferred communication style: Simple, everyday language.
 Work sessions: User prefers to have work logged so they can resume from where we left off.
 Critical requirement: Self-hosting in Iran with zero external dependencies. Must follow check-first protocol.
 Database strategy: Use Replit/Neon for development only, migrate to self-hosted PostgreSQL for production in Iran.
+Code quality: Always avoid duplications - no duplicate code, methods, or logic. Prefer composition and reuse over duplication.
 Recent session (2025-01-12):
 - **Session Updates:**
   - Implemented real activity tracking system to replace all mock data

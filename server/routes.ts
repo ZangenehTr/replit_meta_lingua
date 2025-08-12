@@ -2581,7 +2581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const weeklyData = await activityTracker.getWeeklyProgress(userId);
       
       // Get user's actual data from database
-      const user = await storage.getUserById(userId);
+      const user = await storage.getUser(userId);
       const profile = await storage.getUserProfile(userId);
       
       // Get real skill assessments
@@ -2660,7 +2660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Fallback to basic real data if activity tracker fails
       try {
-        const user = await storage.getUserById(req.user.id);
+        const user = await storage.getUser(req.user.id);
         res.json({
           level: 1,
           totalXp: user?.totalCredits || 0,
