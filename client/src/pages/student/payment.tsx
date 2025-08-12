@@ -1,482 +1,655 @@
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { CreditCard, Wallet, Plus, ArrowUpRight, ArrowDownLeft, Gift, Star, Crown, Shield, Trophy } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
-import { format } from "date-fns";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
+import { 
+  Wallet,
+  CreditCard,
+  TrendingUp,
+  TrendingDown,
+  Plus,
+  History,
+  ChevronRight,
+  Filter,
+  Calendar,
+  Package,
+  ShoppingCart,
+  Receipt,
+  CircleDollarSign,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  X,
+  Download,
+  Send
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
-interface WalletTransaction {
+interface Transaction {
   id: number;
+  type: 'credit' | 'debit' | 'refund';
   amount: number;
-  currency: string;
-  type: 'credit' | 'debit';
   description: string;
-  transactionDate: Date;
-  status: string;
-  paymentMethod?: string;
-  reference?: string;
+  timestamp: string;
+  status: 'completed' | 'pending' | 'failed';
+  referenceNumber?: string;
+  method?: string;
 }
 
-interface MembershipTier {
-  id: string;
+interface PaymentMethod {
+  id: number;
+  type: 'card' | 'wallet' | 'bank';
+  last4?: string;
+  bankName?: string;
+  isDefault: boolean;
+}
+
+interface SessionPackage {
+  id: number;
   name: string;
-  description: string;
+  sessions: number;
   price: number;
-  currency: string;
-  benefits: string[];
-  discount: number;
-  icon: any;
-  color: string;
-  isPopular?: boolean;
+  discount?: number;
+  validityDays: number;
+  description: string;
+  popular?: boolean;
 }
 
-export default function PaymentPage() {
-  const { t } = useTranslation(['student', 'common']);
+export default function StudentPayment() {
   const { user } = useAuth();
+  const { t } = useTranslation();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [topupAmount, setTopupAmount] = useState("");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("shetab");
+  const [selectedTab, setSelectedTab] = useState<'wallet' | 'packages' | 'history'>('wallet');
+  const [selectedPackage, setSelectedPackage] = useState<SessionPackage | null>(null);
+  const [topUpAmount, setTopUpAmount] = useState('');
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
 
-  const { data: walletBalance } = useQuery({
-    queryKey: ['/api/students/wallet/balance'],
-    enabled: !!user
+  // Fetch wallet info
+  const { data: walletInfo } = useQuery({
+    queryKey: ['/api/student/wallet'],
+    queryFn: async () => {
+      const response = await fetch('/api/student/wallet', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) {
+        return { balance: 0, memberTier: 'Bronze', totalSpent: 0 };
+      }
+      return response.json();
+    }
   });
 
-  const { data: transactions } = useQuery({
-    queryKey: ['/api/students/wallet/transactions'],
-    enabled: !!user
+  // Fetch transactions
+  const { data: transactions = [] } = useQuery<Transaction[]>({
+    queryKey: ['/api/student/transactions'],
+    queryFn: async () => {
+      const response = await fetch('/api/student/transactions', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) return [];
+      return response.json();
+    }
   });
 
-  const { data: membershipInfo } = useQuery({
-    queryKey: ['/api/students/membership'],
-    enabled: !!user
+  // Fetch session packages
+  const { data: packages = [] } = useQuery<SessionPackage[]>({
+    queryKey: ['/api/student/packages'],
+    queryFn: async () => {
+      const response = await fetch('/api/student/packages', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) return [];
+      return response.json();
+    }
   });
 
-  const topupMutation = useMutation({
-    mutationFn: async ({ amount, paymentMethod }: { amount: number; paymentMethod: string }) => {
-      const response = await fetch('/api/students/wallet/topup', {
+  // Top up wallet mutation
+  const topUpWalletMutation = useMutation({
+    mutationFn: async (amount: number) => {
+      const response = await fetch('/api/student/wallet/topup', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
-        body: JSON.stringify({ amount, paymentMethod })
+        body: JSON.stringify({ amount })
       });
-      
-      if (!response.ok) throw new Error('Topup failed');
+      if (!response.ok) throw new Error('Failed to top up wallet');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/students/wallet/balance'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/students/wallet/transactions'] });
-      setTopupAmount("");
+      toast({
+        title: t('student:topUpSuccess', 'Top Up Successful'),
+        description: t('student:walletUpdated', 'Your wallet has been updated'),
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/wallet'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/transactions'] });
+      setShowTopUpModal(false);
+      setTopUpAmount('');
+    },
+    onError: () => {
+      toast({
+        title: t('common:error', 'Error'),
+        description: t('student:topUpError', 'Failed to top up wallet'),
+        variant: 'destructive'
+      });
     }
   });
 
-  const upgradeMembershipMutation = useMutation({
-    mutationFn: async (tierId: string) => {
-      const response = await fetch('/api/students/membership/upgrade', {
+  // Purchase package mutation
+  const purchasePackageMutation = useMutation({
+    mutationFn: async (packageId: number) => {
+      const response = await fetch(`/api/student/packages/${packageId}/purchase`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ tierId })
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
       });
-      
-      if (!response.ok) throw new Error('Membership upgrade failed');
+      if (!response.ok) throw new Error('Failed to purchase package');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/students/membership'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/students/wallet/balance'] });
+      toast({
+        title: t('student:purchaseSuccess', 'Purchase Successful'),
+        description: t('student:packageActivated', 'Your package has been activated'),
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/wallet'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/transactions'] });
+      setSelectedPackage(null);
+    },
+    onError: () => {
+      toast({
+        title: t('common:error', 'Error'),
+        description: t('student:purchaseError', 'Failed to purchase package'),
+        variant: 'destructive'
+      });
     }
   });
 
-  const membershipTiers: MembershipTier[] = [
-    {
-      id: 'bronze',
-      name: 'Bronze',
-      description: 'Perfect for beginners',
-      price: 50000,
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fa-IR', {
+      style: 'currency',
       currency: 'IRR',
-      benefits: [
-        'Access to basic courses',
-        'Community forum access',
-        'Mobile app access',
-        '5% session discount'
-      ],
-      discount: 5,
-      icon: Shield,
-      color: 'text-amber-600'
-    },
-    {
-      id: 'silver',
-      name: 'Silver',
-      description: 'Most popular choice',
-      price: 120000,
-      currency: 'IRR',
-      benefits: [
-        'All Bronze benefits',
-        'Priority tutor booking',
-        'Unlimited practice sessions',
-        '10% session discount',
-        'Monthly progress reports'
-      ],
-      discount: 10,
-      icon: Star,
-      color: 'text-gray-500',
-      isPopular: true
-    },
-    {
-      id: 'gold',
-      name: 'Gold',
-      description: 'Advanced learners',
-      price: 200000,
-      currency: 'IRR',
-      benefits: [
-        'All Silver benefits',
-        'Personal learning coach',
-        'Advanced analytics',
-        '15% session discount',
-        'Certificate programs',
-        'Early access to new features'
-      ],
-      discount: 15,
-      icon: Crown,
-      color: 'text-yellow-500'
-    },
-    {
-      id: 'diamond',
-      name: 'Diamond',
-      description: 'Ultimate experience',
-      price: 350000,
-      currency: 'IRR',
-      benefits: [
-        'All Gold benefits',
-        'One-on-one mentorship',
-        'Custom curriculum',
-        '25% session discount',
-        'VIP support',
-        'Exclusive events access',
-        'Cultural immersion programs'
-      ],
-      discount: 25,
-      icon: Trophy,
-      color: 'text-blue-500'
-    }
-  ];
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
 
-  const handleTopup = () => {
-    const amount = parseInt(topupAmount);
-    if (amount && amount > 0) {
-      topupMutation.mutate({ amount, paymentMethod: selectedPaymentMethod });
+  const formatDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case 'credit': return <TrendingUp className="w-5 h-5 text-green-400" />;
+      case 'debit': return <TrendingDown className="w-5 h-5 text-red-400" />;
+      case 'refund': return <CircleDollarSign className="w-5 h-5 text-blue-400" />;
+      default: return <Receipt className="w-5 h-5 text-gray-400" />;
     }
   };
 
-  const quickTopupAmounts = [50000, 100000, 200000, 500000];
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {t('student:payment.title')}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            {t('student:payment.subtitle')}
-          </p>
-        </div>
+    <div className="mobile-app-container min-h-screen">
+      {/* Animated Gradient Background */}
+      <div className="absolute inset-0 animated-gradient-bg opacity-50" />
+      
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Mobile Header */}
+        <motion.header 
+          className="mobile-header"
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-white font-bold text-xl">{t('student:payment', 'Payment')}</h1>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              className="px-4 py-2 bg-white/20 backdrop-blur rounded-lg text-white text-sm font-medium flex items-center gap-2"
+              onClick={() => setShowTopUpModal(true)}
+            >
+              <Plus className="w-4 h-4" />
+              {t('student:topUp', 'Top Up')}
+            </motion.button>
+          </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Wallet Balance */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wallet className="h-5 w-5" />
-                Wallet Balance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="text-center p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg">
-                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    {walletBalance?.balance?.toLocaleString() || '0'} IRR
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm">Available Credits</p>
+          {/* Wallet Balance Card */}
+          <motion.div 
+            className="glass-card p-5"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-gradient-to-br from-green-400 to-blue-500">
+                  <Wallet className="w-6 h-6 text-white" />
                 </div>
-
-                {/* Quick Topup */}
                 <div>
-                  <h3 className="font-semibold mb-4">Add Credits</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                    {quickTopupAmounts.map((amount) => (
-                      <Button
-                        key={amount}
-                        variant="outline"
-                        onClick={() => setTopupAmount(amount.toString())}
-                        className="h-12"
-                      >
-                        {amount.toLocaleString()} IRR
-                      </Button>
-                    ))}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Custom amount"
-                      value={topupAmount}
-                      onChange={(e) => setTopupAmount(e.target.value)}
-                      type="number"
-                    />
-                    <Select value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="shetab">Shetab</SelectItem>
-                        <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                        <SelectItem value="credit_card">Credit Card</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button 
-                      onClick={handleTopup}
-                      disabled={!topupAmount || topupMutation.isPending}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Credits
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Current Membership */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Crown className="h-5 w-5" />
-                Membership
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="text-center p-4 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-lg">
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                    {membershipInfo?.currentTier || 'Free'}
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Current Plan
+                  <p className="text-white/70 text-sm">{t('student:walletBalance', 'Wallet Balance')}</p>
+                  <p className="text-white text-2xl font-bold">
+                    {formatCurrency(walletInfo?.balance || 0)}
                   </p>
-                  {membershipInfo?.discount && (
-                    <Badge variant="secondary" className="mt-2">
-                      {membershipInfo.discount}% Discount
-                    </Badge>
-                  )}
                 </div>
-
-                {membershipInfo?.currentTier !== 'diamond' && (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button className="w-full">
-                        <ArrowUpRight className="h-4 w-4 mr-2" />
-                        Upgrade Plan
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
-                      <DialogHeader>
-                        <DialogTitle>Choose Your Membership Plan</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {membershipTiers.map((tier) => {
-                          const IconComponent = tier.icon;
-                          return (
-                            <Card 
-                              key={tier.id} 
-                              className={`relative ${tier.isPopular ? 'border-primary ring-2 ring-primary/20' : ''}`}
-                            >
-                              {tier.isPopular && (
-                                <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                                  Most Popular
-                                </Badge>
-                              )}
-                              <CardHeader>
-                                <div className="flex items-center gap-2">
-                                  <IconComponent className={`h-6 w-6 ${tier.color}`} />
-                                  <CardTitle className="text-lg">{tier.name}</CardTitle>
-                                </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">
-                                  {tier.description}
-                                </p>
-                                <div className="text-2xl font-bold">
-                                  {tier.price.toLocaleString()} IRR
-                                  <span className="text-sm font-normal text-gray-500">/month</span>
-                                </div>
-                              </CardHeader>
-                              <CardContent>
-                                <ul className="space-y-2 mb-4">
-                                  {tier.benefits.map((benefit, index) => (
-                                    <li key={index} className="flex items-center gap-2 text-sm">
-                                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                                      {benefit}
-                                    </li>
-                                  ))}
-                                </ul>
-                                <Button 
-                                  className="w-full"
-                                  onClick={() => upgradeMembershipMutation.mutate(tier.id)}
-                                  disabled={upgradeMembershipMutation.isPending}
-                                  variant={tier.isPopular ? 'default' : 'outline'}
-                                >
-                                  {upgradeMembershipMutation.isPending ? 'Processing...' : 'Choose Plan'}
-                                </Button>
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
-
-                {membershipInfo?.nextBillingDate && (
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
-                    Next billing: {format(new Date(membershipInfo.nextBillingDate), 'MMM d, yyyy')}
-                  </div>
-                )}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <Badge className="bg-white/20 text-white border-white/30">
+                {walletInfo?.memberTier || 'Bronze'}
+              </Badge>
+            </div>
+            
+            <div className="flex justify-between items-center pt-3 border-t border-white/20">
+              <span className="text-white/60 text-sm">{t('student:totalSpent', 'Total Spent')}</span>
+              <span className="text-white font-medium">
+                {formatCurrency(walletInfo?.totalSpent || 0)}
+              </span>
+            </div>
+          </motion.div>
 
-        {/* Transaction History */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Transaction History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList>
-                <TabsTrigger value="all">All Transactions</TabsTrigger>
-                <TabsTrigger value="topups">Top-ups</TabsTrigger>
-                <TabsTrigger value="payments">Payments</TabsTrigger>
-                <TabsTrigger value="refunds">Refunds</TabsTrigger>
-              </TabsList>
+          {/* Tab Selector */}
+          <div className="flex gap-2 mt-4">
+            {[
+              { id: 'wallet', label: t('student:wallet', 'Wallet'), icon: Wallet },
+              { id: 'packages', label: t('student:packages', 'Packages'), icon: Package },
+              { id: 'history', label: t('student:history', 'History'), icon: History }
+            ].map((tab) => (
+              <motion.button
+                key={tab.id}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedTab(tab.id as any)}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  selectedTab === tab.id 
+                    ? 'bg-white text-purple-600' 
+                    : 'bg-white/10 text-white/70 backdrop-blur'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </motion.button>
+            ))}
+          </div>
+        </motion.header>
 
-              <TabsContent value="all" className="mt-4">
-                <div className="space-y-2">
-                  {transactions && transactions.length > 0 ? (
-                    transactions.map((transaction: WalletTransaction) => (
-                      <div
-                        key={transaction.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
-                      >
+        {/* Main Content */}
+        <div className="mobile-content">
+          {/* Wallet Tab */}
+          {selectedTab === 'wallet' && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-4 mb-20"
+            >
+              {/* Quick Top Up Options */}
+              <div>
+                <h2 className="text-white/90 font-semibold mb-3">{t('student:quickTopUp', 'Quick Top Up')}</h2>
+                <div className="grid grid-cols-3 gap-3">
+                  {[100000, 500000, 1000000].map((amount) => (
+                    <motion.button
+                      key={amount}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setTopUpAmount(amount.toString());
+                        setShowTopUpModal(true);
+                      }}
+                      className="glass-card p-3 text-center"
+                    >
+                      <CreditCard className="w-6 h-6 text-white/70 mx-auto mb-2" />
+                      <p className="text-white font-medium text-sm">
+                        {formatCurrency(amount)}
+                      </p>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent Transactions */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <h2 className="text-white/90 font-semibold">{t('student:recentTransactions', 'Recent Transactions')}</h2>
+                  <button
+                    onClick={() => setSelectedTab('history')}
+                    className="text-white/60 text-sm flex items-center gap-1"
+                  >
+                    {t('common:viewAll', 'View All')} <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  {transactions.slice(0, 5).map((transaction, index) => (
+                    <motion.div
+                      key={transaction.id}
+                      className="glass-card p-4"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                    >
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${
-                            transaction.type === 'credit' 
-                              ? 'bg-green-100 text-green-600' 
-                              : 'bg-red-100 text-red-600'
-                          }`}>
-                            {transaction.type === 'credit' ? (
-                              <ArrowDownLeft className="h-4 w-4" />
-                            ) : (
-                              <ArrowUpRight className="h-4 w-4" />
-                            )}
-                          </div>
+                          {getTransactionIcon(transaction.type)}
                           <div>
-                            <p className="font-medium">{transaction.description}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">
-                              {format(new Date(transaction.transactionDate), 'MMM d, yyyy • h:mm a')}
+                            <p className="text-white font-medium text-sm">
+                              {transaction.description}
                             </p>
-                            {transaction.paymentMethod && (
-                              <p className="text-xs text-gray-500">
-                                via {transaction.paymentMethod}
-                              </p>
-                            )}
+                            <p className="text-white/50 text-xs">
+                              {formatDate(transaction.timestamp)}
+                            </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className={`font-semibold ${
-                            transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                            transaction.type === 'credit' ? 'text-green-400' : 
+                            transaction.type === 'debit' ? 'text-red-400' : 'text-blue-400'
                           }`}>
-                            {transaction.type === 'credit' ? '+' : '-'}
-                            {transaction.amount.toLocaleString()} {transaction.currency}
+                            {transaction.type === 'credit' ? '+' : '-'}{formatCurrency(transaction.amount)}
                           </p>
-                          <Badge variant={
-                            transaction.status === 'completed' ? 'outline' : 
-                            transaction.status === 'pending' ? 'secondary' : 'destructive'
-                          }>
+                          <Badge className={`text-xs ${
+                            transaction.status === 'completed' ? 'bg-green-500/20 text-green-300' :
+                            transaction.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' :
+                            'bg-red-500/20 text-red-300'
+                          }`}>
                             {transaction.status}
                           </Badge>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8">
-                      <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No transactions yet</p>
-                      <p className="text-sm text-gray-400">
-                        Your transaction history will appear here
-                      </p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Packages Tab */}
+          {selectedTab === 'packages' && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-4 mb-20"
+            >
+              <h2 className="text-white/90 font-semibold">{t('student:sessionPackages', 'Session Packages')}</h2>
+              
+              <div className="grid grid-cols-1 gap-4">
+                {packages.map((pkg, index) => (
+                  <motion.div
+                    key={pkg.id}
+                    className={`glass-card p-4 cursor-pointer ${pkg.popular ? 'ring-2 ring-yellow-400' : ''}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSelectedPackage(pkg)}
+                  >
+                    {pkg.popular && (
+                      <Badge className="bg-yellow-400 text-black text-xs mb-2">
+                        {t('student:mostPopular', 'Most Popular')}
+                      </Badge>
+                    )}
+                    
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-white font-semibold text-lg">{pkg.name}</h3>
+                        <p className="text-white/60 text-sm">{pkg.description}</p>
+                      </div>
+                      <ShoppingCart className="w-5 h-5 text-white/50" />
                     </div>
+                    
+                    <div className="flex items-baseline gap-2 mb-3">
+                      <span className="text-white text-2xl font-bold">
+                        {formatCurrency(pkg.price)}
+                      </span>
+                      {pkg.discount && (
+                        <span className="text-white/50 line-through text-sm">
+                          {formatCurrency(pkg.price * (1 + pkg.discount / 100))}
+                        </span>
+                      )}
+                      {pkg.discount && (
+                        <Badge className="bg-red-500/20 text-red-300 text-xs">
+                          {pkg.discount}% OFF
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-white/70 text-sm">
+                      <span>{pkg.sessions} {t('student:sessions', 'Sessions')}</span>
+                      <span>{pkg.validityDays} {t('student:days', 'Days')} {t('student:validity', 'Validity')}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* History Tab */}
+          {selectedTab === 'history' && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-4 mb-20"
+            >
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-white/90 font-semibold">{t('student:transactionHistory', 'Transaction History')}</h2>
+                <button className="text-white/60">
+                  <Filter className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                {transactions.map((transaction, index) => (
+                  <motion.div
+                    key={transaction.id}
+                    className="glass-card p-4"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        {getTransactionIcon(transaction.type)}
+                        <div className="flex-1">
+                          <p className="text-white font-medium">
+                            {transaction.description}
+                          </p>
+                          <p className="text-white/50 text-xs mt-1">
+                            {formatDate(transaction.timestamp)}
+                          </p>
+                          {transaction.referenceNumber && (
+                            <p className="text-white/40 text-xs mt-1">
+                              Ref: {transaction.referenceNumber}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-semibold ${
+                          transaction.type === 'credit' ? 'text-green-400' : 
+                          transaction.type === 'debit' ? 'text-red-400' : 'text-blue-400'
+                        }`}>
+                          {transaction.type === 'credit' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                        </p>
+                        <Badge className={`text-xs mt-1 ${
+                          transaction.status === 'completed' ? 'bg-green-500/20 text-green-300' :
+                          transaction.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' :
+                          'bg-red-500/20 text-red-300'
+                        }`}>
+                          {transaction.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      {/* Top Up Modal */}
+      <AnimatePresence>
+        {showTopUpModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowTopUpModal(false)}
+          >
+            <motion.div
+              className="bg-white rounded-t-3xl w-full p-6"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">{t('student:topUpWallet', 'Top Up Wallet')}</h2>
+                <button
+                  onClick={() => setShowTopUpModal(false)}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-gray-600 mb-2 block">
+                    {t('student:amount', 'Amount')}
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder={t('student:enterAmount', 'Enter amount')}
+                    value={topUpAmount}
+                    onChange={(e) => setTopUpAmount(e.target.value)}
+                    className="text-lg"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {[100000, 500000, 1000000].map((amount) => (
+                    <button
+                      key={amount}
+                      onClick={() => setTopUpAmount(amount.toString())}
+                      className="py-2 px-3 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200"
+                    >
+                      {formatCurrency(amount)}
+                    </button>
+                  ))}
+                </div>
+
+                <Button
+                  onClick={() => topUpWalletMutation.mutate(Number(topUpAmount))}
+                  disabled={!topUpAmount || topUpWalletMutation.isPending}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                >
+                  {topUpWalletMutation.isPending 
+                    ? t('student:processing', 'Processing...') 
+                    : t('student:confirmTopUp', 'Confirm Top Up')}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Package Purchase Modal */}
+      <AnimatePresence>
+        {selectedPackage && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedPackage(null)}
+          >
+            <motion.div
+              className="bg-white rounded-t-3xl w-full p-6"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">{t('student:confirmPurchase', 'Confirm Purchase')}</h2>
+                <button
+                  onClick={() => setSelectedPackage(null)}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-medium mb-2">{selectedPackage.name}</h3>
+                  <p className="text-sm text-gray-600 mb-3">{selectedPackage.description}</p>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">{t('student:sessions', 'Sessions')}</span>
+                      <span className="font-medium">{selectedPackage.sessions}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">{t('student:validity', 'Validity')}</span>
+                      <span className="font-medium">{selectedPackage.validityDays} {t('student:days', 'Days')}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-semibold pt-2 border-t">
+                      <span>{t('student:total', 'Total')}</span>
+                      <span className="text-purple-600">{formatCurrency(selectedPackage.price)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <div className="flex items-center gap-2 text-blue-800">
+                    <Wallet className="w-5 h-5" />
+                    <span className="text-sm">
+                      {t('student:currentBalance', 'Current Balance')}: {formatCurrency(walletInfo?.balance || 0)}
+                    </span>
+                  </div>
+                  {(walletInfo?.balance || 0) < selectedPackage.price && (
+                    <p className="text-red-600 text-xs mt-2">
+                      {t('student:insufficientBalance', 'Insufficient balance. Please top up your wallet.')}
+                    </p>
                   )}
                 </div>
-              </TabsContent>
 
-              <TabsContent value="topups">
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Top-up transactions will appear here</p>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="payments">
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Payment transactions will appear here</p>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="refunds">
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Refund transactions will appear here</p>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        {/* Referral Program */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Gift className="h-5 w-5" />
-              Refer Friends & Earn
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium mb-1">Invite friends and earn 10,000 IRR credits</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Both you and your friend get credits when they complete their first session
-                </p>
+                <Button
+                  onClick={() => purchasePackageMutation.mutate(selectedPackage.id)}
+                  disabled={purchasePackageMutation.isPending || (walletInfo?.balance || 0) < selectedPackage.price}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                >
+                  {purchasePackageMutation.isPending 
+                    ? t('student:processing', 'Processing...') 
+                    : t('student:confirmPurchase', 'Confirm Purchase')}
+                </Button>
               </div>
-              <Button onClick={() => window.location.href = '/referrals'}>
-                Share Referral Link
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }

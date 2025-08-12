@@ -1,360 +1,516 @@
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Video, Calendar, Clock, User, MapPin, ExternalLink, Phone, MessageSquare } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
-import { format } from "date-fns";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
+import { 
+  Calendar,
+  Clock,
+  Video,
+  Users,
+  User,
+  Play,
+  ChevronRight,
+  Filter,
+  Search,
+  MapPin,
+  Globe,
+  Headphones,
+  BookOpen,
+  X,
+  Info,
+  CheckCircle,
+  AlertCircle
+} from "lucide-react";
+import { Link } from "wouter";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface Session {
   id: number;
   title: string;
-  description: string;
-  scheduledAt: Date;
+  courseName: string;
+  tutorFirstName: string;
+  tutorLastName: string;
+  tutorAvatar?: string;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
   duration: number;
-  status: string;
-  sessionUrl: string;
-  tutorId: number;
-  courseId: number;
-  notes: string;
-  tutor: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    profileImage?: string;
-  };
-  course: {
-    title: string;
-    level: string;
-  };
+  type: 'group' | 'individual';
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  location?: string;
+  sessionUrl?: string;
+  canJoin: boolean;
+  participants?: number;
+  maxParticipants?: number;
+  description?: string;
+  language: string;
+  level: string;
 }
 
-export default function SessionsPage() {
-  const { t } = useTranslation(['student', 'common']);
+export default function StudentSessions() {
   const { user } = useAuth();
+  const { t } = useTranslation();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedTab, setSelectedTab] = useState("upcoming");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('upcoming');
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const { data: sessions, isLoading, error } = useQuery({
-    queryKey: ['/api/students/sessions'],
-    enabled: !!user
-  });
-
-  const joinSessionMutation = useMutation({
-    mutationFn: async (sessionId: number) => {
-      const response = await fetch(`/api/sessions/${sessionId}/join`, {
-        method: 'POST',
+  // Fetch sessions
+  const { data: sessions = [], isLoading } = useQuery<Session[]>({
+    queryKey: ['/api/student/sessions'],
+    queryFn: async () => {
+      const response = await fetch('/api/student/sessions', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
-      if (!response.ok) throw new Error(t('errors.failedToJoinSession'));
+      if (!response.ok) return [];
+      return response.json();
+    }
+  });
+
+  // Join session mutation
+  const joinSessionMutation = useMutation({
+    mutationFn: async (sessionId: number) => {
+      const response = await fetch(`/api/student/sessions/${sessionId}/join`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to join session');
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/students/sessions'] });
-    }
-  });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>{t('common:ui.loading')}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !sessions) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{t('errors.loadingSessions')}</p>
-          <Button onClick={() => window.location.reload()}>{t('common:ui.tryAgain')}</Button>
-        </div>
-      </div>
-    );
-  }
-
-  const now = new Date();
-  const upcomingSessions = sessions.filter((session: Session) => 
-    new Date(session.scheduledAt) > now && session.status !== 'cancelled'
-  );
-  const pastSessions = sessions.filter((session: Session) => 
-    new Date(session.scheduledAt) <= now || session.status === 'completed'
-  );
-  const todaySessions = upcomingSessions.filter((session: Session) => {
-    const sessionDate = new Date(session.scheduledAt);
-    return sessionDate.toDateString() === now.toDateString();
-  });
-
-  const handleJoinSession = (session: Session) => {
-    if (session.sessionUrl) {
-      window.open(session.sessionUrl, '_blank');
-    } else {
-      joinSessionMutation.mutate(session.id);
-    }
-  };
-
-  const getSessionStatus = (session: Session) => {
-    const sessionTime = new Date(session.scheduledAt);
-    const sessionEnd = new Date(sessionTime.getTime() + session.duration * 60000);
-    
-    if (now >= sessionTime && now <= sessionEnd) {
-      return { status: 'live', variant: 'destructive' as const };
-    } else if (now < sessionTime) {
-      const timeDiff = sessionTime.getTime() - now.getTime();
-      const minutesUntil = Math.floor(timeDiff / (1000 * 60));
-      if (minutesUntil <= 15) {
-        return { status: 'starting-soon', variant: 'default' as const };
+    onSuccess: (data) => {
+      if (data.sessionUrl) {
+        window.open(data.sessionUrl, '_blank');
       }
-      return { status: 'upcoming', variant: 'secondary' as const };
-    } else {
-      return { status: session.status, variant: 'outline' as const };
+      toast({
+        title: t('student:joiningSession', 'Joining Session'),
+        description: t('student:sessionStarting', 'The session is starting in a new window'),
+      });
+    },
+    onError: () => {
+      toast({
+        title: t('common:error', 'Error'),
+        description: t('student:joinError', 'Failed to join session'),
+        variant: 'destructive'
+      });
+    }
+  });
+
+  // Filter sessions
+  const filteredSessions = sessions.filter(session => {
+    const matchesSearch = session.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         session.courseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         `${session.tutorFirstName} ${session.tutorLastName}`.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = filterType === 'all' || session.type === filterType;
+    const matchesStatus = filterStatus === 'all' || session.status === filterStatus;
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
+  // Group sessions by date
+  const groupedSessions = filteredSessions.reduce((groups, session) => {
+    const date = new Date(session.sessionDate).toDateString();
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(session);
+    return groups;
+  }, {} as Record<string, Session[]>);
+
+  // Get session counts
+  const upcomingSessions = sessions.filter(s => s.status === 'upcoming');
+  const ongoingSessions = sessions.filter(s => s.status === 'ongoing');
+  const completedSessions = sessions.filter(s => s.status === 'completed');
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'upcoming': return 'bg-blue-400';
+      case 'ongoing': return 'bg-green-400';
+      case 'completed': return 'bg-gray-400';
+      case 'cancelled': return 'bg-red-400';
+      default: return 'bg-gray-400';
     }
   };
 
-  const SessionCard = ({ session }: { session: Session }) => {
-    const statusInfo = getSessionStatus(session);
-    
-    return (
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3">
-              <Avatar className="w-12 h-12">
-                <AvatarImage src={session.tutor.profileImage} />
-                <AvatarFallback>
-                  {session.tutor.firstName[0]}{session.tutor.lastName[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-semibold text-lg">{session.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  with {session.tutor.firstName} {session.tutor.lastName}
-                </p>
-                <p className="text-gray-500 text-sm">{session.course.title} • {session.course.level}</p>
-              </div>
-            </div>
-            <Badge variant={statusInfo.variant}>
-              {statusInfo.status === 'live' ? 'Live Now' : 
-               statusInfo.status === 'starting-soon' ? 'Starting Soon' :
-               statusInfo.status}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-              <Calendar className="h-4 w-4" />
-              <span>{format(new Date(session.scheduledAt), 'EEEE, MMMM d, yyyy')}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-              <Clock className="h-4 w-4" />
-              <span>{format(new Date(session.scheduledAt), 'h:mm a')} ({session.duration} minutes)</span>
-            </div>
-            
-            {session.description && (
-              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                {session.description}
-              </p>
-            )}
-
-            <div className="flex gap-2 pt-2">
-              {(statusInfo.status === 'live' || statusInfo.status === 'starting-soon') && (
-                <Button 
-                  onClick={() => handleJoinSession(session)}
-                  disabled={joinSessionMutation.isPending}
-                  className="flex-1"
-                >
-                  <Video className="h-4 w-4 mr-2" />
-                  {statusInfo.status === 'live' ? 'Join Now' : 'Join Session'}
-                </Button>
-              )}
-              
-              {statusInfo.status === 'upcoming' && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleJoinSession(session)}
-                  disabled={joinSessionMutation.isPending}
-                  className="flex-1"
-                >
-                  <Video className="h-4 w-4 mr-2" />
-                  Join Session
-                </Button>
-              )}
-
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Session Details</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-2">Session Information</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{session.description}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium mb-2">Tutor</h4>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={session.tutor.profileImage} />
-                          <AvatarFallback>
-                            {session.tutor.firstName[0]}{session.tutor.lastName[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm">{session.tutor.firstName} {session.tutor.lastName}</span>
-                      </div>
-                    </div>
-                    {session.notes && (
-                      <div>
-                        <h4 className="font-medium mb-2">Notes</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">{session.notes}</p>
-                      </div>
-                    )}
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={() => handleJoinSession(session)}
-                        disabled={joinSessionMutation.isPending}
-                        className="flex-1"
-                      >
-                        <Video className="h-4 w-4 mr-2" />
-                        Join Session
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <MessageSquare className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
+  const formatTime = (time: string) => {
+    return new Date(`2000-01-01T${time}`).toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {t('student:sessions.title')}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            {t('student:sessions.subtitle')}
-          </p>
+    <div className="mobile-app-container min-h-screen">
+      {/* Animated Gradient Background */}
+      <div className="absolute inset-0 animated-gradient-bg opacity-50" />
+      
+      {/* Content */}
+      <div className="relative z-10">
+        {/* Mobile Header */}
+        <motion.header 
+          className="mobile-header"
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-white font-bold text-xl">{t('student:sessions', 'Sessions')}</h1>
+            <div className="flex gap-2">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-full bg-white/10 backdrop-blur"
+              >
+                <Calendar className="w-5 h-5 text-white" />
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="p-2 rounded-full bg-white/10 backdrop-blur"
+                onClick={() => setFilterStatus(filterStatus === 'all' ? 'upcoming' : 'all')}
+              >
+                <Filter className="w-5 h-5 text-white" />
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50" />
+            <input
+              type="text"
+              placeholder={t('student:searchSessions', 'Search sessions...')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur rounded-xl text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/40"
+            />
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+            {['all', 'upcoming', 'ongoing', 'completed'].map((status) => (
+              <motion.button
+                key={status}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setFilterStatus(status)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                  filterStatus === status 
+                    ? 'bg-white text-purple-600' 
+                    : 'bg-white/10 text-white/70 backdrop-blur'
+                }`}
+              >
+                {t(`student:status.${status}`, status.charAt(0).toUpperCase() + status.slice(1))}
+              </motion.button>
+            ))}
+          </div>
+        </motion.header>
+
+        {/* Main Content */}
+        <div className="mobile-content">
+          {isLoading ? (
+            // Loading Skeleton
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="glass-card p-4">
+                  <div className="skeleton h-6 w-3/4 mb-2 rounded" />
+                  <div className="skeleton h-4 w-1/2 mb-3 rounded" />
+                  <div className="skeleton h-10 w-full rounded" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {/* Stats Overview */}
+              <motion.div 
+                className="grid grid-cols-3 gap-3 mb-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <div className="glass-card p-3 text-center">
+                  <Clock className="w-6 h-6 text-blue-300 mx-auto mb-1" />
+                  <p className="text-white text-2xl font-bold">{upcomingSessions.length}</p>
+                  <p className="text-white/70 text-xs">{t('student:upcoming', 'Upcoming')}</p>
+                </div>
+                <div className="glass-card p-3 text-center">
+                  <Play className="w-6 h-6 text-green-300 mx-auto mb-1" />
+                  <p className="text-white text-2xl font-bold">{ongoingSessions.length}</p>
+                  <p className="text-white/70 text-xs">{t('student:ongoing', 'Ongoing')}</p>
+                </div>
+                <div className="glass-card p-3 text-center">
+                  <CheckCircle className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                  <p className="text-white text-2xl font-bold">{completedSessions.length}</p>
+                  <p className="text-white/70 text-xs">{t('student:completed', 'Completed')}</p>
+                </div>
+              </motion.div>
+
+              {/* Sessions List Grouped by Date */}
+              <div className="space-y-6 mb-20">
+                {Object.keys(groupedSessions).length === 0 ? (
+                  <motion.div 
+                    className="glass-card p-8 text-center"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Calendar className="w-16 h-16 text-white/50 mx-auto mb-4" />
+                    <p className="text-white/70">{t('student:noSessions', 'No sessions found')}</p>
+                  </motion.div>
+                ) : (
+                  Object.entries(groupedSessions).map(([date, dateSessions], groupIndex) => (
+                    <motion.div
+                      key={date}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: groupIndex * 0.1 }}
+                    >
+                      <h2 className="text-white/90 font-semibold text-sm mb-3 px-2">
+                        {new Date(date).toLocaleDateString(undefined, { 
+                          weekday: 'long', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </h2>
+                      
+                      <div className="space-y-3">
+                        {dateSessions.map((session, index) => (
+                          <motion.div
+                            key={session.id}
+                            className="glass-card p-4 cursor-pointer"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setSelectedSession(session)}
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <div className={`w-2 h-2 rounded-full ${getStatusColor(session.status)}`} />
+                                  <h3 className="text-white font-semibold text-lg">{session.title}</h3>
+                                </div>
+                                <p className="text-white/60 text-sm">{session.courseName}</p>
+                              </div>
+                              {session.type === 'group' ? (
+                                <Badge className="bg-white/20 text-white border-white/30">
+                                  <Users className="w-3 h-3 mr-1" />
+                                  {t('student:group', 'Group')}
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-white/20 text-white border-white/30">
+                                  <User className="w-3 h-3 mr-1" />
+                                  {t('student:individual', '1-on-1')}
+                                </Badge>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-3 text-white/70 text-sm mb-3">
+                              <div className="flex items-center gap-1">
+                                <User className="w-4 h-4" />
+                                <span>{session.tutorFirstName} {session.tutorLastName}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                <span>{formatTime(session.startTime)} - {formatTime(session.endTime)}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Badge className="bg-white/10 text-white/70 border-white/20 text-xs">
+                                  {session.language}
+                                </Badge>
+                                <Badge className="bg-white/10 text-white/70 border-white/20 text-xs">
+                                  {session.level}
+                                </Badge>
+                              </div>
+                              
+                              {session.status === 'ongoing' && session.canJoin && (
+                                <motion.button
+                                  className="px-3 py-1 bg-green-500/80 backdrop-blur rounded-lg text-white text-sm font-medium flex items-center gap-1"
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    joinSessionMutation.mutate(session.id);
+                                  }}
+                                >
+                                  <Play className="w-3 h-3" />
+                                  {t('student:joinNow', 'Join Now')}
+                                </motion.button>
+                              )}
+                              
+                              {session.status === 'upcoming' && session.canJoin && (
+                                <span className="text-white/50 text-xs">
+                                  {t('student:startsIn', 'Starts in')} {session.duration} {t('student:minutes', 'min')}
+                                </span>
+                              )}
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
         </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                {t('todaySessions')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{todaySessions.length}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                {t('thisWeek')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{upcomingSessions.length}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                {t('completed')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pastSessions.length}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sessions Tabs */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="today">{t('todaySessions')} ({todaySessions.length})</TabsTrigger>
-            <TabsTrigger value="upcoming">{t('upcomingSessions')} ({upcomingSessions.length})</TabsTrigger>
-            <TabsTrigger value="past">{t('pastSessions')} ({pastSessions.length})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="today" className="mt-6">
-            <div className="space-y-4">
-              {todaySessions.length > 0 ? (
-                todaySessions.map((session: Session) => (
-                  <SessionCard key={session.id} session={session} />
-                ))
-              ) : (
-                <div className="text-center py-12">
-                  <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">{t('noSessionsToday')}</p>
-                  <Button className="mt-4" onClick={() => window.location.href = '/tutors'}>
-                    {t('bookSession')}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="upcoming" className="mt-6">
-            <div className="space-y-4">
-              {upcomingSessions.length > 0 ? (
-                upcomingSessions.map((session: Session) => (
-                  <SessionCard key={session.id} session={session} />
-                ))
-              ) : (
-                <div className="text-center py-12">
-                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No upcoming sessions</p>
-                  <Button className="mt-4" onClick={() => window.location.href = '/tutors'}>
-                    Book a Session
-                  </Button>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="past" className="mt-6">
-            <div className="space-y-4">
-              {pastSessions.length > 0 ? (
-                pastSessions.map((session: Session) => (
-                  <SessionCard key={session.id} session={session} />
-                ))
-              ) : (
-                <div className="text-center py-12">
-                  <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No past sessions</p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
       </div>
+
+      {/* Session Detail Modal */}
+      <AnimatePresence>
+        {selectedSession && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedSession(null)}
+          >
+            <motion.div
+              className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">{selectedSession.title}</h2>
+                <button
+                  onClick={() => setSelectedSession(null)}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white font-bold">
+                    {selectedSession.tutorFirstName[0]}{selectedSession.tutorLastName[0]}
+                  </div>
+                  <div>
+                    <p className="font-medium">{selectedSession.tutorFirstName} {selectedSession.tutorLastName}</p>
+                    <p className="text-sm text-gray-600">{t('student:instructor', 'Instructor')}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">{t('student:date', 'Date')}</p>
+                    <p className="font-medium">
+                      {new Date(selectedSession.sessionDate).toLocaleDateString(undefined, {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">{t('student:time', 'Time')}</p>
+                    <p className="font-medium">
+                      {formatTime(selectedSession.startTime)} - {formatTime(selectedSession.endTime)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">{t('student:type', 'Type')}</p>
+                    <p className="font-medium capitalize">{selectedSession.type}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">{t('student:duration', 'Duration')}</p>
+                    <p className="font-medium">{selectedSession.duration} {t('student:minutes', 'minutes')}</p>
+                  </div>
+                </div>
+
+                {selectedSession.description && (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">{t('student:description', 'Description')}</p>
+                    <p className="text-gray-800">{selectedSession.description}</p>
+                  </div>
+                )}
+
+                {selectedSession.location && (
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                    <MapPin className="w-5 h-5 text-gray-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">{t('student:location', 'Location')}</p>
+                      <p className="font-medium">{selectedSession.location}</p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedSession.type === 'group' && (
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                    <Users className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-blue-600">{t('student:participants', 'Participants')}</p>
+                      <p className="font-medium text-blue-700">
+                        {selectedSession.participants || 0} / {selectedSession.maxParticipants || 10}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedSession.canJoin && selectedSession.status === 'ongoing' && (
+                  <Button
+                    onClick={() => {
+                      joinSessionMutation.mutate(selectedSession.id);
+                      setSelectedSession(null);
+                    }}
+                    disabled={joinSessionMutation.isPending}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                  >
+                    <Video className="w-4 h-4 mr-2" />
+                    {joinSessionMutation.isPending 
+                      ? t('student:joining', 'Joining...') 
+                      : t('student:joinSession', 'Join Session')}
+                  </Button>
+                )}
+
+                {selectedSession.status === 'upcoming' && (
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 text-blue-800">
+                      <Info className="w-5 h-5" />
+                      <p className="font-medium">{t('student:sessionNotStarted', 'Session Not Started')}</p>
+                    </div>
+                    <p className="text-blue-700 text-sm mt-1">
+                      {t('student:sessionWillStart', 'This session will start at')} {formatTime(selectedSession.startTime)}
+                    </p>
+                  </div>
+                )}
+
+                {selectedSession.status === 'completed' && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <CheckCircle className="w-5 h-5" />
+                      <p className="font-medium">{t('student:sessionCompleted', 'Session Completed')}</p>
+                    </div>
+                    <p className="text-gray-600 text-sm mt-1">
+                      {t('student:sessionEndedAt', 'This session ended at')} {formatTime(selectedSession.endTime)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }

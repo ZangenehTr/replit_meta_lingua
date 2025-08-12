@@ -1,489 +1,731 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
-import { useLocation } from "wouter";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
+import { 
+  FileQuestion,
   Clock,
-  BookOpen,
   CheckCircle,
-  XCircle,
+  Circle,
+  ChevronLeft,
+  ChevronRight,
   AlertCircle,
-  FileText,
-  Play,
+  Trophy,
+  Target,
+  Brain,
+  Timer,
   Send,
+  Flag,
+  SkipForward,
+  BookOpen,
+  Award,
+  TrendingUp,
+  X
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 interface Test {
   id: number;
   title: string;
   description: string;
-  courseId: number;
+  courseName: string;
+  duration: number; // in minutes
   totalQuestions: number;
-  duration: number;
-  maxAttempts: number;
   passingScore: number;
-  isActive: boolean;
-  courseName?: string;
+  attempts: number;
+  bestScore?: number;
+  lastAttempt?: string;
+  status: 'available' | 'in-progress' | 'completed' | 'locked';
+  type: 'quiz' | 'exam' | 'practice' | 'placement';
 }
 
-interface TestAttempt {
+interface Question {
   id: number;
-  testId: number;
-  studentId: number;
-  startedAt: Date;
-  completedAt?: Date;
-  score?: number;
-  maxScore?: number;
-  percentage?: number;
-  passed?: boolean;
-  status: string;
-}
-
-interface TestQuestion {
-  id: number;
-  testId: number;
-  questionType: string;
   questionText: string;
+  type: 'multiple-choice' | 'true-false' | 'short-answer' | 'essay';
+  options?: string[];
+  correctAnswer?: string | string[];
   points: number;
-  order: number;
-  options?: any;
-  mediaUrl?: string;
+  explanation?: string;
+  image?: string;
+}
+
+interface TestSession {
+  testId: number;
+  questions: Question[];
+  currentQuestionIndex: number;
+  answers: { [questionId: number]: string | string[] };
+  flaggedQuestions: number[];
+  startTime: string;
+  timeRemaining: number;
+}
+
+interface TestResult {
+  score: number;
+  percentage: number;
+  passed: boolean;
+  correctAnswers: number;
+  totalQuestions: number;
+  timeTaken: number;
+  breakdown: {
+    questionId: number;
+    correct: boolean;
+    userAnswer: string | string[];
+    correctAnswer: string | string[];
+    explanation?: string;
+  }[];
 }
 
 export default function StudentTestTaking() {
-  const { t } = useTranslation(['student', 'common']);
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { toast } = useToast();
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const [selectedTest, setSelectedTest] = useState<Test | null>(null);
-  const [currentAttempt, setCurrentAttempt] = useState<TestAttempt | null>(null);
-  const [testQuestions, setTestQuestions] = useState<TestQuestion[]>([]);
-  const [answers, setAnswers] = useState<Record<number, any>>({});
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [testSession, setTestSession] = useState<TestSession | null>(null);
+  const [currentAnswer, setCurrentAnswer] = useState<string | string[]>('');
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
 
   // Fetch available tests
-  const { data: availableTests = [], isLoading } = useQuery({
-    queryKey: ["/api/student/tests/available"],
+  const { data: tests = [], isLoading } = useQuery<Test[]>({
+    queryKey: ['/api/student/tests'],
+    queryFn: async () => {
+      const response = await fetch('/api/student/tests', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) return [];
+      return response.json();
+    }
   });
 
-  // Fetch previous attempts
-  const { data: previousAttempts = [] } = useQuery({
-    queryKey: selectedTest ? [`/api/student/tests/${selectedTest.id}/attempts`] : null,
-    enabled: !!selectedTest,
-  });
-
-  // Start test attempt mutation
+  // Start test mutation
   const startTestMutation = useMutation({
     mutationFn: async (testId: number) => {
-      return await apiRequest(`/api/student/tests/${testId}/attempt`, {
-        method: "POST",
+      const response = await fetch(`/api/student/tests/${testId}/start`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
       });
+      if (!response.ok) throw new Error('Failed to start test');
+      return response.json();
     },
     onSuccess: (data) => {
-      setCurrentAttempt(data.attempt);
-      setTestQuestions(data.questions);
-      toast({
-        title: t('common:toast.testStarted'),
-        description: "Good luck! Your timer has begun.",
+      setTestSession({
+        testId: selectedTest!.id,
+        questions: data.questions,
+        currentQuestionIndex: 0,
+        answers: {},
+        flaggedQuestions: [],
+        startTime: new Date().toISOString(),
+        timeRemaining: selectedTest!.duration * 60 // Convert to seconds
       });
+      setTimeRemaining(selectedTest!.duration * 60);
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({
-        title: t('common:toast.error'),
-        description: error.message || "Failed to start test",
-        variant: "destructive",
+        title: t('common:error', 'Error'),
+        description: t('student:testStartError', 'Failed to start test'),
+        variant: 'destructive'
       });
-    },
+    }
   });
 
   // Submit test mutation
   const submitTestMutation = useMutation({
-    mutationFn: async (attemptId: number) => {
-      return await apiRequest(`/api/student/tests/attempts/${attemptId}/submit`, {
-        method: "POST",
-        body: JSON.stringify({ answers: Object.entries(answers).map(([questionId, answerValue]) => ({
-          questionId: parseInt(questionId),
-          answerValue,
-        })) }),
+    mutationFn: async () => {
+      if (!testSession) return;
+      const response = await fetch(`/api/student/tests/${testSession.testId}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          answers: testSession.answers,
+          timeTaken: (selectedTest!.duration * 60) - timeRemaining
+        })
       });
+      if (!response.ok) throw new Error('Failed to submit test');
+      return response.json();
     },
     onSuccess: (data) => {
-      setCurrentAttempt(null);
-      setTestQuestions([]);
-      setAnswers({});
-      
+      setTestResult(data);
+      setShowResults(true);
+      setTestSession(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/student/tests'] });
       toast({
-        title: data.results.passed ? "Test Passed!" : "Test Completed",
-        description: `Your score: ${data.results.score}/${data.results.maxScore} (${data.results.percentage.toFixed(1)}%)`,
-        variant: data.results.passed ? "default" : "destructive",
-      });
-      
-      // Refresh attempts
-      queryClient.invalidateQueries({ queryKey: [`/api/student/tests/${selectedTest?.id}/attempts`] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: t('common:toast.error'),
-        description: error.message || "Failed to submit test",
-        variant: "destructive",
+        title: t('student:testSubmitted', 'Test Submitted'),
+        description: data.passed 
+          ? t('student:testPassed', 'Congratulations! You passed the test!')
+          : t('student:testFailed', 'You can retake the test to improve your score'),
       });
     },
+    onError: () => {
+      toast({
+        title: t('common:error', 'Error'),
+        description: t('student:testSubmitError', 'Failed to submit test'),
+        variant: 'destructive'
+      });
+    }
   });
 
   // Timer effect
   useEffect(() => {
-    if (currentAttempt && selectedTest) {
-      const interval = setInterval(() => {
-        const elapsed = Date.now() - new Date(currentAttempt.startedAt).getTime();
-        const remaining = (selectedTest.duration * 60 * 1000) - elapsed;
-        
-        if (remaining <= 0) {
-          // Auto-submit when time runs out
-          submitTestMutation.mutate(currentAttempt.id);
-          clearInterval(interval);
-        } else {
-          setTimeRemaining(Math.floor(remaining / 1000));
-        }
-      }, 1000);
+    if (!testSession || timeRemaining <= 0) return;
 
-      return () => clearInterval(interval);
-    }
-  }, [currentAttempt, selectedTest]);
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          submitTestMutation.mutate();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [testSession, timeRemaining]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleAnswerChange = (questionId: number, value: any) => {
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
+  const handleAnswerChange = (answer: string | string[]) => {
+    if (!testSession) return;
+    
+    setCurrentAnswer(answer);
+    setTestSession({
+      ...testSession,
+      answers: {
+        ...testSession.answers,
+        [testSession.questions[testSession.currentQuestionIndex].id]: answer
+      }
+    });
   };
 
-  const renderQuestion = (question: TestQuestion) => {
-    const answer = answers[question.id];
-
-    switch (question.questionType) {
-      case 'multiple_choice':
-        return (
-          <RadioGroup
-            value={answer || ''}
-            onValueChange={(value) => handleAnswerChange(question.id, value)}
-          >
-            {Object.entries(question.options || {}).map(([key, value]) => (
-              <div key={key} className="flex items-center space-x-2 mb-2">
-                <RadioGroupItem value={key} id={`${question.id}-${key}`} />
-                <Label htmlFor={`${question.id}-${key}`} className="cursor-pointer">
-                  {value}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        );
-
-      case 'true_false':
-        return (
-          <RadioGroup
-            value={answer || ''}
-            onValueChange={(value) => handleAnswerChange(question.id, value === 'true')}
-          >
-            <div className="flex items-center space-x-2 mb-2">
-              <RadioGroupItem value="true" id={`${question.id}-true`} />
-              <Label htmlFor={`${question.id}-true`} className="cursor-pointer">True</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="false" id={`${question.id}-false`} />
-              <Label htmlFor={`${question.id}-false`} className="cursor-pointer">False</Label>
-            </div>
-          </RadioGroup>
-        );
-
-      case 'multiple_select':
-        const selectedOptions = answer || [];
-        return (
-          <div className="space-y-2">
-            {Object.entries(question.options || {}).map(([key, value]) => (
-              <div key={key} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`${question.id}-${key}`}
-                  checked={selectedOptions.includes(key)}
-                  onCheckedChange={(checked) => {
-                    const newValue = checked
-                      ? [...selectedOptions, key]
-                      : selectedOptions.filter((opt: string) => opt !== key);
-                    handleAnswerChange(question.id, newValue);
-                  }}
-                />
-                <Label htmlFor={`${question.id}-${key}`} className="cursor-pointer">
-                  {value}
-                </Label>
-              </div>
-            ))}
-          </div>
-        );
-
-      case 'short_answer':
-        return (
-          <Input
-            value={answer || ''}
-            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-            placeholder="Type your answer here..."
-          />
-        );
-
-      case 'essay':
-        return (
-          <Textarea
-            value={answer || ''}
-            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-            placeholder="Write your essay here..."
-            rows={6}
-          />
-        );
-
-      case 'fill_blank':
-        return (
-          <Input
-            value={answer || ''}
-            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-            placeholder="Fill in the blank..."
-          />
-        );
-
-      case 'matching':
-        // Simplified matching implementation
-        return (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Match the items (not fully implemented)</p>
-          </div>
-        );
-
-      case 'ordering':
-        // Simplified ordering implementation
-        return (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Order the items (not fully implemented)</p>
-          </div>
-        );
-
-      default:
-        return <p>Unsupported question type</p>;
+  const handleNextQuestion = () => {
+    if (!testSession) return;
+    
+    if (testSession.currentQuestionIndex < testSession.questions.length - 1) {
+      const nextIndex = testSession.currentQuestionIndex + 1;
+      setTestSession({
+        ...testSession,
+        currentQuestionIndex: nextIndex
+      });
+      setCurrentAnswer(testSession.answers[testSession.questions[nextIndex].id] || '');
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Loading tests...</p>
-        </div>
-      </div>
-    );
-  }
+  const handlePreviousQuestion = () => {
+    if (!testSession) return;
+    
+    if (testSession.currentQuestionIndex > 0) {
+      const prevIndex = testSession.currentQuestionIndex - 1;
+      setTestSession({
+        ...testSession,
+        currentQuestionIndex: prevIndex
+      });
+      setCurrentAnswer(testSession.answers[testSession.questions[prevIndex].id] || '');
+    }
+  };
 
-  if (currentAttempt) {
-    // Test taking interface
-    const answeredCount = Object.keys(answers).length;
-    const progress = (answeredCount / testQuestions.length) * 100;
+  const handleFlagQuestion = () => {
+    if (!testSession) return;
+    
+    const currentQuestionId = testSession.questions[testSession.currentQuestionIndex].id;
+    const flagged = testSession.flaggedQuestions.includes(currentQuestionId);
+    
+    setTestSession({
+      ...testSession,
+      flaggedQuestions: flagged
+        ? testSession.flaggedQuestions.filter(id => id !== currentQuestionId)
+        : [...testSession.flaggedQuestions, currentQuestionId]
+    });
+  };
 
-    return (
-      <div className="container mx-auto p-6">
-        <Card className="mb-4">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>{selectedTest?.title}</CardTitle>
-                <CardDescription>{selectedTest?.description}</CardDescription>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-2 text-lg font-semibold">
-                  <Clock className="h-5 w-5" />
-                  {timeRemaining !== null && formatTime(timeRemaining)}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {answeredCount} of {testQuestions.length} answered
-                </p>
-              </div>
-            </div>
-            <Progress value={progress} className="mt-4" />
-          </CardHeader>
-        </Card>
+  const getTestTypeColor = (type: string) => {
+    switch (type) {
+      case 'quiz': return 'from-blue-400 to-cyan-400';
+      case 'exam': return 'from-red-400 to-orange-400';
+      case 'practice': return 'from-green-400 to-emerald-400';
+      case 'placement': return 'from-purple-400 to-pink-400';
+      default: return 'from-gray-400 to-slate-400';
+    }
+  };
 
-        <div className="space-y-4">
-          {testQuestions.map((question, index) => (
-            <Card key={question.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">Question {index + 1}</p>
-                    <p className="text-lg">{question.questionText}</p>
-                  </div>
-                  <Badge variant="secondary">{question.points} points</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {renderQuestion(question)}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="mt-6 flex justify-end">
-          <Button
-            onClick={() => submitTestMutation.mutate(currentAttempt.id)}
-            disabled={submitTestMutation.isPending}
-            size="lg"
-          >
-            <Send className="mr-2 h-4 w-4" />
-            Submit Test
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  // Group tests by type
+  const groupedTests = tests.reduce((acc, test) => {
+    if (!acc[test.type]) acc[test.type] = [];
+    acc[test.type].push(test);
+    return acc;
+  }, {} as Record<string, Test[]>);
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">{t('student:tests.title')}</h1>
+    <div className="mobile-app-container min-h-screen">
+      {/* Animated Gradient Background */}
+      <div className="absolute inset-0 animated-gradient-bg opacity-50" />
+      
+      {/* Content */}
+      <div className="relative z-10">
+        {!testSession && !showResults ? (
+          // Test List View
+          <>
+            {/* Mobile Header */}
+            <motion.header 
+              className="mobile-header"
+              initial={{ y: -100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h1 className="text-white font-bold text-xl">{t('student:tests', 'Tests')}</h1>
+                <Badge className="bg-white/20 text-white border-white/30">
+                  <Trophy className="w-3 h-3 mr-1" />
+                  {tests.filter(t => t.status === 'completed').length}/{tests.length}
+                </Badge>
+              </div>
 
-      <Tabs defaultValue="available">
-        <TabsList className="mb-6">
-          <TabsTrigger value="available">Available Tests</TabsTrigger>
-          <TabsTrigger value="completed">Completed Tests</TabsTrigger>
-        </TabsList>
+              {/* Stats Overview */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="glass-card p-3 text-center">
+                  <FileQuestion className="w-5 h-5 text-white/70 mx-auto mb-1" />
+                  <p className="text-white text-xl font-bold">{tests.length}</p>
+                  <p className="text-white/60 text-xs">{t('student:totalTests', 'Total Tests')}</p>
+                </div>
+                <div className="glass-card p-3 text-center">
+                  <CheckCircle className="w-5 h-5 text-green-400 mx-auto mb-1" />
+                  <p className="text-white text-xl font-bold">
+                    {tests.filter(t => t.status === 'completed').length}
+                  </p>
+                  <p className="text-white/60 text-xs">{t('student:completed', 'Completed')}</p>
+                </div>
+                <div className="glass-card p-3 text-center">
+                  <TrendingUp className="w-5 h-5 text-yellow-400 mx-auto mb-1" />
+                  <p className="text-white text-xl font-bold">
+                    {Math.round(tests.reduce((sum, t) => sum + (t.bestScore || 0), 0) / tests.length) || 0}%
+                  </p>
+                  <p className="text-white/60 text-xs">{t('student:avgScore', 'Avg Score')}</p>
+                </div>
+              </div>
+            </motion.header>
 
-        <TabsContent value="available">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {availableTests.map((test: Test) => {
-              const attempts = previousAttempts.filter((a: TestAttempt) => a.testId === test.id);
-              const canTakeTest = attempts.length < test.maxAttempts;
-
-              return (
-                <Card key={test.id}>
-                  <CardHeader>
-                    <CardTitle>{test.title}</CardTitle>
-                    <CardDescription>{test.courseName}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between text-sm">
-                        <span>Questions:</span>
-                        <span className="font-medium">{test.totalQuestions}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Duration:</span>
-                        <span className="font-medium">{test.duration} minutes</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Passing Score:</span>
-                        <span className="font-medium">{test.passingScore}%</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Attempts:</span>
-                        <span className="font-medium">{attempts.length}/{test.maxAttempts}</span>
-                      </div>
+            {/* Main Content */}
+            <div className="mobile-content">
+              {isLoading ? (
+                // Loading Skeleton
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="glass-card p-4">
+                      <div className="skeleton h-6 w-3/4 mb-2 rounded" />
+                      <div className="skeleton h-4 w-1/2 mb-3 rounded" />
+                      <div className="skeleton h-10 w-full rounded" />
                     </div>
-
-                    {attempts.length > 0 && (
-                      <div className="mb-4 p-3 bg-muted rounded-lg">
-                        <p className="text-sm font-medium mb-1">Last Attempt:</p>
-                        <div className="flex items-center gap-2">
-                          {attempts[attempts.length - 1].passed ? (
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <XCircle className="h-4 w-4 text-red-500" />
-                          )}
-                          <span className="text-sm">
-                            {attempts[attempts.length - 1].percentage?.toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    <Button
-                      onClick={() => {
-                        setSelectedTest(test);
-                        startTestMutation.mutate(test.id);
-                      }}
-                      disabled={!canTakeTest || startTestMutation.isPending}
-                      className="w-full"
-                    >
-                      <Play className="mr-2 h-4 w-4" />
-                      {canTakeTest ? 'Start Test' : 'No Attempts Left'}
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="completed">
-          <div className="space-y-4">
-            {availableTests.map((test: Test) => {
-              const attempts = previousAttempts.filter((a: TestAttempt) => a.testId === test.id && a.status === 'completed');
-              
-              if (attempts.length === 0) return null;
-
-              return (
-                <Card key={test.id}>
-                  <CardHeader>
-                    <CardTitle>{test.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {attempts.map((attempt: TestAttempt) => (
-                        <div key={attempt.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            {attempt.passed ? (
-                              <CheckCircle className="h-5 w-5 text-green-500" />
-                            ) : (
-                              <XCircle className="h-5 w-5 text-red-500" />
-                            )}
-                            <div>
-                              <p className="font-medium">
-                                Score: {attempt.score}/{attempt.maxScore} ({attempt.percentage?.toFixed(1)}%)
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                Completed {formatDistanceToNow(new Date(attempt.completedAt!), { addSuffix: true })}
-                              </p>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-6 mb-20">
+                  {Object.entries(groupedTests).map(([type, typeTests]) => (
+                    <div key={type}>
+                      <h2 className="text-white/90 font-semibold text-sm mb-3 px-2 capitalize">
+                        {t(`student:${type}`, type)}
+                      </h2>
+                      <div className="space-y-3">
+                        {typeTests.map((test, index) => (
+                          <motion.div
+                            key={test.id}
+                            className="glass-card p-4 cursor-pointer"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setSelectedTest(test)}
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <h3 className="text-white font-semibold text-lg">{test.title}</h3>
+                                <p className="text-white/60 text-sm">{test.courseName}</p>
+                              </div>
+                              {test.status === 'completed' && test.bestScore !== undefined && (
+                                <Badge className={`${
+                                  test.bestScore >= test.passingScore
+                                    ? 'bg-green-500/20 text-green-300'
+                                    : 'bg-red-500/20 text-red-300'
+                                }`}>
+                                  {test.bestScore}%
+                                </Badge>
+                              )}
+                              {test.status === 'locked' && (
+                                <Lock className="w-5 h-5 text-white/50" />
+                              )}
                             </div>
-                          </div>
-                          <Badge variant={attempt.passed ? "success" : "destructive"}>
-                            {attempt.passed ? 'Passed' : 'Failed'}
-                          </Badge>
-                        </div>
-                      ))}
+
+                            <p className="text-white/70 text-sm mb-3">{test.description}</p>
+
+                            <div className="flex items-center gap-3 text-white/60 text-xs">
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {test.duration} min
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <FileQuestion className="w-3 h-3" />
+                                {test.totalQuestions} questions
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Target className="w-3 h-3" />
+                                Pass: {test.passingScore}%
+                              </span>
+                              {test.attempts > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <Trophy className="w-3 h-3" />
+                                  {test.attempts} attempts
+                                </span>
+                              )}
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </TabsContent>
-      </Tabs>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        ) : testSession ? (
+          // Test Taking View
+          <>
+            {/* Test Header */}
+            <motion.header 
+              className="bg-white/10 backdrop-blur-lg border-b border-white/20 px-4 py-3"
+              initial={{ y: -100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-white font-semibold">{selectedTest?.title}</h2>
+                <div className="flex items-center gap-2">
+                  <Badge className={`${
+                    timeRemaining < 300 ? 'bg-red-500/20 text-red-300' : 'bg-white/20 text-white'
+                  } border-white/30`}>
+                    <Clock className="w-3 h-3 mr-1" />
+                    {formatTime(timeRemaining)}
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/60 text-sm">
+                  Question {testSession.currentQuestionIndex + 1} of {testSession.questions.length}
+                </span>
+                <div className="flex gap-1">
+                  {testSession.questions.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`w-2 h-2 rounded-full ${
+                        testSession.answers[testSession.questions[idx].id]
+                          ? 'bg-green-400'
+                          : testSession.flaggedQuestions.includes(testSession.questions[idx].id)
+                          ? 'bg-yellow-400'
+                          : 'bg-white/30'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.header>
+
+            {/* Question Content */}
+            <div className="flex-1 p-4 overflow-y-auto">
+              <motion.div
+                key={testSession.currentQuestionIndex}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+                className="glass-card p-4 mb-4"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <h3 className="text-white text-lg font-medium flex-1">
+                    {testSession.questions[testSession.currentQuestionIndex].questionText}
+                  </h3>
+                  <button
+                    onClick={handleFlagQuestion}
+                    className={`p-2 rounded-full ${
+                      testSession.flaggedQuestions.includes(
+                        testSession.questions[testSession.currentQuestionIndex].id
+                      )
+                        ? 'bg-yellow-400 text-black'
+                        : 'bg-white/10 text-white'
+                    }`}
+                  >
+                    <Flag className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Answer Options */}
+                {testSession.questions[testSession.currentQuestionIndex].type === 'multiple-choice' && (
+                  <RadioGroup
+                    value={currentAnswer as string}
+                    onValueChange={(value) => handleAnswerChange(value)}
+                    className="space-y-3"
+                  >
+                    {testSession.questions[testSession.currentQuestionIndex].options?.map((option, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer"
+                      >
+                        <RadioGroupItem value={option} id={`option-${idx}`} />
+                        <label
+                          htmlFor={`option-${idx}`}
+                          className="text-white/90 cursor-pointer flex-1"
+                        >
+                          {option}
+                        </label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                )}
+
+                {testSession.questions[testSession.currentQuestionIndex].type === 'true-false' && (
+                  <RadioGroup
+                    value={currentAnswer as string}
+                    onValueChange={(value) => handleAnswerChange(value)}
+                    className="space-y-3"
+                  >
+                    <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer">
+                      <RadioGroupItem value="true" id="true" />
+                      <label htmlFor="true" className="text-white/90 cursor-pointer flex-1">
+                        {t('student:true', 'True')}
+                      </label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 cursor-pointer">
+                      <RadioGroupItem value="false" id="false" />
+                      <label htmlFor="false" className="text-white/90 cursor-pointer flex-1">
+                        {t('student:false', 'False')}
+                      </label>
+                    </div>
+                  </RadioGroup>
+                )}
+
+                {(testSession.questions[testSession.currentQuestionIndex].type === 'short-answer' ||
+                  testSession.questions[testSession.currentQuestionIndex].type === 'essay') && (
+                  <Textarea
+                    value={currentAnswer as string}
+                    onChange={(e) => handleAnswerChange(e.target.value)}
+                    placeholder={t('student:typeAnswer', 'Type your answer here...')}
+                    className="min-h-[150px] bg-white/10 border-white/20 text-white placeholder-white/50"
+                  />
+                )}
+              </motion.div>
+
+              {/* Navigation Buttons */}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handlePreviousQuestion}
+                  disabled={testSession.currentQuestionIndex === 0}
+                  className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  {t('student:previous', 'Previous')}
+                </Button>
+                
+                {testSession.currentQuestionIndex === testSession.questions.length - 1 ? (
+                  <Button
+                    onClick={() => submitTestMutation.mutate()}
+                    disabled={submitTestMutation.isPending}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    {submitTestMutation.isPending 
+                      ? t('student:submitting', 'Submitting...') 
+                      : t('student:submitTest', 'Submit Test')}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNextQuestion}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                  >
+                    {t('student:next', 'Next')}
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </>
+        ) : showResults && testResult ? (
+          // Results View
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="min-h-screen flex flex-col"
+          >
+            <div className="p-4">
+              <button
+                onClick={() => {
+                  setShowResults(false);
+                  setTestResult(null);
+                  setSelectedTest(null);
+                }}
+                className="mb-4 text-white/70 flex items-center gap-2"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                {t('student:backToTests', 'Back to Tests')}
+              </button>
+
+              <div className="text-center mb-6">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', duration: 0.5 }}
+                  className={`w-32 h-32 mx-auto mb-4 rounded-full flex items-center justify-center bg-gradient-to-br ${
+                    testResult.passed ? 'from-green-400 to-emerald-500' : 'from-red-400 to-pink-500'
+                  }`}
+                >
+                  {testResult.passed ? (
+                    <Trophy className="w-16 h-16 text-white" />
+                  ) : (
+                    <AlertCircle className="w-16 h-16 text-white" />
+                  )}
+                </motion.div>
+
+                <h2 className="text-white text-2xl font-bold mb-2">
+                  {testResult.passed 
+                    ? t('student:congratulations', 'Congratulations!') 
+                    : t('student:keepTrying', 'Keep Trying!')}
+                </h2>
+                <p className="text-white/70">
+                  {testResult.passed 
+                    ? t('student:youPassed', 'You passed the test!') 
+                    : t('student:youCanRetake', 'You can retake the test to improve')}
+                </p>
+              </div>
+
+              <div className="glass-card p-6 mb-6">
+                <div className="text-center mb-4">
+                  <p className="text-white/60 text-sm mb-1">{t('student:yourScore', 'Your Score')}</p>
+                  <p className="text-white text-5xl font-bold">{testResult.percentage}%</p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center">
+                    <p className="text-white/60 text-xs">{t('student:correct', 'Correct')}</p>
+                    <p className="text-green-400 text-xl font-bold">{testResult.correctAnswers}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white/60 text-xs">{t('student:total', 'Total')}</p>
+                    <p className="text-white text-xl font-bold">{testResult.totalQuestions}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white/60 text-xs">{t('student:time', 'Time')}</p>
+                    <p className="text-white text-xl font-bold">
+                      {Math.floor(testResult.timeTaken / 60)}:{(testResult.timeTaken % 60).toString().padStart(2, '0')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => {
+                  setShowResults(false);
+                  setTestResult(null);
+                  setSelectedTest(null);
+                }}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+              >
+                {t('student:backToTests', 'Back to Tests')}
+              </Button>
+            </div>
+          </motion.div>
+        ) : null}
+
+        {/* Test Info Modal */}
+        <AnimatePresence>
+          {selectedTest && !testSession && !showResults && (
+            <motion.div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedTest(null)}
+            >
+              <motion.div
+                className="bg-white rounded-t-3xl w-full p-6"
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold">{selectedTest.title}</h2>
+                  <button
+                    onClick={() => setSelectedTest(null)}
+                    className="p-2 rounded-full hover:bg-gray-100"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <p className="text-gray-600 mb-4">{selectedTest.description}</p>
+
+                <div className="space-y-3 mb-4">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-gray-600">{t('student:duration', 'Duration')}</span>
+                    <span className="font-medium">{selectedTest.duration} minutes</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-gray-600">{t('student:questions', 'Questions')}</span>
+                    <span className="font-medium">{selectedTest.totalQuestions}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-gray-600">{t('student:passingScore', 'Passing Score')}</span>
+                    <span className="font-medium">{selectedTest.passingScore}%</span>
+                  </div>
+                  {selectedTest.bestScore !== undefined && (
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-gray-600">{t('student:bestScore', 'Best Score')}</span>
+                      <span className={`font-medium ${
+                        selectedTest.bestScore >= selectedTest.passingScore ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {selectedTest.bestScore}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <Button
+                  onClick={() => startTestMutation.mutate(selectedTest.id)}
+                  disabled={startTestMutation.isPending || selectedTest.status === 'locked'}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                >
+                  {startTestMutation.isPending 
+                    ? t('student:starting', 'Starting...') 
+                    : selectedTest.status === 'locked'
+                    ? t('student:locked', 'Locked')
+                    : t('student:startTest', 'Start Test')}
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile Bottom Navigation (only show when not taking test) */}
+        {!testSession && !showResults && <MobileBottomNav />}
+      </div>
     </div>
   );
 }
