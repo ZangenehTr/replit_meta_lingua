@@ -60,6 +60,8 @@
   "purchaseFailed": "Purchase Failed",
   "noActivePackage": "No Active Package",
   "noActivePackageDescription": "Please purchase a package to start video calls.",
+  "needPackage": "Buy Package First",
+  "purchasePackageFirst": "Please purchase a package first to start calls",
   "endCall": "End Call",
   "noTeachersAvailable": "No teachers available for {{language}} at the moment. Please try again later.",
   "duration": "Duration",

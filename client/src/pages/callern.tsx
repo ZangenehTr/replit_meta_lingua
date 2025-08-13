@@ -352,6 +352,25 @@ export default function CallernSystem() {
           </Card>
         </div>
 
+        {/* Alert if no packages purchased */}
+        {studentPackages.length === 0 && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <Package className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  {t('callern:noActivePackage')}
+                </h3>
+                <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+                  {t('callern:noActivePackageDescription')}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Available Packages */}
           <Card>
@@ -626,11 +645,12 @@ export default function CallernSystem() {
                         <span className="font-semibold">${teacher.hourlyRate}{t('callern:perHour')}</span>
                         <Button
                           size="sm"
-                          disabled={!teacher.isOnline}
+                          disabled={!teacher.isOnline || studentPackages.length === 0}
                           onClick={() => handleStartCall(teacher)}
+                          title={studentPackages.length === 0 ? t('callern:purchasePackageFirst') : ''}
                         >
                           <Video className="mr-1 h-4 w-4" />
-                          {t('callern:startVideoCall')}
+                          {studentPackages.length === 0 ? t('callern:needPackage') : t('callern:startVideoCall')}
                         </Button>
                       </div>
                     </div>
