@@ -136,9 +136,8 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
       it('should send a message between users', async () => {
         const message = await storage.createMessage({
           senderId: testTeacherId,
-          recipientId: testStudentId,
-          content: 'Hello student, how is your progress?',
-          type: 'direct'
+          receiverId: testStudentId,
+          content: 'Hello student, how is your progress?'
         });
         
         expect(message).toBeDefined();
@@ -150,7 +149,7 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
       it('should retrieve messages for a user', async () => {
         await storage.createMessage({
           senderId: testTeacherId,
-          recipientId: testStudentId,
+          receiverId: testStudentId,
           content: 'Another message'
         });
         
@@ -162,7 +161,7 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
       it('should mark message as read', async () => {
         const message = await storage.createMessage({
           senderId: testTeacherId,
-          recipientId: testStudentId,
+          receiverId: testStudentId,
           content: 'Please read this'
         });
         
@@ -177,14 +176,12 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
           userId: testStudentId,
           type: 'homework',
           title: 'New Homework Assigned',
-          message: 'You have new homework for the English course',
-          priority: 'high'
+          message: 'You have new homework for the English course'
         });
         
         expect(notification).toBeDefined();
         expect(notification.id).toBeDefined();
         expect(notification.type).toBe('homework');
-        expect(notification.priority).toBe('high');
       });
       
       it('should get user notifications', async () => {
@@ -216,26 +213,28 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
     describe('Communication Logs', () => {
       it('should log a communication', async () => {
         const log = await storage.logCommunication({
-          userId: testStudentId,
+          studentId: testStudentId,
+          agentId: testTeacherId,
           type: 'call',
           direction: 'outbound',
-          duration: 300,
-          status: 'completed',
+          duration_minutes: 300,
+          outcome: 'answered',
           notes: 'Follow-up call about course progress'
         });
         
         expect(log).toBeDefined();
         expect(log.id).toBeDefined();
         expect(log.type).toBe('call');
-        expect(log.duration).toBe(300);
+        expect(log.duration_minutes).toBe(300);
       });
       
       it('should retrieve communication logs', async () => {
         await storage.logCommunication({
-          userId: testStudentId,
+          studentId: testStudentId,
+          agentId: testTeacherId,
           type: 'sms',
           direction: 'outbound',
-          status: 'sent',
+          outcome: 'answered',
           notes: 'Reminder SMS sent'
         });
         
@@ -248,25 +247,29 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
     describe('Leads Management', () => {
       it('should create a lead', async () => {
         const lead = await storage.createLead({
-          name: 'John Prospect',
+          firstName: 'John',
+          lastName: 'Prospect',
           email: 'john.prospect@test.com',
-          phone: '+989121234567',
+          phoneNumber: '+989121234567',
           source: 'website',
           status: 'new',
-          interestedIn: 'English Course',
+          interestedLanguage: 'english',
           notes: 'Interested in business English'
         });
         
         expect(lead).toBeDefined();
         expect(lead.id).toBeDefined();
-        expect(lead.name).toBe('John Prospect');
+        expect(lead.firstName).toBe('John');
         expect(lead.status).toBe('new');
       });
       
       it('should update lead status', async () => {
         const lead = await storage.createLead({
-          name: 'Jane Lead',
+          firstName: 'Jane',
+          lastName: 'Lead',
+          phoneNumber: '+989121234568',
           email: 'jane@test.com',
+          source: 'website',
           status: 'new'
         });
         
@@ -276,8 +279,11 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
       
       it('should get leads by status', async () => {
         await storage.createLead({
-          name: 'Active Lead',
+          firstName: 'Active',
+          lastName: 'Lead',
+          phoneNumber: '+989121234569',
           email: 'active@test.com',
+          source: 'website',
           status: 'qualified'
         });
         
@@ -290,33 +296,32 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
     describe('Homework Management', () => {
       it('should create homework', async () => {
         const homework = await storage.createHomework({
+          studentId: testStudentId,
+          teacherId: testTeacherId,
           courseId: testCourseId,
-          sessionId: testSessionId,
           title: 'Grammar Exercise',
           description: 'Complete the present perfect exercises',
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          points: 10
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         });
         
         expect(homework).toBeDefined();
         expect(homework.id).toBeDefined();
         expect(homework.title).toBe('Grammar Exercise');
-        expect(homework.points).toBe(10);
       });
       
       it('should submit homework', async () => {
         const homework = await storage.createHomework({
+          studentId: testStudentId,
+          teacherId: testTeacherId,
           courseId: testCourseId,
           title: 'Writing Task',
           dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
         });
         
-        const submission = await storage.submitHomework({
-          homeworkId: homework.id,
-          studentId: testStudentId,
-          submissionText: 'My essay about technology',
-          submittedAt: new Date()
-        });
+        const submission = await storage.submitHomework(
+          homework.id,
+          'My essay about technology'
+        );
         
         expect(submission).toBeDefined();
         expect(submission.status).toBe('submitted');
@@ -324,37 +329,36 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
       
       it('should grade homework', async () => {
         const homework = await storage.createHomework({
-          courseId: testCourseId,
-          title: 'Quiz',
-          points: 20
-        });
-        
-        const submission = await storage.submitHomework({
-          homeworkId: homework.id,
           studentId: testStudentId,
-          submissionText: 'My answers'
+          teacherId: testTeacherId,
+          courseId: testCourseId,
+          title: 'Quiz'
         });
         
-        const graded = await storage.gradeHomework(submission.id, {
-          grade: 18,
-          feedback: 'Excellent work!',
-          gradedBy: testTeacherId
-        });
+        const submission = await storage.submitHomework(
+          homework.id,
+          'My answers'
+        );
         
-        expect(graded.grade).toBe(18);
+        const graded = await storage.gradeHomework(
+          homework.id,
+          85,
+          'Excellent work!'
+        );
+        
+        expect(graded.grade).toBe(85);
         expect(graded.status).toBe('graded');
       });
     });
     
     describe('Attendance Records', () => {
       it('should record attendance', async () => {
-        const attendance = await storage.recordAttendance({
-          sessionId: testSessionId,
-          studentId: testStudentId,
-          status: 'present',
-          checkInTime: new Date(),
-          notes: 'On time'
-        });
+        const attendance = await storage.recordAttendance(
+          testStudentId,
+          testSessionId,
+          'present',
+          new Date()
+        );
         
         expect(attendance).toBeDefined();
         expect(attendance.id).toBeDefined();
@@ -362,12 +366,12 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
       });
       
       it('should get session attendance', async () => {
-        await storage.recordAttendance({
-          sessionId: testSessionId,
-          studentId: testUserId,
-          status: 'absent',
-          notes: 'Sick leave'
-        });
+        await storage.recordAttendance(
+          testStudentId,
+          testSessionId,
+          'absent',
+          new Date()
+        );
         
         const attendance = await storage.getSessionAttendance(testSessionId);
         expect(attendance).toBeDefined();
@@ -385,29 +389,26 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
   describe('Teacher Management', () => {
     describe('Teacher Availability', () => {
       it('should set teacher availability', async () => {
-        const availability = await storage.setTeacherAvailability({
-          teacherId: testTeacherId,
-          dayOfWeek: 'monday',
-          startTime: '09:00',
-          endTime: '17:00',
-          isAvailable: true,
-          timezone: 'Asia/Tehran'
-        });
+        const availability = await storage.setTeacherAvailability(
+          testTeacherId,
+          'Monday',
+          '09:00',
+          '17:00'
+        );
         
         expect(availability).toBeDefined();
         expect(availability.id).toBeDefined();
-        expect(availability.dayOfWeek).toBe('monday');
-        expect(availability.isAvailable).toBe(true);
+        expect(availability.dayOfWeek).toBe('Monday');
+        expect(availability.isActive).toBe(true);
       });
       
       it('should get teacher availability', async () => {
-        await storage.setTeacherAvailability({
-          teacherId: testTeacherId,
-          dayOfWeek: 'tuesday',
-          startTime: '10:00',
-          endTime: '18:00',
-          isAvailable: true
-        });
+        await storage.setTeacherAvailability(
+          testTeacherId,
+          'Tuesday',
+          '10:00',
+          '18:00'
+        );
         
         const availability = await storage.getTeacherAvailability(testTeacherId);
         expect(availability).toBeDefined();
@@ -415,17 +416,14 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
       });
       
       it('should update availability', async () => {
-        const availability = await storage.setTeacherAvailability({
-          teacherId: testTeacherId,
-          dayOfWeek: 'wednesday',
-          startTime: '09:00',
-          endTime: '17:00',
-          isAvailable: true
-        });
+        const availability = await storage.setTeacherAvailability(
+          testTeacherId,
+          'Wednesday',
+          '09:00',
+          '17:00'
+        );
         
-        const updated = await storage.updateTeacherAvailability(availability.id, {
-          endTime: '19:00'
-        });
+        const updated = await storage.updateTeacherAvailability(availability.id, '19:00');
         
         expect(updated.endTime).toBe('19:00');
       });
@@ -433,17 +431,14 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
     
     describe('Teacher Assignments', () => {
       it('should assign teacher to course', async () => {
-        const assignment = await storage.assignTeacherToCourse({
-          teacherId: testTeacherId,
-          courseId: testCourseId,
-          role: 'primary',
-          startDate: new Date(),
-          assignedBy: testUserId
-        });
+        const assignment = await storage.assignTeacherToCourse(
+          testTeacherId,
+          testCourseId
+        );
         
         expect(assignment).toBeDefined();
         expect(assignment.id).toBeDefined();
-        expect(assignment.role).toBe('primary');
+        expect(assignment.teacherId).toBe(testTeacherId);
       });
       
       it('should get teacher assignments', async () => {
@@ -453,11 +448,10 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
       });
       
       it('should end teacher assignment', async () => {
-        const assignment = await storage.assignTeacherToCourse({
-          teacherId: testTeacherId,
-          courseId: testCourseId,
-          role: 'substitute'
-        });
+        const assignment = await storage.assignTeacherToCourse(
+          testTeacherId,
+          testCourseId
+        );
         
         const ended = await storage.endTeacherAssignment(assignment.id);
         expect(ended.endDate).toBeDefined();
@@ -469,20 +463,22 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
       it('should create teacher evaluation', async () => {
         const evaluation = await storage.createTeacherEvaluation({
           teacherId: testTeacherId,
-          evaluatorId: testUserId,
-          period: '2025-Q1',
-          overallRating: 4.5,
-          teachingSkills: 4.8,
-          communication: 4.6,
-          professionalism: 4.7,
-          studentFeedback: 4.5,
+          supervisorId: testUserId,
+          evaluationPeriod: '2025-Q1',
+          teachingEffectiveness: 9,
+          classroomManagement: 8,
+          studentEngagement: 9,
+          contentKnowledge: 9,
+          communication: 8,
+          professionalism: 9,
+          overallScore: 87,
           comments: 'Excellent teacher with great communication skills',
-          recommendations: ['Continue professional development']
+          recommendations: 'Continue professional development'
         });
         
         expect(evaluation).toBeDefined();
         expect(evaluation.id).toBeDefined();
-        expect(evaluation.overallRating).toBe(4.5);
+        expect(evaluation.overallScore).toBe(87);
       });
       
       it('should get teacher evaluations', async () => {
@@ -494,28 +490,32 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
       it('should get latest evaluation', async () => {
         const latest = await storage.getLatestTeacherEvaluation(testTeacherId);
         expect(latest).toBeDefined();
-        expect(latest.overallRating).toBeDefined();
+        expect(latest.overallScore).toBeDefined();
       });
     });
     
     describe('Class Observations', () => {
       it('should create class observation', async () => {
         const observation = await storage.createClassObservation({
-          sessionId: testSessionId,
           teacherId: testTeacherId,
-          observerId: testUserId,
-          observationType: 'formal',
-          date: new Date(),
-          duration: 45,
-          strengths: ['Good classroom management', 'Clear explanations'],
-          areasForImprovement: ['More student interaction'],
-          overallScore: 85,
-          notes: 'Well-structured lesson'
+          supervisorId: testUserId,
+          courseId: testCourseId,
+          sessionId: testSessionId,
+          observationDate: new Date(),
+          duration_minutes: 45,
+          preparedness: 4,
+          delivery: 5,
+          studentEngagement: 4,
+          classroomManagement: 5,
+          strengths: 'Good classroom management, Clear explanations',
+          areasForImprovement: 'More student interaction',
+          overallRating: 4,
+          recommendations: 'Well-structured lesson'
         });
         
         expect(observation).toBeDefined();
         expect(observation.id).toBeDefined();
-        expect(observation.overallScore).toBe(85);
+        expect(observation.overallRating).toBe(4);
       });
       
       it('should get teacher observations', async () => {
@@ -526,20 +526,25 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
       
       it('should update observation feedback', async () => {
         const observation = await storage.createClassObservation({
-          sessionId: testSessionId,
           teacherId: testTeacherId,
-          observerId: testUserId,
-          observationType: 'informal',
-          date: new Date()
+          supervisorId: testUserId,
+          courseId: testCourseId,
+          sessionId: testSessionId,
+          observationDate: new Date(),
+          preparedness: 3,
+          delivery: 4,
+          studentEngagement: 3,
+          classroomManagement: 4,
+          overallRating: 3
         });
         
-        const updated = await storage.updateObservationFeedback(observation.id, {
-          teacherResponse: 'Thank you for the feedback',
-          actionPlan: ['Will increase student participation'],
-          followUpDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        });
+        const updated = await storage.updateObservationFeedback(
+          observation.id,
+          'Thank you for the feedback, will increase student participation',
+          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        );
         
-        expect(updated.teacherResponse).toBeDefined();
+        expect(updated.teacherFeedback).toBeDefined();
         expect(updated.followUpDate).toBeDefined();
       });
     });
@@ -549,18 +554,21 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
     it('should handle complete communication workflow', async () => {
       // Create lead
       const lead = await storage.createLead({
-        name: 'Integration Test Lead',
+        firstName: 'Integration',
+        lastName: 'Test Lead',
         email: 'integration@test.com',
-        phone: '+989121234567',
+        phoneNumber: '+989121234567',
+        source: 'website',
         status: 'new'
       });
       
       // Log communication
       const log = await storage.logCommunication({
-        userId: lead.id,
+        leadId: lead.id,
+        agentId: testUserId,
         type: 'call',
         direction: 'outbound',
-        status: 'completed',
+        outcome: 'answered',
         notes: 'Initial contact'
       });
       
@@ -572,7 +580,7 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
         userId: testUserId,
         type: 'reminder',
         title: 'Follow up with lead',
-        message: `Follow up with ${lead.name}`
+        message: `Follow up with ${lead.firstName} ${lead.lastName}`
       });
       
       expect(lead).toBeDefined();
@@ -583,37 +591,45 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
     
     it('should handle complete teacher workflow', async () => {
       // Set availability
-      const availability = await storage.setTeacherAvailability({
-        teacherId: testTeacherId,
-        dayOfWeek: 'thursday',
-        startTime: '09:00',
-        endTime: '17:00',
-        isAvailable: true
-      });
+      const availability = await storage.setTeacherAvailability(
+        testTeacherId,
+        'Thursday',
+        '09:00',
+        '17:00'
+      );
       
       // Assign to course
-      const assignment = await storage.assignTeacherToCourse({
-        teacherId: testTeacherId,
-        courseId: testCourseId,
-        role: 'primary'
-      });
+      const assignment = await storage.assignTeacherToCourse(
+        testTeacherId,
+        testCourseId
+      );
       
       // Create observation
       const observation = await storage.createClassObservation({
-        sessionId: testSessionId,
         teacherId: testTeacherId,
-        observerId: testUserId,
-        observationType: 'formal',
-        date: new Date(),
-        overallScore: 90
+        supervisorId: testUserId,
+        courseId: testCourseId,
+        sessionId: testSessionId,
+        observationDate: new Date(),
+        preparedness: 5,
+        delivery: 5,
+        studentEngagement: 5,
+        classroomManagement: 5,
+        overallRating: 5
       });
       
       // Create evaluation
       const evaluation = await storage.createTeacherEvaluation({
         teacherId: testTeacherId,
-        evaluatorId: testUserId,
-        period: '2025-Q1',
-        overallRating: 4.7
+        supervisorId: testUserId,
+        evaluationPeriod: '2025-Q1',
+        teachingEffectiveness: 9,
+        classroomManagement: 9,
+        studentEngagement: 9,
+        contentKnowledge: 9,
+        communication: 9,
+        professionalism: 9,
+        overallScore: 90
       });
       
       expect(availability).toBeDefined();
