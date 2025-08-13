@@ -591,6 +591,80 @@ export interface IStorage {
   getFinancialKPIs(): Promise<any>;
   getRegistrationAnalytics(): Promise<any>;
   getTeacherPerformanceAnalytics(): Promise<any>;
+  
+  // Student-specific chat methods (temporary until refactored)
+  getStudentConversations(studentId: number): Promise<any[]>;
+  getConversationMessages(conversationId: number, userId: number): Promise<any[]>;
+  sendConversationMessage(conversationId: number, senderId: number, text: string): Promise<any>;
+  
+  // PHASE 1: Critical System Tables Implementation
+  
+  // Audit Logging (Security & Compliance)
+  createAuditLog(log: {
+    userId: number;
+    userRole: string;
+    action: string;
+    resourceType: string;
+    resourceId?: number;
+    details?: any;
+    ipAddress?: string;
+    userAgent?: string;
+  }): Promise<any>;
+  getAuditLogs(filters?: {
+    userId?: number;
+    action?: string;
+    resourceType?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<any[]>;
+  
+  // Email Logging (Communication Tracking)
+  createEmailLog(log: {
+    recipientId: number;
+    recipientEmail: string;
+    templateType: string;
+    subject: string;
+    contentJson?: any;
+    status?: string;
+  }): Promise<any>;
+  updateEmailLogStatus(id: number, status: string, errorMessage?: string): Promise<any>;
+  getEmailLogs(filters?: {
+    recipientId?: number;
+    templateType?: string;
+    status?: string;
+  }): Promise<any[]>;
+  
+  // Student Reports (Core Feature)
+  createStudentReport(report: {
+    studentId: number;
+    generatedBy: number;
+    reportType: string;
+    period: string;
+    startDate: string;
+    endDate: string;
+    data: any;
+    comments?: string;
+  }): Promise<any>;
+  getStudentReports(studentId: number): Promise<any[]>;
+  publishStudentReport(reportId: number): Promise<any>;
+  getPublishedReports(studentId: number): Promise<any[]>;
+  
+  // Payment Transactions (Financial Tracking)
+  createPaymentTransaction(transaction: {
+    studentId: number;
+    amount: number;
+    method: string;
+    description?: string;
+    invoiceId?: number;
+  }): Promise<any>;
+  updatePaymentTransactionStatus(id: number, status: string, details?: any): Promise<any>;
+  getPaymentTransactions(filters?: {
+    studentId?: number;
+    status?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<any[]>;
+  getTransactionDetails(id: number): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
