@@ -61,6 +61,12 @@ export default function StudentMessagesMobile() {
   const [showSearch, setShowSearch] = useState(false);
   const [showNewConversation, setShowNewConversation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Get current user
+  const { data: currentUser } = useQuery({
+    queryKey: ['/api/users/me'],
+    enabled: false // We'll use cached data
+  });
 
   // Fetch conversations
   const { data: conversations = [], isLoading: loadingConversations } = useQuery<Conversation[]>({
@@ -160,7 +166,6 @@ export default function StudentMessagesMobile() {
     <MobileLayout
       title={selectedConversation ? selectedConversation.name : t('student:messages')}
       showBack={!!selectedConversation}
-      onBack={() => setSelectedConversation(null)}
       gradient="primary"
       headerAction={selectedConversation && (
         <button className="p-2 rounded-full glass-button">
@@ -372,7 +377,7 @@ export default function StudentMessagesMobile() {
               </div>
             ) : (
               messages.map((message, index) => {
-                const isOwn = message.senderId === 43; // Current user ID
+                const isOwn = message.senderName === "You" || message.senderId === currentUser?.id; // Check if message is from current user
                 return (
                   <motion.div
                     key={message.id}
@@ -416,14 +421,14 @@ export default function StudentMessagesMobile() {
           </div>
 
           {/* Message Input */}
-          <div className="glass-card p-3 flex items-center gap-3">
-            <button className="p-2 rounded-full bg-white/10">
+          <div className="glass-card p-3 flex items-center gap-2">
+            <button className="p-2 rounded-full bg-white/10 flex-shrink-0">
               <Paperclip className="w-5 h-5 text-white/70" />
             </button>
             <input
               type="text"
               placeholder={t('student:typeMessage')}
-              className="flex-1 bg-transparent text-white placeholder-white/50 outline-none"
+              className="flex-1 bg-transparent text-white placeholder-white/50 outline-none min-w-0"
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
               onKeyPress={(e) => {
@@ -432,19 +437,21 @@ export default function StudentMessagesMobile() {
                 }
               }}
             />
-            {messageText.trim() ? (
-              <motion.button
-                className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
-                whileTap={{ scale: 0.9 }}
-                onClick={() => sendMessage.mutate(messageText)}
-              >
-                <Send className="w-5 h-5 text-white" />
-              </motion.button>
-            ) : (
-              <button className="p-2 rounded-full bg-white/10">
-                <Mic className="w-5 h-5 text-white/70" />
-              </button>
-            )}
+            <div className="flex-shrink-0">
+              {messageText.trim() ? (
+                <motion.button
+                  className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => sendMessage.mutate(messageText)}
+                >
+                  <Send className="w-5 h-5 text-white" />
+                </motion.button>
+              ) : (
+                <button className="p-2 rounded-full bg-white/10">
+                  <Mic className="w-5 h-5 text-white/70" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
