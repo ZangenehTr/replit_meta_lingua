@@ -60,6 +60,8 @@
   "purchaseFailed": "فشل الشراء",
   "noActivePackage": "لا توجد باقة نشطة",
   "noActivePackageDescription": "يرجى شراء باقة لبدء مكالمات الفيديو.",
+  "needPackage": "اشتر الباقة أولاً",
+  "purchasePackageFirst": "يرجى شراء باقة أولاً لبدء المكالمات",
   "endCall": "إنهاء المكالمة",
   "noTeachersAvailable": "لا يوجد معلمون متاحون لـ {{language}} في الوقت الحالي. يرجى المحاولة لاحقاً.",
   "duration": "المدة",
