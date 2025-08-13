@@ -106,11 +106,15 @@ describe('UI Button Behaviors and Permissions', () => {
     });
 
     it('should not show admin-only buttons for teacher role', async () => {
+      const userRole = localStorage.getItem('user_role');
+      
       const TeacherDashboard = () => (
         <div>
-          <button className="admin-only" style={{ display: 'none' }}>
-            Admin Action
-          </button>
+          {userRole === 'Admin' && (
+            <button className="admin-only">
+              Admin Action
+            </button>
+          )}
           <button className="teacher-allowed">
             Teacher Action
           </button>
@@ -131,14 +135,18 @@ describe('UI Button Behaviors and Permissions', () => {
     });
 
     it('should only show student-allowed actions', async () => {
+      const userRole = localStorage.getItem('user_role');
+      
       const StudentDashboard = () => (
         <div>
           <button className="student-allowed">
             Enroll in Course
           </button>
-          <button className="teacher-only" style={{ display: 'none' }}>
-            Create Assignment
-          </button>
+          {(userRole === 'Teacher' || userRole === 'Admin') && (
+            <button className="teacher-only">
+              Create Assignment
+            </button>
+          )}
         </div>
       );
 
