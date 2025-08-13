@@ -1,7 +1,7 @@
 # Meta Lingua Platform
 
 ## Overview
-Meta Lingua is an AI-enhanced multilingual language learning and institute management platform. It's designed for teaching ALL languages (English, Persian, Arabic, Spanish, French, German, Chinese, etc.), built to be self-hostable, and independent of services blocked in certain regions. The platform provides a comprehensive admin system, student management, course enrollment, VoIP integration, and a wallet-based payment system. Its vision is to offer a robust, self-contained solution for language institutes globally, enabling effective language education in any language and efficient institute operations.
+Meta Lingua is an AI-enhanced multilingual language learning and institute management platform. Its purpose is to provide a robust, self-contained solution for language institutes globally, enabling effective language education in any language and efficient institute operations. The platform is designed to be self-hostable and independent of services blocked in certain regions, catering to teaching ALL languages. Key capabilities include a comprehensive admin system, student management, course enrollment, VoIP integration, and a wallet-based payment system.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,108 +9,6 @@ Work sessions: User prefers to have work logged so they can resume from where we
 Critical requirement: Self-hosting in Iran with zero external dependencies. Must follow check-first protocol.
 Database strategy: Use Replit/Neon for development only, migrate to self-hosted PostgreSQL for production in Iran.
 Code quality: Always avoid duplications - no duplicate code, methods, or logic. Prefer composition and reuse over duplication.
-Recent session (2025-01-13):
-- **Critical Protocol Fixes:**
-  - Removed ALL mock data from callern.tsx - now fetches real teacher data from API
-  - Replaced ALL Math.random() usage with crypto functions throughout codebase
-  - Fixed 7+ instances in server/routes.ts using crypto.randomInt() and crypto.randomBytes()
-  - Fixed client-side room ID generation using window.crypto.getRandomValues()
-  - Ensured zero mock data remains - all data from real database queries
-- **Callern Page Improvements:**
-  - Fixed "Start Call" button functionality - clearly shows package requirement
-  - Added prominent gradient yellow alert box when no packages purchased
-  - Button text changes to "ابتدا بسته بخرید" (Buy Package First) without packages
-  - Button includes ShoppingCart icon and scrolls to packages section
-  - Disabled state with helpful tooltips explaining requirements
-  - Fixed tutors API to properly return teacher data
-- **Translation & Routing Fixes:**
-  - Fixed Persian/Arabic translation error for "tutors" - changed from object to string
-  - Added complete games page translations for all 3 languages (English, Persian, Arabic)
-  - Added missing route /student/messages to App.tsx
-  - Fixed stats translations (totalXp, level, streak)
-  - Fixed tutor online status - removed crypto.randomInt() usage
-- **Previous Session Updates (2025-01-12):**
-  - Implemented real activity tracking system to replace all mock data
-  - Created comprehensive learning roadmap system with milestones and steps
-  - Built activity-tracker.ts for recording actual study time and progress
-  - Added roadmap-schema.ts defining structured learning paths
-  - Updated student stats API to use real data from activity tracker
-  - Created roadmap designer UI for admins/teachers at /admin/roadmap-designer
-  - Added endpoints for recording activities, tracking weekly progress, and skill assessments
-  - System now tracks: real study time, actual weekly progress, skill progression over time
-  - **COMPLETED: Callern page mobile redesign** - Transformed from desktop layout to full mobile theme with glassmorphism cards, gradient backgrounds, tabbed navigation
-  - Added missing translations for Callern mobile interface in all three languages
-  - **MAJOR UPDATE: Advanced Callern AI Enhancements** - Implemented comprehensive AI-powered language learning features:
-    - Call recording consent system with dual-party authorization
-    - Live vocabulary suggestions during calls (teacher/AI powered)
-    - Automatic transcript generation and analysis
-    - Rewrite suggestions for grammar improvements
-    - Personal glossary building with spaced repetition (SRS)
-    - Quiz generation from learned vocabulary
-    - Email summaries and weekly recaps
-    - Student preference management
-    - Database: Added 7 new tables and extended callernCallHistory table
-    - Created full service layer with TranscriptParser, SuggestionEngine, RewriteEngine
-    - Built comprehensive UI components for all new features
-    - New enhancement page available at /callern-enhancements
-  - **FIXED: Games page TypeScript errors** - Resolved all 33 TypeScript diagnostics:
-    - Added missing loading state variables for mock data
-    - Fixed translation system usage from t.property to t('namespace:key') format
-    - Fixed property references to match type definitions
-- **New Features:**
-  - Real-time activity recording at /api/activity/record
-  - Weekly progress tracking at /api/activity/weekly-progress
-  - Learning roadmap management at /api/roadmaps
-  - Student roadmap enrollment and progress tracking
-  - Mobile-optimized Callern page with teacher browsing, package management, and call history
-- **Outstanding Requirements:**
-  - Other student pages still need UI redesign with mobile app theme (native app look, not just responsive)
-  - All functions on student and teacher pages need to be corrected and tested
-  - Design approach: Full-screen gradients, glassmorphism effects, animated elements, bottom navigation
-- **Previously Completed:**
-  - Replaced all Math.random() usage with crypto functions for security
-  - Fixed OTP generation to use crypto.randomInt() for secure 6-digit codes
-  - Fixed file upload naming to use crypto.randomBytes() for unique identifiers
-  - Fixed referral code generation to use crypto.randomBytes()
-  - Removed 83+ instances of mock data throughout the codebase
-  - Fixed SQL syntax errors in registration analytics
-  - All endpoints now use real database queries instead of hardcoded values
-- **Previously Completed:**
-  - Implemented complete OTP login system via SMS for all user roles
-  - Users can login using either password or a 6-digit SMS code
-  - OTP codes expire after 5 minutes and are single-use only
-  - Added SMS templates for student creation notifications
-  - Students' phone numbers are set as their default password for easy first login
-Previous session (2025-01-10): 
-- Resolved database connectivity issues, confirmed Neon working for development, prepared migration guides for self-hosting
-- Fixed Callern Management authorization issue (case-insensitive role checks)
-- Added complete Persian translations for Callern Management interface
-- Implemented full create Callern packages functionality (UI dialog + backend API)
-Previous session (2025-01-09): 
-- Previous session (2025-01-08): Complete translation overhaul of ALL admin components with form translations (200+ new keys)
-- MAJOR TRANSLATION FIX: Resolved missing campaigns, smsSettings, and iranianCompliance translations across all languages
-- Added comprehensive campaigns section translations (70+ keys) for all three languages (Persian, Arabic, English)
-  - Includes campaign creation, social media integration, performance tracking, and automation features
-- Added complete smsSettings section translations (50+ keys) for all three languages
-  - Includes SMS event templates, automation rules, Kavenegar settings, and all event types
-- Added full iranianCompliance section translations (40+ keys) for all three languages
-  - Includes VoIP configuration, Shetab payment settings, and third-party services status
-- Fixed structural inconsistencies between language files - all admin.json files now have matching section structures
-- Updated English admin.json with missing translations to match Persian and Arabic completeness
-- Ensured all eventTypes (enrollment, sessionReminder, homeworkAssigned, etc.) are properly translated
-- Added missing recipient types (teacher, parent, student) in all languages
-- All campaigns and SMS automation features now fully translated and functional
-- Translation consistency achieved across all three language files - no more missing keys
-
-## Test Accounts
-All 7 roles have test accounts with the following credentials:
-- **Admin**: admin@test.com / admin123
-- **Teacher**: teacher@test.com / teacher123  
-- **Student**: student@test.com / student123
-- **Mentor**: mentor@test.com / mentor123
-- **Supervisor**: supervisor@test.com / supervisor123
-- **Call Center**: callcenter@test.com / callcenter123
-- **Accountant**: accountant@test.com / accountant123
 
 ## System Architecture
 
@@ -120,7 +18,7 @@ All 7 roles have test accounts with the following credentials:
 - **State Management**: TanStack React Query for server state
 - **Routing**: Wouter for client-side navigation
 - **Build Tool**: Vite
-- **Language Support**: Multi-language support for ALL languages (English, Persian, Arabic, Spanish, French, German, Chinese, Japanese, Korean, etc.) with RTL/LTR layout handling. Implements comprehensive i18n with localized number formatting.
+- **Language Support**: Multi-language support for ALL languages with RTL/LTR layout handling and comprehensive i18n with localized number formatting.
 - **UI/UX Decisions**: Modern gradient backgrounds, professional layouts, responsive design using a mobile-first approach, touch-optimized components, and role-based UI patterns. Features resizable panels and a comprehensive mobile design system with bottom navigation.
 
 ### Backend Architecture
@@ -135,28 +33,28 @@ All 7 roles have test accounts with the following credentials:
 - **Schema**: Comprehensive user management, course system, payment tracking, gamification features, and a mood intelligence system.
 
 ### Key Features
-- **Authentication System**: JWT-based with role-based authorization. Supports both password and OTP (One-Time Password) login via SMS for all roles. Students can use their phone number as default password.
-- **Student Management**: CRUD operations, course enrollment, progress tracking, cultural profiling. Automatic SMS notifications on creation with login credentials.
-- **Payment & Wallet System**: IRR-based wallet, member tiers, Shetab payment gateway integration, transaction tracking.
-- **Course Management**: Creation, teacher assignment, session scheduling, progress monitoring. Includes video courses and Callern on-demand video tutoring service.
-- **Callern Service**: 24/7 on-demand video tutoring system where students purchase hour packages and connect instantly with available teachers for any language. Features WebRTC-based video calling with real-time peer-to-peer connections, screen sharing, and call recording capabilities.
-- **Gamification Features**: XP/level system, achievements, daily challenges, age-based games with localized content.
-- **VoIP Integration**: Isabel VoIP line for call recording and call center functionality. Supports Bluetooth headset integration.
-- **Teacher vs Mentor System**: Differentiated roles for direct instruction (Teachers) and progress monitoring/support (Mentors).
-- **Comprehensive Testing System**: Supports 8 question types (multiple choice, true/false, short answer, essay, fill in blank, matching, ordering, listening comprehension).
-- **Teacher Payment Management**: Automated calculation based on completed sessions, white-label multi-institute management, professional quality assurance system, SMS event management, placement test Q&A, and campaign management.
-- **Unified Class Scheduling Interface**: Multi-view calendar, drag-and-drop scheduling, real-time availability.
+- **Authentication System**: JWT-based with role-based authorization, supporting password and OTP login via SMS for all roles.
+- **Student Management**: CRUD operations, course enrollment, progress tracking, cultural profiling, and SMS notifications.
+- **Payment & Wallet System**: IRR-based wallet, member tiers, and transaction tracking.
+- **Course Management**: Creation, teacher assignment, session scheduling, and progress monitoring, including video courses and Callern on-demand video tutoring.
+- **Callern Service**: 24/7 on-demand video tutoring system using WebRTC for real-time video calling, screen sharing, and call recording capabilities. Includes AI-powered features like live vocabulary suggestions, automatic transcript generation, grammar rewrite suggestions, personal glossary building with SRS, and quiz generation.
+- **Gamification Features**: XP/level system, achievements, daily challenges, age-based games.
+- **VoIP Integration**: Isabel VoIP line for call recording and call center functionality.
+- **Teacher vs Mentor System**: Differentiated roles for direct instruction and progress monitoring.
+- **Comprehensive Testing System**: Supports 8 question types.
+- **Teacher Payment Management**: Automated calculation, white-label multi-institute management, QA system, SMS event management, placement test Q&A, and campaign management.
+- **Unified Class Scheduling Interface**: Multi-view calendar with drag-and-drop scheduling.
 - **Session Packages**: For private students to purchase bundles of sessions.
 - **Communication System**: Support ticket management, internal chat, push notifications (email, SMS).
-- **Ollama AI Services**: Local AI processing for multilingual language support (all languages), model management, and data sovereignty.
-- **Check-First Protocol**: Mandatory validation for data integrity and conflict prevention.
+- **Ollama AI Services**: Local AI processing for multilingual language support and data sovereignty.
+- **Check-First Protocol**: Mandatory validation for data integrity.
 - **Business Logic Consolidation**: Centralized utilities for filtering, calculations, and data integrity.
-- **Complete i18n Implementation**: Comprehensive Persian/Arabic/English translation system with RTL support across all admin dialogs and forms. Student management and course creation dialogs fully translated with proper RTL layout handling.
-- **Unified Dashboard System**: All 7 user roles land on `/dashboard` URL but see role-appropriate content. Eliminates infinite redirect loops while preserving all existing functionality and API endpoints. Each role maintains their specific dashboard features through role-based content routing.
+- **Complete i18n Implementation**: Comprehensive Persian/Arabic/English translation system with RTL support across all admin dialogs and forms.
+- **Unified Dashboard System**: Role-appropriate content for all 7 user roles landing on `/dashboard`.
 
 ### Deployment Strategy
-- **Development**: Replit hosting, environment variables via Replit Secrets.
-- **Production**: Replit Deploy, downloadable as ZIP, Docker containerization. Designed for Iranian hosting requirements with no reliance on blocked services.
+- **Development**: Replit hosting.
+- **Production**: Replit Deploy, downloadable as ZIP, Docker containerization. Designed for Iranian hosting.
 - **Self-Hosting Requirements**: PostgreSQL 14+, Node.js 18+, Nginx, Docker (optional).
 
 ## External Dependencies
@@ -168,6 +66,6 @@ All 7 roles have test accounts with the following credentials:
 - **AI Services**: OpenAI API (personalization, development), Ollama server (local AI processing, production).
 - **Testing**: Playwright (E2E), Vitest (unit).
 - **Fonts**: Self-hosted Arabic/Persian fonts.
-- **WebRTC**: Self-hosted TURN/STUN server support only (no external dependencies). Works on local networks or with configured TURN servers. Integrated with Socket.io for signaling and Simple Peer for peer-to-peer connections.
+- **WebRTC**: Self-hosted TURN/STUN server support only. Integrated with Socket.io for signaling and Simple Peer for peer-to-peer connections.
 - **Real-time Communication**: Socket.io for WebSocket connections, Simple Peer for WebRTC, RecordRTC for call recording.
-- **Self-Hosting**: Complete independence from external services outside Iran. All features work within local network or with self-hosted infrastructure.
+- **Self-Hosting**: Complete independence from external services outside Iran.

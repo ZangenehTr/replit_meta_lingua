@@ -1447,7 +1447,7 @@ export class MemStorage implements IStorage {
 
   async getTeachers(): Promise<User[]> {
     return Array.from(this.users.values()).filter(user => 
-      user.role === "Teacher" || user.role === "teacher" && user.isActive
+      (user.role === "Teacher" || user.role === "Teacher/Tutor" || user.role === "teacher") && user.isActive
     );
   }
 
