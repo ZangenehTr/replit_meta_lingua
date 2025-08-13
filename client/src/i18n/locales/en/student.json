@@ -170,5 +170,9 @@
   "thisWeek": "This Week",
   "completed": "Completed",
   "noSessionsToday": "No sessions scheduled for today",
-  "bookSession": "Book a Session"
+  "bookSession": "Book a Session",
+  "sessions": "sessions",
+  "specialization": "Specialization",
+  "experience": "Experience",
+  "years": "years"
 }

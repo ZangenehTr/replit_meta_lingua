@@ -32,20 +32,19 @@ interface Tutor {
   id: number;
   firstName: string;
   lastName: string;
+  email: string;
+  profileImage?: string;
   avatar?: string;
   rating: number;
-  totalReviews: number;
+  totalSessions: number;
   languages: string[];
-  specialties: string[];
+  specialization: string;
   experience: number; // years
   hourlyRate: number;
   availability: string;
   bio: string;
   isOnline: boolean;
   isFavorite: boolean;
-  verified: boolean;
-  completedSessions: number;
-  responseTime: string;
 }
 
 export default function StudentTutorsMobile() {
@@ -241,11 +240,6 @@ export default function StudentTutorsMobile() {
                         {tutor.firstName[0]}{tutor.lastName[0]}
                       </AvatarFallback>
                     </Avatar>
-                    {tutor.verified && (
-                      <div className="absolute -bottom-1 -right-1 p-1 bg-blue-500 rounded-full">
-                        <Verified className="w-3 h-3 text-white" />
-                      </div>
-                    )}
                   </div>
 
                   {/* Info */}
@@ -262,12 +256,12 @@ export default function StudentTutorsMobile() {
                               {tutor.rating.toFixed(1)}
                             </span>
                             <span className="text-white/50 text-xs">
-                              ({tutor.totalReviews})
+                              ({tutor.totalSessions})
                             </span>
                           </div>
                           <span className="text-white/30">•</span>
                           <span className="text-white/60 text-sm">
-                            {tutor.completedSessions} {t('student:sessions')}
+                            {tutor.totalSessions} {t('student:sessions')}
                           </span>
                         </div>
                       </div>
@@ -363,7 +357,7 @@ export default function StudentTutorsMobile() {
                   <div className="flex items-center gap-2 mt-1">
                     <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                     <span className="text-white">
-                      {selectedTutor.rating.toFixed(1)} ({selectedTutor.totalReviews} {t('student:reviews')})
+                      {selectedTutor.rating.toFixed(1)} ({selectedTutor.totalSessions} {t('student:sessions')})
                     </span>
                   </div>
                 </div>
@@ -379,17 +373,17 @@ export default function StudentTutorsMobile() {
                 <div className="flex items-center gap-3">
                   <Languages className="w-5 h-5 text-white/50" />
                   <span className="text-white/70">{t('student:languages')}:</span>
-                  <span className="text-white">{selectedTutor.languages.join(', ')}</span>
+                  <span className="text-white">{selectedTutor.languages?.join(', ') || ''}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Award className="w-5 h-5 text-white/50" />
-                  <span className="text-white/70">{t('student:specialties')}:</span>
-                  <span className="text-white">{selectedTutor.specialties.join(', ')}</span>
+                  <span className="text-white/70">{t('student:specialization')}:</span>
+                  <span className="text-white">{selectedTutor.specialization || ''}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-white/50" />
-                  <span className="text-white/70">{t('student:responseTime')}:</span>
-                  <span className="text-white">{selectedTutor.responseTime}</span>
+                  <span className="text-white/70">{t('student:experience')}:</span>
+                  <span className="text-white">{selectedTutor.experience} {t('student:years')}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-white/50" />
