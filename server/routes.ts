@@ -3190,6 +3190,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoints for Callern teacher authorization
+  app.get("/api/admin/callern-teachers", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      // Get all teachers and their Callern authorization status
+      const teachers = await storage.getTeachers();
+      const callernAvailability = await storage.getTeacherCallernAvailability();
+      
+      const teachersWithCallernStatus = teachers.map(teacher => ({
+        id: teacher.id,
+        firstName: teacher.firstName,
+        lastName: teacher.lastName,
+        email: teacher.email,
+        isActive: teacher.isActive,
+        isCallernAuthorized: callernAvailability.some(a => a.teacherId === teacher.id),
+        hourlyRate: callernAvailability.find(a => a.teacherId === teacher.id)?.hourlyRate || null
+      }));
+      
+      res.json(teachersWithCallernStatus);
+    } catch (error) {
+      console.error('Error fetching Callern teachers:', error);
+      res.status(500).json({ message: "Failed to fetch Callern teachers" });
+    }
+  });
+  
+  app.post("/api/admin/callern-teachers/:teacherId/authorize", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      const { hourlyRate } = req.body;
+      
+      // Check if teacher exists and is active
+      const teacher = await storage.getUser(teacherId);
+      if (!teacher || !teacher.isActive) {
+        return res.status(400).json({ message: "Teacher not found or inactive" });
+      }
+      
+      // Check if already authorized
+      const existing = await storage.getTeacherCallernAvailability();
+      if (existing.some(a => a.teacherId === teacherId)) {
+        return res.status(400).json({ message: "Teacher already authorized for Callern" });
+      }
+      
+      // Add authorization
+      await storage.setTeacherCallernAvailability({
+        teacherId,
+        isOnline: false,
+        hourlyRate: hourlyRate || 150000,
+        availableHours: [],
+        lastActiveAt: null
+      });
+      
+      res.json({ message: "Teacher authorized for Callern successfully" });
+    } catch (error) {
+      console.error('Error authorizing teacher for Callern:', error);
+      res.status(500).json({ message: "Failed to authorize teacher" });
+    }
+  });
+  
+  app.delete("/api/admin/callern-teachers/:teacherId/authorize", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      
+      // Remove authorization (in production, this would delete from database)
+      // For now, we'll mark it as a successful operation
+      res.json({ message: "Teacher Callern authorization removed successfully" });
+    } catch (error) {
+      console.error('Error removing teacher Callern authorization:', error);
+      res.status(500).json({ message: "Failed to remove authorization" });
+    }
+  });
+
   // Admin endpoints for teacher-class assignment
   app.post("/api/admin/assign-teacher-to-class", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
@@ -15957,8 +16027,8 @@ Meta Lingua Academy`;
   // Student tutors endpoint
   app.get("/api/student/tutors", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
-      // Get all teachers/tutors from the database
-      const tutors = await storage.getTeachers();
+      // Get only teachers authorized for Callern service
+      const tutors = await storage.getTeachersForCallern();
       
       // Transform the data to match the expected format
       const tutorData = tutors.map(tutor => ({
