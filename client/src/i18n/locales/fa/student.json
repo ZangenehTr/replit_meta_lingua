@@ -73,6 +73,12 @@
   "sessions": "جلسات",
   "homework": "تکالیف",
   "searchCourses": "جستجوی دوره‌ها",
+  "practice": "تمرین",
+  "upcomingSessions": "جلسات پیش رو",
+  "searchMessages": "جستجوی پیام‌ها",
+  "noMessages": "پیامی وجود ندارد",
+  "profile": "پروفایل",
+  "join": "پیوستن",
   "inProgress": "در حال انجام",
   "noCoursesFound": "دوره‌ای یافت نشد",
   "videoCoursesSection": {

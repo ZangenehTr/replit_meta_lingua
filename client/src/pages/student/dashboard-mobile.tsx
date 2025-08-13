@@ -213,7 +213,7 @@ export default function StudentDashboardMobile() {
               <div>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-white/70">{t('student:xpToNextLevel')}</span>
-                  <span className="text-white">{stats?.totalXP % 1000}/1000 XP</span>
+                  <span className="text-white">{(stats?.totalXP || 0) % 1000}/1000 XP</span>
                 </div>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                   <motion.div 
