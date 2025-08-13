@@ -135,5 +135,8 @@
   "searchMessages": "البحث عن الرسائل...",
   "noMessages": "لا توجد رسائل",
   "profile": "الملف الشخصي",
-  "join": "انضمام"
+  "join": "انضمام",
+  "messages": "الرسائل",
+  "typeMessage": "اكتب رسالتك...",
+  "messageSendError": "فشل إرسال الرسالة"
 }

@@ -160,7 +160,7 @@ export default function StudentMessagesMobile() {
       title={selectedConversation ? selectedConversation.name : t('student:messages')}
       showBack={!!selectedConversation}
       onBack={() => setSelectedConversation(null)}
-      gradient="ocean"
+      gradient="primary"
       headerAction={selectedConversation && (
         <button className="p-2 rounded-full glass-button">
           <MoreVertical className="w-5 h-5 text-white" />
