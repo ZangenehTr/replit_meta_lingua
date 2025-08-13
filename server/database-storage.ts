@@ -5336,61 +5336,11 @@ export class DatabaseStorage implements IStorage {
     .orderBy(games.ageGroup, games.gameType);
   }
 
-  async getUserAchievements(userId: number): Promise<any[]> {
-    return await db.select({
-      id: achievements.id,
-      title: achievements.title,
-      description: achievements.description,
-      badgeIcon: achievements.icon,
-      xpReward: achievements.xpReward,
-      category: achievements.type,
-      isUnlocked: sql<boolean>`${userAchievements.id} IS NOT NULL`,
-      unlockedAt: userAchievements.unlockedAt
-    }).from(achievements)
-    .leftJoin(userAchievements, and(eq(userAchievements.achievementId, achievements.id), eq(userAchievements.userId, userId)))
-    .where(eq(achievements.isActive, true))
-    .orderBy(desc(userAchievements.unlockedAt), achievements.title);
-  }
 
-  async getUserStats(userId: number): Promise<any> {
-    const [stats] = await db.select().from(userStats).where(eq(userStats.userId, userId));
-    
-    if (!stats) {
-      // Create default stats if none exist
-      const [newStats] = await db.insert(userStats).values({
-        userId,
-        totalXp: 0,
-        currentLevel: 1,
-        streakDays: 0,
-        longestStreak: 0,
-        totalStudyTime: 0,
-        lessonsCompleted: 0,
-        quizzesCompleted: 0,
-        perfectScores: 0,
-        wordsLearned: 0,
-        conversationsCompleted: 0
-      }).returning();
-      return newStats;
-    }
-    
-    return stats;
-  }
 
-  async updateUserStats(userId: number, statsUpdate: any): Promise<any> {
-    const currentStats = await this.getUserStats(userId);
-    
-    const [updatedStats] = await db.update(userStats).set({
-      totalXp: currentStats.totalXp + (statsUpdate.totalXp || 0),
-      lessonsCompleted: currentStats.lessonsCompleted + (statsUpdate.lessonsCompleted || 0),
-      quizzesCompleted: currentStats.quizzesCompleted + (statsUpdate.quizzesCompleted || 0),
-      perfectScores: currentStats.perfectScores + (statsUpdate.perfectScores || 0),
-      wordsLearned: currentStats.wordsLearned + (statsUpdate.wordsLearned || 0),
-      conversationsCompleted: currentStats.conversationsCompleted + (statsUpdate.conversationsCompleted || 0),
-      updatedAt: new Date()
-    }).where(eq(userStats.userId, userId)).returning();
-    
-    return updatedStats;
-  }
+
+
+
 
   // Game courses (individual courses)
   async createGameCourse(gameCourse: any): Promise<any> {
@@ -5686,34 +5636,6 @@ export class DatabaseStorage implements IStorage {
 
   // ===== SUPERVISION SYSTEM - STUDENT QUESTIONNAIRES =====
   
-  async getStudentQuestionnaires(courseId?: number): Promise<StudentQuestionnaire[]> {
-    if (courseId) {
-      return await db
-        .select()
-        .from(studentQuestionnaires)
-        .where(eq(studentQuestionnaires.courseId, courseId))
-        .orderBy(desc(studentQuestionnaires.createdAt));
-    }
-    
-    return await db
-      .select()
-      .from(studentQuestionnaires)
-      .orderBy(desc(studentQuestionnaires.createdAt));
-  }
-
-  async createStudentQuestionnaire(questionnaire: InsertStudentQuestionnaire): Promise<StudentQuestionnaire> {
-    const [created] = await db.insert(studentQuestionnaires).values(questionnaire).returning();
-    return created;
-  }
-
-  async updateStudentQuestionnaire(id: number, updates: Partial<StudentQuestionnaire>): Promise<StudentQuestionnaire | undefined> {
-    const [updated] = await db
-      .update(studentQuestionnaires)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(studentQuestionnaires.id, id))
-      .returning();
-    return updated;
-  }
 
   async deleteStudentQuestionnaire(id: number): Promise<void> {
     await db.delete(studentQuestionnaires).where(eq(studentQuestionnaires.id, id));
@@ -5721,30 +5643,6 @@ export class DatabaseStorage implements IStorage {
 
   // ===== QUESTIONNAIRE RESPONSES =====
   
-  async getQuestionnaireResponses(questionnaireId?: number, teacherId?: number): Promise<QuestionnaireResponse[]> {
-    let query = db.select().from(questionnaireResponses);
-    
-    if (questionnaireId && teacherId) {
-      query = query.where(
-        and(
-          eq(questionnaireResponses.questionnaireId, questionnaireId),
-          eq(questionnaireResponses.teacherId, teacherId)
-        )
-      );
-    } else if (questionnaireId) {
-      query = query.where(eq(questionnaireResponses.questionnaireId, questionnaireId));
-    } else if (teacherId) {
-      query = query.where(eq(questionnaireResponses.teacherId, teacherId));
-    }
-    
-    return await query.orderBy(desc(questionnaireResponses.submittedAt));
-  }
-
-  async createQuestionnaireResponse(response: InsertQuestionnaireResponse): Promise<QuestionnaireResponse> {
-    const [created] = await db.insert(questionnaireResponses).values(response).returning();
-    return created;
-  }
-
   async updateQuestionnaireResponse(id: number, updates: Partial<QuestionnaireResponse>): Promise<QuestionnaireResponse | undefined> {
     const [updated] = await db
       .update(questionnaireResponses)
@@ -7284,77 +7182,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getTeacherDashboardStats(teacherId: number): Promise<any> {
-    try {
-      // Get teacher's classes
-      const classes = await this.getTeacherClasses(teacherId);
-      const assignments = await this.getTeacherAssignments(teacherId);
-      
-      // Calculate stats
-      const totalClasses = classes.length;
-      const completedClasses = classes.filter(c => c.status === 'completed').length;
-      const upcomingClasses = classes.filter(c => {
-        const sessionDate = new Date(c.scheduledAt);
-        return sessionDate > new Date() && c.status === 'scheduled';
-      }).length;
-      
-      const totalAssignments = assignments.length;
-      const pendingAssignments = assignments.filter(a => a.status === 'pending').length;
-      const submittedAssignments = assignments.filter(a => a.status === 'submitted').length;
-      
-      // Calculate earnings (Iranian compliance)
-      const hourlyRate = 75000; // IRR per hour
-      const totalHours = classes.reduce((sum, c) => sum + (c.duration || 60), 0) / 60;
-      const monthlyEarnings = Math.round(totalHours * hourlyRate);
-      
-      return {
-        overview: {
-          totalClasses,
-          completedClasses,
-          upcomingClasses,
-          totalStudents: new Set(classes.map(c => c.studentId)).size,
-          monthlyEarnings,
-          currency: 'IRR',
-          rating: 4.8,
-          totalReviews: 156
-        },
-        assignments: {
-          total: totalAssignments,
-          pending: pendingAssignments,
-          submitted: submittedAssignments,
-          graded: totalAssignments - pendingAssignments - submittedAssignments
-        },
-        schedule: {
-          todayClasses: classes.filter(c => {
-            const today = new Date();
-            const sessionDate = new Date(c.scheduledAt);
-            return sessionDate.toDateString() === today.toDateString();
-          }).length,
-          weekClasses: classes.filter(c => {
-            const weekFromNow = new Date();
-            weekFromNow.setDate(weekFromNow.getDate() + 7);
-            const sessionDate = new Date(c.scheduledAt);
-            return sessionDate >= new Date() && sessionDate <= weekFromNow;
-          }).length
-        },
-        recentActivity: classes.slice(0, 5).map(c => ({
-          type: 'class',
-          title: c.title,
-          student: c.studentName,
-          time: c.scheduledAt,
-          status: c.status
-        }))
-      };
-    } catch (error) {
-      console.error('Error fetching teacher dashboard stats:', error);
-      return {
-        overview: { totalClasses: 0, completedClasses: 0, upcomingClasses: 0, totalStudents: 0, monthlyEarnings: 0, currency: 'IRR', rating: 0, totalReviews: 0 },
-        assignments: { total: 0, pending: 0, submitted: 0, graded: 0 },
-        schedule: { todayClasses: 0, weekClasses: 0 },
-        recentActivity: []
-      };
-    }
-  }
+
 
   async createTeacherAssignment(assignment: any): Promise<any> {
     try {
