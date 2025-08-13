@@ -393,6 +393,11 @@ function Router() {
           <MessagesPage />
         </ProtectedRoute>
       </Route>
+      <Route path="/student/messages">
+        <ProtectedRoute>
+          <MessagesPage />
+        </ProtectedRoute>
+      </Route>
       <Route path="/payment">
         <ProtectedRoute>
           <PaymentPage />

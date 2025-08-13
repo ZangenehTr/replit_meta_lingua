@@ -66,7 +66,8 @@
     "bookmarks": "الإشارات المرجعية",
     "notes": "الملاحظات"
   },
-  "tutors": {
+  "tutors": "المعلمون",
+  "tutorsPage": {
     "title": "المعلمون",
     "findTutor": "العثور على معلم",
     "myTutors": "معلموني",
@@ -75,6 +76,38 @@
     "rating": "التقييم",
     "availability": "التوفر",
     "specialization": "التخصص"
+  },
+  "searchTutors": "البحث عن معلمين...",
+  "favorites": "المفضلة",
+  "noTutors": "لم يتم العثور على معلمين",
+  "games": {
+    "title": "الألعاب والأنشطة",
+    "description": "التعلم مع الألعاب التعليمية والأنشطة التفاعلية",
+    "browseGames": "تصفح الألعاب",
+    "history": "التاريخ",
+    "leaderboard": "لوحة الصدارة",
+    "achievements": "الإنجازات",
+    "gamesPlayed": "الألعاب الملعوبة",
+    "timesPlayed": "مرات اللعب",
+    "bestScore": "أفضل نتيجة",
+    "currentLevel": "المستوى الحالي",
+    "ageGroup": "الفئة العمرية",
+    "allAgeGroups": "جميع الفئات العمرية",
+    "skill": "المهارة",
+    "allSkills": "جميع المهارات",
+    "vocabulary": "المفردات",
+    "grammar": "القواعد",
+    "listening": "الاستماع",
+    "speaking": "التحدث",
+    "reading": "القراءة",
+    "writing": "الكتابة",
+    "level": "المستوى",
+    "allLevels": "جميع المستويات"
+  },
+  "stats": {
+    "totalXp": "إجمالي نقاط الخبرة",
+    "level": "المستوى",
+    "streak": "السلسلة"
   },
   "homework": {
     "title": "الواجبات",

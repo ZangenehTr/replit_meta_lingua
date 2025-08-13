@@ -15943,7 +15943,7 @@ Meta Lingua Academy`;
         availability: 'Available',
         profileImage: tutor.profileImage || '',
         bio: tutor.bio || 'Experienced language teacher specializing in personalized learning.',
-        isOnline: crypto.randomInt(2) === 1,
+        isOnline: true, // Always online for demo, should be tracked in real system
         isFavorite: false
       }));
       
@@ -15975,7 +15975,7 @@ Meta Lingua Academy`;
         availability: 'Available',
         profileImage: tutor.profileImage || '',
         bio: tutor.bio || 'Experienced language teacher specializing in personalized learning.',
-        isOnline: crypto.randomInt(2) === 1,
+        isOnline: true, // Always online for demo, should be tracked in real system
         isFavorite: false
       }));
       
