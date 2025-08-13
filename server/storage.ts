@@ -734,6 +734,50 @@ export interface IStorage {
   createPlacementTest(test: any): Promise<any>;
   assignPlacementTest(studentId: number, testId: number): Promise<any>;
   getStudentPlacementResults(studentId: number): Promise<any[]>;
+  
+  // ===== PHASE 4: REMAINING UNCONNECTED TABLES (16 TABLES) =====
+  
+  // Learning Support Tables
+  addGlossaryItem(data: any): Promise<any>;
+  getUserGlossary(userId: number): Promise<any[]>;
+  createRewriteSuggestion(data: any): Promise<any>;
+  getUserRewriteSuggestions(userId: number): Promise<any[]>;
+  createSuggestedTerm(data: any): Promise<any>;
+  getUserSuggestedTerms(userId: number): Promise<any[]>;
+  addToAIKnowledgeBase(data: any): Promise<any>;
+  searchAIKnowledgeBase(category: string, language?: string): Promise<any[]>;
+  
+  // Business Operations Tables
+  createInvoice(data: any): Promise<any>;
+  getUserInvoices(userId: number): Promise<any[]>;
+  createCourseReferral(data: any): Promise<any>;
+  getReferralsByUser(userId: number): Promise<any[]>;
+  createReferralCommission(data: any): Promise<any>;
+  getUserCommissions(userId: number): Promise<any[]>;
+  getReferralSettings(): Promise<any>;
+  updateReferralSettings(data: any): Promise<any>;
+  
+  // Group Management Tables
+  createStudentGroup(data: any): Promise<any>;
+  getStudentGroups(): Promise<any[]>;
+  addStudentToGroup(groupId: number, studentId: number): Promise<any>;
+  getGroupMembers(groupId: number): Promise<any[]>;
+  updateStudentPreferences(userId: number, preferences: any): Promise<any>;
+  getStudentPreferences(userId: number): Promise<any>;
+  
+  // System Tables
+  getSystemConfig(key: string): Promise<any>;
+  setSystemConfig(key: string, value: any): Promise<any>;
+  recordSystemMetric(data: any): Promise<any>;
+  getSystemMetrics(metricType: string, limit?: number): Promise<any[]>;
+  createCourseSession(data: any): Promise<any>;
+  getCourseSessions(courseId: number): Promise<any[]>;
+  
+  // Assessment Tables
+  recordQuizResult(data: any): Promise<any>;
+  getUserQuizResults(userId: number): Promise<any[]>;
+  createClassObservation(data: any): Promise<any>;
+  getTeacherObservations(teacherId: number): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
