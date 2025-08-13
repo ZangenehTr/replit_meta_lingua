@@ -86,7 +86,8 @@
     "bookmarks": "نشانک‌ها",
     "notes": "یادداشت‌ها"
   },
-  "tutors": {
+  "tutors": "مدرسین",
+  "tutorsPage": {
     "title": "مدرسین",
     "findTutor": "یافتن مدرس",
     "myTutors": "مدرسین من",

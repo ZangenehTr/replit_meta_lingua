@@ -18,10 +18,17 @@ Recent session (2025-01-13):
   - Ensured zero mock data remains - all data from real database queries
 - **Callern Page Improvements:**
   - Fixed "Start Call" button functionality - clearly shows package requirement
-  - Added yellow alert box when no packages purchased
+  - Added prominent gradient yellow alert box when no packages purchased
   - Button text changes to "ابتدا بسته بخرید" (Buy Package First) without packages
+  - Button includes ShoppingCart icon and scrolls to packages section
   - Disabled state with helpful tooltips explaining requirements
   - Fixed tutors API to properly return teacher data
+- **Translation & Routing Fixes:**
+  - Fixed Persian/Arabic translation error for "tutors" - changed from object to string
+  - Added complete games page translations for all 3 languages (English, Persian, Arabic)
+  - Added missing route /student/messages to App.tsx
+  - Fixed stats translations (totalXp, level, streak)
+  - Fixed tutor online status - removed crypto.randomInt() usage
 - **Previous Session Updates (2025-01-12):**
   - Implemented real activity tracking system to replace all mock data
   - Created comprehensive learning roadmap system with milestones and steps
