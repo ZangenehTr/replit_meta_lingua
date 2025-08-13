@@ -6021,6 +6021,193 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+  
+  // Get student-specific conversations including course groups, teacher chats, and support
+  async getStudentConversations(studentId: number): Promise<any[]> {
+    try {
+      // Get all conversations where student is a participant
+      const conversations = await db
+        .select({
+          id: chatConversations.id,
+          title: chatConversations.title,
+          type: chatConversations.type,
+          participants: chatConversations.participants,
+          lastMessage: chatConversations.lastMessage,
+          lastMessageAt: chatConversations.lastMessageAt,
+          unreadCount: chatConversations.unreadCount,
+          metadata: chatConversations.metadata,
+          isActive: chatConversations.isActive
+        })
+        .from(chatConversations)
+        .where(sql`${studentId.toString()} = ANY(${chatConversations.participants})`)
+        .orderBy(desc(chatConversations.lastMessageAt));
+      
+      // Format conversations for the UI
+      const formattedConversations = conversations.map(conv => ({
+        id: conv.id,
+        name: conv.title || 'Untitled Conversation',
+        avatar: '/api/placeholder/40/40',
+        lastMessage: conv.lastMessage || 'No messages yet',
+        lastMessageTime: conv.lastMessageAt || new Date().toISOString(),
+        unreadCount: conv.unreadCount || 0,
+        type: conv.type || 'individual',
+        participants: conv.type === 'group' ? conv.participants?.length || 0 : undefined,
+        online: conv.type === 'individual' ? true : undefined,
+        muted: false
+      }));
+      
+      // If no conversations exist, create default ones
+      if (formattedConversations.length === 0) {
+        // Create teacher support conversation
+        const [teacherSupport] = await db.insert(chatConversations).values({
+          title: 'Teacher Support',
+          type: 'individual',
+          participants: [studentId.toString(), '1'], // Student and admin/teacher
+          metadata: { isSupport: true },
+          isActive: true,
+          createdAt: new Date()
+        }).returning();
+        
+        // Create institute announcements channel
+        const [announcements] = await db.insert(chatConversations).values({
+          title: 'Institute Announcements',
+          type: 'announcement',
+          participants: [studentId.toString()],
+          metadata: { isAnnouncement: true },
+          isActive: true,
+          createdAt: new Date()
+        }).returning();
+        
+        // Return newly created conversations
+        return [
+          {
+            id: teacherSupport.id,
+            name: 'Teacher Support',
+            avatar: '/api/placeholder/40/40',
+            lastMessage: 'Welcome! How can we help you?',
+            lastMessageTime: new Date().toISOString(),
+            unreadCount: 0,
+            type: 'individual',
+            online: true
+          },
+          {
+            id: announcements.id,
+            name: 'Institute Announcements',
+            avatar: '/api/placeholder/40/40',
+            lastMessage: 'Stay updated with institute news',
+            lastMessageTime: new Date().toISOString(),
+            unreadCount: 0,
+            type: 'announcement',
+            muted: false
+          }
+        ];
+      }
+      
+      return formattedConversations;
+    } catch (error) {
+      console.error('Error fetching student conversations:', error);
+      return [];
+    }
+  }
+  
+  // Get messages for a specific conversation
+  async getConversationMessages(conversationId: number, userId: number): Promise<any[]> {
+    try {
+      // Verify user is a participant
+      const [conversation] = await db.select().from(chatConversations)
+        .where(and(
+          eq(chatConversations.id, conversationId),
+          sql`${userId.toString()} = ANY(${chatConversations.participants})`
+        ));
+      
+      if (!conversation) {
+        return [];
+      }
+      
+      // Get messages
+      const messages = await db
+        .select({
+          id: chatMessages.id,
+          message: chatMessages.message,
+          senderId: chatMessages.senderId,
+          senderName: chatMessages.senderName,
+          messageType: chatMessages.messageType,
+          attachments: chatMessages.attachments,
+          isRead: chatMessages.isRead,
+          sentAt: chatMessages.sentAt
+        })
+        .from(chatMessages)
+        .where(eq(chatMessages.conversationId, conversationId))
+        .orderBy(chatMessages.sentAt);
+      
+      // Format messages for UI
+      return messages.map(msg => ({
+        id: msg.id,
+        text: msg.message,
+        senderId: msg.senderId,
+        senderName: msg.senderId === userId ? 'You' : msg.senderName || 'Unknown',
+        senderAvatar: '/api/placeholder/40/40',
+        timestamp: msg.sentAt.toISOString(),
+        read: msg.isRead,
+        type: msg.messageType || 'text'
+      }));
+    } catch (error) {
+      console.error('Error fetching conversation messages:', error);
+      return [];
+    }
+  }
+  
+  // Send a message in a conversation
+  async sendConversationMessage(conversationId: number, senderId: number, text: string): Promise<any> {
+    try {
+      // Verify sender is a participant
+      const [conversation] = await db.select().from(chatConversations)
+        .where(and(
+          eq(chatConversations.id, conversationId),
+          sql`${senderId.toString()} = ANY(${chatConversations.participants})`
+        ));
+      
+      if (!conversation) {
+        throw new Error('Not authorized to send message in this conversation');
+      }
+      
+      // Get sender details
+      const [sender] = await db.select().from(users).where(eq(users.id, senderId));
+      
+      // Insert message
+      const [newMessage] = await db.insert(chatMessages).values({
+        conversationId,
+        senderId,
+        senderName: `${sender?.firstName || ''} ${sender?.lastName || ''}`.trim() || 'Unknown',
+        message: text,
+        messageType: 'text',
+        sentAt: new Date()
+      }).returning();
+      
+      // Update conversation's last message
+      await db.update(chatConversations)
+        .set({
+          lastMessage: text,
+          lastMessageAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(chatConversations.id, conversationId));
+      
+      // Return formatted message
+      return {
+        id: newMessage.id,
+        text: newMessage.message,
+        senderId: newMessage.senderId,
+        senderName: 'You',
+        timestamp: newMessage.sentAt.toISOString(),
+        read: false,
+        type: 'text'
+      };
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
+  }
 
   async getChatConversation(id: number): Promise<ChatConversation | undefined> {
     const [conversation] = await db.select().from(chatConversations)
