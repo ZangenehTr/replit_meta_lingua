@@ -265,30 +265,30 @@ export default function RoadmapDesigner() {
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Create Learning Roadmap</DialogTitle>
+              <DialogTitle>{t('roadmap.createNew')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Title</Label>
+                <Label>{t('roadmap.fields.title')}</Label>
                 <Input
                   value={roadmapForm.title}
                   onChange={(e) => setRoadmapForm({ ...roadmapForm, title: e.target.value })}
-                  placeholder="e.g., Business English Mastery"
+                  placeholder={t('roadmap.titlePlaceholder')}
                 />
               </div>
               
               <div>
-                <Label>Description</Label>
+                <Label>{t('roadmap.fields.description')}</Label>
                 <Textarea
                   value={roadmapForm.description}
                   onChange={(e) => setRoadmapForm({ ...roadmapForm, description: e.target.value })}
-                  placeholder="Describe the learning journey..."
+                  placeholder={t('roadmap.descriptionPlaceholder')}
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Target Language</Label>
+                  <Label>{t('roadmap.targetLanguage')}</Label>
                   <Select
                     value={roadmapForm.targetLanguage}
                     onValueChange={(v) => setRoadmapForm({ ...roadmapForm, targetLanguage: v })}
@@ -307,7 +307,7 @@ export default function RoadmapDesigner() {
                 </div>
                 
                 <div>
-                  <Label>Target Level</Label>
+                  <Label>{t('roadmap.targetLevel')}</Label>
                   <Select
                     value={roadmapForm.targetLevel}
                     onValueChange={(v) => setRoadmapForm({ ...roadmapForm, targetLevel: v })}
@@ -326,7 +326,7 @@ export default function RoadmapDesigner() {
                 </div>
                 
                 <div>
-                  <Label>Estimated Weeks</Label>
+                  <Label>{t('roadmap.estimatedWeeks')}</Label>
                   <Input
                     type="number"
                     value={roadmapForm.estimatedWeeks}
@@ -335,7 +335,7 @@ export default function RoadmapDesigner() {
                 </div>
                 
                 <div>
-                  <Label>Weekly Hours</Label>
+                  <Label>{t('roadmap.weeklyHours')}</Label>
                   <Input
                     type="number"
                     value={roadmapForm.weeklyHours}
@@ -388,11 +388,11 @@ export default function RoadmapDesigner() {
                           <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              {roadmap.estimatedWeeks} weeks
+                              {roadmap.estimatedWeeks} {t('roadmap.weeks')}
                             </span>
                             <span className="flex items-center gap-1">
                               <BookOpen className="w-3 h-3" />
-                              {roadmap.weeklyHours}h/week
+                              {roadmap.weeklyHours}{t('roadmap.hoursPerWeek')}
                             </span>
                           </div>
                         </div>
@@ -416,11 +416,11 @@ export default function RoadmapDesigner() {
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4 mr-1" />
-                      Edit
+                      {t('roadmap.edit')}
                     </Button>
                     <Button variant="outline" size="sm">
                       <Users className="w-4 h-4 mr-1" />
-                      Enrollments
+                      {t('roadmap.enrollments')}
                     </Button>
                   </div>
                 </div>
@@ -428,37 +428,37 @@ export default function RoadmapDesigner() {
               <CardContent>
                 <Tabs defaultValue="milestones">
                   <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="milestones">Milestones</TabsTrigger>
-                    <TabsTrigger value="analytics">Analytics</TabsTrigger>
-                    <TabsTrigger value="settings">Settings</TabsTrigger>
+                    <TabsTrigger value="milestones">{t('roadmap.milestones')}</TabsTrigger>
+                    <TabsTrigger value="analytics">{t('roadmap.analytics')}</TabsTrigger>
+                    <TabsTrigger value="settings">{t('roadmap.settings')}</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="milestones" className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold">Learning Milestones</h3>
+                      <h3 className="text-lg font-semibold">{t('roadmap.learningMilestones')}</h3>
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button size="sm">
                             <Plus className="w-4 h-4 mr-1" />
-                            Add Milestone
+                            {t('roadmap.addMilestone')}
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Add Milestone</DialogTitle>
+                            <DialogTitle>{t('roadmap.addMilestone')}</DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <div>
-                              <Label>Title</Label>
+                              <Label>{t('roadmap.fields.title')}</Label>
                               <Input
                                 value={milestoneForm.title}
                                 onChange={(e) => setMilestoneForm({ ...milestoneForm, title: e.target.value })}
-                                placeholder="e.g., Business Communication Basics"
+                                placeholder={t('roadmap.milestoneTitlePlaceholder')}
                               />
                             </div>
                             
                             <div>
-                              <Label>Week Number</Label>
+                              <Label>{t('roadmap.weekNumber')}</Label>
                               <Input
                                 type="number"
                                 value={milestoneForm.weekNumber}
@@ -467,7 +467,7 @@ export default function RoadmapDesigner() {
                             </div>
                             
                             <div>
-                              <Label>Primary Skill</Label>
+                              <Label>{t('roadmap.primarySkill')}</Label>
                               <Select
                                 value={milestoneForm.primarySkill}
                                 onValueChange={(v) => setMilestoneForm({ ...milestoneForm, primarySkill: v })}
@@ -490,7 +490,7 @@ export default function RoadmapDesigner() {
                               onClick={() => addMilestone.mutate(milestoneForm)}
                               disabled={addMilestone.isPending}
                             >
-                              Add Milestone
+                              {t('roadmap.addMilestone')}
                             </Button>
                           </div>
                         </DialogContent>
@@ -513,7 +513,7 @@ export default function RoadmapDesigner() {
                                   <div>
                                     <h4 className="font-semibold">{milestone.title}</h4>
                                     <p className="text-sm text-muted-foreground mt-1">
-                                      Week {milestone.weekNumber} • {milestone.primarySkill}
+                                      {t('roadmap.week')} {milestone.weekNumber} • {milestone.primarySkill}
                                     </p>
                                   </div>
                                   <Button
@@ -534,7 +534,7 @@ export default function RoadmapDesigner() {
                                         <CheckCircle className="w-4 h-4 text-muted-foreground" />
                                         <span className="text-sm">{step.title}</span>
                                         <span className="text-xs text-muted-foreground ml-auto mr-2">
-                                          {step.estimatedMinutes} min
+                                          {step.estimatedMinutes} {t('roadmap.minutes')}
                                         </span>
                                       </div>
                                     ))}
@@ -553,7 +553,7 @@ export default function RoadmapDesigner() {
                       <CardContent className="p-6">
                         <div className="text-center text-muted-foreground">
                           <TrendingUp className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p>Analytics will be available once students enroll</p>
+                          <p>{t('roadmap.analyticsAvailable')}</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -564,25 +564,25 @@ export default function RoadmapDesigner() {
                       <CardContent className="p-6 space-y-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <h4 className="font-semibold">Public Roadmap</h4>
+                            <h4 className="font-semibold">{t('roadmap.publicRoadmap')}</h4>
                             <p className="text-sm text-muted-foreground">
-                              Allow all students to see and enroll
+                              {t('roadmap.allowAllStudents')}
                             </p>
                           </div>
                           <Button variant="outline" size="sm">
-                            {selectedRoadmap.isPublic ? 'Public' : 'Private'}
+                            {selectedRoadmap.isPublic ? t('roadmap.public') : t('roadmap.private')}
                           </Button>
                         </div>
                         
                         <div className="flex items-center justify-between">
                           <div>
-                            <h4 className="font-semibold">Active Status</h4>
+                            <h4 className="font-semibold">{t('roadmap.activeStatus')}</h4>
                             <p className="text-sm text-muted-foreground">
-                              Enable or disable enrollments
+                              {t('roadmap.enableDisableEnrollments')}
                             </p>
                           </div>
                           <Button variant="outline" size="sm">
-                            {selectedRoadmap.isActive ? 'Active' : 'Inactive'}
+                            {selectedRoadmap.isActive ? t('roadmap.active') : t('roadmap.inactive')}
                           </Button>
                         </div>
                       </CardContent>
