@@ -1101,6 +1101,7 @@ export const leads = pgTable("leads", {
   source: text("source").notNull(), // website, social_media, referral, advertisement, walk_in
   status: text("status").notNull().default("new"), // new, contacted, interested, qualified, converted, lost
   priority: text("priority").default("medium"), // low, medium, high, urgent
+  level: text("level").notNull(), // Required field in the actual database
   interestedLanguage: text("interested_language"), // persian, english, arabic, etc
   interestedLevel: text("interested_level"), // beginner, intermediate, advanced
   preferredFormat: text("preferred_format"), // group, individual, online, in_person
@@ -1125,18 +1126,19 @@ export const insertLeadSchema = createInsertSchema(leads).omit({
 // COMMUNICATION LOGS (Call Center)
 export const communicationLogs = pgTable("communication_logs", {
   id: serial("id").primaryKey(),
-  leadId: integer("lead_id").references(() => leads.id),
-  studentId: integer("student_id").references(() => users.id),
-  agentId: integer("agent_id").references(() => users.id).notNull(),
+  fromUserId: integer("from_user_id").notNull().references(() => users.id),
+  toUserId: integer("to_user_id").references(() => users.id),
+  toParentId: integer("to_parent_id"),
   type: text("type").notNull(), // call, email, sms, meeting, note
-  direction: text("direction"), // inbound, outbound
-  duration: integer("duration_minutes"), // For calls
-  outcome: text("outcome"), // answered, no_answer, busy, voicemail, interested, not_interested
-  notes: text("notes"),
-  followUpRequired: boolean("follow_up_required").default(false),
-  followUpDate: timestamp("follow_up_date"),
-  recordingUrl: text("recording_url"), // For call recordings
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  subject: text("subject"),
+  content: text("content").notNull(),
+  status: text("status").default("sent"),
+  scheduledFor: timestamp("scheduled_for"),
+  sentAt: timestamp("sent_at"),
+  readAt: timestamp("read_at"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+  studentId: integer("student_id").references(() => users.id)
 });
 
 // Insert schema for communication logs

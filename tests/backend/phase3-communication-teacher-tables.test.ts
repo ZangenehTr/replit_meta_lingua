@@ -20,71 +20,116 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
   beforeAll(async () => {
     storage = new DatabaseStorage();
     
-    // Clean up any existing test data first - more thorough cleanup
+    // Clean up any existing test data first - use SQL for thorough cleanup
     try {
-      // First get user IDs if they exist
-      const existingUsers = await db.select().from(users).where(
-        eq(users.email, 'phase3_teacher@test.com')
-      );
+      // Get existing user IDs
+      const existingTeacher = await db.select().from(users).where(eq(users.email, 'phase3_teacher@test.com'));
+      const existingStudent = await db.select().from(users).where(eq(users.email, 'phase3_student@test.com'));
+      const existingAdmin = await db.select().from(users).where(eq(users.email, 'phase3_admin@test.com'));
       
-      // If teacher exists, delete courses they may have created
-      for (const user of existingUsers) {
-        // Use storage method to delete courses
-        const instructorCourses = await storage.getCoursesByInstructor(user.id);
-        for (const course of instructorCourses) {
-          await storage.deleteCourse(course.id).catch(() => {});
-        }
+      const userIds = [
+        ...existingTeacher.map(u => u.id),
+        ...existingStudent.map(u => u.id),
+        ...existingAdmin.map(u => u.id)
+      ];
+      
+      if (userIds.length > 0) {
+        // Clean up all dependent data via raw SQL to avoid FK constraints
+        await db.execute(`
+          DELETE FROM homework WHERE teacher_id = ANY($1) OR student_id = ANY($1)
+        `, [userIds]);
+        
+        await db.execute(`
+          DELETE FROM sessions WHERE tutor_id = ANY($1) OR student_id = ANY($1)
+        `, [userIds]);
+        
+        await db.execute(`
+          DELETE FROM courses WHERE instructor_id = ANY($1)
+        `, [userIds]);
+        
+        await db.execute(`
+          DELETE FROM communication_logs WHERE student_id = ANY($1)
+        `, [userIds]);
+        
+        await db.execute(`
+          DELETE FROM notifications WHERE user_id = ANY($1)
+        `, [userIds]);
+        
+        await db.execute(`
+          DELETE FROM messages WHERE sender_id = ANY($1) OR receiver_id = ANY($1)
+        `, [userIds]);
+        
+        await db.execute(`
+          DELETE FROM teacher_availability WHERE teacher_id = ANY($1)
+        `, [userIds]);
+        
+        await db.execute(`
+          DELETE FROM teacher_assignments WHERE teacher_id = ANY($1)
+        `, [userIds]);
+        
+        await db.execute(`
+          DELETE FROM attendance_records WHERE student_id = ANY($1)
+        `, [userIds]);
+        
+        // Finally delete the users
+        await db.execute(`
+          DELETE FROM users WHERE id = ANY($1)
+        `, [userIds]);
       }
-      
-      // Delete the test users
-      await db.delete(users).where(eq(users.email, 'phase3_admin@test.com'));
-      await db.delete(users).where(eq(users.email, 'phase3_teacher@test.com'));
-      await db.delete(users).where(eq(users.email, 'phase3_student@test.com'));
     } catch (error) {
-      // Silent cleanup - errors are expected if data doesn't exist
+      console.error('Cleanup error:', error);
     }
     
     // Create test users
     const hashedPassword = await bcrypt.hash('password123', 10);
     
-    // Create admin user
-    const [adminUser] = await db.insert(users).values({
-      username: 'phase3_admin',
-      email: 'phase3_admin@test.com',
-      password: hashedPassword,
-      firstName: 'Phase3',
-      lastName: 'Admin',
-      role: 'admin',
-      isActive: true,
-      isEmailVerified: true
-    }).returning();
-    testUserId = adminUser.id;
+    // Create or get admin user
+    let adminUser = await db.select().from(users).where(eq(users.email, 'phase3_admin@test.com'));
+    if (adminUser.length === 0) {
+      [adminUser[0]] = await db.insert(users).values({
+        username: 'phase3_admin',
+        email: 'phase3_admin@test.com',
+        password: hashedPassword,
+        firstName: 'Phase3',
+        lastName: 'Admin',
+        role: 'admin',
+        isActive: true,
+        isEmailVerified: true
+      }).returning();
+    }
+    testUserId = adminUser[0].id;
     
-    // Create teacher user
-    const [teacherUser] = await db.insert(users).values({
-      username: 'phase3_teacher',
-      email: 'phase3_teacher@test.com',
-      password: hashedPassword,
-      firstName: 'Phase3',
-      lastName: 'Teacher',
-      role: 'teacher',
-      isActive: true,
-      isEmailVerified: true
-    }).returning();
-    testTeacherId = teacherUser.id;
+    // Create or get teacher user
+    let teacherUser = await db.select().from(users).where(eq(users.email, 'phase3_teacher@test.com'));
+    if (teacherUser.length === 0) {
+      [teacherUser[0]] = await db.insert(users).values({
+        username: 'phase3_teacher',
+        email: 'phase3_teacher@test.com',
+        password: hashedPassword,
+        firstName: 'Phase3',
+        lastName: 'Teacher',
+        role: 'teacher',
+        isActive: true,
+        isEmailVerified: true
+      }).returning();
+    }
+    testTeacherId = teacherUser[0].id;
     
-    // Create student user
-    const [studentUser] = await db.insert(users).values({
-      username: 'phase3_student',
-      email: 'phase3_student@test.com',
-      password: hashedPassword,
-      firstName: 'Phase3',
-      lastName: 'Student',
-      role: 'student',
-      isActive: true,
-      isEmailVerified: true
-    }).returning();
-    testStudentId = studentUser.id;
+    // Create or get student user
+    let studentUser = await db.select().from(users).where(eq(users.email, 'phase3_student@test.com'));
+    if (studentUser.length === 0) {
+      [studentUser[0]] = await db.insert(users).values({
+        username: 'phase3_student',
+        email: 'phase3_student@test.com',
+        password: hashedPassword,
+        firstName: 'Phase3',
+        lastName: 'Student',
+        role: 'student',
+        isActive: true,
+        isEmailVerified: true
+      }).returning();
+    }
+    testStudentId = studentUser[0].id;
     
     // Create a test course and session
     const course = await storage.createCourse({
@@ -111,21 +156,23 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
   });
   
   afterAll(async () => {
-    // Cleanup test data - delete dependent data first to avoid foreign key constraints
-    
-    // Delete sessions, courses before users (foreign key dependencies)
+    // Cleanup test data - delete dependent data first using raw SQL
     try {
-      if (testSessionId) {
-        await storage.deleteSession(testSessionId).catch(() => {});
-      }
-      if (testCourseId) {
-        await storage.deleteCourse(testCourseId).catch(() => {});
-      }
+      const userIds = [testUserId, testTeacherId, testStudentId].filter(id => id);
       
-      // Delete users
-      await db.delete(users).where(eq(users.email, 'phase3_admin@test.com'));
-      await db.delete(users).where(eq(users.email, 'phase3_teacher@test.com'));
-      await db.delete(users).where(eq(users.email, 'phase3_student@test.com'));
+      if (userIds.length > 0) {
+        // Clean up all dependent data
+        await db.execute(`DELETE FROM homework WHERE teacher_id = ANY($1) OR student_id = ANY($1)`, [userIds]);
+        await db.execute(`DELETE FROM sessions WHERE tutor_id = ANY($1) OR student_id = ANY($1)`, [userIds]);
+        await db.execute(`DELETE FROM courses WHERE instructor_id = ANY($1)`, [userIds]);
+        await db.execute(`DELETE FROM communication_logs WHERE student_id = ANY($1)`, [userIds]);
+        await db.execute(`DELETE FROM notifications WHERE user_id = ANY($1)`, [userIds]);
+        await db.execute(`DELETE FROM messages WHERE sender_id = ANY($1) OR receiver_id = ANY($1)`, [userIds]);
+        await db.execute(`DELETE FROM teacher_availability WHERE teacher_id = ANY($1)`, [userIds]);
+        await db.execute(`DELETE FROM teacher_assignments WHERE teacher_id = ANY($1)`, [userIds]);
+        await db.execute(`DELETE FROM attendance_records WHERE student_id = ANY($1)`, [userIds]);
+        await db.execute(`DELETE FROM users WHERE id = ANY($1)`, [userIds]);
+      }
     } catch (error) {
       console.error('Cleanup error:', error);
     }
@@ -213,29 +260,28 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
     describe('Communication Logs', () => {
       it('should log a communication', async () => {
         const log = await storage.logCommunication({
+          fromUserId: testTeacherId,
+          toUserId: testStudentId,
           studentId: testStudentId,
-          agentId: testTeacherId,
           type: 'call',
-          direction: 'outbound',
-          duration_minutes: 300,
-          outcome: 'answered',
+          subject: 'Follow-up call',
+          content: 'Follow-up call about course progress',
           notes: 'Follow-up call about course progress'
         });
         
         expect(log).toBeDefined();
         expect(log.id).toBeDefined();
         expect(log.type).toBe('call');
-        expect(log.duration_minutes).toBe(300);
       });
       
       it('should retrieve communication logs', async () => {
         await storage.logCommunication({
+          fromUserId: testTeacherId,
+          toUserId: testStudentId,
           studentId: testStudentId,
-          agentId: testTeacherId,
           type: 'sms',
-          direction: 'outbound',
-          outcome: 'answered',
-          notes: 'Reminder SMS sent'
+          subject: 'Reminder',
+          content: 'Reminder SMS sent'
         });
         
         const logs = await storage.getCommunicationLogs(testStudentId);
@@ -253,6 +299,7 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
           phoneNumber: '+989121234567',
           source: 'website',
           status: 'new',
+          level: 'intermediate',
           interestedLanguage: 'english',
           notes: 'Interested in business English'
         });
@@ -270,7 +317,8 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
           phoneNumber: '+989121234568',
           email: 'jane@test.com',
           source: 'website',
-          status: 'new'
+          status: 'new',
+          level: 'beginner'
         });
         
         const updated = await storage.updateLeadStatus(lead.id, 'contacted');
@@ -284,7 +332,8 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
           phoneNumber: '+989121234569',
           email: 'active@test.com',
           source: 'website',
-          status: 'qualified'
+          status: 'qualified',
+          level: 'advanced'
         });
         
         const leads = await storage.getLeadsByStatus('qualified');
@@ -559,7 +608,10 @@ describe('Phase 3: Communication & Teacher Management Tables', () => {
         email: 'integration@test.com',
         phoneNumber: '+989121234567',
         source: 'website',
-        status: 'new'
+        status: 'new',
+        interestedLanguage: 'English',
+        preferredContactMethod: 'phone',
+        level: 'intermediate'
       });
       
       // Log communication
