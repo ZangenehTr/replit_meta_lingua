@@ -2737,24 +2737,12 @@ export class DatabaseStorage implements IStorage {
     return { id: Date.now(), ...parent };
   }
 
-  async getStudentReports(filters: any): Promise<any> {
-    return { reports: [], total: 0, page: 1, limit: 10 };
-  }
-
-  async createStudentReport(report: any): Promise<any> {
-    return { id: Date.now(), ...report, createdAt: new Date() };
-  }
-
   async getInstitutes(): Promise<any> {
     return [{ id: 1, name: 'Meta Lingua Institute', status: 'active' }];
   }
 
   async createInstitute(institute: any): Promise<any> {
     return { id: Date.now(), ...institute };
-  }
-
-  async getPaymentTransactions(filters: any): Promise<any> {
-    return { transactions: [], total: 0, page: 1, limit: 10 };
   }
 
   async getDailyRevenue(date: string): Promise<any> {
@@ -4043,58 +4031,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getUnassignedStudents(): Promise<any[]> {
-    const students = await this.db.select().from(users).where(
-      sql`${users.role} = 'Student' AND NOT EXISTS (
-        SELECT 1 FROM ${mentorAssignments} 
-        WHERE ${mentorAssignments.studentId} = ${users.id} 
-        AND ${mentorAssignments.status} = 'active'
-      )`
-    );
-    
-    return students.map(student => ({
-      id: student.id,
-      firstName: student.firstName,
-      lastName: student.lastName,
-      email: student.email,
-      level: student.level || 'beginner',
-      language: student.language || 'persian',
-      learningGoals: student.learningGoals || [],
-      enrollmentDate: student.createdAt
-    }));
-  }
 
-  async getAvailableMentors(): Promise<any[]> {
-    const mentors = await db.select().from(users).where(eq(users.role, 'Mentor'));
-    
-    // Get mentor statistics
-    const mentorStats = await Promise.all(mentors.map(async (mentor) => {
-      const activeAssignments = await db.select()
-        .from(mentorAssignments)
-        .where(
-          and(
-            eq(mentorAssignments.mentorId, mentor.id),
-            eq(mentorAssignments.status, 'active')
-          )
-        );
-      
-      return {
-        id: mentor.id,
-        firstName: mentor.firstName,
-        lastName: mentor.lastName,
-        email: mentor.email,
-        specializations: mentor.specializations || ['General', 'Conversation'],
-        languages: mentor.languages || ['persian', 'english'],
-        rating: Math.round((4.5 + Math.random() * 0.5) * 10) / 10,
-        activeStudents: activeAssignments.length,
-        maxStudents: 10,
-        availability: 'available',
-        bio: mentor.bio || 'Experienced language mentor'
-      };
-    }));
-    
-    return mentorStats.filter(mentor => mentor.activeStudents < mentor.maxStudents);
-  }
 
   async getTeacherStudentBundles(): Promise<any[]> {
     const students = await db.select().from(users).where(eq(users.role, 'Student'));
@@ -4213,33 +4150,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Callern Video Call System Methods
-  async getCallernPackages() {
-    const packages = await db.select().from(callernPackages)
-      .where(eq(callernPackages.isActive, true))
-      .orderBy(callernPackages.totalHours);
-    return packages;
-  }
-
-  async getStudentCallernPackages(studentId: number) {
-    const packages = await db.select({
-      id: studentCallernPackages.id,
-      packageId: studentCallernPackages.packageId,
-      packageName: callernPackages.packageName,
-      totalHours: studentCallernPackages.totalHours,
-      usedMinutes: studentCallernPackages.usedMinutes,
-      remainingMinutes: studentCallernPackages.remainingMinutes,
-      price: studentCallernPackages.price,
-      status: studentCallernPackages.status,
-      purchasedAt: studentCallernPackages.purchasedAt,
-      expiresAt: studentCallernPackages.expiresAt
-    })
-    .from(studentCallernPackages)
-    .leftJoin(callernPackages, eq(studentCallernPackages.packageId, callernPackages.id))
-    .where(eq(studentCallernPackages.studentId, studentId))
-    .orderBy(desc(studentCallernPackages.purchasedAt));
-    
-    return packages;
-  }
 
   async purchaseCallernPackage(data: {
     studentId: number;
@@ -4318,16 +4228,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getTeacherSessions(teacherId: number): Promise<any[]> {
-    try {
-      return await db.select().from(sessions)
-        .where(eq(sessions.tutorId, teacherId))
-        .orderBy(desc(sessions.date));
-    } catch (error) {
-      console.error('Error getting teacher sessions:', error);
-      return [];
-    }
-  }
+
   
   async getTeacherStudentCount(teacherId: number): Promise<number> {
     try {
@@ -4460,44 +4361,7 @@ export class DatabaseStorage implements IStorage {
     return teachers;
   }
 
-  async updateTeacherCallernAvailability(teacherId: number, updates: {
-    isOnline?: boolean;
-    availableHours?: string[];
-    hourlyRate?: number | null;
-    lastActiveAt?: Date;
-  }) {
-    const existing = await db.select().from(teacherCallernAvailability)
-      .where(eq(teacherCallernAvailability.teacherId, teacherId))
-      .limit(1);
-    
-    if (existing.length === 0) {
-      const [newAvailability] = await db.insert(teacherCallernAvailability)
-        .values({
-          teacherId,
-          isOnline: updates.isOnline || false,
-          availableHours: updates.availableHours || [],
-          hourlyRate: updates.hourlyRate !== undefined ? updates.hourlyRate : null,
-          lastActiveAt: updates.lastActiveAt || new Date()
-        })
-        .returning();
-      return newAvailability;
-    } else {
-      const updateData: any = {
-        updatedAt: new Date()
-      };
-      
-      if (updates.isOnline !== undefined) updateData.isOnline = updates.isOnline;
-      if (updates.availableHours !== undefined) updateData.availableHours = updates.availableHours;
-      if (updates.hourlyRate !== undefined) updateData.hourlyRate = updates.hourlyRate;
-      if (updates.lastActiveAt !== undefined) updateData.lastActiveAt = updates.lastActiveAt;
-      
-      const [updated] = await db.update(teacherCallernAvailability)
-        .set(updateData)
-        .where(eq(teacherCallernAvailability.teacherId, teacherId))
-        .returning();
-      return updated;
-    }
-  }
+
 
   async getStudentCallernHistory(studentId: number) {
     const history = await db.select({
@@ -5148,70 +5012,9 @@ export class DatabaseStorage implements IStorage {
     return lessonsWithProgress;
   }
 
-  async updateVideoProgress(progressData: any): Promise<VideoProgress> {
-    const { studentId, videoLessonId, watchTime, totalDuration, completed, lastWatchedAt } = progressData;
 
-    // Check if progress exists
-    const [existing] = await db.select().from(videoProgress)
-      .where(and(
-        eq(videoProgress.studentId, studentId),
-        eq(videoProgress.videoLessonId, videoLessonId)
-      ));
 
-    if (existing) {
-      // Update existing progress
-      const [updated] = await db.update(videoProgress)
-        .set({
-          watchTime,
-          totalDuration,
-          completed,
-          lastWatchedAt,
-          updatedAt: new Date()
-        })
-        .where(eq(videoProgress.id, existing.id))
-        .returning();
-      
-      // Update video lesson view count if this is first time watching
-      if (!existing.watchTime || existing.watchTime === 0) {
-        await db.update(videoLessons)
-          .set({ viewCount: sql`${videoLessons.viewCount} + 1` })
-          .where(eq(videoLessons.id, videoLessonId));
-      }
-      
-      return updated;
-    } else {
-      // Create new progress
-      const [newProgress] = await db.insert(videoProgress)
-        .values({
-          studentId,
-          videoLessonId,
-          watchTime,
-          totalDuration,
-          completed,
-          lastWatchedAt
-        })
-        .returning();
-      
-      // Update video lesson view count
-      await db.update(videoLessons)
-        .set({ viewCount: sql`${videoLessons.viewCount} + 1` })
-        .where(eq(videoLessons.id, videoLessonId));
-      
-      return newProgress;
-    }
-  }
 
-  async createVideoNote(noteData: any): Promise<VideoNote> {
-    const { studentId, videoLessonId, timestamp, content } = noteData;
-    const [newNote] = await db.insert(videoNotes).values({
-      studentId,
-      videoLessonId,
-      timestamp,
-      content,
-      createdAt: new Date()
-    }).returning();
-    return newNote;
-  }
 
   async getVideoNotes(studentId: number, lessonId: number): Promise<VideoNote[]> {
     return await db.select().from(videoNotes)
@@ -5222,17 +5025,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(videoNotes.timestamp);
   }
 
-  async createVideoBookmark(bookmarkData: any): Promise<VideoBookmark> {
-    const { studentId, videoLessonId, timestamp, title } = bookmarkData;
-    const [newBookmark] = await db.insert(videoBookmarks).values({
-      studentId,
-      videoLessonId,
-      timestamp,
-      title,
-      createdAt: new Date()
-    }).returning();
-    return newBookmark;
-  }
+
 
   async getVideoBookmarks(studentId: number, lessonId: number): Promise<VideoBookmark[]> {
     return await db.select().from(videoBookmarks)
@@ -5500,15 +5293,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(games).orderBy(games.gameName);
   }
 
-  async createGame(gameData: InsertGame): Promise<Game> {
-    const [game] = await db.insert(games).values(gameData).returning();
-    return game;
-  }
 
-  async updateGame(id: number, gameData: Partial<InsertGame>): Promise<Game | undefined> {
-    const [game] = await db.update(games).set(gameData).where(eq(games.id, id)).returning();
-    return game;
-  }
 
   async deleteGame(id: number): Promise<boolean> {
     const result = await db.delete(games).where(eq(games.id, id));
