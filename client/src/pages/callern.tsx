@@ -114,44 +114,6 @@ export default function CallernSystem() {
   // Fetch available teachers
   const { data: availableTeachers = [], isLoading: teachersLoading } = useQuery({
     queryKey: ["/api/student/callern-teachers", selectedLanguage],
-    queryFn: async () => {
-      // Mock data for now - replace with actual API call
-      return [
-        {
-          id: 1,
-          firstName: "Sarah",
-          lastName: "Johnson",
-          languages: ["English", "Spanish"],
-          specializations: ["Business", "Conversational"],
-          rating: 4.8,
-          hourlyRate: 25,
-          isOnline: true,
-          profileImageUrl: ""
-        },
-        {
-          id: 2,
-          firstName: "Ahmed",
-          lastName: "Hassan",
-          languages: ["Arabic", "English"],
-          specializations: ["Academic", "Grammar"],
-          rating: 4.9,
-          hourlyRate: 30,
-          isOnline: true,
-          profileImageUrl: ""
-        },
-        {
-          id: 3,
-          firstName: "Maria",
-          lastName: "Garcia",
-          languages: ["Spanish", "Portuguese", "English"],
-          specializations: ["Conversational", "Travel"],
-          rating: 4.7,
-          hourlyRate: 22,
-          isOnline: false,
-          profileImageUrl: ""
-        }
-      ];
-    }
   });
 
   // Purchase package mutation
@@ -205,8 +167,10 @@ export default function CallernSystem() {
       return;
     }
 
-    // Generate room ID
-    const roomId = `callern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Generate room ID using crypto for security
+    const randomStr = window.crypto.getRandomValues(new Uint8Array(6))
+      .reduce((acc, byte) => acc + byte.toString(36), '');
+    const roomId = `callern-${Date.now()}-${randomStr}`;
 
     // Set up call configuration
     setActiveCallConfig({

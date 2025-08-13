@@ -8496,8 +8496,8 @@ Return JSON format:
           return {
             name: model,
             size: info?.details?.parameter_size || "Unknown",
-            modified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-            digest: `sha256:${Math.random().toString(36).substring(2, 15)}`,
+            modified: new Date(Date.now() - crypto.randomInt(30) * 24 * 60 * 60 * 1000).toISOString(),
+            digest: `sha256:${crypto.randomBytes(12).toString('hex')}`,
             family: model.includes('llama') ? 'llama' : model.includes('mistral') ? 'mistral' : 'other',
             format: "gguf",
             parameterSize: model.includes('1b') ? '1B' : model.includes('3b') ? '3B' : '7B',
@@ -8728,8 +8728,8 @@ Return JSON format:
           return {
             name: model,
             size: info?.details?.parameter_size || "Unknown",
-            modified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-            digest: `sha256:${Math.random().toString(36).substring(2, 15)}`,
+            modified: new Date(Date.now() - crypto.randomInt(30) * 24 * 60 * 60 * 1000).toISOString(),
+            digest: `sha256:${crypto.randomBytes(12).toString('hex')}`,
             family: model.includes('llama') ? 'llama' : model.includes('mistral') ? 'mistral' : 'other',
             format: "gguf",
             parameterSize: model.includes('1b') ? '1B' : model.includes('3b') ? '3B' : '7B',
@@ -9700,7 +9700,7 @@ Return JSON format:
       const { jobId } = req.params;
       
       // Simulate training progress
-      const progress = Math.min(100, Math.floor(Math.random() * 100));
+      const progress = Math.min(100, Math.floor(crypto.randomInt(100)));
       const status = progress === 100 ? 'completed' : 'training';
 
       res.json({
@@ -9871,7 +9871,7 @@ Return JSON format:
       const invoiceData = {
         ...req.body,
         currency: 'IRR',
-        invoiceNumber: `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+        invoiceNumber: `INV-${Date.now()}-${crypto.randomBytes(6).toString('hex').toUpperCase()}`
       };
       const invoice = await storage.createInvoice(invoiceData);
       res.status(201).json(invoice);
@@ -11343,10 +11343,10 @@ Return JSON format:
           iranianTaxCompliance: true
         },
         performanceMetrics: {
-          totalSessions: Math.floor(Math.random() * 50) + 20,
-          averageRating: (4.2 + Math.random() * 0.8).toFixed(1),
-          attendanceRate: (92 + Math.random() * 8).toFixed(1),
-          studentRetentionRate: (88 + Math.random() * 10).toFixed(1)
+          totalSessions: crypto.randomInt(20, 70),
+          averageRating: (4.2 + crypto.randomInt(0, 80) / 100).toFixed(1),
+          attendanceRate: (92 + crypto.randomInt(0, 8)).toFixed(1),
+          studentRetentionRate: (88 + crypto.randomInt(0, 10)).toFixed(1)
         }
       };
       
@@ -11674,8 +11674,8 @@ Return JSON format:
         user: req.user.email,
         success: true,
         metrics: {
-          followers: Math.floor(Math.random() * 10000) + 1000,
-          engagement: (Math.random() * 5 + 2).toFixed(1) + '%',
+          followers: crypto.randomInt(1000, 11000),
+          engagement: (crypto.randomInt(200, 700) / 100).toFixed(1) + '%',
           lastPost: 'آموزش زبان فارسی - درس جدید',
           iranianMarket: true
         }
@@ -15186,15 +15186,15 @@ Meta Lingua Academy`;
             avatar: profile?.avatarUrl,
             course: 'Persian Language', // This should come from enrollment data
             level: profile?.currentLevel || 'A1',
-            progress: Math.floor(Math.random() * 100), // This should come from real progress tracking
-            attendance: Math.floor(Math.random() * 100), // This should come from attendance records
-            lastSession: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            nextSession: new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            progress: crypto.randomInt(0, 100), // This should come from real progress tracking
+            attendance: crypto.randomInt(0, 100), // This should come from attendance records
+            lastSession: new Date(Date.now() - crypto.randomInt(30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            nextSession: new Date(Date.now() + crypto.randomInt(7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             status: 'active',
-            totalHours: Math.floor(Math.random() * 100) + 20,
-            completedLessons: Math.floor(Math.random() * 50) + 10,
-            totalLessons: Math.floor(Math.random() * 20) + 50,
-            averageGrade: (Math.random() * 2 + 3).toFixed(1),
+            totalHours: crypto.randomInt(20, 120),
+            completedLessons: crypto.randomInt(10, 60),
+            totalLessons: crypto.randomInt(50, 70),
+            averageGrade: (crypto.randomInt(300, 500) / 100).toFixed(1),
             strengths: ['Speaking', 'Listening'],
             weaknesses: ['Grammar', 'Writing']
           });
@@ -15943,7 +15943,7 @@ Meta Lingua Academy`;
         availability: 'Available',
         profileImage: tutor.profileImage || '',
         bio: tutor.bio || 'Experienced language teacher specializing in personalized learning.',
-        isOnline: Math.random() > 0.5,
+        isOnline: crypto.randomInt(2) === 1,
         isFavorite: false
       }));
       
@@ -15975,7 +15975,7 @@ Meta Lingua Academy`;
         availability: 'Available',
         profileImage: tutor.profileImage || '',
         bio: tutor.bio || 'Experienced language teacher specializing in personalized learning.',
-        isOnline: Math.random() > 0.5,
+        isOnline: crypto.randomInt(2) === 1,
         isFavorite: false
       }));
       
