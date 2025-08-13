@@ -9469,4 +9469,532 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  // ============================================
+  // Phase 4: Remaining Unconnected Tables (16 tables)
+  // ============================================
+  
+  // Learning Support Tables (4 tables)
+  
+  // 1. Glossary Items - Personal vocabulary collections
+  async addGlossaryItem(data: any): Promise<any> {
+    try {
+      const [item] = await db.insert(glossaryItems).values({
+        userId: data.userId,
+        term: data.term,
+        definition: data.definition,
+        language: data.language || 'en',
+        context: data.context,
+        tags: data.tags || [],
+        metadata: data.metadata || {}
+      }).returning();
+      return item;
+    } catch (error) {
+      console.error('Error adding glossary item:', error);
+      throw error;
+    }
+  }
+
+  async getUserGlossary(userId: number): Promise<any[]> {
+    try {
+      return await db.select().from(glossaryItems)
+        .where(eq(glossaryItems.userId, userId))
+        .orderBy(desc(glossaryItems.createdAt));
+    } catch (error) {
+      console.error('Error fetching user glossary:', error);
+      return [];
+    }
+  }
+
+  // 2. Rewrite Suggestions - AI writing improvements
+  async createRewriteSuggestion(data: any): Promise<any> {
+    try {
+      const [suggestion] = await db.insert(rewriteSuggestions).values({
+        userId: data.userId,
+        originalText: data.originalText,
+        suggestedText: data.suggestedText,
+        improvementType: data.improvementType,
+        confidence: data.confidence || 0.8,
+        context: data.context,
+        metadata: data.metadata || {}
+      }).returning();
+      return suggestion;
+    } catch (error) {
+      console.error('Error creating rewrite suggestion:', error);
+      throw error;
+    }
+  }
+
+  async getUserRewriteSuggestions(userId: number): Promise<any[]> {
+    try {
+      return await db.select().from(rewriteSuggestions)
+        .where(eq(rewriteSuggestions.userId, userId))
+        .orderBy(desc(rewriteSuggestions.createdAt));
+    } catch (error) {
+      console.error('Error fetching rewrite suggestions:', error);
+      return [];
+    }
+  }
+
+  // 3. Suggested Terms - AI vocabulary recommendations
+  async createSuggestedTerm(data: any): Promise<any> {
+    try {
+      const [term] = await db.insert(suggestedTerms).values({
+        userId: data.userId,
+        term: data.term,
+        translation: data.translation,
+        difficulty: data.difficulty || 'intermediate',
+        frequency: data.frequency || 1,
+        context: data.context,
+        language: data.language || 'en',
+        metadata: data.metadata || {}
+      }).returning();
+      return term;
+    } catch (error) {
+      console.error('Error creating suggested term:', error);
+      throw error;
+    }
+  }
+
+  async getUserSuggestedTerms(userId: number): Promise<any[]> {
+    try {
+      return await db.select().from(suggestedTerms)
+        .where(eq(suggestedTerms.userId, userId))
+        .orderBy(desc(suggestedTerms.createdAt));
+    } catch (error) {
+      console.error('Error fetching suggested terms:', error);
+      return [];
+    }
+  }
+
+  // 4. AI Knowledge Base - Training data storage
+  async addToAIKnowledgeBase(data: any): Promise<any> {
+    try {
+      const [entry] = await db.insert(aiKnowledgeBase).values({
+        category: data.category,
+        subcategory: data.subcategory,
+        content: data.content,
+        language: data.language || 'en',
+        tags: data.tags || [],
+        version: data.version || 1,
+        isActive: true,
+        metadata: data.metadata || {}
+      }).returning();
+      return entry;
+    } catch (error) {
+      console.error('Error adding to AI knowledge base:', error);
+      throw error;
+    }
+  }
+
+  async searchAIKnowledgeBase(category: string, language?: string): Promise<any[]> {
+    try {
+      let query = db.select().from(aiKnowledgeBase)
+        .where(eq(aiKnowledgeBase.category, category));
+      
+      if (language) {
+        query = query.where(eq(aiKnowledgeBase.language, language));
+      }
+      
+      return await query.orderBy(desc(aiKnowledgeBase.createdAt));
+    } catch (error) {
+      console.error('Error searching AI knowledge base:', error);
+      return [];
+    }
+  }
+
+  // Business Operations Tables (4 tables)
+  
+  // 5. Invoices - Billing records
+  async createInvoice(data: any): Promise<any> {
+    try {
+      const [invoice] = await db.insert(invoices).values({
+        userId: data.userId,
+        invoiceNumber: data.invoiceNumber || `INV-${Date.now()}`,
+        amount: data.amount,
+        currency: data.currency || 'IRR',
+        status: data.status || 'pending',
+        dueDate: data.dueDate,
+        items: data.items || [],
+        metadata: data.metadata || {}
+      }).returning();
+      return invoice;
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      throw error;
+    }
+  }
+
+  async getUserInvoices(userId: number): Promise<any[]> {
+    try {
+      return await db.select().from(invoices)
+        .where(eq(invoices.userId, userId))
+        .orderBy(desc(invoices.createdAt));
+    } catch (error) {
+      console.error('Error fetching user invoices:', error);
+      return [];
+    }
+  }
+
+  // 6. Course Referrals - Referral tracking
+  async createCourseReferral(data: any): Promise<any> {
+    try {
+      const [referral] = await db.insert(courseReferrals).values({
+        referrerId: data.referrerId,
+        referredUserId: data.referredUserId,
+        courseId: data.courseId,
+        referralCode: data.referralCode || `REF-${Date.now()}`,
+        status: data.status || 'pending',
+        commissionRate: data.commissionRate || 0.1,
+        metadata: data.metadata || {}
+      }).returning();
+      return referral;
+    } catch (error) {
+      console.error('Error creating course referral:', error);
+      throw error;
+    }
+  }
+
+  async getReferralsByUser(userId: number): Promise<any[]> {
+    try {
+      return await db.select().from(courseReferrals)
+        .where(eq(courseReferrals.referrerId, userId))
+        .orderBy(desc(courseReferrals.createdAt));
+    } catch (error) {
+      console.error('Error fetching referrals:', error);
+      return [];
+    }
+  }
+
+  // 7. Referral Commissions - Commission tracking
+  async createReferralCommission(data: any): Promise<any> {
+    try {
+      const [commission] = await db.insert(referralCommissions).values({
+        referralId: data.referralId,
+        userId: data.userId,
+        amount: data.amount,
+        currency: data.currency || 'IRR',
+        status: data.status || 'pending',
+        paidAt: data.paidAt,
+        metadata: data.metadata || {}
+      }).returning();
+      return commission;
+    } catch (error) {
+      console.error('Error creating referral commission:', error);
+      throw error;
+    }
+  }
+
+  async getUserCommissions(userId: number): Promise<any[]> {
+    try {
+      return await db.select().from(referralCommissions)
+        .where(eq(referralCommissions.userId, userId))
+        .orderBy(desc(referralCommissions.createdAt));
+    } catch (error) {
+      console.error('Error fetching commissions:', error);
+      return [];
+    }
+  }
+
+  // 8. Referral Settings - Program configuration
+  async getReferralSettings(): Promise<any> {
+    try {
+      const [settings] = await db.select().from(referralSettings)
+        .where(eq(referralSettings.isActive, true))
+        .limit(1);
+      return settings || { defaultCommissionRate: 0.1, minPayout: 100000 };
+    } catch (error) {
+      console.error('Error fetching referral settings:', error);
+      return { defaultCommissionRate: 0.1, minPayout: 100000 };
+    }
+  }
+
+  async updateReferralSettings(data: any): Promise<any> {
+    try {
+      const [updated] = await db.insert(referralSettings).values({
+        defaultCommissionRate: data.defaultCommissionRate,
+        minPayout: data.minPayout,
+        maxTiers: data.maxTiers || 1,
+        tierRates: data.tierRates || {},
+        isActive: true,
+        metadata: data.metadata || {}
+      }).returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating referral settings:', error);
+      throw error;
+    }
+  }
+
+  // Group Management Tables (3 tables)
+  
+  // 9. Student Groups - Group definitions
+  async createStudentGroup(data: any): Promise<any> {
+    try {
+      const [group] = await db.insert(studentGroups).values({
+        name: data.name,
+        description: data.description,
+        instituteId: data.instituteId || 1,
+        teacherId: data.teacherId,
+        maxMembers: data.maxMembers || 20,
+        groupType: data.groupType || 'class',
+        isActive: true,
+        metadata: data.metadata || {}
+      }).returning();
+      return group;
+    } catch (error) {
+      console.error('Error creating student group:', error);
+      throw error;
+    }
+  }
+
+  async getStudentGroups(): Promise<any[]> {
+    try {
+      return await db.select().from(studentGroups)
+        .where(eq(studentGroups.isActive, true))
+        .orderBy(desc(studentGroups.createdAt));
+    } catch (error) {
+      console.error('Error fetching student groups:', error);
+      return [];
+    }
+  }
+
+  // 10. Student Group Members - Membership tracking
+  async addStudentToGroup(groupId: number, studentId: number): Promise<any> {
+    try {
+      const [member] = await db.insert(studentGroupMembers).values({
+        groupId: groupId,
+        studentId: studentId,
+        role: 'member',
+        joinedAt: new Date(),
+        isActive: true
+      }).returning();
+      return member;
+    } catch (error) {
+      console.error('Error adding student to group:', error);
+      throw error;
+    }
+  }
+
+  async getGroupMembers(groupId: number): Promise<any[]> {
+    try {
+      return await db.select().from(studentGroupMembers)
+        .where(eq(studentGroupMembers.groupId, groupId))
+        .orderBy(desc(studentGroupMembers.joinedAt));
+    } catch (error) {
+      console.error('Error fetching group members:', error);
+      return [];
+    }
+  }
+
+  // 11. Student Preferences - Learning preferences
+  async updateStudentPreferences(userId: number, preferences: any): Promise<any> {
+    try {
+      const existing = await db.select().from(studentPreferences)
+        .where(eq(studentPreferences.userId, userId))
+        .limit(1);
+      
+      if (existing.length > 0) {
+        const [updated] = await db.update(studentPreferences)
+          .set({
+            ...preferences,
+            updatedAt: new Date()
+          })
+          .where(eq(studentPreferences.userId, userId))
+          .returning();
+        return updated;
+      } else {
+        const [created] = await db.insert(studentPreferences).values({
+          userId: userId,
+          ...preferences
+        }).returning();
+        return created;
+      }
+    } catch (error) {
+      console.error('Error updating student preferences:', error);
+      throw error;
+    }
+  }
+
+  async getStudentPreferences(userId: number): Promise<any> {
+    try {
+      const [prefs] = await db.select().from(studentPreferences)
+        .where(eq(studentPreferences.userId, userId))
+        .limit(1);
+      return prefs || {};
+    } catch (error) {
+      console.error('Error fetching student preferences:', error);
+      return {};
+    }
+  }
+
+  // System Tables (3 tables)
+  
+  // 12. System Config - Global settings
+  async getSystemConfig(key: string): Promise<any> {
+    try {
+      const [config] = await db.select().from(systemConfig)
+        .where(eq(systemConfig.key, key))
+        .limit(1);
+      return config?.value || null;
+    } catch (error) {
+      console.error('Error fetching system config:', error);
+      return null;
+    }
+  }
+
+  async setSystemConfig(key: string, value: any): Promise<any> {
+    try {
+      const existing = await db.select().from(systemConfig)
+        .where(eq(systemConfig.key, key))
+        .limit(1);
+      
+      if (existing.length > 0) {
+        const [updated] = await db.update(systemConfig)
+          .set({ value: value, updatedAt: new Date() })
+          .where(eq(systemConfig.key, key))
+          .returning();
+        return updated;
+      } else {
+        const [created] = await db.insert(systemConfig).values({
+          key: key,
+          value: value,
+          category: 'general'
+        }).returning();
+        return created;
+      }
+    } catch (error) {
+      console.error('Error setting system config:', error);
+      throw error;
+    }
+  }
+
+  // 13. System Metrics - Performance tracking
+  async recordSystemMetric(data: any): Promise<any> {
+    try {
+      const [metric] = await db.insert(systemMetrics).values({
+        metricType: data.metricType,
+        metricName: data.metricName,
+        value: data.value,
+        unit: data.unit || 'count',
+        timestamp: data.timestamp || new Date(),
+        metadata: data.metadata || {}
+      }).returning();
+      return metric;
+    } catch (error) {
+      console.error('Error recording system metric:', error);
+      throw error;
+    }
+  }
+
+  async getSystemMetrics(metricType: string, limit: number = 100): Promise<any[]> {
+    try {
+      return await db.select().from(systemMetrics)
+        .where(eq(systemMetrics.metricType, metricType))
+        .orderBy(desc(systemMetrics.timestamp))
+        .limit(limit);
+    } catch (error) {
+      console.error('Error fetching system metrics:', error);
+      return [];
+    }
+  }
+
+  // 14. Course Sessions - Individual session scheduling
+  async createCourseSession(data: any): Promise<any> {
+    try {
+      const [session] = await db.insert(courseSessions).values({
+        courseId: data.courseId,
+        sessionNumber: data.sessionNumber,
+        title: data.title,
+        description: data.description,
+        scheduledDate: data.scheduledDate,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        durationMinutes: data.durationMinutes || 60,
+        status: data.status || 'scheduled'
+      }).returning();
+      return session;
+    } catch (error) {
+      console.error('Error creating course session:', error);
+      throw error;
+    }
+  }
+
+  async getCourseSessions(courseId: number): Promise<any[]> {
+    try {
+      return await db.select().from(courseSessions)
+        .where(eq(courseSessions.courseId, courseId))
+        .orderBy(courseSessions.sessionNumber);
+    } catch (error) {
+      console.error('Error fetching course sessions:', error);
+      return [];
+    }
+  }
+
+  // Assessment Tables (2 tables)
+  
+  // 15. Quiz Results - Score tracking
+  async recordQuizResult(data: any): Promise<any> {
+    try {
+      const [result] = await db.insert(quizResults).values({
+        userId: data.userId,
+        quizId: data.quizId,
+        score: data.score,
+        maxScore: data.maxScore,
+        percentage: data.percentage || (data.score / data.maxScore * 100),
+        timeTaken: data.timeTaken,
+        answers: data.answers || {},
+        completedAt: new Date(),
+        metadata: data.metadata || {}
+      }).returning();
+      return result;
+    } catch (error) {
+      console.error('Error recording quiz result:', error);
+      throw error;
+    }
+  }
+
+  async getUserQuizResults(userId: number): Promise<any[]> {
+    try {
+      return await db.select().from(quizResults)
+        .where(eq(quizResults.userId, userId))
+        .orderBy(desc(quizResults.completedAt));
+    } catch (error) {
+      console.error('Error fetching quiz results:', error);
+      return [];
+    }
+  }
+
+  // 16. Class Observations - Observation records
+  async createClassObservation(data: any): Promise<any> {
+    try {
+      const [observation] = await db.insert(classObservations).values({
+        teacherId: data.teacherId,
+        observerId: data.observerId,
+        classId: data.classId,
+        observationDate: data.observationDate || new Date(),
+        duration: data.duration || 60,
+        strengths: data.strengths || [],
+        improvements: data.improvements || [],
+        overallRating: data.overallRating || 3,
+        feedback: data.feedback,
+        metadata: data.metadata || {}
+      }).returning();
+      return observation;
+    } catch (error) {
+      console.error('Error creating class observation:', error);
+      throw error;
+    }
+  }
+
+  async getTeacherObservations(teacherId: number): Promise<any[]> {
+    try {
+      return await db.select().from(classObservations)
+        .where(eq(classObservations.teacherId, teacherId))
+        .orderBy(desc(classObservations.observationDate));
+    } catch (error) {
+      console.error('Error fetching teacher observations:', error);
+      return [];
+    }
+  }
 }
