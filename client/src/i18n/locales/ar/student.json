@@ -129,5 +129,11 @@
   },
   "sessions": "جلسات",
   "experience": "الخبرة",
-  "years": "سنوات"
+  "years": "سنوات",
+  "practice": "تدريب",
+  "upcomingSessions": "الجلسات القادمة",
+  "searchMessages": "البحث عن الرسائل...",
+  "noMessages": "لا توجد رسائل",
+  "profile": "الملف الشخصي",
+  "join": "انضمام"
 }

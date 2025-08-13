@@ -132,6 +132,12 @@
   "goodAfternoon": "Good Afternoon",
   "goodMorning": "Good Morning",
   "goodEvening": "Good Evening",
+  "practice": "Practice",
+  "upcomingSessions": "Upcoming Sessions",
+  "searchMessages": "Search messages...",
+  "noMessages": "No messages found",
+  "profile": "Profile",
+  "join": "Join",
   "courses": {
     "exploreCourses": "Explore Courses",
     "searchPlaceholder": "Search courses...",
