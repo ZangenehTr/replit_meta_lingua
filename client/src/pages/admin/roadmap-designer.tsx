@@ -249,10 +249,10 @@ export default function RoadmapDesigner() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Map className="w-8 h-8" />
-            Learning Roadmap Designer
+            {t('roadmap.title')}
           </h1>
           <p className="text-muted-foreground mt-2">
-            Create structured learning paths for students
+            {t('roadmap.subtitle')}
           </p>
         </div>
         
@@ -260,7 +260,7 @@ export default function RoadmapDesigner() {
           <DialogTrigger asChild>
             <Button size="lg">
               <Plus className="mr-2" />
-              Create New Roadmap
+              {t('roadmap.createNew')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -362,13 +362,13 @@ export default function RoadmapDesigner() {
         <div className="col-span-4 space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Available Roadmaps</CardTitle>
+              <CardTitle>{t('roadmap.availableRoadmaps')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {loadingRoadmaps ? (
                 <p>Loading roadmaps...</p>
               ) : roadmaps.length === 0 ? (
-                <p className="text-muted-foreground">No roadmaps created yet</p>
+                <p className="text-muted-foreground">{t('roadmap.noRoadmaps')}</p>
               ) : (
                 roadmaps.map((roadmap: Roadmap) => (
                   <Card
@@ -595,9 +595,9 @@ export default function RoadmapDesigner() {
             <Card>
               <CardContent className="p-12 text-center">
                 <Map className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-lg font-semibold mb-2">Select a Roadmap</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('roadmap.selectRoadmap')}</h3>
                 <p className="text-muted-foreground">
-                  Choose a roadmap from the list to view and edit its details
+                  {t('roadmap.chooseRoadmap')}
                 </p>
               </CardContent>
             </Card>
