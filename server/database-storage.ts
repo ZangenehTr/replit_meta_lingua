@@ -84,7 +84,17 @@ import {
   type AuditLog, type InsertAuditLog,
   type EmailLog, type InsertEmailLog,
   type StudentReport, type InsertStudentReport,
-  type PaymentTransaction, type InsertPaymentTransaction
+  type PaymentTransaction, type InsertPaymentTransaction,
+  // Phase 2: Organizational & Student Management tables
+  institutes, departments, customRoles, parentGuardians, studentNotes,
+  levelAssessmentQuestions, levelAssessmentResults,
+  type Institute, type InsertInstitute,
+  type Department, type InsertDepartment,
+  type CustomRole, type InsertCustomRole,
+  type ParentGuardian, type InsertParentGuardian,
+  type StudentNote, type InsertStudentNote,
+  type LevelAssessmentQuestion, type InsertLevelAssessmentQuestion,
+  type LevelAssessmentResult, type InsertLevelAssessmentResult
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -2161,35 +2171,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Mentor Dashboard methods
-  async getMentorAssignments(mentorId: number): Promise<any[]> {
-    return await db
-      .select({
-        id: mentorAssignments.id,
-        mentorId: mentorAssignments.mentorId,
-        studentId: mentorAssignments.studentId,
-        status: mentorAssignments.status,
-        assignedDate: mentorAssignments.assignedDate,
-        completedDate: mentorAssignments.completedDate,
-        goals: mentorAssignments.goals,
-        notes: mentorAssignments.notes,
-        student: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          email: users.email
-        }
-      })
-      .from(mentorAssignments)
-      .leftJoin(users, eq(mentorAssignments.studentId, users.id))
-      .where(eq(mentorAssignments.mentorId, mentorId))
-      .orderBy(desc(mentorAssignments.assignedDate));
-  }
-
-  async createMentorAssignment(assignment: InsertMentorAssignment): Promise<MentorAssignment> {
-    const [created] = await db.insert(mentorAssignments).values(assignment).returning();
-    return created;
-  }
+  // Mentor Dashboard methods - moved to Phase 2 section
 
   // Get unassigned students
   async getUnassignedStudents(): Promise<any[]> {
@@ -2307,18 +2289,7 @@ export class DatabaseStorage implements IStorage {
     return assignmentsWithDetails;
   }
 
-  async getMentoringSessions(assignmentId: number): Promise<MentoringSession[]> {
-    return await db
-      .select()
-      .from(mentoringSessions)
-      .where(eq(mentoringSessions.assignmentId, assignmentId))
-      .orderBy(desc(mentoringSessions.scheduledDate));
-  }
-
-  async createMentoringSession(session: InsertMentoringSession): Promise<MentoringSession> {
-    const [created] = await db.insert(mentoringSessions).values(session).returning();
-    return created;
-  }
+  // Moved to Phase 2 section for better organization
 
   // Call Center Stats
   async getCallCenterStats(agentId: number) {
@@ -2721,29 +2692,15 @@ export class DatabaseStorage implements IStorage {
     return { id: Date.now(), ...record };
   }
 
-  async getStudentNotes(studentId: number): Promise<any> {
-    return { notes: [], total: 0 };
-  }
-
-  async createStudentNote(note: any): Promise<any> {
-    return { id: Date.now(), ...note, createdAt: new Date() };
-  }
+  // Moved to Phase 2 section with real database implementation
 
   async getStudentParents(studentId: number): Promise<any> {
     return { parents: [], total: 0 };
   }
 
-  async createParentGuardian(parent: any): Promise<any> {
-    return { id: Date.now(), ...parent };
-  }
+  // Moved to Phase 2 section with real database implementation
 
-  async getInstitutes(): Promise<any> {
-    return [{ id: 1, name: 'Meta Lingua Institute', status: 'active' }];
-  }
-
-  async createInstitute(institute: any): Promise<any> {
-    return { id: Date.now(), ...institute };
-  }
+  // Moved to Phase 2 section with real database implementation
 
   async getDailyRevenue(date: string): Promise<any> {
     return { revenue: 12500, transactions: 15, date };
@@ -3363,38 +3320,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Placement test methods
-  async getPlacementTests(): Promise<any[]> {
-    return [
-      {
-        id: 1,
-        title: 'آزمون تعیین سطح فارسی مقدماتی',
-        description: 'آزمون تعیین سطح برای سنجش مهارت‌های پایه فارسی',
-        language: 'فارسی',
-        level: 'مقدماتی',
-        duration: 45,
-        questionCount: 30,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: 2,
-        title: 'آزمون تعیین سطح فارسی پیشرفته',
-        description: 'آزمون تعیین سطح برای سنجش مهارت‌های پیشرفته فارسی',
-        language: 'فارسی',
-        level: 'پیشرفته',
-        duration: 60,
-        questionCount: 50,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ];
-  }
-
-  async createPlacementTest(test: any): Promise<any> {
-    return { id: Date.now(), ...test, createdAt: new Date(), updatedAt: new Date() };
-  }
+  // Moved to Phase 2 section with real database implementation
 
   async updatePlacementTest(id: number, updates: any): Promise<any> {
     return { id, ...updates, updatedAt: new Date() };
@@ -8553,6 +8479,754 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching transaction details:', error);
       throw error;
+    }
+  }
+  
+  // ============================================
+  // PHASE 2: ORGANIZATIONAL & STUDENT MANAGEMENT
+  // ============================================
+  
+  // ===== ORGANIZATIONAL STRUCTURE =====
+  
+  // Institutes Management
+  async getInstitutes(): Promise<any[]> {
+    try {
+      return await db.select().from(institutes)
+        .where(eq(institutes.isActive, true))
+        .orderBy(institutes.name);
+    } catch (error) {
+      console.error('Error fetching institutes:', error);
+      return [];
+    }
+  }
+  
+  async getInstituteById(id: number): Promise<any> {
+    try {
+      const [institute] = await db.select().from(institutes)
+        .where(eq(institutes.id, id));
+      return institute;
+    } catch (error) {
+      console.error('Error fetching institute:', error);
+      return null;
+    }
+  }
+  
+  async createInstitute(institute: any): Promise<any> {
+    try {
+      const [created] = await db.insert(institutes).values({
+        name: institute.name,
+        code: institute.code,
+        description: institute.description,
+        address: institute.address,
+        phoneNumber: institute.phoneNumber,
+        email: institute.email,
+        website: institute.website,
+        logo: institute.logo,
+        primaryColor: institute.primaryColor || '#3B82F6',
+        secondaryColor: institute.secondaryColor || '#10B981',
+        timezone: institute.timezone || 'UTC',
+        isActive: institute.isActive ?? true
+      }).returning();
+      return created;
+    } catch (error) {
+      console.error('Error creating institute:', error);
+      throw error;
+    }
+  }
+  
+  async updateInstitute(id: number, updates: any): Promise<any> {
+    try {
+      const [updated] = await db.update(institutes)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(institutes.id, id))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating institute:', error);
+      throw error;
+    }
+  }
+  
+  async deleteInstitute(id: number): Promise<boolean> {
+    try {
+      const result = await db.update(institutes)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(institutes.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting institute:', error);
+      return false;
+    }
+  }
+  
+  // Departments Management
+  async getDepartments(instituteId?: number): Promise<any[]> {
+    try {
+      let query = db.select({
+        id: departments.id,
+        instituteId: departments.instituteId,
+        name: departments.name,
+        description: departments.description,
+        headTeacherId: departments.headTeacherId,
+        isActive: departments.isActive,
+        createdAt: departments.createdAt,
+        headTeacherName: sql`${users.firstName} || ' ' || ${users.lastName}`
+      })
+      .from(departments)
+      .leftJoin(users, eq(departments.headTeacherId, users.id))
+      .where(eq(departments.isActive, true));
+      
+      if (instituteId) {
+        query = query.where(and(
+          eq(departments.instituteId, instituteId),
+          eq(departments.isActive, true)
+        ));
+      }
+      
+      return await query.orderBy(departments.name);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      return [];
+    }
+  }
+  
+  async getDepartmentById(id: number): Promise<any> {
+    try {
+      const [department] = await db.select().from(departments)
+        .where(eq(departments.id, id));
+      return department;
+    } catch (error) {
+      console.error('Error fetching department:', error);
+      return null;
+    }
+  }
+  
+  async createDepartment(department: any): Promise<any> {
+    try {
+      const [created] = await db.insert(departments).values({
+        instituteId: department.instituteId,
+        name: department.name,
+        description: department.description,
+        headTeacherId: department.headTeacherId,
+        isActive: department.isActive ?? true
+      }).returning();
+      return created;
+    } catch (error) {
+      console.error('Error creating department:', error);
+      throw error;
+    }
+  }
+  
+  async updateDepartment(id: number, updates: any): Promise<any> {
+    try {
+      const [updated] = await db.update(departments)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(departments.id, id))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating department:', error);
+      throw error;
+    }
+  }
+  
+  async deleteDepartment(id: number): Promise<boolean> {
+    try {
+      const result = await db.update(departments)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(departments.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting department:', error);
+      return false;
+    }
+  }
+  
+  // Custom Roles Management
+  async getCustomRoles(): Promise<any[]> {
+    try {
+      return await db.select().from(customRoles)
+        .orderBy(customRoles.name);
+    } catch (error) {
+      console.error('Error fetching custom roles:', error);
+      return [];
+    }
+  }
+  
+  async getCustomRoleById(id: number): Promise<any> {
+    try {
+      const [role] = await db.select().from(customRoles)
+        .where(eq(customRoles.id, id));
+      return role;
+    } catch (error) {
+      console.error('Error fetching custom role:', error);
+      return null;
+    }
+  }
+  
+  async createCustomRole(role: any): Promise<any> {
+    try {
+      const [created] = await db.insert(customRoles).values({
+        name: role.name,
+        description: role.description,
+        permissions: role.permissions,
+        isSystemRole: role.isSystemRole || false
+      }).returning();
+      return created;
+    } catch (error) {
+      console.error('Error creating custom role:', error);
+      throw error;
+    }
+  }
+  
+  async updateCustomRole(id: number, updates: any): Promise<any> {
+    try {
+      const [updated] = await db.update(customRoles)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(customRoles.id, id))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating custom role:', error);
+      throw error;
+    }
+  }
+  
+  async deleteCustomRole(id: number): Promise<boolean> {
+    try {
+      // Don't delete system roles
+      const role = await this.getCustomRoleById(id);
+      if (role?.isSystemRole) {
+        console.error('Cannot delete system role');
+        return false;
+      }
+      
+      const result = await db.delete(customRoles)
+        .where(eq(customRoles.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting custom role:', error);
+      return false;
+    }
+  }
+  
+  // ===== STUDENT MANAGEMENT =====
+  
+  // Mentor Assignments
+  async getMentorAssignments(mentorId?: number, studentId?: number): Promise<any[]> {
+    try {
+      let query = db.select({
+        id: mentorAssignments.id,
+        mentorId: mentorAssignments.mentorId,
+        studentId: mentorAssignments.studentId,
+        status: mentorAssignments.status,
+        assignedDate: mentorAssignments.assignedDate,
+        completedDate: mentorAssignments.completedDate,
+        goals: mentorAssignments.goals,
+        notes: mentorAssignments.notes,
+        createdAt: mentorAssignments.createdAt,
+        mentorName: sql`${users}.first_name || ' ' || ${users}.last_name`,
+        studentName: sql`${users}.first_name || ' ' || ${users}.last_name`
+      })
+      .from(mentorAssignments)
+      .leftJoin(users, eq(mentorAssignments.mentorId, users.id));
+      
+      const conditions = [];
+      if (mentorId) conditions.push(eq(mentorAssignments.mentorId, mentorId));
+      if (studentId) conditions.push(eq(mentorAssignments.studentId, studentId));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      return await query.orderBy(desc(mentorAssignments.createdAt));
+    } catch (error) {
+      console.error('Error fetching mentor assignments:', error);
+      return [];
+    }
+  }
+  
+  async createMentorAssignment(assignment: any): Promise<any> {
+    try {
+      const [created] = await db.insert(mentorAssignments).values({
+        mentorId: assignment.mentorId,
+        studentId: assignment.studentId,
+        status: assignment.status || 'active',
+        assignedDate: assignment.assignedDate || new Date(),
+        completedDate: assignment.completedDate,
+        goals: Array.isArray(assignment.goals) ? assignment.goals : assignment.goals ? [assignment.goals] : [],
+        notes: assignment.notes
+      }).returning();
+      return created;
+    } catch (error) {
+      console.error('Error creating mentor assignment:', error);
+      throw error;
+    }
+  }
+  
+  async updateMentorAssignment(id: number, updates: any): Promise<any> {
+    try {
+      const [updated] = await db.update(mentorAssignments)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(mentorAssignments.id, id))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating mentor assignment:', error);
+      throw error;
+    }
+  }
+  
+  async deleteMentorAssignment(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(mentorAssignments)
+        .where(eq(mentorAssignments.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting mentor assignment:', error);
+      return false;
+    }
+  }
+  
+  async getActiveMentorAssignments(mentorId: number): Promise<any[]> {
+    try {
+      return await this.getMentorAssignments(mentorId)
+        .then(assignments => assignments.filter(a => a.status === 'active'));
+    } catch (error) {
+      console.error('Error fetching active mentor assignments:', error);
+      return [];
+    }
+  }
+  
+  // Mentoring Sessions
+  async getMentoringSessions(mentorId?: number, studentId?: number): Promise<any[]> {
+    try {
+      let query = db.select({
+        id: mentoringSessions.id,
+        assignmentId: mentoringSessions.assignmentId,
+        scheduledDate: mentoringSessions.scheduledDate,
+        duration: mentoringSessions.duration,
+        sessionType: mentoringSessions.sessionType,
+        status: mentoringSessions.status,
+        topics: mentoringSessions.topics,
+        outcomes: mentoringSessions.outcomes,
+        nextSteps: mentoringSessions.nextSteps,
+        mentorNotes: mentoringSessions.mentorNotes,
+        studentProgress: mentoringSessions.studentProgress,
+        completedAt: mentoringSessions.completedAt,
+        createdAt: mentoringSessions.createdAt
+      })
+      .from(mentoringSessions)
+      .leftJoin(mentorAssignments, eq(mentoringSessions.assignmentId, mentorAssignments.id));
+      
+      const conditions = [];
+      if (mentorId) conditions.push(eq(mentorAssignments.mentorId, mentorId));
+      if (studentId) conditions.push(eq(mentorAssignments.studentId, studentId));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      return await query.orderBy(desc(mentoringSessions.scheduledDate));
+    } catch (error) {
+      console.error('Error fetching mentoring sessions:', error);
+      return [];
+    }
+  }
+  
+  async createMentoringSession(session: any): Promise<any> {
+    try {
+      const [created] = await db.insert(mentoringSessions).values({
+        assignmentId: session.assignmentId,
+        scheduledDate: session.scheduledDate,
+        duration: session.duration || 60,
+        sessionType: session.sessionType || 'regular',
+        status: session.status || 'scheduled',
+        topics: Array.isArray(session.topics) ? session.topics : session.topics ? [session.topics] : [],
+        outcomes: session.outcomes,
+        nextSteps: Array.isArray(session.nextSteps) ? session.nextSteps : session.nextSteps ? [session.nextSteps] : [],
+        mentorNotes: session.mentorNotes,
+        studentProgress: session.studentProgress
+      }).returning();
+      return created;
+    } catch (error) {
+      console.error('Error creating mentoring session:', error);
+      throw error;
+    }
+  }
+  
+  async updateMentoringSession(id: number, updates: any): Promise<any> {
+    try {
+      // Ensure arrays are properly formatted
+      if (updates.topics && !Array.isArray(updates.topics)) {
+        updates.topics = [updates.topics];
+      }
+      if (updates.nextSteps && !Array.isArray(updates.nextSteps)) {
+        updates.nextSteps = [updates.nextSteps];
+      }
+      
+      const [updated] = await db.update(mentoringSessions)
+        .set(updates)
+        .where(eq(mentoringSessions.id, id))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating mentoring session:', error);
+      throw error;
+    }
+  }
+  
+  async completeMentoringSession(id: number, outcome: any): Promise<any> {
+    try {
+      return await this.updateMentoringSession(id, {
+        status: 'completed',
+        outcomes: outcome.outcomes || outcome.outcome,  // Support both field names
+        nextSteps: Array.isArray(outcome.nextSteps) ? outcome.nextSteps : outcome.nextSteps ? [outcome.nextSteps] : [],
+        mentorNotes: outcome.mentorNotes || outcome.notes,  // Support both field names
+        completedAt: new Date()
+      });
+    } catch (error) {
+      console.error('Error completing mentoring session:', error);
+      throw error;
+    }
+  }
+  
+  // Parent/Guardian Management
+  async getParentGuardians(studentId: number): Promise<any[]> {
+    try {
+      return await db.select().from(parentGuardians)
+        .where(eq(parentGuardians.studentId, studentId))
+        .orderBy(desc(parentGuardians.isPrimary), parentGuardians.name);
+    } catch (error) {
+      console.error('Error fetching parent guardians:', error);
+      return [];
+    }
+  }
+  
+  async getParentGuardianById(id: number): Promise<any> {
+    try {
+      const [guardian] = await db.select().from(parentGuardians)
+        .where(eq(parentGuardians.id, id));
+      return guardian;
+    } catch (error) {
+      console.error('Error fetching parent guardian:', error);
+      return null;
+    }
+  }
+  
+  async createParentGuardian(guardian: any): Promise<any> {
+    try {
+      const [created] = await db.insert(parentGuardians).values({
+        studentId: guardian.studentId,
+        name: guardian.name,
+        relationship: guardian.relationship,
+        phoneNumber: guardian.phoneNumber,
+        email: guardian.email,
+        address: guardian.address,
+        isPrimary: guardian.isPrimary || false,
+        emergencyContact: guardian.emergencyContact || false,
+        canPickup: guardian.canPickup ?? true,
+        notes: guardian.notes
+      }).returning();
+      return created;
+    } catch (error) {
+      console.error('Error creating parent guardian:', error);
+      throw error;
+    }
+  }
+  
+  async updateParentGuardian(id: number, updates: any): Promise<any> {
+    try {
+      const [updated] = await db.update(parentGuardians)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(parentGuardians.id, id))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating parent guardian:', error);
+      throw error;
+    }
+  }
+  
+  async deleteParentGuardian(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(parentGuardians)
+        .where(eq(parentGuardians.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting parent guardian:', error);
+      return false;
+    }
+  }
+  
+  // Student Notes
+  async getStudentNotes(studentId: number, teacherId?: number): Promise<any[]> {
+    try {
+      let query = db.select({
+        id: studentNotes.id,
+        studentId: studentNotes.studentId,
+        teacherId: studentNotes.teacherId,
+        type: studentNotes.type,
+        title: studentNotes.title,
+        content: studentNotes.content,
+        priority: studentNotes.priority,
+        isPrivate: studentNotes.isPrivate,
+        tags: studentNotes.tags,
+        createdAt: studentNotes.createdAt,
+        teacherName: sql`${users.firstName} || ' ' || ${users.lastName}`
+      })
+      .from(studentNotes)
+      .leftJoin(users, eq(studentNotes.teacherId, users.id))
+      .where(eq(studentNotes.studentId, studentId));
+      
+      if (teacherId) {
+        query = query.where(and(
+          eq(studentNotes.studentId, studentId),
+          eq(studentNotes.teacherId, teacherId)
+        ));
+      }
+      
+      return await query.orderBy(desc(studentNotes.createdAt));
+    } catch (error) {
+      console.error('Error fetching student notes:', error);
+      return [];
+    }
+  }
+  
+  async createStudentNote(note: any): Promise<any> {
+    try {
+      const [created] = await db.insert(studentNotes).values({
+        studentId: note.studentId,
+        teacherId: note.teacherId,
+        type: note.type,
+        title: note.title,
+        content: note.content,
+        priority: note.priority || 'normal',
+        isPrivate: note.isPrivate || false,
+        tags: note.tags || []
+      }).returning();
+      return created;
+    } catch (error) {
+      console.error('Error creating student note:', error);
+      throw error;
+    }
+  }
+  
+  async updateStudentNote(id: number, updates: any): Promise<any> {
+    try {
+      const [updated] = await db.update(studentNotes)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(studentNotes.id, id))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating student note:', error);
+      throw error;
+    }
+  }
+  
+  async deleteStudentNote(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(studentNotes)
+        .where(eq(studentNotes.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting student note:', error);
+      return false;
+    }
+  }
+  
+  // ===== PLACEMENT & ASSESSMENT =====
+  
+  // Level Assessment Questions
+  async getLevelAssessmentQuestions(language?: string, difficulty?: string): Promise<any[]> {
+    try {
+      let query = db.select().from(levelAssessmentQuestions)
+        .where(eq(levelAssessmentQuestions.isActive, true));
+      
+      const conditions = [eq(levelAssessmentQuestions.isActive, true)];
+      if (language) conditions.push(eq(levelAssessmentQuestions.language, language));
+      if (difficulty) conditions.push(eq(levelAssessmentQuestions.difficulty, difficulty));
+      
+      query = query.where(and(...conditions));
+      
+      return await query.orderBy(levelAssessmentQuestions.order, levelAssessmentQuestions.difficulty);
+    } catch (error) {
+      console.error('Error fetching level assessment questions:', error);
+      return [];
+    }
+  }
+  
+  async createLevelAssessmentQuestion(question: any): Promise<any> {
+    try {
+      const [created] = await db.insert(levelAssessmentQuestions).values({
+        language: question.language,
+        questionText: question.questionText,
+        questionType: question.questionType,
+        difficulty: question.difficulty,
+        options: question.options,
+        correctAnswer: question.correctAnswer,
+        mediaUrl: question.mediaUrl,
+        points: question.points || 1,
+        isActive: question.isActive ?? true,
+        order: question.order || 0,
+        createdBy: question.createdBy
+      }).returning();
+      return created;
+    } catch (error) {
+      console.error('Error creating level assessment question:', error);
+      throw error;
+    }
+  }
+  
+  async updateLevelAssessmentQuestion(id: number, updates: any): Promise<any> {
+    try {
+      const [updated] = await db.update(levelAssessmentQuestions)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(levelAssessmentQuestions.id, id))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating level assessment question:', error);
+      throw error;
+    }
+  }
+  
+  async deleteLevelAssessmentQuestion(id: number): Promise<boolean> {
+    try {
+      const result = await db.update(levelAssessmentQuestions)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(levelAssessmentQuestions.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting level assessment question:', error);
+      return false;
+    }
+  }
+  
+  // Level Assessment Results
+  async getLevelAssessmentResults(userId: number, language?: string): Promise<any[]> {
+    try {
+      let query = db.select().from(levelAssessmentResults)
+        .where(eq(levelAssessmentResults.userId, userId));
+      
+      if (language) {
+        query = query.where(and(
+          eq(levelAssessmentResults.userId, userId),
+          eq(levelAssessmentResults.language, language)
+        ));
+      }
+      
+      return await query.orderBy(desc(levelAssessmentResults.completedAt));
+    } catch (error) {
+      console.error('Error fetching level assessment results:', error);
+      return [];
+    }
+  }
+  
+  async createLevelAssessmentResult(result: any): Promise<any> {
+    try {
+      const [created] = await db.insert(levelAssessmentResults).values({
+        userId: result.userId,
+        language: result.language,
+        totalScore: result.totalScore,
+        maxScore: result.maxScore,
+        proficiencyLevel: result.proficiencyLevel,
+        answers: result.answers,
+        timeTaken: result.timeTaken
+      }).returning();
+      return created;
+    } catch (error) {
+      console.error('Error creating level assessment result:', error);
+      throw error;
+    }
+  }
+  
+  async getLatestAssessmentResult(userId: number, language: string): Promise<any> {
+    try {
+      const [result] = await db.select().from(levelAssessmentResults)
+        .where(and(
+          eq(levelAssessmentResults.userId, userId),
+          eq(levelAssessmentResults.language, language)
+        ))
+        .orderBy(desc(levelAssessmentResults.completedAt))
+        .limit(1);
+      return result;
+    } catch (error) {
+      console.error('Error fetching latest assessment result:', error);
+      return null;
+    }
+  }
+  
+  // Placement Test Management (using tests table with type='placement')
+  async getPlacementTests(): Promise<any[]> {
+    try {
+      return await db.select().from(tests)
+        .where(and(
+          eq(tests.testType, 'placement'),
+          eq(tests.isActive, true)
+        ))
+        .orderBy(tests.language, tests.level);
+    } catch (error) {
+      console.error('Error fetching placement tests:', error);
+      return [];
+    }
+  }
+  
+  async createPlacementTest(test: any): Promise<any> {
+    try {
+      const [created] = await db.insert(tests).values({
+        ...test,
+        testType: 'placement',
+        isActive: test.isActive ?? true
+      }).returning();
+      return created;
+    } catch (error) {
+      console.error('Error creating placement test:', error);
+      throw error;
+    }
+  }
+  
+  async assignPlacementTest(studentId: number, testId: number): Promise<any> {
+    try {
+      // Create a test attempt for the student
+      const [attempt] = await db.insert(testAttempts).values({
+        testId,
+        studentId,
+        attemptNumber: 1,
+        status: 'assigned'
+      }).returning();
+      return attempt;
+    } catch (error) {
+      console.error('Error assigning placement test:', error);
+      throw error;
+    }
+  }
+  
+  async getStudentPlacementResults(studentId: number): Promise<any[]> {
+    try {
+      return await db.select({
+        id: testAttempts.id,
+        testId: testAttempts.testId,
+        testTitle: tests.title,
+        language: tests.language,
+        level: tests.level,
+        score: testAttempts.score,
+        percentage: testAttempts.percentage,
+        status: testAttempts.status,
+        completedAt: testAttempts.completedAt,
+        feedback: testAttempts.feedback
+      })
+      .from(testAttempts)
+      .leftJoin(tests, eq(testAttempts.testId, tests.id))
+      .where(and(
+        eq(testAttempts.studentId, studentId),
+        eq(tests.testType, 'placement')
+      ))
+      .orderBy(desc(testAttempts.completedAt));
+    } catch (error) {
+      console.error('Error fetching student placement results:', error);
+      return [];
     }
   }
 }

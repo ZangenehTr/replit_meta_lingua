@@ -665,6 +665,75 @@ export interface IStorage {
     endDate?: Date;
   }): Promise<any[]>;
   getTransactionDetails(id: number): Promise<any>;
+  
+  // PHASE 2: Organizational & Student Management Tables
+  
+  // ===== ORGANIZATIONAL STRUCTURE =====
+  // Institutes Management
+  getInstitutes(): Promise<any[]>;
+  getInstituteById(id: number): Promise<any>;
+  createInstitute(institute: any): Promise<any>;
+  updateInstitute(id: number, updates: any): Promise<any>;
+  deleteInstitute(id: number): Promise<boolean>;
+  
+  // Departments Management
+  getDepartments(instituteId?: number): Promise<any[]>;
+  getDepartmentById(id: number): Promise<any>;
+  createDepartment(department: any): Promise<any>;
+  updateDepartment(id: number, updates: any): Promise<any>;
+  deleteDepartment(id: number): Promise<boolean>;
+  
+  // Custom Roles Management
+  getCustomRoles(): Promise<any[]>;
+  getCustomRoleById(id: number): Promise<any>;
+  createCustomRole(role: any): Promise<any>;
+  updateCustomRole(id: number, updates: any): Promise<any>;
+  deleteCustomRole(id: number): Promise<boolean>;
+  
+  // ===== STUDENT MANAGEMENT =====
+  // Mentor Assignments
+  getMentorAssignments(mentorId?: number, studentId?: number): Promise<any[]>;
+  createMentorAssignment(assignment: any): Promise<any>;
+  updateMentorAssignment(id: number, updates: any): Promise<any>;
+  deleteMentorAssignment(id: number): Promise<boolean>;
+  getActiveMentorAssignments(mentorId: number): Promise<any[]>;
+  
+  // Mentoring Sessions
+  getMentoringSessions(mentorId?: number, studentId?: number): Promise<any[]>;
+  createMentoringSession(session: any): Promise<any>;
+  updateMentoringSession(id: number, updates: any): Promise<any>;
+  completeMentoringSession(id: number, outcome: any): Promise<any>;
+  
+  // Parent/Guardian Management
+  getParentGuardians(studentId: number): Promise<any[]>;
+  getParentGuardianById(id: number): Promise<any>;
+  createParentGuardian(guardian: any): Promise<any>;
+  updateParentGuardian(id: number, updates: any): Promise<any>;
+  deleteParentGuardian(id: number): Promise<boolean>;
+  
+  // Student Notes
+  getStudentNotes(studentId: number, teacherId?: number): Promise<any[]>;
+  createStudentNote(note: any): Promise<any>;
+  updateStudentNote(id: number, updates: any): Promise<any>;
+  deleteStudentNote(id: number): Promise<boolean>;
+  
+  // ===== PLACEMENT & ASSESSMENT =====
+  // Level Assessment Questions
+  getLevelAssessmentQuestions(language?: string, difficulty?: string): Promise<any[]>;
+  createLevelAssessmentQuestion(question: any): Promise<any>;
+  updateLevelAssessmentQuestion(id: number, updates: any): Promise<any>;
+  deleteLevelAssessmentQuestion(id: number): Promise<boolean>;
+  
+  // Level Assessment Results
+  getLevelAssessmentResults(userId: number, language?: string): Promise<any[]>;
+  createLevelAssessmentResult(result: any): Promise<any>;
+  getLatestAssessmentResult(userId: number, language: string): Promise<any>;
+  
+  // Placement Test Management (using tests table with type='placement')
+  getPlacementTests(): Promise<any[]>;
+  createPlacementTest(test: any): Promise<any>;
+  assignPlacementTest(studentId: number, testId: number): Promise<any>;
+  getStudentPlacementResults(studentId: number): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
