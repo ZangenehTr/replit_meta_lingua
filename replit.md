@@ -37,7 +37,7 @@ Code quality: Always avoid duplications - no duplicate code, methods, or logic. 
 - **Student Management**: CRUD operations, course enrollment, progress tracking, cultural profiling, and SMS notifications.
 - **Payment & Wallet System**: IRR-based wallet, member tiers, and transaction tracking.
 - **Course Management**: Creation, teacher assignment, session scheduling, and progress monitoring, including video courses and Callern on-demand video tutoring.
-- **Callern Service**: 24/7 on-demand video tutoring system using WebRTC for real-time video calling, screen sharing, and call recording capabilities. Includes AI-powered features like live vocabulary suggestions, automatic transcript generation, grammar rewrite suggestions, personal glossary building with SRS, and quiz generation.
+- **Callern Service**: 24/7 on-demand video tutoring system using WebRTC for real-time video calling, screen sharing, and call recording capabilities. Includes AI-powered features like live vocabulary suggestions, automatic transcript generation, grammar rewrite suggestions, personal glossary building with SRS, and quiz generation. Features teacher authorization system using teacherCallernAvailability table to control which teachers can provide Callern services.
 - **Gamification Features**: XP/level system, achievements, daily challenges, age-based games.
 - **VoIP Integration**: Isabel VoIP line for call recording and call center functionality.
 - **Teacher vs Mentor System**: Differentiated roles for direct instruction and progress monitoring.

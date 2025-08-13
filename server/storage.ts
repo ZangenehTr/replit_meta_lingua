@@ -3106,11 +3106,28 @@ export class MemStorage implements IStorage {
   }
 
   async getTeacherCallernAvailability(teacherId?: number): Promise<any[]> {
-    return [];
+    // Mock implementation - returns sample data for authorized teachers
+    const availabilityData = [
+      { teacherId: 1, isOnline: true, hourlyRate: 55, availableHours: [], lastActiveAt: null },
+      { teacherId: 37, isOnline: true, hourlyRate: 300000, availableHours: [], lastActiveAt: null }
+    ];
+    
+    if (teacherId) {
+      return availabilityData.filter(a => a.teacherId === teacherId);
+    }
+    return availabilityData;
   }
 
   async getTeachersForCallern(): Promise<any[]> {
-    return Array.from(this.users.values()).filter(u => u.role === 'Teacher');
+    // Only return teachers who are authorized for Callern (have entries in teacher_callern_availability table)
+    // This is a mock implementation - in production, this would query the database
+    // Currently returns teachers with IDs 1 and 37 based on actual database entries
+    const authorizedTeacherIds = [1, 37]; // These are the teachers in teacher_callern_availability table
+    return Array.from(this.users.values()).filter(u => 
+      (u.role === 'Teacher' || u.role === 'Teacher/Tutor') && 
+      u.isActive && 
+      authorizedTeacherIds.includes(u.id)
+    );
   }
 
   async createCallernPackage(pkg: any): Promise<any> {
@@ -3124,6 +3141,9 @@ export class MemStorage implements IStorage {
   async setTeacherCallernAvailability(teacherId: number, availability: any): Promise<any>;
   async setTeacherCallernAvailability(availabilityData: any): Promise<any>;
   async setTeacherCallernAvailability(teacherIdOrData: any, availability?: any): Promise<any> {
+    // Mock implementation - in production, this would insert into the database
+    console.log('Setting teacher Callern availability:', teacherIdOrData, availability);
+    
     if (typeof teacherIdOrData === 'number') {
       return { id: 1, teacherId: teacherIdOrData, ...availability, updatedAt: new Date() };
     } else {

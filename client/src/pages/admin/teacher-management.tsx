@@ -55,7 +55,9 @@ import {
   Calendar,
   User,
   Camera,
-  Upload
+  Upload,
+  Video,
+  VideoOff
 } from "lucide-react";
 
 const teacherSchema = z.object({
@@ -93,6 +95,13 @@ export function AdminTeacherManagement() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+  
+  // Fetch Callern teachers authorization status
+  const { data: callernTeachers = [] } = useQuery({
+    queryKey: ['/api/admin/callern-teachers'],
+    retry: 3,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const form = useForm<TeacherFormData>({
     resolver: zodResolver(teacherSchema),
@@ -110,6 +119,46 @@ export function AdminTeacherManagement() {
       status: "active",
     },
   });
+
+  // Handler for toggling Callern authorization
+  const handleCallernToggle = async (teacher: any) => {
+    try {
+      const isAuthorized = callernTeachers.find((ct: any) => ct.id === teacher.id)?.isCallernAuthorized;
+      
+      if (isAuthorized) {
+        // Revoke authorization
+        await apiRequest(`/api/admin/callern-teachers/${teacher.id}/authorize`, {
+          method: "DELETE"
+        });
+        toast({
+          title: "Callern Access Revoked",
+          description: `${teacher.firstName} ${teacher.lastName} can no longer provide Callern services.`,
+        });
+      } else {
+        // Grant authorization
+        await apiRequest(`/api/admin/callern-teachers/${teacher.id}/authorize`, {
+          method: "POST",
+          body: JSON.stringify({
+            hourlyRate: teacher.hourlyRate || 150000
+          })
+        });
+        toast({
+          title: "Callern Access Granted",
+          description: `${teacher.firstName} ${teacher.lastName} can now provide Callern services.`,
+        });
+      }
+      
+      // Refetch both lists
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/callern-teachers'] });
+    } catch (error) {
+      toast({
+        title: "Operation Failed",
+        description: "Failed to update Callern authorization.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const createTeacherMutation = useMutation({
     mutationFn: async (data: TeacherFormData) => {
@@ -657,9 +706,17 @@ export function AdminTeacherManagement() {
                         <CardTitle className="text-lg">
                           {teacher.firstName} {teacher.lastName}
                         </CardTitle>
-                        <Badge variant={teacher.isActive !== false ? "default" : "secondary"}>
-                          {teacher.isActive !== false ? t('admin:teacherManagement.status.active') : t('admin:teacherManagement.status.inactive')}
-                        </Badge>
+                        <div className="flex gap-2">
+                          <Badge variant={teacher.isActive !== false ? "default" : "secondary"}>
+                            {teacher.isActive !== false ? t('admin:teacherManagement.status.active') : t('admin:teacherManagement.status.inactive')}
+                          </Badge>
+                          {callernTeachers.find((ct: any) => ct.id === teacher.id)?.isCallernAuthorized && (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                              <Video className="h-3 w-3 mr-1" />
+                              Callern
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -679,6 +736,18 @@ export function AdminTeacherManagement() {
                         onClick={() => handleEditTeacher(teacher)}
                       >
                         <Edit3 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCallernToggle(teacher)}
+                        title={callernTeachers.find((ct: any) => ct.id === teacher.id)?.isCallernAuthorized ? "Revoke Callern Access" : "Grant Callern Access"}
+                      >
+                        {callernTeachers.find((ct: any) => ct.id === teacher.id)?.isCallernAuthorized ? (
+                          <VideoOff className="h-4 w-4 text-red-600" />
+                        ) : (
+                          <Video className="h-4 w-4 text-green-600" />
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -775,9 +844,17 @@ export function AdminTeacherManagement() {
                           {new Intl.NumberFormat('fa-IR').format(teacher.hourlyRate || 500000)} تومان
                         </td>
                         <td className="p-4">
-                          <Badge variant={teacher.isActive !== false ? "default" : "secondary"}>
-                            {teacher.isActive !== false ? t('admin:teacherManagement.status.active') : t('admin:teacherManagement.status.inactive')}
-                          </Badge>
+                          <div className="flex gap-2">
+                            <Badge variant={teacher.isActive !== false ? "default" : "secondary"}>
+                              {teacher.isActive !== false ? t('admin:teacherManagement.status.active') : t('admin:teacherManagement.status.inactive')}
+                            </Badge>
+                            {callernTeachers.find((ct: any) => ct.id === teacher.id)?.isCallernAuthorized && (
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                                <Video className="h-3 w-3 mr-1" />
+                                Callern
+                              </Badge>
+                            )}
+                          </div>
                         </td>
                         <td className="p-4">
                           <div className="flex gap-2">
@@ -797,6 +874,18 @@ export function AdminTeacherManagement() {
                               onClick={() => handleEditTeacher(teacher)}
                             >
                               <Edit3 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCallernToggle(teacher)}
+                              title={callernTeachers.find((ct: any) => ct.id === teacher.id)?.isCallernAuthorized ? "Revoke Callern Access" : "Grant Callern Access"}
+                            >
+                              {callernTeachers.find((ct: any) => ct.id === teacher.id)?.isCallernAuthorized ? (
+                                <VideoOff className="h-4 w-4 text-red-600" />
+                              ) : (
+                                <Video className="h-4 w-4 text-green-600" />
+                              )}
                             </Button>
                           </div>
                         </td>
