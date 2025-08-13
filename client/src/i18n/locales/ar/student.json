@@ -138,5 +138,18 @@
   "join": "انضمام",
   "messages": "الرسائل",
   "typeMessage": "اكتب رسالتك...",
-  "messageSendError": "فشل إرسال الرسالة"
+  "messageSendError": "فشل إرسال الرسالة",
+  "newConversation": "محادثة جديدة",
+  "contactTeacher": "الاتصال بالمعلم",
+  "askQuestions": "اطرح أسئلتك",
+  "createGroup": "إنشاء مجموعة",
+  "studyTogether": "ادرسوا معًا",
+  "contactSupport": "الاتصال بالدعم",
+  "getHelp": "احصل على المساعدة",
+  "conversationStarted": "بدأت المحادثة",
+  "teacherWillRespond": "سيرد المعلم قريبًا",
+  "groupCreated": "تم إنشاء المجموعة",
+  "inviteClassmates": "ادع زملاءك في الصف",
+  "supportContacted": "تم الاتصال بالدعم",
+  "supportWillRespond": "سيرد الدعم قريبًا"
 }

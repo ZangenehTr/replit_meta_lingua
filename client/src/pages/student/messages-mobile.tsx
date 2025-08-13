@@ -59,6 +59,7 @@ export default function StudentMessagesMobile() {
   const [messageText, setMessageText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [showNewConversation, setShowNewConversation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch conversations
@@ -276,9 +277,89 @@ export default function StudentMessagesMobile() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.3 }}
+            onClick={() => setShowNewConversation(true)}
           >
             <Plus className="w-6 h-6 text-white" />
           </motion.button>
+          
+          {/* New Conversation Dialog */}
+          {showNewConversation && (
+            <motion.div
+              className="fixed inset-0 bg-black/50 flex items-end justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onClick={() => setShowNewConversation(false)}
+            >
+              <motion.div
+                className="bg-white dark:bg-gray-800 rounded-t-3xl w-full max-w-lg p-6"
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-xl font-bold mb-4">{t('student:newConversation')}</h3>
+                <div className="space-y-4">
+                  <button 
+                    className="w-full p-4 rounded-xl bg-gray-100 dark:bg-gray-700 text-left flex items-center gap-3"
+                    onClick={() => {
+                      // Mock: Create conversation with teacher
+                      toast({
+                        title: t('student:conversationStarted'),
+                        description: t('student:teacherWillRespond')
+                      });
+                      setShowNewConversation(false);
+                    }}
+                  >
+                    <User className="w-5 h-5" />
+                    <div>
+                      <p className="font-semibold">{t('student:contactTeacher')}</p>
+                      <p className="text-sm text-gray-500">{t('student:askQuestions')}</p>
+                    </div>
+                  </button>
+                  
+                  <button 
+                    className="w-full p-4 rounded-xl bg-gray-100 dark:bg-gray-700 text-left flex items-center gap-3"
+                    onClick={() => {
+                      toast({
+                        title: t('student:groupCreated'),
+                        description: t('student:inviteClassmates')
+                      });
+                      setShowNewConversation(false);
+                    }}
+                  >
+                    <Users className="w-5 h-5" />
+                    <div>
+                      <p className="font-semibold">{t('student:createGroup')}</p>
+                      <p className="text-sm text-gray-500">{t('student:studyTogether')}</p>
+                    </div>
+                  </button>
+                  
+                  <button 
+                    className="w-full p-4 rounded-xl bg-gray-100 dark:bg-gray-700 text-left flex items-center gap-3"
+                    onClick={() => {
+                      toast({
+                        title: t('student:supportContacted'),
+                        description: t('student:supportWillRespond')
+                      });
+                      setShowNewConversation(false);
+                    }}
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    <div>
+                      <p className="font-semibold">{t('student:contactSupport')}</p>
+                      <p className="text-sm text-gray-500">{t('student:getHelp')}</p>
+                    </div>
+                  </button>
+                </div>
+                
+                <button 
+                  className="mt-6 w-full p-3 rounded-xl bg-gray-200 dark:bg-gray-600"
+                  onClick={() => setShowNewConversation(false)}
+                >
+                  {t('common:cancel')}
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
         </>
       ) : (
         /* Messages View */
