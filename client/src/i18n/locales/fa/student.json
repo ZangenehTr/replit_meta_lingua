@@ -188,5 +188,9 @@
   "sessions": "جلسات",
   "specialization": "تخصص",
   "experience": "تجربه",
-  "years": "سال"
+  "years": "سال",
+  "noMessages": "پیامی وجود ندارد",
+  "searchMessages": "جستجو در پیام‌ها",
+  "typeMessage": "پیام خود را بنویسید...",
+  "messageSendError": "خطا در ارسال پیام"
 }

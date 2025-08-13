@@ -223,5 +223,10 @@
   "sessions": "sessions",
   "specialization": "Specialization",
   "experience": "Experience",
-  "years": "years"
+  "years": "years",
+  "messages": "Messages",
+  "noMessages": "No messages",
+  "searchMessages": "Search messages...",
+  "typeMessage": "Type your message...",
+  "messageSendError": "Failed to send message"
 }

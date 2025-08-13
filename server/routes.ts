@@ -3468,6 +3468,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const messages = await storage.getUserMessages(req.user.id);
     res.json(messages);
   });
+  
+  // Student conversations endpoint
+  app.get("/api/student/conversations", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      // Mock conversations for students - in production, this would query the database
+      const conversations = [
+        {
+          id: 1,
+          name: "Teacher Support",
+          avatar: "/api/placeholder/40/40",
+          lastMessage: "Your next class is scheduled for tomorrow",
+          lastMessageTime: new Date().toISOString(),
+          unreadCount: 0,
+          type: "individual",
+          online: true
+        },
+        {
+          id: 2,
+          name: "Class Group - B2",
+          avatar: "/api/placeholder/40/40",
+          lastMessage: "Don't forget to submit your homework",
+          lastMessageTime: new Date(Date.now() - 3600000).toISOString(),
+          unreadCount: 2,
+          type: "group",
+          participants: 15
+        },
+        {
+          id: 3,
+          name: "Institute Announcements",
+          avatar: "/api/placeholder/40/40",
+          lastMessage: "New course materials available",
+          lastMessageTime: new Date(Date.now() - 86400000).toISOString(),
+          unreadCount: 1,
+          type: "announcement",
+          muted: false
+        }
+      ];
+      
+      res.json(conversations);
+    } catch (error) {
+      console.error('Error fetching student conversations:', error);
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+  
+  // Student messages for a conversation
+  app.get("/api/student/conversations/:conversationId/messages", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const conversationId = parseInt(req.params.conversationId);
+      
+      // Mock messages - in production, this would query the database
+      const messages = [
+        {
+          id: 1,
+          text: "Welcome to your language learning journey!",
+          senderId: 50,
+          senderName: "Sara Ahmadi",
+          senderAvatar: "/api/placeholder/40/40",
+          timestamp: new Date(Date.now() - 7200000).toISOString(),
+          read: true,
+          type: "text"
+        },
+        {
+          id: 2,
+          text: "Your next class is scheduled for tomorrow at 10 AM",
+          senderId: 50,
+          senderName: "Sara Ahmadi",
+          senderAvatar: "/api/placeholder/40/40",
+          timestamp: new Date(Date.now() - 3600000).toISOString(),
+          read: true,
+          type: "text"
+        },
+        {
+          id: 3,
+          text: "Thank you! I'll be there.",
+          senderId: req.user.id,
+          senderName: "You",
+          timestamp: new Date(Date.now() - 1800000).toISOString(),
+          read: true,
+          type: "text"
+        }
+      ];
+      
+      res.json(messages);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+  
+  // Send message in conversation
+  app.post("/api/student/conversations/:conversationId/messages", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const conversationId = parseInt(req.params.conversationId);
+      const { text } = req.body;
+      
+      // Mock message creation - in production, this would save to database
+      const newMessage = {
+        id: Date.now(),
+        text,
+        senderId: req.user.id,
+        senderName: `${req.user.firstName} ${req.user.lastName}`,
+        timestamp: new Date().toISOString(),
+        read: false,
+        type: "text"
+      };
+      
+      res.status(201).json(newMessage);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
 
   // ===== STUDENT INFORMATION SYSTEM (SIS) ENDPOINTS =====
   
