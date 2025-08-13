@@ -74,6 +74,7 @@ import {
   type PushNotification, type InsertPushNotification, type NotificationDeliveryLog, type InsertNotificationDeliveryLog,
   // Teacher availability
   teacherAvailability, teacherAvailabilityPeriods,
+  attendanceRecords, teacherAssignments, teacherEvaluations, classObservations,
   type TeacherAvailability, type InsertTeacherAvailability,
   type TeacherAvailabilityPeriod, type InsertTeacherAvailabilityPeriod,
   // Teacher observation responses
@@ -9227,6 +9228,235 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching student placement results:', error);
       return [];
+    }
+  }
+  
+  // Phase 3: Missing Communication & Teacher Management Methods
+  
+  // Communication Logs
+  async logCommunication(data: any): Promise<any> {
+    try {
+      const [log] = await db.insert(communicationLogs).values({
+        userId: data.userId,
+        type: data.type,
+        direction: data.direction,
+        duration: data.duration,
+        status: data.status,
+        notes: data.notes,
+        metadata: data.metadata || {},
+        createdAt: new Date()
+      }).returning();
+      return log;
+    } catch (error) {
+      console.error('Error logging communication:', error);
+      throw error;
+    }
+  }
+  
+  // Lead Management
+  async updateLeadStatus(leadId: number, status: string): Promise<any> {
+    try {
+      const [updated] = await db.update(leads)
+        .set({ status, updatedAt: new Date() })
+        .where(eq(leads.id, leadId))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating lead status:', error);
+      throw error;
+    }
+  }
+  
+  // Homework Management
+  async submitHomework(data: any): Promise<any> {
+    try {
+      const [existing] = await db.select().from(homework)
+        .where(eq(homework.id, data.homeworkId));
+      
+      if (!existing) {
+        throw new Error('Homework not found');
+      }
+      
+      const submissions = existing.metadata?.submissions || {};
+      submissions[data.studentId] = {
+        submissionText: data.submissionText,
+        submittedAt: data.submittedAt || new Date(),
+        status: 'submitted',
+        attachments: data.attachments || []
+      };
+      
+      const [updated] = await db.update(homework)
+        .set({ metadata: { ...existing.metadata, submissions } })
+        .where(eq(homework.id, data.homeworkId))
+        .returning();
+      
+      return {
+        id: data.homeworkId,
+        studentId: data.studentId,
+        status: 'submitted',
+        ...submissions[data.studentId]
+      };
+    } catch (error) {
+      console.error('Error submitting homework:', error);
+      throw error;
+    }
+  }
+  
+  async gradeHomework(submissionId: number, gradeData: any): Promise<any> {
+    try {
+      const [homework_entry] = await db.select().from(homework)
+        .where(eq(homework.id, submissionId));
+      
+      if (!homework_entry) {
+        throw new Error('Homework not found');
+      }
+      
+      const submissions = homework_entry.metadata?.submissions || {};
+      const studentId = Object.keys(submissions)[0];
+      
+      if (submissions[studentId]) {
+        submissions[studentId] = {
+          ...submissions[studentId],
+          grade: gradeData.grade,
+          feedback: gradeData.feedback,
+          gradedBy: gradeData.gradedBy,
+          gradedAt: new Date(),
+          status: 'graded'
+        };
+      }
+      
+      await db.update(homework)
+        .set({ metadata: { ...homework_entry.metadata, submissions } })
+        .where(eq(homework.id, submissionId));
+      
+      return {
+        id: submissionId,
+        grade: gradeData.grade,
+        status: 'graded',
+        ...submissions[studentId]
+      };
+    } catch (error) {
+      console.error('Error grading homework:', error);
+      throw error;
+    }
+  }
+  
+  // Attendance Management
+  async recordAttendance(data: any): Promise<any> {
+    try {
+      const [attendance] = await db.insert(attendanceRecords).values({
+        sessionId: data.sessionId,
+        studentId: data.studentId,
+        status: data.status,
+        checkInTime: data.checkInTime,
+        checkOutTime: data.checkOutTime,
+        notes: data.notes,
+        recordedBy: data.recordedBy,
+        createdAt: new Date()
+      }).returning();
+      return attendance;
+    } catch (error) {
+      console.error('Error recording attendance:', error);
+      throw error;
+    }
+  }
+  
+  async getStudentAttendance(studentId: number): Promise<any[]> {
+    try {
+      return await db.select().from(attendanceRecords)
+        .where(eq(attendanceRecords.studentId, studentId))
+        .orderBy(desc(attendanceRecords.createdAt));
+    } catch (error) {
+      console.error('Error fetching student attendance:', error);
+      return [];
+    }
+  }
+  
+  // Teacher Management
+  async setTeacherAvailability(data: any): Promise<any> {
+    try {
+      const [availability] = await db.insert(teacherAvailability).values({
+        teacherId: data.teacherId,
+        dayOfWeek: data.dayOfWeek,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        isAvailable: data.isAvailable !== false,
+        timezone: data.timezone || 'Asia/Tehran',
+        metadata: data.metadata || {},
+        createdAt: new Date()
+      }).returning();
+      return availability;
+    } catch (error) {
+      console.error('Error setting teacher availability:', error);
+      throw error;
+    }
+  }
+  
+  async assignTeacherToCourse(data: any): Promise<any> {
+    try {
+      const [assignment] = await db.insert(teacherAssignments).values({
+        teacherId: data.teacherId,
+        courseId: data.courseId,
+        role: data.role || 'primary',
+        startDate: data.startDate || new Date(),
+        endDate: data.endDate,
+        assignedBy: data.assignedBy,
+        isActive: true,
+        metadata: data.metadata || {},
+        createdAt: new Date()
+      }).returning();
+      return assignment;
+    } catch (error) {
+      console.error('Error assigning teacher to course:', error);
+      throw error;
+    }
+  }
+  
+  async endTeacherAssignment(assignmentId: number): Promise<any> {
+    try {
+      const [updated] = await db.update(teacherAssignments)
+        .set({ 
+          endDate: new Date(),
+          isActive: false,
+          updatedAt: new Date()
+        })
+        .where(eq(teacherAssignments.id, assignmentId))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error ending teacher assignment:', error);
+      throw error;
+    }
+  }
+  
+  async getLatestTeacherEvaluation(teacherId: number): Promise<any> {
+    try {
+      const [latest] = await db.select().from(teacherEvaluations)
+        .where(eq(teacherEvaluations.teacherId, teacherId))
+        .orderBy(desc(teacherEvaluations.createdAt))
+        .limit(1);
+      return latest;
+    } catch (error) {
+      console.error('Error fetching latest teacher evaluation:', error);
+      return null;
+    }
+  }
+  
+  async updateObservationFeedback(observationId: number, feedback: any): Promise<any> {
+    try {
+      const [updated] = await db.update(classObservations)
+        .set({
+          teacherResponse: feedback.teacherResponse,
+          actionPlan: feedback.actionPlan || [],
+          followUpDate: feedback.followUpDate,
+          updatedAt: new Date()
+        })
+        .where(eq(classObservations.id, observationId))
+        .returning();
+      return updated;
+    } catch (error) {
+      console.error('Error updating observation feedback:', error);
+      throw error;
     }
   }
 }
