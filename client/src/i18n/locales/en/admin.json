@@ -1939,5 +1939,31 @@
     "cancel": "Cancel",
     "createInstitute": "Create New Institute",
     "institutes": "Institutes"
+  },
+  "roadmap": {
+    "title": "Learning Roadmap Designer",
+    "subtitle": "Create structured learning paths for students",
+    "createNew": "Create New Roadmap",
+    "availableRoadmaps": "Available Roadmaps",
+    "selectRoadmap": "Select a Roadmap",
+    "chooseRoadmap": "Choose a roadmap from the list to view and edit its details",
+    "noRoadmaps": "No roadmaps created yet",
+    "createFirst": "Create your first learning roadmap",
+    "editRoadmap": "Edit Roadmap",
+    "deleteRoadmap": "Delete Roadmap",
+    "roadmapDetails": "Roadmap Details",
+    "milestones": "Milestones",
+    "addMilestone": "Add Milestone",
+    "steps": "Steps",
+    "addStep": "Add Step",
+    "targetLanguage": "Target Language",
+    "targetLevel": "Target Level",
+    "estimatedWeeks": "Estimated Weeks",
+    "weeklyHours": "Weekly Hours",
+    "difficulty": "Difficulty",
+    "prerequisites": "Prerequisites",
+    "isPublic": "Public",
+    "save": "Save",
+    "cancel": "Cancel"
   }
 }

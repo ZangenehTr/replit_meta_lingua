@@ -1467,5 +1467,31 @@
     "errorMessage": "خطایی رخ داده است. لطفاً دوباره تلاش کنید",
     "invalidInput": "ورودی نامعتبر",
     "fieldsRequired": "لطفاً تمام فیلدهای الزامی را پر کنید"
+  },
+  "roadmap": {
+    "title": "طراح نقشه راه یادگیری",
+    "subtitle": "ایجاد مسیرهای یادگیری ساختاریافته برای دانش‌آموزان",
+    "createNew": "ایجاد نقشه راه جدید",
+    "availableRoadmaps": "نقشه راه‌های موجود",
+    "selectRoadmap": "انتخاب نقشه راه",
+    "chooseRoadmap": "یک نقشه راه از لیست انتخاب کنید تا جزئیات آن را مشاهده و ویرایش کنید",
+    "noRoadmaps": "هیچ نقشه راهی ایجاد نشده است",
+    "createFirst": "اولین نقشه راه یادگیری خود را ایجاد کنید",
+    "editRoadmap": "ویرایش نقشه راه",
+    "deleteRoadmap": "حذف نقشه راه",
+    "roadmapDetails": "جزئیات نقشه راه",
+    "milestones": "نقاط عطف",
+    "addMilestone": "افزودن نقطه عطف",
+    "steps": "مراحل",
+    "addStep": "افزودن مرحله",
+    "targetLanguage": "زبان هدف",
+    "targetLevel": "سطح هدف",
+    "estimatedWeeks": "هفته‌های تخمینی",
+    "weeklyHours": "ساعات هفتگی",
+    "difficulty": "دشواری",
+    "prerequisites": "پیش‌نیازها",
+    "isPublic": "عمومی",
+    "save": "ذخیره",
+    "cancel": "انصراف"
   }
 }
