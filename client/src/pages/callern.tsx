@@ -9,6 +9,22 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/mobile/MobileLayout";
 import { MobileCard } from "@/components/mobile/MobileCard";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import AppLayout from "@/components/AppLayout";
 import { 
   Video, 
   Clock, 
@@ -27,7 +43,8 @@ import {
   Users,
   ChevronRight,
   Wifi,
-  WifiOff
+  WifiOff,
+  AlertCircle
 } from "lucide-react";
 import {
   Dialog,
@@ -316,26 +333,39 @@ export default function CallernSystem() {
           </Card>
         </div>
 
-        {/* Alert if no packages purchased */}
+        {/* Alert if no packages purchased - More prominent */}
         {studentPackages.length === 0 && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0">
-                <Package className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+          <Alert className="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 border-2 border-yellow-400 dark:border-yellow-600 shadow-lg">
+            <AlertCircle className="h-5 w-5 text-yellow-700 dark:text-yellow-400" />
+            <AlertDescription>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <p className="font-bold text-yellow-900 dark:text-yellow-200 text-base mb-1">
+                    {t('callern:noActivePackage')}
+                  </p>
+                  <p className="text-yellow-800 dark:text-yellow-300 text-sm">
+                    {t('callern:noActivePackageDescription')}
+                  </p>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="default"
+                  className="w-fit bg-yellow-600 hover:bg-yellow-700 text-white font-semibold"
+                  onClick={() => {
+                    // Scroll to packages section
+                    const packagesSection = document.querySelector('#packages-section');
+                    packagesSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  {t('callern:purchasePackageFirst')}
+                </Button>
               </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                  {t('callern:noActivePackage')}
-                </h3>
-                <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
-                  {t('callern:noActivePackageDescription')}
-                </p>
-              </div>
-            </div>
-          </div>
+            </AlertDescription>
+          </Alert>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="packages-section">
           {/* Available Packages */}
           <Card>
             <CardHeader>
@@ -609,12 +639,23 @@ export default function CallernSystem() {
                         <span className="font-semibold">${teacher.hourlyRate}{t('callern:perHour')}</span>
                         <Button
                           size="sm"
+                          variant={studentPackages.length === 0 ? "secondary" : "default"}
                           disabled={!teacher.isOnline || studentPackages.length === 0}
                           onClick={() => handleStartCall(teacher)}
                           title={studentPackages.length === 0 ? t('callern:purchasePackageFirst') : ''}
+                          className={studentPackages.length === 0 ? "opacity-50 cursor-not-allowed" : ""}
                         >
-                          <Video className="mr-1 h-4 w-4" />
-                          {studentPackages.length === 0 ? t('callern:needPackage') : t('callern:startVideoCall')}
+                          {studentPackages.length === 0 ? (
+                            <>
+                              <ShoppingCart className="mr-1 h-4 w-4" />
+                              {t('callern:purchasePackageFirst')}
+                            </>
+                          ) : (
+                            <>
+                              <Video className="mr-1 h-4 w-4" />
+                              {t('callern:startVideoCall')}
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
