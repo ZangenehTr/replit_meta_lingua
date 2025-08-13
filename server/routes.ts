@@ -3569,7 +3569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: Date.now(),
         text,
         senderId: req.user.id,
-        senderName: `${req.user.firstName} ${req.user.lastName}`,
+        senderName: "You",  // Always return "You" for the sender's own messages
         timestamp: new Date().toISOString(),
         read: false,
         type: "text"

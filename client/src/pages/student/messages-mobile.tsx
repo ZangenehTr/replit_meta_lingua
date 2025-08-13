@@ -62,11 +62,7 @@ export default function StudentMessagesMobile() {
   const [showNewConversation, setShowNewConversation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Get current user
-  const { data: currentUser } = useQuery({
-    queryKey: ['/api/users/me'],
-    enabled: false // We'll use cached data
-  });
+
 
   // Fetch conversations
   const { data: conversations = [], isLoading: loadingConversations } = useQuery<Conversation[]>({
@@ -167,11 +163,6 @@ export default function StudentMessagesMobile() {
       title={selectedConversation ? selectedConversation.name : t('student:messages')}
       showBack={!!selectedConversation}
       gradient="primary"
-      headerAction={selectedConversation && (
-        <button className="p-2 rounded-full glass-button">
-          <MoreVertical className="w-5 h-5 text-white" />
-        </button>
-      )}
     >
       {!selectedConversation ? (
         <>
@@ -377,7 +368,7 @@ export default function StudentMessagesMobile() {
               </div>
             ) : (
               messages.map((message, index) => {
-                const isOwn = message.senderName === "You" || message.senderId === currentUser?.id; // Check if message is from current user
+                const isOwn = message.senderName === "You"; // Check if message is from current user
                 return (
                   <motion.div
                     key={message.id}
