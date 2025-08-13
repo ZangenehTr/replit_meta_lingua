@@ -247,6 +247,8 @@ export default function TeacherPaymentsPage() {
         title: t('common:toast.reportDownloaded'),
         description: "Payment report has been downloaded successfully.",
       });
+      // Invalidate to refresh UI state
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/teacher-payments'] });
     },
   });
 
@@ -263,6 +265,8 @@ export default function TeacherPaymentsPage() {
         title: t('common:toast.sentToAccounting'),
         description: `Payment data sent successfully. Tracking ID: ${data.trackingId}`,
       });
+      // Invalidate to refresh payment status
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/teacher-payments'] });
     },
   });
 
@@ -279,6 +283,9 @@ export default function TeacherPaymentsPage() {
         title: "Rate Structure Updated",
         description: "Both regular and callern rates have been updated successfully.",
       });
+      // Add missing query invalidation
+      queryClient.invalidateQueries({ queryKey: ['/api/teachers/rates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/teacher-payments'] });
     },
   });
 
