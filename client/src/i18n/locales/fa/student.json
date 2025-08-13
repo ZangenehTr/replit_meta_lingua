@@ -192,5 +192,18 @@
   "noMessages": "پیامی وجود ندارد",
   "searchMessages": "جستجو در پیام‌ها",
   "typeMessage": "پیام خود را بنویسید...",
-  "messageSendError": "خطا در ارسال پیام"
+  "messageSendError": "خطا در ارسال پیام",
+  "newConversation": "گفتگوی جدید",
+  "contactTeacher": "تماس با معلم",
+  "askQuestions": "سوالات خود را بپرسید",
+  "createGroup": "ایجاد گروه",
+  "studyTogether": "با هم درس بخوانید",
+  "contactSupport": "تماس با پشتیبانی",
+  "getHelp": "دریافت کمک",
+  "conversationStarted": "گفتگو شروع شد",
+  "teacherWillRespond": "معلم به زودی پاسخ خواهد داد",
+  "groupCreated": "گروه ایجاد شد",
+  "inviteClassmates": "همکلاسی‌های خود را دعوت کنید",
+  "supportContacted": "با پشتیبانی تماس گرفته شد",
+  "supportWillRespond": "پشتیبانی به زودی پاسخ خواهد داد"
 }

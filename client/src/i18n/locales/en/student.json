@@ -228,5 +228,18 @@
   "noMessages": "No messages",
   "searchMessages": "Search messages...",
   "typeMessage": "Type your message...",
-  "messageSendError": "Failed to send message"
+  "messageSendError": "Failed to send message",
+  "newConversation": "New Conversation",
+  "contactTeacher": "Contact Teacher",
+  "askQuestions": "Ask your questions",
+  "createGroup": "Create Group",
+  "studyTogether": "Study together",
+  "contactSupport": "Contact Support",
+  "getHelp": "Get help",
+  "conversationStarted": "Conversation started",
+  "teacherWillRespond": "Teacher will respond soon",
+  "groupCreated": "Group created",
+  "inviteClassmates": "Invite your classmates",
+  "supportContacted": "Support contacted",
+  "supportWillRespond": "Support will respond soon"
 }
