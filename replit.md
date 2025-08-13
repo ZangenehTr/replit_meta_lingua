@@ -9,8 +9,20 @@ Work sessions: User prefers to have work logged so they can resume from where we
 Critical requirement: Self-hosting in Iran with zero external dependencies. Must follow check-first protocol.
 Database strategy: Use Replit/Neon for development only, migrate to self-hosted PostgreSQL for production in Iran.
 Code quality: Always avoid duplications - no duplicate code, methods, or logic. Prefer composition and reuse over duplication.
-Recent session (2025-01-12):
-- **Session Updates:**
+Recent session (2025-01-13):
+- **Critical Protocol Fixes:**
+  - Removed ALL mock data from callern.tsx - now fetches real teacher data from API
+  - Replaced ALL Math.random() usage with crypto functions throughout codebase
+  - Fixed 7+ instances in server/routes.ts using crypto.randomInt() and crypto.randomBytes()
+  - Fixed client-side room ID generation using window.crypto.getRandomValues()
+  - Ensured zero mock data remains - all data from real database queries
+- **Callern Page Improvements:**
+  - Fixed "Start Call" button functionality - clearly shows package requirement
+  - Added yellow alert box when no packages purchased
+  - Button text changes to "ابتدا بسته بخرید" (Buy Package First) without packages
+  - Disabled state with helpful tooltips explaining requirements
+  - Fixed tutors API to properly return teacher data
+- **Previous Session Updates (2025-01-12):**
   - Implemented real activity tracking system to replace all mock data
   - Created comprehensive learning roadmap system with milestones and steps
   - Built activity-tracker.ts for recording actual study time and progress
