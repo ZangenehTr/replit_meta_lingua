@@ -78,7 +78,13 @@ import {
   type TeacherAvailabilityPeriod, type InsertTeacherAvailabilityPeriod,
   // Teacher observation responses
   teacherObservationResponses,
-  type TeacherObservationResponse, type InsertTeacherObservationResponse
+  type TeacherObservationResponse, type InsertTeacherObservationResponse,
+  // Phase 1: Critical system tables
+  auditLogs, emailLogs, studentReports, paymentTransactions,
+  type AuditLog, type InsertAuditLog,
+  type EmailLog, type InsertEmailLog,
+  type StudentReport, type InsertStudentReport,
+  type PaymentTransaction, type InsertPaymentTransaction
 } from "@shared/schema";
 import { IStorage } from "./storage";
 
@@ -8486,6 +8492,453 @@ export class DatabaseStorage implements IStorage {
         .orderBy(videoLessons.orderIndex);
     } catch (error) {
       console.error('Error fetching module lessons:', error);
+      throw error;
+    }
+  }
+  
+  // ===== PHASE 1: CRITICAL SYSTEM TABLES IMPLEMENTATION =====
+  
+  // AUDIT LOGGING (Security & Compliance)
+  async createAuditLog(log: {
+    userId: number;
+    userRole: string;
+    action: string;
+    resourceType: string;
+    resourceId?: number;
+    details?: any;
+    ipAddress?: string;
+    userAgent?: string;
+  }): Promise<any> {
+    try {
+      const [auditLog] = await db.insert(auditLogs).values({
+        userId: log.userId,
+        userRole: log.userRole,
+        action: log.action,
+        resourceType: log.resourceType,
+        resourceId: log.resourceId,
+        details: log.details,
+        ipAddress: log.ipAddress,
+        userAgent: log.userAgent,
+        createdAt: new Date()
+      }).returning();
+      
+      console.log(`Audit log created: ${log.action} by user ${log.userId}`);
+      return auditLog;
+    } catch (error) {
+      console.error('Error creating audit log:', error);
+      throw error;
+    }
+  }
+  
+  async getAuditLogs(filters?: {
+    userId?: number;
+    action?: string;
+    resourceType?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<any[]> {
+    try {
+      let query = db.select().from(auditLogs);
+      const conditions = [];
+      
+      if (filters?.userId) {
+        conditions.push(eq(auditLogs.userId, filters.userId));
+      }
+      if (filters?.action) {
+        conditions.push(eq(auditLogs.action, filters.action));
+      }
+      if (filters?.resourceType) {
+        conditions.push(eq(auditLogs.resourceType, filters.resourceType));
+      }
+      if (filters?.startDate) {
+        conditions.push(gte(auditLogs.createdAt, filters.startDate));
+      }
+      if (filters?.endDate) {
+        conditions.push(lte(auditLogs.createdAt, filters.endDate));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      const logs = await query.orderBy(desc(auditLogs.createdAt));
+      return logs;
+    } catch (error) {
+      console.error('Error fetching audit logs:', error);
+      return [];
+    }
+  }
+  
+  // EMAIL LOGGING (Communication Tracking)
+  async createEmailLog(log: {
+    recipientId: number;
+    recipientEmail: string;
+    templateType: string;
+    subject: string;
+    contentJson?: any;
+    status?: string;
+  }): Promise<any> {
+    try {
+      const [emailLog] = await db.insert(emailLogs).values({
+        recipientId: log.recipientId,
+        recipientEmail: log.recipientEmail,
+        templateType: log.templateType,
+        subject: log.subject,
+        contentJson: log.contentJson,
+        status: log.status || 'pending',
+        createdAt: new Date()
+      }).returning();
+      
+      console.log(`Email log created: ${log.templateType} to ${log.recipientEmail}`);
+      return emailLog;
+    } catch (error) {
+      console.error('Error creating email log:', error);
+      throw error;
+    }
+  }
+  
+  async updateEmailLogStatus(id: number, status: string, errorMessage?: string): Promise<any> {
+    try {
+      const updates: any = {
+        status,
+        sentAt: status === 'sent' ? new Date() : undefined,
+        errorMessage: errorMessage || null
+      };
+      
+      const [updated] = await db.update(emailLogs)
+        .set(updates)
+        .where(eq(emailLogs.id, id))
+        .returning();
+      
+      return updated;
+    } catch (error) {
+      console.error('Error updating email log status:', error);
+      throw error;
+    }
+  }
+  
+  async getEmailLogs(filters?: {
+    recipientId?: number;
+    templateType?: string;
+    status?: string;
+  }): Promise<any[]> {
+    try {
+      let query = db.select().from(emailLogs);
+      const conditions = [];
+      
+      if (filters?.recipientId) {
+        conditions.push(eq(emailLogs.recipientId, filters.recipientId));
+      }
+      if (filters?.templateType) {
+        conditions.push(eq(emailLogs.templateType, filters.templateType));
+      }
+      if (filters?.status) {
+        conditions.push(eq(emailLogs.status, filters.status));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      const logs = await query.orderBy(desc(emailLogs.createdAt));
+      return logs;
+    } catch (error) {
+      console.error('Error fetching email logs:', error);
+      return [];
+    }
+  }
+  
+  // STUDENT REPORTS (Core Feature)
+  async createStudentReport(report: {
+    studentId: number;
+    generatedBy: number;
+    reportType: string;
+    period: string;
+    startDate: string;
+    endDate: string;
+    data: any;
+    comments?: string;
+  }): Promise<any> {
+    try {
+      const [studentReport] = await db.insert(studentReports).values({
+        studentId: report.studentId,
+        generatedBy: report.generatedBy,
+        reportType: report.reportType,
+        period: report.period,
+        startDate: new Date(report.startDate),
+        endDate: new Date(report.endDate),
+        data: report.data,
+        comments: report.comments,
+        isPublished: false,
+        createdAt: new Date()
+      }).returning();
+      
+      // Create audit log for report generation
+      await this.createAuditLog({
+        userId: report.generatedBy,
+        userRole: 'Teacher',
+        action: 'CREATE_STUDENT_REPORT',
+        resourceType: 'student_report',
+        resourceId: studentReport.id,
+        details: { studentId: report.studentId, reportType: report.reportType }
+      });
+      
+      console.log(`Student report created: ${report.reportType} for student ${report.studentId}`);
+      return studentReport;
+    } catch (error) {
+      console.error('Error creating student report:', error);
+      throw error;
+    }
+  }
+  
+  async getStudentReports(studentId: number): Promise<any[]> {
+    try {
+      const reports = await db.select({
+        id: studentReports.id,
+        studentId: studentReports.studentId,
+        generatedBy: studentReports.generatedBy,
+        reportType: studentReports.reportType,
+        period: studentReports.period,
+        startDate: studentReports.startDate,
+        endDate: studentReports.endDate,
+        data: studentReports.data,
+        comments: studentReports.comments,
+        isPublished: studentReports.isPublished,
+        publishedAt: studentReports.publishedAt,
+        createdAt: studentReports.createdAt,
+        generatorName: sql`${users.firstName} || ' ' || ${users.lastName}`
+      })
+      .from(studentReports)
+      .leftJoin(users, eq(studentReports.generatedBy, users.id))
+      .where(eq(studentReports.studentId, studentId))
+      .orderBy(desc(studentReports.createdAt));
+      
+      return reports;
+    } catch (error) {
+      console.error('Error fetching student reports:', error);
+      return [];
+    }
+  }
+  
+  async publishStudentReport(reportId: number): Promise<any> {
+    try {
+      const [published] = await db.update(studentReports)
+        .set({
+          isPublished: true,
+          publishedAt: new Date()
+        })
+        .where(eq(studentReports.id, reportId))
+        .returning();
+      
+      // Send email notification to student/parents
+      if (published) {
+        const student = await this.getUser(published.studentId);
+        if (student) {
+          await this.createEmailLog({
+            recipientId: published.studentId,
+            recipientEmail: student.email,
+            templateType: 'REPORT_PUBLISHED',
+            subject: `New ${published.reportType} Report Available`,
+            contentJson: { reportId: published.id, reportType: published.reportType }
+          });
+        }
+      }
+      
+      return published;
+    } catch (error) {
+      console.error('Error publishing student report:', error);
+      throw error;
+    }
+  }
+  
+  async getPublishedReports(studentId: number): Promise<any[]> {
+    try {
+      const reports = await db.select().from(studentReports)
+        .where(and(
+          eq(studentReports.studentId, studentId),
+          eq(studentReports.isPublished, true)
+        ))
+        .orderBy(desc(studentReports.publishedAt));
+      
+      return reports;
+    } catch (error) {
+      console.error('Error fetching published reports:', error);
+      return [];
+    }
+  }
+  
+  // PAYMENT TRANSACTIONS (Financial Tracking)
+  async createPaymentTransaction(transaction: {
+    studentId: number;
+    amount: number;
+    method: string;
+    description?: string;
+    invoiceId?: number;
+  }): Promise<any> {
+    try {
+      const [paymentTx] = await db.insert(paymentTransactions).values({
+        studentId: transaction.studentId,
+        amount: transaction.amount,
+        method: transaction.method,
+        description: transaction.description,
+        invoiceId: transaction.invoiceId,
+        status: 'pending',
+        currency: 'IRR',
+        createdAt: new Date()
+      }).returning();
+      
+      // Create audit log for payment
+      await this.createAuditLog({
+        userId: transaction.studentId,
+        userRole: 'Student',
+        action: 'CREATE_PAYMENT',
+        resourceType: 'payment_transaction',
+        resourceId: paymentTx.id,
+        details: { amount: transaction.amount, method: transaction.method }
+      });
+      
+      console.log(`Payment transaction created: ${transaction.amount} IRR by student ${transaction.studentId}`);
+      return paymentTx;
+    } catch (error) {
+      console.error('Error creating payment transaction:', error);
+      throw error;
+    }
+  }
+  
+  async updatePaymentTransactionStatus(id: number, status: string, details?: any): Promise<any> {
+    try {
+      const updates: any = {
+        status,
+        processedAt: ['completed', 'failed'].includes(status) ? new Date() : undefined
+      };
+      
+      if (details) {
+        if (details.shetabRefNumber) updates.shetabRefNumber = details.shetabRefNumber;
+        if (details.shetabCardNumber) updates.shetabCardNumber = details.shetabCardNumber;
+        if (details.bankCode) updates.bankCode = details.bankCode;
+        if (details.terminalId) updates.terminalId = details.terminalId;
+        if (details.failureReason) updates.failureReason = details.failureReason;
+      }
+      
+      const [updated] = await db.update(paymentTransactions)
+        .set(updates)
+        .where(eq(paymentTransactions.id, id))
+        .returning();
+      
+      // Update wallet balance if payment completed
+      if (updated && status === 'completed') {
+        await db.update(users)
+          .set({
+            walletBalance: sql`${users.walletBalance} + ${updated.amount}`,
+            totalCredits: sql`${users.totalCredits} + ${Math.floor(updated.amount / 10000)}`
+          })
+          .where(eq(users.id, updated.studentId));
+        
+        // Create email log for successful payment
+        const student = await this.getUser(updated.studentId);
+        if (student) {
+          await this.createEmailLog({
+            recipientId: updated.studentId,
+            recipientEmail: student.email,
+            templateType: 'PAYMENT_SUCCESS',
+            subject: 'Payment Successfully Processed',
+            contentJson: { 
+              amount: updated.amount, 
+              method: updated.method,
+              refNumber: updated.shetabRefNumber 
+            }
+          });
+        }
+      }
+      
+      return updated;
+    } catch (error) {
+      console.error('Error updating payment transaction status:', error);
+      throw error;
+    }
+  }
+  
+  async getPaymentTransactions(filters?: {
+    studentId?: number;
+    status?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<any[]> {
+    try {
+      let query = db.select({
+        id: paymentTransactions.id,
+        studentId: paymentTransactions.studentId,
+        amount: paymentTransactions.amount,
+        currency: paymentTransactions.currency,
+        method: paymentTransactions.method,
+        status: paymentTransactions.status,
+        description: paymentTransactions.description,
+        shetabRefNumber: paymentTransactions.shetabRefNumber,
+        bankCode: paymentTransactions.bankCode,
+        processedAt: paymentTransactions.processedAt,
+        createdAt: paymentTransactions.createdAt,
+        studentName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+        studentEmail: users.email
+      })
+      .from(paymentTransactions)
+      .leftJoin(users, eq(paymentTransactions.studentId, users.id));
+      
+      const conditions = [];
+      
+      if (filters?.studentId) {
+        conditions.push(eq(paymentTransactions.studentId, filters.studentId));
+      }
+      if (filters?.status) {
+        conditions.push(eq(paymentTransactions.status, filters.status));
+      }
+      if (filters?.startDate) {
+        conditions.push(gte(paymentTransactions.createdAt, filters.startDate));
+      }
+      if (filters?.endDate) {
+        conditions.push(lte(paymentTransactions.createdAt, filters.endDate));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      const transactions = await query.orderBy(desc(paymentTransactions.createdAt));
+      return transactions;
+    } catch (error) {
+      console.error('Error fetching payment transactions:', error);
+      return [];
+    }
+  }
+  
+  async getTransactionDetails(id: number): Promise<any> {
+    try {
+      const [transaction] = await db.select({
+        id: paymentTransactions.id,
+        studentId: paymentTransactions.studentId,
+        invoiceId: paymentTransactions.invoiceId,
+        amount: paymentTransactions.amount,
+        currency: paymentTransactions.currency,
+        method: paymentTransactions.method,
+        status: paymentTransactions.status,
+        shetabRefNumber: paymentTransactions.shetabRefNumber,
+        shetabCardNumber: paymentTransactions.shetabCardNumber,
+        bankCode: paymentTransactions.bankCode,
+        terminalId: paymentTransactions.terminalId,
+        description: paymentTransactions.description,
+        failureReason: paymentTransactions.failureReason,
+        processedAt: paymentTransactions.processedAt,
+        createdAt: paymentTransactions.createdAt,
+        studentName: sql`${users.firstName} || ' ' || ${users.lastName}`,
+        studentEmail: users.email,
+        studentPhone: users.phoneNumber
+      })
+      .from(paymentTransactions)
+      .leftJoin(users, eq(paymentTransactions.studentId, users.id))
+      .where(eq(paymentTransactions.id, id));
+      
+      return transaction;
+    } catch (error) {
+      console.error('Error fetching transaction details:', error);
       throw error;
     }
   }
