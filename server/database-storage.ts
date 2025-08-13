@@ -334,10 +334,85 @@ export class DatabaseStorage implements IStorage {
         courseId: enrollment.courseId,
         progress: enrollment.progress || 0
       }).returning();
+      
+      // Automatically create or join group chat for the course
+      await this.ensureCourseGroupChat(enrollment.courseId, enrollment.userId);
+      
       return newEnrollment;
     } catch (error) {
       console.error('Error enrolling in course:', error);
       throw error;
+    }
+  }
+  
+  // Helper method to ensure a group chat exists for a course and add student to it
+  private async ensureCourseGroupChat(courseId: number, studentId: number): Promise<void> {
+    try {
+      // Get course details
+      const [course] = await db.select().from(courses).where(eq(courses.id, courseId));
+      if (!course) return;
+      
+      // Check if group chat already exists for this course
+      const existingChats = await db.select().from(chatConversations)
+        .where(and(
+          eq(chatConversations.type, 'group'),
+          sql`${chatConversations.metadata}->>'courseId' = ${courseId.toString()}`
+        ));
+      
+      let chatId: number;
+      
+      if (existingChats.length === 0) {
+        // Create new group chat for the course
+        const [newChat] = await db.insert(chatConversations).values({
+          title: `${course.title} - Class Group`,
+          type: 'group',
+          participants: [studentId.toString()],
+          metadata: { courseId: courseId },
+          isActive: true,
+          createdAt: new Date()
+        }).returning();
+        chatId = newChat.id;
+        
+        // Add welcome message
+        await db.insert(chatMessages).values({
+          conversationId: chatId,
+          senderId: 1, // System message from admin
+          senderName: 'System',
+          message: `Welcome to the ${course.title} class group! Feel free to ask questions and interact with your classmates.`,
+          messageType: 'system',
+          sentAt: new Date()
+        });
+      } else {
+        // Add student to existing group chat
+        chatId = existingChats[0].id;
+        const currentParticipants = existingChats[0].participants || [];
+        
+        // Only add if not already a participant
+        if (!currentParticipants.includes(studentId.toString())) {
+          await db.update(chatConversations)
+            .set({
+              participants: [...currentParticipants, studentId.toString()],
+              updatedAt: new Date()
+            })
+            .where(eq(chatConversations.id, chatId));
+          
+          // Add system message about new student joining
+          const [student] = await db.select().from(users).where(eq(users.id, studentId));
+          if (student) {
+            await db.insert(chatMessages).values({
+              conversationId: chatId,
+              senderId: 1,
+              senderName: 'System',
+              message: `${student.firstName} ${student.lastName} has joined the class`,
+              messageType: 'system',
+              sentAt: new Date()
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error ensuring course group chat:', error);
+      // Don't throw - enrollment should succeed even if chat creation fails
     }
   }
 

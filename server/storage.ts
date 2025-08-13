@@ -2215,6 +2215,52 @@ export class MemStorage implements IStorage {
     }
     return undefined;
   }
+  
+  // Student-specific conversation methods
+  async getStudentConversations(studentId: number): Promise<any[]> {
+    // Return mock conversations for in-memory storage
+    return [
+      {
+        id: 1,
+        name: "Teacher Support",
+        avatar: "/api/placeholder/40/40",
+        lastMessage: "Welcome! How can we help?",
+        lastMessageTime: new Date().toISOString(),
+        unreadCount: 0,
+        type: "individual",
+        online: true
+      }
+    ];
+  }
+  
+  async getConversationMessages(conversationId: number, userId: number): Promise<any[]> {
+    // Return mock messages for in-memory storage
+    return [
+      {
+        id: 1,
+        text: "Welcome to Meta Lingua!",
+        senderId: 1,
+        senderName: "System",
+        senderAvatar: "/api/placeholder/40/40",
+        timestamp: new Date().toISOString(),
+        read: true,
+        type: "text"
+      }
+    ];
+  }
+  
+  async sendConversationMessage(conversationId: number, senderId: number, text: string): Promise<any> {
+    // Create mock message for in-memory storage
+    return {
+      id: Date.now(),
+      text,
+      senderId,
+      senderName: "You",
+      timestamp: new Date().toISOString(),
+      read: false,
+      type: "text"
+    };
+  }
 
   // CRITICAL MISSING METHODS - Support Tickets
   async getSupportTickets(filters?: any): Promise<any[]> {
