@@ -177,5 +177,9 @@
   "noSessions": "هیچ جلسه‌ای یافت نشد",
   "videoCourses": "دوره‌های ویدیویی",
   "messages": "پیام‌ها",
-  "homework": "تکالیف"
+  "homework": "تکالیف",
+  "sessions": "جلسات",
+  "specialization": "تخصص",
+  "experience": "تجربه",
+  "years": "سال"
 }

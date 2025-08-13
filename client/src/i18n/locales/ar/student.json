@@ -93,5 +93,8 @@
     "transactionHistory": "تاريخ المعاملات",
     "paymentMethods": "طرق الدفع",
     "balance": "الرصيد"
-  }
+  },
+  "sessions": "جلسات",
+  "experience": "الخبرة",
+  "years": "سنوات"
 }
