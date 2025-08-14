@@ -1,17 +1,25 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AdminStudents } from '../../client/src/pages/admin/students'
+import { LanguageProvider } from '../../client/src/contexts/LanguageContext'
+import { I18nextProvider } from 'react-i18next'
+import i18n from 'i18next'
 
-// Mock the hooks and components
-vi.mock('@/hooks/use-language', () => ({
-  useLanguage: () => ({
-    language: 'en',
-    setLanguage: vi.fn(),
-    t: (key: string) => key
-  })
-}))
+// Initialize i18n for testing
+i18n.init({
+  lng: 'en',
+  fallbackLng: 'en',
+  resources: {
+    en: {
+      common: {},
+      admin: {},
+      validation: {}
+    }
+  }
+})
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
@@ -99,9 +107,13 @@ describe('AdminStudents Component', () => {
 
   const renderWithProviders = (component: React.ReactElement) => {
     return render(
-      <QueryClientProvider client={queryClient}>
-        {component}
-      </QueryClientProvider>
+      <I18nextProvider i18n={i18n}>
+        <LanguageProvider>
+          <QueryClientProvider client={queryClient}>
+            {component}
+          </QueryClientProvider>
+        </LanguageProvider>
+      </I18nextProvider>
     )
   }
 

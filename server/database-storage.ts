@@ -6337,11 +6337,14 @@ export class DatabaseStorage implements IStorage {
         }
       });
 
-      // Get Callern users count
+      // Get Callern users count  
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      
       const callernUsers = await db.select({
         count: sql<number>`count(*)`
       }).from(studentCallernPackages)
-        .where(gte(studentCallernPackages.purchaseDate, sql`current_date - interval '1 month'`));
+        .where(gte(studentCallernPackages.purchaseDate, oneMonthAgo));
 
       byType[5].value = callernUsers[0]?.count || 0;
 
