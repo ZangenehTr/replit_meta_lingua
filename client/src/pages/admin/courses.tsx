@@ -639,9 +639,9 @@ export function AdminCourses() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
 
-  // Fetch courses data
+  // Fetch courses data - simplified query without parameters
   const { data: courses, isLoading, isError, error } = useQuery({
-    queryKey: ['/api/admin/courses', { search: searchTerm, category: filterCategory }],
+    queryKey: ['/api/admin/courses'],
     enabled: !!user && ['Admin', 'Supervisor'].includes(user.role),
     retry: (failureCount, error: any) => {
       if (error?.status === 401 || error?.status === 403) {
