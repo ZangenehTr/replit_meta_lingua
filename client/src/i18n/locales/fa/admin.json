@@ -124,9 +124,17 @@
     "performanceMetrics": "معیارهای عملکرد",
     "systemHealth": "سلامت سیستم"
   },
+  "students": {
+    "searchPlaceholder": "جستجوی دانش‌آموزان...",
+    "allStudents": "همه دانش‌آموزان"
+  },
+  "communications": {
+    "manageStudentRequests": "مدیریت درخواست‌های دانش‌آموزان"
+  },
   "callernManagement": {
     "title": "مدیریت کالرن",
     "subtitle": "مدیریت دسترسی و تماس‌های ویدیویی تحت تقاضا",
+    "scheduleConflict": "تداخل برنامه زمانی",
     "accessDenied": "دسترسی رد شد",
     "adminSupervisorOnly": "فقط ادمین و سوپروایزر می‌توانند به سیستم کالرن دسترسی داشته باشند",
     "yourCurrentRole": "نقش فعلی شما",

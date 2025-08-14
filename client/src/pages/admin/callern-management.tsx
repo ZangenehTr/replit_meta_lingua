@@ -897,8 +897,8 @@ export function CallernManagement() {
                 }
                 createPackageMutation.mutate({
                   packageName: newPackageForm.packageName,
-                  totalHours: parseInt(newPackageForm.totalHours),
-                  price: parseFloat(newPackageForm.price),
+                  totalHours: parseInt(newPackageForm.totalHours) || 0,
+                  price: parseFloat(newPackageForm.price) || 0,
                   description: newPackageForm.description,
                   isActive: newPackageForm.isActive
                 });
