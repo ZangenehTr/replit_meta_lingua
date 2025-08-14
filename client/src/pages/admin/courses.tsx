@@ -637,7 +637,7 @@ export function AdminCourses() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterLanguage, setFilterLanguage] = useState("all");
 
   // Fetch courses data - simplified query without parameters
   const { data: courses, isLoading, isError, error } = useQuery({
@@ -655,11 +655,18 @@ export function AdminCourses() {
   const courseData = Array.isArray(courses) ? courses : [];
 
   const filteredCourses = courseData.filter((course: any) => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === "all" || course.category === filterCategory;
-    return matchesSearch && matchesCategory;
+    const matchesSearch = !searchTerm || 
+                         course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         course.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLanguage = filterLanguage === "all" || course.language === filterLanguage;
+    return matchesSearch && matchesLanguage;
   });
+
+  // Debug logging
+  console.log('Filter language:', filterLanguage);
+  console.log('Total courses:', courseData.length);
+  console.log('Filtered courses:', filteredCourses.length);
+  console.log('Sample course languages:', courseData.slice(0, 5).map(c => c.language));
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -733,17 +740,20 @@ export function AdminCourses() {
             className="pl-10"
           />
         </div>
-        <Select value={filterCategory} onValueChange={setFilterCategory}>
+        <Select value={filterLanguage} onValueChange={setFilterLanguage}>
           <SelectTrigger className="w-48">
             <Filter className="h-4 w-4" />
-            <SelectValue placeholder={t('admin:courses.allCategories')} />
+            <SelectValue placeholder={t('admin:courses.allLanguages')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t('admin:courses.allCategories')}</SelectItem>
+            <SelectItem value="all">{t('admin:courses.allLanguages')}</SelectItem>
             <SelectItem value="Persian">{t('admin:courses.persian')}</SelectItem>
             <SelectItem value="English">{t('admin:courses.english')}</SelectItem>
             <SelectItem value="Arabic">{t('admin:courses.arabic')}</SelectItem>
             <SelectItem value="French">{t('admin:courses.french')}</SelectItem>
+            <SelectItem value="Spanish">{t('admin:courses.spanish')}</SelectItem>
+            <SelectItem value="German">{t('admin:courses.german')}</SelectItem>
+            <SelectItem value="Chinese">{t('admin:courses.chinese')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
