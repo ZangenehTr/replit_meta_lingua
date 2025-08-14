@@ -4,7 +4,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AdminStudents } from '../../client/src/pages/admin/students'
-import { LanguageProvider } from '../../client/src/contexts/LanguageContext'
+import { LanguageProvider } from '../../client/src/hooks/useLanguage'
 import { I18nextProvider } from 'react-i18next'
 import i18n from 'i18next'
 

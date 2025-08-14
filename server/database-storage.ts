@@ -6304,13 +6304,16 @@ export class DatabaseStorage implements IStorage {
   async getRegistrationAnalytics(): Promise<any> {
     try {
       // Get enrollment statistics by course type - properly structured query
+      const oneMonthAgoEnroll = new Date();
+      oneMonthAgoEnroll.setMonth(oneMonthAgoEnroll.getMonth() - 1);
+      
       const registrationsByType = await db.select({
         deliveryMode: courses.deliveryMode,
         classFormat: courses.classFormat,
         count: sql<number>`count(*)`
       }).from(enrollments)
         .leftJoin(courses, eq(enrollments.courseId, courses.id))
-        .where(gte(enrollments.enrolledAt, sql`current_date - interval '1 month'`))
+        .where(gte(enrollments.enrolledAt, oneMonthAgoEnroll))
         .groupBy(courses.deliveryMode, courses.classFormat);
 
       // Transform data to match chart format
@@ -6338,13 +6341,10 @@ export class DatabaseStorage implements IStorage {
       });
 
       // Get Callern users count  
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      
       const callernUsers = await db.select({
         count: sql<number>`count(*)`
       }).from(studentCallernPackages)
-        .where(gte(studentCallernPackages.purchaseDate, oneMonthAgo));
+        .where(sql`${studentCallernPackages.purchaseDate} >= CURRENT_DATE - INTERVAL '1 month'`);
 
       byType[5].value = callernUsers[0]?.count || 0;
 
