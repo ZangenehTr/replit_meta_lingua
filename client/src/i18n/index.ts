@@ -72,7 +72,7 @@ i18n
   .use(initReactI18next)
   .init({
     detection: detectionOptions,
-    fallbackLng: 'en',
+    fallbackLng: 'fa',
     debug: true,
     returnNull: false,
     returnEmptyString: false,

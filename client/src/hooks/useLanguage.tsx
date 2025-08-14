@@ -21,13 +21,13 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Get current language from i18n
   const storedLanguage = localStorage.getItem('i18nextLng');
-  const language = (i18n.language as Language) || 'en';
+  const language = (i18n.language as Language) || 'fa';
 
-  // Initialize language detection with fallback
+  // Initialize language detection with fallback to Farsi
   React.useEffect(() => {
     if (!i18n.language || i18n.language === 'dev') {
-      i18n.changeLanguage('en');
-      localStorage.setItem('i18nextLng', 'en');
+      i18n.changeLanguage('fa');
+      localStorage.setItem('i18nextLng', 'fa');
     }
   }, [i18n]);
 
