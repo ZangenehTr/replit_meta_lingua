@@ -107,7 +107,7 @@ body.rtl p, body.rtl div, body.rtl span {
 /* Language-specific font families with improved typography */
 /* Persian (Farsi) Typography */
 .lang-fa, .lang-fa *, [lang="fa"], [lang="fa"] * {
-  font-family: 'Vazirmatn', 'IRANSansX', 'Tahoma', sans-serif !important;
+  font-family: 'Almarai', 'Noto Kufi Arabic', 'Vazirmatn', 'Tahoma', sans-serif !important;
   line-height: 1.8;
   letter-spacing: 0.02em;
 }

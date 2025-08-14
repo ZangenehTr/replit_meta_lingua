@@ -1,5 +1,22 @@
 {
   "loading": "در حال بارگذاری...",
+  "view": "مشاهده",
+  "edit": "ویرایش",
+  "delete": "حذف",
+  "save": "ذخیره",
+  "cancel": "انصراف",
+  "submit": "ارسال",
+  "add": "افزودن",
+  "search": "جستجو",
+  "filter": "فیلتر",
+  "actions": "عملیات",
+  "status": {
+    "loading": "در حال بارگذاری...",
+    "active": "فعال",
+    "inactive": "غیرفعال",
+    "pending": "در انتظار",
+    "completed": "تکمیل شده"
+  },
   "today": "امروز",
   "yesterday": "دیروز",
   "month": "ماه",

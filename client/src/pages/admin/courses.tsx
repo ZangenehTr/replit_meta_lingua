@@ -662,11 +662,7 @@ export function AdminCourses() {
     return matchesSearch && matchesLanguage;
   });
 
-  // Debug logging
-  console.log('Filter language:', filterLanguage);
-  console.log('Total courses:', courseData.length);
-  console.log('Filtered courses:', filteredCourses.length);
-  console.log('Sample course languages:', courseData.slice(0, 5).map(c => c.language));
+
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -729,20 +725,20 @@ export function AdminCourses() {
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex gap-4 items-center">
+      {/* Search and Filters - Mobile First */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder={t('admin:courses.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 rtl:pl-3 rtl:pr-10 w-full"
           />
         </div>
         <Select value={filterLanguage} onValueChange={setFilterLanguage}>
-          <SelectTrigger className="w-48">
-            <Filter className="h-4 w-4" />
+          <SelectTrigger className="w-full sm:w-48">
+            <Filter className="h-4 w-4 ml-2 rtl:mr-2 rtl:ml-0" />
             <SelectValue placeholder={t('admin:courses.allLanguages')} />
           </SelectTrigger>
           <SelectContent>
@@ -758,8 +754,8 @@ export function AdminCourses() {
         </Select>
       </div>
 
-      {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Courses Grid - Mobile First */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredCourses.map((course: any) => (
           <Card key={course.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
@@ -800,18 +796,18 @@ export function AdminCourses() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-2 gap-2">
                 <div className="text-lg font-bold">
-                  {course.price || 0} IRR
+                  {(course.price || 0).toLocaleString('fa-IR')} IRR
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button variant="outline" size="sm" className="flex-1 sm:flex-initial flex items-center justify-center gap-1">
                     <Eye className="h-4 w-4" />
-                    {t('common:view')}
+                    <span className="hidden sm:inline">{t('common:view')}</span>
                   </Button>
-                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                  <Button variant="outline" size="sm" className="flex-1 sm:flex-initial flex items-center justify-center gap-1">
                     <Edit3 className="h-4 w-4" />
-                    {t('common:edit')}
+                    <span className="hidden sm:inline">{t('common:edit')}</span>
                   </Button>
                 </div>
               </div>
@@ -820,51 +816,51 @@ export function AdminCourses() {
         ))}
       </div>
 
-      {/* Statistics Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
+      {/* Statistics Summary - Mobile First */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-6 sm:mt-8">
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">{t('admin:courses.totalCourses')}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Array.isArray(courseData) ? courseData.length : 0}</div>
-
+          <CardContent className="px-3 sm:px-6">
+            <div className="text-xl sm:text-2xl font-bold">{Array.isArray(courseData) ? courseData.length : 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">{t('admin:courses.totalDesc')}</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Courses</CardTitle>
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">{t('admin:courses.activeCourses')}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-3 sm:px-6">
+            <div className="text-xl sm:text-2xl font-bold">
               {Array.isArray(courseData) ? courseData.filter((c: any) => c.status === 'active').length : 0}
             </div>
-            <p className="text-xs text-green-600">Currently available</p>
+            <p className="text-xs text-green-600">{t('admin:courses.currentlyAvailable')}</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Categories</CardTitle>
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">{t('admin:courses.categories')}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-3 sm:px-6">
+            <div className="text-xl sm:text-2xl font-bold">
               {Array.isArray(courseData) ? new Set(courseData.map((c: any) => c.category)).size : 0}
             </div>
-            <p className="text-xs text-blue-600">Unique categories</p>
+            <p className="text-xs text-blue-600">{t('admin:courses.uniqueCategories')}</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Course Revenue</CardTitle>
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">{t('admin:courses.courseRevenue')}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {Array.isArray(courseData) ? courseData.reduce((sum: number, course: any) => sum + (course.price || 0), 0).toLocaleString() : 0} IRR
+          <CardContent className="px-3 sm:px-6">
+            <div className="text-xl sm:text-2xl font-bold">
+              {Array.isArray(courseData) ? courseData.reduce((sum: number, course: any) => sum + (course.price || 0), 0).toLocaleString('fa-IR') : 0} IRR
             </div>
-            <p className="text-xs text-green-600">Total potential</p>
+            <p className="text-xs text-green-600">{t('admin:courses.totalPotential')}</p>
           </CardContent>
         </Card>
       </div>
