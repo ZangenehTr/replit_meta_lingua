@@ -102,6 +102,7 @@ import CampaignsPage from "@/pages/callcenter/campaigns";
 
 // Admin pages
 import AdminClassesPage from "@/pages/admin/classes";
+import ClassManagementPage from "@/pages/admin/class-management";
 import AdminReportsPage from "@/pages/admin/reports";
 import AdminCommunicationsPage from "@/pages/admin/communications";
 import AdminSupervisionPage from "@/pages/admin/supervision";
@@ -592,6 +593,11 @@ function Router() {
       <Route path="/admin/classes">
         <ProtectedRoute>
           <AdminClassesPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/class-management">
+        <ProtectedRoute>
+          <ClassManagementPage />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/callern-management">
