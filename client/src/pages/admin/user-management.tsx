@@ -240,35 +240,35 @@ export default function UserManagement() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin:userManagement.mentors')}</CardTitle>
-            <UserPlus className="h-4 w-4 text-muted-foreground" />
+        <Card className="shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">{t('admin:userManagement.mentors')}</CardTitle>
+            <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{users.filter(u => u.role === 'Mentor').length}</div>
+          <CardContent className="px-3 sm:px-6">
+            <div className="text-xl sm:text-2xl font-bold">{users.filter(u => u.role === 'Mentor').length}</div>
             <p className="text-xs text-muted-foreground">{t('admin:userManagement.availableForMatching')}</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin:userManagement.teachers')}</CardTitle>
-            <UserPlus className="h-4 w-4 text-muted-foreground" />
+        <Card className="shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">{t('admin:userManagement.teachers')}</CardTitle>
+            <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{users.filter(u => u.role === 'Teacher').length}</div>
+          <CardContent className="px-3 sm:px-6">
+            <div className="text-xl sm:text-2xl font-bold">{users.filter(u => u.role === 'Teacher').length}</div>
             <p className="text-xs text-muted-foreground">{t('admin:userManagement.activeInstructors')}</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin:userManagement.students')}</CardTitle>
-            <UserPlus className="h-4 w-4 text-muted-foreground" />
+        <Card className="shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">{t('admin:userManagement.students')}</CardTitle>
+            <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{users.filter(u => u.role === 'Student').length}</div>
+          <CardContent className="px-3 sm:px-6">
+            <div className="text-xl sm:text-2xl font-bold">{users.filter(u => u.role === 'Student').length}</div>
             <p className="text-xs text-muted-foreground">{t('admin:userManagement.registeredStudents')}</p>
           </CardContent>
         </Card>
@@ -281,18 +281,18 @@ export default function UserManagement() {
           <CardDescription>{t('admin:userManagement.searchAndFilter')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute ltr:left-3 rtl:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder={t('admin:userManagement.searchUsers')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="ltr:pl-10 rtl:pr-10"
+                className="ltr:pl-10 rtl:pr-10 w-full"
               />
             </div>
             <Select value={selectedRole} onValueChange={setSelectedRole}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -312,16 +312,16 @@ export default function UserManagement() {
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-8 text-gray-500">{t('admin:userManagement.noUsersFound')}</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <table className="w-full min-w-[640px]">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-start pb-3 font-medium">{t('admin:userManagement.user')}</th>
-                    <th className="text-start pb-3 font-medium">{t('admin:userManagement.email')}</th>
-                    <th className="text-start pb-3 font-medium">{t('admin:userManagement.role')}</th>
-                    <th className="text-start pb-3 font-medium">{t('admin:userManagement.status')}</th>
-                    <th className="text-start pb-3 font-medium">{t('admin:userManagement.createdDate')}</th>
-                    <th className="text-end pb-3 font-medium">{t('admin:userManagement.actions')}</th>
+                    <th className="text-start pb-3 px-2 sm:px-0 font-medium text-xs sm:text-sm">{t('admin:userManagement.user')}</th>
+                    <th className="text-start pb-3 px-2 sm:px-0 font-medium text-xs sm:text-sm hidden sm:table-cell">{t('admin:userManagement.email')}</th>
+                    <th className="text-start pb-3 px-2 sm:px-0 font-medium text-xs sm:text-sm">{t('admin:userManagement.role')}</th>
+                    <th className="text-start pb-3 px-2 sm:px-0 font-medium text-xs sm:text-sm">{t('admin:userManagement.status')}</th>
+                    <th className="text-start pb-3 px-2 sm:px-0 font-medium text-xs sm:text-sm hidden lg:table-cell">{t('admin:userManagement.createdDate')}</th>
+                    <th className="text-end pb-3 px-2 sm:px-0 font-medium text-xs sm:text-sm">{t('admin:userManagement.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
