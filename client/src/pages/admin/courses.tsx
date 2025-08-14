@@ -642,7 +642,7 @@ export function AdminCourses() {
   // Fetch courses data - simplified query without parameters
   const { data: courses, isLoading, isError, error } = useQuery({
     queryKey: ['/api/admin/courses'],
-    enabled: !!user && ['Admin', 'Supervisor'].includes(user.role),
+    enabled: !!user && ['admin', 'Admin', 'supervisor', 'Supervisor'].some(role => role.toLowerCase() === user?.role?.toLowerCase()),
     retry: (failureCount, error: any) => {
       if (error?.status === 401 || error?.status === 403) {
         console.error('Authentication error, not retrying:', error?.status);
@@ -651,7 +651,7 @@ export function AdminCourses() {
       return failureCount < 3;
     }
   });
-
+  
   const courseData = Array.isArray(courses) ? courses : [];
 
   const filteredCourses = courseData.filter((course: any) => {
