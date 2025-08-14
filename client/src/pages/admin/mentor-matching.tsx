@@ -173,14 +173,14 @@ export default function MentorMatchingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-4 sm:p-6 space-y-6">
-      {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-4 sm:p-6 space-y-4 sm:space-y-6">
+      {/* Header - Mobile First */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
             {t('admin:mentorMatching.title')}
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
             {t('admin:mentorMatching.subtitle')}
           </p>
         </div>
