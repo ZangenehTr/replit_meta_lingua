@@ -727,7 +727,7 @@ export function AdminCourses() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder="Search courses by title or description..."
+            placeholder={t('admin:courses.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -736,14 +736,14 @@ export function AdminCourses() {
         <Select value={filterCategory} onValueChange={setFilterCategory}>
           <SelectTrigger className="w-48">
             <Filter className="h-4 w-4" />
-            <SelectValue />
+            <SelectValue placeholder={t('admin:courses.allCategories')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="Persian">Persian</SelectItem>
-            <SelectItem value="English">English</SelectItem>
-            <SelectItem value="Arabic">Arabic</SelectItem>
-            <SelectItem value="French">French</SelectItem>
+            <SelectItem value="all">{t('admin:courses.allCategories')}</SelectItem>
+            <SelectItem value="Persian">{t('admin:courses.persian')}</SelectItem>
+            <SelectItem value="English">{t('admin:courses.english')}</SelectItem>
+            <SelectItem value="Arabic">{t('admin:courses.arabic')}</SelectItem>
+            <SelectItem value="French">{t('admin:courses.french')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -768,21 +768,21 @@ export function AdminCourses() {
               
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600">Level:</span>
+                  <span className="text-gray-600">{t('admin:courses.level')}:</span>
                   <Badge className={`ms-2 ${getLevelColor(course.level)}`}>
                     {course.level}
                   </Badge>
                 </div>
                 <div>
-                  <span className="text-gray-600">Duration:</span>
+                  <span className="text-gray-600">{t('admin:courses.duration')}:</span>
                   <span className="ms-2 font-medium">{course.duration}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">{t('students')}:</span>
+                  <span className="text-gray-600">{t('admin:courses.students')}:</span>
                   <span className="ms-2 font-bold">{course.enrolledStudents || 0}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">{t('rating')}:</span>
+                  <span className="text-gray-600">{t('admin:courses.rating')}:</span>
                   <span className="ms-2 font-bold flex items-center gap-1">
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     {course.rating || 'N/A'}
@@ -797,11 +797,11 @@ export function AdminCourses() {
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="flex items-center gap-1">
                     <Eye className="h-4 w-4" />
-                    View
+                    {t('common:view')}
                   </Button>
                   <Button variant="outline" size="sm" className="flex items-center gap-1">
                     <Edit3 className="h-4 w-4" />
-                    Edit
+                    {t('common:edit')}
                   </Button>
                 </div>
               </div>
