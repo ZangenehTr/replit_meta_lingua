@@ -9,6 +9,7 @@ Work sessions: User prefers to have work logged so they can resume from where we
 Critical requirement: Self-hosting in Iran with zero external dependencies. Must follow check-first protocol.
 Database strategy: Use Replit/Neon for development only, migrate to self-hosted PostgreSQL for production in Iran.
 Code quality: Always avoid duplications - no duplicate code, methods, or logic. Prefer composition and reuse over duplication.
+Language preference: Default language set to Farsi (fa) for Iranian users (August 14, 2025).
 Database cleanup: Successfully removed 23 duplicate methods from database-storage.ts (January 13, 2025).
 Phase 2 implementation: Successfully connected 10 organizational & student management tables with all 29 tests passing (January 13, 2025).
 Phase 3 implementation: Connected communication and teacher management tables with comprehensive test coverage (August 13, 2025). Added 11 missing methods for full functionality.
