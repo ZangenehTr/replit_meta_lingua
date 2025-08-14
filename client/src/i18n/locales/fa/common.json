@@ -10,6 +10,11 @@
   "search": "جستجو",
   "filter": "فیلتر",
   "actions": "عملیات",
+  "allTypes": "همه انواع",
+  "allLevels": "همه سطوح",
+  "beginner": "مبتدی",
+  "intermediate": "متوسط",
+  "advanced": "پیشرفته",
   "status": {
     "loading": "در حال بارگذاری...",
     "active": "فعال",

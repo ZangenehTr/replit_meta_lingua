@@ -203,33 +203,33 @@ export default function AdminClassesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header - Mobile First */}
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
             {t('admin:classes.title')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
             {t('admin:classes.subtitle')}
           </p>
         </div>
 
-        {/* Toolbar */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-              {/* View Controls */}
-              <div className="flex items-center gap-4">
+        {/* Toolbar - Mobile First */}
+        <Card className="mb-4 sm:mb-6 shadow-sm">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 items-start lg:items-center justify-between">
+              {/* View Controls - Mobile First */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full lg:w-auto">
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="icon" onClick={navigatePrevious}>
+                  <Button variant="outline" size="sm" className="h-8" onClick={navigatePrevious}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="icon" onClick={navigateNext}>
+                  <Button variant="outline" size="sm" className="h-8" onClick={navigateNext}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" onClick={() => setSelectedDate(new Date())}>
-                    {t('common.today')}
+                  <Button variant="outline" size="sm" className="h-8 px-3" onClick={() => setSelectedDate(new Date())}>
+                    {t('admin:common.today')}
                   </Button>
                 </div>
                 
@@ -240,22 +240,23 @@ export default function AdminClassesPage() {
                 </h2>
               </div>
 
-              {/* View Mode Tabs */}
-              <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)}>
-                <TabsList>
-                  <TabsTrigger value="day">{t('common.day')}</TabsTrigger>
-                  <TabsTrigger value="week">{t('common.week')}</TabsTrigger>
-                  <TabsTrigger value="month">{t('common.month')}</TabsTrigger>
+              {/* View Mode Tabs - Mobile First */}
+              <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)} className="w-full sm:w-auto">
+                <TabsList className="grid grid-cols-3 w-full sm:w-auto">
+                  <TabsTrigger value="day" className="text-xs sm:text-sm">{t('admin:common.day')}</TabsTrigger>
+                  <TabsTrigger value="week" className="text-xs sm:text-sm">{t('admin:common.week')}</TabsTrigger>
+                  <TabsTrigger value="month" className="text-xs sm:text-sm">{t('admin:common.month')}</TabsTrigger>
                 </TabsList>
               </Tabs>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2">
+              {/* Actions - Mobile First */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="flex items-center gap-2">
-                      <Plus className="h-4 w-4" />
-                      {t('classScheduling.scheduleClass')}
+                    <Button size="sm" className="flex items-center gap-2 h-8 text-xs sm:text-sm">
+                      <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">{t('admin:classScheduling.scheduleClass')}</span>
+                      <span className="sm:hidden">{t('admin:add')}</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
@@ -271,17 +272,17 @@ export default function AdminClassesPage() {
                   </DialogContent>
                 </Dialog>
 
-                <Button variant="outline" size="icon">
-                  <Download className="h-4 w-4" />
+                <Button variant="outline" size="sm" className="h-8 w-8">
+                  <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
-                <Button variant="outline" size="icon">
-                  <Settings className="h-4 w-4" />
+                <Button variant="outline" size="sm" className="h-8 w-8">
+                  <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             </div>
 
-            {/* Filters */}
-            <div className="mt-4 pt-4 border-t flex flex-wrap gap-4">
+            {/* Filters - Mobile First */}
+            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4">
               <Select value={filters.teacher} onValueChange={(v) => setFilters({ ...filters, teacher: v })}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder={t('filters.allTeachers')} />
@@ -679,7 +680,7 @@ function ClassScheduleForm({
   });
 
   // Get selected course details
-  const selectedCourse = courses.find((c: any) => c.id === parseInt(formData.courseId));
+  const selectedCourse = (courses as any[]).find((c: any) => c.id === parseInt(formData.courseId));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -706,7 +707,7 @@ function ClassScheduleForm({
               <SelectValue placeholder={t('classScheduling.selectCourseToSchedule')} />
             </SelectTrigger>
             <SelectContent>
-              {courses.map((course: any) => (
+              {(courses as any[]).map((course: any) => (
                 <SelectItem key={course.id} value={course.id.toString()}>
                   {course.title} - {course.level} ({course.language})
                 </SelectItem>

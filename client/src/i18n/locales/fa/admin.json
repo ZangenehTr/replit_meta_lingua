@@ -122,7 +122,25 @@
     "created": "ایجاد شده",
     "userMetrics": "معیارهای کاربری",
     "performanceMetrics": "معیارهای عملکرد",
-    "systemHealth": "سلامت سیستم"
+    "systemHealth": "سلامت سیستم",
+    "common": {
+      "today": "امروز",
+      "day": "روز",
+      "week": "هفته",
+      "month": "ماه"
+    },
+    "classScheduling": {
+      "scheduleClass": "برنامه‌ریزی کلاس",
+      "scheduleNewClass": "برنامه‌ریزی کلاس جدید"
+    },
+    "classes": {
+      "title": "برنامه‌ریزی کلاس",
+      "subtitle": "مدیریت و برنامه‌ریزی کلاس‌ها و جلسات",
+      "online": "آنلاین",
+      "inPerson": "حضوری",
+      "hybrid": "ترکیبی"
+    },
+    "add": "افزودن"
   },
   "students": {
     "searchPlaceholder": "جستجوی دانش‌آموزان...",
