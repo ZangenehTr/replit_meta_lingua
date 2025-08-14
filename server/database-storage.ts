@@ -80,6 +80,10 @@ import {
   // Teacher observation responses
   teacherObservationResponses,
   type TeacherObservationResponse, type InsertTeacherObservationResponse,
+  // Classes and Holidays tables
+  classes, holidays,
+  type Class, type InsertClass,
+  type Holiday, type InsertHoliday,
   // Phase 1: Critical system tables
   auditLogs, emailLogs, studentReports, paymentTransactions,
   type AuditLog, type InsertAuditLog,
@@ -10208,6 +10212,259 @@ export class DatabaseStorage implements IStorage {
         overallRating: 4,
         feedback: 'Good session'
       }];
+    }
+  }
+
+  // ==================== CLASSES AND HOLIDAYS MANAGEMENT ====================
+  // Classes (specific instances of courses with teacher and schedule)
+  
+  async getClasses(): Promise<any[]> {
+    try {
+      const result = await db.select({
+        id: classes.id,
+        courseId: classes.courseId,
+        teacherId: classes.teacherId,
+        startDate: classes.startDate,
+        endDate: classes.endDate,
+        startTime: classes.startTime,
+        endTime: classes.endTime,
+        weekdays: classes.weekdays,
+        totalSessions: classes.totalSessions,
+        isRecurring: classes.isRecurring,
+        recurringType: classes.recurringType,
+        maxStudents: classes.maxStudents,
+        roomId: classes.roomId,
+        isActive: classes.isActive
+      })
+      .from(classes)
+      .orderBy(desc(classes.startDate));
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+      return [];
+    }
+  }
+
+  async getClass(id: number): Promise<any | undefined> {
+    try {
+      const [result] = await db.select()
+        .from(classes)
+        .where(eq(classes.id, id));
+      return result;
+    } catch (error) {
+      console.error('Error fetching class:', error);
+      return undefined;
+    }
+  }
+
+  async createClass(classData: any): Promise<any> {
+    try {
+      // Calculate end date considering holidays
+      const endDate = await this.calculateClassEndDate(
+        classData.startDate,
+        classData.totalSessions,
+        classData.weekdays
+      );
+      
+      const [result] = await db.insert(classes).values({
+        ...classData,
+        endDate
+      }).returning();
+      
+      return result;
+    } catch (error) {
+      console.error('Error creating class:', error);
+      throw error;
+    }
+  }
+
+  async updateClass(id: number, updates: any): Promise<any | undefined> {
+    try {
+      // If updating start date or sessions, recalculate end date
+      if (updates.startDate || updates.totalSessions || updates.weekdays) {
+        const existingClass = await this.getClass(id);
+        if (existingClass) {
+          const endDate = await this.calculateClassEndDate(
+            updates.startDate || existingClass.startDate,
+            updates.totalSessions || existingClass.totalSessions,
+            updates.weekdays || existingClass.weekdays
+          );
+          updates.endDate = endDate;
+        }
+      }
+      
+      const [result] = await db.update(classes)
+        .set(updates)
+        .where(eq(classes.id, id))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating class:', error);
+      return undefined;
+    }
+  }
+
+  async deleteClass(id: number): Promise<void> {
+    try {
+      await db.delete(classes).where(eq(classes.id, id));
+    } catch (error) {
+      console.error('Error deleting class:', error);
+      throw error;
+    }
+  }
+
+  async getClassesByCourse(courseId: number): Promise<any[]> {
+    try {
+      const result = await db.select()
+        .from(classes)
+        .where(eq(classes.courseId, courseId))
+        .orderBy(desc(classes.startDate));
+      return result;
+    } catch (error) {
+      console.error('Error fetching classes by course:', error);
+      return [];
+    }
+  }
+
+  async getClassesByTeacher(teacherId: number): Promise<any[]> {
+    try {
+      const result = await db.select()
+        .from(classes)
+        .where(eq(classes.teacherId, teacherId))
+        .orderBy(desc(classes.startDate));
+      return result;
+    } catch (error) {
+      console.error('Error fetching classes by teacher:', error);
+      return [];
+    }
+  }
+
+  async calculateClassEndDate(startDate: string, totalSessions: number, weekdays: string[]): Promise<string> {
+    try {
+      // Get holidays that might affect the class duration
+      const start = new Date(startDate);
+      const estimatedEnd = new Date(start);
+      estimatedEnd.setMonth(estimatedEnd.getMonth() + 6); // Estimate 6 months max
+      
+      const holidaysInRange = await this.getHolidaysInRange(
+        startDate,
+        estimatedEnd.toISOString().split('T')[0]
+      );
+      
+      // Calculate end date considering weekdays and holidays
+      let sessionCount = 0;
+      let currentDate = new Date(start);
+      const weekdayNumbers = weekdays.map(day => {
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        return days.indexOf(day.toLowerCase());
+      });
+      
+      while (sessionCount < totalSessions) {
+        const dayOfWeek = currentDate.getDay();
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        // Check if it's a class day and not a holiday
+        if (weekdayNumbers.includes(dayOfWeek)) {
+          const isHoliday = holidaysInRange.some(h => 
+            h.date === dateStr
+          );
+          
+          if (!isHoliday) {
+            sessionCount++;
+          }
+        }
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      // Go back one day as we've incremented after finding the last session
+      currentDate.setDate(currentDate.getDate() - 1);
+      
+      return currentDate.toISOString().split('T')[0];
+    } catch (error) {
+      console.error('Error calculating class end date:', error);
+      // Fallback: estimate based on weeks
+      const start = new Date(startDate);
+      const weeksNeeded = Math.ceil(totalSessions / weekdays.length);
+      start.setDate(start.getDate() + (weeksNeeded * 7));
+      return start.toISOString().split('T')[0];
+    }
+  }
+
+  // Holidays Management
+  
+  async getHolidays(): Promise<any[]> {
+    try {
+      const result = await db.select()
+        .from(holidays)
+        .orderBy(desc(holidays.date));
+      return result;
+    } catch (error) {
+      console.error('Error fetching holidays:', error);
+      return [];
+    }
+  }
+
+  async getHoliday(id: number): Promise<any | undefined> {
+    try {
+      const [result] = await db.select()
+        .from(holidays)
+        .where(eq(holidays.id, id));
+      return result;
+    } catch (error) {
+      console.error('Error fetching holiday:', error);
+      return undefined;
+    }
+  }
+
+  async createHoliday(holiday: any): Promise<any> {
+    try {
+      const [result] = await db.insert(holidays).values(holiday).returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating holiday:', error);
+      throw error;
+    }
+  }
+
+  async updateHoliday(id: number, updates: any): Promise<any | undefined> {
+    try {
+      const [result] = await db.update(holidays)
+        .set(updates)
+        .where(eq(holidays.id, id))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating holiday:', error);
+      return undefined;
+    }
+  }
+
+  async deleteHoliday(id: number): Promise<void> {
+    try {
+      await db.delete(holidays).where(eq(holidays.id, id));
+    } catch (error) {
+      console.error('Error deleting holiday:', error);
+      throw error;
+    }
+  }
+
+  async getHolidaysInRange(startDate: string, endDate: string): Promise<any[]> {
+    try {
+      const result = await db.select()
+        .from(holidays)
+        .where(
+          and(
+            gte(holidays.date, startDate),
+            lte(holidays.date, endDate)
+          )
+        )
+        .orderBy(holidays.date);
+      return result;
+    } catch (error) {
+      console.error('Error fetching holidays in range:', error);
+      return [];
     }
   }
 }

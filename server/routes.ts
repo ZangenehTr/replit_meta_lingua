@@ -4967,12 +4967,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startTime: classData.startTime,
         endTime: classData.endTime,
         weekdays: classData.weekdays || [],
+        deliveryMode: classData.deliveryMode || 'in_person', // Add required field
         totalSessions: classData.totalSessions || 10,
         isRecurring: classData.isRecurring || false,
-        recurringType: classData.recurringType || 'weekly',
+        recurringPattern: classData.recurringType || classData.recurringPattern || 'weekly',
         maxStudents: classData.maxStudents || 20,
         roomId: classData.roomId,
-        isActive: true
+        status: 'scheduled'
       });
       
       res.status(201).json({ message: "Class created successfully", class: newClass });
@@ -5074,17 +5075,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new holiday
   app.post("/api/admin/holidays", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      const { name, date, isNational, affectsClasses } = req.body;
+      const holidayData = req.body;
       
-      if (!name || !date) {
+      if (!holidayData.name || !holidayData.date) {
         return res.status(400).json({ message: "Name and date are required" });
       }
       
       const newHoliday = await storage.createHoliday({
-        name,
-        date,
-        isNational: isNational !== undefined ? isNational : true,
-        affectsClasses: affectsClasses !== undefined ? affectsClasses : true
+        name: holidayData.name,
+        date: holidayData.date,
+        type: holidayData.type || 'national', // Use correct field name
+        isRecurring: holidayData.isRecurring || false,
+        recurringPattern: holidayData.recurringPattern,
+        description: holidayData.description
       });
       
       res.status(201).json({ message: "Holiday created successfully", holiday: newHoliday });
