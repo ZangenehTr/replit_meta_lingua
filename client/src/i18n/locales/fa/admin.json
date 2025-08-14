@@ -585,7 +585,15 @@
     "firstSessionDate": "تاریخ اولین جلسه",
     "importCourse": "وارد کردن دوره",
     "allCategories": "همه دسته‌ها",
-    "searchPlaceholder": "جستجوی دوره‌ها بر اساس عنوان یا توضیحات"
+    "searchPlaceholder": "جستجوی دوره‌ها بر اساس عنوان یا توضیحات",
+    "persian": "فارسی",
+    "english": "انگلیسی",
+    "arabic": "عربی",
+    "french": "فرانسه",
+    "students": "دانش‌آموزان",
+    "rating": "امتیاز",
+    "level": "سطح",
+    "duration": "مدت زمان"
   },
   "games": {
     "title": "مدیریت بازی‌ها",
