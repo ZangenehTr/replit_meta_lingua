@@ -6,6 +6,7 @@ import {
   moodEntries, moodRecommendations, learningAdaptations, attendanceRecords, rooms,
   studentQuestionnaires, questionnaireResponses, userProfiles, rolePermissions, userSessions,
   sessionPackages, walletTransactions, coursePayments, mentorAssignments, mentoringSessions,
+  classes, holidays,
   // Testing subsystem tables
   tests, testQuestions, testAttempts, testAnswers,
   // Gamification tables
@@ -28,6 +29,7 @@ import {
   referralCommissions, adminSettings, aiTrainingData, aiKnowledgeBase,
   // Types
   type User, type InsertUser, type Course, type InsertCourse,
+  type Class, type InsertClass, type Holiday, type InsertHoliday,
   type Enrollment, type InsertEnrollment, type Session, type InsertSession,
   type Message, type InsertMessage, type Homework, type InsertHomework,
   type Payment, type InsertPayment, type Notification, type InsertNotification,
@@ -113,6 +115,24 @@ export interface IStorage {
   getCourseEnrollments(courseId: number): Promise<any[]>;
   enrollInCourse(enrollment: InsertEnrollment): Promise<Enrollment>;
   unenrollFromCourse(userId: number, courseId: number): Promise<void>;
+  
+  // Classes (specific instances of courses with teacher and schedule)
+  getClasses(): Promise<Class[]>;
+  getClass(id: number): Promise<Class | undefined>;
+  createClass(classData: InsertClass): Promise<Class>;
+  updateClass(id: number, updates: Partial<Class>): Promise<Class | undefined>;
+  deleteClass(id: number): Promise<void>;
+  getClassesByCourse(courseId: number): Promise<Class[]>;
+  getClassesByTeacher(teacherId: number): Promise<Class[]>;
+  calculateClassEndDate(startDate: string, totalSessions: number, weekdays: string[]): Promise<string>;
+  
+  // Holidays
+  getHolidays(): Promise<Holiday[]>;
+  getHoliday(id: number): Promise<Holiday | undefined>;
+  createHoliday(holiday: InsertHoliday): Promise<Holiday>;
+  updateHoliday(id: number, updates: Partial<Holiday>): Promise<Holiday | undefined>;
+  deleteHoliday(id: number): Promise<void>;
+  getHolidaysInRange(startDate: string, endDate: string): Promise<Holiday[]>;
   
   // Course modules and lessons
   addCourseModule(courseId: number, moduleData: any): Promise<any>;
@@ -2852,6 +2872,200 @@ export class MemStorage implements IStorage {
 
   async updateRecommendationFeedback(recommendationId: number, feedback: any): Promise<void> {
     // Mock implementation
+  }
+  
+  // Classes implementation
+  async getClasses(): Promise<Class[]> {
+    try {
+      const result = await db.select().from(classes);
+      return result;
+    } catch (error) {
+      console.error('Error getting classes:', error);
+      return [];
+    }
+  }
+  
+  async getClass(id: number): Promise<Class | undefined> {
+    try {
+      const result = await db.select().from(classes).where(eq(classes.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error getting class:', error);
+      return undefined;
+    }
+  }
+  
+  async createClass(classData: InsertClass): Promise<Class> {
+    try {
+      // Calculate end date considering holidays
+      const endDate = await this.calculateClassEndDate(
+        classData.startDate,
+        classData.totalSessions || 10,
+        classData.weekdays
+      );
+      
+      const result = await db.insert(classes).values({
+        ...classData,
+        endDate
+      }).returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Error creating class:', error);
+      throw error;
+    }
+  }
+  
+  async updateClass(id: number, updates: Partial<Class>): Promise<Class | undefined> {
+    try {
+      const result = await db.update(classes)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(classes.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating class:', error);
+      return undefined;
+    }
+  }
+  
+  async deleteClass(id: number): Promise<void> {
+    try {
+      await db.delete(classes).where(eq(classes.id, id));
+    } catch (error) {
+      console.error('Error deleting class:', error);
+    }
+  }
+  
+  async getClassesByCourse(courseId: number): Promise<Class[]> {
+    try {
+      const result = await db.select().from(classes).where(eq(classes.courseId, courseId));
+      return result;
+    } catch (error) {
+      console.error('Error getting classes by course:', error);
+      return [];
+    }
+  }
+  
+  async getClassesByTeacher(teacherId: number): Promise<Class[]> {
+    try {
+      const result = await db.select().from(classes).where(eq(classes.teacherId, teacherId));
+      return result;
+    } catch (error) {
+      console.error('Error getting classes by teacher:', error);
+      return [];
+    }
+  }
+  
+  async calculateClassEndDate(startDate: string, totalSessions: number, weekdays: string[]): Promise<string> {
+    try {
+      // Get holidays within a reasonable range (next 6 months)
+      const start = new Date(startDate);
+      const maxEnd = new Date(start);
+      maxEnd.setMonth(maxEnd.getMonth() + 6);
+      
+      const holidays = await this.getHolidaysInRange(
+        startDate,
+        maxEnd.toISOString().split('T')[0]
+      );
+      
+      // Calculate end date skipping holidays
+      let currentDate = new Date(start);
+      let sessionsScheduled = 0;
+      const holidayDates = new Set(holidays.map(h => h.date));
+      
+      while (sessionsScheduled < totalSessions) {
+        const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][currentDate.getDay()];
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        // Check if this day is a class day and not a holiday
+        if (weekdays.includes(dayName) && !holidayDates.has(dateStr)) {
+          sessionsScheduled++;
+        }
+        
+        // Move to next day if we haven't scheduled all sessions
+        if (sessionsScheduled < totalSessions) {
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      }
+      
+      return currentDate.toISOString().split('T')[0];
+    } catch (error) {
+      console.error('Error calculating class end date:', error);
+      // Fallback: estimate without holidays
+      const start = new Date(startDate);
+      const weeksNeeded = Math.ceil(totalSessions / weekdays.length);
+      start.setDate(start.getDate() + (weeksNeeded * 7));
+      return start.toISOString().split('T')[0];
+    }
+  }
+  
+  // Holidays implementation
+  async getHolidays(): Promise<Holiday[]> {
+    try {
+      const result = await db.select().from(holidays);
+      return result;
+    } catch (error) {
+      console.error('Error getting holidays:', error);
+      return [];
+    }
+  }
+  
+  async getHoliday(id: number): Promise<Holiday | undefined> {
+    try {
+      const result = await db.select().from(holidays).where(eq(holidays.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error getting holiday:', error);
+      return undefined;
+    }
+  }
+  
+  async createHoliday(holiday: InsertHoliday): Promise<Holiday> {
+    try {
+      const result = await db.insert(holidays).values(holiday).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating holiday:', error);
+      throw error;
+    }
+  }
+  
+  async updateHoliday(id: number, updates: Partial<Holiday>): Promise<Holiday | undefined> {
+    try {
+      const result = await db.update(holidays)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(holidays.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating holiday:', error);
+      return undefined;
+    }
+  }
+  
+  async deleteHoliday(id: number): Promise<void> {
+    try {
+      await db.delete(holidays).where(eq(holidays.id, id));
+    } catch (error) {
+      console.error('Error deleting holiday:', error);
+    }
+  }
+  
+  async getHolidaysInRange(startDate: string, endDate: string): Promise<Holiday[]> {
+    try {
+      const result = await db.select().from(holidays)
+        .where(
+          and(
+            gte(holidays.date, startDate),
+            lte(holidays.date, endDate)
+          )
+        );
+      return result;
+    } catch (error) {
+      console.error('Error getting holidays in range:', error);
+      return [];
+    }
   }
 
   // Additional missing methods for complete IStorage compliance

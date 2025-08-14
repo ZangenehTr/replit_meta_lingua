@@ -29,7 +29,7 @@ import {
   Upload
 } from "lucide-react";
 
-// Schema for course creation and editing - matches backend requirements
+// Schema for course creation and editing - matches new architecture (no teacher/schedule)
 const courseSchema = z.object({
   courseCode: z.string().min(1, "Course code is required"),
   title: z.string().min(1, "Title is required"),
@@ -47,27 +47,18 @@ const courseSchema = z.object({
   maxStudents: z.coerce.number().optional(),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
-  // Scheduling fields - required for regular courses, optional for Callern
-  weekdays: z.array(z.string()).optional(),
-  startTime: z.string().optional(),
-  endTime: z.string().optional(),
-  firstSessionDate: z.string().optional(),
   // Callern-specific fields
   accessPeriodMonths: z.coerce.number().optional(), // For Callern courses: access period in months
   callernAvailable24h: z.boolean().optional() // For Callern courses: 24/7 availability
 }).refine((data) => {
-  // For non-Callern courses, require scheduling fields
-  if (data.deliveryMode !== 'callern') {
-    return data.weekdays && data.weekdays.length > 0 && data.startTime && data.endTime;
-  }
   // For Callern courses, require access period
   if (data.deliveryMode === 'callern') {
     return data.accessPeriodMonths && data.accessPeriodMonths > 0;
   }
   return true;
 }, {
-  message: "Regular courses require weekdays and time settings. Callern courses require access period.",
-  path: ['weekdays']
+  message: "Callern courses require access period.",
+  path: ['accessPeriodMonths']
 });
 
 // Create Course Dialog Component
@@ -93,10 +84,6 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
       maxStudents: 30,
       isActive: true,
       isFeatured: false,
-      weekdays: [],
-      startTime: "",
-      endTime: "",
-      firstSessionDate: "",
       accessPeriodMonths: 2,
       callernAvailable24h: true
     }
@@ -458,103 +445,7 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
               />
             </div>
 
-            {/* Scheduling Section - Conditional based on delivery mode */}
-            {form.watch('deliveryMode') !== 'callern' && (
-              <div className="space-y-4 border-t pt-6">
-                <h3 className="text-lg font-semibold">{t('admin:courses.classScheduleSettings')}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {t('admin:courses.setDaysAndTimes')}
-                </p>
-                
-                {/* Weekdays Selection */}
-                <FormField
-                  control={form.control}
-                  name="weekdays"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('admin:courses.classDays')}</FormLabel>
-                      <div className="grid grid-cols-4 gap-2">
-                        {[
-                          { key: 'Monday', label: t('admin:courses.monday'), short: t('admin:courses.mon') },
-                          { key: 'Tuesday', label: t('admin:courses.tuesday'), short: t('admin:courses.tue') },
-                          { key: 'Wednesday', label: t('admin:courses.wednesday'), short: t('admin:courses.wed') },
-                          { key: 'Thursday', label: t('admin:courses.thursday'), short: t('admin:courses.thu') },
-                          { key: 'Friday', label: t('admin:courses.friday'), short: t('admin:courses.fri') },
-                          { key: 'Saturday', label: t('admin:courses.saturday'), short: t('admin:courses.sat') },
-                          { key: 'Sunday', label: t('admin:courses.sunday'), short: t('admin:courses.sun') }
-                        ].map((day) => (
-                          <div key={day.key} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              id={day.key}
-                              checked={field.value?.includes(day.key.toLowerCase()) || false}
-                              onChange={(e) => {
-                                const currentDays = field.value || [];
-                                if (e.target.checked) {
-                                  field.onChange([...currentDays, day.key.toLowerCase()]);
-                                } else {
-                                  field.onChange(currentDays.filter(d => d !== day.key.toLowerCase()));
-                                }
-                              }}
-                              className="h-4 w-4 rounded border-gray-300"
-                            />
-                            <label htmlFor={day.key} className="text-sm font-medium">
-                              {day.short}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {/* Time Settings */}
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="startTime"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('admin:courses.startTime')}</FormLabel>
-                        <FormControl>
-                          <Input type="time" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="endTime"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('admin:courses.endTime')}</FormLabel>
-                        <FormControl>
-                          <Input type="time" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="firstSessionDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('admin:courses.firstSessionDate')}</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            )}
+            {/* Note: Scheduling is now handled in Classes, not Courses */}
 
             {/* Callern Access Period Settings */}
             {form.watch('deliveryMode') === 'callern' && (

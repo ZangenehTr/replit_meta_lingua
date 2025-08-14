@@ -175,10 +175,39 @@ export const rooms = pgTable("rooms", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
-// Course Sessions - Scheduled class sessions for courses
-export const courseSessions = pgTable("course_sessions", {
+// Classes - Specific instances of courses with teacher and schedule
+export const classes = pgTable("classes", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").references(() => courses.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  roomId: integer("room_id").references(() => rooms.id),
+  
+  // Schedule information
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(), // Auto-calculated based on course duration and holidays
+  weekdays: text("weekdays").array().notNull(), // ["monday", "wednesday", "friday"]
+  startTime: text("start_time").notNull(), // "18:00"
+  endTime: text("end_time").notNull(), // "19:30"
+  
+  // Class-specific settings
+  maxStudents: integer("max_students").notNull().default(20),
+  currentEnrollment: integer("current_enrollment").default(0),
+  deliveryMode: text("delivery_mode").notNull(), // "online", "in_person", "hybrid"
+  status: text("status").default("scheduled"), // scheduled, in_progress, completed, cancelled
+  
+  // Additional info
+  notes: text("notes"),
+  isRecurring: boolean("is_recurring").default(false),
+  recurringPattern: text("recurring_pattern"), // weekly, biweekly, monthly
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Course Sessions - Individual sessions within a class
+export const courseSessions = pgTable("course_sessions", {
+  id: serial("id").primaryKey(),
+  classId: integer("class_id").references(() => classes.id).notNull(),
   sessionNumber: integer("session_number").notNull(), // 1, 2, 3...
   title: text("title").notNull(),
   description: text("description"),
@@ -802,7 +831,22 @@ export const insertUserSchema = createInsertSchema(users);
 export const insertUserProfileSchema = createInsertSchema(userProfiles);
 export const insertRolePermissionSchema = createInsertSchema(rolePermissions);
 export const insertUserSessionSchema = createInsertSchema(userSessions);
+// Holidays table for managing institute holidays (used for class end date calculation)
+export const holidays = pgTable("holidays", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  date: date("date").notNull(),
+  type: text("type").notNull(), // national, religious, institute
+  isRecurring: boolean("is_recurring").default(false),
+  recurringPattern: text("recurring_pattern"), // yearly, monthly
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 export const insertCourseSchema = createInsertSchema(courses);
+export const insertClassSchema = createInsertSchema(classes);
+export const insertHolidaySchema = createInsertSchema(holidays);
 export const insertEnrollmentSchema = createInsertSchema(enrollments);
 export const insertSessionSchema = createInsertSchema(sessions);
 export const insertMessageSchema = createInsertSchema(messages);
@@ -1911,6 +1955,10 @@ export type UserSession = typeof userSessions.$inferSelect;
 export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
 export type Course = typeof courses.$inferSelect;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
+export type Class = typeof classes.$inferSelect;
+export type InsertClass = z.infer<typeof insertClassSchema>;
+export type Holiday = typeof holidays.$inferSelect;
+export type InsertHoliday = z.infer<typeof insertHolidaySchema>;
 export type Enrollment = typeof enrollments.$inferSelect;
 export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
 export type Session = typeof sessions.$inferSelect;

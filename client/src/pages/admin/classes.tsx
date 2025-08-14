@@ -259,16 +259,18 @@ export default function AdminClassesPage() {
                       <span className="sm:hidden">{t('admin:add')}</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-2xl max-h-[90vh]">
                     <DialogHeader>
                       <DialogTitle>{t('classScheduling.scheduleNewClass')}</DialogTitle>
                     </DialogHeader>
-                    <ClassScheduleForm 
-                      teachers={teachers}
-                      rooms={rooms}
-                      onSubmit={(data) => createSession.mutate(data)}
-                      isPending={createSession.isPending}
-                    />
+                    <ScrollArea className="max-h-[calc(90vh-100px)] pr-4">
+                      <ClassScheduleForm 
+                        teachers={teachers}
+                        rooms={rooms}
+                        onSubmit={(data) => createSession.mutate(data)}
+                        isPending={createSession.isPending}
+                      />
+                    </ScrollArea>
                   </DialogContent>
                 </Dialog>
 
