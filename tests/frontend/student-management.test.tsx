@@ -303,7 +303,7 @@ describe('AdminStudents Component', () => {
       const user = userEvent.setup()
       renderWithProviders(<AdminStudents />)
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const viewButton = screen.getAllByText('View')[0]
         await user.click(viewButton)
       })
