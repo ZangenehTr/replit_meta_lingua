@@ -471,19 +471,21 @@ export default function GamesManagement() {
   }, [form, createGameMutation.isPending, updateGameMutation.isPending, selectedGame]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">{t('admin:games.title')}</h1>
-          <p className="text-gray-600">{t('admin:games.subtitle')}</p>
-        </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-{t('admin:games.createGame')}
-            </Button>
-          </DialogTrigger>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header - Mobile First */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">{t('admin:games.title')}</h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">{t('admin:games.subtitle')}</p>
+          </div>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="h-8 text-xs sm:text-sm">
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                {t('admin:games.createGame')}
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{t('admin:games.addGame')}</DialogTitle>
@@ -496,12 +498,12 @@ export default function GamesManagement() {
         </Dialog>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="games">{t('admin:games.title')}</TabsTrigger>
-          <TabsTrigger value="configuration">{t('admin:games.configuration')}</TabsTrigger>
-          <TabsTrigger value="analytics">{t('admin:games.analytics')}</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="games" className="text-xs sm:text-sm">{t('admin:games.title')}</TabsTrigger>
+            <TabsTrigger value="configuration" className="text-xs sm:text-sm">{t('admin:games.configuration')}</TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs sm:text-sm">{t('admin:games.analytics')}</TabsTrigger>
+          </TabsList>
 
         <TabsContent value="games" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -618,6 +620,7 @@ export default function GamesManagement() {
           {GameFormComponent}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
