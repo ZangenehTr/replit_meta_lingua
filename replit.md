@@ -15,6 +15,7 @@ Phase 2 implementation: Successfully connected 10 organizational & student manag
 Phase 3 implementation: Connected communication and teacher management tables with comprehensive test coverage (August 13, 2025). Added 11 missing methods for full functionality.
 Phase 4 implementation: **100% DATABASE COVERAGE ACHIEVED** - All 103 tables now connected with real functionality, zero mock data (August 13, 2025). Added methods for 16 final tables including learning support, business operations, group management, system configuration, and assessment features.
 UI Button Behaviors Audit: Comprehensive implementation of consistent React Query invalidation patterns, fixed all missing invalidations, created complete test suite with 24/24 tests passing (August 13, 2025).
+Course/Class Architecture Separation: Successfully implemented separation where courses contain only general info (name, description, fee, level, language) and classes are specific instances with teacher/schedule/dates. Added new `classes` and `holidays` tables, implemented storage methods with automatic end-date calculation considering holidays, and created complete REST API endpoints for both resources (August 14, 2025).
 
 ## System Architecture
 

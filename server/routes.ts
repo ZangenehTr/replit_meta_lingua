@@ -4922,6 +4922,232 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== CLASSES MANAGEMENT (Course Instances with Teachers/Schedule) ==========
+  
+  // Get all classes
+  app.get("/api/admin/classes", authenticateToken, requireRole(['Admin', 'Teacher/Tutor', 'Supervisor']), async (req: any, res) => {
+    try {
+      const classes = await storage.getClasses();
+      res.json(classes);
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+      res.status(500).json({ message: "Failed to fetch classes" });
+    }
+  });
+  
+  // Get single class
+  app.get("/api/admin/classes/:id", authenticateToken, requireRole(['Admin', 'Teacher/Tutor', 'Supervisor']), async (req: any, res) => {
+    try {
+      const classId = parseInt(req.params.id);
+      const classData = await storage.getClass(classId);
+      if (!classData) {
+        return res.status(404).json({ message: "Class not found" });
+      }
+      res.json(classData);
+    } catch (error) {
+      console.error('Error fetching class:', error);
+      res.status(500).json({ message: "Failed to fetch class" });
+    }
+  });
+  
+  // Create new class
+  app.post("/api/admin/classes", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const classData = req.body;
+      
+      // Validate required fields
+      if (!classData.courseId || !classData.teacherId || !classData.startDate) {
+        return res.status(400).json({ message: "Missing required fields: courseId, teacherId, startDate" });
+      }
+      
+      const newClass = await storage.createClass({
+        courseId: classData.courseId,
+        teacherId: classData.teacherId,
+        startDate: classData.startDate,
+        startTime: classData.startTime,
+        endTime: classData.endTime,
+        weekdays: classData.weekdays || [],
+        totalSessions: classData.totalSessions || 10,
+        isRecurring: classData.isRecurring || false,
+        recurringType: classData.recurringType || 'weekly',
+        maxStudents: classData.maxStudents || 20,
+        roomId: classData.roomId,
+        isActive: true
+      });
+      
+      res.status(201).json({ message: "Class created successfully", class: newClass });
+    } catch (error) {
+      console.error('Error creating class:', error);
+      res.status(500).json({ message: "Failed to create class" });
+    }
+  });
+  
+  // Update class
+  app.put("/api/admin/classes/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const classId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedClass = await storage.updateClass(classId, updateData);
+      if (!updatedClass) {
+        return res.status(404).json({ message: "Class not found" });
+      }
+      
+      res.json({ message: "Class updated successfully", class: updatedClass });
+    } catch (error) {
+      console.error('Error updating class:', error);
+      res.status(500).json({ message: "Failed to update class" });
+    }
+  });
+  
+  // Delete class
+  app.delete("/api/admin/classes/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const classId = parseInt(req.params.id);
+      
+      // Check if class exists
+      const classData = await storage.getClass(classId);
+      if (!classData) {
+        return res.status(404).json({ message: "Class not found" });
+      }
+      
+      await storage.deleteClass(classId);
+      res.json({ message: "Class deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting class:', error);
+      res.status(500).json({ message: "Failed to delete class" });
+    }
+  });
+  
+  // Get classes by course
+  app.get("/api/admin/classes/by-course/:courseId", authenticateToken, requireRole(['Admin', 'Teacher/Tutor', 'Supervisor']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const classes = await storage.getClassesByCourse(courseId);
+      res.json(classes);
+    } catch (error) {
+      console.error('Error fetching classes by course:', error);
+      res.status(500).json({ message: "Failed to fetch classes" });
+    }
+  });
+  
+  // Get classes by teacher
+  app.get("/api/admin/classes/by-teacher/:teacherId", authenticateToken, requireRole(['Admin', 'Teacher/Tutor', 'Supervisor']), async (req: any, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      const classes = await storage.getClassesByTeacher(teacherId);
+      res.json(classes);
+    } catch (error) {
+      console.error('Error fetching classes by teacher:', error);
+      res.status(500).json({ message: "Failed to fetch classes" });
+    }
+  });
+  
+  // ========== HOLIDAYS MANAGEMENT ==========
+  
+  // Get all holidays
+  app.get("/api/admin/holidays", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const holidays = await storage.getHolidays();
+      res.json(holidays);
+    } catch (error) {
+      console.error('Error fetching holidays:', error);
+      res.status(500).json({ message: "Failed to fetch holidays" });
+    }
+  });
+  
+  // Get single holiday
+  app.get("/api/admin/holidays/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const holidayId = parseInt(req.params.id);
+      const holiday = await storage.getHoliday(holidayId);
+      if (!holiday) {
+        return res.status(404).json({ message: "Holiday not found" });
+      }
+      res.json(holiday);
+    } catch (error) {
+      console.error('Error fetching holiday:', error);
+      res.status(500).json({ message: "Failed to fetch holiday" });
+    }
+  });
+  
+  // Create new holiday
+  app.post("/api/admin/holidays", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { name, date, isNational, affectsClasses } = req.body;
+      
+      if (!name || !date) {
+        return res.status(400).json({ message: "Name and date are required" });
+      }
+      
+      const newHoliday = await storage.createHoliday({
+        name,
+        date,
+        isNational: isNational !== undefined ? isNational : true,
+        affectsClasses: affectsClasses !== undefined ? affectsClasses : true
+      });
+      
+      res.status(201).json({ message: "Holiday created successfully", holiday: newHoliday });
+    } catch (error) {
+      console.error('Error creating holiday:', error);
+      res.status(500).json({ message: "Failed to create holiday" });
+    }
+  });
+  
+  // Update holiday
+  app.put("/api/admin/holidays/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const holidayId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedHoliday = await storage.updateHoliday(holidayId, updateData);
+      if (!updatedHoliday) {
+        return res.status(404).json({ message: "Holiday not found" });
+      }
+      
+      res.json({ message: "Holiday updated successfully", holiday: updatedHoliday });
+    } catch (error) {
+      console.error('Error updating holiday:', error);
+      res.status(500).json({ message: "Failed to update holiday" });
+    }
+  });
+  
+  // Delete holiday
+  app.delete("/api/admin/holidays/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const holidayId = parseInt(req.params.id);
+      
+      // Check if holiday exists
+      const holiday = await storage.getHoliday(holidayId);
+      if (!holiday) {
+        return res.status(404).json({ message: "Holiday not found" });
+      }
+      
+      await storage.deleteHoliday(holidayId);
+      res.json({ message: "Holiday deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting holiday:', error);
+      res.status(500).json({ message: "Failed to delete holiday" });
+    }
+  });
+  
+  // Get holidays in date range
+  app.get("/api/admin/holidays/range", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "Start date and end date are required" });
+      }
+      
+      const holidays = await storage.getHolidaysInRange(startDate, endDate);
+      res.json(holidays);
+    } catch (error) {
+      console.error('Error fetching holidays in range:', error);
+      res.status(500).json({ message: "Failed to fetch holidays" });
+    }
+  });
+  
   // Bulk course operations
   app.post("/api/admin/courses/bulk", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
