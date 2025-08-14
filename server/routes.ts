@@ -5044,6 +5044,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // ========== CLASS ENROLLMENT MANAGEMENT ==========
+  
+  // Get all class enrollments
+  app.get("/api/admin/enrollments", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const enrollments = await storage.getClassEnrollments();
+      res.json(enrollments);
+    } catch (error) {
+      console.error('Error fetching class enrollments:', error);
+      res.status(500).json({ message: "Failed to fetch enrollments" });
+    }
+  });
+  
+  // Get enrollments for a specific class
+  app.get("/api/admin/classes/:classId/enrollments", authenticateToken, requireRole(['Admin', 'Teacher/Tutor', 'Supervisor']), async (req: any, res) => {
+    try {
+      const classId = parseInt(req.params.classId);
+      const enrollments = await storage.getClassEnrollmentsByClass(classId);
+      res.json(enrollments);
+    } catch (error) {
+      console.error('Error fetching class enrollments:', error);
+      res.status(500).json({ message: "Failed to fetch enrollments" });
+    }
+  });
+  
+  // Get enrollments for a specific student
+  app.get("/api/admin/students/:studentId/enrollments", authenticateToken, requireRole(['Admin', 'Teacher/Tutor', 'Supervisor']), async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const enrollments = await storage.getClassEnrollmentsByStudent(studentId);
+      res.json(enrollments);
+    } catch (error) {
+      console.error('Error fetching student enrollments:', error);
+      res.status(500).json({ message: "Failed to fetch enrollments" });
+    }
+  });
+  
+  // Get detailed enrollment information for a student
+  app.get("/api/admin/students/:studentId/enrollment-details", authenticateToken, requireRole(['Admin', 'Teacher/Tutor', 'Supervisor']), async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const details = await storage.getStudentClassEnrollmentDetails(studentId);
+      res.json(details);
+    } catch (error) {
+      console.error('Error fetching student enrollment details:', error);
+      res.status(500).json({ message: "Failed to fetch enrollment details" });
+    }
+  });
+  
+  // Search students for enrollment
+  app.get("/api/admin/enrollments/search-students", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { query, courseId } = req.query;
+      const students = await storage.searchStudentsForEnrollment(query || '', courseId ? parseInt(courseId) : undefined);
+      res.json(students);
+    } catch (error) {
+      console.error('Error searching students:', error);
+      res.status(500).json({ message: "Failed to search students" });
+    }
+  });
+  
+  // Create class enrollment
+  app.post("/api/admin/enrollments", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const enrollmentData = req.body;
+      const userId = req.user?.id;
+      
+      if (!enrollmentData.classId || !enrollmentData.studentId) {
+        return res.status(400).json({ message: "Class ID and Student ID are required" });
+      }
+      
+      const newEnrollment = await storage.createClassEnrollment({
+        classId: enrollmentData.classId,
+        studentId: enrollmentData.studentId,
+        enrollmentType: enrollmentData.enrollmentType || 'admin',
+        enrolledBy: userId,
+        paymentStatus: enrollmentData.paymentStatus || 'pending',
+        notes: enrollmentData.notes
+      });
+      
+      res.status(201).json({ message: "Student enrolled successfully", enrollment: newEnrollment });
+    } catch (error) {
+      console.error('Error creating enrollment:', error);
+      res.status(500).json({ message: error.message || "Failed to enroll student" });
+    }
+  });
+  
+  // Update class enrollment
+  app.put("/api/admin/enrollments/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const enrollmentId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedEnrollment = await storage.updateClassEnrollment(enrollmentId, updateData);
+      if (!updatedEnrollment) {
+        return res.status(404).json({ message: "Enrollment not found" });
+      }
+      
+      res.json({ message: "Enrollment updated successfully", enrollment: updatedEnrollment });
+    } catch (error) {
+      console.error('Error updating enrollment:', error);
+      res.status(500).json({ message: "Failed to update enrollment" });
+    }
+  });
+  
+  // Delete class enrollment (unenroll student)
+  app.delete("/api/admin/enrollments/:id", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const enrollmentId = parseInt(req.params.id);
+      
+      await storage.deleteClassEnrollment(enrollmentId);
+      res.json({ message: "Student unenrolled successfully" });
+    } catch (error) {
+      console.error('Error deleting enrollment:', error);
+      res.status(500).json({ message: "Failed to unenroll student" });
+    }
+  });
+  
+  // Bulk enrollment operations
+  app.post("/api/admin/enrollments/bulk", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { action, classId, studentIds } = req.body;
+      const userId = req.user?.id;
+      
+      if (!action || !classId || !studentIds || !Array.isArray(studentIds)) {
+        return res.status(400).json({ message: "Invalid request data" });
+      }
+      
+      let enrolledCount = 0;
+      const errors = [];
+      
+      for (const studentId of studentIds) {
+        try {
+          if (action === 'enroll') {
+            await storage.createClassEnrollment({
+              classId,
+              studentId,
+              enrollmentType: 'admin',
+              enrolledBy: userId,
+              paymentStatus: 'pending'
+            });
+            enrolledCount++;
+          } else if (action === 'unenroll') {
+            // Find and delete enrollment
+            const enrollments = await storage.getClassEnrollmentsByClass(classId);
+            const enrollment = enrollments.find(e => e.studentId === studentId);
+            if (enrollment) {
+              await storage.deleteClassEnrollment(enrollment.id);
+              enrolledCount++;
+            }
+          }
+        } catch (error) {
+          errors.push({ studentId, error: error.message });
+        }
+      }
+      
+      res.json({ 
+        message: `Bulk operation completed. ${enrolledCount} students processed.`,
+        enrolledCount,
+        errors
+      });
+    } catch (error) {
+      console.error('Error performing bulk enrollment:', error);
+      res.status(500).json({ message: "Failed to perform bulk enrollment" });
+    }
+  });
+  
   // ========== HOLIDAYS MANAGEMENT ==========
   
   // Get all holidays
