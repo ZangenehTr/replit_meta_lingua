@@ -136,7 +136,10 @@ export default function RoadmapDesigner() {
 
   // Create roadmap mutation
   const createRoadmap = useMutation({
-    mutationFn: (data: typeof roadmapForm) => apiRequest('/api/admin/roadmaps', 'POST', data),
+    mutationFn: (data: typeof roadmapForm) => apiRequest('/api/admin/roadmaps', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
     onSuccess: () => {
       toast({ title: "Roadmap created successfully" });
       queryClient.invalidateQueries({ queryKey: ['/api/roadmaps'] });
@@ -161,14 +164,17 @@ export default function RoadmapDesigner() {
   // Add milestone mutation
   const addMilestone = useMutation({
     mutationFn: (data: typeof milestoneForm) => 
-      apiRequest(`/api/roadmaps/${selectedRoadmap?.id}/milestones`, 'POST', data),
+      apiRequest(`/api/roadmaps/${selectedRoadmap?.id}/milestones`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      }),
     onSuccess: () => {
       toast({ title: "Milestone added successfully" });
       refetchDetails();
       setMilestoneForm({
         title: '',
         description: '',
-        orderIndex: (roadmapDetails?.milestones?.length || 0) + 1,
+        orderIndex: ((roadmapDetails as any)?.milestones?.length || 0) + 1,
         weekNumber: 1,
         primarySkill: 'speaking',
         secondarySkills: [],
@@ -184,7 +190,10 @@ export default function RoadmapDesigner() {
   // Add step mutation
   const addStep = useMutation({
     mutationFn: ({ milestoneId, data }: { milestoneId: number; data: typeof stepForm }) => 
-      apiRequest(`/api/milestones/${milestoneId}/steps`, 'POST', data),
+      apiRequest(`/api/milestones/${milestoneId}/steps`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      }),
     onSuccess: () => {
       toast({ title: "Step added successfully" });
       refetchDetails();
@@ -244,26 +253,28 @@ export default function RoadmapDesigner() {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Map className="w-8 h-8" />
-            {t('roadmap.title')}
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {t('roadmap.subtitle')}
-          </p>
-        </div>
-        
-        <Dialog open={isCreatingRoadmap} onOpenChange={setIsCreatingRoadmap}>
-          <DialogTrigger asChild>
-            <Button size="lg">
-              <Plus className="mr-2" />
-              {t('roadmap.createNew')}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        {/* Header - Mobile First */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
+              <Map className="w-6 h-6 sm:w-8 sm:h-8" />
+              {t('roadmap.title')}
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1 sm:mt-2">
+              {t('roadmap.subtitle')}
+            </p>
+          </div>
+          
+          <Dialog open={isCreatingRoadmap} onOpenChange={setIsCreatingRoadmap}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="h-8 text-xs sm:text-sm">
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                {t('roadmap.createNew')}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{t('roadmap.createNew')}</DialogTitle>
             </DialogHeader>
@@ -686,6 +697,7 @@ export default function RoadmapDesigner() {
           </DialogContent>
         </Dialog>
       )}
+      </div>
     </div>
   );
 }
