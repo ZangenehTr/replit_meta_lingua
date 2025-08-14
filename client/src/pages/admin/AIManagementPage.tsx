@@ -109,11 +109,11 @@ export function AIManagementPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">{t('admin:aiServices.title')}</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">{t('admin:aiServices.title')}</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             {t('admin:aiServices.subtitle')}
           </p>
         </div>
@@ -121,20 +121,20 @@ export function AIManagementPage() {
           variant="outline"
           onClick={() => refetch()}
           disabled={isLoading}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 h-8 sm:h-10 text-xs sm:text-sm"
         >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${isLoading ? 'animate-spin' : ''}`} />
           {t('common:ui.refreshStatus')}
         </Button>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="overview">{t('admin:aiServices.overview')}</TabsTrigger>
-          <TabsTrigger value="models">{t('admin:aiServices.models')}</TabsTrigger>
-          <TabsTrigger value="testing" className="flex items-center gap-2">
-            <TestTube className="h-4 w-4" />
-            {t('admin:aiServices.testing')}
+      <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">{t('admin:aiServices.overview')}</TabsTrigger>
+          <TabsTrigger value="models" className="text-xs sm:text-sm">{t('admin:aiServices.models')}</TabsTrigger>
+          <TabsTrigger value="testing" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+            <TestTube className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">{t('admin:aiServices.testing')}</span>
           </TabsTrigger>
         </TabsList>
 
