@@ -81,8 +81,9 @@ import {
   teacherObservationResponses,
   type TeacherObservationResponse, type InsertTeacherObservationResponse,
   // Classes and Holidays tables
-  classes, holidays,
+  classes, holidays, classEnrollments,
   type Class, type InsertClass,
+  type ClassEnrollment, type InsertClassEnrollment,
   type Holiday, type InsertHoliday,
   // Phase 1: Critical system tables
   auditLogs, emailLogs, studentReports, paymentTransactions,
@@ -10464,6 +10465,171 @@ export class DatabaseStorage implements IStorage {
       return result;
     } catch (error) {
       console.error('Error fetching holidays in range:', error);
+      return [];
+    }
+  }
+
+  // ========== CLASS ENROLLMENT METHODS ==========
+  
+  async createClassEnrollment(enrollment: InsertClassEnrollment): Promise<ClassEnrollment> {
+    try {
+      // Check if student is already enrolled in this class
+      const existing = await db.select()
+        .from(classEnrollments)
+        .where(
+          and(
+            eq(classEnrollments.classId, enrollment.classId),
+            eq(classEnrollments.studentId, enrollment.studentId),
+            eq(classEnrollments.isActive, true)
+          )
+        );
+      
+      if (existing.length > 0) {
+        throw new Error('Student is already enrolled in this class');
+      }
+
+      // Create enrollment
+      const [result] = await db.insert(classEnrollments).values(enrollment).returning();
+      
+      // Update class current enrollment count
+      await db.update(classes)
+        .set({ 
+          currentEnrollment: sql`${classes.currentEnrollment} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(classes.id, enrollment.classId));
+      
+      return result;
+    } catch (error) {
+      console.error('Error creating class enrollment:', error);
+      throw error;
+    }
+  }
+
+  async getClassEnrollments(): Promise<ClassEnrollment[]> {
+    try {
+      const result = await db.select()
+        .from(classEnrollments)
+        .orderBy(desc(classEnrollments.enrollmentDate));
+      return result;
+    } catch (error) {
+      console.error('Error fetching class enrollments:', error);
+      return [];
+    }
+  }
+
+  async getClassEnrollmentsByClass(classId: number): Promise<ClassEnrollment[]> {
+    try {
+      const result = await db.select()
+        .from(classEnrollments)
+        .where(eq(classEnrollments.classId, classId))
+        .orderBy(desc(classEnrollments.enrollmentDate));
+      return result;
+    } catch (error) {
+      console.error('Error fetching class enrollments:', error);
+      return [];
+    }
+  }
+
+  async getClassEnrollmentsByStudent(studentId: number): Promise<ClassEnrollment[]> {
+    try {
+      const result = await db.select()
+        .from(classEnrollments)
+        .where(eq(classEnrollments.studentId, studentId))
+        .orderBy(desc(classEnrollments.enrollmentDate));
+      return result;
+    } catch (error) {
+      console.error('Error fetching student enrollments:', error);
+      return [];
+    }
+  }
+
+  async updateClassEnrollment(id: number, updates: Partial<ClassEnrollment>): Promise<ClassEnrollment | undefined> {
+    try {
+      const [result] = await db.update(classEnrollments)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(classEnrollments.id, id))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating class enrollment:', error);
+      return undefined;
+    }
+  }
+
+  async deleteClassEnrollment(id: number): Promise<void> {
+    try {
+      // Get enrollment to update class count
+      const [enrollment] = await db.select()
+        .from(classEnrollments)
+        .where(eq(classEnrollments.id, id));
+      
+      if (enrollment && enrollment.isActive) {
+        // Update class current enrollment count
+        await db.update(classes)
+          .set({ 
+            currentEnrollment: sql`GREATEST(${classes.currentEnrollment} - 1, 0)`,
+            updatedAt: new Date()
+          })
+          .where(eq(classes.id, enrollment.classId));
+      }
+      
+      // Delete enrollment
+      await db.delete(classEnrollments).where(eq(classEnrollments.id, id));
+    } catch (error) {
+      console.error('Error deleting class enrollment:', error);
+      throw error;
+    }
+  }
+
+  async searchStudentsForEnrollment(query: string, courseId?: number): Promise<User[]> {
+    try {
+      let whereConditions = [eq(users.role, 'Student')];
+      
+      if (query) {
+        whereConditions.push(
+          or(
+            sql`LOWER(${users.name}) LIKE LOWER(${`%${query}%`})`,
+            sql`LOWER(${users.email}) LIKE LOWER(${`%${query}%`})`,
+            sql`${users.phoneNumber} LIKE ${`%${query}%`}`
+          )!
+        );
+      }
+      
+      if (courseId) {
+        whereConditions.push(eq(users.enrolledCourseId, courseId));
+      }
+      
+      const result = await db.select()
+        .from(users)
+        .where(and(...whereConditions))
+        .limit(50);
+      
+      return result;
+    } catch (error) {
+      console.error('Error searching students for enrollment:', error);
+      return [];
+    }
+  }
+
+  async getStudentClassEnrollmentDetails(studentId: number): Promise<any[]> {
+    try {
+      const result = await db.select({
+        enrollment: classEnrollments,
+        class: classes,
+        course: courses,
+        teacher: users
+      })
+      .from(classEnrollments)
+      .leftJoin(classes, eq(classEnrollments.classId, classes.id))
+      .leftJoin(courses, eq(classes.courseId, courses.id))
+      .leftJoin(users, eq(classes.teacherId, users.id))
+      .where(eq(classEnrollments.studentId, studentId))
+      .orderBy(desc(classEnrollments.enrollmentDate));
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching student enrollment details:', error);
       return [];
     }
   }

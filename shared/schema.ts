@@ -62,6 +62,7 @@ export const userProfiles = pgTable("user_profiles", {
   guardianPhone: text("guardian_phone"),
   notes: text("notes"),
   currentLevel: text("current_level"), // Override for display level
+  enrolledCourseId: integer("enrolled_course_id").references(() => courses.id), // Course assigned during student creation
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
@@ -200,6 +201,31 @@ export const classes = pgTable("classes", {
   isRecurring: boolean("is_recurring").default(false),
   recurringPattern: text("recurring_pattern"), // weekly, biweekly, monthly
   
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Class Enrollments (links students to specific classes)
+export const classEnrollments = pgTable("class_enrollments", {
+  id: serial("id").primaryKey(),
+  classId: integer("class_id").references(() => classes.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  
+  // Enrollment details
+  enrollmentDate: timestamp("enrollment_date").defaultNow(),
+  enrollmentType: text("enrollment_type").default("admin"), // "self", "admin", "supervisor"
+  enrolledBy: integer("enrolled_by").references(() => users.id), // Who enrolled the student
+  
+  // Progress tracking
+  attendedSessions: integer("attended_sessions").default(0),
+  absences: integer("absences").default(0),
+  completionStatus: text("completion_status").default("enrolled"), // enrolled, in_progress, completed, dropped
+  
+  // Payment status (if applicable)
+  paymentStatus: text("payment_status").default("pending"), // pending, paid, partial, waived
+  
+  notes: text("notes"),
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
 });
@@ -846,6 +872,7 @@ export const holidays = pgTable("holidays", {
 
 export const insertCourseSchema = createInsertSchema(courses);
 export const insertClassSchema = createInsertSchema(classes);
+export const insertClassEnrollmentSchema = createInsertSchema(classEnrollments);
 export const insertHolidaySchema = createInsertSchema(holidays);
 export const insertEnrollmentSchema = createInsertSchema(enrollments);
 export const insertSessionSchema = createInsertSchema(sessions);
@@ -1957,6 +1984,8 @@ export type Course = typeof courses.$inferSelect;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type Class = typeof classes.$inferSelect;
 export type InsertClass = z.infer<typeof insertClassSchema>;
+export type ClassEnrollment = typeof classEnrollments.$inferSelect;
+export type InsertClassEnrollment = z.infer<typeof insertClassEnrollmentSchema>;
 export type Holiday = typeof holidays.$inferSelect;
 export type InsertHoliday = z.infer<typeof insertHolidaySchema>;
 export type Enrollment = typeof enrollments.$inferSelect;
