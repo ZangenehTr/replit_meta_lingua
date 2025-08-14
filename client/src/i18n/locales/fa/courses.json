@@ -44,5 +44,10 @@
   "month": "ماه",
   "months": "ماه",
   "session": "جلسه",
-  "sessions": "جلسات"
+  "sessions": "جلسات",
+  "description": "توضیحات",
+  "classScheduleSettings": "تنظیمات برنامه کلاس",
+  "setDaysAndTimes": "تنظیم روزها و زمان‌ها",
+  "save": "ذخیره",
+  "cancel": "انصراف"
 }

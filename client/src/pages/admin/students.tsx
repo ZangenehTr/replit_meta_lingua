@@ -694,18 +694,26 @@ export function AdminStudents() {
           {/* Compact View Toggle */}
           <div className="flex border rounded-md overflow-hidden border-blue-200">
             <Button
-              variant={viewMode === "cards" ? "default" : "outline"}
+              variant="ghost"
               size="sm"
               onClick={() => setViewMode("cards")}
-              className="h-8 px-2 sm:px-3 rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs"
+              className={`h-8 px-2 sm:px-3 rounded-none border-0 text-xs ${
+                viewMode === "cards" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700" 
+                  : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
             >
               <Grid3X3 className="h-3 w-3" />
             </Button>
             <Button
-              variant={viewMode === "list" ? "default" : "outline"}
+              variant="ghost"
               size="sm"
               onClick={() => setViewMode("list")}
-              className="h-8 px-2 sm:px-3 rounded-none border-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs"
+              className={`h-8 px-2 sm:px-3 rounded-none border-0 text-xs ${
+                viewMode === "list" 
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700" 
+                  : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
             >
               <List className="h-3 w-3" />
             </Button>

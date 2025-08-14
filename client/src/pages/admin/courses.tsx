@@ -818,7 +818,7 @@ export function AdminCourses() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{Array.isArray(courseData) ? courseData.length : 0}</div>
-            <p className="text-xs text-green-600">Real database count</p>
+
           </CardContent>
         </Card>
 
