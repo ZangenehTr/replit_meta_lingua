@@ -819,7 +819,13 @@
     "inPerson": "حضوری",
     "hybrid": "ترکیبی",
     "allTeachers": "همه معلمان",
-    "allTypes": "همه انواع"
+    "allTypes": "همه انواع",
+    "classList": "لیست کلاس‌ها",
+    "classListDescription": "مشاهده و مدیریت کلاس‌های برنامه‌ریزی شده"
+  },
+  "add": "افزودن",
+  "classScheduling": {
+    "scheduleClass": "برنامه‌ریزی کلاس"
   },
   "filters": {
     "allLevels": "همه سطوح",
