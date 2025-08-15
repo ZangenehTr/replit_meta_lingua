@@ -40,6 +40,10 @@ export default function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [newUser, setNewUser] = useState({
     email: '',
     firstName: '',
@@ -94,6 +98,63 @@ export default function UserManagement() {
     }
   });
 
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async (userData: { id: number; email: string; firstName: string; lastName: string; role: string; phoneNumber?: string }) => {
+      return apiRequest(`/api/admin/users/${userData.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          role: userData.role,
+          phoneNumber: userData.phoneNumber
+        })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+      toast({
+        title: t('common:toast.success'),
+        description: t('common:toast.userUpdated')
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common:toast.error'),
+        description: error.message || t('common:toast.userUpdateFailed'),
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      return apiRequest(`/api/admin/users/${userId}`, {
+        method: 'DELETE'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      setIsDeleteDialogOpen(false);
+      setDeletingUser(null);
+      toast({
+        title: t('common:toast.success'),
+        description: t('common:toast.userDeleted')
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common:toast.error'),
+        description: error.message || t('common:toast.userDeleteFailed'),
+        variant: "destructive"
+      });
+    }
+  });
+
   // Filter users
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,6 +171,35 @@ export default function UserManagement() {
 
   const handleCreateUser = () => {
     createUserMutation.mutate(newUser);
+  };
+
+  const handleEditUser = (user: User) => {
+    setEditingUser(user);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateUser = () => {
+    if (editingUser) {
+      updateUserMutation.mutate({
+        id: editingUser.id,
+        email: editingUser.email,
+        firstName: editingUser.firstName,
+        lastName: editingUser.lastName,
+        role: editingUser.role,
+        phoneNumber: editingUser.phoneNumber
+      });
+    }
+  };
+
+  const handleDeleteUser = (user: User) => {
+    setDeletingUser(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deletingUser) {
+      deleteUserMutation.mutate(deletingUser.id);
+    }
   };
 
   return (
@@ -365,10 +455,20 @@ export default function UserManagement() {
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="py-4 text-end">
-                        <Button variant="ghost" size="sm" className="mx-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="mx-1"
+                          onClick={() => handleEditUser(user)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="mx-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="mx-1"
+                          onClick={() => handleDeleteUser(user)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </td>
@@ -380,6 +480,116 @@ export default function UserManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit User Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin:userManagement.editUser')}</DialogTitle>
+            <DialogDescription>
+              {t('admin:userManagement.editUserDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-firstName">{t('admin:userManagement.firstName')}</Label>
+              <Input
+                id="edit-firstName"
+                value={editingUser?.firstName || ''}
+                onChange={(e) => setEditingUser(prev => prev ? {...prev, firstName: e.target.value} : null)}
+                placeholder={t('admin:userManagement.firstNamePlaceholder')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-lastName">{t('admin:userManagement.lastName')}</Label>
+              <Input
+                id="edit-lastName"
+                value={editingUser?.lastName || ''}
+                onChange={(e) => setEditingUser(prev => prev ? {...prev, lastName: e.target.value} : null)}
+                placeholder={t('admin:userManagement.lastNamePlaceholder')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">{t('admin:userManagement.email')}</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editingUser?.email || ''}
+                onChange={(e) => setEditingUser(prev => prev ? {...prev, email: e.target.value} : null)}
+                placeholder={t('admin:userManagement.emailPlaceholder')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-phoneNumber">{t('admin:userManagement.phoneNumber')} ({t('admin:userManagement.optional')})</Label>
+              <Input
+                id="edit-phoneNumber"
+                value={editingUser?.phoneNumber || ''}
+                onChange={(e) => setEditingUser(prev => prev ? {...prev, phoneNumber: e.target.value} : null)}
+                placeholder="+98 912 345 6789"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">{t('admin:userManagement.role')}</Label>
+              <Select 
+                value={editingUser?.role || ''} 
+                onValueChange={(value) => setEditingUser(prev => prev ? {...prev, role: value} : null)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      {role.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              {t('admin:userManagement.cancel')}
+            </Button>
+            <Button 
+              onClick={handleUpdateUser} 
+              disabled={updateUserMutation.isPending || !editingUser?.email || !editingUser?.firstName || !editingUser?.lastName}
+            >
+              {updateUserMutation.isPending ? t('admin:userManagement.updating') : t('admin:userManagement.updateUser')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('admin:userManagement.deleteUser')}</DialogTitle>
+            <DialogDescription>
+              {t('admin:userManagement.deleteConfirmation', {
+                name: `${deletingUser?.firstName} ${deletingUser?.lastName}`
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              {t('admin:userManagement.cancel')}
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending ? t('admin:userManagement.deleting') : t('admin:userManagement.delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

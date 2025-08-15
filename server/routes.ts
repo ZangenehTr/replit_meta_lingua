@@ -1331,6 +1331,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user endpoint
+  app.put("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { email, firstName, lastName, role, phoneNumber } = req.body;
+      
+      console.log('Updating user with ID:', userId, req.body);
+      
+      // Check if the user exists
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if the email is being changed and if it already exists
+      if (email !== existingUser.email) {
+        const emailUser = await storage.getUserByEmail(email);
+        if (emailUser) {
+          return res.status(400).json({ 
+            message: "Email already exists", 
+            error: "This email is already registered to another user" 
+          });
+        }
+      }
+      
+      // Update the user
+      const updatedUser = await storage.updateUser(userId, {
+        email,
+        firstName,
+        lastName,
+        role,
+        phoneNumber
+      });
+      
+      // Don't return the password in the response
+      const { password: _, ...userResponse } = updatedUser;
+      
+      res.json(userResponse);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user", error: error.message });
+    }
+  });
+
+  // Delete user endpoint
+  app.delete("/api/admin/users/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      console.log('Deleting user with ID:', userId);
+      
+      // Check if the user exists
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Don't allow deleting the current user
+      if (existingUser.id === req.user.id) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      // Delete the user
+      await storage.deleteUser(userId);
+      
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user", error: error.message });
+    }
+  });
+
   // Temporary development endpoint for creating teachers without strict auth
   app.post("/api/teachers/create", async (req: any, res) => {
     try {
