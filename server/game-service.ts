@@ -12,6 +12,50 @@ import type {
 } from '@shared/schema';
 
 export class GameService {
+  // Generate questions for a game without requiring levels
+  async generateQuestionsForGame(gameId: number, levelNumber: number, count: number = 10): Promise<GameQuestion[]> {
+    const game = await db.select().from(games).where(eq(games.id, gameId)).limit(1);
+    
+    if (!game[0]) {
+      throw new Error('Game not found');
+    }
+
+    const gameData = game[0];
+    
+    // Generate questions based on game type
+    const questions: Partial<InsertGameQuestion>[] = [];
+    
+    switch (gameData.gameType) {
+      case 'vocabulary':
+        questions.push(...this.generateVocabularyQuestionsForGame(gameData, levelNumber, count));
+        break;
+      case 'grammar':
+        questions.push(...this.generateGrammarQuestionsForGame(gameData, levelNumber, count));
+        break;
+      default:
+        questions.push(...this.generateMixedQuestionsForGame(gameData, levelNumber, count));
+    }
+
+    // Insert questions into database
+    const insertedQuestions = [];
+    for (const question of questions) {
+      const completeQuestion = {
+        gameId: gameId,
+        levelNumber: levelNumber,
+        difficulty: question.difficulty || 'medium',
+        questionType: question.questionType || 'multiple-choice',
+        skillFocus: question.skillFocus || 'general',
+        question: question.question || '',
+        language: gameData.language || 'en',
+        ...question
+      };
+      const [inserted] = await db.insert(gameQuestions).values(completeQuestion as InsertGameQuestion).returning();
+      insertedQuestions.push(inserted);
+    }
+
+    return insertedQuestions;
+  }
+
   // Generate real game questions based on game type and level
   async generateGameQuestions(gameId: number, levelId: number, count: number = 10): Promise<GameQuestion[]> {
     const game = await db.select().from(games).where(eq(games.id, gameId)).limit(1);
@@ -58,6 +102,112 @@ export class GameService {
     }
 
     return insertedQuestions;
+  }
+
+  // Generate vocabulary questions for game without levels
+  private generateVocabularyQuestionsForGame(game: Game, levelNumber: number, count: number): Partial<InsertGameQuestion>[] {
+    const questions: Partial<InsertGameQuestion>[] = [];
+    const difficulties = ['easy', 'medium', 'hard'];
+    
+    // Sample vocabulary data
+    const vocabData = {
+      en: {
+        easy: [
+          { word: 'apple', translation: 'سیب', context: 'I eat an apple every day' },
+          { word: 'book', translation: 'کتاب', context: 'She reads a book' },
+          { word: 'water', translation: 'آب', context: 'We need water to live' }
+        ],
+        medium: [
+          { word: 'accomplish', translation: 'انجام دادن', context: 'We will accomplish our goals' },
+          { word: 'essential', translation: 'ضروری', context: 'Sleep is essential for health' },
+          { word: 'demonstrate', translation: 'نشان دادن', context: 'Let me demonstrate how it works' }
+        ],
+        hard: [
+          { word: 'ubiquitous', translation: 'همه جا حاضر', context: 'Smartphones are ubiquitous nowadays' },
+          { word: 'pragmatic', translation: 'عملگرا', context: 'We need a pragmatic solution' },
+          { word: 'ephemeral', translation: 'زودگذر', context: 'Social media posts are ephemeral' }
+        ]
+      }
+    };
+
+    for (let i = 0; i < count; i++) {
+      const difficulty = difficulties[i % 3];
+      const vocab = vocabData.en[difficulty][i % 3];
+      
+      questions.push({
+        gameId: game.id,
+        levelNumber: levelNumber,
+        difficulty: difficulty,
+        questionType: 'multiple-choice',
+        skillFocus: 'vocabulary',
+        question: `What is the meaning of "${vocab.word}"?`,
+        optionsJson: JSON.stringify([vocab.translation, 'خانه', 'ماشین', 'درخت']),
+        correctAnswer: vocab.translation,
+        points: difficulty === 'easy' ? 5 : difficulty === 'medium' ? 10 : 15,
+        timeLimit: 30,
+        hint: vocab.context,
+        orderIndex: i + 1
+      });
+    }
+
+    return questions;
+  }
+
+  // Generate grammar questions for game without levels
+  private generateGrammarQuestionsForGame(game: Game, levelNumber: number, count: number): Partial<InsertGameQuestion>[] {
+    const questions: Partial<InsertGameQuestion>[] = [];
+    
+    const grammarData = [
+      {
+        question: 'Choose the correct form: She ___ to school every day.',
+        options: ['go', 'goes', 'going', 'went'],
+        correct: 'goes',
+        difficulty: 'easy',
+        hint: 'Third person singular present tense'
+      },
+      {
+        question: 'Which sentence is grammatically correct?',
+        options: [
+          'I have been working here since 5 years',
+          'I have been working here for 5 years',
+          'I am working here since 5 years',
+          'I work here since 5 years'
+        ],
+        correct: 'I have been working here for 5 years',
+        difficulty: 'medium',
+        hint: 'Use "for" with duration, "since" with specific time'
+      }
+    ];
+
+    for (let i = 0; i < count; i++) {
+      const data = grammarData[i % grammarData.length];
+      questions.push({
+        gameId: game.id,
+        levelNumber: levelNumber,
+        difficulty: data.difficulty,
+        questionType: 'multiple-choice',
+        skillFocus: 'grammar',
+        question: data.question,
+        optionsJson: JSON.stringify(data.options),
+        correctAnswer: data.correct,
+        points: data.difficulty === 'easy' ? 5 : 10,
+        timeLimit: 45,
+        hint: data.hint,
+        orderIndex: i + 1
+      });
+    }
+
+    return questions;
+  }
+
+  // Generate mixed questions for game without levels
+  private generateMixedQuestionsForGame(game: Game, levelNumber: number, count: number): Partial<InsertGameQuestion>[] {
+    const questions: Partial<InsertGameQuestion>[] = [];
+    const vocabQuestions = this.generateVocabularyQuestionsForGame(game, levelNumber, Math.floor(count / 2));
+    const grammarQuestions = this.generateGrammarQuestionsForGame(game, levelNumber, Math.ceil(count / 2));
+    
+    questions.push(...vocabQuestions, ...grammarQuestions);
+    return questions.slice(0, count);
   }
 
   // Generate vocabulary questions with real content

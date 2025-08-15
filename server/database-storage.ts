@@ -4795,6 +4795,67 @@ export class DatabaseStorage implements IStorage {
     return newSession;
   }
 
+  // Game Questions - Real game content
+  async createGameQuestion(question: InsertGameQuestion): Promise<GameQuestion> {
+    const [newQuestion] = await db.insert(gameQuestions).values(question).returning();
+    return newQuestion;
+  }
+
+  async getGameQuestions(gameId: number, levelId?: number): Promise<GameQuestion[]> {
+    let query = db.select().from(gameQuestions).where(eq(gameQuestions.gameId, gameId));
+    
+    if (levelId !== undefined) {
+      query = query.where(eq(gameQuestions.levelNumber, levelId));
+    }
+    
+    return await query;
+  }
+
+  async getRandomGameQuestions(gameId: number, count: number, difficulty?: string): Promise<GameQuestion[]> {
+    let query = db.select().from(gameQuestions).where(eq(gameQuestions.gameId, gameId));
+    
+    if (difficulty) {
+      query = query.where(eq(gameQuestions.difficulty, difficulty));
+    }
+    
+    const allQuestions = await query;
+    const shuffled = allQuestions.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  }
+
+  async updateGameQuestion(id: number, question: Partial<InsertGameQuestion>): Promise<GameQuestion | undefined> {
+    const [updated] = await db.update(gameQuestions)
+      .set({ ...question, updatedAt: new Date() })
+      .where(eq(gameQuestions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteGameQuestion(id: number): Promise<boolean> {
+    const result = await db.delete(gameQuestions)
+      .where(eq(gameQuestions.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async updateQuestionStats(questionId: number, isCorrect: boolean, responseTime: number): Promise<void> {
+    const [question] = await db.select().from(gameQuestions).where(eq(gameQuestions.id, questionId));
+    
+    if (question) {
+      const stats = question.statisticsData || {};
+      const newStats = {
+        ...stats,
+        totalAttempts: (stats.totalAttempts || 0) + 1,
+        correctAttempts: (stats.correctAttempts || 0) + (isCorrect ? 1 : 0),
+        averageResponseTime: ((stats.averageResponseTime || 0) * (stats.totalAttempts || 0) + responseTime) / ((stats.totalAttempts || 0) + 1)
+      };
+      
+      await db.update(gameQuestions)
+        .set({ statisticsData: newStats })
+        .where(eq(gameQuestions.id, questionId));
+    }
+  }
+
   async endGameSession(id: number, sessionData: Partial<InsertGameSession>): Promise<GameSession | undefined> {
     const [updated] = await db.update(gameSessions)
       .set({
