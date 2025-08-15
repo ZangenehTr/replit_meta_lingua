@@ -45,9 +45,11 @@ import {
   type TestAttempt, type InsertTestAttempt, type TestAnswer, type InsertTestAnswer,
   // Gamification types
   games, gameLevels, userGameProgress, gameSessions, gameLeaderboards,
+  gameQuestions, gameAnswerLogs,
   type Game, type InsertGame, type GameLevel, type InsertGameLevel,
   type UserGameProgress, type InsertUserGameProgress, type GameSession, type InsertGameSession,
   type GameLeaderboard, type InsertGameLeaderboard,
+  type GameQuestion, type InsertGameQuestion, type GameAnswerLog, type InsertGameAnswerLog,
   // Video learning types
   videoLessons, videoProgress, videoNotes, videoBookmarks,
   type VideoLesson, type InsertVideoLesson, type VideoProgress, type InsertVideoProgress,
@@ -4655,6 +4657,87 @@ export class DatabaseStorage implements IStorage {
       .where(eq(games.id, id))
       .returning();
     return updated;
+  }
+
+  async getGameAnalytics(gameId: number): Promise<any> {
+    try {
+      // Get all game sessions for this game
+      const sessions = await db
+        .select()
+        .from(gameSessions)
+        .where(eq(gameSessions.gameId, gameId));
+      
+      const totalPlays = sessions.length;
+      const scores = sessions.map(s => s.score);
+      const averageScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+      const completionRate = sessions.filter(s => s.isCompleted).length / Math.max(totalPlays, 1) * 100;
+      
+      // Get top players
+      const topPlayersResult = await db
+        .select({
+          userId: gameSessions.userId,
+          maxScore: sql<number>`MAX(${gameSessions.score})`,
+          firstName: users.firstName,
+          lastName: users.lastName
+        })
+        .from(gameSessions)
+        .leftJoin(users, eq(gameSessions.userId, users.id))
+        .where(eq(gameSessions.gameId, gameId))
+        .groupBy(gameSessions.userId, users.firstName, users.lastName)
+        .orderBy(sql`MAX(${gameSessions.score}) DESC`)
+        .limit(5);
+      
+      const topPlayers = topPlayersResult.map(p => ({
+        name: `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'Anonymous',
+        score: p.maxScore
+      }));
+      
+      // Get question statistics
+      const questionStats = await db
+        .select({
+          questionId: gameAnswerLogs.questionId,
+          correctRate: sql<number>`CAST(SUM(CASE WHEN ${gameAnswerLogs.isCorrect} THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS INTEGER)`,
+          averageTime: sql<number>`AVG(${gameAnswerLogs.responseTime})`
+        })
+        .from(gameAnswerLogs)
+        .leftJoin(gameQuestions, eq(gameAnswerLogs.questionId, gameQuestions.id))
+        .where(eq(gameQuestions.gameId, gameId))
+        .groupBy(gameAnswerLogs.questionId)
+        .limit(10);
+      
+      // Get daily plays for last 7 days
+      const dailyPlays = await db
+        .select({
+          date: sql<string>`DATE(${gameSessions.createdAt})`,
+          plays: sql<number>`COUNT(*)`
+        })
+        .from(gameSessions)
+        .where(and(
+          eq(gameSessions.gameId, gameId),
+          gte(gameSessions.createdAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
+        ))
+        .groupBy(sql`DATE(${gameSessions.createdAt})`)
+        .orderBy(sql`DATE(${gameSessions.createdAt})`);
+      
+      return {
+        totalPlays,
+        averageScore,
+        completionRate,
+        topPlayers,
+        questionStats,
+        dailyPlays
+      };
+    } catch (error) {
+      console.error('Error fetching game analytics:', error);
+      return {
+        totalPlays: 0,
+        averageScore: 0,
+        completionRate: 0,
+        topPlayers: [],
+        questionStats: [],
+        dailyPlays: []
+      };
+    }
   }
 
   // Game levels

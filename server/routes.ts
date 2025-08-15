@@ -10332,6 +10332,82 @@ Return JSON format:
     }
   });
 
+  // Get game questions
+  app.get('/api/admin/games/:id/questions', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const questions = await storage.getGameQuestions(Number(id));
+      res.json(questions);
+    } catch (error) {
+      console.error('Error fetching game questions:', error);
+      res.status(500).json({ error: 'Failed to fetch game questions' });
+    }
+  });
+
+  // Create game question
+  app.post('/api/admin/games/:id/questions', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const questionData = { ...req.body, gameId: Number(id) };
+      const question = await storage.createGameQuestion(questionData);
+      res.json(question);
+    } catch (error) {
+      console.error('Error creating game question:', error);
+      res.status(500).json({ error: 'Failed to create game question' });
+    }
+  });
+
+  // Update game question
+  app.put('/api/admin/games/:gameId/questions/:questionId', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { questionId } = req.params;
+      const question = await storage.updateGameQuestion(Number(questionId), req.body);
+      res.json(question);
+    } catch (error) {
+      console.error('Error updating game question:', error);
+      res.status(500).json({ error: 'Failed to update game question' });
+    }
+  });
+
+  // Delete game question
+  app.delete('/api/admin/games/:gameId/questions/:questionId', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { questionId } = req.params;
+      await storage.deleteGameQuestion(Number(questionId));
+      res.json({ message: 'Question deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting game question:', error);
+      res.status(500).json({ error: 'Failed to delete game question' });
+    }
+  });
+
+  // Generate game questions
+  app.post('/api/admin/games/:id/generate-questions', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { count = 10 } = req.body;
+      const { GameService } = await import('./game-service');
+      const gameService = new GameService(storage);
+      const questions = await gameService.generateGameQuestions(Number(id), 1, count);
+      res.json({ message: `Generated ${questions.length} questions`, questions });
+    } catch (error) {
+      console.error('Error generating game questions:', error);
+      res.status(500).json({ error: 'Failed to generate game questions' });
+    }
+  });
+
+  // Get game analytics
+  app.get('/api/admin/games/:id/analytics', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const analytics = await storage.getGameAnalytics(Number(id));
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching game analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch game analytics' });
+    }
+  });
+
   // ============================================
   // STUDENT AI CONVERSATION ROUTES
   // ============================================
