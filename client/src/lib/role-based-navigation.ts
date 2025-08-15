@@ -53,9 +53,6 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
     // Class Scheduling & Management
     { path: "/admin/classes", icon: "Calendar", label: t('common:navigation.classScheduling'), roles: ["Admin", "Supervisor"] },
     
-    // Class & Enrollment Management (NEW)
-    { path: "/admin/class-management", icon: "Users", label: t('common:navigation.classEnrollmentManagement') || 'Class & Enrollment Management', roles: ["Admin", "Supervisor"] },
-    
     // Games Management
     { path: "/admin/games-management", icon: "Gamepad2", label: t('common:navigation.gamesManagement'), roles: ["Admin", "Supervisor"] },
     

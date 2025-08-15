@@ -41,24 +41,26 @@ import {
 
 interface ClassSession {
   id: number;
-  title: string;
   courseId: number;
+  courseName?: string;
   teacherId: number;
-  teacherName: string;
-  roomId: string;
-  roomName: string;
+  teacherName?: string;
+  roomId: number | null;
+  roomName?: string;
+  startDate: string;
+  endDate: string;
+  weekdays: string[];
   startTime: string;
   endTime: string;
-  duration: number;
   maxStudents: number;
-  enrolledStudents: number;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  currentEnrollment: number;
+  deliveryMode: 'online' | 'in_person' | 'hybrid';
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
   isRecurring: boolean;
   recurringPattern?: string;
-  description?: string;
-  level: string;
-  language: string;
-  type: 'online' | 'in-person' | 'hybrid';
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface Teacher {
@@ -97,9 +99,9 @@ export default function AdminClassesPage() {
     type: ''
   });
 
-  // Fetch all scheduled classes
+  // Fetch all scheduled classes from the classes table
   const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
-    queryKey: ['/api/admin/class-sessions', selectedDate, viewMode],
+    queryKey: ['/api/admin/classes'],
   });
 
   // Fetch teachers
@@ -112,38 +114,43 @@ export default function AdminClassesPage() {
     queryKey: ['/api/admin/rooms'],
   });
 
-  // Create new class session
+  // Fetch courses for class creation
+  const { data: courses = [] } = useQuery({
+    queryKey: ['/api/admin/courses'],
+  });
+
+  // Create new class
   const createSession = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/admin/class-sessions', {
+    mutationFn: (data: any) => apiRequest('/api/admin/classes', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/class-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/classes'] });
       toast({ title: t('common:toast.success'), description: t('common:toast.classScheduled') });
       setIsCreateDialogOpen(false);
     }
   });
 
-  // Update class session
+  // Update class
   const updateSession = useMutation({
-    mutationFn: ({ id, ...data }: any) => apiRequest(`/api/admin/class-sessions/${id}`, {
+    mutationFn: ({ id, ...data }: any) => apiRequest(`/api/admin/classes/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/class-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/classes'] });
       toast({ title: t('common:toast.success'), description: t('common:toast.classUpdated') });
     }
   });
 
-  // Delete class session
+  // Delete class
   const deleteSession = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/admin/class-sessions/${id}`, {
+    mutationFn: (id: number) => apiRequest(`/api/admin/classes/${id}`, {
       method: 'DELETE',
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/class-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/classes'] });
       toast({ title: t('common:toast.success'), description: t('common:toast.classDeleted') });
     }
   });
@@ -151,10 +158,8 @@ export default function AdminClassesPage() {
   // Filter sessions based on selected filters
   const filteredSessions = (sessions as ClassSession[] || []).filter((session: ClassSession) => {
     if (filters.teacher && filters.teacher !== 'all' && session.teacherId !== parseInt(filters.teacher)) return false;
-    if (filters.room && filters.room !== 'all' && session.roomId !== filters.room) return false;
-    if (filters.level && filters.level !== 'all' && session.level !== filters.level) return false;
-    if (filters.language && filters.language !== 'all' && session.language !== filters.language) return false;
-    if (filters.type && filters.type !== 'all' && session.type !== filters.type) return false;
+    if (filters.room && filters.room !== 'all' && session.roomId !== parseInt(filters.room)) return false;
+    if (filters.type && filters.type !== 'all' && session.deliveryMode !== filters.type) return false;
     return true;
   });
 
@@ -340,29 +345,129 @@ export default function AdminClassesPage() {
           </CardContent>
         </Card>
 
-        {/* Calendar View */}
+        {/* Classes List View */}
         <Card>
+          <CardHeader>
+            <CardTitle>{t('admin:classes.classList')}</CardTitle>
+            <CardDescription>{t('admin:classes.classListDescription')}</CardDescription>
+          </CardHeader>
           <CardContent className="p-6">
             {sessionsLoading ? (
               <div className="flex items-center justify-center h-96">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                  <p className="mt-4 text-muted-foreground">Loading schedule...</p>
+                  <p className="mt-4 text-muted-foreground">Loading classes...</p>
                 </div>
               </div>
-            ) : viewMode === 'month' ? (
-              <MonthView 
-                days={calendarDays} 
-                sessions={filteredSessions}
-                onSessionClick={setSelectedSession}
-              />
+            ) : filteredSessions.length === 0 ? (
+              <div className="text-center py-12">
+                <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-gray-400 mb-4">No classes found</p>
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create First Class
+                </Button>
+              </div>
             ) : (
-              <WeekDayView 
-                days={calendarDays}
-                sessions={filteredSessions}
-                onSessionClick={setSelectedSession}
-                viewMode={viewMode}
-              />
+              <div className="space-y-4">
+                {filteredSessions.map((classSession: ClassSession) => (
+                  <div key={classSession.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-semibold text-lg">
+                            {classSession.courseName || `Course ${classSession.courseId}`}
+                          </h3>
+                          <Badge variant={classSession.status === 'scheduled' ? 'default' : 'secondary'}>
+                            {classSession.status}
+                          </Badge>
+                          <Badge variant={classSession.deliveryMode === 'online' ? 'outline' : 'default'}>
+                            {classSession.deliveryMode.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          <div className="space-y-1">
+                            <p className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-gray-500" />
+                              <span className="text-gray-600">Teacher:</span>
+                              <span className="font-medium">{classSession.teacherName || `Teacher ${classSession.teacherId}`}</span>
+                            </p>
+                            <p className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-gray-500" />
+                              <span className="text-gray-600">Room:</span>
+                              <span className="font-medium">{classSession.roomName || (classSession.roomId ? `Room ${classSession.roomId}` : 'Online')}</span>
+                            </p>
+                            <p className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-gray-500" />
+                              <span className="text-gray-600">Time:</span>
+                              <span className="font-medium">{classSession.startTime} - {classSession.endTime}</span>
+                            </p>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <p className="flex items-center gap-2">
+                              <CalendarIcon className="h-4 w-4 text-gray-500" />
+                              <span className="text-gray-600">Duration:</span>
+                              <span className="font-medium">{classSession.startDate} to {classSession.endDate}</span>
+                            </p>
+                            <p className="flex items-center gap-2">
+                              <Repeat className="h-4 w-4 text-gray-500" />
+                              <span className="text-gray-600">Schedule:</span>
+                              <span className="font-medium">{classSession.weekdays?.join(', ') || 'Not set'}</span>
+                            </p>
+                            <p className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-gray-500" />
+                              <span className="text-gray-600">Enrollment:</span>
+                              <span className={`font-medium ${classSession.currentEnrollment >= classSession.maxStudents ? 'text-red-600' : 'text-green-600'}`}>
+                                {classSession.currentEnrollment} / {classSession.maxStudents} students
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {classSession.notes && (
+                          <p className="text-sm text-gray-600 mt-2">{classSession.notes}</p>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-col gap-2 ml-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setSelectedSession(classSession)}
+                        >
+                          <Users className="h-4 w-4 mr-1" />
+                          Manage Enrollment
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            // Handle edit
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="text-red-600"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this class?')) {
+                              deleteSession.mutate(classSession.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -372,36 +477,35 @@ export default function AdminClassesPage() {
           <Dialog open={!!selectedSession} onOpenChange={() => setSelectedSession(null)}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{selectedSession.title}</DialogTitle>
+                <DialogTitle>{selectedSession.courseName || `Course ${selectedSession.courseId}`}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Teacher</Label>
-                    <p className="font-medium">{selectedSession.teacherName}</p>
+                    <p className="font-medium">{selectedSession.teacherName || `Teacher ${selectedSession.teacherId}`}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Room</Label>
-                    <p className="font-medium">{selectedSession.roomName}</p>
+                    <p className="font-medium">{selectedSession.roomName || (selectedSession.roomId ? `Room ${selectedSession.roomId}` : 'Online')}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Time</Label>
                     <p className="font-medium">
-                      {format(new Date(selectedSession.startTime), 'h:mm a')} - 
-                      {format(new Date(selectedSession.endTime), 'h:mm a')}
+                      {selectedSession.startTime} - {selectedSession.endTime}
                     </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Students</Label>
                     <p className="font-medium">
-                      {selectedSession.enrolledStudents} / {selectedSession.maxStudents}
+                      {selectedSession.currentEnrollment} / {selectedSession.maxStudents}
                     </p>
                   </div>
                 </div>
-                {selectedSession.description && (
+                {selectedSession.notes && (
                   <div>
-                    <Label className="text-muted-foreground">Description</Label>
-                    <p className="mt-1">{selectedSession.description}</p>
+                    <Label className="text-muted-foreground">Notes</Label>
+                    <p className="mt-1">{selectedSession.notes}</p>
                   </div>
                 )}
                 <div className="flex justify-end gap-2 pt-4">
@@ -575,9 +679,9 @@ function MonthView({
                       className="text-xs p-1 bg-primary/20 rounded cursor-pointer hover:bg-primary/30"
                       onClick={() => onSessionClick(session)}
                     >
-                      <div className="font-medium truncate">{session.title}</div>
+                      <div className="font-medium truncate">{session.courseName || `Course ${session.courseId}`}</div>
                       <div className="text-muted-foreground">
-                        {format(new Date(session.startTime), 'h:mm a')}
+                        {session.startTime}
                       </div>
                     </div>
                   ))}
@@ -617,7 +721,7 @@ function ClassSessionCard({
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'online': return <Video className="h-3 w-3" />;
-      case 'in-person': return <MapPin className="h-3 w-3" />;
+      case 'in_person': return <MapPin className="h-3 w-3" />;
       case 'hybrid': return <Globe className="h-3 w-3" />;
       default: return null;
     }
@@ -629,23 +733,23 @@ function ClassSessionCard({
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-1">
-        <h4 className="text-xs font-medium truncate flex-1">{session.title}</h4>
-        {getTypeIcon(session.type)}
+        <h4 className="text-xs font-medium truncate flex-1">{session.courseName || `Course ${session.courseId}`}</h4>
+        {getTypeIcon(session.deliveryMode)}
       </div>
       <div className="space-y-1">
         <div className="flex items-center gap-1 text-xs">
           <User className="h-3 w-3" />
-          <span className="truncate">{session.teacherName}</span>
+          <span className="truncate">{session.teacherName || `Teacher ${session.teacherId}`}</span>
         </div>
         <div className="flex items-center gap-1 text-xs">
           <Clock className="h-3 w-3" />
-          <span>{format(new Date(session.startTime), 'h:mm a')}</span>
+          <span>{session.startTime}</span>
         </div>
         <div className="flex items-center justify-between text-xs">
           <Badge variant="secondary" className="text-xs py-0">
-            {session.level}
+            {session.status}
           </Badge>
-          <span>{session.enrolledStudents}/{session.maxStudents}</span>
+          <span>{session.currentEnrollment}/{session.maxStudents}</span>
         </div>
       </div>
     </div>
