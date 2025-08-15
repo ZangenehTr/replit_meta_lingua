@@ -12,7 +12,8 @@ import {
   filterTeachers, 
   filterActiveTeachers,
   filterStudents, 
-  filterActiveUsers, 
+  filterActiveUsers,
+  excludeTestUsers,
   calculatePercentage, 
   calculateAttendanceRate,
   calculateTeacherRating,
@@ -2069,7 +2070,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User Management (Admin/Manager only)
   app.get("/api/users", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      const users = await storage.getAllUsers();
+      const allUsers = await storage.getAllUsers();
+      // Exclude test users with lowercase roles
+      const users = excludeTestUsers(allUsers);
       res.json(users);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
@@ -2962,8 +2965,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin Dashboard Stats API (comprehensive dashboard data)
   app.get("/api/admin/dashboard-stats", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
-      const users = await storage.getAllUsers();
-      const totalUsers = await storage.getTotalUsers();
+      const allUsers = await storage.getAllUsers();
+      // Exclude test users with lowercase roles
+      const users = excludeTestUsers(allUsers);
+      const totalUsers = users.length; // Use filtered count, not getTotalUsers()
       const students = filterStudents(users);
       const teachers = filterTeachers(users);
       
@@ -12304,7 +12309,9 @@ Return JSON format:
   // Get all users
   app.get("/api/admin/users", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
-      const users = await storage.getAllUsers();
+      const allUsers = await storage.getAllUsers();
+      // Exclude test users with lowercase roles
+      const users = excludeTestUsers(allUsers);
       res.json(users);
     } catch (error) {
       console.error('Error getting users:', error);

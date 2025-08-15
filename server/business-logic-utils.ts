@@ -4,17 +4,40 @@
 import { User } from '../shared/schema';
 
 /**
+ * TEST USER EXCLUSION
+ * Test users have lowercase roles: 'student', 'teacher', 'admin', 'mentor', 'instructor'
+ * Production users have proper case roles: 'Student', 'Teacher/Tutor', 'Admin', 'Mentor', 'Teacher'
+ */
+export const TEST_USER_ROLES = ['student', 'teacher', 'admin', 'mentor', 'instructor'] as const;
+export const PRODUCTION_USER_ROLES = ['Student', 'Teacher/Tutor', 'Admin', 'Mentor', 'Teacher', 
+                                       'Supervisor', 'Call Center Agent', 'Accountant',
+                                       'supervisor', 'callcenter', 'accountant'] as const;
+
+/**
+ * Filter out test users from any user array
+ * Test users are identified by lowercase roles
+ */
+export function excludeTestUsers(users: User[]): User[] {
+  return users.filter(user => !TEST_USER_ROLES.includes(user.role as any));
+}
+
+/**
  * TEACHER FILTERING UTILITIES
  * Consolidates 10+ teacher filtering duplications across routes.ts
+ * Updated to exclude test teachers with lowercase roles
  */
-export const TEACHER_ROLES = ['Teacher/Tutor', 'instructor', 'teacher', 'Teacher'] as const;
+export const TEACHER_ROLES = ['Teacher/Tutor', 'Teacher'] as const;  // Only production teacher roles
 
 export function filterTeachers(users: User[]): User[] {
-  return users.filter(user => TEACHER_ROLES.includes(user.role as any));
+  // First exclude test users, then filter for teacher roles
+  const productionUsers = excludeTestUsers(users);
+  return productionUsers.filter(user => TEACHER_ROLES.includes(user.role as any));
 }
 
 export function filterActiveTeachers(users: User[]): User[] {
-  return users.filter(user => 
+  // First exclude test users, then filter for active teachers
+  const productionUsers = excludeTestUsers(users);
+  return productionUsers.filter(user => 
     TEACHER_ROLES.includes(user.role as any) && user.isActive
   );
 }
@@ -22,8 +45,10 @@ export function filterActiveTeachers(users: User[]): User[] {
 /**
  * USER ROLE FILTERING UTILITIES
  * Consolidates role filtering across multiple components
+ * Updated to exclude test users
  */
 export function filterStudents(users: User[]): User[] {
+  // Only return production students (uppercase 'Student'), not test students (lowercase 'student')
   return users.filter(user => user.role === 'Student');
 }
 
