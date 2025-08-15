@@ -27,6 +27,21 @@
   "month": "ماه",
   "week": "هفته",
   "day": "روز",
+  "days": {
+    "saturday": "شنبه",
+    "sunday": "یکشنبه",
+    "monday": "دوشنبه",
+    "tuesday": "سه‌شنبه",
+    "wednesday": "چهارشنبه",
+    "thursday": "پنجشنبه",
+    "friday": "جمعه"
+  },
+  "classScheduling": {
+    "scheduleNewClass": "برنامه‌ریزی کلاس جدید",
+    "startDate": "تاریخ شروع",
+    "classDays": "روزهای کلاس",
+    "scheduleClass": "برنامه‌ریزی کلاس"
+  },
   "allTeachers": "همه معلمان",
   "total": "کل",
   "home": "خانه",

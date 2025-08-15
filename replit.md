@@ -17,6 +17,8 @@ Phase 4 implementation: **100% DATABASE COVERAGE ACHIEVED** - All 103 tables now
 UI Button Behaviors Audit: Comprehensive implementation of consistent React Query invalidation patterns, fixed all missing invalidations, created complete test suite with 24/24 tests passing (August 13, 2025).
 Course/Class Architecture Separation: Successfully implemented separation where courses contain only general info (name, description, fee, level, language) and classes are specific instances with teacher/schedule/dates. Added new `classes` and `holidays` tables, implemented storage methods with automatic end-date calculation considering holidays, and created complete REST API endpoints for both resources. **FULLY TESTED: 4/4 tests passing** - Confirmed complete architectural separation with real database implementation (August 14, 2025).
 Class Enrollment System: **COMPREHENSIVE ENROLLMENT IMPLEMENTATION** - Added `classEnrollments` table with full CRUD operations, student search by name/course, bulk enrollment capabilities, and automatic class capacity tracking. Implemented 10 new API endpoints for enrollment management. Course-based student creation replaces level system - students now assigned to courses during creation via `enrolledCourseId` field (August 14, 2025).
+Translation Keys Update: Fixed missing Farsi translation keys for class scheduling UI - added days of week and classScheduling keys to prevent raw key displays (August 15, 2025).
+Teacher Cleanup: Deleted all test teachers except one (updated@test.com) for cleaner testing environment. Fixed roomId null handling to prevent database errors (August 15, 2025).
 
 ## System Architecture
 
