@@ -316,7 +316,7 @@ export function GameAccessControl() {
                   <SelectContent>
                     {courses.map((course: any) => (
                       <SelectItem key={course.id} value={course.id.toString()}>
-                        {course.courseName}
+                        {course.title || course.courseName}
                       </SelectItem>
                     ))}
                   </SelectContent>
