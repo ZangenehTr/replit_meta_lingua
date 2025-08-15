@@ -10409,6 +10409,173 @@ Return JSON format:
   });
 
   // ============================================
+  // GAME ACCESS CONTROL ROUTES
+  // ============================================
+
+  // Get student accessible games
+  app.get('/api/student/games/accessible', authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.id;
+      const games = await storage.getStudentAccessibleGames(studentId);
+      res.json(games);
+    } catch (error) {
+      console.error('Error fetching accessible games:', error);
+      res.status(500).json({ error: 'Failed to fetch accessible games' });
+    }
+  });
+
+  // Create game access rule
+  app.post('/api/admin/games/:id/access-rules', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const ruleData = { ...req.body, gameId: Number(id) };
+      const rule = await storage.createGameAccessRule(ruleData);
+      res.json(rule);
+    } catch (error) {
+      console.error('Error creating access rule:', error);
+      res.status(500).json({ error: 'Failed to create access rule' });
+    }
+  });
+
+  // Get game access rules
+  app.get('/api/admin/games/:id/access-rules', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const rules = await storage.getGameAccessRules(Number(id));
+      res.json(rules);
+    } catch (error) {
+      console.error('Error fetching access rules:', error);
+      res.status(500).json({ error: 'Failed to fetch access rules' });
+    }
+  });
+
+  // Update game access rule
+  app.put('/api/admin/access-rules/:id', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const rule = await storage.updateGameAccessRule(Number(id), req.body);
+      res.json(rule);
+    } catch (error) {
+      console.error('Error updating access rule:', error);
+      res.status(500).json({ error: 'Failed to update access rule' });
+    }
+  });
+
+  // Delete game access rule
+  app.delete('/api/admin/access-rules/:id', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteGameAccessRule(Number(id));
+      res.json({ message: 'Access rule deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting access rule:', error);
+      res.status(500).json({ error: 'Failed to delete access rule' });
+    }
+  });
+
+  // Assign game to student
+  app.post('/api/admin/students/:studentId/games', authenticateToken, requireRole(['Admin', 'Teacher']), async (req: any, res) => {
+    try {
+      const { studentId } = req.params;
+      const assignmentData = {
+        ...req.body,
+        studentId: Number(studentId),
+        assignedBy: req.user.id
+      };
+      const assignment = await storage.assignGameToStudent(assignmentData);
+      res.json(assignment);
+    } catch (error) {
+      console.error('Error assigning game to student:', error);
+      res.status(500).json({ error: 'Failed to assign game to student' });
+    }
+  });
+
+  // Get student game assignments
+  app.get('/api/admin/students/:studentId/games', authenticateToken, requireRole(['Admin', 'Teacher']), async (req: any, res) => {
+    try {
+      const { studentId } = req.params;
+      const assignments = await storage.getStudentGameAssignments(Number(studentId));
+      res.json(assignments);
+    } catch (error) {
+      console.error('Error fetching student game assignments:', error);
+      res.status(500).json({ error: 'Failed to fetch game assignments' });
+    }
+  });
+
+  // Update student game assignment
+  app.put('/api/admin/game-assignments/:id', authenticateToken, requireRole(['Admin', 'Teacher']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const assignment = await storage.updateStudentGameAssignment(Number(id), req.body);
+      res.json(assignment);
+    } catch (error) {
+      console.error('Error updating game assignment:', error);
+      res.status(500).json({ error: 'Failed to update game assignment' });
+    }
+  });
+
+  // Remove student game assignment
+  app.delete('/api/admin/game-assignments/:id', authenticateToken, requireRole(['Admin', 'Teacher']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.removeStudentGameAssignment(Number(id));
+      res.json({ message: 'Game assignment removed successfully' });
+    } catch (error) {
+      console.error('Error removing game assignment:', error);
+      res.status(500).json({ error: 'Failed to remove game assignment' });
+    }
+  });
+
+  // Assign game to course
+  app.post('/api/admin/courses/:courseId/games', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { courseId } = req.params;
+      const courseGameData = { ...req.body, courseId: Number(courseId) };
+      const courseGame = await storage.assignGameToCourse(courseGameData);
+      res.json(courseGame);
+    } catch (error) {
+      console.error('Error assigning game to course:', error);
+      res.status(500).json({ error: 'Failed to assign game to course' });
+    }
+  });
+
+  // Get course games
+  app.get('/api/admin/courses/:courseId/games', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { courseId } = req.params;
+      const games = await storage.getCourseGames(Number(courseId));
+      res.json(games);
+    } catch (error) {
+      console.error('Error fetching course games:', error);
+      res.status(500).json({ error: 'Failed to fetch course games' });
+    }
+  });
+
+  // Update course game
+  app.put('/api/admin/course-games/:id', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const courseGame = await storage.updateCourseGame(Number(id), req.body);
+      res.json(courseGame);
+    } catch (error) {
+      console.error('Error updating course game:', error);
+      res.status(500).json({ error: 'Failed to update course game' });
+    }
+  });
+
+  // Remove course game
+  app.delete('/api/admin/course-games/:id', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.removeCourseGame(Number(id));
+      res.json({ message: 'Course game removed successfully' });
+    } catch (error) {
+      console.error('Error removing course game:', error);
+      res.status(500).json({ error: 'Failed to remove course game' });
+    }
+  });
+
+  // ============================================
   // STUDENT AI CONVERSATION ROUTES
   // ============================================
   

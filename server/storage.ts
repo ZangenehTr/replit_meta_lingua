@@ -474,6 +474,22 @@ export interface IStorage {
   getGamesByFilters(filters: { ageGroup?: string, gameType?: string, level?: string, language?: string }): Promise<Game[]>;
   updateGame(id: number, game: Partial<InsertGame>): Promise<Game | undefined>;
   getGameAnalytics(gameId: number): Promise<any>;
+  deleteGame(id: number): Promise<boolean>;
+  
+  // Game Access Control
+  getStudentAccessibleGames(studentId: number): Promise<Game[]>;
+  createGameAccessRule(rule: any): Promise<any>;
+  getGameAccessRules(gameId?: number): Promise<any[]>;
+  updateGameAccessRule(id: number, updates: any): Promise<any>;
+  deleteGameAccessRule(id: number): Promise<void>;
+  assignGameToStudent(assignment: any): Promise<any>;
+  getStudentGameAssignments(studentId: number): Promise<any[]>;
+  updateStudentGameAssignment(id: number, updates: any): Promise<any>;
+  removeStudentGameAssignment(id: number): Promise<void>;
+  assignGameToCourse(courseGameData: any): Promise<any>;
+  getCourseGames(courseId: number): Promise<any[]>;
+  updateCourseGame(id: number, updates: any): Promise<any>;
+  removeCourseGame(id: number): Promise<void>;
   
   // Game levels
   createGameLevel(level: InsertGameLevel): Promise<GameLevel>;
