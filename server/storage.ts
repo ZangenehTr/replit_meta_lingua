@@ -58,6 +58,11 @@ import {
   type Game, type InsertGame, type GameLevel, type InsertGameLevel,
   type UserGameProgress, type InsertUserGameProgress, type GameSession, type InsertGameSession,
   type GameLeaderboard, type InsertGameLeaderboard,
+  // New game system types
+  gameQuestions, gameDailyChallenges, userDailyChallengeProgress, gameAnswerLogs,
+  type GameQuestion, type InsertGameQuestion, type GameDailyChallenge, type InsertGameDailyChallenge,
+  type UserDailyChallengeProgress, type InsertUserDailyChallengeProgress,
+  type GameAnswerLog, type InsertGameAnswerLog,
   // Video learning types
   type VideoLesson, type InsertVideoLesson, type VideoProgress, type InsertVideoProgress,
   type VideoNote, type InsertVideoNote, type VideoBookmark, type InsertVideoBookmark,
@@ -488,6 +493,35 @@ export interface IStorage {
   updateGameLeaderboard(entry: InsertGameLeaderboard): Promise<GameLeaderboard>;
   getGameLeaderboard(gameId?: number, type?: string, period?: string): Promise<GameLeaderboard[]>;
   getGlobalLeaderboard(): Promise<any[]>;
+  
+  // Game Questions - Real game content
+  createGameQuestion(question: InsertGameQuestion): Promise<GameQuestion>;
+  getGameQuestions(gameId: number, levelId?: number): Promise<GameQuestion[]>;
+  getRandomGameQuestions(gameId: number, count: number, difficulty?: string): Promise<GameQuestion[]>;
+  updateGameQuestion(id: number, question: Partial<InsertGameQuestion>): Promise<GameQuestion | undefined>;
+  deleteGameQuestion(id: number): Promise<boolean>;
+  updateQuestionStats(questionId: number, isCorrect: boolean, responseTime: number): Promise<void>;
+  
+  // Daily Challenges
+  createDailyChallenge(challenge: InsertGameDailyChallenge): Promise<GameDailyChallenge>;
+  getTodayChallenge(): Promise<GameDailyChallenge | undefined>;
+  getDailyChallengeById(id: number): Promise<GameDailyChallenge | undefined>;
+  getActiveDailyChallenges(): Promise<GameDailyChallenge[]>;
+  updateDailyChallenge(id: number, challenge: Partial<InsertGameDailyChallenge>): Promise<GameDailyChallenge | undefined>;
+  generateDailyChallenge(): Promise<GameDailyChallenge>;
+  
+  // User Daily Challenge Progress
+  createUserDailyChallengeProgress(progress: InsertUserDailyChallengeProgress): Promise<UserDailyChallengeProgress>;
+  getUserDailyChallengeProgress(userId: number, challengeId: number): Promise<UserDailyChallengeProgress | undefined>;
+  updateUserDailyChallengeProgress(id: number, progress: Partial<InsertUserDailyChallengeProgress>): Promise<UserDailyChallengeProgress | undefined>;
+  getUserDailyChallengeHistory(userId: number): Promise<UserDailyChallengeProgress[]>;
+  completeDailyChallenge(userId: number, challengeId: number, performance: any): Promise<UserDailyChallengeProgress | undefined>;
+  
+  // Game Answer Logs - Track all answers for analytics
+  createGameAnswerLog(log: InsertGameAnswerLog): Promise<GameAnswerLog>;
+  getGameAnswerLogs(sessionId: number): Promise<GameAnswerLog[]>;
+  getUserAnswerLogs(userId: number, questionId?: number): Promise<GameAnswerLog[]>;
+  getQuestionAnalytics(questionId: number): Promise<any>;
   
   // User achievements and stats
   getUserAchievements(userId: number): Promise<any[]>;
