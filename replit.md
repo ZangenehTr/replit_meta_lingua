@@ -69,13 +69,19 @@ Teacher Cleanup: Deleted all test teachers except one (updated@test.com) for cle
 
 ## External Dependencies
 
-- **Database**: Neon PostgreSQL (development), self-hosted PostgreSQL (production).
-- **Payment Gateway**: Shetab (for Iranian market).
-- **SMS Service**: Kavenegar (for Iranian SMS).
-- **VoIP**: Isabel VoIP line.
-- **AI Services**: OpenAI API (personalization, development), Ollama server (local AI processing, production).
-- **Testing**: Playwright (E2E), Vitest (unit).
-- **Fonts**: Self-hosted Arabic/Persian fonts.
-- **WebRTC**: Self-hosted TURN/STUN server support only. Integrated with Socket.io for signaling and Simple Peer for peer-to-peer connections.
-- **Real-time Communication**: Socket.io for WebSocket connections, Simple Peer for WebRTC, RecordRTC for call recording.
-- **Self-Hosting**: Complete independence from external services outside Iran.
+### Development Environment (Replit)
+- **Database**: Neon PostgreSQL (development only)
+- **Testing**: Playwright (E2E), Vitest (unit)
+
+### Production Environment (Iranian Self-Hosting)
+- **Database**: Self-hosted PostgreSQL (no external database services)
+- **Payment Gateway**: Shetab (Iranian payment network only)
+- **SMS Service**: Kavenegar (Iranian SMS provider only)
+- **VoIP**: Isabel VoIP line (Iranian telecom)
+- **AI Services**: Ollama server (local AI processing, no OpenAI or external AI APIs)
+- **Fonts**: Self-hosted Arabic/Persian fonts (no Google Fonts or external CDNs)
+- **WebRTC**: Self-hosted TURN/STUN server (no Twilio or external services)
+- **Real-time Communication**: Socket.io for WebSocket connections, Simple Peer for WebRTC, RecordRTC for local call recording
+- **Video Infrastructure**: Local filesystem storage and streaming (no YouTube, Vimeo, or external CDNs)
+- **File Storage**: Local server filesystem (no AWS S3, Cloudinary, or external storage)
+- **Self-Hosting**: **ZERO dependencies on non-Iranian servers** - complete independence from all external services
