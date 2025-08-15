@@ -923,7 +923,9 @@ function ClassScheduleForm({
       endTime: calculateEndTime(formData.startTime, parseInt(formData.duration)),
       title: selectedCourse?.title || '',
       level: selectedCourse?.level || '',
-      language: selectedCourse?.language || ''
+      language: selectedCourse?.language || '',
+      // Convert empty string to null for roomId to prevent database errors
+      roomId: formData.roomId === '' ? null : formData.roomId
     };
     onSubmit(submitData);
   };
