@@ -4789,6 +4789,11 @@ export class DatabaseStorage implements IStorage {
     const [lesson] = await db.select().from(videoLessons).where(eq(videoLessons.id, id));
     return lesson;
   }
+  
+  // Alias for getVideoLessonById (used in routes)
+  async getVideoLesson(id: number): Promise<VideoLesson | undefined> {
+    return this.getVideoLessonById(id);
+  }
 
   async getVideoLessonsByCourse(courseId: number): Promise<VideoLesson[]> {
     return await db.select().from(videoLessons)
@@ -4840,6 +4845,49 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(videoProgress)
       .where(eq(videoProgress.userId, userId));
   }
+  
+  // Alias for getUserVideoProgress (used in routes)
+  async getStudentVideoProgress(studentId: number): Promise<VideoProgress[]> {
+    return this.getUserVideoProgress(studentId);
+  }
+  
+  // Overloaded version of updateVideoProgress for routes
+  async updateVideoProgress(data: { studentId: number, videoLessonId: number, watchTime: number, totalDuration: number, completed: boolean }): Promise<VideoProgress | undefined>;
+  async updateVideoProgress(userId: number, videoId: number, progress: Partial<InsertVideoProgress>): Promise<VideoProgress | undefined>;
+  async updateVideoProgress(arg1: any, arg2?: any, arg3?: any): Promise<VideoProgress | undefined> {
+    // Handle object-based signature (from routes)
+    if (typeof arg1 === 'object' && !arg2 && !arg3) {
+      const { studentId, videoLessonId, watchTime, totalDuration, completed } = arg1;
+      
+      // First get or create the progress record
+      const existing = await this.getOrCreateVideoProgress(studentId, videoLessonId);
+      
+      // Then update it
+      const [updated] = await db.update(videoProgress)
+        .set({ 
+          watchTime,
+          totalDuration,
+          completed,
+          updatedAt: new Date() 
+        })
+        .where(and(
+          eq(videoProgress.userId, studentId),
+          eq(videoProgress.videoLessonId, videoLessonId)
+        ))
+        .returning();
+      return updated;
+    }
+    
+    // Handle original signature (userId, videoId, progress)
+    const [updated] = await db.update(videoProgress)
+      .set({ ...arg3, updatedAt: new Date() })
+      .where(and(
+        eq(videoProgress.userId, arg1),
+        eq(videoProgress.videoId, arg2)
+      ))
+      .returning();
+    return updated;
+  }
 
   // Video notes & bookmarks
   async createVideoNote(note: InsertVideoNote): Promise<VideoNote> {
@@ -4855,6 +4903,11 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(videoNotes.timestamp);
   }
+  
+  // Alias for getUserVideoNotes (used in routes)
+  async getVideoNotes(studentId: number, videoId: number): Promise<VideoNote[]> {
+    return this.getUserVideoNotes(studentId, videoId);
+  }
 
   async createVideoBookmark(bookmark: InsertVideoBookmark): Promise<VideoBookmark> {
     const [newBookmark] = await db.insert(videoBookmarks).values(bookmark).returning();
@@ -4868,6 +4921,11 @@ export class DatabaseStorage implements IStorage {
         eq(videoBookmarks.videoId, videoId)
       ))
       .orderBy(videoBookmarks.timestamp);
+  }
+  
+  // Alias for getUserVideoBookmarks (used in routes)
+  async getVideoBookmarks(studentId: number, videoId: number): Promise<VideoBookmark[]> {
+    return this.getUserVideoBookmarks(studentId, videoId);
   }
 
   // Additional video methods for teacher/student interfaces

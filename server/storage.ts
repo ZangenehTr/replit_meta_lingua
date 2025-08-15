@@ -505,21 +505,26 @@ export interface IStorage {
   // ===== VIDEO LEARNING SUBSYSTEM =====
   // Video lessons
   createVideoLesson(lesson: InsertVideoLesson): Promise<VideoLesson>;
+  getVideoLesson(id: number): Promise<VideoLesson | undefined>; // Alias for getVideoLessonById
   getVideoLessonById(id: number): Promise<VideoLesson | undefined>;
   getVideoLessonsByCourse(courseId: number): Promise<VideoLesson[]>;
+  getTeacherVideoLessons(teacherId: number): Promise<VideoLesson[]>;
   updateVideoLesson(id: number, lesson: Partial<InsertVideoLesson>): Promise<VideoLesson | undefined>;
   deleteVideoLesson(id: number): Promise<boolean>;
   
   // Video progress
   getOrCreateVideoProgress(userId: number, videoId: number): Promise<VideoProgress>;
-  updateVideoProgress(userId: number, videoId: number, progress: Partial<InsertVideoProgress>): Promise<VideoProgress | undefined>;
+  updateVideoProgress(data: { studentId: number, videoLessonId: number, watchTime: number, totalDuration: number, completed: boolean }): Promise<VideoProgress | undefined>;
   getUserVideoProgress(userId: number): Promise<VideoProgress[]>;
+  getStudentVideoProgress(studentId: number): Promise<VideoProgress[]>;
   
   // Video notes & bookmarks
   createVideoNote(note: InsertVideoNote): Promise<VideoNote>;
   getUserVideoNotes(userId: number, videoId: number): Promise<VideoNote[]>;
+  getVideoNotes(studentId: number, videoId: number): Promise<VideoNote[]>;
   createVideoBookmark(bookmark: InsertVideoBookmark): Promise<VideoBookmark>;
   getUserVideoBookmarks(userId: number, videoId: number): Promise<VideoBookmark[]>;
+  getVideoBookmarks(studentId: number, videoId: number): Promise<VideoBookmark[]>;
   
   // ===== LMS FEATURES =====
   // Forums

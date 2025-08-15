@@ -30,6 +30,9 @@ import { ollamaInstaller } from "./ollama-installer";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { z } from "zod";
 import { 
   insertUserSchema, 
@@ -65,6 +68,39 @@ const audioStorage = multer.diskStorage({
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(performance.now());
     cb(null, 'audio-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+// Configure multer for video uploads
+const videoStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const videoDir = path.join(process.cwd(), 'uploads', 'videos', 'raw');
+    if (!fs.existsSync(videoDir)) {
+      fs.mkdirSync(videoDir, { recursive: true });
+    }
+    cb(null, videoDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'video-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const uploadVideo = multer({
+  storage: videoStorage,
+  limits: {
+    fileSize: 500 * 1024 * 1024 // 500MB max file size
+  },
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /mp4|webm|ogg|mov|avi|mkv/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only video files are allowed'));
+    }
   }
 });
 
@@ -5118,6 +5154,283 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching classes by teacher:', error);
       res.status(500).json({ message: "Failed to fetch classes" });
+    }
+  });
+  
+  // ========== VIDEO COURSE MANAGEMENT ==========
+  
+  // Configure multer for video upload
+  const videoStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = './uploads/videos/raw';
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, `video-${uniqueSuffix}${path.extname(file.originalname)}`);
+    }
+  });
+  
+  const uploadVideo = multer({
+    storage: videoStorage,
+    limits: {
+      fileSize: 500 * 1024 * 1024 // 500MB max
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = /mp4|avi|mov|wmv|flv|mkv|webm/;
+      const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = file.mimetype.startsWith('video/');
+      
+      if (mimetype && extname) {
+        return cb(null, true);
+      } else {
+        cb(new Error('Only video files are allowed'));
+      }
+    }
+  });
+  
+  // Upload video lesson
+  app.post("/api/teacher/videos/upload", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), uploadVideo.single('video'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No video file provided" });
+      }
+      
+      const { title, description, courseId, moduleId, level, skillFocus, isFree } = req.body;
+      
+      if (!title || !courseId) {
+        return res.status(400).json({ message: "Title and course ID are required" });
+      }
+      
+      // Create video lesson record in database
+      const videoLesson = await storage.createVideoLesson({
+        courseId: parseInt(courseId),
+        teacherId: req.user.id,
+        title,
+        description,
+        videoUrl: `/uploads/videos/raw/${req.file.filename}`,
+        thumbnailUrl: null, // We'll generate this later
+        duration: 0, // We'll update this after processing
+        moduleId: moduleId ? parseInt(moduleId) : null,
+        orderIndex: 0, // Will be calculated based on existing lessons
+        language: 'fa', // Default to Farsi
+        level: level || 'A1',
+        skillFocus: skillFocus || 'general',
+        isFree: isFree === 'true',
+        isPublished: false // Start as unpublished
+      });
+      
+      res.status(201).json({ 
+        message: "Video uploaded successfully", 
+        lesson: videoLesson,
+        filename: req.file.filename 
+      });
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      res.status(500).json({ message: "Failed to upload video" });
+    }
+  });
+  
+  // Stream video with range support
+  app.get("/api/videos/stream/:id", async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.id);
+      const videoLesson = await storage.getVideoLesson(videoId);
+      
+      if (!videoLesson) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      const videoPath = path.join(process.cwd(), videoLesson.videoUrl);
+      
+      if (!fs.existsSync(videoPath)) {
+        return res.status(404).json({ message: "Video file not found" });
+      }
+      
+      const stat = fs.statSync(videoPath);
+      const fileSize = stat.size;
+      const range = req.headers.range;
+      
+      if (range) {
+        // Parse Range header
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        const chunksize = (end - start) + 1;
+        const file = fs.createReadStream(videoPath, { start, end });
+        const head = {
+          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunksize,
+          'Content-Type': 'video/mp4',
+        };
+        res.writeHead(206, head);
+        file.pipe(res);
+      } else {
+        const head = {
+          'Content-Length': fileSize,
+          'Content-Type': 'video/mp4',
+        };
+        res.writeHead(200, head);
+        fs.createReadStream(videoPath).pipe(res);
+      }
+    } catch (error) {
+      console.error('Error streaming video:', error);
+      res.status(500).json({ message: "Failed to stream video" });
+    }
+  });
+  
+  // Update video progress
+  app.post("/api/videos/:id/progress", authenticateToken, async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.id);
+      const { watchTime, totalDuration, completed } = req.body;
+      
+      const progress = await storage.updateVideoProgress({
+        studentId: req.user.id,
+        videoLessonId: videoId,
+        watchTime,
+        totalDuration,
+        completed: completed || false
+      });
+      
+      res.json({ message: "Progress updated", progress });
+    } catch (error) {
+      console.error('Error updating video progress:', error);
+      res.status(500).json({ message: "Failed to update progress" });
+    }
+  });
+  
+  // Create video note
+  app.post("/api/videos/:id/notes", authenticateToken, async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.id);
+      const { timestamp, content } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ message: "Note content is required" });
+      }
+      
+      const note = await storage.createVideoNote({
+        studentId: req.user.id,
+        videoLessonId: videoId,
+        timestamp: timestamp || 0,
+        content
+      });
+      
+      res.status(201).json({ message: "Note created", note });
+    } catch (error) {
+      console.error('Error creating video note:', error);
+      res.status(500).json({ message: "Failed to create note" });
+    }
+  });
+  
+  // Create video bookmark
+  app.post("/api/videos/:id/bookmarks", authenticateToken, async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.id);
+      const { timestamp, title } = req.body;
+      
+      const bookmark = await storage.createVideoBookmark({
+        studentId: req.user.id,
+        videoLessonId: videoId,
+        timestamp: timestamp || 0,
+        title: title || 'Bookmark'
+      });
+      
+      res.status(201).json({ message: "Bookmark created", bookmark });
+    } catch (error) {
+      console.error('Error creating video bookmark:', error);
+      res.status(500).json({ message: "Failed to create bookmark" });
+    }
+  });
+  
+  // Get student's video progress
+  app.get("/api/student/videos/progress", authenticateToken, async (req: any, res) => {
+    try {
+      const progress = await storage.getStudentVideoProgress(req.user.id);
+      res.json(progress);
+    } catch (error) {
+      console.error('Error fetching video progress:', error);
+      res.status(500).json({ message: "Failed to fetch progress" });
+    }
+  });
+  
+  // Get video notes
+  app.get("/api/videos/:id/notes", authenticateToken, async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.id);
+      const notes = await storage.getVideoNotes(req.user.id, videoId);
+      res.json(notes);
+    } catch (error) {
+      console.error('Error fetching video notes:', error);
+      res.status(500).json({ message: "Failed to fetch notes" });
+    }
+  });
+  
+  // Get video bookmarks
+  app.get("/api/videos/:id/bookmarks", authenticateToken, async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.id);
+      const bookmarks = await storage.getVideoBookmarks(req.user.id, videoId);
+      res.json(bookmarks);
+    } catch (error) {
+      console.error('Error fetching video bookmarks:', error);
+      res.status(500).json({ message: "Failed to fetch bookmarks" });
+    }
+  });
+  
+  // Get teacher's video lessons
+  app.get("/api/teacher/videos", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
+    try {
+      const lessons = await storage.getTeacherVideoLessons(req.user.id);
+      res.json(lessons);
+    } catch (error) {
+      console.error('Error fetching teacher video lessons:', error);
+      res.status(500).json({ message: "Failed to fetch video lessons" });
+    }
+  });
+  
+  // Update video lesson
+  app.put("/api/teacher/videos/:id", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedLesson = await storage.updateVideoLesson(videoId, updateData);
+      res.json({ message: "Video lesson updated", lesson: updatedLesson });
+    } catch (error) {
+      console.error('Error updating video lesson:', error);
+      res.status(500).json({ message: "Failed to update video lesson" });
+    }
+  });
+  
+  // Delete video lesson
+  app.delete("/api/teacher/videos/:id", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.id);
+      
+      // Get video info before deleting
+      const videoLesson = await storage.getVideoLesson(videoId);
+      if (!videoLesson) {
+        return res.status(404).json({ message: "Video lesson not found" });
+      }
+      
+      // Delete video file
+      const videoPath = path.join(process.cwd(), videoLesson.videoUrl);
+      if (fs.existsSync(videoPath)) {
+        fs.unlinkSync(videoPath);
+      }
+      
+      // Delete from database
+      await storage.deleteVideoLesson(videoId);
+      res.json({ message: "Video lesson deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting video lesson:', error);
+      res.status(500).json({ message: "Failed to delete video lesson" });
     }
   });
   

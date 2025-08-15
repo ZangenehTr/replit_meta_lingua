@@ -1,0 +1,15 @@
+{
+  "auth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjg0NjMsImVtYWlsIjoidmlkZW8udGVhY2hlckB0ZXN0LmNvbSIsInJvbGUiOiJUZWFjaGVyL1R1dG9yIiwiaWF0IjoxNzU1MjgyNjMyLCJleHAiOjE3NTUzNjkwMzJ9.FaDg4NrxTBRMk7RDxYQaeBrvOZgBV205qHf2NPrkKNc",
+  "user_role": "Teacher/Tutor",
+  "user": {
+    "id": 8463,
+    "email": "video.teacher@test.com",
+    "firstName": "Video",
+    "lastName": "Teacher",
+    "role": "Teacher/Tutor",
+    "avatar": null,
+    "credits": 0,
+    "streakDays": 0,
+    "preferences": {}
+  }
+}
