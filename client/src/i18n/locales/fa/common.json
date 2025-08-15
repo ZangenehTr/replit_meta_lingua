@@ -547,6 +547,8 @@
     "availableTeachers": "مدرسان موجود",
     "selectAvailableTeacher": "انتخاب مدرس موجود",
     "date": "تاریخ",
+    "startDate": "تاریخ شروع",
+    "classDays": "روزهای کلاس",
     "classType": "نوع کلاس",
     "online": "آنلاین",
     "inPerson": "حضوری",
@@ -568,6 +570,8 @@
     "selectTime": "انتخاب زمان",
     "capacity": "ظرفیت",
     "rating": "امتیاز",
+    "classroomNumber": "شماره کلاس",
+    "enterClassroomNumber": "شماره کلاس را وارد کنید",
     "teacherCompatibility": {
       "excellent": "عالی",
       "good": "خوب", 

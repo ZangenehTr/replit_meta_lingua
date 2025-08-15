@@ -235,7 +235,7 @@ export default function AdminClassesPage() {
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="sm" className="h-8 px-3" onClick={() => setSelectedDate(new Date())}>
-                    {t('admin:common.today')}
+                    {t('common:today')}
                   </Button>
                 </div>
                 
@@ -249,9 +249,9 @@ export default function AdminClassesPage() {
               {/* View Mode Tabs - Mobile First */}
               <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)} className="w-full sm:w-auto">
                 <TabsList className="grid grid-cols-3 w-full sm:w-auto">
-                  <TabsTrigger value="day" className="text-xs sm:text-sm">{t('admin:common.day')}</TabsTrigger>
-                  <TabsTrigger value="week" className="text-xs sm:text-sm">{t('admin:common.week')}</TabsTrigger>
-                  <TabsTrigger value="month" className="text-xs sm:text-sm">{t('admin:common.month')}</TabsTrigger>
+                  <TabsTrigger value="day" className="text-xs sm:text-sm">{t('common:day')}</TabsTrigger>
+                  <TabsTrigger value="week" className="text-xs sm:text-sm">{t('common:week')}</TabsTrigger>
+                  <TabsTrigger value="month" className="text-xs sm:text-sm">{t('common:month')}</TabsTrigger>
                 </TabsList>
               </Tabs>
 
@@ -267,7 +267,7 @@ export default function AdminClassesPage() {
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[90vh]">
                     <DialogHeader>
-                      <DialogTitle>{t('classScheduling.scheduleNewClass')}</DialogTitle>
+                      <DialogTitle>{t('common:classScheduling.scheduleNewClass')}</DialogTitle>
                     </DialogHeader>
                     <ScrollArea className="max-h-[calc(90vh-100px)] pr-4">
                       <ClassScheduleForm 
@@ -765,7 +765,7 @@ function ClassScheduleForm({
   isPending,
   initialData = null
 }: any) {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['common', 'admin']);
   // Fetch available courses
   const { data: courses = [] } = useQuery({
     queryKey: ['/api/admin/courses'],
@@ -1046,7 +1046,7 @@ function ClassScheduleForm({
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="startDate">{t('classScheduling.startDate')}</Label>
+          <Label htmlFor="startDate">{t('common:classScheduling.startDate')}</Label>
           <Input
             id="startDate"
             type="date"
@@ -1114,16 +1114,16 @@ function ClassScheduleForm({
 
       {/* Class Days Selection */}
       <div className="space-y-2 col-span-2">
-        <Label>{t('classScheduling.classDays')}</Label>
+        <Label>{t('common:classScheduling.classDays')}</Label>
         <div className="grid grid-cols-7 gap-2">
           {[
-            { key: 'saturday', label: t('days.saturday') || 'شنبه' },
-            { key: 'sunday', label: t('days.sunday') || 'یکشنبه' },
-            { key: 'monday', label: t('days.monday') || 'دوشنبه' },
-            { key: 'tuesday', label: t('days.tuesday') || 'سه‌شنبه' },
-            { key: 'wednesday', label: t('days.wednesday') || 'چهارشنبه' },
-            { key: 'thursday', label: t('days.thursday') || 'پنج‌شنبه' },
-            { key: 'friday', label: t('days.friday') || 'جمعه' },
+            { key: 'saturday', label: t('common:days.saturday') || 'شنبه' },
+            { key: 'sunday', label: t('common:days.sunday') || 'یکشنبه' },
+            { key: 'monday', label: t('common:days.monday') || 'دوشنبه' },
+            { key: 'tuesday', label: t('common:days.tuesday') || 'سه‌شنبه' },
+            { key: 'wednesday', label: t('common:days.wednesday') || 'چهارشنبه' },
+            { key: 'thursday', label: t('common:days.thursday') || 'پنج‌شنبه' },
+            { key: 'friday', label: t('common:days.friday') || 'جمعه' },
           ].map(({ key, label }) => (
             <div key={key} className="flex items-center space-x-2">
               <Checkbox
