@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -774,19 +775,50 @@ function ClassScheduleForm({
     courseId: initialData?.courseId || '',
     teacherId: initialData?.teacherId || '',
     roomId: initialData?.roomId || '',
+    classroomNumber: initialData?.classroomNumber || '',
     startDate: initialData?.startDate || '',
+    endDate: initialData?.endDate || '',
     startTime: initialData?.startTime || '',
     duration: initialData?.duration || '60',
     maxStudents: initialData?.maxStudents || '20',
     type: initialData?.type || 'online',
     sessionNote: initialData?.sessionNote || '', // Note specific to this session
-    isRecurring: initialData?.isRecurring || false,
-    recurringPattern: initialData?.recurringPattern || 'weekly',
-    recurringEnd: initialData?.recurringEnd || ''
+    weekDays: initialData?.weekDays || {
+      sunday: false,
+      monday: false,
+      tuesday: false,
+      wednesday: false,
+      thursday: false,
+      friday: false,
+      saturday: false
+    }
   });
 
   // Get selected course details
   const selectedCourse = (courses as any[]).find((c: any) => c.id === parseInt(formData.courseId));
+
+  // Calculate end date when start date changes (based on course duration)
+  useEffect(() => {
+    if (formData.startDate && selectedCourse?.duration) {
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + (selectedCourse.duration * 7)); // duration is in weeks
+      setFormData(prev => ({ 
+        ...prev, 
+        endDate: endDate.toISOString().split('T')[0] 
+      }));
+    }
+  }, [formData.startDate, selectedCourse?.duration]);
+
+  const handleWeekDayToggle = (day: string) => {
+    setFormData(prev => ({
+      ...prev,
+      weekDays: {
+        ...prev.weekDays,
+        [day]: !prev.weekDays[day]
+      }
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -853,25 +885,6 @@ function ClassScheduleForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="room">{t('classScheduling.room')}</Label>
-          <Select 
-            value={formData.roomId} 
-            onValueChange={(v) => setFormData({ ...formData, roomId: v })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('classScheduling.selectRoom')} />
-            </SelectTrigger>
-            <SelectContent>
-              {rooms.map((room: ClassRoom) => (
-                <SelectItem key={room.id} value={room.id}>
-                  {room.name} ({room.capacity} capacity)
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
           <Label htmlFor="type">{t('classScheduling.classType')}</Label>
           <Select 
             value={formData.type} 
@@ -888,14 +901,40 @@ function ClassScheduleForm({
           </Select>
         </div>
 
+        {/* Show classroom field only for in-person type */}
+        {formData.type === 'in-person' && (
+          <div className="space-y-2">
+            <Label htmlFor="classroomNumber">{t('classScheduling.classroomNumber')}*</Label>
+            <Input
+              id="classroomNumber"
+              type="text"
+              value={formData.classroomNumber}
+              onChange={(e) => setFormData({ ...formData, classroomNumber: e.target.value })}
+              placeholder={t('classScheduling.enterClassroomNumber')}
+              required={formData.type === 'in-person'}
+            />
+          </div>
+        )}
+
         <div className="space-y-2">
-          <Label htmlFor="startDate">{t('classScheduling.date')}</Label>
+          <Label htmlFor="startDate">{t('classScheduling.startDate')}</Label>
           <Input
             id="startDate"
             type="date"
             value={formData.startDate}
             onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
             required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="endDate">{t('classScheduling.endDate')}</Label>
+          <Input
+            id="endDate"
+            type="date"
+            value={formData.endDate}
+            disabled
+            className="bg-muted"
           />
         </div>
 
@@ -944,6 +983,36 @@ function ClassScheduleForm({
 
       </div>
 
+      {/* Class Days Selection */}
+      <div className="space-y-2 col-span-2">
+        <Label>{t('classScheduling.classDays')}</Label>
+        <div className="grid grid-cols-7 gap-2">
+          {[
+            { key: 'saturday', label: t('days.saturday') || 'شنبه' },
+            { key: 'sunday', label: t('days.sunday') || 'یکشنبه' },
+            { key: 'monday', label: t('days.monday') || 'دوشنبه' },
+            { key: 'tuesday', label: t('days.tuesday') || 'سه‌شنبه' },
+            { key: 'wednesday', label: t('days.wednesday') || 'چهارشنبه' },
+            { key: 'thursday', label: t('days.thursday') || 'پنج‌شنبه' },
+            { key: 'friday', label: t('days.friday') || 'جمعه' },
+          ].map(({ key, label }) => (
+            <div key={key} className="flex items-center space-x-2">
+              <Checkbox
+                id={key}
+                checked={formData.weekDays[key]}
+                onCheckedChange={() => handleWeekDayToggle(key)}
+              />
+              <Label 
+                htmlFor={key} 
+                className="text-sm cursor-pointer"
+              >
+                {label}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="sessionNote">{t('classScheduling.sessionNote')}</Label>
         <Textarea
@@ -954,47 +1023,6 @@ function ClassScheduleForm({
           rows={2}
         />
       </div>
-
-      <div className="flex items-center gap-2">
-        <Switch
-          id="recurring"
-          checked={formData.isRecurring}
-          onCheckedChange={(v) => setFormData({ ...formData, isRecurring: v })}
-        />
-        <Label htmlFor="recurring">{t('classScheduling.recurringClass')}</Label>
-      </div>
-
-      {formData.isRecurring && (
-        <div className="grid grid-cols-2 gap-4 pl-8">
-          <div className="space-y-2">
-            <Label htmlFor="recurringPattern">{t('classScheduling.repeat')}</Label>
-            <Select 
-              value={formData.recurringPattern} 
-              onValueChange={(v) => setFormData({ ...formData, recurringPattern: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">{t('classScheduling.daily')}</SelectItem>
-                <SelectItem value="weekly">{t('classScheduling.weekly')}</SelectItem>
-                <SelectItem value="biweekly">{t('classScheduling.biweekly')}</SelectItem>
-                <SelectItem value="monthly">{t('classScheduling.monthly')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="recurringEnd">{t('classScheduling.endDate')}</Label>
-            <Input
-              id="recurringEnd"
-              type="date"
-              value={formData.recurringEnd}
-              onChange={(e) => setFormData({ ...formData, recurringEnd: e.target.value })}
-            />
-          </div>
-        </div>
-      )}
 
       <div className="flex justify-end gap-2 pt-4">
         <Button type="submit" disabled={isPending}>
