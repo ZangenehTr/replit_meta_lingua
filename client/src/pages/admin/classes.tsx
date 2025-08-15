@@ -771,6 +771,19 @@ function ClassScheduleForm({
     queryKey: ['/api/admin/courses'],
   });
 
+  // Fetch holidays from database
+  const { data: holidays = [] } = useQuery<Array<{
+    id: number;
+    name: string;
+    date: string;
+    type: string;
+    isRecurring: boolean;
+    recurringPattern?: string;
+    description?: string;
+  }>>({
+    queryKey: ['/api/admin/holidays'],
+  });
+
   const [formData, setFormData] = useState({
     courseId: initialData?.courseId || '',
     teacherId: initialData?.teacherId || '',
@@ -797,18 +810,56 @@ function ClassScheduleForm({
   // Get selected course details
   const selectedCourse = (courses as any[]).find((c: any) => c.id === parseInt(formData.courseId));
 
-  // Calculate end date when start date changes (based on course duration)
-  useEffect(() => {
-    if (formData.startDate && selectedCourse?.duration) {
-      const startDate = new Date(formData.startDate);
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + (selectedCourse.duration * 7)); // duration is in weeks
-      setFormData(prev => ({ 
-        ...prev, 
-        endDate: endDate.toISOString().split('T')[0] 
-      }));
+  // Calculate end date considering holidays and weekdays
+  const calculateEndDate = (startDate: Date, totalSessions: number, selectedWeekdays: any) => {
+    const weekdaysList = Object.keys(selectedWeekdays).filter(day => selectedWeekdays[day]);
+    if (weekdaysList.length === 0) return startDate;
+    
+    let currentDate = new Date(startDate);
+    let sessionsScheduled = 0;
+    let daysChecked = 0;
+    const maxDaysToCheck = 365; // Prevent infinite loop
+    
+    while (sessionsScheduled < totalSessions && daysChecked < maxDaysToCheck) {
+      const dayName = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][currentDate.getDay()];
+      
+      // Check if this day is a selected weekday
+      if (selectedWeekdays[dayName]) {
+        // Check if this day is not a holiday
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const isHoliday = holidays.some((holiday: any) => {
+          const holidayDate = new Date(holiday.date).toISOString().split('T')[0];
+          return holidayDate === dateStr;
+        });
+        
+        if (!isHoliday) {
+          sessionsScheduled++;
+        }
+      }
+      
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+      daysChecked++;
     }
-  }, [formData.startDate, selectedCourse?.duration]);
+    
+    return currentDate;
+  };
+
+  // Calculate end date when start date or weekdays change
+  useEffect(() => {
+    if (formData.startDate && selectedCourse?.totalSessions) {
+      const startDate = new Date(formData.startDate);
+      const hasSelectedDays = Object.values(formData.weekDays).some(v => v);
+      
+      if (hasSelectedDays) {
+        const endDate = calculateEndDate(startDate, selectedCourse.totalSessions, formData.weekDays);
+        setFormData(prev => ({ 
+          ...prev, 
+          endDate: endDate.toISOString().split('T')[0] 
+        }));
+      }
+    }
+  }, [formData.startDate, formData.weekDays, selectedCourse?.totalSessions, holidays]);
 
   const handleWeekDayToggle = (day: string) => {
     setFormData(prev => ({
@@ -820,16 +871,70 @@ function ClassScheduleForm({
     }));
   };
 
+  // Filter teachers based on availability for selected time and weekdays
+  const getAvailableTeachers = () => {
+    if (!formData.startTime || !Object.values(formData.weekDays).some(v => v)) {
+      return teachers; // Return all teachers if no time/days selected yet
+    }
+
+    const selectedHour = parseInt(formData.startTime.split(':')[0]);
+    const selectedWeekdaysList = Object.keys(formData.weekDays)
+      .filter(day => formData.weekDays[day])
+      .map(day => day.toLowerCase());
+
+    return teachers.filter((teacher: Teacher) => {
+      // Check if teacher has any availability periods
+      if (!teacher.availabilityPeriods || teacher.availabilityPeriods.length === 0) {
+        return false; // Teacher has no availability set
+      }
+
+      // Check if teacher is available on selected days and time
+      return teacher.availabilityPeriods.some((period: any) => {
+        const periodStartHour = parseInt(period.startTime?.split(':')[0] || '0');
+        const periodEndHour = parseInt(period.endTime?.split(':')[0] || '24');
+        
+        // Check if selected time falls within period
+        const timeMatches = selectedHour >= periodStartHour && selectedHour < periodEndHour;
+        
+        // Check if any selected weekday matches period weekdays
+        const dayMatches = selectedWeekdaysList.some(day => 
+          period.weekdays?.includes(day) || period.day === day
+        );
+
+        return timeMatches && dayMatches;
+      });
+    });
+  };
+
+  const availableTeachers = getAvailableTeachers();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Convert weekDays object to array of day names
+    const weekdaysArray = Object.keys(formData.weekDays)
+      .filter(day => formData.weekDays[day]);
+    
     // Include course details in submission
     const submitData = {
       ...formData,
+      weekdays: weekdaysArray, // Convert to array format expected by backend
+      deliveryMode: formData.type === 'in-person' ? 'in_person' : formData.type,
+      endTime: calculateEndTime(formData.startTime, parseInt(formData.duration)),
       title: selectedCourse?.title || '',
       level: selectedCourse?.level || '',
       language: selectedCourse?.language || ''
     };
     onSubmit(submitData);
+  };
+
+  // Helper function to calculate end time from start time and duration
+  const calculateEndTime = (startTime: string, durationMinutes: number) => {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + durationMinutes;
+    const endHours = Math.floor(totalMinutes / 60);
+    const endMinutes = totalMinutes % 60;
+    return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -860,7 +965,14 @@ function ClassScheduleForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="teacher">{t('classScheduling.availableTeachers')}</Label>
+          <Label htmlFor="teacher">
+            {t('classScheduling.availableTeachers')} 
+            {availableTeachers.length < teachers.length && 
+              <span className="text-sm text-muted-foreground ml-2">
+                ({availableTeachers.length} of {teachers.length} available)
+              </span>
+            }
+          </Label>
           <Select 
             value={formData.teacherId} 
             onValueChange={(v) => setFormData({ ...formData, teacherId: v })}
@@ -869,17 +981,32 @@ function ClassScheduleForm({
               <SelectValue placeholder={t('classScheduling.selectAvailableTeacher')} />
             </SelectTrigger>
             <SelectContent>
-              {teachers.map((teacher: Teacher) => (
-                <SelectItem key={teacher.id} value={teacher.id.toString()}>
-                  {teacher.name} {teacher.availabilityPeriods && teacher.availabilityPeriods.length > 0 && 
-                    `(${teacher.availabilityPeriods.length} availability periods)`}
-                </SelectItem>
-              ))}
+              {availableTeachers.length === 0 ? (
+                <div className="p-2 text-sm text-muted-foreground">
+                  No teachers available for selected time and days
+                </div>
+              ) : (
+                availableTeachers.map((teacher: Teacher) => (
+                  <SelectItem key={teacher.id} value={teacher.id.toString()}>
+                    {teacher.name || `${teacher.firstName} ${teacher.lastName}`}
+                    {teacher.availabilityPeriods && teacher.availabilityPeriods.length > 0 && 
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({teacher.availabilityPeriods.length} slots)
+                      </span>
+                    }
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
-          {formData.teacherId && (
-            <div className="text-sm text-green-600 bg-green-50 p-2 rounded">
-              ✓ Teacher has availability periods matching the selected schedule
+          {formData.teacherId && availableTeachers.find(t => t.id.toString() === formData.teacherId) && (
+            <div className="text-sm text-green-600 bg-green-50 dark:bg-green-900/20 p-2 rounded">
+              ✓ Teacher is available for the selected schedule
+            </div>
+          )}
+          {formData.teacherId && !availableTeachers.find(t => t.id.toString() === formData.teacherId) && (
+            <div className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-2 rounded">
+              ⚠ Teacher may not be available for all selected days/times
             </div>
           )}
         </div>
