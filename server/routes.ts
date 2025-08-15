@@ -10385,10 +10385,10 @@ Return JSON format:
   app.post('/api/admin/games/:id/generate-questions', authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { id } = req.params;
-      const { count = 10 } = req.body;
+      const { count = 10, levelNumber = 1 } = req.body;
       const { GameService } = await import('./game-service');
-      const gameService = new GameService(storage);
-      const questions = await gameService.generateGameQuestions(Number(id), 1, count);
+      const gameService = new GameService();
+      const questions = await gameService.generateQuestionsForGame(Number(id), levelNumber, count);
       res.json({ message: `Generated ${questions.length} questions`, questions });
     } catch (error) {
       console.error('Error generating game questions:', error);

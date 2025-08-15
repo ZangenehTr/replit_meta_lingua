@@ -862,6 +862,7 @@ export class MemStorage implements IStorage {
   private rooms: Map<number, any>;
   private games: Map<number, any>;
   private gameSessions: Map<number, any>;
+  private gameQuestions: Map<number, any>;
   private currentId: number;
 
   constructor() {
@@ -884,6 +885,7 @@ export class MemStorage implements IStorage {
     this.rooms = new Map();
     this.games = new Map();
     this.gameSessions = new Map();
+    this.gameQuestions = new Map();
     this.currentId = 1;
     this.initializeData();
   }
@@ -3619,6 +3621,66 @@ export class MemStorage implements IStorage {
     };
     this.gameSessions.set(id, newSession);
     return newSession;
+  }
+
+  // Game Questions - Real game content
+  async createGameQuestion(question: InsertGameQuestion): Promise<GameQuestion> {
+    const id = this.currentId++;
+    const newQuestion = {
+      id,
+      ...question,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.gameQuestions.set(id, newQuestion);
+    return newQuestion;
+  }
+
+  async getGameQuestions(gameId: number, levelId?: number): Promise<GameQuestion[]> {
+    const questions = Array.from(this.gameQuestions.values())
+      .filter(q => q.gameId === gameId);
+    
+    if (levelId !== undefined) {
+      return questions.filter(q => q.levelNumber === levelId);
+    }
+    
+    return questions;
+  }
+
+  async getRandomGameQuestions(gameId: number, count: number, difficulty?: string): Promise<GameQuestion[]> {
+    let questions = Array.from(this.gameQuestions.values())
+      .filter(q => q.gameId === gameId);
+    
+    if (difficulty) {
+      questions = questions.filter(q => q.difficulty === difficulty);
+    }
+    
+    // Shuffle and return requested count
+    const shuffled = questions.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  }
+
+  async updateGameQuestion(id: number, question: Partial<InsertGameQuestion>): Promise<GameQuestion | undefined> {
+    const existing = this.gameQuestions.get(id);
+    if (existing) {
+      const updated = { ...existing, ...question, updatedAt: new Date() };
+      this.gameQuestions.set(id, updated);
+      return updated;
+    }
+    return undefined;
+  }
+
+  async deleteGameQuestion(id: number): Promise<boolean> {
+    return this.gameQuestions.delete(id);
+  }
+
+  async updateQuestionStats(questionId: number, isCorrect: boolean, responseTime: number): Promise<void> {
+    // In memory storage, we can track basic stats
+    const question = this.gameQuestions.get(questionId);
+    if (question) {
+      // Update stats (would be more complex in real DB)
+      console.log(`Question ${questionId} answered: ${isCorrect ? 'correct' : 'incorrect'} in ${responseTime}ms`);
+    }
   }
 
   // Communication methods (missing from interface)
