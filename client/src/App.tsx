@@ -35,6 +35,7 @@ import { IranianComplianceSettings } from "@/pages/admin/iranian-compliance-sett
 import { FinancialReportsPage } from "@/pages/admin/FinancialReportsPage";
 import AIServicesManagement from "@/pages/admin/AIServicesManagement";
 import GamesManagement from "@/pages/admin/games-management";
+import { GameAccessControl } from "@/pages/admin/game-access-control";
 import AdminTeacherPaymentsPage from "@/pages/admin/teacher-payments";
 import WhiteLabelPage from "@/pages/admin/white-label";
 import SupervisionPage from "@/pages/admin/supervision";
@@ -252,6 +253,11 @@ function Router() {
       <Route path="/admin/games-management">
         <ProtectedRoute>
           <GamesManagement />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/game-access-control">
+        <ProtectedRoute>
+          <GameAccessControl />
         </ProtectedRoute>
       </Route>
       

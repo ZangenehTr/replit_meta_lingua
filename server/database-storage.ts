@@ -45,7 +45,7 @@ import {
   type TestAttempt, type InsertTestAttempt, type TestAnswer, type InsertTestAnswer,
   // Gamification types
   games, gameLevels, userGameProgress, gameSessions, gameLeaderboards,
-  gameQuestions, gameAnswerLogs,
+  gameQuestions, gameAnswerLogs, gameAccessRules, studentGameAssignments, courseGames,
   type Game, type InsertGame, type GameLevel, type InsertGameLevel,
   type UserGameProgress, type InsertUserGameProgress, type GameSession, type InsertGameSession,
   type GameLeaderboard, type InsertGameLeaderboard,
@@ -5487,6 +5487,234 @@ export class DatabaseStorage implements IStorage {
   async deleteGame(id: number): Promise<boolean> {
     const result = await db.delete(games).where(eq(games.id, id));
     return result.rowCount > 0;
+  }
+
+  // Game Access Control Methods
+  async getStudentAccessibleGames(studentId: number): Promise<Game[]> {
+    try {
+      // Get student details (age, level, enrolled courses)
+      const student = await this.getUserById(studentId);
+      if (!student) return [];
+
+      // Calculate student age if birthday exists
+      let studentAge: number | null = null;
+      if (student.birthday) {
+        const today = new Date();
+        const birthDate = new Date(student.birthday);
+        studentAge = today.getFullYear() - birthDate.getFullYear();
+      }
+
+      // Get student's enrolled courses
+      const enrollments = await db.query.classEnrollments?.findMany({
+        where: eq(classEnrollments.studentId, studentId),
+        with: {
+          class: {
+            with: {
+              course: true
+            }
+          }
+        }
+      }) || [];
+      
+      const courseIds = enrollments.map(e => e.class?.course?.id).filter(Boolean);
+
+      // 1. Get directly assigned games
+      const directAssignments = await db
+        .select({ gameId: studentGameAssignments.gameId })
+        .from(studentGameAssignments)
+        .where(
+          and(
+            eq(studentGameAssignments.studentId, studentId),
+            eq(studentGameAssignments.isAccessible, true),
+            or(
+              isNull(studentGameAssignments.accessStartDate),
+              lte(studentGameAssignments.accessStartDate, new Date())
+            ),
+            or(
+              isNull(studentGameAssignments.accessEndDate),
+              gte(studentGameAssignments.accessEndDate, new Date())
+            )
+          )
+        );
+
+      // 2. Get course-based games
+      const courseGameIds = courseIds.length > 0 
+        ? await db
+            .select({ gameId: courseGames.gameId })
+            .from(courseGames)
+            .where(
+              and(
+                inArray(courseGames.courseId, courseIds),
+                eq(courseGames.isActive, true)
+              )
+            )
+        : [];
+
+      // 3. Get games based on access rules
+      const ruleBasedGames = await db
+        .select({ gameId: gameAccessRules.gameId })
+        .from(gameAccessRules)
+        .where(
+          and(
+            eq(gameAccessRules.isActive, true),
+            or(
+              // Default games (shown to all)
+              eq(gameAccessRules.isDefault, true),
+              // Level-based rules
+              and(
+                student.level ? 
+                  and(
+                    or(isNull(gameAccessRules.minLevel), lte(gameAccessRules.minLevel, student.level)),
+                    or(isNull(gameAccessRules.maxLevel), gte(gameAccessRules.maxLevel, student.level))
+                  ) : sql`true`,
+              ),
+              // Age-based rules
+              and(
+                studentAge ?
+                  and(
+                    or(isNull(gameAccessRules.minAge), lte(gameAccessRules.minAge, studentAge)),
+                    or(isNull(gameAccessRules.maxAge), gte(gameAccessRules.maxAge, studentAge))
+                  ) : sql`true`,
+              ),
+              // Course-based rules
+              courseIds.length > 0 ?
+                inArray(gameAccessRules.courseId, courseIds) : sql`false`
+            )
+          )
+        );
+
+      // Combine all game IDs
+      const allGameIds = new Set([
+        ...directAssignments.map(a => a.gameId),
+        ...courseGameIds.map(c => c.gameId),
+        ...ruleBasedGames.map(r => r.gameId)
+      ]);
+
+      // Fetch the actual games
+      if (allGameIds.size === 0) return [];
+
+      return await db
+        .select()
+        .from(games)
+        .where(
+          and(
+            inArray(games.id, Array.from(allGameIds)),
+            eq(games.isActive, true)
+          )
+        )
+        .orderBy(games.gameName);
+    } catch (error) {
+      console.error('Error getting student accessible games:', error);
+      return [];
+    }
+  }
+
+  async createGameAccessRule(rule: any): Promise<any> {
+    const [newRule] = await db.insert(gameAccessRules).values(rule).returning();
+    return newRule;
+  }
+
+  async getGameAccessRules(gameId?: number): Promise<any[]> {
+    if (gameId) {
+      return await db
+        .select()
+        .from(gameAccessRules)
+        .where(eq(gameAccessRules.gameId, gameId))
+        .orderBy(gameAccessRules.ruleName);
+    }
+    return await db.select().from(gameAccessRules).orderBy(gameAccessRules.ruleName);
+  }
+
+  async updateGameAccessRule(id: number, updates: any): Promise<any> {
+    const [updatedRule] = await db
+      .update(gameAccessRules)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(gameAccessRules.id, id))
+      .returning();
+    return updatedRule;
+  }
+
+  async deleteGameAccessRule(id: number): Promise<void> {
+    await db.delete(gameAccessRules).where(eq(gameAccessRules.id, id));
+  }
+
+  async assignGameToStudent(assignment: any): Promise<any> {
+    const [newAssignment] = await db.insert(studentGameAssignments).values(assignment).returning();
+    return newAssignment;
+  }
+
+  async getStudentGameAssignments(studentId: number): Promise<any[]> {
+    return await db
+      .select({
+        id: studentGameAssignments.id,
+        gameId: studentGameAssignments.gameId,
+        game: games,
+        assignedBy: studentGameAssignments.assignedBy,
+        assignmentType: studentGameAssignments.assignmentType,
+        isAccessible: studentGameAssignments.isAccessible,
+        accessStartDate: studentGameAssignments.accessStartDate,
+        accessEndDate: studentGameAssignments.accessEndDate,
+        targetScore: studentGameAssignments.targetScore,
+        targetCompletionDate: studentGameAssignments.targetCompletionDate,
+        isCompleted: studentGameAssignments.isCompleted,
+        completedAt: studentGameAssignments.completedAt,
+        notes: studentGameAssignments.notes,
+        createdAt: studentGameAssignments.createdAt
+      })
+      .from(studentGameAssignments)
+      .leftJoin(games, eq(studentGameAssignments.gameId, games.id))
+      .where(eq(studentGameAssignments.studentId, studentId))
+      .orderBy(studentGameAssignments.createdAt);
+  }
+
+  async updateStudentGameAssignment(id: number, updates: any): Promise<any> {
+    const [updatedAssignment] = await db
+      .update(studentGameAssignments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(studentGameAssignments.id, id))
+      .returning();
+    return updatedAssignment;
+  }
+
+  async removeStudentGameAssignment(id: number): Promise<void> {
+    await db.delete(studentGameAssignments).where(eq(studentGameAssignments.id, id));
+  }
+
+  async assignGameToCourse(courseGameData: any): Promise<any> {
+    const [newCourseGame] = await db.insert(courseGames).values(courseGameData).returning();
+    return newCourseGame;
+  }
+
+  async getCourseGames(courseId: number): Promise<any[]> {
+    return await db
+      .select({
+        id: courseGames.id,
+        gameId: courseGames.gameId,
+        game: games,
+        isRequired: courseGames.isRequired,
+        orderIndex: courseGames.orderIndex,
+        minScoreRequired: courseGames.minScoreRequired,
+        weekNumber: courseGames.weekNumber,
+        moduleNumber: courseGames.moduleNumber,
+        isActive: courseGames.isActive
+      })
+      .from(courseGames)
+      .leftJoin(games, eq(courseGames.gameId, games.id))
+      .where(eq(courseGames.courseId, courseId))
+      .orderBy(courseGames.orderIndex);
+  }
+
+  async updateCourseGame(id: number, updates: any): Promise<any> {
+    const [updatedCourseGame] = await db
+      .update(courseGames)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(courseGames.id, id))
+      .returning();
+    return updatedCourseGame;
+  }
+
+  async removeCourseGame(id: number): Promise<void> {
+    await db.delete(courseGames).where(eq(courseGames.id, id));
   }
 
   // Missing gamification methods

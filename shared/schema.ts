@@ -1516,6 +1516,79 @@ export const gameLeaderboards = pgTable("game_leaderboards", {
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+// Game Access Rules - Define automatic rules for game visibility
+export const gameAccessRules = pgTable("game_access_rules", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").references(() => games.id).notNull(),
+  ruleName: varchar("rule_name", { length: 255 }).notNull(),
+  ruleType: varchar("rule_type", { length: 50 }).notNull(), // 'level', 'age', 'course', 'manual', 'all'
+  
+  // Rule criteria
+  minLevel: varchar("min_level", { length: 10 }), // A1, A2, B1, B2, C1, C2
+  maxLevel: varchar("max_level", { length: 10 }),
+  minAge: integer("min_age"),
+  maxAge: integer("max_age"),
+  courseId: integer("course_id").references(() => courses.id),
+  languages: jsonb("languages"), // array of language codes
+  
+  // Additional settings
+  isDefault: boolean("is_default").default(false), // Show to all students by default
+  requiresUnlock: boolean("requires_unlock").default(false), // Must be unlocked through progress
+  unlockCriteria: jsonb("unlock_criteria"), // {minGamesCompleted: 5, minLevel: 'B1', prerequisiteGames: [1,2,3]}
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Student Game Assignments - Direct assignment of games to students
+export const studentGameAssignments = pgTable("student_game_assignments", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  gameId: integer("game_id").references(() => games.id).notNull(),
+  
+  // Assignment details
+  assignedBy: integer("assigned_by").references(() => users.id).notNull(), // Admin or teacher who assigned
+  assignmentType: varchar("assignment_type", { length: 50 }).notNull(), // 'required', 'optional', 'practice', 'homework'
+  
+  // Access control
+  isAccessible: boolean("is_accessible").default(true),
+  accessStartDate: timestamp("access_start_date"),
+  accessEndDate: timestamp("access_end_date"),
+  
+  // Progress tracking
+  targetScore: integer("target_score"),
+  targetCompletionDate: date("target_completion_date"),
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  
+  // Notes
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Course Games - Associate games with courses
+export const courseGames = pgTable("course_games", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  gameId: integer("game_id").references(() => games.id).notNull(),
+  
+  // Configuration
+  isRequired: boolean("is_required").default(false),
+  orderIndex: integer("order_index"), // Display order in course
+  minScoreRequired: integer("min_score_required"), // Minimum score to consider complete
+  
+  // Availability
+  weekNumber: integer("week_number"), // Which week of the course this game is for
+  moduleNumber: integer("module_number"), // Which module/unit this game belongs to
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Game Questions Table - Stores actual game content
 export const gameQuestions = pgTable("game_questions", {
   id: serial("id").primaryKey(),

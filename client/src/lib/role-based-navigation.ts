@@ -56,6 +56,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
     // Games Management
     { path: "/admin/games-management", icon: "Gamepad2", label: t('common:navigation.gamesManagement'), roles: ["Admin", "Supervisor"] },
     
+    // Game Access Control
+    { path: "/admin/game-access-control", icon: "Settings", label: t('common:navigation.gameAccessControl'), roles: ["Admin"] },
+    
     // Callern Video Call Management
     { path: "/admin/callern-management", icon: "Video", label: t('common:navigation.callernManagement'), roles: ["Admin", "Supervisor"] },
     
