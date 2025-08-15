@@ -1516,6 +1516,172 @@ export const gameLeaderboards = pgTable("game_leaderboards", {
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+// Game Questions Table - Stores actual game content
+export const gameQuestions = pgTable("game_questions", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").references(() => games.id).notNull(),
+  levelId: integer("level_id").references(() => gameLevels.id),
+  
+  // Question metadata
+  questionType: varchar("question_type", { length: 50 }).notNull(), // multiple_choice, fill_blank, matching, ordering, translation
+  difficulty: varchar("difficulty", { length: 20 }).notNull(), // easy, medium, hard, expert
+  language: varchar("language", { length: 10 }).notNull(),
+  skillFocus: varchar("skill_focus", { length: 50 }).notNull(), // vocabulary, grammar, pronunciation, comprehension
+  
+  // Question content
+  question: text("question").notNull(),
+  questionAudio: varchar("question_audio", { length: 500 }), // for listening exercises
+  questionImage: varchar("question_image", { length: 500 }), // for visual learning
+  
+  // Answer options
+  options: jsonb("options"), // Array of {id, text, audio, image}
+  correctAnswer: jsonb("correct_answer").notNull(), // Can be string, array, or object
+  alternativeAnswers: jsonb("alternative_answers"), // Acceptable alternatives
+  
+  // Feedback
+  explanation: text("explanation"),
+  hint: text("hint"),
+  teachingPoint: text("teaching_point"), // Grammar rule or vocabulary context
+  
+  // Scoring
+  basePoints: integer("base_points").default(10),
+  timeLimit: integer("time_limit"), // seconds, null for no limit
+  bonusPoints: integer("bonus_points").default(5), // for quick answers
+  
+  // Usage tracking
+  timesUsed: integer("times_used").default(0),
+  correctRate: decimal("correct_rate", { precision: 5, scale: 2 }),
+  averageTime: decimal("average_time", { precision: 5, scale: 2 }), // seconds
+  
+  // AI enhancement
+  aiGenerated: boolean("ai_generated").default(false),
+  aiPrompt: text("ai_prompt"), // Prompt used to generate question
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Daily Challenges Table
+export const gameDailyChallenges = pgTable("game_daily_challenges", {
+  id: serial("id").primaryKey(),
+  challengeDate: date("challenge_date").notNull().unique(),
+  
+  // Challenge configuration
+  challengeName: varchar("challenge_name", { length: 255 }).notNull(),
+  description: text("description"),
+  challengeType: varchar("challenge_type", { length: 50 }).notNull(), // score_based, time_based, accuracy_based, streak_based
+  
+  // Target settings
+  targetGameId: integer("target_game_id").references(() => games.id),
+  targetScore: integer("target_score"),
+  targetTime: integer("target_time"), // seconds
+  targetAccuracy: decimal("target_accuracy", { precision: 5, scale: 2 }),
+  targetStreak: integer("target_streak"),
+  
+  // Difficulty and rewards
+  difficulty: varchar("difficulty", { length: 20 }).notNull(), // easy, medium, hard
+  xpReward: integer("xp_reward").default(100),
+  coinsReward: integer("coins_reward").default(50),
+  badgeId: integer("badge_id").references(() => achievements.id),
+  
+  // Participation tracking
+  totalParticipants: integer("total_participants").default(0),
+  totalCompletions: integer("total_completions").default(0),
+  averageScore: decimal("average_score", { precision: 10, scale: 2 }),
+  
+  // Featured content
+  featuredQuestions: jsonb("featured_questions"), // Array of question IDs
+  bonusMultiplier: decimal("bonus_multiplier", { precision: 3, scale: 2 }).default(1.5),
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// User Daily Challenge Progress
+export const userDailyChallengeProgress = pgTable("user_daily_challenge_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  challengeId: integer("challenge_id").references(() => gameDailyChallenges.id).notNull(),
+  
+  // Progress tracking
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  
+  // Performance
+  score: integer("score").default(0),
+  timeSpent: integer("time_spent"), // seconds
+  accuracy: decimal("accuracy", { precision: 5, scale: 2 }),
+  streak: integer("streak").default(0),
+  
+  // Completion status
+  isCompleted: boolean("is_completed").default(false),
+  completionPercentage: decimal("completion_percentage", { precision: 5, scale: 2 }).default(0),
+  
+  // Rewards claimed
+  xpClaimed: integer("xp_claimed").default(0),
+  coinsClaimed: integer("coins_claimed").default(0),
+  badgeClaimed: boolean("badge_claimed").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Game Answer Logs - Track every answer for analytics
+export const gameAnswerLogs = pgTable("game_answer_logs", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => gameSessions.id).notNull(),
+  questionId: integer("question_id").references(() => gameQuestions.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  
+  // Answer details
+  userAnswer: jsonb("user_answer").notNull(),
+  isCorrect: boolean("is_correct").notNull(),
+  responseTime: integer("response_time").notNull(), // milliseconds
+  
+  // Points and feedback
+  pointsEarned: integer("points_earned").default(0),
+  hintUsed: boolean("hint_used").default(false),
+  attemptsCount: integer("attempts_count").default(1),
+  
+  // AI assistance (if used)
+  aiAssisted: boolean("ai_assisted").default(false),
+  aiResponse: jsonb("ai_response"),
+  
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Insert schemas for game system
+export const insertGameQuestionSchema = createInsertSchema(gameQuestions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertGameDailyChallengeSchema = createInsertSchema(gameDailyChallenges).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertUserDailyChallengeProgressSchema = createInsertSchema(userDailyChallengeProgress).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertGameAnswerLogSchema = createInsertSchema(gameAnswerLogs).omit({
+  id: true,
+  createdAt: true
+});
+
+// Game system types
+export type GameQuestion = typeof gameQuestions.$inferSelect;
+export type InsertGameQuestion = z.infer<typeof insertGameQuestionSchema>;
+export type GameDailyChallenge = typeof gameDailyChallenges.$inferSelect;
+export type InsertGameDailyChallenge = z.infer<typeof insertGameDailyChallengeSchema>;
+export type UserDailyChallengeProgress = typeof userDailyChallengeProgress.$inferSelect;
+export type InsertUserDailyChallengeProgress = z.infer<typeof insertUserDailyChallengeProgressSchema>;
+export type GameAnswerLog = typeof gameAnswerLogs.$inferSelect;
+export type InsertGameAnswerLog = z.infer<typeof insertGameAnswerLogSchema>;
+
 // ===== VIDEO-BASED COURSES SUBSYSTEM =====
 
 // Video Lessons
