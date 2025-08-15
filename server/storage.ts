@@ -473,6 +473,7 @@ export interface IStorage {
   getGamesByLevel(level: string): Promise<Game[]>;
   getGamesByFilters(filters: { ageGroup?: string, gameType?: string, level?: string, language?: string }): Promise<Game[]>;
   updateGame(id: number, game: Partial<InsertGame>): Promise<Game | undefined>;
+  getGameAnalytics(gameId: number): Promise<any>;
   
   // Game levels
   createGameLevel(level: InsertGameLevel): Promise<GameLevel>;
@@ -3564,6 +3565,48 @@ export class MemStorage implements IStorage {
       return updatedGame;
     }
     return undefined;
+  }
+
+  async getGameAnalytics(gameId: number): Promise<any> {
+    const sessions = Array.from(this.gameSessions.values())
+      .filter(s => s.gameId === gameId);
+    
+    const totalPlays = sessions.length;
+    const scores = sessions.map(s => s.score);
+    const averageScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+    const completionRate = sessions.filter(s => s.isCompleted).length / Math.max(totalPlays, 1) * 100;
+    
+    // Get top players
+    const playerScores = new Map<number, { name: string; score: number }>();
+    sessions.forEach(s => {
+      const user = this.users.get(s.userId);
+      if (user) {
+        const current = playerScores.get(s.userId) || { name: `${user.firstName} ${user.lastName}`, score: 0 };
+        playerScores.set(s.userId, {
+          name: current.name,
+          score: Math.max(current.score, s.score)
+        });
+      }
+    });
+    
+    const topPlayers = Array.from(playerScores.values())
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+    
+    // Question stats (mock for now)
+    const questionStats = [];
+    
+    // Daily plays (last 7 days)
+    const dailyPlays = [];
+    
+    return {
+      totalPlays,
+      averageScore,
+      completionRate,
+      topPlayers,
+      questionStats,
+      dailyPlays
+    };
   }
 
   async createGameSession(session: InsertGameSession): Promise<GameSession> {
