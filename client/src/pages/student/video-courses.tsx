@@ -61,7 +61,7 @@ interface VideoLesson {
 }
 
 export default function StudentVideoCourses() {
-  const { t, ready: translationsReady } = useTranslation(['student', 'common']);
+  const { t, ready: translationsReady } = useTranslation('student');
   const [, navigate] = useLocation();
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<number | null>(null);
@@ -103,7 +103,7 @@ export default function StudentVideoCourses() {
 
   // Group lessons by module
   const groupedLessons = lessons.reduce((acc, lesson) => {
-    const moduleKey = lesson.moduleName || t('student:videoCourses.generalModule');
+    const moduleKey = lesson.moduleName || t('videoCourses.generalModule');
     if (!acc[moduleKey]) {
       acc[moduleKey] = [];
     }
@@ -170,7 +170,7 @@ export default function StudentVideoCourses() {
                 onClick={() => setSelectedLesson(null)}
                 className="text-xs sm:text-sm px-2 sm:px-3"
               >
-                {t('student:videoCourses.backToCourse')}
+                {t('videoCourses.backToCourse')}
               </Button>
               <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="truncate">{lessons.find(l => l.id === selectedLesson)?.title}</span>
@@ -209,7 +209,7 @@ export default function StudentVideoCourses() {
                 onClick={() => setSelectedCourse(null)}
                 className="mb-2 sm:mb-4 text-xs sm:text-sm px-2 sm:px-3"
               >
-                ← {t('student:videoCourses.backToCourses')}
+                ← {t('videoCourses.backToCourses')}
               </Button>
               
               {course && (
@@ -226,7 +226,7 @@ export default function StudentVideoCourses() {
                     <div className="flex items-center gap-6 mt-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Video className="h-4 w-4" />
-                        {course.totalLessons} {t('student:videoCourses.lessons')}
+                        {course.totalLessons} {t('videoCourses.lessons')}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
@@ -234,7 +234,7 @@ export default function StudentVideoCourses() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
-                        {course.enrolledStudents} {t('student:videoCourses.students')}
+                        {course.enrolledStudents} {t('videoCourses.students')}
                       </span>
                       <span className="flex items-center gap-1">
                         <Star className="h-4 w-4 text-yellow-500" />
@@ -244,7 +244,7 @@ export default function StudentVideoCourses() {
                     
                     <div className="mt-4">
                       <div className="flex justify-between text-sm mb-1">
-                        <span>{t('student:videoCourses.progress')}</span>
+                        <span>{t('videoCourses.progress')}</span>
                         <span>{course.progress}%</span>
                       </div>
                       <Progress value={course.progress} className="h-2" />
@@ -257,7 +257,7 @@ export default function StudentVideoCourses() {
             {/* Lessons List - Mobile responsive */}
             <Card>
               <CardHeader className="p-3 sm:p-4 lg:p-6">
-                <CardTitle className="text-base sm:text-lg lg:text-xl">{t('student:videoCourses.courseLessons')}</CardTitle>
+                <CardTitle className="text-base sm:text-lg lg:text-xl">{t('videoCourses.courseLessons')}</CardTitle>
               </CardHeader>
               <CardContent className="p-2 sm:p-4 lg:p-6">
                 {lessonsLoading ? (
@@ -311,7 +311,7 @@ export default function StudentVideoCourses() {
                                   </span>
                                   {lesson.isFree && (
                                     <Badge variant="secondary" className="text-[9px] sm:text-[10px] lg:text-xs px-1.5 py-0.5">
-                                      {t('student:videoCourses.free')}
+                                      {t('videoCourses.free')}
                                     </Badge>
                                   )}
                                   <Button 
@@ -319,7 +319,7 @@ export default function StudentVideoCourses() {
                                     variant={lesson.completed ? "outline" : "default"}
                                     className="text-[10px] sm:text-xs lg:text-sm px-2 py-1 sm:px-3 sm:py-1.5 h-6 sm:h-7 lg:h-8"
                                   >
-                                    {lesson.completed ? t('student:videoCourses.review') : t('student:videoCourses.watch')}
+                                    {lesson.completed ? t('videoCourses.review') : t('videoCourses.watch')}
                                   </Button>
                                 </div>
                               </div>
@@ -346,8 +346,8 @@ export default function StudentVideoCourses() {
         <div className="max-w-7xl mx-auto">
           {/* Page Header - Mobile optimized */}
           <div className="mb-4 sm:mb-6 lg:mb-8">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">{t('student:videoCourses.title')}</h1>
-            <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">{t('student:videoCourses.subtitle')}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">{t('videoCourses.title')}</h1>
+            <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">{t('videoCourses.subtitle')}</p>
           </div>
 
           {/* Search and Filters - Mobile responsive */}
@@ -355,7 +355,7 @@ export default function StudentVideoCourses() {
             <div className="relative flex-1 max-w-full sm:max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3 sm:h-4 sm:w-4" />
               <Input
-                placeholder={t('student:videoCourses.searchPlaceholder')}
+                placeholder={t('videoCourses.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 sm:pl-10 text-sm sm:text-base"
@@ -364,9 +364,9 @@ export default function StudentVideoCourses() {
             
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
-                <TabsTrigger value="all">{t('student:videoCourses.allCourses')}</TabsTrigger>
-                <TabsTrigger value="in-progress">{t('student:videoCourses.inProgress')}</TabsTrigger>
-                <TabsTrigger value="completed">{t('student:videoCourses.completed')}</TabsTrigger>
+                <TabsTrigger value="all">{t('videoCourses.allCourses')}</TabsTrigger>
+                <TabsTrigger value="in-progress">{t('videoCourses.inProgress')}</TabsTrigger>
+                <TabsTrigger value="completed">{t('videoCourses.completed')}</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -379,10 +379,10 @@ export default function StudentVideoCourses() {
           ) : filteredCourses.length === 0 ? (
             <Card className="p-12 text-center">
               <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">{t('student:videoCourses.noCourses')}</h3>
-              <p className="text-muted-foreground">{t('student:videoCourses.noCoursesDescription')}</p>
+              <h3 className="text-lg font-semibold mb-2">{t('videoCourses.noCourses')}</h3>
+              <p className="text-muted-foreground">{t('videoCourses.noCoursesDescription')}</p>
               <Button className="mt-4" onClick={() => navigate('/courses')}>
-                {t('student:videoCourses.browseCourses')}
+                {t('videoCourses.browseCourses')}
               </Button>
             </Card>
           ) : (
@@ -442,7 +442,7 @@ export default function StudentVideoCourses() {
                       <div className="mb-2 sm:mb-3">
                         <Progress value={course.progress} className="h-1.5 sm:h-2" />
                         <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
-                          {course.completedLessons}/{course.totalLessons} {t('student:videoCourses.lessonsCompleted')}
+                          {course.completedLessons}/{course.totalLessons} {t('videoCourses.lessonsCompleted')}
                         </p>
                       </div>
                     )}
