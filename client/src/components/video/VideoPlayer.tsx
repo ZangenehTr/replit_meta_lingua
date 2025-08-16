@@ -181,7 +181,7 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
 
   // Load saved progress when video loads
   useEffect(() => {
-    if (videoRef.current && progress) {
+    if (videoRef.current && progress && typeof progress.watchTime === 'number' && isFinite(progress.watchTime) && progress.watchTime >= 0) {
       videoRef.current.currentTime = progress.watchTime;
       setCurrentTime(progress.watchTime);
     }
@@ -193,16 +193,20 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
       if (videoRef.current && isPlaying) {
         const watchTime = videoRef.current.currentTime;
         const totalDuration = videoRef.current.duration;
-        const completed = watchTime / totalDuration > 0.9;
+        
+        // Only save progress if we have valid numbers
+        if (isFinite(watchTime) && isFinite(totalDuration) && totalDuration > 0) {
+          const completed = watchTime / totalDuration > 0.9;
 
-        updateProgressMutation.mutate({
-          watchTime,
-          totalDuration,
-          completed
-        });
+          updateProgressMutation.mutate({
+            watchTime,
+            totalDuration,
+            completed
+          });
 
-        if (completed && onComplete) {
-          onComplete();
+          if (completed && onComplete) {
+            onComplete();
+          }
         }
       }
     }, 10000); // Save every 10 seconds
