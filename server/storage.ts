@@ -114,6 +114,7 @@ export interface IStorage {
   // Courses
   getCourses(): Promise<Course[]>;
   getCourse(id: number): Promise<Course | undefined>;
+  getCoursesByDeliveryMode(mode: string): Promise<Course[]>;
   getUserCourses(userId: number): Promise<(Course & { progress: number })[]>;
   createCourse(course: InsertCourse): Promise<Course>;
   updateCourse(id: number, updates: Partial<Course>): Promise<Course | undefined>;
@@ -1196,6 +1197,10 @@ export class MemStorage implements IStorage {
 
   async getCourse(id: number): Promise<Course | undefined> {
     return this.courses.get(id);
+  }
+
+  async getCoursesByDeliveryMode(mode: string): Promise<Course[]> {
+    return Array.from(this.courses.values()).filter(course => course.deliveryMode === mode);
   }
 
   async getUserCourses(userId: number): Promise<(Course & { progress: number })[]> {

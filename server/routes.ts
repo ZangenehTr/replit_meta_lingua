@@ -17444,6 +17444,173 @@ Meta Lingua Academy`;
       res.status(500).json({ message: "Failed to fetch tutors" });
     }
   });
+
+  // Student Video Courses endpoints
+  app.get("/api/student/video-courses", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const student = await storage.getStudentByUserId(req.user.id);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Get all video courses (self-paced courses)
+      const courses = await storage.getCoursesByDeliveryMode('self_paced');
+      
+      // For now, return all published video courses
+      // In the future, you might want to filter by enrolled courses only
+      const publishedCourses = courses.filter((c: any) => c.isPublished);
+      
+      // Add progress info (placeholder for now)
+      const coursesWithProgress = publishedCourses.map((course: any) => ({
+        ...course,
+        progress: 0, // This would be calculated from video watch progress
+        enrolledAt: new Date().toISOString(),
+        totalLessons: 0, // Will be updated when we fetch lessons
+        completedLessons: 0
+      }));
+
+      res.json(coursesWithProgress);
+    } catch (error) {
+      console.error("Error fetching student video courses:", error);
+      res.status(500).json({ message: "Failed to fetch video courses" });
+    }
+  });
+
+  // Get video lessons for a course
+  app.get("/api/courses/:courseId/video-lessons", authenticateToken, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      
+      // Fetch lessons for the course
+      const lessons = await storage.getVideoLessonsByCourse(courseId);
+      
+      // Add progress and module info
+      const lessonsWithProgress = lessons.map((lesson: any) => ({
+        ...lesson,
+        isCompleted: false, // This would be tracked in user progress
+        progress: 0,
+        moduleName: lesson.moduleId ? `Module ${lesson.moduleId}` : null
+      }));
+
+      res.json(lessonsWithProgress);
+    } catch (error) {
+      console.error("Error fetching video lessons:", error);
+      res.status(500).json({ message: "Failed to fetch video lessons" });
+    }
+  });
+
+  // Get specific video lesson
+  app.get("/api/videos/:videoId", authenticateToken, async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.videoId);
+      const lesson = await storage.getVideoLesson(videoId);
+      
+      if (!lesson) {
+        return res.status(404).json({ message: "Video lesson not found" });
+      }
+
+      res.json(lesson);
+    } catch (error) {
+      console.error("Error fetching video lesson:", error);
+      res.status(500).json({ message: "Failed to fetch video lesson" });
+    }
+  });
+
+  // Track video progress
+  app.post("/api/videos/:videoId/progress", authenticateToken, async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.videoId);
+      const { currentTime, duration, completed } = req.body;
+      
+      // In a real implementation, you would store this in a userVideoProgress table
+      // For now, just acknowledge the update
+      res.json({
+        videoId,
+        currentTime,
+        duration,
+        completed,
+        progress: Math.round((currentTime / duration) * 100)
+      });
+    } catch (error) {
+      console.error("Error updating video progress:", error);
+      res.status(500).json({ message: "Failed to update progress" });
+    }
+  });
+
+  // Get video progress
+  app.get("/api/videos/:videoId/progress", authenticateToken, async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.videoId);
+      
+      // Return default progress for now
+      res.json({
+        videoId,
+        currentTime: 0,
+        duration: 0,
+        completed: false,
+        progress: 0
+      });
+    } catch (error) {
+      console.error("Error fetching video progress:", error);
+      res.status(500).json({ message: "Failed to fetch progress" });
+    }
+  });
+
+  // Video notes endpoints
+  app.get("/api/videos/:videoId/notes", authenticateToken, async (req: any, res) => {
+    try {
+      // Return empty array for now
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch notes" });
+    }
+  });
+
+  app.post("/api/videos/:videoId/notes", authenticateToken, async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.videoId);
+      const { timestamp, content } = req.body;
+      
+      // Acknowledge note creation
+      res.status(201).json({
+        id: Date.now(),
+        videoId,
+        timestamp,
+        content,
+        createdAt: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create note" });
+    }
+  });
+
+  // Video bookmarks endpoints
+  app.get("/api/videos/:videoId/bookmarks", authenticateToken, async (req: any, res) => {
+    try {
+      // Return empty array for now
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch bookmarks" });
+    }
+  });
+
+  app.post("/api/videos/:videoId/bookmarks", authenticateToken, async (req: any, res) => {
+    try {
+      const videoId = parseInt(req.params.videoId);
+      const { timestamp, title } = req.body;
+      
+      // Acknowledge bookmark creation
+      res.status(201).json({
+        id: Date.now(),
+        videoId,
+        timestamp,
+        title,
+        createdAt: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create bookmark" });
+    }
+  });
   
   // Setup roadmap routes
   setupRoadmapRoutes(app, authenticateToken, requireRole);
