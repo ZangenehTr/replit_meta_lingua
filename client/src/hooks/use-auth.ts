@@ -62,23 +62,29 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials) => {
-      const response = await apiClient.post("/auth/login", credentials);
-      const data = response.data;
-      
-      // Store both tokens - handle different response formats
-      if (data.accessToken) {
-        localStorage.setItem("auth_token", data.accessToken);
-      } else if (data.auth_token) {
-        localStorage.setItem("auth_token", data.auth_token);
+      try {
+        const response = await apiClient.post("/auth/login", credentials);
+        const data = response.data;
+        
+        // Store both tokens - handle different response formats
+        if (data.accessToken) {
+          localStorage.setItem("auth_token", data.accessToken);
+        } else if (data.auth_token) {
+          localStorage.setItem("auth_token", data.auth_token);
+        }
+        
+        if (data.refreshToken) {
+          localStorage.setItem("refresh_token", data.refreshToken);
+        } else if (data.refresh_token) {
+          localStorage.setItem("refresh_token", data.refresh_token);
+        }
+        
+        return data;
+      } catch (error: any) {
+        // Properly throw the error so the auth page can display it
+        const errorMessage = error.response?.data?.message || error.message || "Login failed";
+        throw new Error(errorMessage);
       }
-      
-      if (data.refreshToken) {
-        localStorage.setItem("refresh_token", data.refreshToken);
-      } else if (data.refresh_token) {
-        localStorage.setItem("refresh_token", data.refresh_token);
-      }
-      
-      return data;
     },
     onSuccess: async (data) => {
       // Immediately invalidate and refetch the user data
