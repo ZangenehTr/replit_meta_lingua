@@ -521,6 +521,7 @@
     "enterCourseDescription": "Enter full course description",
     "instructor": "Instructor",
     "selectInstructor": "Select Instructor",
+    "autoAssigned": "Auto-assigned",
     "selectLanguage": "Select Language",
     "selectLevel": "Select Level",
     "category": "Category",
