@@ -274,6 +274,10 @@ export class DatabaseStorage implements IStorage {
     return course;
   }
 
+  async getCoursesByDeliveryMode(mode: string): Promise<Course[]> {
+    return await db.select().from(courses).where(eq(courses.deliveryMode, mode));
+  }
+
   async getUserCourses(userId: number): Promise<(Course & { progress: number })[]> {
     try {
       // First check if the user has any enrollments to avoid complex join failures
