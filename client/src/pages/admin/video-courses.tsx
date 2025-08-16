@@ -642,7 +642,7 @@ export default function AdminVideoCourses() {
     defaultValues: {
       title: "",
       description: "",
-      instructorId: 0,
+      instructorId: user?.role === 'Teacher/Tutor' ? user?.id : 0,
       language: "fa",
       level: "beginner",
       category: "language",
@@ -736,7 +736,11 @@ export default function AdminVideoCourses() {
   const totalLessons = courses.reduce((sum: number, c: any) => sum + (c.lessons?.length || 0), 0);
 
   const handleCreateCourse = (data: any) => {
-    createCourseMutation.mutate(data);
+    // For teachers, always use their own ID as instructor
+    const courseData = user?.role === 'Teacher/Tutor' 
+      ? { ...data, instructorId: user.id }
+      : data;
+    createCourseMutation.mutate(courseData);
   };
 
   const handleEditCourse = (course: any) => {
@@ -972,20 +976,33 @@ export default function AdminVideoCourses() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('admin:videoCourses.instructor')}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value?.toString()}>
+                      {user?.role === 'Teacher/Tutor' ? (
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('admin:videoCourses.selectInstructor')} />
-                          </SelectTrigger>
+                          <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-muted">
+                            <span className="text-sm">
+                              {user.firstName} {user.lastName}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              ({t('admin:videoCourses.autoAssigned', 'Auto-assigned')})
+                            </span>
+                          </div>
                         </FormControl>
-                        <SelectContent>
-                          {instructors.map((instructor: any) => (
-                            <SelectItem key={instructor.id} value={instructor.id.toString()}>
-                              {instructor.firstName} {instructor.lastName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      ) : (
+                        <Select onValueChange={field.onChange} value={field.value?.toString()}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t('admin:videoCourses.selectInstructor')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {instructors.map((instructor: any) => (
+                              <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                                {instructor.firstName} {instructor.lastName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
