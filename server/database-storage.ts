@@ -4942,7 +4942,7 @@ export class DatabaseStorage implements IStorage {
   async getVideoLessonsByCourse(courseId: number): Promise<VideoLesson[]> {
     return await db.select().from(videoLessons)
       .where(eq(videoLessons.courseId, courseId))
-      .orderBy(videoLessons.order);
+      .orderBy(videoLessons.orderIndex);
   }
 
   async updateVideoLesson(id: number, lesson: Partial<InsertVideoLesson>): Promise<VideoLesson | undefined> {

@@ -42,7 +42,6 @@ import {
   ChevronDown,
   List,
   Grid,
-  DragHandleDots2Icon,
   GripVertical,
   MoreVertical,
   Settings,
@@ -117,7 +116,7 @@ function VideoCourseCard({ course, onEdit, onDelete, onTogglePublish, onManageLe
           <div className="flex-1">
             <CardTitle className="text-lg flex items-center gap-2">
               {course.title}
-              <Badge variant={course.isPublished ? "success" : "secondary"}>
+              <Badge variant={course.isPublished ? "default" : "secondary"}>
                 {course.isPublished ? t('admin:videoCourses.published') : t('admin:videoCourses.draft')}
               </Badge>
             </CardTitle>
@@ -656,49 +655,31 @@ export default function AdminVideoCourses() {
     }
   });
 
-  // Fetch courses - in real app, this would include lessons
+  // Fetch courses - includes lessons from the API
   const { data: courses = [], isLoading: coursesLoading } = useQuery({
     queryKey: ['/api/admin/video-courses', { search: searchTerm, level: filterLevel, status: filterStatus }],
     queryFn: async () => {
-      // Simulate API call with mock data
-      return [
-        {
-          id: 1,
-          title: "Complete Persian Language Course",
-          description: "Learn Persian from beginner to advanced level",
-          instructor: { id: 1, name: "Dr. Ahmad Rezaei" },
-          language: "fa",
-          level: "beginner",
-          category: "language",
-          price: 1500000,
-          isPublished: true,
-          lessons: [
-            { id: 1, title: "Introduction to Persian Alphabet", duration: 1200, isFree: true },
-            { id: 2, title: "Basic Greetings", duration: 900, isFree: false },
-            { id: 3, title: "Numbers and Counting", duration: 1500, isFree: false }
-          ]
-        },
-        {
-          id: 2,
-          title: "Advanced English Conversation",
-          description: "Master English conversation skills",
-          instructor: { id: 2, name: "Sarah Johnson" },
-          language: "en",
-          level: "advanced",
-          category: "language",
-          price: 2000000,
-          isPublished: false,
-          lessons: []
-        }
-      ];
+      const queryParams = new URLSearchParams();
+      if (searchTerm) queryParams.append('search', searchTerm);
+      if (filterLevel !== 'all') queryParams.append('level', filterLevel);
+      
+      const response = await fetch(`/api/admin/video-courses?${queryParams.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch video courses');
+      const data = await response.json();
+      
+      // Map instructor data properly
+      return data.map((course: any) => ({
+        ...course,
+        instructor: instructors?.find((i: any) => i.id === course.instructorId) || null
+      }));
     }
   });
 
   // Fetch instructors
   const { data: instructors = [] } = useQuery({
-    queryKey: ['/api/users', { role: 'Teacher' }],
+    queryKey: ['/api/teachers/list'],
     queryFn: async () => {
-      const response = await fetch('/api/users?role=Teacher');
+      const response = await fetch('/api/teachers/list');
       if (!response.ok) throw new Error('Failed to fetch teachers');
       return response.json();
     }

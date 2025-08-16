@@ -4943,6 +4943,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Video Courses Endpoints (for Admin and Teachers)
+  
+  // Get all video courses
+  app.get("/api/admin/video-courses", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const { language, level, skillFocus, search } = req.query;
+      
+      // Get courses with deliveryMode = "self_paced"
+      const allCourses = await storage.getCourses();
+      let videoCourses = allCourses.filter((course: any) => course.deliveryMode === "self_paced");
+      
+      // Apply filters
+      if (language) {
+        videoCourses = videoCourses.filter((course: any) => course.language === language);
+      }
+      if (level) {
+        videoCourses = videoCourses.filter((course: any) => course.level === level);
+      }
+      if (search) {
+        const searchLower = search.toLowerCase();
+        videoCourses = videoCourses.filter((course: any) => 
+          course.title.toLowerCase().includes(searchLower) ||
+          course.description?.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      // For teachers, only show their own courses
+      if (req.user.role === 'Teacher/Tutor') {
+        videoCourses = videoCourses.filter((course: any) => course.instructorId === req.user.id);
+      }
+      
+      // Get video lessons for each course
+      for (const course of videoCourses) {
+        const lessons = await storage.getVideoLessonsByCourse(course.id);
+        course.lessons = lessons || [];
+        course.totalLessons = lessons?.length || 0;
+        course.totalDuration = lessons?.reduce((sum: number, lesson: any) => sum + (lesson.duration || 0), 0) || 0;
+      }
+      
+      res.json(videoCourses);
+    } catch (error) {
+      console.error('Error fetching video courses:', error);
+      res.status(500).json({ message: "Failed to fetch video courses" });
+    }
+  });
+  
+  // Create a video course
+  app.post("/api/admin/video-courses", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const { title, description, language, level, price, thumbnail, category, skillFocus, instructorId } = req.body;
+      
+      if (!title || !language || !level || !category) {
+        return res.status(400).json({ message: "Title, language, level, and category are required" });
+      }
+      
+      // Determine the instructor
+      let assignedInstructorId = instructorId;
+      if (req.user.role === 'Teacher/Tutor') {
+        // Teachers can only create courses for themselves
+        assignedInstructorId = req.user.id;
+      } else if (!instructorId) {
+        // Admin must provide an instructor
+        return res.status(400).json({ message: "Instructor is required" });
+      }
+      
+      // Generate a unique course code
+      const courseCode = `VID-${language.toUpperCase()}-${Date.now()}`;
+      
+      // Create the course with deliveryMode = "self_paced"
+      const newCourse = await storage.createCourse({
+        courseCode,
+        title,
+        description: description || '',
+        language,
+        level,
+        thumbnail: thumbnail || '',
+        instructorId: assignedInstructorId,
+        price: price || 0,
+        totalSessions: 0, // Video courses don't have sessions
+        sessionDuration: 0, // Video courses don't have session duration
+        deliveryMode: "self_paced", // This marks it as a video course
+        classFormat: "self_paced", // Video courses are self-paced
+        maxStudents: null, // No limit for video courses
+        targetLanguage: language,
+        targetLevel: [level],
+        category,
+        tags: skillFocus ? [skillFocus] : [],
+        isActive: true,
+        autoRecord: false,
+        recordingAvailable: true, // Videos are always available
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      res.status(201).json(newCourse);
+    } catch (error) {
+      console.error('Error creating video course:', error);
+      res.status(500).json({ message: "Failed to create video course" });
+    }
+  });
+  
+  // Update a video course
+  app.put("/api/admin/video-courses/:id", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const { title, description, language, level, price, thumbnail, category, skillFocus, instructorId } = req.body;
+      
+      // Get the existing course
+      const existingCourse = await storage.getCourseById(courseId);
+      if (!existingCourse) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Check permissions for teachers
+      if (req.user.role === 'Teacher/Tutor' && existingCourse.instructorId !== req.user.id) {
+        return res.status(403).json({ message: "You can only edit your own courses" });
+      }
+      
+      // Prepare update data
+      const updateData: any = {};
+      if (title) updateData.title = title;
+      if (description !== undefined) updateData.description = description;
+      if (language) updateData.language = language;
+      if (level) updateData.level = level;
+      if (price !== undefined) updateData.price = price;
+      if (thumbnail !== undefined) updateData.thumbnail = thumbnail;
+      if (category) updateData.category = category;
+      if (skillFocus) updateData.tags = [skillFocus];
+      
+      // Only admins can change the instructor
+      if (req.user.role === 'Admin' && instructorId) {
+        updateData.instructorId = instructorId;
+      }
+      
+      updateData.updatedAt = new Date();
+      
+      const updatedCourse = await storage.updateCourse(courseId, updateData);
+      res.json(updatedCourse);
+    } catch (error) {
+      console.error('Error updating video course:', error);
+      res.status(500).json({ message: "Failed to update video course" });
+    }
+  });
+  
+  // Delete a video course
+  app.delete("/api/admin/video-courses/:id", authenticateToken, requireRole(['Admin', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      
+      // Get the existing course
+      const existingCourse = await storage.getCourseById(courseId);
+      if (!existingCourse) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Check permissions for teachers
+      if (req.user.role === 'Teacher/Tutor' && existingCourse.instructorId !== req.user.id) {
+        return res.status(403).json({ message: "You can only delete your own courses" });
+      }
+      
+      // Delete all video lessons associated with this course
+      const lessons = await storage.getVideoLessonsByCourse(courseId);
+      for (const lesson of lessons) {
+        await storage.deleteVideoLesson(lesson.id);
+      }
+      
+      // Delete the course
+      await storage.deleteCourse(courseId);
+      
+      res.json({ message: "Video course deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting video course:', error);
+      res.status(500).json({ message: "Failed to delete video course" });
+    }
+  });
+
   // Get course module lessons
   app.get("/api/admin/courses/:courseId/modules/:moduleId/lessons", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
