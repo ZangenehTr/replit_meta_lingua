@@ -30,6 +30,7 @@ export const getStudentNavigation = (t: any): NavigationItem[] => [
 export const getTeacherNavigation = (t: any): NavigationItem[] => [
   { path: "/dashboard", icon: "Home", label: t('common:navigation.dashboard'), roles: ["Teacher/Tutor"] },
   { path: "/teacher/classes", icon: "Users", label: t('common:navigation.myClasses'), roles: ["Teacher/Tutor"] },
+  { path: "/admin/video-courses", icon: "Play", label: t('common:navigation.videoCourses'), roles: ["Teacher/Tutor"] },
   { path: "/teacher/schedule", icon: "Calendar", label: t('common:navigation.classScheduling'), roles: ["Teacher/Tutor"] },
   { path: "/teacher/assignments", icon: "ClipboardCheck", label: t('common:navigation.assignments'), roles: ["Teacher/Tutor"] },
   { path: "/teacher/students", icon: "GraduationCap", label: t('common:navigation.students'), roles: ["Teacher/Tutor"] },
