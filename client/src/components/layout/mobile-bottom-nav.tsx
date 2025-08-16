@@ -116,7 +116,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
   
   return (
     <nav className={cn(
-      "fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-t border-border safe-area-inset-bottom",
+      "fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border safe-area-inset-bottom",
       "md:hidden", // Only show on mobile
       className
     )}>
@@ -128,16 +128,20 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
           return (
             <button
               key={item.route}
-              onClick={() => setLocation(item.route)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setLocation(item.route);
+              }}
               className={cn(
-                "bottom-nav-item touch-friendly relative",
+                "flex flex-col items-center justify-center space-y-1 relative touch-target",
                 isActive 
                   ? "text-primary bg-primary/10" 
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground"
               )}
             >
               <div className="relative">
-                <Icon className="h-5 w-5 nav-icon" />
+                <Icon className="h-6 w-6" />
                 {item.badge && item.badge > 0 && (
                   <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
                     {item.badge > 99 ? '99+' : item.badge}
