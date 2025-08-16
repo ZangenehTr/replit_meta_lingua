@@ -61,7 +61,7 @@ interface VideoLesson {
 }
 
 export default function StudentVideoCourses() {
-  const { t } = useTranslation(['student', 'common']);
+  const { t, ready: translationsReady } = useTranslation(['student', 'common']);
   const [, navigate] = useLocation();
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<number | null>(null);
@@ -143,24 +143,37 @@ export default function StudentVideoCourses() {
     return `${mins}m`;
   };
 
+  // Wait for translations to be ready to prevent raw keys
+  if (!translationsReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p>{t('common:loading')}</p>
+        </div>
+      </div>
+    );
+  }
+
   // If a lesson is selected, show the video player
   if (selectedLesson) {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <Sidebar />
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+            {/* Breadcrumb - Mobile optimized */}
+            <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedLesson(null)}
+                className="text-xs sm:text-sm px-2 sm:px-3"
               >
                 {t('student:videoCourses.backToCourse')}
               </Button>
-              <ChevronRight className="h-4 w-4" />
-              <span>{lessons.find(l => l.id === selectedLesson)?.title}</span>
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="truncate">{lessons.find(l => l.id === selectedLesson)?.title}</span>
             </div>
 
             <VideoPlayer
@@ -186,15 +199,15 @@ export default function StudentVideoCourses() {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <Sidebar />
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
-            {/* Course Header */}
-            <div className="mb-6">
+            {/* Course Header - Mobile optimized */}
+            <div className="mb-3 sm:mb-6">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedCourse(null)}
-                className="mb-4"
+                className="mb-2 sm:mb-4 text-xs sm:text-sm px-2 sm:px-3"
               >
                 ← {t('student:videoCourses.backToCourses')}
               </Button>
