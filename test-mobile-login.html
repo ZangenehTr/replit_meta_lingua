@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Login Test</title>
+    <style>
+        body {
+            font-family: 'Vazir', 'Tahoma', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .success {
+            background: #f1f8f4;
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+        .error {
+            background: #ffebee;
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+        .info {
+            background: #e3f2fd;
+            color: #2196F3;
+            border: 1px solid #2196F3;
+        }
+        .status-info {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-size: 0.85rem;
+        }
+        .status-info div {
+            margin: 5px 0;
+        }
+        .token-display {
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.8rem;
+            background: #f5f5f5;
+            padding: 5px;
+            border-radius: 3px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>تست ورود دانشجو - موبایل</h1>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">ایمیل:</label>
+                <input type="email" id="email" value="student@test.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">رمز عبور:</label>
+                <input type="password" id="password" value="student123" required>
+            </div>
+            
+            <button type="submit" id="loginBtn">ورود</button>
+            <button type="button" onclick="checkAuth()">بررسی احراز هویت</button>
+            <button type="button" onclick="clearAuth()">پاک کردن توکن</button>
+            <button type="button" onclick="testRedirect()">تست انتقال به داشبورد</button>
+        </form>
+        
+        <div id="message"></div>
+        
+        <div class="status-info">
+            <div><strong>وضعیت localStorage:</strong> <span id="localStorageStatus">بررسی نشده</span></div>
+            <div><strong>توکن ذخیره شده:</strong> <span id="tokenStatus">بررسی نشده</span></div>
+            <div><strong>کاربر فعلی:</strong> <span id="userStatus">بررسی نشده</span></div>
+            <div id="tokenDisplay"></div>
+        </div>
+    </div>
+
+    <script>
+        // Check localStorage availability
+        function checkLocalStorage() {
+            try {
+                const test = 'test';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                document.getElementById('localStorageStatus').textContent = '✓ فعال';
+                return true;
+            } catch(e) {
+                document.getElementById('localStorageStatus').textContent = '✗ غیرفعال - ' + e.message;
+                return false;
+            }
+        }
+        
+        // Display message
+        function showMessage(text, type = 'info') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = text;
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = '';
+            }, 5000);
+        }
+        
+        // Check current auth status
+        async function checkAuth() {
+            const token = localStorage.getItem('auth_token');
+            const tokenStatus = document.getElementById('tokenStatus');
+            const userStatus = document.getElementById('userStatus');
+            const tokenDisplay = document.getElementById('tokenDisplay');
+            
+            if (!token) {
+                tokenStatus.textContent = '✗ توکن یافت نشد';
+                userStatus.textContent = '✗ کاربر وارد نشده';
+                tokenDisplay.innerHTML = '';
+                showMessage('توکن احراز هویت یافت نشد', 'error');
+                return;
+            }
+            
+            tokenStatus.textContent = '✓ توکن موجود است';
+            tokenDisplay.innerHTML = `<div class="token-display">توکن: ${token.substring(0, 50)}...</div>`;
+            
+            try {
+                const response = await fetch('/api/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    userStatus.textContent = `✓ ${user.email} (${user.role})`;
+                    showMessage(`کاربر فعال: ${user.email} - نقش: ${user.role}`, 'success');
+                } else {
+                    userStatus.textContent = '✗ توکن نامعتبر';
+                    showMessage('توکن نامعتبر است', 'error');
+                }
+            } catch (error) {
+                userStatus.textContent = '✗ خطا در بررسی: ' + error.message;
+                showMessage('خطا در بررسی احراز هویت: ' + error.message, 'error');
+            }
+        }
+        
+        // Clear authentication
+        function clearAuth() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('refresh_token');
+            checkAuth();
+            showMessage('توکن‌ها پاک شدند', 'info');
+        }
+        
+        // Test redirect
+        function testRedirect() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                showMessage('ابتدا وارد شوید', 'error');
+                return;
+            }
+            showMessage('در حال انتقال به داشبورد...', 'info');
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 1000);
+        }
+        
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'در حال ورود...';
+            
+            try {
+                showMessage('در حال ارسال درخواست ورود...', 'info');
+                
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store token
+                    if (data.auth_token) {
+                        localStorage.setItem('auth_token', data.auth_token);
+                        showMessage('✓ توکن ذخیره شد', 'success');
+                    } else if (data.accessToken) {
+                        localStorage.setItem('auth_token', data.accessToken);
+                        showMessage('✓ توکن ذخیره شد (accessToken)', 'success');
+                    }
+                    
+                    if (data.refresh_token) {
+                        localStorage.setItem('refresh_token', data.refresh_token);
+                    } else if (data.refreshToken) {
+                        localStorage.setItem('refresh_token', data.refreshToken);
+                    }
+                    
+                    showMessage(`✓ ورود موفق - ${data.user?.email || email} (${data.user?.role || data.user_role})`, 'success');
+                    
+                    // Check auth after login
+                    setTimeout(() => {
+                        checkAuth();
+                    }, 500);
+                    
+                    // Show redirect option
+                    setTimeout(() => {
+                        if (confirm('آیا می‌خواهید به داشبورد منتقل شوید؟')) {
+                            window.location.href = '/dashboard';
+                        }
+                    }, 1500);
+                    
+                } else {
+                    showMessage(`خطا: ${data.message || 'ورود ناموفق'}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`خطای شبکه: ${error.message}`, 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'ورود';
+            }
+        });
+        
+        // Check on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkLocalStorage();
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
