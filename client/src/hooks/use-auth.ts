@@ -85,8 +85,13 @@ export function useAuth() {
       await queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
       await queryClient.refetchQueries({ queryKey: ["/api/users/me"] });
       
-      // Force a hard refresh to ensure the app is in the correct state
-      window.location.href = "/dashboard";
+      // Redirect based on user role
+      const userRole = data.user?.role || data.user_role;
+      if (userRole?.toLowerCase() === 'student') {
+        window.location.href = "/dashboard";  // Students use the unified dashboard
+      } else {
+        window.location.href = "/dashboard";  // All roles use unified dashboard
+      }
     },
   });
 
