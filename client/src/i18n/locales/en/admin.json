@@ -570,7 +570,12 @@
     "showLessons": "Show Lessons",
     "noLessonsYet": "This course has no lessons yet",
     "addFirstLesson": "Add First Lesson",
-    "unpublish": "Unpublish"
+    "unpublish": "Unpublish",
+    "durationDetected": "Video duration detected",
+    "videoUrlHelp": "Enter video path or URL. Duration will be detected automatically.",
+    "autoDetected": "Auto-detected",
+    "lessonAddFailed": "Failed to add lesson. Please try again.",
+    "videoUrl": "Video URL"
   },
   "games": {
     "title": "Games Management",
