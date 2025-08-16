@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -655,35 +655,32 @@ export default function AdminVideoCourses() {
     }
   });
 
-  // Fetch courses - includes lessons from the API
-  const { data: courses = [], isLoading: coursesLoading } = useQuery({
-    queryKey: ['/api/admin/video-courses', { search: searchTerm, level: filterLevel, status: filterStatus }],
-    queryFn: async () => {
-      const queryParams = new URLSearchParams();
-      if (searchTerm) queryParams.append('search', searchTerm);
-      if (filterLevel !== 'all') queryParams.append('level', filterLevel);
-      
-      const response = await fetch(`/api/admin/video-courses?${queryParams.toString()}`);
-      if (!response.ok) throw new Error('Failed to fetch video courses');
-      const data = await response.json();
-      
-      // Map instructor data properly
-      return data.map((course: any) => ({
-        ...course,
-        instructor: instructors?.find((i: any) => i.id === course.instructorId) || null
-      }));
-    }
+  // Fetch instructors first
+  const { data: instructors = [] } = useQuery({
+    queryKey: ['/api/teachers/list']
   });
 
-  // Fetch instructors
-  const { data: instructors = [] } = useQuery({
-    queryKey: ['/api/teachers/list'],
-    queryFn: async () => {
-      const response = await fetch('/api/teachers/list');
-      if (!response.ok) throw new Error('Failed to fetch teachers');
-      return response.json();
-    }
+  // Build query string for courses
+  const queryParams = useMemo(() => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.append('search', searchTerm);
+    if (filterLevel !== 'all') params.append('level', filterLevel);
+    return params.toString();
+  }, [searchTerm, filterLevel]);
+  
+  // Fetch courses - includes lessons from the API
+  const queryUrl = queryParams ? `/api/admin/video-courses?${queryParams}` : '/api/admin/video-courses';
+  const { data: coursesData = [], isLoading: coursesLoading } = useQuery({
+    queryKey: [queryUrl]
   });
+  
+  // Map instructor data to courses
+  const courses = useMemo(() => {
+    return coursesData.map((course: any) => ({
+      ...course,
+      instructor: instructors?.find((i: any) => i.id === course.instructorId) || null
+    }));
+  }, [coursesData, instructors]);
 
   // Create course mutation
   const createCourseMutation = useMutation({
