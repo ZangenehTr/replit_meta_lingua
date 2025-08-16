@@ -9,7 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sidebar } from '@/components/layout/sidebar';
+import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
 import VideoPlayer from '@/components/video/VideoPlayer';
 import { apiRequest } from '@/lib/queryClient';
 import {
@@ -61,7 +61,7 @@ interface VideoLesson {
 }
 
 export default function StudentVideoCourses() {
-  const { t, ready: translationsReady } = useTranslation('student');
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<number | null>(null);
@@ -143,25 +143,12 @@ export default function StudentVideoCourses() {
     return `${mins}m`;
   };
 
-  // Wait for translations to be ready to prevent raw keys
-  if (!translationsReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p>{t('common:loading')}</p>
-        </div>
-      </div>
-    );
-  }
-
   // If a lesson is selected, show the video player
   if (selectedLesson) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <Sidebar />
-        <main className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="pb-16 md:pb-0">
+          <div className="container mx-auto px-4 py-4 md:py-8">
             {/* Breadcrumb - Mobile optimized */}
             <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-4">
               <Button
@@ -170,7 +157,7 @@ export default function StudentVideoCourses() {
                 onClick={() => setSelectedLesson(null)}
                 className="text-xs sm:text-sm px-2 sm:px-3"
               >
-                {t('videoCourses.backToCourse')}
+                {t('student:videoCourses.backToCourse')}
               </Button>
               <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="truncate">{lessons.find(l => l.id === selectedLesson)?.title}</span>
@@ -187,7 +174,8 @@ export default function StudentVideoCourses() {
               }}
             />
           </div>
-        </main>
+        </div>
+        <MobileBottomNav />
       </div>
     );
   }
@@ -197,10 +185,9 @@ export default function StudentVideoCourses() {
     const course = courses.find(c => c.id === selectedCourse);
     
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <Sidebar />
-        <main className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="pb-16 md:pb-0">
+          <div className="container mx-auto px-4 py-4 md:py-8">
             {/* Course Header - Mobile optimized */}
             <div className="mb-3 sm:mb-6">
               <Button
@@ -209,7 +196,7 @@ export default function StudentVideoCourses() {
                 onClick={() => setSelectedCourse(null)}
                 className="mb-2 sm:mb-4 text-xs sm:text-sm px-2 sm:px-3"
               >
-                ← {t('videoCourses.backToCourses')}
+                ← {t('student:videoCourses.backToCourses')}
               </Button>
               
               {course && (
@@ -226,7 +213,7 @@ export default function StudentVideoCourses() {
                     <div className="flex items-center gap-6 mt-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Video className="h-4 w-4" />
-                        {course.totalLessons} {t('videoCourses.lessons')}
+                        {course.totalLessons} {t('student:videoCourses.lessons')}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
@@ -234,7 +221,7 @@ export default function StudentVideoCourses() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
-                        {course.enrolledStudents} {t('videoCourses.students')}
+                        {course.enrolledStudents} {t('student:videoCourses.students')}
                       </span>
                       <span className="flex items-center gap-1">
                         <Star className="h-4 w-4 text-yellow-500" />
@@ -244,7 +231,7 @@ export default function StudentVideoCourses() {
                     
                     <div className="mt-4">
                       <div className="flex justify-between text-sm mb-1">
-                        <span>{t('videoCourses.progress')}</span>
+                        <span>{t('student:videoCourses.progress')}</span>
                         <span>{course.progress}%</span>
                       </div>
                       <Progress value={course.progress} className="h-2" />
@@ -257,7 +244,7 @@ export default function StudentVideoCourses() {
             {/* Lessons List - Mobile responsive */}
             <Card>
               <CardHeader className="p-3 sm:p-4 lg:p-6">
-                <CardTitle className="text-base sm:text-lg lg:text-xl">{t('videoCourses.courseLessons')}</CardTitle>
+                <CardTitle className="text-base sm:text-lg lg:text-xl">{t('student:videoCourses.courseLessons')}</CardTitle>
               </CardHeader>
               <CardContent className="p-2 sm:p-4 lg:p-6">
                 {lessonsLoading ? (
@@ -311,7 +298,7 @@ export default function StudentVideoCourses() {
                                   </span>
                                   {lesson.isFree && (
                                     <Badge variant="secondary" className="text-[9px] sm:text-[10px] lg:text-xs px-1.5 py-0.5">
-                                      {t('videoCourses.free')}
+                                      {t('student:videoCourses.free')}
                                     </Badge>
                                   )}
                                   <Button 
@@ -319,7 +306,7 @@ export default function StudentVideoCourses() {
                                     variant={lesson.completed ? "outline" : "default"}
                                     className="text-[10px] sm:text-xs lg:text-sm px-2 py-1 sm:px-3 sm:py-1.5 h-6 sm:h-7 lg:h-8"
                                   >
-                                    {lesson.completed ? t('videoCourses.review') : t('videoCourses.watch')}
+                                    {lesson.completed ? t('student:videoCourses.review') : t('student:videoCourses.watch')}
                                   </Button>
                                 </div>
                               </div>
@@ -333,21 +320,21 @@ export default function StudentVideoCourses() {
               </CardContent>
             </Card>
           </div>
-        </main>
+        </div>
+        <MobileBottomNav />
       </div>
     );
   }
 
   // Course listing view
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <Sidebar />
-      <main className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="pb-16 md:pb-0">
+        <div className="container mx-auto px-4 py-4 md:py-8">
           {/* Page Header - Mobile optimized */}
           <div className="mb-4 sm:mb-6 lg:mb-8">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">{t('videoCourses.title')}</h1>
-            <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">{t('videoCourses.subtitle')}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">{t('student:videoCourses.title')}</h1>
+            <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">{t('student:videoCourses.subtitle')}</p>
           </div>
 
           {/* Search and Filters - Mobile responsive */}
@@ -355,7 +342,7 @@ export default function StudentVideoCourses() {
             <div className="relative flex-1 max-w-full sm:max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3 sm:h-4 sm:w-4" />
               <Input
-                placeholder={t('videoCourses.searchPlaceholder')}
+                placeholder={t('student:videoCourses.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 sm:pl-10 text-sm sm:text-base"
@@ -364,9 +351,9 @@ export default function StudentVideoCourses() {
             
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
-                <TabsTrigger value="all">{t('videoCourses.allCourses')}</TabsTrigger>
-                <TabsTrigger value="in-progress">{t('videoCourses.inProgress')}</TabsTrigger>
-                <TabsTrigger value="completed">{t('videoCourses.completed')}</TabsTrigger>
+                <TabsTrigger value="all">{t('student:videoCourses.allCourses')}</TabsTrigger>
+                <TabsTrigger value="in-progress">{t('student:videoCourses.inProgress')}</TabsTrigger>
+                <TabsTrigger value="completed">{t('student:videoCourses.completed')}</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -379,10 +366,10 @@ export default function StudentVideoCourses() {
           ) : filteredCourses.length === 0 ? (
             <Card className="p-12 text-center">
               <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">{t('videoCourses.noCourses')}</h3>
-              <p className="text-muted-foreground">{t('videoCourses.noCoursesDescription')}</p>
+              <h3 className="text-lg font-semibold mb-2">{t('student:videoCourses.noCourses')}</h3>
+              <p className="text-muted-foreground">{t('student:videoCourses.noCoursesDescription')}</p>
               <Button className="mt-4" onClick={() => navigate('/courses')}>
-                {t('videoCourses.browseCourses')}
+                {t('student:videoCourses.browseCourses')}
               </Button>
             </Card>
           ) : (
@@ -442,7 +429,7 @@ export default function StudentVideoCourses() {
                       <div className="mb-2 sm:mb-3">
                         <Progress value={course.progress} className="h-1.5 sm:h-2" />
                         <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
-                          {course.completedLessons}/{course.totalLessons} {t('videoCourses.lessonsCompleted')}
+                          {course.completedLessons}/{course.totalLessons} {t('student:videoCourses.lessonsCompleted')}
                         </p>
                       </div>
                     )}
@@ -461,7 +448,8 @@ export default function StudentVideoCourses() {
             </div>
           )}
         </div>
-      </main>
+      </div>
+      <MobileBottomNav />
     </div>
   );
 }
