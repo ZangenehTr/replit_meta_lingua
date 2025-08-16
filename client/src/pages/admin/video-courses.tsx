@@ -318,7 +318,13 @@ function LessonManagementDialog({ course, open, onClose }: any) {
       setIsAddingLesson(false);
       // Refresh both courses and lessons
       refetchLessons();
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/video-courses'] });
+      // Invalidate all video courses queries (including those with query params)
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey[0] as string;
+          return key && key.includes('/api/admin/video-courses');
+        }
+      });
       queryClient.invalidateQueries({ queryKey: [`/api/admin/courses/${course.id}/lessons`] });
       queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
     },
