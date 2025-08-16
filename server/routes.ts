@@ -13624,6 +13624,32 @@ Return JSON format:
   // VIDEO COURSES SUBSYSTEM
   // =====================================================
 
+  // Admin endpoints for video lessons
+  app.post("/api/admin/video-lessons", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const lessonData = req.body;
+      const newLesson = await storage.createVideoLesson(lessonData);
+      res.status(201).json(newLesson);
+    } catch (error: any) {
+      console.error('Error creating video lesson:', error);
+      res.status(500).json({ 
+        message: 'Failed to create video lesson',
+        error: error.message 
+      });
+    }
+  });
+
+  app.get("/api/admin/courses/:courseId/lessons", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { courseId } = req.params;
+      const lessons = await storage.getVideoLessonsByCourse(Number(courseId));
+      res.json(lessons || []);
+    } catch (error: any) {
+      console.error('Error fetching lessons:', error);
+      res.json([]); // Return empty array on error
+    }
+  });
+
   // Get all video lessons for a teacher
   app.get("/api/teacher/video-lessons", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
