@@ -4794,7 +4794,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new course
-  app.post("/api/admin/courses", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+  app.post("/api/admin/courses", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const courseData = req.body;
       
@@ -13624,8 +13624,8 @@ Return JSON format:
   // VIDEO COURSES SUBSYSTEM
   // =====================================================
 
-  // Admin endpoints for video lessons
-  app.post("/api/admin/video-lessons", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+  // Admin and Teacher endpoints for video lessons
+  app.post("/api/admin/video-lessons", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const lessonData = req.body;
       const newLesson = await storage.createVideoLesson(lessonData);
@@ -13639,7 +13639,7 @@ Return JSON format:
     }
   });
 
-  app.get("/api/admin/courses/:courseId/lessons", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+  app.get("/api/admin/courses/:courseId/lessons", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const { courseId } = req.params;
       const lessons = await storage.getVideoLessonsByCourse(Number(courseId));
