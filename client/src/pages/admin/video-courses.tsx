@@ -86,7 +86,7 @@ const videoLessonSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   videoUrl: z.string().min(1, "Video URL is required"),
-  duration: z.coerce.number().min(1, "Duration is required (in seconds)"),
+  duration: z.coerce.number().min(0, "Duration must be non-negative"),
   orderIndex: z.coerce.number().min(0, "Order must be non-negative"),
   isFree: z.boolean().default(false)
 });
@@ -442,7 +442,7 @@ function LessonManagementDialog({ course, open, onClose }: any) {
                               <FormLabel>
                                 {t('admin:videoCourses.duration')} 
                                 <span className="text-xs text-muted-foreground ml-1">
-                                  ({t('admin:videoCourses.autoDetected', 'Auto-detected')})
+                                  ({t('admin:videoCourses.inSeconds', 'in seconds')})
                                 </span>
                               </FormLabel>
                               <FormControl>
@@ -450,9 +450,7 @@ function LessonManagementDialog({ course, open, onClose }: any) {
                                   <Input 
                                     {...field} 
                                     type="number" 
-                                    placeholder="0" 
-                                    readOnly
-                                    className="bg-muted"
+                                    placeholder="60" 
                                   />
                                   {field.value > 0 && (
                                     <div className="text-xs text-muted-foreground">
