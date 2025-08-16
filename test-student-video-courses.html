@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Video Courses Test</title>
+    <style>
+        body {
+            font-family: 'Vazir', 'Tahoma', sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .success {
+            color: #4CAF50;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            background: #f1f8f4;
+        }
+        .error {
+            color: #f44336;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #f44336;
+            border-radius: 4px;
+            background: #ffebee;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .actions {
+            margin: 20px 0;
+        }
+        #result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>تست صفحه دوره‌های ویدیویی دانشجو</h1>
+        
+        <div class="actions">
+            <button onclick="loginAsStudent()">ورود به عنوان دانشجو</button>
+            <button onclick="getVideoCourses()">دریافت دوره‌های ویدیویی</button>
+            <button onclick="openVideoCoursesPage()">باز کردن صفحه دوره‌های ویدیویی</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const studentToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQzLCJlbWFpbCI6InN0dWRlbnRAdGVzdC5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1NTM1OTczNiwiZXhwIjoxNzU1NDQ2MTM2fQ.f1LTaDeM9Rq2TjKI60gWJ03SH6hHlyO4sI9sq3KfKbo';
+        
+        function showResult(message, isSuccess = true) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="${isSuccess ? 'success' : 'error'}">${message}</div>`;
+        }
+        
+        async function loginAsStudent() {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'student@test.com',
+                        password: 'student123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('auth_token', data.auth_token);
+                    showResult(`✓ ورود موفق به عنوان: ${data.user.email} (${data.user.role})`);
+                } else {
+                    showResult('خطا در ورود: ' + JSON.stringify(data), false);
+                }
+            } catch (error) {
+                showResult('خطا: ' + error.message, false);
+            }
+        }
+        
+        async function getVideoCourses() {
+            try {
+                const token = localStorage.getItem('auth_token') || studentToken;
+                const response = await fetch('/api/student/video-courses', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✓ دوره‌های ویدیویی دریافت شد:<pre>${JSON.stringify(data, null, 2)}</pre>`);
+                } else {
+                    showResult('خطا: ' + JSON.stringify(data), false);
+                }
+            } catch (error) {
+                showResult('خطا: ' + error.message, false);
+            }
+        }
+        
+        function openVideoCoursesPage() {
+            // Set the student token before navigating
+            localStorage.setItem('auth_token', studentToken);
+            window.location.href = '/video-courses';
+        }
+    </script>
+</body>
+</html>
