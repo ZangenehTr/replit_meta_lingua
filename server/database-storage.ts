@@ -5079,9 +5079,34 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(videoLessons.createdAt));
   }
 
-  async getAllVideoLessons(): Promise<VideoLesson[]> {
-    return await db.select().from(videoLessons)
-      .orderBy(desc(videoLessons.createdAt));
+  async getAllVideoLessons(filters?: {
+    courseId?: number;
+    teacherId?: number;
+    level?: string;
+    isPublished?: boolean;
+  }): Promise<VideoLesson[]> {
+    let query = db.select().from(videoLessons);
+
+    // Apply filters
+    const conditions = [];
+    if (filters?.courseId) {
+      conditions.push(eq(videoLessons.courseId, filters.courseId));
+    }
+    if (filters?.teacherId) {
+      conditions.push(eq(videoLessons.teacherId, filters.teacherId));
+    }
+    if (filters?.level) {
+      conditions.push(eq(videoLessons.level, filters.level));
+    }
+    if (filters?.isPublished !== undefined) {
+      conditions.push(eq(videoLessons.isPublished, filters.isPublished));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    return await query.orderBy(desc(videoLessons.createdAt));
   }
 
   async getCourseVideoLessons(courseId: number): Promise<VideoLesson[]> {
