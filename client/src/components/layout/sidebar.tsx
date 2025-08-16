@@ -86,6 +86,11 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
 
+  // Students should not have a sidebar - they use mobile bottom navigation
+  if (user?.role?.toLowerCase() === 'student') {
+    return null;
+  }
+
   // Use react-i18next translation function with correct namespace
   const navigationItems = user ? getNavigationForRole(user.role, t) : [];
 
