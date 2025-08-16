@@ -38,11 +38,14 @@ export default function TeacherSchedulePage() {
     queryKey: ["/api/teacher/classes"],
   });
 
-  const { data: availability = [], isLoading: availabilityLoading } = useQuery({
+  const { data: availability = [], isLoading: availabilityLoading } = useQuery<any[]>({
     queryKey: ["/api/teacher/availability"],
   });
 
-
+  // Get today's sessions
+  const today = new Date();
+  const todayString = today.toISOString().split('T')[0];
+  const sessions = classes.filter(session => session.date === todayString);
 
   const getWeekDays = () => {
     const startOfWeek = new Date(selectedDate);
