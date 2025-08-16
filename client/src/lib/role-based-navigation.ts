@@ -50,6 +50,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
     // Course & Curriculum Management
     { path: "/admin/courses", icon: "BookOpen", label: t('common:navigation.courseManagement'), roles: ["Admin", "Supervisor", "Teacher/Tutor"] },
     
+    // Video Courses Management
+    { path: "/admin/video-courses", icon: "Play", label: t('common:navigation.videoCourses'), roles: ["Admin", "Supervisor"] },
+    
     // Class Scheduling & Management
     { path: "/admin/classes", icon: "Calendar", label: t('common:navigation.classScheduling'), roles: ["Admin", "Supervisor"] },
     

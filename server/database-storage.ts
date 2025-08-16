@@ -5079,6 +5079,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(videoLessons.createdAt));
   }
 
+  async getAllVideoLessons(): Promise<VideoLesson[]> {
+    return await db.select().from(videoLessons)
+      .orderBy(desc(videoLessons.createdAt));
+  }
+
   async getCourseVideoLessons(courseId: number): Promise<VideoLesson[]> {
     return await db.select().from(videoLessons)
       .where(eq(videoLessons.courseId, courseId))

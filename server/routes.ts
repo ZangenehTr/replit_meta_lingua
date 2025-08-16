@@ -15699,6 +15699,121 @@ Meta Lingua Academy`;
     }
   });
 
+  // ==================== ADMIN VIDEO LESSONS MANAGEMENT ====================
+  
+  // Get all video lessons with optional filters
+  app.get("/api/admin/video-lessons", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { courseId, level, isPublished } = req.query;
+      let lessons = await storage.getAllVideoLessons();
+      
+      // Apply filters
+      if (courseId) {
+        lessons = lessons.filter(l => l.courseId === Number(courseId));
+      }
+      if (level) {
+        lessons = lessons.filter(l => l.level === level);
+      }
+      if (isPublished !== undefined) {
+        lessons = lessons.filter(l => l.isPublished === (isPublished === 'true'));
+      }
+      
+      res.json(lessons);
+    } catch (error) {
+      console.error('Error fetching video lessons:', error);
+      res.status(500).json({ message: "Failed to fetch video lessons" });
+    }
+  });
+
+  // Get video lessons statistics
+  app.get("/api/admin/video-lessons/stats", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const lessons = await storage.getAllVideoLessons();
+      const totalLessons = lessons.length;
+      const publishedLessons = lessons.filter(l => l.isPublished).length;
+      const totalViews = lessons.reduce((sum, l) => sum + (l.viewCount || 0), 0);
+      const avgCompletionRate = lessons.length > 0 
+        ? Math.round(lessons.reduce((sum, l) => sum + (l.completionRate || 0), 0) / lessons.length)
+        : 0;
+      
+      res.json({
+        totalLessons,
+        publishedLessons,
+        totalViews,
+        avgCompletionRate
+      });
+    } catch (error) {
+      console.error('Error fetching video lesson stats:', error);
+      res.status(500).json({ message: "Failed to fetch video lesson statistics" });
+    }
+  });
+
+  // Create a new video lesson
+  app.post("/api/admin/video-lessons", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const lessonData = req.body;
+      const lesson = await storage.createVideoLesson(lessonData);
+      res.status(201).json(lesson);
+    } catch (error) {
+      console.error('Error creating video lesson:', error);
+      res.status(500).json({ message: "Failed to create video lesson" });
+    }
+  });
+
+  // Update a video lesson
+  app.put("/api/admin/video-lessons/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const lessonId = Number(req.params.id);
+      const updates = req.body;
+      const updatedLesson = await storage.updateVideoLesson(lessonId, updates);
+      
+      if (!updatedLesson) {
+        return res.status(404).json({ message: "Video lesson not found" });
+      }
+      
+      res.json(updatedLesson);
+    } catch (error) {
+      console.error('Error updating video lesson:', error);
+      res.status(500).json({ message: "Failed to update video lesson" });
+    }
+  });
+
+  // Delete a video lesson
+  app.delete("/api/admin/video-lessons/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const lessonId = Number(req.params.id);
+      const success = await storage.deleteVideoLesson(lessonId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Video lesson not found" });
+      }
+      
+      res.json({ message: "Video lesson deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting video lesson:', error);
+      res.status(500).json({ message: "Failed to delete video lesson" });
+    }
+  });
+
+  // Toggle publish status of a video lesson
+  app.patch("/api/admin/video-lessons/:id/publish", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const lessonId = Number(req.params.id);
+      const { isPublished } = req.body;
+      
+      const updatedLesson = await storage.updateVideoLesson(lessonId, { isPublished });
+      
+      if (!updatedLesson) {
+        return res.status(404).json({ message: "Video lesson not found" });
+      }
+      
+      res.json(updatedLesson);
+    } catch (error) {
+      console.error('Error toggling video lesson publish status:', error);
+      res.status(500).json({ message: "Failed to update video lesson status" });
+    }
+  });
+
   // ==================== OLLAMA AI SERVICES CONFIGURATION ====================
   
   // Ollama Setup and Management
