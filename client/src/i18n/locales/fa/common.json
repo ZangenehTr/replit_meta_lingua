@@ -225,6 +225,11 @@
     "conversion": "تبدیل"
   },
   "days": "روز",
+  "levels": {
+    "beginner": "مبتدی",
+    "intermediate": "متوسط",
+    "advanced": "پیشرفته"
+  },
   "toast": {
     "success": "موفق",
     "error": "خطا", 
