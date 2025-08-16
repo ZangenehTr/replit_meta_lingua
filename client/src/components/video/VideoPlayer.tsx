@@ -344,7 +344,6 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
         >
           <video
             ref={videoRef}
-            src={`/api/videos/stream/${lessonId}`}
             className="w-full h-full"
             onLoadedMetadata={(e) => {
               setDuration(e.currentTarget.duration);
@@ -355,7 +354,23 @@ export default function VideoPlayer({ lessonId, courseId, onComplete, onNext, on
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             onClick={handlePlayPause}
-          />
+            onError={(e) => {
+              console.error('Video error:', e);
+              toast({
+                title: t('student:videoPlayer.errorLoadingVideo'),
+                description: t('student:videoPlayer.videoNotSupported'),
+                variant: 'destructive'
+              });
+            }}
+          >
+            {/* Support both local streaming and external URLs */}
+            {lesson.videoUrl.startsWith('http') || lesson.videoUrl.startsWith('https') ? (
+              <source src={lesson.videoUrl} type="video/mp4" />
+            ) : (
+              <source src={`/api/videos/stream/${lessonId}`} type="video/mp4" />
+            )}
+            {t('student:videoPlayer.browserNotSupported')}
+          </video>
 
           {/* Video Controls Overlay */}
           <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
