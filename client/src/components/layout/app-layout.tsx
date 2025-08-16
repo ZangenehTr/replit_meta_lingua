@@ -77,20 +77,23 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="flex h-16 items-center justify-between px-3 md:px-6">
           {/* Mobile Menu Button & Brand */}
           <div className="flex items-center space-x-3">
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="md:hidden touch-target-sm"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side={direction === 'rtl' ? 'right' : 'left'} className="w-72 p-0 max-w-[75vw]" onInteractOutside={() => setMobileMenuOpen(false)}>
-                <Sidebar onNavigate={() => setMobileMenuOpen(false)} />
-              </SheetContent>
-            </Sheet>
+            {/* Only show mobile menu for non-student roles */}
+            {user?.role?.toLowerCase() !== 'student' && (
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="md:hidden touch-target-sm"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side={direction === 'rtl' ? 'right' : 'left'} className="w-72 p-0 max-w-[75vw]" onInteractOutside={() => setMobileMenuOpen(false)}>
+                  <Sidebar onNavigate={() => setMobileMenuOpen(false)} />
+                </SheetContent>
+              </Sheet>
+            )}
             
             {/* Enhanced Logo and Brand */}
             <Button 
@@ -172,25 +175,29 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Main Layout with Sidebar */}
       <div className="flex min-h-[calc(100vh-4rem)]" dir={direction}>
-        {/* Desktop Sidebar - hidden on mobile */}
-        <aside 
-          className={`hidden md:block md:w-64 flex-shrink-0 ${
-            direction === 'rtl' ? 'order-last' : 'order-first'
-          }`}
-        >
-          <div className={`fixed top-16 w-64 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 ${
-            direction === 'rtl' 
-              ? 'right-0 border-l border-border' 
-              : 'left-0 border-r border-border'
-          } bg-background`}>
-            <Sidebar />
-          </div>
-        </aside>
+        {/* Desktop Sidebar - hidden on mobile and for students */}
+        {user?.role?.toLowerCase() !== 'student' && (
+          <aside 
+            className={`hidden md:block md:w-64 flex-shrink-0 ${
+              direction === 'rtl' ? 'order-last' : 'order-first'
+            }`}
+          >
+            <div className={`fixed top-16 w-64 h-[calc(100vh-4rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 ${
+              direction === 'rtl' 
+                ? 'right-0 border-l border-border' 
+                : 'left-0 border-r border-border'
+            } bg-background`}>
+              <Sidebar />
+            </div>
+          </aside>
+        )}
         
         {/* Main Content - properly spaced for sidebar and bottom nav */}
         <main 
-          className={`flex-1 w-full md:w-[calc(100%-16rem)] overflow-y-auto pb-20 md:pb-8 ${
-            direction === 'rtl' ? 'md:mr-64' : 'md:ml-64'
+          className={`flex-1 w-full overflow-y-auto pb-20 md:pb-8 ${
+            user?.role?.toLowerCase() !== 'student' 
+              ? `md:w-[calc(100%-16rem)] ${direction === 'rtl' ? 'md:mr-64' : 'md:ml-64'}`
+              : ''
           }`}
           dir={direction} 
         >
