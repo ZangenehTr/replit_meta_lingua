@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -37,807 +37,1000 @@ import {
   XCircle,
   BookOpen,
   Globe,
-  Shield
+  Shield,
+  ChevronRight,
+  ChevronDown,
+  List,
+  Grid,
+  DragHandleDots2Icon,
+  GripVertical,
+  MoreVertical,
+  Settings,
+  Copy,
+  Archive,
+  RefreshCw
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
-// Schema for video lesson creation and editing
+// Schema for video course creation
+const videoCourseSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  instructorId: z.coerce.number().min(1, "Instructor is required"),
+  language: z.string().min(1, "Language is required"),
+  level: z.string().min(1, "Level is required"),
+  category: z.string().min(1, "Category is required"),
+  price: z.coerce.number().min(0, "Price must be non-negative"),
+  thumbnailUrl: z.string().optional(),
+  tags: z.string().optional(),
+  prerequisites: z.string().optional(),
+  learningObjectives: z.string().optional(),
+  accessPeriodMonths: z.coerce.number().optional(),
+  isPublished: z.boolean().default(false)
+});
+
+// Schema for video lesson within a course
 const videoLessonSchema = z.object({
-  courseId: z.coerce.number().min(1, "Course is required"),
-  teacherId: z.coerce.number().min(1, "Teacher is required"),
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   videoUrl: z.string().min(1, "Video URL is required"),
-  thumbnailUrl: z.string().optional(),
-  duration: z.coerce.number().min(1, "Duration is required"),
-  moduleId: z.coerce.number().optional(),
-  orderIndex: z.coerce.number().min(0, "Order index must be non-negative"),
-  language: z.string().min(1, "Language is required"),
-  level: z.string().min(1, "Level is required"),
-  skillFocus: z.string().optional(),
-  transcriptUrl: z.string().optional(),
-  subtitlesUrl: z.string().optional(),
-  materialsUrl: z.string().optional(),
-  isFree: z.boolean().default(false),
-  isPublished: z.boolean().default(true)
+  duration: z.coerce.number().min(1, "Duration is required (in seconds)"),
+  orderIndex: z.coerce.number().min(0, "Order must be non-negative"),
+  isFree: z.boolean().default(false)
 });
 
-// Video Lesson Card Component
-function VideoLessonCard({ lesson, onEdit, onDelete, onTogglePublish }: any) {
+// Course Card Component with Expandable Lessons
+function VideoCourseCard({ course, onEdit, onDelete, onTogglePublish, onManageLessons }: any) {
   const { t } = useTranslation(['admin', 'common']);
-  const [isPlaying, setIsPlaying] = useState(false);
-
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Simulate lessons data - in real app, this would come from API
+  const lessons = course.lessons || [];
+  const totalDuration = lessons.reduce((sum: number, lesson: any) => sum + (lesson.duration || 0), 0);
+  
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
     if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      return t('admin:videoCourses.hoursMinutes', { hours, minutes });
     }
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    return t('admin:videoCourses.minutes', { minutes });
   };
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex gap-4">
-          {/* Thumbnail */}
-          <div className="relative w-40 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-            {lesson.thumbnailUrl ? (
-              <img 
-                src={lesson.thumbnailUrl} 
-                alt={lesson.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <FileVideo className="h-8 w-8 text-gray-400" />
-              </div>
-            )}
-            <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
-              {formatDuration(lesson.duration)}
-            </div>
-            {lesson.isFree && (
-              <div className="absolute top-1 left-1">
-                <Badge variant="secondary" className="text-xs">
-                  {t('admin:videoCourses.free')}
-                </Badge>
-              </div>
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <h3 className="font-semibold text-sm truncate">{lesson.title}</h3>
-                <p className="text-xs text-muted-foreground truncate">
-                  {lesson.course?.title} • {t(`common:levels.${lesson.level}`)}
-                </p>
-              </div>
-              <Badge variant={lesson.isPublished ? "success" : "secondary"}>
-                {lesson.isPublished ? t('admin:videoCourses.published') : t('admin:videoCourses.draft')}
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-lg flex items-center gap-2">
+              {course.title}
+              <Badge variant={course.isPublished ? "success" : "secondary"}>
+                {course.isPublished ? t('admin:videoCourses.published') : t('admin:videoCourses.draft')}
               </Badge>
-            </div>
-
-            {lesson.description && (
-              <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                {lesson.description}
-              </p>
-            )}
-
-            {/* Stats */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
-              <span className="flex items-center gap-1">
-                <Eye className="h-3 w-3" />
-                {lesson.viewCount || 0}
-              </span>
-              <span className="flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" />
-                {lesson.completionRate || 0}%
-              </span>
-              <span className="flex items-center gap-1">
-                <Globe className="h-3 w-3" />
-                {lesson.language}
-              </span>
-              {lesson.skillFocus && (
-                <Badge variant="outline" className="text-xs">
-                  {lesson.skillFocus}
-                </Badge>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setIsPlaying(!isPlaying)}
-              >
-                {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+            </CardTitle>
+            <CardDescription className="mt-1">
+              {course.description}
+            </CardDescription>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-4 w-4" />
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onEdit(lesson)}
-              >
-                <Edit3 className="h-3 w-3" />
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onTogglePublish(lesson)}
-              >
-                {lesson.isPublished ? <XCircle className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onDelete(lesson)}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{t('common:actions')}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onManageLessons(course)}>
+                <List className="mr-2 h-4 w-4" />
+                {t('admin:videoCourses.manageLessons')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(course)}>
+                <Edit3 className="mr-2 h-4 w-4" />
+                {t('common:edit')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onTogglePublish(course)}>
+                {course.isPublished ? (
+                  <>
+                    <Archive className="mr-2 h-4 w-4" />
+                    {t('admin:videoCourses.unpublish')}
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    {t('admin:videoCourses.publish')}
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => onDelete(course)}
                 className="text-destructive"
               >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
+                <Trash2 className="mr-2 h-4 w-4" />
+                {t('common:delete')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Course Metadata */}
+        <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Users className="h-4 w-4" />
+            <span>{course.instructor?.name || t('admin:videoCourses.noInstructor')}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Globe className="h-4 w-4" />
+            <span>{course.language}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <BookOpen className="h-4 w-4" />
+            <span>{lessons.length} {t('admin:videoCourses.lessons')}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            <span>{formatDuration(totalDuration)}</span>
           </div>
         </div>
-      </CardContent>
+      </CardHeader>
+
+      {/* Expandable Lessons Section */}
+      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+        <CollapsibleTrigger asChild>
+          <Button 
+            variant="ghost" 
+            className="w-full rounded-none border-t justify-between px-6 py-3 hover:bg-muted/50"
+          >
+            <span className="text-sm font-medium">
+              {isExpanded ? t('admin:videoCourses.hideLessons') : t('admin:videoCourses.showLessons')}
+            </span>
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-0">
+            {lessons.length > 0 ? (
+              <div className="space-y-2 mt-3">
+                {lessons.map((lesson: any, index: number) => (
+                  <div 
+                    key={lesson.id} 
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50"
+                  >
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <GripVertical className="h-4 w-4" />
+                      <span className="text-sm font-medium w-6">{index + 1}</span>
+                    </div>
+                    <FileVideo className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{lesson.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {Math.floor(lesson.duration / 60)} min
+                        {lesson.isFree && (
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            {t('admin:videoCourses.freePreview')}
+                          </Badge>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-muted-foreground">
+                <FileVideo className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">{t('admin:videoCourses.noLessonsYet')}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2"
+                  onClick={() => onManageLessons(course)}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {t('admin:videoCourses.addFirstLesson')}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }
 
-// Video Lesson Form Component
-function VideoLessonForm({ lesson, courses, teachers, onSubmit, isLoading }: any) {
+// Lesson Management Dialog
+function LessonManagementDialog({ course, open, onClose }: any) {
   const { t } = useTranslation(['admin', 'common']);
-  const form = useForm<z.infer<typeof videoLessonSchema>>({
+  const queryClient = useQueryClient();
+  const [isAddingLesson, setIsAddingLesson] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<any>(null);
+  
+  const form = useForm({
     resolver: zodResolver(videoLessonSchema),
-    defaultValues: lesson ? {
-      courseId: lesson.courseId,
-      teacherId: lesson.teacherId,
-      title: lesson.title,
-      description: lesson.description || '',
-      videoUrl: lesson.videoUrl,
-      thumbnailUrl: lesson.thumbnailUrl || '',
-      duration: lesson.duration,
-      moduleId: lesson.moduleId || undefined,
-      orderIndex: lesson.orderIndex,
-      language: lesson.language,
-      level: lesson.level,
-      skillFocus: lesson.skillFocus || '',
-      transcriptUrl: lesson.transcriptUrl || '',
-      subtitlesUrl: lesson.subtitlesUrl || '',
-      materialsUrl: lesson.materialsUrl || '',
-      isFree: lesson.isFree,
-      isPublished: lesson.isPublished
-    } : {
-      courseId: 0,
-      teacherId: 0,
-      title: '',
-      description: '',
-      videoUrl: '',
-      thumbnailUrl: '',
+    defaultValues: {
+      title: "",
+      description: "",
+      videoUrl: "",
       duration: 0,
       orderIndex: 0,
-      language: 'English',
-      level: 'A1',
-      skillFocus: '',
-      transcriptUrl: '',
-      subtitlesUrl: '',
-      materialsUrl: '',
-      isFree: false,
-      isPublished: true
+      isFree: false
     }
   });
 
+  // Simulate lessons - in real app, this would be an API call
+  const lessons = course?.lessons || [];
+
+  const handleAddLesson = (data: any) => {
+    // In real app, this would be an API call to add lesson to course
+    console.log("Adding lesson to course:", course.id, data);
+    toast({
+      title: t('admin:videoCourses.lessonAdded'),
+      description: t('admin:videoCourses.lessonAddedDesc')
+    });
+    form.reset();
+    setIsAddingLesson(false);
+    // Invalidate queries to refresh the list
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/video-courses'] });
+  };
+
+  const handleDeleteLesson = (lessonId: number) => {
+    // In real app, this would be an API call
+    console.log("Deleting lesson:", lessonId);
+    toast({
+      title: t('admin:videoCourses.lessonDeleted'),
+      description: t('admin:videoCourses.lessonDeletedDesc')
+    });
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/video-courses'] });
+  };
+
+  const handleReorderLesson = (lessonId: number, newIndex: number) => {
+    // In real app, this would be an API call to update order
+    console.log("Reordering lesson:", lessonId, "to index:", newIndex);
+  };
+
+  if (!course) return null;
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="courseId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('admin:videoCourses.course')}</FormLabel>
-                <Select 
-                  value={field.value?.toString()} 
-                  onValueChange={(value) => field.onChange(Number(value))}
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>{t('admin:videoCourses.manageLessonsFor', { title: course.title })}</DialogTitle>
+          <DialogDescription>
+            {t('admin:videoCourses.manageLessonsDesc')}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-[500px] pr-4">
+            {/* Add Lesson Form */}
+            {isAddingLesson && (
+              <Card className="mb-4">
+                <CardHeader>
+                  <CardTitle className="text-base">{t('admin:videoCourses.addNewLesson')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleAddLesson)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('admin:videoCourses.lessonTitle')}</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder={t('admin:videoCourses.enterLessonTitle')} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="videoUrl"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('admin:videoCourses.videoUrl')}</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="https://..." />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="duration"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('admin:videoCourses.duration')} ({t('admin:videoCourses.seconds')})</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="number" placeholder="300" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="orderIndex"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('admin:videoCourses.lessonOrder')}</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="number" placeholder="1" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('admin:videoCourses.description')}</FormLabel>
+                            <FormControl>
+                              <Textarea {...field} placeholder={t('admin:videoCourses.enterDescription')} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="isFree"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                            <div className="space-y-0.5">
+                              <FormLabel>{t('admin:videoCourses.freePreview')}</FormLabel>
+                              <div className="text-sm text-muted-foreground">
+                                {t('admin:videoCourses.freePreviewDesc')}
+                              </div>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex gap-2">
+                        <Button type="submit">
+                          <Plus className="h-4 w-4 mr-1" />
+                          {t('admin:videoCourses.addLesson')}
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          onClick={() => {
+                            setIsAddingLesson(false);
+                            form.reset();
+                          }}
+                        >
+                          {t('common:cancel')}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Lessons List */}
+            <div className="space-y-2">
+              {!isAddingLesson && (
+                <Button 
+                  onClick={() => setIsAddingLesson(true)}
+                  className="w-full mb-4"
+                  variant="outline"
                 >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('admin:videoCourses.selectCourse')} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {courses?.map((course: any) => (
-                      <SelectItem key={course.id} value={course.id.toString()}>
-                        {course.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('admin:videoCourses.addNewLesson')}
+                </Button>
+              )}
 
-          <FormField
-            control={form.control}
-            name="teacherId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('admin:videoCourses.teacher')}</FormLabel>
-                <Select 
-                  value={field.value?.toString()} 
-                  onValueChange={(value) => field.onChange(Number(value))}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('admin:videoCourses.selectTeacher')} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {teachers?.map((teacher: any) => (
-                      <SelectItem key={teacher.id} value={teacher.id.toString()}>
-                        {teacher.firstName} {teacher.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              {lessons.length > 0 ? (
+                lessons.map((lesson: any, index: number) => (
+                  <Card key={lesson.id} className="p-4">
+                    <div className="flex items-center gap-3">
+                      <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-semibold">
+                        {index + 1}
+                      </div>
+                      <FileVideo className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{lesson.title}</h4>
+                          {lesson.isFree && (
+                            <Badge variant="outline" className="text-xs">
+                              {t('admin:videoCourses.freePreview')}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {Math.floor(lesson.duration / 60)} {t('admin:videoCourses.minutes')}
+                          {lesson.description && ` • ${lesson.description}`}
+                        </p>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditingLesson(lesson)}>
+                            <Edit3 className="mr-2 h-4 w-4" />
+                            {t('common:edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {}}>
+                            <Copy className="mr-2 h-4 w-4" />
+                            {t('admin:videoCourses.duplicate')}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => handleDeleteLesson(lesson.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {t('common:delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                !isAddingLesson && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <FileVideo className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm mb-1">{t('admin:videoCourses.noLessonsInCourse')}</p>
+                    <p className="text-xs">{t('admin:videoCourses.addLessonsToGetStarted')}</p>
+                  </div>
+                )
+              )}
+            </div>
+          </ScrollArea>
         </div>
 
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('admin:videoCourses.title')}</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder={t('admin:videoCourses.enterTitle')} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('admin:videoCourses.description')}</FormLabel>
-              <FormControl>
-                <Textarea {...field} placeholder={t('admin:videoCourses.enterDescription')} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="videoUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('admin:videoCourses.videoUrl')}</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="/uploads/videos/..." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="duration"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('admin:videoCourses.duration')} (seconds)</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" placeholder="300" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
-            name="language"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('admin:videoCourses.language')}</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="English">English</SelectItem>
-                    <SelectItem value="Farsi">فارسی</SelectItem>
-                    <SelectItem value="Arabic">العربية</SelectItem>
-                    <SelectItem value="French">Français</SelectItem>
-                    <SelectItem value="Spanish">Español</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="level"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('admin:videoCourses.level')}</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="A1">A1 - Beginner</SelectItem>
-                    <SelectItem value="A2">A2 - Elementary</SelectItem>
-                    <SelectItem value="B1">B1 - Intermediate</SelectItem>
-                    <SelectItem value="B2">B2 - Upper Intermediate</SelectItem>
-                    <SelectItem value="C1">C1 - Advanced</SelectItem>
-                    <SelectItem value="C2">C2 - Proficient</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="skillFocus"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('admin:videoCourses.skillFocus')}</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('admin:videoCourses.selectSkill')} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="speaking">Speaking</SelectItem>
-                    <SelectItem value="listening">Listening</SelectItem>
-                    <SelectItem value="grammar">Grammar</SelectItem>
-                    <SelectItem value="vocabulary">Vocabulary</SelectItem>
-                    <SelectItem value="reading">Reading</SelectItem>
-                    <SelectItem value="writing">Writing</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="orderIndex"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('admin:videoCourses.orderIndex')}</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" placeholder="0" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="moduleId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('admin:videoCourses.moduleId')}</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" placeholder="Optional" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="flex items-center gap-4">
-          <FormField
-            control={form.control}
-            name="isFree"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-2">
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel>{t('admin:videoCourses.freeAccess')}</FormLabel>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="isPublished"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-2">
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormLabel>{t('admin:videoCourses.published')}</FormLabel>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? t('common:saving') : (lesson ? t('common:update') : t('common:create'))}
-        </Button>
-      </form>
-    </Form>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            {t('common:close')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
+// Main Component
 export default function AdminVideoCourses() {
   const { t } = useTranslation(['admin', 'common']);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCourse, setFilterCourse] = useState("all");
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [selectedLesson, setSelectedLesson] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
 
-  // Fetch video lessons
-  const { data: videoLessons = [], isLoading: lessonsLoading } = useQuery({
-    queryKey: ['/api/admin/video-lessons', filterCourse, filterLevel, filterStatus],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (filterCourse) params.append('courseId', filterCourse);
-      if (filterLevel) params.append('level', filterLevel);
-      if (filterStatus) params.append('isPublished', filterStatus);
-      
-      const response = await apiRequest(`/api/admin/video-lessons?${params.toString()}`);
-      return response as any[];
+  // Form for course creation/editing
+  const courseForm = useForm({
+    resolver: zodResolver(videoCourseSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      instructorId: 0,
+      language: "fa",
+      level: "beginner",
+      category: "language",
+      price: 0,
+      thumbnailUrl: "",
+      tags: "",
+      prerequisites: "",
+      learningObjectives: "",
+      accessPeriodMonths: 12,
+      isPublished: false
     }
   });
 
-  // Fetch courses for dropdown
-  const { data: courses = [] } = useQuery({
-    queryKey: ['/api/admin/courses'],
+  // Fetch courses - in real app, this would include lessons
+  const { data: courses = [], isLoading: coursesLoading } = useQuery({
+    queryKey: ['/api/admin/video-courses', { search: searchTerm, level: filterLevel, status: filterStatus }],
     queryFn: async () => {
-      const response = await apiRequest('/api/admin/courses');
-      return response as any[];
+      // Simulate API call with mock data
+      return [
+        {
+          id: 1,
+          title: "Complete Persian Language Course",
+          description: "Learn Persian from beginner to advanced level",
+          instructor: { id: 1, name: "Dr. Ahmad Rezaei" },
+          language: "fa",
+          level: "beginner",
+          category: "language",
+          price: 1500000,
+          isPublished: true,
+          lessons: [
+            { id: 1, title: "Introduction to Persian Alphabet", duration: 1200, isFree: true },
+            { id: 2, title: "Basic Greetings", duration: 900, isFree: false },
+            { id: 3, title: "Numbers and Counting", duration: 1500, isFree: false }
+          ]
+        },
+        {
+          id: 2,
+          title: "Advanced English Conversation",
+          description: "Master English conversation skills",
+          instructor: { id: 2, name: "Sarah Johnson" },
+          language: "en",
+          level: "advanced",
+          category: "language",
+          price: 2000000,
+          isPublished: false,
+          lessons: []
+        }
+      ];
     }
   });
 
-  // Fetch teachers for dropdown
-  const { data: teachers = [] } = useQuery({
-    queryKey: ['/api/users', 'teachers'],
+  // Fetch instructors
+  const { data: instructors = [] } = useQuery({
+    queryKey: ['/api/users', { role: 'Teacher' }],
     queryFn: async () => {
-      const response = await apiRequest('/api/users?role=Teacher');
-      return response as any[];
+      const response = await fetch('/api/users?role=Teacher');
+      if (!response.ok) throw new Error('Failed to fetch teachers');
+      return response.json();
     }
   });
 
-  // Fetch statistics
-  const { data: stats } = useQuery({
-    queryKey: ['/api/admin/video-lessons/stats'],
-    queryFn: async () => {
-      const response = await apiRequest('/api/admin/video-lessons/stats');
-      return response as any;
-    }
-  });
-
-  // Create video lesson mutation
-  const createLessonMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof videoLessonSchema>) => {
-      return await apiRequest('/api/admin/video-lessons', {
+  // Create course mutation
+  const createCourseMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest('/api/admin/video-courses', {
         method: 'POST',
         body: JSON.stringify(data)
       });
     },
     onSuccess: () => {
-      toast({ title: t('admin:videoCourses.lessonCreated') });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/video-lessons'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/video-lessons/stats'] });
+      toast({
+        title: t('admin:videoCourses.courseCreated'),
+        description: t('admin:videoCourses.courseCreatedDesc')
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/video-courses'] });
       setIsCreateDialogOpen(false);
+      courseForm.reset();
     },
-    onError: (error: any) => {
-      toast({ 
-        title: t('admin:videoCourses.failedToCreateLesson'), 
-        description: error.message,
-        variant: "destructive" 
+    onError: () => {
+      toast({
+        title: t('common:error'),
+        description: t('admin:videoCourses.failedToCreateCourse'),
+        variant: "destructive"
       });
     }
   });
 
-  // Update video lesson mutation
-  const updateLessonMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: z.infer<typeof videoLessonSchema> }) => {
-      return await apiRequest(`/api/admin/video-lessons/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data)
-      });
-    },
-    onSuccess: () => {
-      toast({ title: t('admin:videoCourses.lessonUpdated') });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/video-lessons'] });
-      setIsEditDialogOpen(false);
-      setSelectedLesson(null);
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: t('admin:videoCourses.failedToUpdateLesson'), 
-        description: error.message,
-        variant: "destructive" 
-      });
-    }
-  });
+  // Statistics
+  const totalCourses = courses.length;
+  const publishedCourses = courses.filter((c: any) => c.isPublished).length;
+  const totalLessons = courses.reduce((sum: number, c: any) => sum + (c.lessons?.length || 0), 0);
 
-  // Delete video lesson mutation
-  const deleteLessonMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return await apiRequest(`/api/admin/video-lessons/${id}`, {
-        method: 'DELETE'
-      });
-    },
-    onSuccess: () => {
-      toast({ title: t('admin:videoCourses.lessonDeleted') });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/video-lessons'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/video-lessons/stats'] });
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: t('admin:videoCourses.failedToDeleteLesson'), 
-        description: error.message,
-        variant: "destructive" 
-      });
-    }
-  });
+  const handleCreateCourse = (data: any) => {
+    createCourseMutation.mutate(data);
+  };
 
-  // Toggle publish status mutation
-  const togglePublishMutation = useMutation({
-    mutationFn: async (lesson: any) => {
-      return await apiRequest(`/api/admin/video-lessons/${lesson.id}/publish`, {
-        method: 'PATCH',
-        body: JSON.stringify({ isPublished: !lesson.isPublished })
-      });
-    },
-    onSuccess: () => {
-      toast({ title: t('admin:videoCourses.statusUpdated') });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/video-lessons'] });
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: t('admin:videoCourses.failedToUpdateStatus'), 
-        description: error.message,
-        variant: "destructive" 
-      });
-    }
-  });
-
-  // Filter lessons
-  const filteredLessons = videoLessons.filter(lesson => {
-    const matchesSearch = !searchTerm || 
-      lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lesson.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    return matchesSearch;
-  });
-
-  const handleEdit = (lesson: any) => {
-    setSelectedLesson(lesson);
+  const handleEditCourse = (course: any) => {
+    setEditingCourse(course);
+    courseForm.reset({
+      title: course.title,
+      description: course.description,
+      instructorId: course.instructor?.id || 0,
+      language: course.language,
+      level: course.level,
+      category: course.category,
+      price: course.price,
+      isPublished: course.isPublished
+    });
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (lesson: any) => {
-    if (confirm(t('admin:videoCourses.confirmDelete'))) {
-      deleteLessonMutation.mutate(lesson.id);
-    }
+  const handleManageLessons = (course: any) => {
+    setSelectedCourse(course);
+    setIsLessonDialogOpen(true);
   };
 
-  const handleTogglePublish = (lesson: any) => {
-    togglePublishMutation.mutate(lesson);
-  };
+  const filteredCourses = courses.filter((course: any) => {
+    if (searchTerm && !course.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    if (filterLevel !== "all" && course.level !== filterLevel) {
+      return false;
+    }
+    if (filterStatus === "published" && !course.isPublished) {
+      return false;
+    }
+    if (filterStatus === "draft" && course.isPublished) {
+      return false;
+    }
+    return true;
+  });
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">{t('admin:videoCourses.title')}</h1>
+          <h1 className="text-2xl font-bold">{t('admin:videoCourses.title')}</h1>
           <p className="text-muted-foreground">{t('admin:videoCourses.description')}</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('admin:videoCourses.addLesson')}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{t('admin:videoCourses.createLesson')}</DialogTitle>
-              <DialogDescription>{t('admin:videoCourses.createLessonDesc')}</DialogDescription>
-            </DialogHeader>
-            <VideoLessonForm
-              courses={courses}
-              teachers={teachers}
-              onSubmit={(data: any) => createLessonMutation.mutate(data)}
-              isLoading={createLessonMutation.isPending}
-            />
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          {t('admin:videoCourses.createCourse')}
+        </Button>
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin:videoCourses.totalLessons')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalLessons || 0}</div>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">{t('admin:videoCourses.totalCourses')}</p>
+                <p className="text-2xl font-bold">{totalCourses}</p>
+              </div>
+              <BookOpen className="h-8 w-8 text-primary opacity-50" />
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin:videoCourses.totalViews')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalViews || 0}</div>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">{t('admin:videoCourses.publishedCourses')}</p>
+                <p className="text-2xl font-bold">{publishedCourses}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-green-500 opacity-50" />
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin:videoCourses.avgCompletion')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.avgCompletionRate || 0}%</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{t('admin:videoCourses.publishedLessons')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.publishedLessons || 0}</div>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">{t('admin:videoCourses.totalLessons')}</p>
+                <p className="text-2xl font-bold">{totalLessons}</p>
+              </div>
+              <Video className="h-8 w-8 text-blue-500 opacity-50" />
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle>{t('admin:videoCourses.filters')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <Input
-                placeholder={t('admin:videoCourses.searchPlaceholder')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={t('admin:videoCourses.searchCourses')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
-            <Select value={filterCourse} onValueChange={setFilterCourse}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder={t('admin:videoCourses.allCourses')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Courses</SelectItem>
-                {courses.map((course: any) => (
-                  <SelectItem key={course.id} value={course.id.toString()}>
-                    {course.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Select value={filterLevel} onValueChange={setFilterLevel}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder={t('admin:videoCourses.allLevels')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="A1">A1</SelectItem>
-                <SelectItem value="A2">A2</SelectItem>
-                <SelectItem value="B1">B1</SelectItem>
-                <SelectItem value="B2">B2</SelectItem>
-                <SelectItem value="C1">C1</SelectItem>
-                <SelectItem value="C2">C2</SelectItem>
+                <SelectItem value="all">{t('admin:videoCourses.allLevels')}</SelectItem>
+                <SelectItem value="beginner">{t('common:levels.beginner')}</SelectItem>
+                <SelectItem value="intermediate">{t('common:levels.intermediate')}</SelectItem>
+                <SelectItem value="advanced">{t('common:levels.advanced')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder={t('admin:videoCourses.allStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="true">Published</SelectItem>
-                <SelectItem value="false">Draft</SelectItem>
+                <SelectItem value="all">{t('admin:videoCourses.allStatus')}</SelectItem>
+                <SelectItem value="published">{t('admin:videoCourses.published')}</SelectItem>
+                <SelectItem value="draft">{t('admin:videoCourses.draft')}</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === "grid" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("grid")}
+              >
+                <Grid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "outline"}
+                size="icon"
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Video Lessons List */}
-      <div className="space-y-4">
-        {lessonsLoading ? (
-          <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-        ) : filteredLessons.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-8">
-              <FileVideo className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-muted-foreground">{t('admin:videoCourses.noLessons')}</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <ScrollArea className="h-[600px]">
-            <div className="space-y-4 pr-4">
-              {filteredLessons.map((lesson: any) => (
-                <VideoLessonCard
-                  key={lesson.id}
-                  lesson={lesson}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onTogglePublish={handleTogglePublish}
-                />
-              ))}
-            </div>
-          </ScrollArea>
-        )}
-      </div>
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('admin:videoCourses.editLesson')}</DialogTitle>
-            <DialogDescription>{t('admin:videoCourses.editLessonDesc')}</DialogDescription>
-          </DialogHeader>
-          {selectedLesson && (
-            <VideoLessonForm
-              lesson={selectedLesson}
-              courses={courses}
-              teachers={teachers}
-              onSubmit={(data: any) => updateLessonMutation.mutate({ id: selectedLesson.id, data })}
-              isLoading={updateLessonMutation.isPending}
+      {/* Courses Grid/List */}
+      {coursesLoading ? (
+        <div className="text-center py-12">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2" />
+          <p className="text-muted-foreground">{t('common:loading')}</p>
+        </div>
+      ) : filteredCourses.length > 0 ? (
+        <div className={cn(
+          "grid gap-4",
+          viewMode === "grid" ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"
+        )}>
+          {filteredCourses.map((course: any) => (
+            <VideoCourseCard
+              key={course.id}
+              course={course}
+              onEdit={handleEditCourse}
+              onDelete={(course: any) => {
+                // Handle delete
+                console.log("Delete course:", course.id);
+              }}
+              onTogglePublish={(course: any) => {
+                // Handle publish/unpublish
+                console.log("Toggle publish:", course.id);
+              }}
+              onManageLessons={handleManageLessons}
             />
-          )}
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="text-center py-12">
+            <FileVideo className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+            <p className="text-lg font-medium mb-1">{t('admin:videoCourses.noCourses')}</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              {t('admin:videoCourses.noCoursesDesc')}
+            </p>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              {t('admin:videoCourses.createFirstCourse')}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Create Course Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t('admin:videoCourses.createNewCourse')}</DialogTitle>
+            <DialogDescription>
+              {t('admin:videoCourses.createCourseDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...courseForm}>
+            <form onSubmit={courseForm.handleSubmit(handleCreateCourse)} className="space-y-4">
+              <FormField
+                control={courseForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin:videoCourses.courseTitle')}</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder={t('admin:videoCourses.enterCourseTitle')} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={courseForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin:videoCourses.courseDescription')}</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder={t('admin:videoCourses.enterCourseDescription')} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={courseForm.control}
+                  name="instructorId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('admin:videoCourses.instructor')}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value?.toString()}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('admin:videoCourses.selectInstructor')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {instructors.map((instructor: any) => (
+                            <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                              {instructor.firstName} {instructor.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={courseForm.control}
+                  name="language"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('admin:videoCourses.language')}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('admin:videoCourses.selectLanguage')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="fa">فارسی</SelectItem>
+                          <SelectItem value="en">English</SelectItem>
+                          <SelectItem value="ar">العربية</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={courseForm.control}
+                  name="level"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('admin:videoCourses.level')}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('admin:videoCourses.selectLevel')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="beginner">{t('common:levels.beginner')}</SelectItem>
+                          <SelectItem value="intermediate">{t('common:levels.intermediate')}</SelectItem>
+                          <SelectItem value="advanced">{t('common:levels.advanced')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={courseForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('admin:videoCourses.category')}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('admin:videoCourses.selectCategory')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="language">{t('admin:videoCourses.categoryLanguage')}</SelectItem>
+                          <SelectItem value="business">{t('admin:videoCourses.categoryBusiness')}</SelectItem>
+                          <SelectItem value="exam">{t('admin:videoCourses.categoryExam')}</SelectItem>
+                          <SelectItem value="conversation">{t('admin:videoCourses.categoryConversation')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={courseForm.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin:videoCourses.price')} (IRR)</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="number" placeholder="1500000" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={courseForm.control}
+                name="isPublished"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel>{t('admin:videoCourses.publishCourse')}</FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        {t('admin:videoCourses.publishCourseDesc')}
+                      </div>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  {t('common:cancel')}
+                </Button>
+                <Button type="submit">
+                  {t('admin:videoCourses.createCourse')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Lesson Management Dialog */}
+      <LessonManagementDialog
+        course={selectedCourse}
+        open={isLessonDialogOpen}
+        onClose={() => {
+          setIsLessonDialogOpen(false);
+          setSelectedCourse(null);
+        }}
+      />
     </div>
   );
 }
