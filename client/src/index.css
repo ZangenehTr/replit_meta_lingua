@@ -578,3 +578,63 @@ body.rtl p, body.rtl div, body.rtl span {
 .animation-delay-4000 {
   animation-delay: 4s;
 }
+
+/* Mobile Performance Optimizations */
+@media (max-width: 767px) {
+  /* Disable heavy animations on mobile */
+  .animate-blob {
+    animation: none !important;
+    opacity: 0.3 !important;
+  }
+  
+  /* Reduce blur effects on mobile for better performance */
+  .backdrop-blur-lg {
+    backdrop-filter: blur(8px) !important;
+  }
+  
+  .backdrop-blur-md {
+    backdrop-filter: blur(4px) !important;
+  }
+  
+  .backdrop-blur-sm {
+    backdrop-filter: blur(2px) !important;
+  }
+  
+  .backdrop-blur {
+    backdrop-filter: none !important;
+  }
+  
+  /* Faster transitions on mobile */
+  * {
+    animation-duration: 0.2s !important;
+  }
+  
+  /* Larger touch targets for mobile */
+  .touch-target {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  
+  .touch-target-sm {
+    min-height: 36px !important;
+    min-width: 36px !important;
+  }
+  
+  /* Optimize shadows on mobile */
+  .shadow-lg {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .shadow-xl {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .shadow-2xl {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Simplify gradients on mobile */
+  .bg-gradient-to-br {
+    background: linear-gradient(135deg, #6366f1, #a855f7) !important;
+  }
+}

@@ -83,13 +83,23 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <SheetTrigger asChild>
                   <Button 
                     variant="ghost" 
-                    size="sm"
-                    className="md:hidden touch-target-sm"
+                    size="icon"
+                    className="md:hidden touch-target"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setMobileMenuOpen(true);
+                    }}
                   >
-                    <Menu className="h-5 w-5" />
+                    <Menu className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side={direction === 'rtl' ? 'right' : 'left'} className="w-72 p-0 max-w-[75vw]" onInteractOutside={() => setMobileMenuOpen(false)}>
+                <SheetContent 
+                  side={direction === 'rtl' ? 'right' : 'left'} 
+                  className="w-72 p-0 max-w-[75vw] z-[100]" 
+                  onPointerDownOutside={() => setMobileMenuOpen(false)}
+                  onEscapeKeyDown={() => setMobileMenuOpen(false)}
+                >
                   <Sidebar onNavigate={() => setMobileMenuOpen(false)} />
                 </SheetContent>
               </Sheet>
