@@ -27,6 +27,7 @@ import StudentInformationSystem from "@/pages/student-information-system";
 import { AdminDashboard as EnhancedAdminDashboard } from "@/pages/admin/admin-dashboard";
 import { AdminStudents } from "@/pages/admin/students";
 import { AdminCourses } from "@/pages/admin/courses";
+import AdminVideoCourses from "@/pages/admin/video-courses";
 import { AdminTeacherManagement } from "@/pages/admin/teacher-management";
 import { AdminFinancial } from "@/pages/admin/financial";
 import { AdminSystem } from "@/pages/admin/system-simple";
@@ -193,6 +194,11 @@ function Router() {
       <Route path="/admin/courses">
         <ProtectedRoute>
           <AdminCourses />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/admin/video-courses">
+        <ProtectedRoute>
+          <AdminVideoCourses />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/financial">

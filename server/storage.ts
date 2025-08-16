@@ -560,6 +560,7 @@ export interface IStorage {
   getVideoLessonById(id: number): Promise<VideoLesson | undefined>;
   getVideoLessonsByCourse(courseId: number): Promise<VideoLesson[]>;
   getTeacherVideoLessons(teacherId: number): Promise<VideoLesson[]>;
+  getAllVideoLessons(): Promise<VideoLesson[]>;
   updateVideoLesson(id: number, lesson: Partial<InsertVideoLesson>): Promise<VideoLesson | undefined>;
   deleteVideoLesson(id: number): Promise<boolean>;
   
