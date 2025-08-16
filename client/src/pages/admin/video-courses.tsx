@@ -508,9 +508,9 @@ export default function AdminVideoCourses() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterCourse, setFilterCourse] = useState("");
-  const [filterLevel, setFilterLevel] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterCourse, setFilterCourse] = useState("all");
+  const [filterLevel, setFilterLevel] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -754,7 +754,7 @@ export default function AdminVideoCourses() {
                 <SelectValue placeholder={t('admin:videoCourses.allCourses')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Courses</SelectItem>
+                <SelectItem value="all">All Courses</SelectItem>
                 {courses.map((course: any) => (
                   <SelectItem key={course.id} value={course.id.toString()}>
                     {course.title}
@@ -767,7 +767,7 @@ export default function AdminVideoCourses() {
                 <SelectValue placeholder={t('admin:videoCourses.allLevels')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Levels</SelectItem>
+                <SelectItem value="all">All Levels</SelectItem>
                 <SelectItem value="A1">A1</SelectItem>
                 <SelectItem value="A2">A2</SelectItem>
                 <SelectItem value="B1">B1</SelectItem>
@@ -781,7 +781,7 @@ export default function AdminVideoCourses() {
                 <SelectValue placeholder={t('admin:videoCourses.allStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="true">Published</SelectItem>
                 <SelectItem value="false">Draft</SelectItem>
               </SelectContent>
