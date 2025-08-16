@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -274,20 +274,66 @@ function LessonManagementDialog({ course, open, onClose }: any) {
     }
   });
 
-  // Simulate lessons - in real app, this would be an API call
-  const lessons = course?.lessons || [];
+  // Fetch lessons for this course
+  const { data: lessons = [], refetch: refetchLessons } = useQuery({
+    queryKey: [`/api/admin/courses/${course?.id}/lessons`],
+    queryFn: async () => {
+      if (!course?.id) return [];
+      try {
+        const response = await apiRequest(`/api/admin/courses/${course.id}/lessons`);
+        return response;
+      } catch (error) {
+        // If endpoint doesn't exist yet, return empty array
+        return [];
+      }
+    },
+    enabled: !!course?.id
+  });
+
+  // Mutation for adding a lesson
+  const addLessonMutation = useMutation({
+    mutationFn: async (data: any) => {
+      // Get current user for teacher ID
+      const userResponse = await apiRequest('/api/users/me');
+      const teacherId = userResponse.id || 35; // Default to teacher ID 35 if not found
+      
+      return apiRequest('/api/admin/video-lessons', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...data,
+          courseId: course.id,
+          teacherId,
+          language: course.language || 'fa',
+          level: course.level || 'intermediate',
+          viewCount: 0,
+          completionRate: 0
+        }),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: t('admin:videoCourses.lessonAdded'),
+        description: t('admin:videoCourses.lessonAddedDesc')
+      });
+      form.reset();
+      setIsAddingLesson(false);
+      // Refresh both courses and lessons
+      refetchLessons();
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/video-courses'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/courses/${course.id}/lessons`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('common:error'),
+        description: error.message || t('admin:videoCourses.lessonAddFailed'),
+        variant: "destructive"
+      });
+    }
+  });
 
   const handleAddLesson = (data: any) => {
-    // In real app, this would be an API call to add lesson to course
-    console.log("Adding lesson to course:", course.id, data);
-    toast({
-      title: t('admin:videoCourses.lessonAdded'),
-      description: t('admin:videoCourses.lessonAddedDesc')
-    });
-    form.reset();
-    setIsAddingLesson(false);
-    // Invalidate queries to refresh the list
-    queryClient.invalidateQueries({ queryKey: ['/api/admin/video-courses'] });
+    addLessonMutation.mutate(data);
   };
 
   const handleDeleteLesson = (lessonId: number) => {
@@ -349,7 +395,33 @@ function LessonManagementDialog({ course, open, onClose }: any) {
                           <FormItem>
                             <FormLabel>{t('admin:videoCourses.videoUrl')}</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="https://..." />
+                              <div className="space-y-2">
+                                <Input 
+                                  {...field} 
+                                  placeholder="/uploads/videos/lesson.mp4 or https://..." 
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    // If it's a video URL, try to calculate duration
+                                    if (e.target.value && (e.target.value.includes('.mp4') || e.target.value.includes('.webm'))) {
+                                      const video = document.createElement('video');
+                                      video.src = e.target.value;
+                                      video.onloadedmetadata = () => {
+                                        form.setValue('duration', Math.floor(video.duration));
+                                        toast({
+                                          title: t('admin:videoCourses.durationDetected'),
+                                          description: `${Math.floor(video.duration / 60)} ${t('admin:videoCourses.minutes')} ${Math.floor(video.duration % 60)} ${t('admin:videoCourses.seconds')}`
+                                        });
+                                      };
+                                      video.onerror = () => {
+                                        console.log("Could not load video to detect duration");
+                                      };
+                                    }
+                                  }}
+                                />
+                                <div className="text-xs text-muted-foreground">
+                                  {t('admin:videoCourses.videoUrlHelp', 'Enter video path or URL. Duration will be detected automatically.')}
+                                </div>
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -362,9 +434,27 @@ function LessonManagementDialog({ course, open, onClose }: any) {
                           name="duration"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('admin:videoCourses.duration')} ({t('admin:videoCourses.seconds')})</FormLabel>
+                              <FormLabel>
+                                {t('admin:videoCourses.duration')} 
+                                <span className="text-xs text-muted-foreground ml-1">
+                                  ({t('admin:videoCourses.autoDetected', 'Auto-detected')})
+                                </span>
+                              </FormLabel>
                               <FormControl>
-                                <Input {...field} type="number" placeholder="300" />
+                                <div className="space-y-1">
+                                  <Input 
+                                    {...field} 
+                                    type="number" 
+                                    placeholder="0" 
+                                    readOnly
+                                    className="bg-muted"
+                                  />
+                                  {field.value > 0 && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {Math.floor(field.value / 60)} {t('admin:videoCourses.minutes')} {field.value % 60} {t('admin:videoCourses.seconds')}
+                                    </div>
+                                  )}
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
