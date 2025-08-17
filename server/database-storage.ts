@@ -20,6 +20,7 @@ import {
   communicationLogs, mentorAssignments, mentoringSessions, sessionPackages,
   callernPackages, studentCallernPackages, teacherCallernAvailability,
   callernCallHistory, callernSyllabusTopics, studentCallernProgress, rooms,
+  callernRoadmaps, callernRoadmapSteps, studentRoadmapProgress,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
@@ -583,6 +584,377 @@ export class DatabaseStorage implements IStorage {
       status: packageData.status || 'active'
     }).returning();
     return studentPackage;
+  }
+
+  // Callern Roadmaps Implementation
+  async createCallernRoadmap(roadmapData: any): Promise<any> {
+    const [roadmap] = await db.insert(callernRoadmaps).values({
+      packageId: roadmapData.packageId,
+      roadmapName: roadmapData.roadmapName,
+      description: roadmapData.description,
+      totalSteps: roadmapData.totalSteps,
+      estimatedHours: roadmapData.estimatedHours,
+      createdBy: roadmapData.createdBy,
+      isActive: roadmapData.isActive !== false
+    }).returning();
+    return roadmap;
+  }
+
+  async getCallernRoadmaps(): Promise<any[]> {
+    return await db
+      .select({
+        id: callernRoadmaps.id,
+        packageId: callernRoadmaps.packageId,
+        roadmapName: callernRoadmaps.roadmapName,
+        description: callernRoadmaps.description,
+        totalSteps: callernRoadmaps.totalSteps,
+        estimatedHours: callernRoadmaps.estimatedHours,
+        createdBy: callernRoadmaps.createdBy,
+        isActive: callernRoadmaps.isActive,
+        packageName: callernPackages.packageName
+      })
+      .from(callernRoadmaps)
+      .leftJoin(callernPackages, eq(callernRoadmaps.packageId, callernPackages.id))
+      .where(eq(callernRoadmaps.isActive, true));
+  }
+
+  async getCallernRoadmap(id: number): Promise<any | undefined> {
+    const [roadmap] = await db
+      .select()
+      .from(callernRoadmaps)
+      .where(eq(callernRoadmaps.id, id));
+    return roadmap;
+  }
+
+  async updateCallernRoadmap(id: number, updates: any): Promise<any | undefined> {
+    const [updated] = await db
+      .update(callernRoadmaps)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(callernRoadmaps.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCallernRoadmap(id: number): Promise<void> {
+    await db.delete(callernRoadmaps).where(eq(callernRoadmaps.id, id));
+  }
+
+  async getRoadmapByPackageId(packageId: number): Promise<any | undefined> {
+    const [roadmap] = await db
+      .select()
+      .from(callernRoadmaps)
+      .where(and(
+        eq(callernRoadmaps.packageId, packageId),
+        eq(callernRoadmaps.isActive, true)
+      ));
+    return roadmap;
+  }
+
+  // Callern Roadmap Steps Implementation
+  async createRoadmapStep(stepData: any): Promise<any> {
+    const [step] = await db.insert(callernRoadmapSteps).values({
+      roadmapId: stepData.roadmapId,
+      stepNumber: stepData.stepNumber,
+      title: stepData.title,
+      description: stepData.description,
+      objectives: stepData.objectives,
+      estimatedMinutes: stepData.estimatedMinutes || 30,
+      skillFocus: stepData.skillFocus,
+      materials: stepData.materials,
+      assessmentCriteria: stepData.assessmentCriteria
+    }).returning();
+    return step;
+  }
+
+  async getRoadmapSteps(roadmapId: number): Promise<any[]> {
+    return await db
+      .select()
+      .from(callernRoadmapSteps)
+      .where(eq(callernRoadmapSteps.roadmapId, roadmapId))
+      .orderBy(callernRoadmapSteps.stepNumber);
+  }
+
+  async updateRoadmapStep(id: number, updates: any): Promise<any | undefined> {
+    const [updated] = await db
+      .update(callernRoadmapSteps)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(callernRoadmapSteps.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteRoadmapStep(id: number): Promise<void> {
+    await db.delete(callernRoadmapSteps).where(eq(callernRoadmapSteps.id, id));
+  }
+
+  // Student Roadmap Progress Implementation
+  async getStudentRoadmapProgress(studentId: number, packageId: number): Promise<any[]> {
+    const progress = await db
+      .select({
+        id: studentRoadmapProgress.id,
+        studentId: studentRoadmapProgress.studentId,
+        packageId: studentRoadmapProgress.packageId,
+        roadmapId: studentRoadmapProgress.roadmapId,
+        stepId: studentRoadmapProgress.stepId,
+        teacherId: studentRoadmapProgress.teacherId,
+        callId: studentRoadmapProgress.callId,
+        status: studentRoadmapProgress.status,
+        startedAt: studentRoadmapProgress.startedAt,
+        completedAt: studentRoadmapProgress.completedAt,
+        teacherNotes: studentRoadmapProgress.teacherNotes,
+        studentFeedback: studentRoadmapProgress.studentFeedback,
+        performanceRating: studentRoadmapProgress.performanceRating,
+        stepTitle: callernRoadmapSteps.title,
+        stepNumber: callernRoadmapSteps.stepNumber,
+        teacherName: sql`${users.firstName} || ' ' || ${users.lastName}`
+      })
+      .from(studentRoadmapProgress)
+      .leftJoin(callernRoadmapSteps, eq(studentRoadmapProgress.stepId, callernRoadmapSteps.id))
+      .leftJoin(users, eq(studentRoadmapProgress.teacherId, users.id))
+      .where(and(
+        eq(studentRoadmapProgress.studentId, studentId),
+        eq(studentRoadmapProgress.packageId, packageId)
+      ))
+      .orderBy(callernRoadmapSteps.stepNumber);
+    
+    return progress;
+  }
+
+  async getStudentCurrentStep(studentId: number, roadmapId: number): Promise<any | undefined> {
+    // Get the last incomplete step or the next step to start
+    const [currentStep] = await db
+      .select({
+        stepId: callernRoadmapSteps.id,
+        stepNumber: callernRoadmapSteps.stepNumber,
+        title: callernRoadmapSteps.title,
+        description: callernRoadmapSteps.description,
+        objectives: callernRoadmapSteps.objectives,
+        estimatedMinutes: callernRoadmapSteps.estimatedMinutes,
+        progressId: studentRoadmapProgress.id,
+        status: studentRoadmapProgress.status
+      })
+      .from(callernRoadmapSteps)
+      .leftJoin(
+        studentRoadmapProgress,
+        and(
+          eq(studentRoadmapProgress.stepId, callernRoadmapSteps.id),
+          eq(studentRoadmapProgress.studentId, studentId)
+        )
+      )
+      .where(eq(callernRoadmapSteps.roadmapId, roadmapId))
+      .orderBy(callernRoadmapSteps.stepNumber)
+      .limit(1);
+    
+    return currentStep;
+  }
+
+  async markStepCompleted(progressData: any): Promise<any> {
+    const [progress] = await db.insert(studentRoadmapProgress).values({
+      studentId: progressData.studentId,
+      packageId: progressData.packageId,
+      roadmapId: progressData.roadmapId,
+      stepId: progressData.stepId,
+      teacherId: progressData.teacherId,
+      callId: progressData.callId,
+      status: progressData.status || 'completed',
+      completedAt: progressData.status === 'completed' ? new Date() : null,
+      teacherNotes: progressData.teacherNotes,
+      studentFeedback: progressData.studentFeedback,
+      performanceRating: progressData.performanceRating
+    }).returning();
+    return progress;
+  }
+
+  async updateStepProgress(id: number, updates: any): Promise<any | undefined> {
+    const [updated] = await db
+      .update(studentRoadmapProgress)
+      .set({ 
+        ...updates, 
+        updatedAt: new Date(),
+        completedAt: updates.status === 'completed' ? new Date() : null
+      })
+      .where(eq(studentRoadmapProgress.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Student Briefing for Teachers - Comprehensive data for incoming calls
+  async getStudentCallernBriefing(studentId: number): Promise<{
+    profile: any;
+    currentPackage: any;
+    roadmapProgress: any[];
+    pastLessons: any[];
+    assignedTasks: any[];
+    recentPerformance: any;
+  }> {
+    // Get student basic info first
+    console.log('Fetching student with ID:', studentId);
+    const [studentBasic] = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        phoneNumber: users.phoneNumber,
+        avatar: users.avatar,
+        level: users.level,
+        status: users.status
+      })
+      .from(users)
+      .where(eq(users.id, studentId));
+    
+    // Get student profile separately
+    const [profileData] = await db
+      .select()
+      .from(userProfiles)
+      .where(eq(userProfiles.userId, studentId));
+    
+    const student = studentBasic ? {
+      id: studentBasic.id,
+      firstName: studentBasic.firstName,
+      lastName: studentBasic.lastName,
+      email: studentBasic.email,
+      phone: studentBasic.phoneNumber,
+      avatar: studentBasic.avatar,
+      targetLanguage: profileData?.targetLanguage,
+      currentLevel: profileData?.proficiencyLevel || studentBasic.level,
+      learningGoals: profileData?.learningGoals,
+      preferredLearningStyle: profileData?.learningStyle
+    } : null;
+
+    // Get current active package - Separate queries
+    const [studentPackage] = await db
+      .select()
+      .from(studentCallernPackages)
+      .where(and(
+        eq(studentCallernPackages.studentId, studentId),
+        eq(studentCallernPackages.status, 'active')
+      ));
+    
+    let currentPackage = null;
+    if (studentPackage) {
+      const [packageInfo] = await db
+        .select()
+        .from(callernPackages)
+        .where(eq(callernPackages.id, studentPackage.packageId));
+      
+      const [roadmapInfo] = packageInfo ? await db
+        .select()
+        .from(callernRoadmaps)
+        .where(eq(callernRoadmaps.packageId, packageInfo.id)) : [undefined];
+      
+      currentPackage = {
+        id: studentPackage.id,
+        packageName: packageInfo?.packageName,
+        packageType: packageInfo?.packageType,
+        totalHours: studentPackage.totalHours,
+        usedMinutes: studentPackage.usedMinutes,
+        remainingMinutes: studentPackage.remainingMinutes,
+        roadmapId: roadmapInfo?.id,
+        roadmapName: roadmapInfo?.roadmapName
+      };
+    }
+
+    // Get roadmap progress if package has roadmap
+    let roadmapProgress: any[] = [];
+    if (currentPackage?.roadmapId) {
+      roadmapProgress = await this.getStudentRoadmapProgress(studentId, currentPackage.id);
+    }
+
+    // Get past 5 lessons - Simple query first then fetch teacher names
+    const pastLessonsData = await db
+      .select()
+      .from(callernCallHistory)
+      .where(and(
+        eq(callernCallHistory.studentId, studentId),
+        eq(callernCallHistory.status, 'completed')
+      ))
+      .orderBy(desc(callernCallHistory.startTime))
+      .limit(5);
+    
+    const pastLessons = await Promise.all(pastLessonsData.map(async (lesson) => {
+      let teacherName = 'Unknown Teacher';
+      if (lesson.teacherId) {
+        const [teacher] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, lesson.teacherId));
+        if (teacher) {
+          teacherName = `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim() || 'Unknown Teacher';
+        }
+      }
+      
+      return {
+        id: lesson.id,
+        teacherName,
+        startTime: lesson.startTime,
+        durationMinutes: lesson.durationMinutes,
+        notes: lesson.notes,
+        aiSummary: lesson.aiSummaryJson
+      };
+    }));
+
+    // Get assigned tasks/homework - Simple query first then fetch teacher names
+    const assignedTasksData = await db
+      .select()
+      .from(homework)
+      .where(and(
+        eq(homework.studentId, studentId),
+        eq(homework.status, 'pending')
+      ))
+      .orderBy(homework.dueDate);
+    
+    const assignedTasks = await Promise.all(assignedTasksData.map(async (task) => {
+      let teacherName = 'Unknown Teacher';
+      if (task.teacherId) {
+        const [teacher] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, task.teacherId));
+        if (teacher) {
+          teacherName = `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim() || 'Unknown Teacher';
+        }
+      }
+      
+      return {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        status: task.status,
+        teacherName
+      };
+    }));
+
+    // Calculate recent performance metrics
+    const recentCalls = await db
+      .select({
+        durationMinutes: callernCallHistory.durationMinutes
+      })
+      .from(callernCallHistory)
+      .where(and(
+        eq(callernCallHistory.studentId, studentId),
+        eq(callernCallHistory.status, 'completed'),
+        gte(callernCallHistory.startTime, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) // Last 30 days
+      ));
+
+    const totalMinutesLast30Days = recentCalls.reduce((sum, call) => sum + (call.durationMinutes || 0), 0);
+    const averageSessionLength = recentCalls.length > 0 
+      ? Math.round(totalMinutesLast30Days / recentCalls.length)
+      : 0;
+
+    return {
+      profile: student,
+      currentPackage,
+      roadmapProgress,
+      pastLessons,
+      assignedTasks,
+      recentPerformance: {
+        totalMinutesLast30Days,
+        sessionsLast30Days: recentCalls.length,
+        averageSessionLength
+      }
+    };
   }
 
   // Schedule Conflict Checking (Check-First Protocol)
@@ -11057,16 +11429,15 @@ export class DatabaseStorage implements IStorage {
       if (query) {
         whereConditions.push(
           or(
-            sql`LOWER(${users.name}) LIKE LOWER(${`%${query}%`})`,
+            sql`LOWER(${users.firstName} || ' ' || ${users.lastName}) LIKE LOWER(${`%${query}%`})`,
             sql`LOWER(${users.email}) LIKE LOWER(${`%${query}%`})`,
             sql`${users.phoneNumber} LIKE ${`%${query}%`}`
           )!
         );
       }
       
-      if (courseId) {
-        whereConditions.push(eq(users.enrolledCourseId, courseId));
-      }
+      // Note: Removed enrolledCourseId check as this column doesn't exist in users table
+      // If we need to filter by course, we should join with classEnrollments table
       
       const result = await db.select()
         .from(users)

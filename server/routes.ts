@@ -12690,6 +12690,181 @@ Return JSON format:
     }
   });
 
+  // =====================================================
+  // CALLERN ROADMAP API ROUTES  
+  // =====================================================
+  
+  // Get student briefing when teacher receives a call
+  app.get("/api/callern/student-briefing/:studentId", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const briefing = await storage.getStudentCallernBriefing(studentId);
+      res.json(briefing);
+    } catch (error) {
+      console.error('Error fetching student briefing:', error);
+      res.status(500).json({ message: 'Failed to fetch student briefing' });
+    }
+  });
+
+  // Get all roadmaps
+  app.get("/api/admin/callern/roadmaps", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmaps = await storage.getCallernRoadmaps();
+      res.json(roadmaps);
+    } catch (error) {
+      console.error('Error fetching roadmaps:', error);
+      res.status(500).json({ message: 'Failed to fetch roadmaps' });
+    }
+  });
+
+  // Create roadmap
+  app.post("/api/admin/callern/roadmaps", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmapData = {
+        ...req.body,
+        createdBy: req.user.id
+      };
+      const roadmap = await storage.createCallernRoadmap(roadmapData);
+      res.status(201).json(roadmap);
+    } catch (error) {
+      console.error('Error creating roadmap:', error);
+      res.status(500).json({ message: 'Failed to create roadmap' });
+    }
+  });
+
+  // Update roadmap
+  app.put("/api/admin/callern/roadmaps/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmapId = parseInt(req.params.id);
+      const roadmap = await storage.updateCallernRoadmap(roadmapId, req.body);
+      res.json(roadmap);
+    } catch (error) {
+      console.error('Error updating roadmap:', error);
+      res.status(500).json({ message: 'Failed to update roadmap' });
+    }
+  });
+
+  // Delete roadmap
+  app.delete("/api/admin/callern/roadmaps/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmapId = parseInt(req.params.id);
+      await storage.deleteCallernRoadmap(roadmapId);
+      res.json({ message: 'Roadmap deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting roadmap:', error);
+      res.status(500).json({ message: 'Failed to delete roadmap' });
+    }
+  });
+
+  // Get roadmap steps
+  app.get("/api/admin/callern/roadmaps/:roadmapId/steps", authenticateToken, async (req: any, res) => {
+    try {
+      const roadmapId = parseInt(req.params.roadmapId);
+      const steps = await storage.getRoadmapSteps(roadmapId);
+      res.json(steps);
+    } catch (error) {
+      console.error('Error fetching roadmap steps:', error);
+      res.status(500).json({ message: 'Failed to fetch roadmap steps' });
+    }
+  });
+
+  // Create roadmap step
+  app.post("/api/admin/callern/roadmaps/:roadmapId/steps", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmapId = parseInt(req.params.roadmapId);
+      const stepData = {
+        ...req.body,
+        roadmapId
+      };
+      const step = await storage.createRoadmapStep(stepData);
+      res.status(201).json(step);
+    } catch (error) {
+      console.error('Error creating roadmap step:', error);
+      res.status(500).json({ message: 'Failed to create roadmap step' });
+    }
+  });
+
+  // Update roadmap step
+  app.put("/api/admin/callern/roadmap-steps/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const stepId = parseInt(req.params.id);
+      const step = await storage.updateRoadmapStep(stepId, req.body);
+      res.json(step);
+    } catch (error) {
+      console.error('Error updating roadmap step:', error);
+      res.status(500).json({ message: 'Failed to update roadmap step' });
+    }
+  });
+
+  // Delete roadmap step
+  app.delete("/api/admin/callern/roadmap-steps/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const stepId = parseInt(req.params.id);
+      await storage.deleteRoadmapStep(stepId);
+      res.json({ message: 'Step deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting roadmap step:', error);
+      res.status(500).json({ message: 'Failed to delete roadmap step' });
+    }
+  });
+
+  // Get student progress in roadmap
+  app.get("/api/callern/student-progress/:studentId/:packageId", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const packageId = parseInt(req.params.packageId);
+      const progress = await storage.getStudentRoadmapProgress(studentId, packageId);
+      res.json(progress);
+    } catch (error) {
+      console.error('Error fetching student progress:', error);
+      res.status(500).json({ message: 'Failed to fetch student progress' });
+    }
+  });
+
+  // Mark step as completed
+  app.post("/api/callern/student-progress/complete", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const progressData = {
+        ...req.body,
+        teacherId: req.user.id
+      };
+      const progress = await storage.markStepCompleted(progressData);
+      res.status(201).json(progress);
+    } catch (error) {
+      console.error('Error marking step completed:', error);
+      res.status(500).json({ message: 'Failed to mark step completed' });
+    }
+  });
+
+  // Update student progress
+  app.put("/api/callern/student-progress/:id", authenticateToken, requireRole(['Teacher', 'Admin']), async (req: any, res) => {
+    try {
+      const progressId = parseInt(req.params.id);
+      const progress = await storage.updateStepProgress(progressId, req.body);
+      res.json(progress);
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      res.status(500).json({ message: 'Failed to update progress' });
+    }
+  });
+
+  // Get roadmap for a package
+  app.get("/api/callern/packages/:packageId/roadmap", authenticateToken, async (req: any, res) => {
+    try {
+      const packageId = parseInt(req.params.packageId);
+      const roadmap = await storage.getRoadmapByPackageId(packageId);
+      if (roadmap) {
+        const steps = await storage.getRoadmapSteps(roadmap.id);
+        res.json({ ...roadmap, steps });
+      } else {
+        res.json(null);
+      }
+    } catch (error) {
+      console.error('Error fetching package roadmap:', error);
+      res.status(500).json({ message: 'Failed to fetch package roadmap' });
+    }
+  });
+
   // Get teacher session details for payment period
   app.get("/api/admin/teacher-payments/:teacherId/sessions/:period", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
