@@ -201,19 +201,58 @@
     <script>
         // Configuration
         const ROOM_ID = 'debug-room-001';
-        const ICE_SERVERS = [
-            { urls: 'stun:stun.l.google.com:19302' },
-            {
-                urls: "turn:a.relay.metered.ca:80",
-                username: "97f4025e826e8fe4a53e8a97",
-                credential: "qRVXr/1dN5EQDmHG",
-            },
-            {
-                urls: "turn:a.relay.metered.ca:80?transport=tcp",
-                username: "97f4025e826e8fe4a53e8a97",
-                credential: "qRVXr/1dN5EQDmHG",
+        let ICE_SERVERS = []; // Will be populated dynamically
+        
+        // Fetch dynamic TURN credentials from Metered.ca
+        async function fetchTURNCredentials() {
+            try {
+                const response = await fetch('https://metalingua.metered.live/api/v1/turn/credentials?apiKey=f3d6e866f1744312d043ffc9271c35ce8914');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch TURN credentials');
+                }
+                
+                const turnServers = await response.json();
+                log(`Fetched ${turnServers.length} dynamic TURN servers`, 'success');
+                
+                // Add Google's STUN server
+                ICE_SERVERS = [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    ...turnServers
+                ];
+                
+                return true;
+            } catch (error) {
+                log(`Error fetching TURN credentials: ${error.message}`, 'error');
+                
+                // Fallback to static credentials
+                ICE_SERVERS = [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    {
+                        urls: 'turn:global.relay.metered.ca:80',
+                        username: 'metalingua',
+                        credential: 'g6qOeKd-yYFCnlLV2SF5MyQzYwVpPeDcWMkzTNKFBuRsCfI_'
+                    },
+                    {
+                        urls: 'turn:global.relay.metered.ca:80?transport=tcp',
+                        username: 'metalingua',
+                        credential: 'g6qOeKd-yYFCnlLV2SF5MyQzYwVpPeDcWMkzTNKFBuRsCfI_'
+                    },
+                    {
+                        urls: 'turn:global.relay.metered.ca:443',
+                        username: 'metalingua',
+                        credential: 'g6qOeKd-yYFCnlLV2SF5MyQzYwVpPeDcWMkzTNKFBuRsCfI_'
+                    },
+                    {
+                        urls: 'turns:global.relay.metered.ca:443?transport=tcp',
+                        username: 'metalingua',
+                        credential: 'g6qOeKd-yYFCnlLV2SF5MyQzYwVpPeDcWMkzTNKFBuRsCfI_'
+                    }
+                ];
+                
+                return false;
             }
-        ];
+        }
         
         // State
         let socket = null;
@@ -250,6 +289,9 @@
                 document.getElementById('endBtn').disabled = false;
                 
                 updateStatus(`Starting as ${role}...`, 'info');
+                
+                // Fetch TURN credentials first
+                await fetchTURNCredentials();
                 
                 // Get user media
                 localStream = await navigator.mediaDevices.getUserMedia({
