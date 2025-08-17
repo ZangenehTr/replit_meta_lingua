@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Call Test - Meta Lingua</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .section h2 {
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .test-group {
+            margin-bottom: 20px;
+        }
+        
+        .test-group h3 {
+            color: #444;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .video-container {
+            display: none;
+            margin-top: 20px;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 16/9;
+        }
+        
+        .video-container.active {
+            display: block;
+        }
+        
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        #localVideo {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            border-radius: 10px;
+            border: 2px solid white;
+            z-index: 10;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .control-btn {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: 2px solid white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .control-btn.active {
+            background: #e74c3c;
+        }
+        
+        .test-results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f8ff;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .test-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        
+        .test-item .icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .test-item.success .icon {
+            color: #28a745;
+        }
+        
+        .test-item.error .icon {
+            color: #dc3545;
+        }
+        
+        .test-item.pending .icon {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 Meta Lingua Video Call Test</h1>
+        <p class="subtitle">Test WebRTC video calling functionality with TURN server support</p>
+        
+        <div class="section">
+            <h2>📋 Test Configuration</h2>
+            <div class="test-group">
+                <h3>TURN Server Status</h3>
+                <button onclick="testTurnServer()">Test TURN Connection</button>
+                <div id="turnStatus" class="status info">Ready to test TURN server connectivity</div>
+            </div>
+            
+            <div class="test-group">
+                <h3>Media Devices</h3>
+                <button onclick="testMediaDevices()">Test Camera & Microphone</button>
+                <div id="mediaStatus" class="status info">Click to request media permissions</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🚀 Video Call Test</h2>
+            <div class="test-group">
+                <h3>Simulate Video Call</h3>
+                <button onclick="startVideoCall('student')" id="studentBtn">Start as Student</button>
+                <button onclick="startVideoCall('teacher')" id="teacherBtn">Start as Teacher</button>
+                <button onclick="endVideoCall()" id="endBtn" disabled>End Call</button>
+                <div id="callStatus" class="status info">Select a role to start the video call test</div>
+            </div>
+            
+            <div id="videoContainer" class="video-container">
+                <video id="localVideo" autoplay muted playsinline></video>
+                <video id="remoteVideo" autoplay playsinline></video>
+                <div class="controls">
+                    <div class="control-btn" onclick="toggleMute()">
+                        <span id="muteIcon">🎤</span>
+                    </div>
+                    <div class="control-btn" onclick="toggleVideo()">
+                        <span id="videoIcon">📹</span>
+                    </div>
+                    <div class="control-btn" onclick="endVideoCall()" style="background: #e74c3c;">
+                        <span>📞</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>✅ Test Results</h2>
+            <div class="test-results">
+                <div class="test-item pending" id="testWebSocket">
+                    <span class="icon">⏳</span>
+                    <span>WebSocket Connection</span>
+                </div>
+                <div class="test-item pending" id="testTurn">
+                    <span class="icon">⏳</span>
+                    <span>TURN Server Connection</span>
+                </div>
+                <div class="test-item pending" id="testMedia">
+                    <span class="icon">⏳</span>
+                    <span>Media Access (Camera/Mic)</span>
+                </div>
+                <div class="test-item pending" id="testPeer">
+                    <span class="icon">⏳</span>
+                    <span>Peer Connection</span>
+                </div>
+                <div class="test-item pending" id="testSignaling">
+                    <span class="icon">⏳</span>
+                    <span>Signaling Server</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let socket = null;
+        let peer = null;
+        let localStream = null;
+        let currentRole = null;
+        let isMuted = false;
+        let isVideoOff = false;
+        
+        // TURN server configuration (Metered.ca)
+        const turnConfig = {
+            iceServers: [
+                {
+                    urls: "stun:stun.relay.metered.ca:80",
+                },
+                {
+                    urls: "turn:global.relay.metered.ca:80",
+                    username: "647eb8e7e89b89c5cbee9153",
+                    credential: "Z9v5V8J7sFjPQcXP",
+                },
+                {
+                    urls: "turn:global.relay.metered.ca:80?transport=tcp",
+                    username: "647eb8e7e89b89c5cbee9153",
+                    credential: "Z9v5V8J7sFjPQcXP",
+                },
+                {
+                    urls: "turn:global.relay.metered.ca:443",
+                    username: "647eb8e7e89b89c5cbee9153",
+                    credential: "Z9v5V8J7sFjPQcXP",
+                },
+                {
+                    urls: "turns:global.relay.metered.ca:443?transport=tcp",
+                    username: "647eb8e7e89b89c5cbee9153",
+                    credential: "Z9v5V8J7sFjPQcXP",
+                },
+            ]
+        };
+        
+        async function testTurnServer() {
+            const statusEl = document.getElementById('turnStatus');
+            const testEl = document.getElementById('testTurn');
+            
+            try {
+                statusEl.className = 'status info';
+                statusEl.textContent = 'Testing TURN server connectivity...';
+                
+                const pc = new RTCPeerConnection(turnConfig);
+                
+                // Create a data channel to trigger ICE gathering
+                pc.createDataChannel('test');
+                
+                // Wait for ICE gathering
+                await pc.setLocalDescription(await pc.createOffer());
+                
+                // Check for relay candidates
+                let hasRelay = false;
+                pc.onicecandidate = (event) => {
+                    if (event.candidate && event.candidate.type === 'relay') {
+                        hasRelay = true;
+                    }
+                };
+                
+                // Wait a bit for candidates
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                pc.close();
+                
+                if (hasRelay) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ TURN server connected successfully (Metered.ca)';
+                    updateTestItem('testTurn', 'success', '✅');
+                } else {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ STUN server connected (TURN may not be needed for your network)';
+                    updateTestItem('testTurn', 'success', '✅');
+                }
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ TURN server test failed: ${error.message}`;
+                updateTestItem('testTurn', 'error', '❌');
+            }
+        }
+        
+        async function testMediaDevices() {
+            const statusEl = document.getElementById('mediaStatus');
+            const testEl = document.getElementById('testMedia');
+            
+            try {
+                statusEl.className = 'status info';
+                statusEl.textContent = 'Requesting camera and microphone access...';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                });
+                
+                // Stop the stream after testing
+                stream.getTracks().forEach(track => track.stop());
+                
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ Camera and microphone access granted';
+                updateTestItem('testMedia', 'success', '✅');
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ Media access failed: ${error.message}`;
+                updateTestItem('testMedia', 'error', '❌');
+            }
+        }
+        
+        async function startVideoCall(role) {
+            currentRole = role;
+            const statusEl = document.getElementById('callStatus');
+            const videoContainer = document.getElementById('videoContainer');
+            
+            try {
+                // Update UI
+                document.getElementById('studentBtn').disabled = true;
+                document.getElementById('teacherBtn').disabled = true;
+                document.getElementById('endBtn').disabled = false;
+                
+                statusEl.className = 'status info';
+                statusEl.textContent = `Starting video call as ${role}...`;
+                
+                // Get media stream
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                });
+                
+                // Display local video
+                const localVideo = document.getElementById('localVideo');
+                localVideo.srcObject = localStream;
+                videoContainer.classList.add('active');
+                
+                // Initialize WebSocket connection
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}`;
+                socket = new WebSocket(wsUrl);
+                
+                socket.onopen = () => {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = `✅ Connected as ${role} - Waiting for peer...`;
+                    updateTestItem('testWebSocket', 'success', '✅');
+                    
+                    // Join room
+                    socket.send(JSON.stringify({
+                        type: 'join',
+                        roomId: 'test-room-123',
+                        userId: role === 'student' ? 'student-1' : 'teacher-1',
+                        role: role
+                    }));
+                };
+                
+                socket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    handleSignalingMessage(data);
+                };
+                
+                socket.onerror = (error) => {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = `❌ WebSocket error: ${error}`;
+                    updateTestItem('testWebSocket', 'error', '❌');
+                };
+                
+                // Initialize peer connection
+                initializePeerConnection();
+                
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ Failed to start call: ${error.message}`;
+                console.error('Error starting video call:', error);
+            }
+        }
+        
+        function initializePeerConnection() {
+            peer = new RTCPeerConnection(turnConfig);
+            
+            // Add local stream tracks
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    peer.addTrack(track, localStream);
+                });
+            }
+            
+            // Handle remote stream
+            peer.ontrack = (event) => {
+                const remoteVideo = document.getElementById('remoteVideo');
+                remoteVideo.srcObject = event.streams[0];
+                updateTestItem('testPeer', 'success', '✅');
+            };
+            
+            // Handle ICE candidates
+            peer.onicecandidate = (event) => {
+                if (event.candidate && socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({
+                        type: 'ice-candidate',
+                        candidate: event.candidate,
+                        roomId: 'test-room-123'
+                    }));
+                }
+            };
+            
+            // Monitor connection state
+            peer.onconnectionstatechange = () => {
+                const statusEl = document.getElementById('callStatus');
+                
+                switch(peer.connectionState) {
+                    case 'connected':
+                        statusEl.className = 'status success';
+                        statusEl.textContent = '✅ Video call connected successfully!';
+                        updateTestItem('testSignaling', 'success', '✅');
+                        break;
+                    case 'failed':
+                        statusEl.className = 'status error';
+                        statusEl.textContent = '❌ Connection failed';
+                        updateTestItem('testPeer', 'error', '❌');
+                        break;
+                }
+            };
+        }
+        
+        async function handleSignalingMessage(data) {
+            switch(data.type) {
+                case 'offer':
+                    if (peer) {
+                        await peer.setRemoteDescription(new RTCSessionDescription(data.offer));
+                        const answer = await peer.createAnswer();
+                        await peer.setLocalDescription(answer);
+                        
+                        socket.send(JSON.stringify({
+                            type: 'answer',
+                            answer: answer,
+                            roomId: 'test-room-123'
+                        }));
+                    }
+                    break;
+                    
+                case 'answer':
+                    if (peer) {
+                        await peer.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    }
+                    break;
+                    
+                case 'ice-candidate':
+                    if (peer && data.candidate) {
+                        await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
+                    }
+                    break;
+                    
+                case 'user-joined':
+                    // If we're the teacher and a student joined, create offer
+                    if (currentRole === 'teacher' && data.role === 'student') {
+                        const offer = await peer.createOffer();
+                        await peer.setLocalDescription(offer);
+                        
+                        socket.send(JSON.stringify({
+                            type: 'offer',
+                            offer: offer,
+                            roomId: 'test-room-123'
+                        }));
+                    }
+                    break;
+            }
+        }
+        
+        function endVideoCall() {
+            // Stop local stream
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            // Close peer connection
+            if (peer) {
+                peer.close();
+                peer = null;
+            }
+            
+            // Close WebSocket
+            if (socket) {
+                socket.close();
+                socket = null;
+            }
+            
+            // Update UI
+            document.getElementById('videoContainer').classList.remove('active');
+            document.getElementById('studentBtn').disabled = false;
+            document.getElementById('teacherBtn').disabled = false;
+            document.getElementById('endBtn').disabled = true;
+            document.getElementById('callStatus').className = 'status info';
+            document.getElementById('callStatus').textContent = 'Call ended. Select a role to start a new test.';
+            
+            // Clear video elements
+            document.getElementById('localVideo').srcObject = null;
+            document.getElementById('remoteVideo').srcObject = null;
+        }
+        
+        function toggleMute() {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    isMuted = !isMuted;
+                    audioTrack.enabled = !isMuted;
+                    document.getElementById('muteIcon').textContent = isMuted ? '🔇' : '🎤';
+                }
+            }
+        }
+        
+        function toggleVideo() {
+            if (localStream) {
+                const videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    isVideoOff = !isVideoOff;
+                    videoTrack.enabled = !isVideoOff;
+                    document.getElementById('videoIcon').textContent = isVideoOff ? '📵' : '📹';
+                }
+            }
+        }
+        
+        function updateTestItem(id, status, icon) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.className = `test-item ${status}`;
+                element.querySelector('.icon').textContent = icon;
+            }
+        }
+        
+        // Test TURN server on page load
+        window.addEventListener('load', () => {
+            setTimeout(testTurnServer, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -65,5 +65,14 @@
   "endCall": "End Call",
   "noTeachersAvailable": "No teachers available for {{language}} at the moment. Please try again later.",
   "duration": "Duration",
-  "used": "Used"
+  "used": "Used",
+  "connected": "Connected",
+  "connecting": "Connecting...",
+  "waitingForConnection": "Waiting for connection...",
+  "wordHelper": "Word Helper",
+  "typeWordForHelp": "Type a word for translation",
+  "pressEnterForTranslation": "Press Enter to get translation and suggestions",
+  "errors": {
+    "mediaAccess": "Could not access camera or microphone. Please check your permissions."
+  }
 }

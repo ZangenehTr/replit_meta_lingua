@@ -65,5 +65,14 @@
   "endCall": "پایان تماس",
   "noTeachersAvailable": "در حال حاضر معلمی برای {{language}} موجود نیست. لطفاً بعداً تلاش کنید.",
   "duration": "مدت زمان",
-  "used": "استفاده شده"
+  "used": "استفاده شده",
+  "connected": "متصل شد",
+  "connecting": "در حال اتصال...",
+  "waitingForConnection": "در انتظار اتصال...",
+  "wordHelper": "دستیار واژه",
+  "typeWordForHelp": "واژه‌ای را برای ترجمه تایپ کنید",
+  "pressEnterForTranslation": "برای دریافت ترجمه و پیشنهادات Enter را بزنید",
+  "errors": {
+    "mediaAccess": "دسترسی به دوربین یا میکروفون امکان‌پذیر نیست. لطفاً مجوزها را بررسی کنید."
+  }
 }

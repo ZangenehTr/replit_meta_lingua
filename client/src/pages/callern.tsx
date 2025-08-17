@@ -189,15 +189,20 @@ export default function CallernSystem() {
       .reduce((acc, byte) => acc + byte.toString(36), '');
     const roomId = `callern-${Date.now()}-${randomStr}`;
 
-    // Set up call configuration
+    // Set up call configuration with proper props for VideoCall component
     setActiveCallConfig({
       roomId,
-      studentId: user?.id || 0,
+      userId: user?.id || 0,
+      role: 'student' as const,
+      onMinutesUpdate: (minutes: number) => {
+        console.log(`Call duration: ${minutes} minutes`);
+        // Update package minutes here
+        queryClient.invalidateQueries({ queryKey: ["/api/student/my-callern-packages"] });
+      },
+      // Store additional data for reference
       teacherId: teacher.id,
       packageId: activePackage.packageId,
-      language: selectedLanguage,
       teacherName: `${teacher.firstName} ${teacher.lastName}`,
-      studentName: user?.firstName || 'Student',
     });
 
     setSelectedTeacher(teacher);
