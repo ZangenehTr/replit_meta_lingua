@@ -55,9 +55,6 @@ import {
   type Room,
   type InsertRoom
 } from "@shared/schema";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
 import mammoth from "mammoth";
 
 // Configure multer for audio uploads
@@ -17609,6 +17606,108 @@ Meta Lingua Academy`;
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to create bookmark" });
+    }
+  });
+
+  // ============== AI Word Suggestion Endpoints (OpenAI) ==============
+  
+  // Get AI word suggestions for video calls
+  app.post("/api/ai/word-suggestions", authenticateToken, async (req: any, res) => {
+    try {
+      const { context, targetLanguage, difficulty } = req.body;
+      
+      if (!context || !targetLanguage) {
+        return res.status(400).json({ 
+          message: "Context and target language are required" 
+        });
+      }
+
+      const { getWordSuggestions } = await import('./openai-service');
+      const suggestions = await getWordSuggestions({
+        context,
+        targetLanguage,
+        difficulty: difficulty || 'intermediate'
+      });
+      
+      res.json({ suggestions });
+    } catch (error) {
+      console.error('Word suggestion error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate word suggestions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get instant translation
+  app.post("/api/ai/translate", authenticateToken, async (req: any, res) => {
+    try {
+      const { text, fromLang, toLang } = req.body;
+      
+      if (!text || !fromLang || !toLang) {
+        return res.status(400).json({ 
+          message: "Text, source language, and target language are required" 
+        });
+      }
+
+      const { getInstantTranslation } = await import('./openai-service');
+      const result = await getInstantTranslation(text, fromLang, toLang);
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Translation error:', error);
+      res.status(500).json({ 
+        message: "Failed to translate text",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get grammar correction
+  app.post("/api/ai/grammar-check", authenticateToken, async (req: any, res) => {
+    try {
+      const { text, language } = req.body;
+      
+      if (!text || !language) {
+        return res.status(400).json({ 
+          message: "Text and language are required" 
+        });
+      }
+
+      const { getGrammarCorrection } = await import('./openai-service');
+      const result = await getGrammarCorrection(text, language);
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Grammar check error:', error);
+      res.status(500).json({ 
+        message: "Failed to check grammar",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get pronunciation guide
+  app.post("/api/ai/pronunciation", authenticateToken, async (req: any, res) => {
+    try {
+      const { word, language } = req.body;
+      
+      if (!word || !language) {
+        return res.status(400).json({ 
+          message: "Word and language are required" 
+        });
+      }
+
+      const { getPronunciationGuide } = await import('./openai-service');
+      const result = await getPronunciationGuide(word, language);
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Pronunciation guide error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate pronunciation guide",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
   
