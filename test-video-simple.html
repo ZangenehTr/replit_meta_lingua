@@ -181,7 +181,8 @@
         let peer = null;
         let localStream = null;
         let currentRole = null;
-        let roomId = 'test-room-' + Date.now();
+        // Use a fixed room ID so both devices join the same room
+        let roomId = 'test-room-shared';
         
         // TURN servers configuration
         const iceServers = [
