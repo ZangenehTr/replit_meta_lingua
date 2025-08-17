@@ -73,15 +73,12 @@ export const roadmapSteps = pgTable("roadmap_steps", {
   contentType: varchar("content_type", { length: 50 }).notNull(), // lesson, video, exercise, reading, project
   courseId: integer("course_id").references(() => courses.id), // Optional link to course
   contentUrl: varchar("content_url", { length: 500 }), // External content
-  contentMetadata: jsonb("content_metadata"), // Additional content info
   
   // Requirements
   isRequired: boolean("is_required").default(true),
-  prerequisites: integer("prerequisites").array().default([]), // IDs of prerequisite steps
   
   // Learning objectives
   objectives: text("objectives").array().default([]),
-  skillsTargeted: jsonb("skills_targeted"), // { speaking: 20, listening: 30, etc. }
   
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
