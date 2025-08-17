@@ -181,6 +181,7 @@
         let peer = null;
         let localStream = null;
         let currentRole = null;
+        let otherUserSocketId = null; // Track the other user's socket ID
         // Use a fixed room ID so both devices join the same room
         let roomId = 'test-room-shared';
         
@@ -244,8 +245,12 @@
                     console.log('User joined:', data);
                     statusEl.textContent = `${data.role} joined - Connecting...`;
                     
+                    // Store the other user's socket ID
+                    otherUserSocketId = data.socketId;
+                    
                     if (currentRole === 'teacher' && data.role === 'student') {
                         // Teacher creates offer
+                        console.log('Teacher creating offer for student:', data.socketId);
                         const offer = await peer.createOffer();
                         await peer.setLocalDescription(offer);
                         
@@ -258,7 +263,11 @@
                 });
                 
                 socket.on('offer', async (data) => {
-                    console.log('Received offer');
+                    console.log('Received offer from:', data.from);
+                    
+                    // Store the sender's socket ID for ICE candidates
+                    otherUserSocketId = data.from;
+                    
                     await peer.setRemoteDescription(new RTCSessionDescription(data.offer));
                     
                     const answer = await peer.createAnswer();
@@ -313,11 +322,11 @@
             
             // Handle ICE candidates
             peer.onicecandidate = (event) => {
-                if (event.candidate && socket) {
+                if (event.candidate && socket && otherUserSocketId) {
                     socket.emit('ice-candidate', {
                         candidate: event.candidate,
                         roomId: roomId,
-                        to: 'broadcast'
+                        to: otherUserSocketId
                     });
                 }
             };
