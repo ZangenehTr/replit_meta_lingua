@@ -379,6 +379,16 @@ function Router() {
           <GamificationSystem />
         </ProtectedRoute>
       </Route>
+      <Route path="/game/:gameId">
+        <ProtectedRoute>
+          <GamePlayer />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/game-player/:gameId">
+        <ProtectedRoute>
+          <GamePlayer />
+        </ProtectedRoute>
+      </Route>
       <Route path="/wallet">
         <ProtectedRoute>
           <WalletPage />
