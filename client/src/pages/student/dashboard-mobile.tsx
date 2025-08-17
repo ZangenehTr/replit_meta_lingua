@@ -33,7 +33,10 @@ import {
   Sparkles,
   Users,
   Video,
-  MessageCircle
+  MessageCircle,
+  Map,
+  Gamepad2,
+  PlayCircle
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -201,6 +204,57 @@ export default function StudentDashboardMobile() {
                 />
               </div>
             </GlossyCard>
+
+            {/* Quick Actions - Core Features */}
+            <div className="grid grid-cols-2 gap-4">
+              <GlossyCard interactive className="p-4">
+                <Link href="/student/roadmap">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-2">
+                      <Map className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-white/90 text-sm font-medium">{t('student:myRoadmap')}</span>
+                    <span className="text-white/60 text-xs mt-1">{t('student:learningPath')}</span>
+                  </div>
+                </Link>
+              </GlossyCard>
+              
+              <GlossyCard interactive className="p-4">
+                <Link href="/callern">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center mb-2">
+                      <Video className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-white/90 text-sm font-medium">Callern</span>
+                    <span className="text-white/60 text-xs mt-1">{t('student:instantTutoring')}</span>
+                  </div>
+                </Link>
+              </GlossyCard>
+              
+              <GlossyCard interactive className="p-4">
+                <Link href="/games">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-2">
+                      <Gamepad2 className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-white/90 text-sm font-medium">{t('student:games')}</span>
+                    <span className="text-white/60 text-xs mt-1">{t('student:playAndLearn')}</span>
+                  </div>
+                </Link>
+              </GlossyCard>
+              
+              <GlossyCard interactive className="p-4">
+                <Link href="/video-courses">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-2">
+                      <PlayCircle className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-white/90 text-sm font-medium">{t('student:videoCourses')}</span>
+                    <span className="text-white/60 text-xs mt-1">{t('student:watchAndLearn')}</span>
+                  </div>
+                </Link>
+              </GlossyCard>
+            </div>
 
             {/* Upcoming Sessions */}
             <GlossyCard>
