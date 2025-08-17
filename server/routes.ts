@@ -8,6 +8,7 @@ import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
+import { registerCallernAIRoutes } from "./callern-ai-routes";
 import { 
   filterTeachers, 
   filterActiveTeachers,
@@ -17891,6 +17892,9 @@ Meta Lingua Academy`;
   
   // Setup Callern enhancement routes
   setupCallernEnhancementRoutes(app);
+  
+  // Setup Callern AI routes for video calling
+  registerCallernAIRoutes(app);
 
   const httpServer = createServer(app);
   
