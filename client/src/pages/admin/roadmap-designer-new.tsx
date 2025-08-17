@@ -133,7 +133,7 @@ export default function RoadmapDesigner() {
   });
 
   // Fetch roadmaps
-  const { data: roadmaps = [], isLoading: loadingRoadmaps } = useQuery({
+  const { data: roadmaps = [], isLoading: loadingRoadmaps } = useQuery<Roadmap[]>({
     queryKey: ['/api/roadmaps']
   });
 
@@ -144,7 +144,7 @@ export default function RoadmapDesigner() {
   });
 
   // Fetch courses for content linking
-  const { data: courses = [] } = useQuery({
+  const { data: courses = [] } = useQuery<any[]>({
     queryKey: ['/api/courses']
   });
 
