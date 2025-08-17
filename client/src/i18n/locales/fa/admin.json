@@ -1989,6 +1989,21 @@
     "create": "ایجاد",
     "roadmapTitlePlaceholder": "عنوان نقشه راه را وارد کنید",
     "roadmapDescriptionPlaceholder": "توضیحات نقشه راه را وارد کنید",
-    "addMilestone": "افزودن نقطه عطف"
+    "addMilestone": "افزودن نقطه عطف",
+    "roadmapDesigner": "طراح نقشه راه",
+    "roadmapDesignerDescription": "طراحی و مدیریت مسیرهای یادگیری شخصی‌سازی شده",
+    "createRoadmap": "ایجاد نقشه راه",
+    "roadmaps": "نقشه راه‌ها",
+    "selectRoadmap": "یک نقشه راه را انتخاب کنید",
+    "title": "عنوان",
+    "milestoneTitlePlaceholder": "عنوان نقطه عطف را وارد کنید",
+    "description": "توضیحات",
+    "milestoneDescriptionPlaceholder": "توضیحات نقطه عطف را وارد کنید",
+    "weekNumber": "شماره هفته",
+    "primarySkill": "مهارت اصلی",
+    "roadmapCreatedSuccess": "نقشه راه با موفقیت ایجاد شد",
+    "roadmapCreatedError": "خطا در ایجاد نقشه راه",
+    "milestoneAddedSuccess": "نقطه عطف با موفقیت اضافه شد",
+    "milestoneAddedError": "خطا در افزودن نقطه عطف"
   }
 }
