@@ -11,6 +11,7 @@ interface CallRoom {
   packageId: number;
   startTime: Date;
   participants: Set<string>;
+  minutesUsed?: number;
 }
 
 interface TeacherSocket {
@@ -20,11 +21,20 @@ interface TeacherSocket {
   currentCall?: string;
 }
 
+interface UserSocket {
+  socketId: string;
+  userId: number;
+  role: string;
+  currentRoom?: string;
+}
+
 export class CallernWebSocketServer {
   private io: SocketIOServer;
   private activeRooms: Map<string, CallRoom> = new Map();
   private teacherSockets: Map<number, TeacherSocket> = new Map();
   private studentSockets: Map<number, string> = new Map();
+  private userSockets: Map<string, UserSocket> = new Map(); // socketId -> user info
+  private roomTimers: Map<string, NodeJS.Timeout> = new Map();
 
   constructor(httpServer: Server) {
     this.io = new SocketIOServer(httpServer, {
@@ -72,13 +82,84 @@ export class CallernWebSocketServer {
         const { roomId, userId, role } = data;
         socket.join(roomId);
         
+        // Store user socket info
+        this.userSockets.set(socket.id, {
+          socketId: socket.id,
+          userId,
+          role,
+          currentRoom: roomId
+        });
+        
         // Add to room participants
         const room = this.activeRooms.get(roomId);
         if (room) {
           room.participants.add(socket.id);
+          
+          // Notify other participants that someone joined
+          socket.to(roomId).emit('user-joined', {
+            userId,
+            role,
+            socketId: socket.id
+          });
         }
         
         console.log(`User ${userId} (${role}) joined room ${roomId}`);
+      });
+      
+      // WebRTC Signaling Events
+      socket.on('offer', (data) => {
+        const { roomId, offer, to } = data;
+        console.log(`Forwarding offer from ${socket.id} to ${to} in room ${roomId}`);
+        this.io.to(to).emit('offer', {
+          offer,
+          from: socket.id,
+          roomId
+        });
+      });
+      
+      socket.on('answer', (data) => {
+        const { roomId, answer, to } = data;
+        console.log(`Forwarding answer from ${socket.id} to ${to} in room ${roomId}`);
+        this.io.to(to).emit('answer', {
+          answer,
+          from: socket.id,
+          roomId
+        });
+      });
+      
+      socket.on('ice-candidate', (data) => {
+        const { roomId, candidate, to } = data;
+        console.log(`Forwarding ICE candidate from ${socket.id} to ${to}`);
+        this.io.to(to).emit('ice-candidate', {
+          candidate,
+          from: socket.id,
+          roomId
+        });
+      });
+      
+      // Handle call control events
+      socket.on('toggle-video', (data) => {
+        const { roomId, enabled } = data;
+        socket.to(roomId).emit('peer-video-toggle', {
+          userId: this.userSockets.get(socket.id)?.userId,
+          enabled
+        });
+      });
+      
+      socket.on('toggle-audio', (data) => {
+        const { roomId, enabled } = data;
+        socket.to(roomId).emit('peer-audio-toggle', {
+          userId: this.userSockets.get(socket.id)?.userId,
+          enabled
+        });
+      });
+      
+      socket.on('share-screen', (data) => {
+        const { roomId, enabled } = data;
+        socket.to(roomId).emit('peer-screen-share', {
+          userId: this.userSockets.get(socket.id)?.userId,
+          enabled
+        });
       });
 
       // Handle call request from student
