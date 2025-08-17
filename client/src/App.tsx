@@ -112,7 +112,7 @@ import UserManagement from "@/pages/admin/user-management";
 import TeacherStudentMatchingPage from "@/pages/admin/teacher-student-matching";
 import RoomManagement from "@/pages/admin/room-management";
 import { CallernManagement } from "@/pages/admin/callern-management";
-import RoadmapDesigner from "@/pages/admin/roadmap-designer";
+import RoadmapDesigner from "@/pages/admin/roadmap-designer-new";
 import CallernMobilePage from "@/pages/callern-mobile";
 import CallernEnhancements from "@/pages/callern-enhancements";
 import GamificationSystem from "@/pages/games";
