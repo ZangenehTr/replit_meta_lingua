@@ -72,6 +72,16 @@
   "wordHelper": "Word Helper",
   "typeWordForHelp": "Type a word for translation",
   "pressEnterForTranslation": "Press Enter to get translation and suggestions",
+  "studentBriefing": "Student Briefing",
+  "showBriefing": "Show Briefing",
+  "studentProfile": "Student Profile",
+  "currentPackage": "Current Package",
+  "timeUsed": "Time Used",
+  "roadmapProgress": "Roadmap Progress",
+  "recentLessons": "Recent Lessons",
+  "recentPerformance": "Recent Performance",
+  "last30Days": "Last 30 Days",
+  "avgSessionLength": "Avg Session Length",
   "errors": {
     "mediaAccess": "Could not access camera or microphone. Please check your permissions."
   }

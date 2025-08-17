@@ -72,6 +72,16 @@
   "wordHelper": "دستیار واژه",
   "typeWordForHelp": "واژه‌ای را برای ترجمه تایپ کنید",
   "pressEnterForTranslation": "برای دریافت ترجمه و پیشنهادات Enter را بزنید",
+  "studentBriefing": "گزارش زبان‌آموز",
+  "showBriefing": "نمایش گزارش",
+  "studentProfile": "پروفایل زبان‌آموز",
+  "currentPackage": "بسته فعلی",
+  "timeUsed": "زمان استفاده شده",
+  "roadmapProgress": "پیشرفت نقشه راه",
+  "recentLessons": "جلسات اخیر",
+  "recentPerformance": "عملکرد اخیر",
+  "last30Days": "۳۰ روز گذشته",
+  "avgSessionLength": "میانگین مدت جلسه",
   "errors": {
     "mediaAccess": "دسترسی به دوربین یا میکروفون امکان‌پذیر نیست. لطفاً مجوزها را بررسی کنید."
   }

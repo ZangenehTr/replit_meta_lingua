@@ -6,21 +6,81 @@ import { Card } from '@/components/ui/card';
 import { 
   Mic, MicOff, Video, VideoOff, PhoneOff, 
   Monitor, MonitorOff, MessageSquare, HelpCircle,
-  Volume2, VolumeX, Maximize2, Minimize2
+  Volume2, VolumeX, Maximize2, Minimize2,
+  User, Target, Clock, BookOpen, CheckCircle, AlertCircle
 } from 'lucide-react';
 import { getSimplePeerConfig } from '../../../../shared/webrtc-config';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 
 interface VideoCallProps {
   roomId: string;
   userId: number;
   role: 'student' | 'teacher';
+  studentId?: number; // For teachers to know which student they're calling
   onCallEnd: () => void;
   onMinutesUpdate?: (minutes: number) => void;
 }
 
-export function VideoCall({ roomId, userId, role, onCallEnd, onMinutesUpdate }: VideoCallProps) {
+interface StudentBriefing {
+  profile: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    avatar?: string;
+    targetLanguage?: string;
+    currentLevel?: string;
+    learningGoals?: string;
+    preferredLearningStyle?: string;
+  };
+  currentPackage?: {
+    id: number;
+    packageName: string;
+    packageType?: string;
+    totalHours: number;
+    usedMinutes: number;
+    remainingMinutes: number;
+    roadmapId?: number;
+    roadmapName?: string;
+  };
+  roadmapProgress: Array<{
+    id: number;
+    stepNumber: number;
+    stepTitle: string;
+    status: string;
+    teacherName?: string;
+  }>;
+  pastLessons: Array<{
+    id: number;
+    teacherName: string;
+    startTime: string;
+    durationMinutes: number;
+    notes?: string;
+    aiSummary?: any;
+  }>;
+  assignedTasks: Array<{
+    id: number;
+    title: string;
+    description: string;
+    dueDate: string;
+    status: string;
+    teacherName: string;
+  }>;
+  recentPerformance: {
+    totalMinutesLast30Days: number;
+    sessionsLast30Days: number;
+    averageSessionLength: number;
+  };
+}
+
+export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinutesUpdate }: VideoCallProps) {
   const { t } = useTranslation(['callern']);
   const socket = useSocket();
   
@@ -41,6 +101,13 @@ export function VideoCall({ roomId, userId, role, onCallEnd, onMinutesUpdate }: 
   const [showChat, setShowChat] = useState(false);
   const [showWordHelper, setShowWordHelper] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showBriefing, setShowBriefing] = useState(role === 'teacher');
+  
+  // Fetch student briefing for teachers
+  const { data: briefing, isLoading: briefingLoading } = useQuery<StudentBriefing>({
+    queryKey: ['/api/callern/student-briefing', studentId],
+    enabled: role === 'teacher' && !!studentId,
+  });
   
   // Timer for call duration
   useEffect(() => {
@@ -345,54 +412,208 @@ export function VideoCall({ roomId, userId, role, onCallEnd, onMinutesUpdate }: 
   };
   
   return (
-    <div className="flex flex-col h-full bg-gray-900">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className={cn(
-              "w-3 h-3 rounded-full",
-              isConnected ? "bg-green-500 animate-pulse" : "bg-yellow-500"
-            )} />
-            <span className="text-white text-sm">
-              {isConnected ? t('callern:connected') : t('callern:connecting')}
-            </span>
+    <div className="flex h-screen bg-gray-900">
+      {/* Student Briefing Panel for Teachers */}
+      {role === 'teacher' && showBriefing && (
+        <div className="w-96 bg-white border-r overflow-hidden flex flex-col">
+          <div className="p-4 border-b flex items-center justify-between">
+            <h3 className="font-semibold">{t('callern:studentBriefing')}</h3>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowBriefing(false)}
+            >
+              ✕
+            </Button>
           </div>
-          {isConnected && (
-            <div className="text-white text-sm font-mono">
-              {formatTime(callDuration)}
+          
+          {briefingLoading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             </div>
-          )}
+          ) : briefing ? (
+            <ScrollArea className="flex-1">
+              <div className="p-4 space-y-6">
+                {/* Student Profile */}
+                <div>
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    {t('callern:studentProfile')}
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                    <p className="font-medium">{briefing.profile?.firstName} {briefing.profile?.lastName}</p>
+                    <p className="text-sm text-gray-600">{briefing.profile?.email}</p>
+                    <div className="flex gap-2 mt-2">
+                      <Badge variant="secondary">{briefing.profile?.currentLevel || 'A1'}</Badge>
+                      <Badge variant="outline">{briefing.profile?.targetLanguage || 'English'}</Badge>
+                    </div>
+                    {briefing.profile?.learningGoals && (
+                      <p className="text-sm mt-2">{briefing.profile.learningGoals}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Current Package & Roadmap */}
+                {briefing.currentPackage && (
+                  <div>
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <Target className="h-4 w-4" />
+                      {t('callern:currentPackage')}
+                    </h4>
+                    <div className="bg-blue-50 rounded-lg p-3">
+                      <p className="font-medium">{briefing.currentPackage.packageName}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {briefing.currentPackage.roadmapName || 'No roadmap assigned'}
+                      </p>
+                      <div className="mt-2">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>{t('callern:timeUsed')}</span>
+                          <span>{Math.round(briefing.currentPackage.usedMinutes / 60)}h / {briefing.currentPackage.totalHours}h</span>
+                        </div>
+                        <Progress 
+                          value={(briefing.currentPackage.usedMinutes / (briefing.currentPackage.totalHours * 60)) * 100} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Roadmap Progress */}
+                {briefing.roadmapProgress && briefing.roadmapProgress.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      {t('callern:roadmapProgress')}
+                    </h4>
+                    <div className="space-y-2">
+                      {briefing.roadmapProgress.slice(0, 5).map((step: any) => (
+                        <div key={step.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                          {step.status === 'completed' ? (
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 text-yellow-600" />
+                          )}
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">Step {step.stepNumber}: {step.stepTitle}</p>
+                            {step.teacherName && (
+                              <p className="text-xs text-gray-500">by {step.teacherName}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Past Lessons */}
+                {briefing.pastLessons && briefing.pastLessons.length > 0 && (
+                  <div>
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      {t('callern:recentLessons')}
+                    </h4>
+                    <div className="space-y-2">
+                      {briefing.pastLessons.map((lesson: any) => (
+                        <div key={lesson.id} className="bg-gray-50 rounded p-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-sm font-medium">{lesson.teacherName}</p>
+                              <p className="text-xs text-gray-500">
+                                {new Date(lesson.startTime).toLocaleDateString()} - {lesson.durationMinutes} min
+                              </p>
+                            </div>
+                          </div>
+                          {lesson.notes && (
+                            <p className="text-sm mt-1 text-gray-600">{lesson.notes}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Performance Metrics */}
+                {briefing.recentPerformance && (
+                  <div>
+                    <h4 className="font-medium mb-2">{t('callern:recentPerformance')}</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-gray-50 rounded p-2">
+                        <p className="text-xs text-gray-500">{t('callern:last30Days')}</p>
+                        <p className="text-lg font-medium">{briefing.recentPerformance.sessionsLast30Days} sessions</p>
+                      </div>
+                      <div className="bg-gray-50 rounded p-2">
+                        <p className="text-xs text-gray-500">{t('callern:avgSessionLength')}</p>
+                        <p className="text-lg font-medium">{briefing.recentPerformance.averageSessionLength} min</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          ) : null}
         </div>
+      )}
+
+      {/* Main Video Call Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
+          <div className="flex items-center gap-4">
+            {role === 'teacher' && !showBriefing && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowBriefing(true)}
+                className="text-white hover:bg-gray-700"
+              >
+                <User className="h-4 w-4 mr-2" />
+                {t('callern:showBriefing')}
+              </Button>
+            )}
+            <div className="flex items-center gap-2">
+              <div className={cn(
+                "w-3 h-3 rounded-full",
+                isConnected ? "bg-green-500 animate-pulse" : "bg-yellow-500"
+              )} />
+              <span className="text-white text-sm">
+                {isConnected ? t('callern:connected') : t('callern:connecting')}
+              </span>
+            </div>
+            {isConnected && (
+              <div className="text-white text-sm font-mono">
+                {formatTime(callDuration)}
+              </div>
+            )}
+          </div>
         
         <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setShowWordHelper(!showWordHelper)}
-            className="text-white hover:bg-gray-700"
-          >
-            <HelpCircle className="h-4 w-4 mr-2" />
-            {t('callern:wordHelper')}
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setShowChat(!showChat)}
-            className="text-white hover:bg-gray-700"
-          >
-            <MessageSquare className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={toggleFullscreen}
-            className="text-white hover:bg-gray-700"
-          >
-            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-          </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowWordHelper(!showWordHelper)}
+              className="text-white hover:bg-gray-700"
+            >
+              <HelpCircle className="h-4 w-4 mr-2" />
+              {t('callern:wordHelper')}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowChat(!showChat)}
+              className="text-white hover:bg-gray-700"
+            >
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={toggleFullscreen}
+              className="text-white hover:bg-gray-700"
+            >
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
-      </div>
       
       {/* Video Area */}
       <div className="flex-1 relative overflow-hidden">
@@ -492,6 +713,7 @@ export function VideoCall({ roomId, userId, role, onCallEnd, onMinutesUpdate }: 
             <PhoneOff className="h-6 w-6" />
           </Button>
         </div>
+      </div>
       </div>
     </div>
   );

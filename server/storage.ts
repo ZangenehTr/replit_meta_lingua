@@ -164,6 +164,36 @@ export interface IStorage {
   getStudentCallernPackages(studentId: number): Promise<any[]>;
   createStudentCallernPackage(packageData: any): Promise<any>;
   
+  // Callern Roadmaps
+  createCallernRoadmap(roadmapData: any): Promise<any>;
+  getCallernRoadmaps(): Promise<any[]>;
+  getCallernRoadmap(id: number): Promise<any | undefined>;
+  updateCallernRoadmap(id: number, updates: any): Promise<any | undefined>;
+  deleteCallernRoadmap(id: number): Promise<void>;
+  getRoadmapByPackageId(packageId: number): Promise<any | undefined>;
+  
+  // Callern Roadmap Steps
+  createRoadmapStep(stepData: any): Promise<any>;
+  getRoadmapSteps(roadmapId: number): Promise<any[]>;
+  updateRoadmapStep(id: number, updates: any): Promise<any | undefined>;
+  deleteRoadmapStep(id: number): Promise<void>;
+  
+  // Student Roadmap Progress
+  getStudentRoadmapProgress(studentId: number, packageId: number): Promise<any[]>;
+  getStudentCurrentStep(studentId: number, roadmapId: number): Promise<any | undefined>;
+  markStepCompleted(progressData: any): Promise<any>;
+  updateStepProgress(id: number, updates: any): Promise<any | undefined>;
+  
+  // Student Briefing for Teachers
+  getStudentCallernBriefing(studentId: number): Promise<{
+    profile: any;
+    currentPackage: any;
+    roadmapProgress: any[];
+    pastLessons: any[];
+    assignedTasks: any[];
+    recentPerformance: any;
+  }>;
+  
   // Schedule Conflict Checking (Check-First Protocol)
   checkTeacherScheduleConflicts(teacherId: number, proposedHours: string[]): Promise<{
     hasConflicts: boolean;

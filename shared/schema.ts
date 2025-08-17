@@ -62,7 +62,7 @@ export const userProfiles = pgTable("user_profiles", {
   guardianPhone: text("guardian_phone"),
   notes: text("notes"),
   currentLevel: text("current_level"), // Override for display level
-  enrolledCourseId: integer("enrolled_course_id").references(() => courses.id), // Course assigned during student creation
+  // Note: enrolledCourseId removed - using classEnrollments table for tracking student enrollments
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
@@ -343,7 +343,58 @@ export const callernPackages = pgTable("callern_packages", {
   totalHours: integer("total_hours").notNull(), // Total hours in the package
   price: decimal("price", { precision: 10, scale: 2 }).notNull(), // IRR
   description: text("description"),
+  packageType: varchar("package_type", { length: 50 }), // e.g., 'ielts_speaking', 'general_conversation', 'business_english'
+  targetLevel: varchar("target_level", { length: 20 }), // e.g., 'beginner', 'intermediate', 'advanced'
   isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Callern Package Roadmaps - Defines learning paths for each package
+export const callernRoadmaps = pgTable("callern_roadmaps", {
+  id: serial("id").primaryKey(),
+  packageId: integer("package_id").notNull().references(() => callernPackages.id, { onDelete: 'cascade' }),
+  roadmapName: varchar("roadmap_name", { length: 200 }).notNull(),
+  description: text("description"),
+  totalSteps: integer("total_steps").notNull(),
+  estimatedHours: integer("estimated_hours").notNull(),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Callern Roadmap Steps - Individual lessons/steps in a roadmap
+export const callernRoadmapSteps = pgTable("callern_roadmap_steps", {
+  id: serial("id").primaryKey(),
+  roadmapId: integer("roadmap_id").notNull().references(() => callernRoadmaps.id, { onDelete: 'cascade' }),
+  stepNumber: integer("step_number").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  objectives: text("objectives"), // Learning objectives for this step
+  estimatedMinutes: integer("estimated_minutes").notNull().default(30),
+  skillFocus: varchar("skill_focus", { length: 50 }), // speaking, listening, grammar, vocabulary
+  materials: jsonb("materials"), // JSON object with teaching materials, links, etc.
+  assessmentCriteria: text("assessment_criteria"), // How to evaluate completion
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Student progress through roadmap steps
+export const studentRoadmapProgress = pgTable("student_roadmap_progress", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => users.id),
+  packageId: integer("package_id").notNull().references(() => studentCallernPackages.id),
+  roadmapId: integer("roadmap_id").notNull().references(() => callernRoadmaps.id),
+  stepId: integer("step_id").notNull().references(() => callernRoadmapSteps.id),
+  teacherId: integer("teacher_id").notNull().references(() => users.id),
+  callId: integer("call_id").references(() => callernCallHistory.id),
+  status: varchar("status", { length: 20 }).notNull().default('in_progress'), // in_progress, completed, skipped
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  teacherNotes: text("teacher_notes"),
+  studentFeedback: text("student_feedback"),
+  performanceRating: integer("performance_rating"), // 1-5 rating
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
