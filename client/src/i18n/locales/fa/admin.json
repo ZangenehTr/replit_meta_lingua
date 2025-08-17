@@ -1960,6 +1960,24 @@
     "stepAddedSuccess": "مرحله با موفقیت اضافه شد",
     "stepAddedError": "خطا در افزودن مرحله",
     "roadmapDeletedSuccess": "نقشه راه با موفقیت حذف شد",
-    "roadmapDeletedError": "خطا در حذف نقشه راه"
+    "roadmapDeletedError": "خطا در حذف نقشه راه",
+    "roadmapDesigner": "طراح نقشه راه",
+    "roadmapDesignerDescription": "طراحی و مدیریت مسیرهای یادگیری شخصی‌سازی شده",
+    "createRoadmap": "ایجاد نقشه راه",
+    "roadmaps": "نقشه‌های راه",
+    "selectRoadmap": "یک نقشه راه را انتخاب کنید",
+    "noRoadmaps": "هیچ نقشه راهی یافت نشد",
+    "milestoneTitlePlaceholder": "عنوان نقطه عطف را وارد کنید",
+    "milestoneDescriptionPlaceholder": "توضیحات نقطه عطف را وارد کنید",
+    "title": "عنوان",
+    "description": "توضیحات",
+    "weekNumber": "شماره هفته",
+    "primarySkill": "مهارت اصلی",
+    "assessmentType": "نوع ارزیابی",
+    "passingScore": "نمره قبولی",
+    "orderIndex": "ترتیب",
+    "cancel": "انصراف",
+    "save": "ذخیره",
+    "saving": "در حال ذخیره..."
   }
 }

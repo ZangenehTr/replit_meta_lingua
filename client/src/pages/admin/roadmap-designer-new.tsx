@@ -275,18 +275,18 @@ export default function RoadmapDesigner() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glassmorphism-card p-6 mb-6"
+        className="glassmorphism-card p-4 sm:p-6 mb-6"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="neon-icon-wrapper">
-              <Map className="w-8 h-8 text-white" />
+              <Map className="w-6 sm:w-8 h-6 sm:h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white neon-text">
+              <h1 className="text-xl sm:text-3xl font-bold text-white neon-text">
                 {t('admin:roadmapDesigner')}
               </h1>
-              <p className="text-white/70 mt-1">
+              <p className="text-white/70 mt-1 text-sm sm:text-base">
                 {t('admin:roadmapDesignerDescription')}
               </p>
             </div>
@@ -296,7 +296,7 @@ export default function RoadmapDesigner() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowCreateModal(true)}
-            className="glossy-button-primary px-6 py-3 rounded-xl flex items-center gap-2"
+            className="glossy-button-primary px-4 sm:px-6 py-2 sm:py-3 rounded-xl flex items-center gap-2 w-full sm:w-auto justify-center"
           >
             <Plus className="w-5 h-5" />
             {t('admin:createRoadmap')}
@@ -701,19 +701,7 @@ export default function RoadmapDesigner() {
                   />
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-white/80 text-sm mb-1 block">
-                      {t('admin:weekNumber')}
-                    </label>
-                    <input
-                      type="number"
-                      value={milestoneForm.weekNumber}
-                      onChange={(e) => setMilestoneForm({...milestoneForm, weekNumber: parseInt(e.target.value)})}
-                      className="glossy-input w-full"
-                    />
-                  </div>
-                  
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-white/80 text-sm mb-1 block">
                       {t('admin:orderIndex')}
@@ -722,6 +710,18 @@ export default function RoadmapDesigner() {
                       type="number"
                       value={milestoneForm.orderIndex}
                       onChange={(e) => setMilestoneForm({...milestoneForm, orderIndex: parseInt(e.target.value)})}
+                      className="glossy-input w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-white/80 text-sm mb-1 block">
+                      {t('admin:weekNumber')}
+                    </label>
+                    <input
+                      type="number"
+                      value={milestoneForm.weekNumber}
+                      onChange={(e) => setMilestoneForm({...milestoneForm, weekNumber: parseInt(e.target.value)})}
                       className="glossy-input w-full"
                     />
                   </div>
@@ -742,16 +742,17 @@ export default function RoadmapDesigner() {
                   </select>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-white/80 text-sm mb-1 block">
-                      {t('admin:assessmentType')}
+                      {t('admin:assessmentType')} <span className="text-white/40">(اختیاری)</span>
                     </label>
                     <select
-                      value={milestoneForm.assessmentType}
-                      onChange={(e) => setMilestoneForm({...milestoneForm, assessmentType: e.target.value})}
+                      value={milestoneForm.assessmentType || ''}
+                      onChange={(e) => setMilestoneForm({...milestoneForm, assessmentType: e.target.value || null})}
                       className="glossy-input w-full"
                     >
+                      <option value="">بدون ارزیابی</option>
                       {assessmentTypes.map(type => (
                         <option key={type} value={type}>{type}</option>
                       ))}
@@ -767,17 +768,18 @@ export default function RoadmapDesigner() {
                       value={milestoneForm.passingScore}
                       onChange={(e) => setMilestoneForm({...milestoneForm, passingScore: parseInt(e.target.value)})}
                       className="glossy-input w-full"
+                      disabled={!milestoneForm.assessmentType}
                     />
                   </div>
                 </div>
               </div>
               
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowMilestoneModal(false)}
-                  className="glossy-button-secondary px-6 py-2 rounded-lg"
+                  className="glossy-button-secondary px-6 py-2 rounded-lg w-full sm:w-auto"
                 >
                   {t('admin:cancel')}
                 </motion.button>
@@ -785,7 +787,7 @@ export default function RoadmapDesigner() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => addMilestone.mutate(milestoneForm)}
-                  className="glossy-button-primary px-6 py-2 rounded-lg flex items-center gap-2"
+                  className="glossy-button-primary px-6 py-2 rounded-lg flex items-center justify-center gap-2 w-full sm:w-auto"
                   disabled={addMilestone.isPending}
                 >
                   {addMilestone.isPending ? (
