@@ -90,18 +90,26 @@ export class CallernWebSocketServer {
           currentRoom: roomId
         });
         
-        // Add to room participants
-        const room = this.activeRooms.get(roomId);
-        if (room) {
-          room.participants.add(socket.id);
-          
-          // Notify other participants that someone joined
-          socket.to(roomId).emit('user-joined', {
-            userId,
-            role,
-            socketId: socket.id
+        // Create room if it doesn't exist
+        if (!this.activeRooms.has(roomId)) {
+          this.activeRooms.set(roomId, {
+            id: roomId,
+            type: 'video',
+            participants: new Set(),
+            createdAt: new Date()
           });
         }
+        
+        // Add to room participants
+        const room = this.activeRooms.get(roomId)!;
+        room.participants.add(socket.id);
+        
+        // Notify other participants that someone joined
+        socket.to(roomId).emit('user-joined', {
+          userId,
+          role,
+          socketId: socket.id
+        });
         
         console.log(`User ${userId} (${role}) joined room ${roomId}`);
       });
