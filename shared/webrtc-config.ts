@@ -1,30 +1,31 @@
 // WebRTC Configuration with Metered TURN Servers
+// Production domain: metalingua.metered.live
 export const getICEServers = () => {
   return [
     // Google's public STUN server
     {
       urls: 'stun:stun.l.google.com:19302'
     },
-    // Metered TURN servers (Global)
+    // Metered TURN servers - Production (metalingua.metered.live)
     {
-      urls: 'turn:a.relay.metered.ca:80',
-      username: 'e8dd65c5e48a3edc8afdb679',
-      credential: 'GV9gJZLb6XR5WqBP'
+      urls: 'turn:global.relay.metered.ca:80',
+      username: 'metalingua',
+      credential: 'g6qOeKd-yYFCnlLV2SF5MyQzYwVpPeDcWMkzTNKFBuRsCfI_'
     },
     {
-      urls: 'turn:a.relay.metered.ca:80?transport=tcp',
-      username: 'e8dd65c5e48a3edc8afdb679',
-      credential: 'GV9gJZLb6XR5WqBP'
+      urls: 'turn:global.relay.metered.ca:80?transport=tcp',
+      username: 'metalingua',
+      credential: 'g6qOeKd-yYFCnlLV2SF5MyQzYwVpPeDcWMkzTNKFBuRsCfI_'
     },
     {
-      urls: 'turn:a.relay.metered.ca:443',
-      username: 'e8dd65c5e48a3edc8afdb679',
-      credential: 'GV9gJZLb6XR5WqBP'
+      urls: 'turn:global.relay.metered.ca:443',
+      username: 'metalingua',
+      credential: 'g6qOeKd-yYFCnlLV2SF5MyQzYwVpPeDcWMkzTNKFBuRsCfI_'
     },
     {
-      urls: 'turn:a.relay.metered.ca:443?transport=tcp',
-      username: 'e8dd65c5e48a3edc8afdb679',
-      credential: 'GV9gJZLb6XR5WqBP'
+      urls: 'turns:global.relay.metered.ca:443?transport=tcp',
+      username: 'metalingua',
+      credential: 'g6qOeKd-yYFCnlLV2SF5MyQzYwVpPeDcWMkzTNKFBuRsCfI_'
     }
   ];
 };
