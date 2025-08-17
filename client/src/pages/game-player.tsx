@@ -49,7 +49,9 @@ interface Question {
 
 export default function GamePlayer() {
   const { t } = useTranslation('common');
-  const [, params] = useRoute('/game/:gameId');
+  const [matchGame, paramsGame] = useRoute('/game/:gameId');
+  const [matchPlayer, paramsPlayer] = useRoute('/game-player/:gameId');
+  const params = matchGame ? paramsGame : matchPlayer ? paramsPlayer : null;
   const gameId = params?.gameId ? parseInt(params.gameId) : null;
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
