@@ -3,7 +3,17 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
+import { 
+  GlossyFantasyLayout,
+  GlossyCard,
+  GlossyButton,
+  GlossyProgress,
+  StatCard,
+  ListItem,
+  GlossyTabs,
+  Badge,
+  FAB
+} from "@/components/mobile/GlossyFantasyLayout";
 import { 
   Trophy, 
   Flame, 
@@ -19,11 +29,13 @@ import {
   Plus,
   Bell,
   Search,
-  Filter
+  Filter,
+  Sparkles,
+  Users,
+  Video,
+  MessageCircle
 } from "lucide-react";
 import { Link } from "wouter";
-import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface StudentStats {
   totalLessons: number;
@@ -97,292 +109,254 @@ export default function StudentDashboardMobile() {
   const progressPercentage = stats ? (stats.completedLessons / stats.totalLessons) * 100 : 0;
   const xpProgress = stats ? ((stats.totalXP % 1000) / 1000) * 100 : 0;
 
+  // Tab items for navigation
+  const tabItems = [
+    { id: 'overview', label: t('student:overview'), icon: <Sparkles className="w-4 h-4" /> },
+    { id: 'courses', label: t('student:courses'), icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'social', label: t('student:social'), icon: <Users className="w-4 h-4" /> }
+  ];
+
   return (
-    <div className="mobile-app-container min-h-screen">
-      {/* Animated Gradient Background */}
-      <div className="absolute inset-0 animated-gradient-bg opacity-50" />
-      
-      {/* Content */}
-      <div className="relative z-10">
-        {/* Mobile Header */}
-        <motion.header 
-          className="mobile-header"
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-12 h-12 border-2 border-white/20">
-                <AvatarImage src={user?.avatar} />
-                <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-white/70 text-sm">{greeting}</p>
-                <h1 className="text-white font-bold text-lg">
-                  {user?.firstName} {user?.lastName}
-                </h1>
-              </div>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-full bg-white/10 backdrop-blur"
-            >
-              <Bell className="w-5 h-5 text-white" />
-            </motion.button>
-          </div>
-        </motion.header>
-
-        {/* Main Content */}
-        <div className="mobile-content">
-          {/* Stats Overview */}
-          <motion.div 
-            className="grid grid-cols-2 gap-4 mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            {/* Streak Card */}
-            <motion.div 
-              className="glass-card p-4"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-gradient-to-br from-orange-400 to-red-500">
-                  <Flame className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-white/70 text-sm">{t('student:streak')}</p>
-                  <p className="text-white text-2xl font-bold">{stats?.currentStreak || 0}</p>
-                  <p className="text-white/50 text-xs">{t('student:days')}</p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* XP Card */}
-            <motion.div 
-              className="glass-card p-4"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-gradient-to-br from-purple-400 to-blue-500">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-white/70 text-sm">{t('student:totalXP')}</p>
-                  <p className="text-white text-2xl font-bold">{stats?.totalXP || 0}</p>
-                  <p className="text-white/50 text-xs">Level {stats?.currentLevel || 1}</p>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-
-          {/* Progress Section */}
-          <motion.div 
-            className="glass-card p-5 mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-white font-semibold text-lg">{t('student:weeklyProgress')}</h2>
-              <span className="text-white/70 text-sm">
-                {stats?.studyTimeThisWeek || 0}/{stats?.weeklyGoalHours || 10} {t('student:hours')}
-              </span>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-white/70">{t('student:lessonsCompleted')}</span>
-                  <span className="text-white">{stats?.completedLessons || 0}/{stats?.totalLessons || 0}</span>
-                </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-green-400 to-blue-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPercentage}%` }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-white/70">{t('student:xpToNextLevel')}</span>
-                  <span className="text-white">{(stats?.totalXP || 0) % 1000}/1000 XP</span>
-                </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-purple-400 to-pink-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${xpProgress}%` }}
-                    transition={{ duration: 1, delay: 0.6 }}
-                  />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Quick Actions */}
-          <motion.div 
-            className="grid grid-cols-3 gap-3 mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <Link href="/sessions">
-              <motion.div 
-                className="glass-card p-4 text-center"
-                whileTap={{ scale: 0.95 }}
-              >
-                <Calendar className="w-8 h-8 text-white mx-auto mb-2" />
-                <p className="text-white/90 text-xs font-medium">{t('student:joinClass')}</p>
-              </motion.div>
-            </Link>
-            
-            <Link href="/homework">
-              <motion.div 
-                className="glass-card p-4 text-center"
-                whileTap={{ scale: 0.95 }}
-              >
-                <BookOpen className="w-8 h-8 text-white mx-auto mb-2" />
-                <p className="text-white/90 text-xs font-medium">{t('student:homework')}</p>
-              </motion.div>
-            </Link>
-            
-            <Link href="/ai-practice">
-              <motion.div 
-                className="glass-card p-4 text-center"
-                whileTap={{ scale: 0.95 }}
-              >
-                <Trophy className="w-8 h-8 text-white mx-auto mb-2" />
-                <p className="text-white/90 text-xs font-medium">{t('student:practice')}</p>
-              </motion.div>
-            </Link>
-          </motion.div>
-
-          {/* Upcoming Sessions */}
-          {upcomingSessions.length > 0 && (
-            <motion.div 
-              className="mb-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-white font-semibold text-lg">{t('student:upcomingSessions')}</h2>
-                <Link href="/sessions">
-                  <span className="text-white/70 text-sm flex items-center gap-1">
-                    {t('common:viewAll')} <ChevronRight className="w-4 h-4" />
-                  </span>
-                </Link>
-              </div>
-              
-              <div className="space-y-3">
-                {upcomingSessions.slice(0, 2).map((session: any, index: number) => (
-                  <motion.div 
-                    key={session.id}
-                    className="glass-card p-4"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="text-white font-medium">{session.title}</h3>
-                        <p className="text-white/60 text-sm mt-1">
-                          {session.tutorFirstName} {session.tutorLastName}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Clock className="w-4 h-4 text-white/50" />
-                          <span className="text-white/70 text-sm">
-                            {new Date(session.sessionDate).toLocaleDateString()} - {session.startTime}
-                          </span>
-                        </div>
-                      </div>
-                      <motion.button 
-                        className="px-3 py-1 bg-white/20 rounded-lg text-white text-sm font-medium"
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {t('student:join')}
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Active Courses */}
-          {courses.length > 0 && (
-            <motion.div 
-              className="mb-20"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-white font-semibold text-lg">{t('student:myCourses')}</h2>
-                <Link href="/courses">
-                  <span className="text-white/70 text-sm flex items-center gap-1">
-                    {t('common:viewAll')} <ChevronRight className="w-4 h-4" />
-                  </span>
-                </Link>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                {courses.slice(0, 4).map((course: any, index: number) => (
-                  <motion.div 
-                    key={course.id}
-                    className="mobile-course-card"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <div className="aspect-video bg-gradient-to-br from-purple-400 to-blue-500 rounded-lg mb-3 flex items-center justify-center">
-                      <BookOpen className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-medium text-gray-800 text-sm line-clamp-1">{course.title}</h3>
-                    <p className="text-gray-500 text-xs mt-1">{course.level}</p>
-                    <div className="mt-3">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-600">{t('student:progress')}</span>
-                        <span className="text-purple-600 font-medium">{course.progress || 0}%</span>
-                      </div>
-                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-purple-400 to-blue-500"
-                          style={{ width: `${course.progress || 0}%` }}
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </div>
+    <GlossyFantasyLayout 
+      title={`${greeting}, ${user?.firstName}!`}
+      showSearch={true}
+      showNotifications={true}
+    >
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <StatCard
+          icon={<Flame className="w-6 h-6 text-white" />}
+          label={t('student:streak')}
+          value={stats?.currentStreak || 0}
+          subValue={t('student:days')}
+          color="orange"
+        />
+        
+        <StatCard
+          icon={<Zap className="w-6 h-6 text-white" />}
+          label={t('student:totalXP')}
+          value={stats?.totalXP || 0}
+          subValue={`Level ${stats?.currentLevel || 1}`}
+          color="purple"
+        />
+        
+        <StatCard
+          icon={<Trophy className="w-6 h-6 text-white" />}
+          label={t('student:completed')}
+          value={stats?.completedLessons || 0}
+          subValue={`of ${stats?.totalLessons || 0} lessons`}
+          color="green"
+        />
+        
+        <StatCard
+          icon={<Clock className="w-6 h-6 text-white" />}
+          label={t('student:studyTime')}
+          value={`${stats?.studyTimeThisWeek || 0}h`}
+          subValue={`Goal: ${stats?.weeklyGoalHours || 10}h`}
+          color="blue"
+        />
       </div>
 
-      {/* Floating Action Button */}
-      <motion.button
-        className="fab-button"
-        whileTap={{ scale: 0.9 }}
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.8 }}
-      >
-        <Plus className="w-6 h-6" />
-      </motion.button>
+      {/* Navigation Tabs */}
+      <GlossyTabs
+        items={tabItems}
+        activeTab={selectedTab}
+        onTabChange={setSelectedTab}
+      />
 
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
-    </div>
+      {/* Tab Content */}
+      <AnimatePresence mode="wait">
+        {selectedTab === 'overview' && (
+          <motion.div
+            key="overview"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="space-y-4"
+          >
+            {/* Progress Section */}
+            <GlossyCard>
+              <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                {t('student:yourProgress')}
+              </h3>
+              
+              <div className="space-y-4">
+                <GlossyProgress
+                  value={progressPercentage}
+                  label={t('student:courseProgress')}
+                  showPercentage={true}
+                />
+                
+                <GlossyProgress
+                  value={xpProgress}
+                  label={t('student:levelProgress')}
+                  showPercentage={true}
+                />
+                
+                <GlossyProgress
+                  value={(stats?.studyTimeThisWeek || 0) / (stats?.weeklyGoalHours || 10) * 100}
+                  label={t('student:weeklyGoal')}
+                  showPercentage={true}
+                />
+              </div>
+            </GlossyCard>
+
+            {/* Upcoming Sessions */}
+            <GlossyCard>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-bold flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  {t('student:upcomingSessions')}
+                </h3>
+                <Badge variant="info" size="sm">
+                  {upcomingSessions.length} {t('student:scheduled')}
+                </Badge>
+              </div>
+              
+              <div className="space-y-2">
+                {upcomingSessions.slice(0, 3).map((session: any, index: number) => (
+                  <ListItem
+                    key={index}
+                    title={session.courseName}
+                    subtitle={`${session.date} at ${session.time}`}
+                    leftIcon={<Video className="w-5 h-5" />}
+                    rightContent={<ChevronRight className="w-5 h-5" />}
+                    onClick={() => console.log('Session clicked')}
+                  />
+                ))}
+              </div>
+              
+              {upcomingSessions.length > 3 && (
+                <GlossyButton 
+                  variant="secondary" 
+                  size="sm" 
+                  fullWidth 
+                  className="mt-3"
+                >
+                  {t('student:viewAllSessions')}
+                </GlossyButton>
+              )}
+            </GlossyCard>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 gap-3">
+              <GlossyButton variant="primary" fullWidth>
+                <Link href="/student/courses-mobile" className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  {t('student:browseCourses')}
+                </Link>
+              </GlossyButton>
+              
+              <GlossyButton variant="success" fullWidth>
+                <Link href="/callern-mobile" className="flex items-center gap-2">
+                  <Video className="w-5 h-5" />
+                  {t('student:startCallern')}
+                </Link>
+              </GlossyButton>
+            </div>
+          </motion.div>
+        )}
+
+        {selectedTab === 'courses' && (
+          <motion.div
+            key="courses"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="space-y-4"
+          >
+            {courses.map((course: any, index: number) => (
+              <GlossyCard key={index} interactive>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="text-white font-bold">{course.name}</h4>
+                    <p className="text-white/60 text-sm mt-1">{course.description}</p>
+                    <div className="flex items-center gap-3 mt-3">
+                      <Badge variant="success" size="sm">
+                        {course.level}
+                      </Badge>
+                      <span className="text-white/50 text-sm">
+                        {course.completedLessons}/{course.totalLessons} lessons
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-white/40" />
+                </div>
+                <div className="mt-3">
+                  <GlossyProgress
+                    value={(course.completedLessons / course.totalLessons) * 100}
+                    showPercentage={true}
+                  />
+                </div>
+              </GlossyCard>
+            ))}
+          </motion.div>
+        )}
+
+        {selectedTab === 'social' && (
+          <motion.div
+            key="social"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="space-y-4"
+          >
+            <GlossyCard>
+              <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                {t('student:leaderboard')}
+              </h3>
+              
+              <div className="space-y-3">
+                {[1, 2, 3].map((rank) => (
+                  <ListItem
+                    key={rank}
+                    title={`Student ${rank}`}
+                    subtitle={`${1000 - rank * 100} XP this week`}
+                    leftIcon={
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        rank === 1 ? 'bg-yellow-500' : rank === 2 ? 'bg-gray-400' : 'bg-orange-600'
+                      }`}>
+                        {rank}
+                      </div>
+                    }
+                    rightContent={<Trophy className="w-5 h-5 text-yellow-500" />}
+                  />
+                ))}
+              </div>
+            </GlossyCard>
+
+            <GlossyCard>
+              <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                <MessageCircle className="w-5 h-5" />
+                {t('student:studyGroups')}
+              </h3>
+              
+              <div className="space-y-2">
+                <ListItem
+                  title="English Conversation Club"
+                  subtitle="23 members • Active now"
+                  leftIcon={<Users className="w-5 h-5" />}
+                  rightContent={<Badge variant="success" size="sm">Join</Badge>}
+                />
+                <ListItem
+                  title="Grammar Warriors"
+                  subtitle="15 members • 2 new messages"
+                  leftIcon={<Users className="w-5 h-5" />}
+                  rightContent={<Badge variant="warning" size="sm">2</Badge>}
+                />
+              </div>
+            </GlossyCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Action Button */}
+      <FAB
+        icon={<Plus className="w-6 h-6 text-white" />}
+        onClick={() => console.log('FAB clicked')}
+      />
+    </GlossyFantasyLayout>
   );
 }
