@@ -8,7 +8,7 @@ import {
   Monitor, MonitorOff, MessageSquare, HelpCircle,
   Volume2, VolumeX, Maximize2, Minimize2
 } from 'lucide-react';
-import { webrtcConfig } from '../../../../shared/webrtc-config';
+import { getSimplePeerConfig } from '../../../../shared/webrtc-config';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
@@ -81,12 +81,12 @@ export function VideoCall({ roomId, userId, role, onCallEnd, onMinutesUpdate }: 
   }, [t]);
   
   // Create peer connection
-  const createPeer = useCallback((initiator: boolean, stream: MediaStream, targetSocketId: string) => {
+  const createPeer = useCallback(async (initiator: boolean, stream: MediaStream, targetSocketId: string) => {
+    const peerConfig = await getSimplePeerConfig(initiator);
+    
     const peer = new SimplePeer({
-      initiator,
-      stream,
-      config: webrtcConfig,
-      trickle: true
+      ...peerConfig,
+      stream
     });
     
     peer.on('signal', (signal) => {
@@ -153,7 +153,7 @@ export function VideoCall({ roomId, userId, role, onCallEnd, onMinutesUpdate }: 
         if (role === 'teacher') {
           const stream = await initializeMedia();
           if (stream) {
-            peerRef.current = createPeer(true, stream, socketId);
+            peerRef.current = await createPeer(true, stream, socketId);
           }
         }
       }
@@ -165,7 +165,7 @@ export function VideoCall({ roomId, userId, role, onCallEnd, onMinutesUpdate }: 
       
       const stream = await initializeMedia();
       if (stream) {
-        const peer = createPeer(false, stream, from);
+        const peer = await createPeer(false, stream, from);
         peer.signal(offer);
         peerRef.current = peer;
       }
