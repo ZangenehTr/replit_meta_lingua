@@ -13,6 +13,14 @@ app.use(express.urlencoded({ extended: false }));
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Serve test HTML files directly
+app.get('/test-video-call.html', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../test-video-call.html'));
+});
+app.get('/test-mobile-login.html', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../test-mobile-login.html'));
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
