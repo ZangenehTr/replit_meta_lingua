@@ -287,6 +287,8 @@
         </div>
     </div>
     
+    <!-- Include Socket.IO client library -->
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         let socket = null;
         let peer = null;
@@ -420,35 +422,60 @@
                 localVideo.srcObject = localStream;
                 videoContainer.classList.add('active');
                 
-                // Initialize WebSocket connection
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = `${protocol}//${window.location.host}`;
-                socket = new WebSocket(wsUrl);
+                // Initialize Socket.IO connection
+                socket = io({
+                    path: '/socket.io',
+                    transports: ['websocket', 'polling']
+                });
                 
-                socket.onopen = () => {
+                socket.on('connect', () => {
+                    console.log('Socket.IO connected:', socket.id);
                     statusEl.className = 'status success';
                     statusEl.textContent = `✅ Connected as ${role} - Waiting for peer...`;
                     updateTestItem('testWebSocket', 'success', '✅');
                     
                     // Join room
-                    socket.send(JSON.stringify({
-                        type: 'join',
+                    socket.emit('join-room', {
                         roomId: 'test-room-123',
                         userId: role === 'student' ? 'student-1' : 'teacher-1',
                         role: role
-                    }));
-                };
+                    });
+                });
                 
-                socket.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-                    handleSignalingMessage(data);
-                };
+                socket.on('user-joined', (data) => {
+                    console.log('User joined:', data);
+                    handleSignalingMessage({ ...data, type: 'user-joined' });
+                });
                 
-                socket.onerror = (error) => {
+                socket.on('offer', (data) => {
+                    console.log('Received offer:', data);
+                    handleSignalingMessage({ ...data, type: 'offer' });
+                });
+                
+                socket.on('answer', (data) => {
+                    console.log('Received answer:', data);
+                    handleSignalingMessage({ ...data, type: 'answer' });
+                });
+                
+                socket.on('ice-candidate', (data) => {
+                    console.log('Received ICE candidate:', data);
+                    handleSignalingMessage({ ...data, type: 'ice-candidate' });
+                });
+                
+                socket.on('connect_error', (error) => {
+                    console.error('Socket.IO connection error:', error.message);
                     statusEl.className = 'status error';
-                    statusEl.textContent = `❌ WebSocket error: ${error}`;
+                    statusEl.textContent = `❌ Connection error: ${error.message}`;
                     updateTestItem('testWebSocket', 'error', '❌');
-                };
+                });
+                
+                socket.on('disconnect', (reason) => {
+                    console.log('Socket.IO disconnected:', reason);
+                    if (reason === 'io server disconnect') {
+                        // Server disconnected, attempt to reconnect
+                        socket.connect();
+                    }
+                });
                 
                 // Initialize peer connection
                 initializePeerConnection();
@@ -479,12 +506,12 @@
             
             // Handle ICE candidates
             peer.onicecandidate = (event) => {
-                if (event.candidate && socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify({
-                        type: 'ice-candidate',
+                if (event.candidate && socket && socket.connected) {
+                    socket.emit('ice-candidate', {
                         candidate: event.candidate,
-                        roomId: 'test-room-123'
-                    }));
+                        roomId: 'test-room-123',
+                        to: 'broadcast' // Send to all participants in room
+                    });
                 }
             };
             
@@ -515,11 +542,11 @@
                         const answer = await peer.createAnswer();
                         await peer.setLocalDescription(answer);
                         
-                        socket.send(JSON.stringify({
-                            type: 'answer',
+                        socket.emit('answer', {
                             answer: answer,
-                            roomId: 'test-room-123'
-                        }));
+                            roomId: 'test-room-123',
+                            to: data.from // Send answer back to the offer sender
+                        });
                     }
                     break;
                     
@@ -541,11 +568,11 @@
                         const offer = await peer.createOffer();
                         await peer.setLocalDescription(offer);
                         
-                        socket.send(JSON.stringify({
-                            type: 'offer',
+                        socket.emit('offer', {
                             offer: offer,
-                            roomId: 'test-room-123'
-                        }));
+                            roomId: 'test-room-123',
+                            to: data.socketId // Send offer to the student who joined
+                        });
                     }
                     break;
             }
@@ -564,9 +591,9 @@
                 peer = null;
             }
             
-            // Close WebSocket
+            // Disconnect Socket.IO
             if (socket) {
-                socket.close();
+                socket.disconnect();
                 socket = null;
             }
             
