@@ -684,39 +684,39 @@ export default function RoadmapDesigner() {
               className="glassmorphism-card p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar"
             >
               <h2 className="text-2xl font-bold text-white mb-4">
-                {t('admin:addMilestone')}
+                {t('admin:roadmap.addMilestone')}
               </h2>
               
               <div className="space-y-4">
                 <div>
                   <label className="text-white/80 text-sm mb-1 block">
-                    {t('admin:title')}
+                    {t('admin:roadmap.title')}
                   </label>
                   <input
                     type="text"
                     value={milestoneForm.title}
                     onChange={(e) => setMilestoneForm({...milestoneForm, title: e.target.value})}
                     className="glossy-input w-full"
-                    placeholder={t('admin:milestoneTitlePlaceholder')}
+                    placeholder={t('admin:roadmap.milestoneTitlePlaceholder')}
                   />
                 </div>
                 
                 <div>
                   <label className="text-white/80 text-sm mb-1 block">
-                    {t('admin:description')}
+                    {t('admin:roadmap.description')}
                   </label>
                   <textarea
                     value={milestoneForm.description}
                     onChange={(e) => setMilestoneForm({...milestoneForm, description: e.target.value})}
                     className="glossy-input w-full min-h-[100px]"
-                    placeholder={t('admin:milestoneDescriptionPlaceholder')}
+                    placeholder={t('admin:roadmap.milestoneDescriptionPlaceholder')}
                   />
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-white/80 text-sm mb-1 block">
-                      {t('admin:orderIndex')}
+                      {t('admin:roadmap.orderIndex')}
                     </label>
                     <input
                       type="number"
@@ -728,7 +728,7 @@ export default function RoadmapDesigner() {
                   
                   <div>
                     <label className="text-white/80 text-sm mb-1 block">
-                      {t('admin:weekNumber')}
+                      {t('admin:roadmap.weekNumber')}
                     </label>
                     <input
                       type="number"
@@ -741,7 +741,7 @@ export default function RoadmapDesigner() {
                 
                 <div>
                   <label className="text-white/80 text-sm mb-1 block">
-                    {t('admin:primarySkill')}
+                    {t('admin:roadmap.primarySkill')}
                   </label>
                   <select
                     value={milestoneForm.primarySkill}
@@ -757,7 +757,7 @@ export default function RoadmapDesigner() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-white/80 text-sm mb-1 block">
-                      {t('admin:assessmentType')} <span className="text-white/40">(اختیاری)</span>
+                      {t('admin:roadmap.assessmentType')} <span className="text-white/40">(اختیاری)</span>
                     </label>
                     <select
                       value={milestoneForm.assessmentType || ''}
@@ -773,7 +773,7 @@ export default function RoadmapDesigner() {
                   
                   <div>
                     <label className="text-white/80 text-sm mb-1 block">
-                      {t('admin:passingScore')}
+                      {t('admin:roadmap.passingScore')}
                     </label>
                     <input
                       type="number"
