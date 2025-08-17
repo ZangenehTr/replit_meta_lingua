@@ -236,8 +236,6 @@
                         userId: `${role}-${Date.now()}`,
                         role: role
                     });
-                    
-                    setupPeerConnection();
                 });
                 
                 // Handle signaling
@@ -247,6 +245,11 @@
                     
                     // Store the other user's socket ID
                     otherUserSocketId = data.socketId;
+                    
+                    // Setup peer connection when another user joins
+                    if (!peer) {
+                        setupPeerConnection();
+                    }
                     
                     if (currentRole === 'teacher' && data.role === 'student') {
                         // Teacher creates offer
@@ -267,6 +270,11 @@
                     
                     // Store the sender's socket ID for ICE candidates
                     otherUserSocketId = data.from;
+                    
+                    // Setup peer connection if not already setup
+                    if (!peer) {
+                        setupPeerConnection();
+                    }
                     
                     await peer.setRemoteDescription(new RTCSessionDescription(data.offer));
                     
