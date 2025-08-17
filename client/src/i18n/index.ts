@@ -73,7 +73,7 @@ i18n
   .init({
     detection: detectionOptions,
     fallbackLng: 'fa',
-    debug: true,
+    debug: false,
     returnNull: false,
     returnEmptyString: false,
     load: 'languageOnly',
