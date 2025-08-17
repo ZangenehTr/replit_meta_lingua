@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin/Teacher Login Helper</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .login-option {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f9fafb;
+        }
+        .login-option h3 {
+            margin-top: 0;
+            color: #6366f1;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #4f46e5;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            display: block;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+        .logout-first {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ورود به عنوان ادمین یا معلم</h1>
+        
+        <div class="logout-first">
+            ⚠️ ابتدا از حساب دانشجو خارج شوید
+        </div>
+
+        <div class="login-option">
+            <h3>🔧 حساب ادمین</h3>
+            <p>دسترسی کامل به سیستم</p>
+            <p><strong>ایمیل:</strong> admin@test.com</p>
+            <p><strong>رمز عبور:</strong> admin123</p>
+            <button onclick="loginAs('admin@test.com', 'admin123', 'Admin')">
+                ورود به عنوان ادمین
+            </button>
+        </div>
+
+        <div class="login-option">
+            <h3>👨‍🏫 حساب معلم</h3>
+            <p>دسترسی به مدیریت دوره‌ها و دانشجویان</p>
+            <p><strong>ایمیل:</strong> teacher@test.com</p>
+            <p><strong>رمز عبور:</strong> teacher123</p>
+            <button onclick="loginAs('teacher@test.com', 'teacher123', 'Teacher')">
+                ورود به عنوان معلم
+            </button>
+        </div>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        async function loginAs(email, password, role) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = 'status';
+            statusDiv.textContent = 'در حال ورود...';
+            statusDiv.style.display = 'block';
+
+            try {
+                // First logout
+                await fetch('http://localhost:5000/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                // Then login
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.access_token) {
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = `✅ ورود موفق به عنوان ${role}!<br>در حال انتقال به صفحه دوره‌های ویدیویی...`;
+                    
+                    // Store token
+                    localStorage.setItem('access_token', data.access_token);
+                    if (data.refresh_token) {
+                        localStorage.setItem('refresh_token', data.refresh_token);
+                    }
+                    
+                    // Redirect to video courses page
+                    setTimeout(() => {
+                        window.location.href = 'http://localhost:5000/admin/video-courses';
+                    }, 1500);
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = `❌ خطا در ورود: ${data.message || 'Unknown error'}`;
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `❌ خطا: ${error.message}`;
+            }
+        }
+
+        // Check current login status on load
+        async function checkCurrentUser() {
+            try {
+                const token = localStorage.getItem('access_token');
+                if (token) {
+                    const response = await fetch('http://localhost:5000/api/users/me', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const user = await response.json();
+                        if (user.role === 'Admin' || user.role === 'Teacher') {
+                            const statusDiv = document.getElementById('status');
+                            statusDiv.className = 'status success';
+                            statusDiv.innerHTML = `شما در حال حاضر به عنوان ${user.role} (${user.email}) وارد شده‌اید.<br><a href="http://localhost:5000/admin/video-courses">به صفحه دوره‌های ویدیویی بروید</a>`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking user:', error);
+            }
+        }
+
+        checkCurrentUser();
+    </script>
+</body>
+</html>
