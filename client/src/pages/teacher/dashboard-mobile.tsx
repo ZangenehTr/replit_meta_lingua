@@ -31,7 +31,8 @@ import {
   Star,
   BarChart,
   FileText,
-  Settings
+  Settings,
+  Map
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -289,21 +290,55 @@ export default function TeacherDashboardMobile() {
               </div>
             </GlossyCard>
 
-            {/* Quick Actions */}
+            {/* Quick Actions - Core Features */}
             <div className="grid grid-cols-2 gap-3">
-              <GlossyButton variant="primary" fullWidth>
-                <Link href="/teacher/classes" className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5" />
-                  {t('teacher:manageClasses')}
+              <GlossyCard interactive className="p-4">
+                <Link href="/callern">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center mb-2">
+                      <Video className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-white/90 text-sm font-medium">Start Callern</span>
+                    <span className="text-white/60 text-xs mt-1">Video Tutoring</span>
+                  </div>
                 </Link>
-              </GlossyButton>
+              </GlossyCard>
               
-              <GlossyButton variant="success" fullWidth>
-                <Link href="/callern" className="flex items-center gap-2">
-                  <Video className="w-5 h-5" />
-                  {t('teacher:startCallern')}
+              <GlossyCard interactive className="p-4">
+                <Link href="/admin/roadmap-designer">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-2">
+                      <Map className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-white/90 text-sm font-medium">Roadmaps</span>
+                    <span className="text-white/60 text-xs mt-1">Design Paths</span>
+                  </div>
                 </Link>
-              </GlossyButton>
+              </GlossyCard>
+              
+              <GlossyCard interactive className="p-4">
+                <Link href="/teacher/classes">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center mb-2">
+                      <BookOpen className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-white/90 text-sm font-medium">My Classes</span>
+                    <span className="text-white/60 text-xs mt-1">Manage Schedule</span>
+                  </div>
+                </Link>
+              </GlossyCard>
+              
+              <GlossyCard interactive className="p-4">
+                <Link href="/teacher/students">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-2">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-white/90 text-sm font-medium">Students</span>
+                    <span className="text-white/60 text-xs mt-1">Track Progress</span>
+                  </div>
+                </Link>
+              </GlossyCard>
             </div>
           </motion.div>
         )}
