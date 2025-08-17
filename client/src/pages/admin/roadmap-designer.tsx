@@ -118,19 +118,19 @@ export default function RoadmapDesigner() {
   });
 
   // Fetch roadmaps
-  const { data: roadmaps = [], isLoading: loadingRoadmaps } = useQuery({
+  const { data: roadmaps = [], isLoading: loadingRoadmaps } = useQuery<Roadmap[]>({
     queryKey: ['/api/roadmaps'],
     enabled: true
   });
 
   // Fetch selected roadmap details
-  const { data: roadmapDetails, refetch: refetchDetails } = useQuery({
+  const { data: roadmapDetails, refetch: refetchDetails } = useQuery<Roadmap & { milestones?: RoadmapMilestone[] }>({
     queryKey: selectedRoadmap ? [`/api/roadmaps/${selectedRoadmap.id}`] : [''],
     enabled: !!selectedRoadmap
   });
 
   // Fetch courses for content linking
-  const { data: courses = [] } = useQuery({
+  const { data: courses = [] } = useQuery<any[]>({
     queryKey: ['/api/courses']
   });
 
