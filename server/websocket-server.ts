@@ -117,32 +117,52 @@ export class CallernWebSocketServer {
       // WebRTC Signaling Events
       socket.on('offer', (data) => {
         const { roomId, offer, to } = data;
-        console.log(`Forwarding offer from ${socket.id} to ${to} in room ${roomId}`);
-        this.io.to(to).emit('offer', {
-          offer,
-          from: socket.id,
-          roomId
-        });
+        console.log(`[OFFER] From ${socket.id} to ${to} in room ${roomId}`);
+        console.log(`[OFFER] Target socket exists: ${this.io.sockets.sockets.has(to)}`);
+        
+        if (this.io.sockets.sockets.has(to)) {
+          this.io.to(to).emit('offer', {
+            offer,
+            from: socket.id,
+            roomId
+          });
+          console.log(`[OFFER] Successfully forwarded to ${to}`);
+        } else {
+          console.log(`[OFFER] ERROR: Target socket ${to} not found`);
+        }
       });
       
       socket.on('answer', (data) => {
         const { roomId, answer, to } = data;
-        console.log(`Forwarding answer from ${socket.id} to ${to} in room ${roomId}`);
-        this.io.to(to).emit('answer', {
-          answer,
-          from: socket.id,
-          roomId
-        });
+        console.log(`[ANSWER] From ${socket.id} to ${to} in room ${roomId}`);
+        console.log(`[ANSWER] Target socket exists: ${this.io.sockets.sockets.has(to)}`);
+        
+        if (this.io.sockets.sockets.has(to)) {
+          this.io.to(to).emit('answer', {
+            answer,
+            from: socket.id,
+            roomId
+          });
+          console.log(`[ANSWER] Successfully forwarded to ${to}`);
+        } else {
+          console.log(`[ANSWER] ERROR: Target socket ${to} not found`);
+        }
       });
       
       socket.on('ice-candidate', (data) => {
         const { roomId, candidate, to } = data;
-        console.log(`Forwarding ICE candidate from ${socket.id} to ${to}`);
-        this.io.to(to).emit('ice-candidate', {
-          candidate,
-          from: socket.id,
-          roomId
-        });
+        console.log(`[ICE] From ${socket.id} to ${to}`);
+        
+        if (this.io.sockets.sockets.has(to)) {
+          this.io.to(to).emit('ice-candidate', {
+            candidate,
+            from: socket.id,
+            roomId
+          });
+          console.log(`[ICE] Successfully forwarded to ${to}`);
+        } else {
+          console.log(`[ICE] ERROR: Target socket ${to} not found`);
+        }
       });
       
       // Handle call control events
