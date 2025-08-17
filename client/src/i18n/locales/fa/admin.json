@@ -1978,6 +1978,17 @@
     "orderIndex": "ترتیب",
     "cancel": "انصراف",
     "save": "ذخیره",
-    "saving": "در حال ذخیره..."
+    "saving": "در حال ذخیره...",
+    "milestones": "نقاط عطف",
+    "noMilestones": "هیچ نقطه عطفی یافت نشد",
+    "targetLanguage": "زبان هدف",
+    "targetLevel": "سطح هدف",
+    "estimatedWeeks": "هفته‌های تخمینی",
+    "weeklyHours": "ساعات هفتگی",
+    "isPublic": "عمومی",
+    "create": "ایجاد",
+    "roadmapTitlePlaceholder": "عنوان نقشه راه را وارد کنید",
+    "roadmapDescriptionPlaceholder": "توضیحات نقشه راه را وارد کنید",
+    "addMilestone": "افزودن نقطه عطف"
   }
 }

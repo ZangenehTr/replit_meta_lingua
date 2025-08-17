@@ -333,7 +333,18 @@ export default function RoadmapDesigner() {
                     key={roadmap.id}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setSelectedRoadmap(roadmap)}
+                    onClick={() => {
+                      setSelectedRoadmap(roadmap);
+                      // On mobile, scroll to the details section
+                      if (window.innerWidth < 1024) {
+                        setTimeout(() => {
+                          const detailsSection = document.getElementById('roadmap-details');
+                          if (detailsSection) {
+                            detailsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }, 100);
+                      }
+                    }}
                     className={`glassmorphism-card p-4 cursor-pointer transition-all ${
                       selectedRoadmap?.id === roadmap.id ? 'ring-2 ring-cyan-400 shadow-neon-cyan' : ''
                     }`}
@@ -375,9 +386,10 @@ export default function RoadmapDesigner() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className="lg:col-span-2"
+          id="roadmap-details"
         >
           {selectedRoadmap ? (
-            <div className="glassmorphism-card p-6">
+            <div className="glassmorphism-card p-4 sm:p-6">
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-white">{selectedRoadmap.title}</h2>
