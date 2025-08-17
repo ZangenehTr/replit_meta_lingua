@@ -444,6 +444,8 @@
                 
                 socket.on('user-joined', (data) => {
                     console.log('User joined:', data);
+                    // Store the other user's socket ID for signaling
+                    window.otherUserSocketId = data.socketId;
                     handleSignalingMessage({ ...data, type: 'user-joined' });
                 });
                 
@@ -507,10 +509,11 @@
             // Handle ICE candidates
             peer.onicecandidate = (event) => {
                 if (event.candidate && socket && socket.connected) {
+                    // Broadcast ICE candidate to the room
                     socket.emit('ice-candidate', {
                         candidate: event.candidate,
                         roomId: 'test-room-123',
-                        to: 'broadcast' // Send to all participants in room
+                        to: window.otherUserSocketId || 'broadcast'
                     });
                 }
             };
@@ -563,8 +566,14 @@
                     break;
                     
                 case 'user-joined':
+                    // Initialize peer connection if not already done
+                    if (!peer) {
+                        initializePeerConnection();
+                    }
+                    
                     // If we're the teacher and a student joined, create offer
                     if (currentRole === 'teacher' && data.role === 'student') {
+                        console.log('Teacher creating offer for student:', data.socketId);
                         const offer = await peer.createOffer();
                         await peer.setLocalDescription(offer);
                         

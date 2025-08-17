@@ -20,6 +20,9 @@ app.get('/test-video-call.html', (_req, res) => {
 app.get('/test-mobile-login.html', (_req, res) => {
   res.sendFile(path.join(__dirname, '../test-mobile-login.html'));
 });
+app.get('/test-video-simple.html', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../test-video-simple.html'));
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
