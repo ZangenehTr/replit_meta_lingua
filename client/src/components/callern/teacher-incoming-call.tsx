@@ -29,6 +29,8 @@ export function TeacherIncomingCall() {
   useEffect(() => {
     if (!user || user.role !== 'Teacher/Tutor') return;
 
+    console.log('TeacherIncomingCall component mounted for user:', user.id, user.role);
+
     // Initialize socket connection
     const newSocket = io({
       path: '/socket.io/',
@@ -39,7 +41,7 @@ export function TeacherIncomingCall() {
 
     // Wait for connection before authenticating
     newSocket.on('connect', () => {
-      console.log('Teacher WebSocket connected, authenticating...');
+      console.log('Teacher WebSocket connected, authenticating with ID:', user.id);
       // Authenticate with WebSocket as teacher
       newSocket.emit('authenticate', {
         userId: user.id,
