@@ -10,6 +10,7 @@ import { setupRoadmapRoutes } from "./roadmap-routes";
 import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
 import { registerCallernAIRoutes } from "./callern-ai-routes";
 import { setupCallernPackageRoutes } from "./callern-package-routes";
+import tttRoutes from "./ttt-routes";
 import { 
   filterTeachers, 
   filterActiveTeachers,
@@ -18055,6 +18056,9 @@ Meta Lingua Academy`;
   // Setup Callern AI routes for video calling
   registerCallernAIRoutes(app);
   setupCallernPackageRoutes(app, requireRole);
+  
+  // Setup TTT monitoring routes
+  app.use(tttRoutes);
 
   const httpServer = createServer(app);
   

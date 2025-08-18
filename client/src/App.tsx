@@ -116,6 +116,7 @@ import RoadmapDesigner from "@/pages/admin/roadmap-designer";
 import CallernMobilePage from "@/pages/callern-mobile";
 import CallernEnhancements from "@/pages/callern-enhancements";
 import CallernVideoSession from "@/pages/callern-video-session";
+import CallernVideoCall from "@/pages/callern/VideoCall";
 import GamificationSystem from "@/pages/games";
 import AIPracticePage from "@/pages/ai-practice";
 
@@ -626,6 +627,11 @@ function Router() {
       <Route path="/callern-session/:packageId/:studentId/:teacherId">
         <ProtectedRoute>
           <CallernVideoSession />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/callern/video/:callId">
+        <ProtectedRoute>
+          <CallernVideoCall />
         </ProtectedRoute>
       </Route>
       <Route path="/admin/room-management">
