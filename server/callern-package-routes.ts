@@ -1,6 +1,9 @@
 import { Express } from "express";
 import { authenticateToken } from "./auth-middleware";
 import { storage } from "./storage";
+import { db } from "../db";
+import { callernRoadmaps, callernRoadmapSteps } from "../shared/schema";
+import { eq } from "drizzle-orm";
 
 export function setupCallernPackageRoutes(app: Express, requireRole: any) {
 
@@ -11,9 +14,9 @@ export function setupCallernPackageRoutes(app: Express, requireRole: any) {
       
       // For each package, get its roadmap and steps
       const packagesWithRoadmaps = await Promise.all(packages.map(async (pkg) => {
-        const roadmaps = await storage.db.select()
-          .from(storage.db.callernRoadmaps)
-          .where(storage.db.eq(storage.db.callernRoadmaps.packageId, pkg.id));
+        const roadmaps = await db.select()
+          .from(callernRoadmaps)
+          .where(eq(callernRoadmaps.packageId, pkg.id));
         
         if (roadmaps.length > 0) {
           const roadmap = roadmaps[0];
