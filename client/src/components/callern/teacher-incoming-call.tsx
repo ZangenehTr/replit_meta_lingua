@@ -37,12 +37,20 @@ export function TeacherIncomingCall() {
 
     setSocket(newSocket);
 
-    // Authenticate with WebSocket as teacher
-    newSocket.emit('authenticate', {
-      userId: user.id,
-      role: 'teacher'
+    // Wait for connection before authenticating
+    newSocket.on('connect', () => {
+      console.log('Teacher WebSocket connected, authenticating...');
+      // Authenticate with WebSocket as teacher
+      newSocket.emit('authenticate', {
+        userId: user.id,
+        role: 'teacher'
+      });
     });
-    console.log('Teacher authenticated with WebSocket:', user.id);
+    
+    // Listen for authentication confirmation
+    newSocket.on('authenticated', (data) => {
+      console.log('Teacher authentication confirmed:', data);
+    });
 
     // Listen for incoming calls
     const handleCallRequest = (data: IncomingCallData) => {
