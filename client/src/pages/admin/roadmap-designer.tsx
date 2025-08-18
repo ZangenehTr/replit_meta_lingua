@@ -79,7 +79,9 @@ export default function RoadmapDesigner() {
   const [selectedRoadmap, setSelectedRoadmap] = useState<Roadmap | null>(null);
   const [isCreatingRoadmap, setIsCreatingRoadmap] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<RoadmapMilestone | null>(null);
-  const [editingStep, setEditingStep] = useState<RoadmapStep | null>(null);
+  const [editingStep, setEditingStep] = useState<any>(null);
+  const [isEditStepDialogOpen, setIsEditStepDialogOpen] = useState(false);
+  const [stepToDelete, setStepToDelete] = useState<number | null>(null);
   
   // Form states
   const [roadmapForm, setRoadmapForm] = useState({
@@ -190,6 +192,40 @@ export default function RoadmapDesigner() {
     },
     onError: () => {
       toast({ title: "Failed to add step", variant: "destructive" });
+    }
+  });
+
+  // Update step mutation
+  const updateStep = useMutation({
+    mutationFn: (data: any) => 
+      apiRequest(`/api/roadmaps/${selectedRoadmap?.id}/steps/${data.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      }),
+    onSuccess: () => {
+      toast({ title: "Step updated successfully" });
+      refetchDetails();
+      setIsEditStepDialogOpen(false);
+      setEditingStep(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to update step", variant: "destructive" });
+    }
+  });
+
+  // Delete step mutation
+  const deleteStep = useMutation({
+    mutationFn: (stepId: number) => 
+      apiRequest(`/api/roadmaps/${selectedRoadmap?.id}/steps/${stepId}`, {
+        method: 'DELETE'
+      }),
+    onSuccess: () => {
+      toast({ title: "Step deleted successfully" });
+      refetchDetails();
+      setStepToDelete(null);
+    },
+    onError: () => {
+      toast({ title: "Failed to delete step", variant: "destructive" });
     }
   });
 
@@ -349,8 +385,8 @@ export default function RoadmapDesigner() {
 
       <div className="grid grid-cols-12 gap-6">
         {/* Roadmap List */}
-        <div className="col-span-4 space-y-4">
-          <Card>
+        <div className="col-span-12 md:col-span-4 space-y-4">
+          <Card className="backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border-white/20 shadow-xl">
             <CardHeader>
               <CardTitle>{t('admin:roadmap.availableRoadmaps')}</CardTitle>
             </CardHeader>
@@ -363,8 +399,8 @@ export default function RoadmapDesigner() {
                 roadmaps.map((roadmap: Roadmap) => (
                   <Card
                     key={roadmap.id}
-                    className={`cursor-pointer transition-colors ${
-                      selectedRoadmap?.id === roadmap.id ? 'border-primary' : ''
+                    className={`cursor-pointer transition-all backdrop-blur-sm bg-white/50 dark:bg-gray-900/50 hover:bg-white/70 dark:hover:bg-gray-900/70 ${
+                      selectedRoadmap?.id === roadmap.id ? 'border-primary ring-2 ring-primary/20' : 'border-white/10'
                     }`}
                     onClick={() => setSelectedRoadmap(roadmap)}
                   >
@@ -397,20 +433,20 @@ export default function RoadmapDesigner() {
         </div>
 
         {/* Roadmap Details */}
-        <div className="col-span-8">
+        <div className="col-span-12 md:col-span-8">
           {selectedRoadmap ? (
-            <Card>
+            <Card className="backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 border-white/20 shadow-xl">
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle>{selectedRoadmap.title}</CardTitle>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4 mr-1" />
-                      {t('admin:roadmap.edit')}
+                      {t('common:edit')}
                     </Button>
                     <Button variant="outline" size="sm">
                       <Users className="w-4 h-4 mr-1" />
-                      {t('admin:roadmap.enrollments')}
+                      Enrollments
                     </Button>
                   </div>
                 </div>
@@ -426,7 +462,7 @@ export default function RoadmapDesigner() {
                   <TabsContent value="milestones" className="space-y-4">
                     <div className="flex justify-between items-center">
                       <h3 className="text-lg font-semibold">
-                        Roadmap Steps ({roadmapDetails?.steps?.length || 0}) • Total: {roadmapDetails?.steps?.reduce((sum: number, step: any) => sum + (step.estimatedMinutes || 0), 0) || 0} minutes
+                        Roadmap Steps ({roadmapDetails?.steps?.length || 0}) • Total: {Math.round((roadmapDetails?.steps?.reduce((sum: number, step: any) => sum + (step.estimatedMinutes || 0), 0) || 0) / 60 * 10) / 10} hours
                       </h3>
                       <Dialog>
                         <DialogTrigger asChild>
@@ -540,7 +576,7 @@ export default function RoadmapDesigner() {
                     {/* Steps Timeline */}
                     <div className="space-y-4">
                       {roadmapDetails?.steps?.map((step: any, index: number) => (
-                        <Card key={step.id}>
+                        <Card key={step.id} className="backdrop-blur-md bg-white/60 dark:bg-gray-900/60 border-white/10 hover:bg-white/70 dark:hover:bg-gray-900/70 transition-all">
                           <CardContent className="p-4">
                             <div className="flex items-start gap-4">
                               <div className="flex-shrink-0">
@@ -571,15 +607,37 @@ export default function RoadmapDesigner() {
                                       </div>
                                     )}
                                   </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      // TODO: Edit step
-                                    }}
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setEditingStep(step);
+                                        setStepForm({
+                                          title: step.title || '',
+                                          description: step.description || '',
+                                          stepNumber: step.stepNumber || 1,
+                                          estimatedMinutes: step.estimatedMinutes || 30,
+                                          skillFocus: step.skillFocus || 'speaking',
+                                          objectives: step.objectives || '',
+                                          teacherAiTips: step.teacherAiTips || '',
+                                          materials: step.materials || {},
+                                          assessmentCriteria: step.assessmentCriteria || ''
+                                        });
+                                        setIsEditStepDialogOpen(true);
+                                      }}
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setStepToDelete(step.id)}
+                                      className="text-destructive hover:text-destructive"
+                                    >
+                                      <Trash className="w-4 h-4" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -648,6 +706,142 @@ export default function RoadmapDesigner() {
 
 
       </div>
+
+      {/* Edit Step Dialog */}
+      <Dialog open={isEditStepDialogOpen} onOpenChange={setIsEditStepDialogOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto backdrop-blur-xl bg-white/90 dark:bg-gray-900/90">
+          <DialogHeader>
+            <DialogTitle>Edit Roadmap Step</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={stepForm.title}
+                onChange={(e) => setStepForm({ ...stepForm, title: e.target.value })}
+                placeholder="e.g. Introduction to Speaking"
+              />
+            </div>
+            
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                value={stepForm.description}
+                onChange={(e) => setStepForm({ ...stepForm, description: e.target.value })}
+                placeholder="Detailed description of what this step covers"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Step Number</Label>
+                <Input
+                  type="number"
+                  value={stepForm.stepNumber}
+                  onChange={(e) => setStepForm({ ...stepForm, stepNumber: parseInt(e.target.value) })}
+                />
+              </div>
+              
+              <div>
+                <Label>Estimated Minutes</Label>
+                <Input
+                  type="number"
+                  value={stepForm.estimatedMinutes}
+                  onChange={(e) => setStepForm({ ...stepForm, estimatedMinutes: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label>Skill Focus</Label>
+              <Select
+                value={stepForm.skillFocus}
+                onValueChange={(v) => setStepForm({ ...stepForm, skillFocus: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {skillOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Learning Objectives</Label>
+              <Textarea
+                value={stepForm.objectives}
+                onChange={(e) => setStepForm({ ...stepForm, objectives: e.target.value })}
+                placeholder="What will the student learn in this step?"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-blue-600">Teacher AI Tips</Label>
+              <Textarea
+                value={stepForm.teacherAiTips}
+                onChange={(e) => setStepForm({ ...stepForm, teacherAiTips: e.target.value })}
+                placeholder="AI guidance for teachers: key points to cover, common mistakes to avoid, suggested activities..."
+                className="border-blue-200 focus:border-blue-400"
+              />
+            </div>
+            
+            <div>
+              <Label>Assessment Criteria</Label>
+              <Textarea
+                value={stepForm.assessmentCriteria}
+                onChange={(e) => setStepForm({ ...stepForm, assessmentCriteria: e.target.value })}
+                placeholder="How to assess if the student has mastered this step"
+              />
+            </div>
+            
+            <Button
+              className="w-full"
+              onClick={() => {
+                if (editingStep) {
+                  updateStep.mutate({
+                    id: editingStep.id,
+                    ...stepForm
+                  });
+                }
+              }}
+              disabled={updateStep.isPending}
+            >
+              Update Step
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={stepToDelete !== null} onOpenChange={(open) => !open && setStepToDelete(null)}>
+        <DialogContent className="backdrop-blur-xl bg-white/90 dark:bg-gray-900/90">
+          <DialogHeader>
+            <DialogTitle>Delete Step</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this step? This action cannot be undone.</p>
+          <div className="flex gap-4 justify-end mt-4">
+            <Button variant="outline" onClick={() => setStepToDelete(null)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => {
+                if (stepToDelete) {
+                  deleteStep.mutate(stepToDelete);
+                }
+              }}
+              disabled={deleteStep.isPending}
+            >
+              Delete Step
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
