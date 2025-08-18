@@ -469,18 +469,22 @@ export class CallernWebSocketServer {
   private async getStudentInfo(studentId: number) {
     try {
       const student = await db
-        .select({
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          email: users.email,
-          profileImageUrl: users.profileImageUrl,
-        })
+        .select()
         .from(users)
         .where(eq(users.id, studentId))
         .limit(1);
 
-      return student[0] || null;
+      if (student[0]) {
+        return {
+          id: student[0].id,
+          firstName: student[0].firstName || 'Student',
+          lastName: student[0].lastName || '',
+          email: student[0].email || '',
+          profileImageUrl: student[0].profileImageUrl || null,
+        };
+      }
+      
+      return null;
     } catch (error) {
       console.error('Error getting student info:', error);
       return null;
