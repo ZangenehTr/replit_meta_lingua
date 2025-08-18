@@ -147,7 +147,7 @@ export function TeacherIncomingCall() {
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4" />
                 <span>
-                  {incomingCall.studentInfo.firstName} {incomingCall.studentInfo.lastName}
+                  {incomingCall.studentInfo?.firstName || 'Student'} {incomingCall.studentInfo?.lastName || ''}
                 </span>
               </div>
               <div className="text-sm text-muted-foreground">
