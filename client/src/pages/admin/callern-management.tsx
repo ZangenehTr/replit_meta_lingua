@@ -410,6 +410,29 @@ export function CallernManagement() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Test Connection Button */}
+            <Button
+              variant="outline"
+              className="col-span-full mb-4"
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/callern/ai/test', {
+                    method: 'POST',
+                    headers: { 
+                      'Content-Type': 'application/json'
+                    }
+                  });
+                  const data = await response.json();
+                  alert(`AI Connection Test:\n${JSON.stringify(data, null, 2)}`);
+                } catch (error: any) {
+                  alert(`Connection Error: ${error.message}`);
+                }
+              }}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Test AI Connection (No Auth)
+            </Button>
+            
             <Button
               onClick={async () => {
                 try {

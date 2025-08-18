@@ -12,6 +12,26 @@ if (process.env.OPENAI_API_KEY) {
 }
 
 export function registerCallernAIRoutes(app: Express) {
+  // Test endpoint (no auth required for testing)
+  app.post("/api/callern/ai/test", async (req, res) => {
+    try {
+      if (!openai) {
+        return res.status(503).json({ 
+          error: "AI service not configured", 
+          message: "OpenAI API key is missing" 
+        });
+      }
+      
+      res.json({ 
+        status: "OpenAI connected successfully",
+        model: "gpt-4o",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Test failed" });
+    }
+  });
+
   // Translation endpoint
   app.post("/api/callern/ai/translate", authenticateToken, async (req: any, res) => {
     try {
