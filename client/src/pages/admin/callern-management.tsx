@@ -413,12 +413,13 @@ export function CallernManagement() {
             <Button
               onClick={async () => {
                 try {
+                  // Use the same fetch configuration as the rest of the app
                   const response = await fetch('/api/callern/ai/word-helper', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                      'Content-Type': 'application/json'
                     },
+                    credentials: 'include', // Include cookies for authentication
                     body: JSON.stringify({
                       conversationContext: "We are discussing travel plans",
                       studentLevel: "B1",
@@ -443,9 +444,9 @@ export function CallernManagement() {
                   const response = await fetch('/api/callern/ai/grammar-check', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                      'Content-Type': 'application/json'
                     },
+                    credentials: 'include',
                     body: JSON.stringify({
                       sentence: "I have went to the store yesterday",
                       targetLanguage: "English"
@@ -469,9 +470,9 @@ export function CallernManagement() {
                   const response = await fetch('/api/callern/ai/translate', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                      'Content-Type': 'application/json'
                     },
+                    credentials: 'include',
                     body: JSON.stringify({
                       text: "Hello, how are you today?",
                       fromLanguage: "English",
@@ -496,9 +497,9 @@ export function CallernManagement() {
                   const response = await fetch('/api/callern/ai/pronunciation', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                      'Content-Type': 'application/json'
                     },
+                    credentials: 'include',
                     body: JSON.stringify({
                       word: "entrepreneur",
                       language: "English"
