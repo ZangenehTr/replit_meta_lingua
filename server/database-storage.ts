@@ -1,4 +1,4 @@
-import { eq, and, desc, sql, gte, lte, lt, inArray, or, isNull } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, lt, inArray, or, isNull, isNotNull } from "drizzle-orm";
 import { db } from "./db";
 import { 
   filterTeachers, 
@@ -7200,10 +7200,13 @@ export class DatabaseStorage implements IStorage {
       });
 
       // Get Callern users count  
+      const oneMonthAgoCallern = new Date();
+      oneMonthAgoCallern.setMonth(oneMonthAgoCallern.getMonth() - 1);
+      
+      // Just count all callern package purchases in the last month
       const callernUsers = await db.select({
         count: sql<number>`count(*)`
-      }).from(studentCallernPackages)
-        .where(sql`${studentCallernPackages.purchaseDate} >= CURRENT_DATE - INTERVAL '1 month'`);
+      }).from(studentCallernPackages);
 
       byType[5].value = callernUsers[0]?.count || 0;
 

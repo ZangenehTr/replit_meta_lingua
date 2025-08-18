@@ -38,8 +38,8 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const controller = new AbortController();
-      // Progressive timeout: shorter for first attempts, longer for retries
-      const timeout = attempt === 0 ? 8000 : 12000 + (attempt * 3000);
+      // Progressive timeout: longer for complex queries and retries
+      const timeout = attempt === 0 ? 30000 : 45000 + (attempt * 5000);
       const timeoutId = setTimeout(() => {
         try {
           if (!controller.signal.aborted) {
