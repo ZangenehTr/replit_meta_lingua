@@ -436,22 +436,14 @@ export function CallernManagement() {
             <Button
               onClick={async () => {
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  if (!token) {
-                    alert('Please log in again to test AI features');
-                    return;
-                  }
-                  
-                  const response = await fetch('/api/callern/ai/word-helper', {
+                  const response = await fetch('/api/callern/ai/test/word-helper', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
+                      'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                      conversationContext: "We are discussing travel plans",
-                      studentLevel: "B1",
-                      targetLanguage: "English"
+                      context: "We are discussing travel plans",
+                      level: "B1"
                     })
                   });
                   const data = await response.json();
@@ -469,21 +461,13 @@ export function CallernManagement() {
             <Button
               onClick={async () => {
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  if (!token) {
-                    alert('Please log in again to test AI features');
-                    return;
-                  }
-                  
-                  const response = await fetch('/api/callern/ai/grammar-check', {
+                  const response = await fetch('/api/callern/ai/test/grammar-check', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
+                      'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                      sentence: "I have went to the store yesterday",
-                      targetLanguage: "English"
+                      text: "I have went to the store yesterday"
                     })
                   });
                   const data = await response.json();
@@ -501,22 +485,14 @@ export function CallernManagement() {
             <Button
               onClick={async () => {
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  if (!token) {
-                    alert('Please log in again to test AI features');
-                    return;
-                  }
-                  
-                  const response = await fetch('/api/callern/ai/translate', {
+                  const response = await fetch('/api/callern/ai/test/translate', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
+                      'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                       text: "Hello, how are you today?",
-                      fromLanguage: "English",
-                      toLanguage: "Persian"
+                      targetLanguage: "fa"
                     })
                   });
                   const data = await response.json();
@@ -534,21 +510,13 @@ export function CallernManagement() {
             <Button
               onClick={async () => {
                 try {
-                  const token = localStorage.getItem('auth_token');
-                  if (!token) {
-                    alert('Please log in again to test AI features');
-                    return;
-                  }
-                  
-                  const response = await fetch('/api/callern/ai/pronunciation', {
+                  const response = await fetch('/api/callern/ai/test/pronunciation', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
+                      'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                      word: "entrepreneur",
-                      language: "English"
+                      word: "entrepreneur"
                     })
                   });
                   const data = await response.json();
