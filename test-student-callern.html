@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Student Callern Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f4f4f4;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Student Callern Page</h1>
+    
+    <button onclick="loginStudent()">1. Login as Student1</button>
+    <button onclick="checkTeachers()">2. Check Available Teachers</button>
+    <button onclick="checkPackages()">3. Check Student Packages</button>
+    
+    <div id="output"></div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        let authToken = '';
+
+        function log(message, type = '') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+        }
+
+        async function loginStudent() {
+            try {
+                log('Logging in as student1@test.com...');
+                
+                const response = await fetch(`${API_URL}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'student1@test.com',
+                        password: 'password123'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.user) {
+                    authToken = data.token;
+                    log(`✓ Logged in successfully as ${data.user.firstName} ${data.user.lastName}`, 'success');
+                    log(`  Role: ${data.user.role}`, 'success');
+                    log(`  Token: ${authToken.substring(0, 20)}...`, 'success');
+                } else {
+                    log(`✗ Login failed: ${data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Login error: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkTeachers() {
+            try {
+                log('Fetching available teachers...');
+                
+                const response = await fetch(`${API_URL}/api/callern/online-teachers`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Cookie': `token=${authToken}`
+                    }
+                });
+
+                const teachers = await response.json();
+                
+                if (response.ok) {
+                    log(`✓ Found ${teachers.length} teachers:`, 'success');
+                    teachers.forEach(teacher => {
+                        log(`  - ${teacher.firstName} ${teacher.lastName}:`, 'success');
+                        log(`    Status: ${teacher.isOnline ? 'Online' : 'Offline'}`);
+                        log(`    Languages: ${teacher.languages.join(', ')}`);
+                        log(`    Rate: ${teacher.hourlyRate} IRR/hour`);
+                        log(`    Specializations: ${teacher.specializations.join(', ')}`);
+                    });
+                } else {
+                    log(`✗ Failed to fetch teachers: ${teachers.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Error fetching teachers: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkPackages() {
+            try {
+                log('Fetching student packages...');
+                
+                const response = await fetch(`${API_URL}/api/student/my-callern-packages`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Cookie': `token=${authToken}`
+                    }
+                });
+
+                const packages = await response.json();
+                
+                if (response.ok) {
+                    log(`✓ Found ${packages.length} packages:`, 'success');
+                    packages.forEach(pkg => {
+                        log(`  - Package: ${pkg.packageName}`, 'success');
+                        log(`    Status: ${pkg.status}`);
+                        log(`    Remaining: ${pkg.remainingMinutes} minutes`);
+                        log(`    Total: ${pkg.totalMinutes} minutes`);
+                    });
+                } else {
+                    log(`✗ Failed to fetch packages: ${packages.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Error fetching packages: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
