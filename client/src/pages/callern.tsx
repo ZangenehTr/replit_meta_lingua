@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/mobile/MobileLayout";
 import { MobileCard } from "@/components/mobile/MobileCard";
+import io, { Socket } from 'socket.io-client';
 import {
   Card,
   CardContent,
@@ -112,6 +113,8 @@ export default function CallernSystem() {
   const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
   const [activeCallConfig, setActiveCallConfig] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'packages' | 'teachers' | 'history'>('teachers');
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [waitingForTeacher, setWaitingForTeacher] = useState(false);
 
   // Fetch available Callern packages
   const { data: packages = [], isLoading: packagesLoading } = useQuery({
@@ -200,35 +203,118 @@ export default function CallernSystem() {
       .reduce((acc, byte) => acc + byte.toString(36), '');
     const roomId = `callern-${Date.now()}-${randomStr}`;
 
-    // Set up call configuration with proper props for VideoCall component
-    setActiveCallConfig({
-      roomId,
-      userId: user?.id || 0,
-      role: 'student' as const,
-      onMinutesUpdate: (minutes: number) => {
-        console.log(`Call duration: ${minutes} minutes`);
-        // Update package minutes here
-        queryClient.invalidateQueries({ queryKey: ["/api/student/my-callern-packages"] });
-      },
-      // Store additional data for reference
-      teacherId: teacher.id,
-      packageId: activePackage.packageId,
-      teacherName: `${teacher.firstName} ${teacher.lastName}`,
+    // Connect to WebSocket and emit call request
+    const newSocket = io({
+      path: '/socket.io/',
+      transports: ['websocket', 'polling']
     });
 
-    setSelectedTeacher(teacher);
-    setIsInCall(true);
+    setSocket(newSocket);
+    setWaitingForTeacher(true);
+
+    // Authenticate as student
+    newSocket.emit('authenticate', {
+      userId: user?.id,
+      role: 'student'
+    });
+
+    // Emit call request to teacher
+    newSocket.emit('call-teacher', {
+      teacherId: teacher.id,
+      studentId: user?.id,
+      packageId: activePackage.packageId,
+      language: selectedLanguage,
+      roomId: roomId
+    });
+
+    // Listen for teacher's response
+    newSocket.on('call-accepted', (data) => {
+      console.log('Call accepted by teacher:', data);
+      setWaitingForTeacher(false);
+
+      // Set up call configuration with proper props for VideoCall component
+      setActiveCallConfig({
+        roomId,
+        userId: user?.id || 0,
+        role: 'student' as const,
+        onMinutesUpdate: (minutes: number) => {
+          console.log(`Call duration: ${minutes} minutes`);
+          // Update package minutes here
+          queryClient.invalidateQueries({ queryKey: ["/api/student/my-callern-packages"] });
+        },
+        // Store additional data for reference
+        teacherId: teacher.id,
+        packageId: activePackage.packageId,
+        teacherName: `${teacher.firstName} ${teacher.lastName}`,
+      });
+
+      setSelectedTeacher(teacher);
+      setIsInCall(true);
+
+      toast({
+        title: t('callern:callAccepted'),
+        description: t('callern:connectingToTeacher'),
+      });
+    });
+
+    newSocket.on('call-rejected', (data) => {
+      console.log('Call rejected by teacher:', data);
+      setWaitingForTeacher(false);
+      newSocket.disconnect();
+      setSocket(null);
+
+      toast({
+        title: t('callern:callRejected'),
+        description: data.reason || t('callern:teacherUnavailable'),
+        variant: "destructive",
+      });
+    });
+
+    newSocket.on('error', (data) => {
+      console.error('Call error:', data);
+      setWaitingForTeacher(false);
+      newSocket.disconnect();
+      setSocket(null);
+
+      toast({
+        title: t('callern:callError'),
+        description: data.message || t('callern:connectionFailed'),
+        variant: "destructive",
+      });
+    });
+
+    // Show waiting dialog
+    toast({
+      title: t('callern:callingTeacher'),
+      description: t('callern:waitingForResponse'),
+    });
   };
 
   const handleEndCall = () => {
     setIsInCall(false);
     setSelectedTeacher(null);
     setActiveCallConfig(null);
+    setWaitingForTeacher(false);
+    
+    // Disconnect socket if connected
+    if (socket) {
+      socket.disconnect();
+      setSocket(null);
+    }
     
     // Refresh packages and history
     queryClient.invalidateQueries({ queryKey: ["/api/student/my-callern-packages"] });
     queryClient.invalidateQueries({ queryKey: ["/api/student/callern-history"] });
   };
+
+  // Clean up socket on component unmount
+  useEffect(() => {
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, [socket]);
 
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -730,6 +816,47 @@ export default function CallernSystem() {
                 disabled={purchasePackageMutation.isPending}
               >
                 {purchasePackageMutation.isPending ? t('common:processing') : t('callern:confirmPurchase')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Waiting for Teacher Dialog */}
+        <Dialog open={waitingForTeacher} onOpenChange={setWaitingForTeacher}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Phone className="h-5 w-5 animate-pulse text-primary" />
+                {t('callern:callingTeacher', 'Calling Teacher...')}
+              </DialogTitle>
+              <DialogDescription>
+                {t('callern:waitingForResponse', 'Waiting for teacher to respond to your call request. This may take a few moments.')}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-center py-6">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Video className="h-6 w-6 text-primary" />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setWaitingForTeacher(false);
+                  if (socket) {
+                    socket.disconnect();
+                    setSocket(null);
+                  }
+                  toast({
+                    title: t('callern:callCancelled', 'Call Cancelled'),
+                    description: t('callern:youCancelledCall', 'You have cancelled the call request.'),
+                  });
+                }}
+              >
+                {t('common:cancel', 'Cancel')}
               </Button>
             </DialogFooter>
           </DialogContent>
