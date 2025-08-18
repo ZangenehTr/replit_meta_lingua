@@ -134,10 +134,12 @@ export default function CallernSystem() {
   });
 
   // Debug logging
-  console.log('Teachers loading:', teachersLoading);
-  console.log('Teachers data:', availableTeachers);
-  console.log('Teachers error:', teachersError);
-  console.log('Selected language:', selectedLanguage);
+  useEffect(() => {
+    console.log('Teachers loading:', teachersLoading);
+    console.log('Teachers data:', availableTeachers);
+    console.log('Teachers error:', teachersError);
+    console.log('Selected language:', selectedLanguage);
+  }, [teachersLoading, availableTeachers, teachersError, selectedLanguage]);
 
   // Purchase package mutation
   const purchasePackageMutation = useMutation({
@@ -422,11 +424,7 @@ export default function CallernSystem() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {availableTeachers
-                  .filter((teacher: AvailableTeacher) => 
-                    teacher.languages.includes(selectedLanguage)
-                  )
-                  .map((teacher: AvailableTeacher) => (
+                {availableTeachers.map((teacher: AvailableTeacher) => (
                   <div key={teacher.id} className="border rounded-lg p-4 space-y-3 hover:shadow-lg transition-shadow">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
