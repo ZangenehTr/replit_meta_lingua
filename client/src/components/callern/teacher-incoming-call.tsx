@@ -27,7 +27,7 @@ export function TeacherIncomingCall() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!user || user.role !== 'Teacher/Tutor') return;
+    if (!user || (user.role !== 'Teacher' && user.role !== 'Teacher/Tutor')) return;
 
     console.log('TeacherIncomingCall component mounted for user:', user.id, user.role);
 
