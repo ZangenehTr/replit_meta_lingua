@@ -209,8 +209,12 @@ export class CallernWebSocketServer {
         
         try {
           // Verify student has available minutes
+          console.log(`Verifying package for student ${studentId} with package ID ${packageId}`);
           const hasMinutes = await this.verifyStudentPackage(studentId, packageId);
+          console.log(`Package verification result: ${hasMinutes}`);
+          
           if (!hasMinutes) {
+            console.log(`Student ${studentId} has insufficient balance for package ${packageId}`);
             socket.emit('error', { message: 'Insufficient balance' });
             return;
           }
@@ -411,6 +415,8 @@ export class CallernWebSocketServer {
 
   private async verifyStudentPackage(studentId: number, packageId: number): Promise<boolean> {
     try {
+      console.log(`Checking package: studentId=${studentId}, packageId=${packageId}`);
+      
       const studentPackage = await db
         .select()
         .from(studentCallernPackages)
@@ -423,7 +429,12 @@ export class CallernWebSocketServer {
         )
         .limit(1);
 
-      if (!studentPackage.length) return false;
+      console.log(`Found packages:`, studentPackage);
+      
+      if (!studentPackage.length) {
+        console.log(`No active package found for student ${studentId} with package ID ${packageId}`);
+        return false;
+      }
 
       const pkg = studentPackage[0];
       const remainingMinutes = pkg.remainingMinutes; // Use remainingMinutes directly
