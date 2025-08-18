@@ -1,0 +1,38 @@
+Javascript Console
+
+Stop logging
+Tap the "Start logging" button to collect future JavaScript console logs and errors from all tabs. Logs will be collected (and stored only in memory) until this page is closed or "Stop logging" is tapped.
+https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/callern
+DEBUG[vite] connecting...
+DEBUG[vite] connected.
+WARNINGModule "events" has been externalized for browser compatibility. Cannot access "events.EventEmitter" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+WARNINGModule "events" has been externalized for browser compatibility. Cannot access "events.EventEmitter" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+WARNINGModule "util" has been externalized for browser compatibility. Cannot access "util.debuglog" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+WARNINGModule "util" has been externalized for browser compatibility. Cannot access "util.inspect" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+LOGError handler initialized for development
+LOGApplied RTL for language: fa
+LOGApplied RTL styles for fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOGApplied RTL styles for fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOGWebSocket connected
+https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/callern
+DEBUG[vite] connecting...
+DEBUG[vite] connected.
+WARNINGModule "events" has been externalized for browser compatibility. Cannot access "events.EventEmitter" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+WARNINGModule "events" has been externalized for browser compatibility. Cannot access "events.EventEmitter" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+WARNINGModule "util" has been externalized for browser compatibility. Cannot access "util.debuglog" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+WARNINGModule "util" has been externalized for browser compatibility. Cannot access "util.inspect" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+LOGError handler initialized for development
+LOGApplied RTL for language: fa
+LOGApplied RTL styles for fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOGApplied RTL styles for fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOGWebSocket connected
