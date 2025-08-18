@@ -129,9 +129,15 @@ export default function CallernSystem() {
   });
 
   // Fetch available teachers
-  const { data: availableTeachers = [], isLoading: teachersLoading } = useQuery({
-    queryKey: ["/api/callern/online-teachers", selectedLanguage],
+  const { data: availableTeachers = [], isLoading: teachersLoading, error: teachersError } = useQuery({
+    queryKey: ["/api/callern/online-teachers"],
   });
+
+  // Debug logging
+  console.log('Teachers loading:', teachersLoading);
+  console.log('Teachers data:', availableTeachers);
+  console.log('Teachers error:', teachersError);
+  console.log('Selected language:', selectedLanguage);
 
   // Purchase package mutation
   const purchasePackageMutation = useMutation({
