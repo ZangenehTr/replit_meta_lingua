@@ -130,7 +130,7 @@ export default function CallernSystem() {
 
   // Fetch available teachers
   const { data: availableTeachers = [], isLoading: teachersLoading } = useQuery({
-    queryKey: ["/api/student/callern-teachers", selectedLanguage],
+    queryKey: ["/api/callern/online-teachers", selectedLanguage],
   });
 
   // Purchase package mutation

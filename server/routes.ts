@@ -8389,6 +8389,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         return {
           id: teacher.id,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName,
           name: `${teacher.firstName} ${teacher.lastName}`,
           email: teacher.email,
           avatar: `https://ui-avatars.com/api/?name=${teacher.firstName}+${teacher.lastName}&background=random`,
