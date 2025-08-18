@@ -194,6 +194,9 @@ export class CallernWebSocketServer {
       socket.on('call-teacher', async (data) => {
         const { teacherId, studentId, packageId, language, roomId } = data;
         
+        console.log('Call request received:', { teacherId, studentId, packageId, language, roomId });
+        console.log('Current teacher sockets:', Array.from(this.teacherSockets.keys()));
+        
         try {
           // Verify student has available minutes
           const hasMinutes = await this.verifyStudentPackage(studentId, packageId);
@@ -215,7 +218,11 @@ export class CallernWebSocketServer {
 
           // Check if teacher is available
           const teacherSocket = this.teacherSockets.get(assignedTeacherId);
+          console.log('Teacher socket found:', teacherSocket ? 'yes' : 'no');
+          console.log('Teacher socket details:', teacherSocket);
+          
           if (!teacherSocket || !teacherSocket.isAvailable || teacherSocket.currentCall) {
+            console.log('Teacher not available, finding another...');
             // Try to find another teacher
             assignedTeacherId = await this.findAvailableTeacher(language, assignedTeacherId);
             if (!assignedTeacherId) {
@@ -429,10 +436,7 @@ export class CallernWebSocketServer {
         .from(teacherCallernAvailability)
         .innerJoin(users, eq(users.id, teacherCallernAvailability.teacherId))
         .where(
-          and(
-            eq(teacherCallernAvailability.isOnline, true),
-            eq(teacherCallernAvailability.isAvailable, true)
-          )
+          eq(teacherCallernAvailability.isOnline, true)
         );
 
       // Filter by language and availability in memory
