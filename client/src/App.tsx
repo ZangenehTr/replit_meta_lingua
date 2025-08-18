@@ -65,6 +65,7 @@ import ScheduleObservationReview from "@/components/supervision/ScheduleObservat
 import TutorsPage from "@/pages/student/tutors";
 import SessionsPage from "@/pages/student/sessions";
 import HomeworkPage from "@/pages/student/homework";
+import StudentAIConversation from "@/pages/student/AIConversation";
 import MessagesPage from "@/pages/student/messages";
 import PaymentPage from "@/pages/student/payment";
 import StudentTestTaking from "@/pages/student/test-taking";
@@ -413,9 +414,29 @@ function Router() {
           <SessionsPage />
         </ProtectedRoute>
       </Route>
+      <Route path="/student/sessions">
+        <ProtectedRoute>
+          <SessionsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/join-class">
+        <ProtectedRoute>
+          <SessionsPage />
+        </ProtectedRoute>
+      </Route>
       <Route path="/homework">
         <ProtectedRoute>
           <HomeworkPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/homework">
+        <ProtectedRoute>
+          <HomeworkPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/AIConversation">
+        <ProtectedRoute>
+          <StudentAIConversation />
         </ProtectedRoute>
       </Route>
       <Route path="/assignments">
