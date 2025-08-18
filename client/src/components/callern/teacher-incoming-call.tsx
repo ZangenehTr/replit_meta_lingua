@@ -83,13 +83,20 @@ export function TeacherIncomingCall() {
   }, [user]);
 
   const handleAccept = () => {
-    if (!incomingCall) return;
+    if (!incomingCall || !socket) return;
 
     // Stop ringtone
     if ((window as any).ringtoneAudio) {
       (window as any).ringtoneAudio.pause();
       (window as any).ringtoneAudio = null;
     }
+
+    // Emit accept-call event to notify the student
+    socket.emit('accept-call', {
+      roomId: incomingCall.roomId,
+      teacherId: user?.id,
+      studentId: incomingCall.studentId
+    });
 
     // Navigate to video call page with room info
     setLocation(`/callern/video/${incomingCall.roomId}?role=teacher&studentId=${incomingCall.studentId}`);
