@@ -14579,6 +14579,50 @@ Return JSON format:
     }
   });
 
+  // Get available Callern teachers
+  app.get("/api/student/callern-teachers", authenticateToken, async (req: any, res) => {
+    try {
+      const { language } = req.query;
+      
+      // Get all teachers
+      const teachers = await storage.getTeachers();
+      
+      // Get the two test teachers we created with Callern availability
+      // Filter to get teachers who were set up with Callern (teacher1 and teacher2)
+      const callernTeachers = teachers.filter((teacher: any) => 
+        teacher.email === 'teacher1@test.com' || teacher.email === 'teacher2@test.com'
+      );
+      
+      // Filter by language if specified
+      let filteredTeachers = callernTeachers;
+      if (language && language !== 'all') {
+        filteredTeachers = callernTeachers.filter((teacher: any) => {
+          const languages = teacher.languages || ['English'];
+          const specializations = teacher.specializations || [];
+          return languages.includes(language) || specializations.includes(language);
+        });
+      }
+      
+      // Format teacher data for student view with hourly rates
+      const formattedTeachers = filteredTeachers.map((teacher: any) => ({
+        id: teacher.id,
+        firstName: teacher.firstName || 'Teacher',
+        lastName: teacher.lastName || '',
+        languages: teacher.languages || ['English'],
+        specializations: teacher.specializations || [],
+        rating: teacher.rating || 4.5,
+        hourlyRate: teacher.email === 'teacher1@test.com' ? 500000 : 450000, // Teacher1: 500k, Teacher2: 450k
+        isOnline: true, // Set as online for testing
+        profileImageUrl: null
+      }));
+      
+      res.json(formattedTeachers);
+    } catch (error) {
+      console.error('Error fetching Callern teachers:', error);
+      res.status(500).json({ message: "Failed to fetch available teachers" });
+    }
+  });
+
   // Purchase Callern package
   app.post("/api/student/purchase-callern-package", authenticateToken, async (req: any, res) => {
     try {
@@ -14588,9 +14632,44 @@ Return JSON format:
         return res.status(400).json({ message: "Package ID is required" });
       }
 
-      const purchasedPackage = await storage.purchaseCallernPackage(req.user.id, packageId);
+      // Get package details
+      const packages = await storage.getCallernPackages();
+      const selectedPackage = packages.find(p => p.id === packageId);
+      
+      if (!selectedPackage) {
+        return res.status(404).json({ message: "Package not found" });
+      }
+
+      // Get user's wallet balance
+      const walletData = await storage.getUserWalletData(req.user.id);
+      
+      if (!walletData || walletData.walletBalance < parseInt(selectedPackage.price)) {
+        return res.status(400).json({ message: "Insufficient wallet balance" });
+      }
+
+      // Deduct from wallet
+      await storage.updateWalletBalance(req.user.id, -parseInt(selectedPackage.price));
+      
+      // Create wallet transaction
+      await storage.createWalletTransaction({
+        userId: req.user.id,
+        type: 'purchase',
+        amount: -parseInt(selectedPackage.price),
+        description: `Purchased Callern package: ${selectedPackage.packageName}`,
+        status: 'completed',
+        merchantTransactionId: `CALLERN_${Date.now()}_${req.user.id}`
+      });
+
+      // Purchase the package
+      const purchasedPackage = await storage.purchaseCallernPackage({
+        studentId: req.user.id,
+        packageId: packageId,
+        price: parseInt(selectedPackage.price)
+      });
       
       if (!purchasedPackage) {
+        // Rollback wallet deduction if purchase fails
+        await storage.updateWalletBalance(req.user.id, parseInt(selectedPackage.price));
         return res.status(400).json({ message: "Failed to purchase package" });
       }
 
@@ -15434,6 +15513,9 @@ Return JSON format:
       const skillProgression = await activityTracker.getSkillProgression(req.user.id, 1);
       const latestSkills = skillProgression[skillProgression.length - 1];
       
+      // Get wallet balance
+      const walletData = await storage.getUserWalletData(req.user.id);
+      
       // Calculate real statistics based on database
       const realStats = {
         level: user?.level || 'A1',
@@ -15443,6 +15525,10 @@ Return JSON format:
         completedChallenges: weeklyData.completedLessons,
         totalChallenges: 15,
         leaderboardRank: userStats?.leaderboardRank || 1,
+        
+        // Wallet information
+        walletBalance: walletData?.walletBalance || 0,
+        memberTier: walletData?.memberTier || 'Bronze',
         
         // Real weekly progress from activity tracker
         weeklyProgress: weeklyData.progressPercentage,
