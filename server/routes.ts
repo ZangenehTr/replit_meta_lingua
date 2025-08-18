@@ -8339,57 +8339,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get online teachers
   app.get("/api/callern/online-teachers", async (req, res) => {
     try {
-      const teachers = [
-        {
-          id: 1,
-          name: "دکتر امیر حسینی / Dr. Amir Hosseini",
-          avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
-          specializations: ["Persian Grammar", "Literature", "Conversation"],
-          languages: ["Persian", "English"],
-          rating: 4.9,
-          reviewCount: 234,
-          totalMinutes: 15420,
-          isOnline: true,
-          responseTime: "Usually responds within 2 minutes",
-          hourlyRate: 7200, // 7,200 Toman per hour
-          successRate: 96,
-          description: "متخصص ادبیات فارسی و دستور زبان با ۱۰ سال تجربه تدریس"
-        },
-        {
-          id: 2,
-          name: "خانم مریم صادقی / Ms. Maryam Sadeghi",
-          avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
-          specializations: ["Business Persian", "Pronunciation", "Writing"],
-          languages: ["Persian", "English", "French"],
+      // Get actual teachers from database
+      const allTeachers = await storage.getTeachers();
+      const callernAvailability = await storage.getTeacherCallernAvailability();
+      
+      // Filter for our test teachers (teacher1 and teacher2)
+      const testTeachers = allTeachers.filter(t => 
+        t.email === 'teacher1@test.com' || t.email === 'teacher2@test.com'
+      );
+      
+      // Format teachers for Callern display
+      const teachers = testTeachers.map((teacher, index) => {
+        const availability = callernAvailability.find(a => a.teacherId === teacher.id);
+        const isTeacher1 = teacher.email === 'teacher1@test.com';
+        
+        return {
+          id: teacher.id,
+          name: `${teacher.firstName} ${teacher.lastName}`,
+          email: teacher.email,
+          avatar: `https://ui-avatars.com/api/?name=${teacher.firstName}+${teacher.lastName}&background=random`,
+          specializations: ["English Grammar", "Conversation", "Business English"],
+          languages: ["English", "Persian"],
           rating: 4.8,
-          reviewCount: 189,
-          totalMinutes: 12350,
-          isOnline: true,
-          responseTime: "Usually responds within 1 minute",
-          hourlyRate: 6000, // 6,000 Toman per hour
-          successRate: 94,
-          description: "مربی فارسی تجاری و تلفظ صحیح با تخصص در آموزش به بازرگانان"
-        },
-        {
-          id: 3,
-          name: "استاد علی رضایی / Prof. Ali Rezaei",
-          avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-          specializations: ["Poetry", "Classical Persian", "Advanced Grammar"],
-          languages: ["Persian", "Arabic"],
-          rating: 4.7,
-          reviewCount: 156,
-          totalMinutes: 8900,
-          isOnline: false,
-          responseTime: "Usually responds within 5 minutes",
-          hourlyRate: 9000, // 9,000 Toman per hour
-          successRate: 98,
-          description: "استاد شعر و ادبیات کلاسیک فارسی با تخصص در حافظ و سعدی"
-        }
-      ];
+          reviewCount: isTeacher1 ? 156 : 89,
+          totalMinutes: isTeacher1 ? 8900 : 4500,
+          isOnline: isTeacher1, // teacher1 is online, teacher2 is offline
+          status: isTeacher1 ? 'online' : 'offline',
+          responseTime: isTeacher1 ? "Usually responds within 2 minutes" : "Usually responds within 5 minutes",
+          hourlyRate: availability?.hourlyRate || 120000, // Default 120,000 IRR per hour
+          successRate: isTeacher1 ? 96 : 92,
+          description: isTeacher1 ? 
+            "Expert English teacher with 10 years of experience" :
+            "Experienced English instructor specializing in business communication",
+          isCallernAuthorized: !!availability
+        };
+      });
 
-      res.json(mentors);
+      res.json(teachers);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get mentors" });
+      console.error('Error fetching online teachers:', error);
+      res.status(500).json({ message: "Failed to get online teachers" });
     }
   });
 
