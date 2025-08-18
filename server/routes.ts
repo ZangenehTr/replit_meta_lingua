@@ -3326,6 +3326,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch Callern teachers" });
     }
   });
+
+  // Endpoint for frontend Callern management page (uses /callern/ path)
+  app.get("/api/admin/callern/available-teachers", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      // Get all teachers and their Callern authorization status
+      const teachers = await storage.getTeachers();
+      const callernAvailability = await storage.getTeacherCallernAvailability();
+      
+      // Format teachers for the Callern management UI
+      const availableTeachers = teachers.map(teacher => {
+        const availability = callernAvailability.find(a => a.teacherId === teacher.id);
+        return {
+          id: teacher.id,
+          firstName: teacher.firstName,
+          lastName: teacher.lastName,
+          fullName: `${teacher.firstName} ${teacher.lastName}`,
+          email: teacher.email,
+          isActive: teacher.isActive,
+          isCallernAuthorized: !!availability,
+          hourlyRate: availability?.hourlyRate || null,
+          isOnline: availability?.isOnline || false,
+          availableHours: availability?.availableHours || [],
+          specializations: ["General Language", "Conversation", "Grammar"], // Mock data for now
+          rating: 4.5,
+          totalCallMinutes: 0
+        };
+      });
+      
+      res.json(availableTeachers);
+    } catch (error) {
+      console.error('Error fetching available teachers for Callern:', error);
+      res.status(500).json({ message: "Failed to fetch available teachers" });
+    }
+  });
   
   app.post("/api/admin/callern-teachers/:teacherId/authorize", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
