@@ -628,6 +628,10 @@ export class DatabaseStorage implements IStorage {
     return roadmap;
   }
 
+  async getCallernRoadmapById(id: number): Promise<any | undefined> {
+    return this.getCallernRoadmap(id);
+  }
+
   async updateCallernRoadmap(id: number, updates: any): Promise<any | undefined> {
     const [updated] = await db
       .update(callernRoadmaps)
@@ -687,6 +691,14 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRoadmapStep(id: number): Promise<void> {
     await db.delete(callernRoadmapSteps).where(eq(callernRoadmapSteps.id, id));
+  }
+
+  async getRoadmapStepById(id: number): Promise<any | undefined> {
+    const [step] = await db
+      .select()
+      .from(callernRoadmapSteps)
+      .where(eq(callernRoadmapSteps.id, id));
+    return step;
   }
 
   // Student Roadmap Progress Implementation

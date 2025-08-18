@@ -108,13 +108,13 @@ export default function RoadmapDesigner() {
   const [stepForm, setStepForm] = useState({
     title: '',
     description: '',
-    orderIndex: 1,
+    stepNumber: 1,
     estimatedMinutes: 30,
-    contentType: 'lesson',
-    courseId: undefined as number | undefined,
-    contentUrl: '',
-    isRequired: true,
-    objectives: [] as string[]
+    skillFocus: 'speaking',
+    objectives: '',
+    teacherAiTips: '',
+    materials: {} as any,
+    assessmentCriteria: ''
   });
 
   // Fetch roadmaps
@@ -136,9 +136,14 @@ export default function RoadmapDesigner() {
 
   // Create roadmap mutation
   const createRoadmap = useMutation({
-    mutationFn: (data: typeof roadmapForm) => apiRequest('/api/admin/roadmaps', {
+    mutationFn: (data: typeof roadmapForm) => apiRequest('/api/roadmaps', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify({
+        roadmapName: data.title,
+        description: data.description,
+        totalSteps: 0,
+        estimatedHours: data.estimatedWeeks * data.weeklyHours
+      })
     }),
     onSuccess: () => {
       toast({ title: "Roadmap created successfully" });
@@ -161,36 +166,10 @@ export default function RoadmapDesigner() {
     }
   });
 
-  // Add milestone mutation
-  const addMilestone = useMutation({
-    mutationFn: (data: typeof milestoneForm) => 
-      apiRequest(`/api/roadmaps/${selectedRoadmap?.id}/milestones`, {
-        method: 'POST',
-        body: JSON.stringify(data)
-      }),
-    onSuccess: () => {
-      toast({ title: "Milestone added successfully" });
-      refetchDetails();
-      setMilestoneForm({
-        title: '',
-        description: '',
-        orderIndex: ((roadmapDetails as any)?.milestones?.length || 0) + 1,
-        weekNumber: 1,
-        primarySkill: 'speaking',
-        secondarySkills: [],
-        assessmentType: 'quiz',
-        passingScore: 70
-      });
-    },
-    onError: () => {
-      toast({ title: "Failed to add milestone", variant: "destructive" });
-    }
-  });
-
   // Add step mutation
   const addStep = useMutation({
-    mutationFn: ({ milestoneId, data }: { milestoneId: number; data: typeof stepForm }) => 
-      apiRequest(`/api/milestones/${milestoneId}/steps`, {
+    mutationFn: (data: typeof stepForm) => 
+      apiRequest(`/api/roadmaps/${selectedRoadmap?.id}/steps`, {
         method: 'POST',
         body: JSON.stringify(data)
       }),
@@ -200,13 +179,13 @@ export default function RoadmapDesigner() {
       setStepForm({
         title: '',
         description: '',
-        orderIndex: 1,
+        stepNumber: ((roadmapDetails as any)?.steps?.length || 0) + 1,
         estimatedMinutes: 30,
-        contentType: 'lesson',
-        courseId: undefined,
-        contentUrl: '',
-        isRequired: true,
-        objectives: []
+        skillFocus: 'speaking',
+        objectives: '',
+        teacherAiTips: '',
+        materials: {},
+        assessmentCriteria: ''
       });
     },
     onError: () => {
@@ -439,49 +418,71 @@ export default function RoadmapDesigner() {
               <CardContent>
                 <Tabs defaultValue="milestones">
                   <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="milestones">{t('admin:roadmap.milestones')}</TabsTrigger>
+                    <TabsTrigger value="milestones">Steps</TabsTrigger>
                     <TabsTrigger value="analytics">{t('admin:roadmap.analytics')}</TabsTrigger>
                     <TabsTrigger value="settings">{t('admin:roadmap.settings')}</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="milestones" className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold">{t('admin:roadmap.learningMilestones')}</h3>
+                      <h3 className="text-lg font-semibold">
+                        Roadmap Steps ({roadmapDetails?.steps?.length || 0}) • Total: {roadmapDetails?.steps?.reduce((sum: number, step: any) => sum + (step.estimatedMinutes || 0), 0) || 0} minutes
+                      </h3>
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button size="sm">
                             <Plus className="w-4 h-4 mr-1" />
-                            {t('admin:roadmap.addMilestone')}
+                            Add Step
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
-                            <DialogTitle>{t('admin:roadmap.addMilestone')}</DialogTitle>
+                            <DialogTitle>Add Roadmap Step</DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <div>
-                              <Label>{t('admin:roadmap.fields.title')}</Label>
+                              <Label>Title</Label>
                               <Input
-                                value={milestoneForm.title}
-                                onChange={(e) => setMilestoneForm({ ...milestoneForm, title: e.target.value })}
-                                placeholder={t('admin:roadmap.milestoneTitlePlaceholder')}
+                                value={stepForm.title}
+                                onChange={(e) => setStepForm({ ...stepForm, title: e.target.value })}
+                                placeholder="e.g. Introduction to Speaking"
                               />
                             </div>
                             
                             <div>
-                              <Label>{t('admin:roadmap.weekNumber')}</Label>
-                              <Input
-                                type="number"
-                                value={milestoneForm.weekNumber}
-                                onChange={(e) => setMilestoneForm({ ...milestoneForm, weekNumber: parseInt(e.target.value) })}
+                              <Label>Description</Label>
+                              <Textarea
+                                value={stepForm.description}
+                                onChange={(e) => setStepForm({ ...stepForm, description: e.target.value })}
+                                placeholder="Detailed description of what this step covers"
                               />
                             </div>
                             
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label>Step Number</Label>
+                                <Input
+                                  type="number"
+                                  value={stepForm.stepNumber}
+                                  onChange={(e) => setStepForm({ ...stepForm, stepNumber: parseInt(e.target.value) })}
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label>Estimated Minutes</Label>
+                                <Input
+                                  type="number"
+                                  value={stepForm.estimatedMinutes}
+                                  onChange={(e) => setStepForm({ ...stepForm, estimatedMinutes: parseInt(e.target.value) })}
+                                />
+                              </div>
+                            </div>
+                            
                             <div>
-                              <Label>{t('admin:roadmap.primarySkill')}</Label>
+                              <Label>Skill Focus</Label>
                               <Select
-                                value={milestoneForm.primarySkill}
-                                onValueChange={(v) => setMilestoneForm({ ...milestoneForm, primarySkill: v })}
+                                value={stepForm.skillFocus}
+                                onValueChange={(v) => setStepForm({ ...stepForm, skillFocus: v })}
                               >
                                 <SelectTrigger>
                                   <SelectValue />
@@ -496,61 +497,90 @@ export default function RoadmapDesigner() {
                               </Select>
                             </div>
                             
+                            <div>
+                              <Label>Learning Objectives</Label>
+                              <Textarea
+                                value={stepForm.objectives}
+                                onChange={(e) => setStepForm({ ...stepForm, objectives: e.target.value })}
+                                placeholder="What will the student learn in this step?"
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label className="text-blue-600">Teacher AI Tips</Label>
+                              <Textarea
+                                value={stepForm.teacherAiTips}
+                                onChange={(e) => setStepForm({ ...stepForm, teacherAiTips: e.target.value })}
+                                placeholder="AI guidance for teachers: key points to cover, common mistakes to avoid, suggested activities..."
+                                className="border-blue-200 focus:border-blue-400"
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label>Assessment Criteria</Label>
+                              <Textarea
+                                value={stepForm.assessmentCriteria}
+                                onChange={(e) => setStepForm({ ...stepForm, assessmentCriteria: e.target.value })}
+                                placeholder="How to assess if the student has mastered this step"
+                              />
+                            </div>
+                            
                             <Button
                               className="w-full"
-                              onClick={() => addMilestone.mutate(milestoneForm)}
-                              disabled={addMilestone.isPending}
+                              onClick={() => addStep.mutate(stepForm)}
+                              disabled={addStep.isPending}
                             >
-                              {t('admin:roadmap.addMilestone')}
+                              Add Step
                             </Button>
                           </div>
                         </DialogContent>
                       </Dialog>
                     </div>
                     
-                    {/* Milestones Timeline */}
+                    {/* Steps Timeline */}
                     <div className="space-y-4">
-                      {roadmapDetails?.milestones?.map((milestone: RoadmapMilestone, index: number) => (
-                        <Card key={milestone.id}>
+                      {roadmapDetails?.steps?.map((step: any, index: number) => (
+                        <Card key={step.id}>
                           <CardContent className="p-4">
                             <div className="flex items-start gap-4">
                               <div className="flex-shrink-0">
                                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <Milestone className="w-5 h-5 text-primary" />
+                                  <span className="font-semibold">{step.stepNumber}</span>
                                 </div>
                               </div>
                               <div className="flex-1">
                                 <div className="flex justify-between items-start">
-                                  <div>
-                                    <h4 className="font-semibold">{milestone.title}</h4>
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold">{step.title}</h4>
                                     <p className="text-sm text-muted-foreground mt-1">
-                                      {t('admin:roadmap.week')} {milestone.weekNumber} • {milestone.primarySkill}
+                                      {step.estimatedMinutes} {t('admin:roadmap.minutes')} • {step.skillFocus}
                                     </p>
+                                    {step.description && (
+                                      <p className="text-sm mt-2">{step.description}</p>
+                                    )}
+                                    {step.objectives && (
+                                      <div className="mt-2">
+                                        <span className="text-sm font-medium">Objectives:</span>
+                                        <p className="text-sm text-muted-foreground">{step.objectives}</p>
+                                      </div>
+                                    )}
+                                    {step.teacherAiTips && (
+                                      <div className="mt-2">
+                                        <span className="text-sm font-medium text-blue-600">AI Tips for Teachers:</span>
+                                        <p className="text-sm text-blue-600/80">{step.teacherAiTips}</p>
+                                      </div>
+                                    )}
                                   </div>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => setEditingMilestone(milestone)}
+                                    onClick={() => {
+                                      // TODO: Edit step
+                                    }}
                                   >
-                                    <Plus className="w-4 h-4 mr-1" />
-                                    Add Step
+                                    <Edit className="w-4 h-4" />
                                   </Button>
                                 </div>
-                                
-                                {/* Steps */}
-                                {milestone.steps && milestone.steps.length > 0 && (
-                                  <div className="mt-4 space-y-2">
-                                    {milestone.steps.map((step: RoadmapStep) => (
-                                      <div key={step.id} className="flex items-center gap-2 pl-4 py-2 bg-muted/50 rounded">
-                                        <CheckCircle className="w-4 h-4 text-muted-foreground" />
-                                        <span className="text-sm">{step.title}</span>
-                                        <span className="text-xs text-muted-foreground ml-auto mr-2">
-                                          {step.estimatedMinutes} {t('admin:roadmap.minutes')}
-                                        </span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
                               </div>
                             </div>
                           </CardContent>
@@ -616,87 +646,7 @@ export default function RoadmapDesigner() {
         </div>
       </div>
 
-      {/* Add Step Dialog */}
-      {editingMilestone && (
-        <Dialog open={!!editingMilestone} onOpenChange={() => setEditingMilestone(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Step to {editingMilestone.title}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Step Title</Label>
-                <Input
-                  value={stepForm.title}
-                  onChange={(e) => setStepForm({ ...stepForm, title: e.target.value })}
-                  placeholder="e.g., Introduction to Business Vocabulary"
-                />
-              </div>
-              
-              <div>
-                <Label>Content Type</Label>
-                <Select
-                  value={stepForm.contentType}
-                  onValueChange={(v) => setStepForm({ ...stepForm, contentType: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contentTypes.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label>Estimated Duration (minutes)</Label>
-                <Input
-                  type="number"
-                  value={stepForm.estimatedMinutes}
-                  onChange={(e) => setStepForm({ ...stepForm, estimatedMinutes: parseInt(e.target.value) })}
-                />
-              </div>
-              
-              {stepForm.contentType === 'lesson' && (
-                <div>
-                  <Label>Link to Course (Optional)</Label>
-                  <Select
-                    value={stepForm.courseId?.toString() || ''}
-                    onValueChange={(v) => setStepForm({ ...stepForm, courseId: v ? parseInt(v) : undefined })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">None</SelectItem>
-                      {courses.map((course: any) => (
-                        <SelectItem key={course.id} value={course.id.toString()}>
-                          {course.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              
-              <Button
-                className="w-full"
-                onClick={() => addStep.mutate({ 
-                  milestoneId: editingMilestone.id, 
-                  data: stepForm 
-                })}
-                disabled={addStep.isPending}
-              >
-                Add Step
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+
       </div>
     </div>
   );

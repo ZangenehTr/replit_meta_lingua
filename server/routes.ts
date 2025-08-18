@@ -12693,6 +12693,164 @@ Return JSON format:
   });
 
   // =====================================================
+  // GENERAL ROADMAP API ROUTES  
+  // =====================================================
+  
+  // Get all roadmaps (general endpoint used by roadmap designer)
+  app.get("/api/roadmaps", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmaps = await storage.getCallernRoadmaps();
+      res.json(roadmaps);
+    } catch (error) {
+      console.error('Error fetching roadmaps:', error);
+      res.status(500).json({ message: 'Failed to fetch roadmaps' });
+    }
+  });
+
+  // Get roadmap with steps
+  app.get("/api/roadmaps/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmapId = parseInt(req.params.id);
+      const roadmap = await storage.getCallernRoadmapById(roadmapId);
+      if (!roadmap) {
+        return res.status(404).json({ message: 'Roadmap not found' });
+      }
+      const steps = await storage.getRoadmapSteps(roadmapId);
+      res.json({ ...roadmap, steps });
+    } catch (error) {
+      console.error('Error fetching roadmap details:', error);
+      res.status(500).json({ message: 'Failed to fetch roadmap details' });
+    }
+  });
+
+  // Create roadmap
+  app.post("/api/roadmaps", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmapData = {
+        ...req.body,
+        createdBy: req.user.id,
+        packageId: null // General roadmaps don't need a package initially
+      };
+      const roadmap = await storage.createCallernRoadmap(roadmapData);
+      res.status(201).json(roadmap);
+    } catch (error) {
+      console.error('Error creating roadmap:', error);
+      res.status(500).json({ message: 'Failed to create roadmap' });
+    }
+  });
+
+  // Update roadmap
+  app.put("/api/roadmaps/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmapId = parseInt(req.params.id);
+      const roadmap = await storage.updateCallernRoadmap(roadmapId, req.body);
+      res.json(roadmap);
+    } catch (error) {
+      console.error('Error updating roadmap:', error);
+      res.status(500).json({ message: 'Failed to update roadmap' });
+    }
+  });
+
+  // Delete roadmap
+  app.delete("/api/roadmaps/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmapId = parseInt(req.params.id);
+      await storage.deleteCallernRoadmap(roadmapId);
+      res.json({ message: 'Roadmap deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting roadmap:', error);
+      res.status(500).json({ message: 'Failed to delete roadmap' });
+    }
+  });
+
+  // Get roadmap steps
+  app.get("/api/roadmaps/:roadmapId/steps", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmapId = parseInt(req.params.roadmapId);
+      const steps = await storage.getRoadmapSteps(roadmapId);
+      res.json(steps);
+    } catch (error) {
+      console.error('Error fetching roadmap steps:', error);
+      res.status(500).json({ message: 'Failed to fetch roadmap steps' });
+    }
+  });
+
+  // Create roadmap step
+  app.post("/api/roadmaps/:roadmapId/steps", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const roadmapId = parseInt(req.params.roadmapId);
+      const stepData = {
+        ...req.body,
+        roadmapId
+      };
+      const step = await storage.createRoadmapStep(stepData);
+      
+      // Update total minutes on the roadmap
+      const steps = await storage.getRoadmapSteps(roadmapId);
+      const totalMinutes = steps.reduce((sum: number, s: any) => sum + (s.estimatedMinutes || 30), 0);
+      const totalHours = Math.ceil(totalMinutes / 60);
+      await storage.updateCallernRoadmap(roadmapId, { 
+        estimatedHours: totalHours,
+        totalSteps: steps.length
+      });
+      
+      res.status(201).json(step);
+    } catch (error) {
+      console.error('Error creating roadmap step:', error);
+      res.status(500).json({ message: 'Failed to create roadmap step' });
+    }
+  });
+
+  // Update roadmap step
+  app.put("/api/roadmap-steps/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const stepId = parseInt(req.params.id);
+      const step = await storage.updateRoadmapStep(stepId, req.body);
+      
+      // Update total minutes on the roadmap
+      if (step && step.roadmapId) {
+        const steps = await storage.getRoadmapSteps(step.roadmapId);
+        const totalMinutes = steps.reduce((sum: number, s: any) => sum + (s.estimatedMinutes || 30), 0);
+        const totalHours = Math.ceil(totalMinutes / 60);
+        await storage.updateCallernRoadmap(step.roadmapId, { 
+          estimatedHours: totalHours,
+          totalSteps: steps.length
+        });
+      }
+      
+      res.json(step);
+    } catch (error) {
+      console.error('Error updating roadmap step:', error);
+      res.status(500).json({ message: 'Failed to update roadmap step' });
+    }
+  });
+
+  // Delete roadmap step
+  app.delete("/api/roadmap-steps/:id", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const stepId = parseInt(req.params.id);
+      const step = await storage.getRoadmapStepById(stepId);
+      await storage.deleteRoadmapStep(stepId);
+      
+      // Update total minutes on the roadmap
+      if (step && step.roadmapId) {
+        const steps = await storage.getRoadmapSteps(step.roadmapId);
+        const totalMinutes = steps.reduce((sum: number, s: any) => sum + (s.estimatedMinutes || 30), 0);
+        const totalHours = Math.ceil(totalMinutes / 60);
+        await storage.updateCallernRoadmap(step.roadmapId, { 
+          estimatedHours: totalHours,
+          totalSteps: steps.length
+        });
+      }
+      
+      res.json({ message: 'Roadmap step deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting roadmap step:', error);
+      res.status(500).json({ message: 'Failed to delete roadmap step' });
+    }
+  });
+
+  // =====================================================
   // CALLERN ROADMAP API ROUTES  
   // =====================================================
   

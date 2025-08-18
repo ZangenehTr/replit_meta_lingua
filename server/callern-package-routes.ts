@@ -1,7 +1,7 @@
 import { Express } from "express";
 import { authenticateToken } from "./auth-middleware";
 import { storage } from "./storage";
-import { db } from "../db";
+import { db } from "./db";
 import { callernRoadmaps, callernRoadmapSteps } from "../shared/schema";
 import { eq } from "drizzle-orm";
 
