@@ -599,10 +599,7 @@ export class CallernWebSocketServer {
             remainingMinutes: studentCallernPackages.remainingMinutes - minutes,
           })
           .where(
-            and(
-              eq(studentCallernPackages.studentId, room.studentId),
-              eq(studentCallernPackages.packageId, room.packageId)
-            )
+            eq(studentCallernPackages.id, room.packageId) // packageId is actually the student package ID
           );
       }
 
