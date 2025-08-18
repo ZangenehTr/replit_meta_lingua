@@ -32,6 +32,139 @@ export function registerCallernAIRoutes(app: Express) {
     }
   });
 
+  // TEST VERSIONS WITHOUT AUTH (for testing only)
+  // Test Translation endpoint
+  app.post("/api/callern/ai/test/translate", async (req, res) => {
+    try {
+      if (!openai) {
+        return res.status(503).json({ error: "OpenAI service not configured" });
+      }
+
+      const { text, targetLanguage = "fa" } = req.body;
+      
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `Translate the following text to ${targetLanguage === 'fa' ? 'Persian/Farsi' : targetLanguage}. Return as JSON with 'translation' and 'pronunciation' fields.`
+          },
+          {
+            role: "user",
+            content: text
+          }
+        ],
+        temperature: 0.3,
+        response_format: { type: "json_object" }
+      });
+
+      const result = JSON.parse(completion.choices[0].message.content || "{}");
+      res.json(result);
+    } catch (error: any) {
+      console.error("Translation error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Test Word Helper endpoint
+  app.post("/api/callern/ai/test/word-helper", async (req, res) => {
+    try {
+      if (!openai) {
+        return res.status(503).json({ error: "OpenAI service not configured" });
+      }
+
+      const { context, level = "B1" } = req.body;
+      
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are a language learning assistant. Suggest 5 helpful English words for the given context at ${level} level. Return as JSON with 'words' array containing objects with 'word', 'definition', and 'example' fields.`
+          },
+          {
+            role: "user",
+            content: `Context: ${context}`
+          }
+        ],
+        temperature: 0.7,
+        response_format: { type: "json_object" }
+      });
+
+      const result = JSON.parse(completion.choices[0].message.content || "{}");
+      res.json(result);
+    } catch (error: any) {
+      console.error("Word helper error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Test Grammar Check endpoint
+  app.post("/api/callern/ai/test/grammar-check", async (req, res) => {
+    try {
+      if (!openai) {
+        return res.status(503).json({ error: "OpenAI service not configured" });
+      }
+
+      const { text } = req.body;
+      
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are a grammar correction assistant. Correct the grammar and explain the corrections. Return as JSON with 'corrected' and 'explanation' fields."
+          },
+          {
+            role: "user",
+            content: text
+          }
+        ],
+        temperature: 0.3,
+        response_format: { type: "json_object" }
+      });
+
+      const result = JSON.parse(completion.choices[0].message.content || "{}");
+      res.json(result);
+    } catch (error: any) {
+      console.error("Grammar check error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Test Pronunciation endpoint
+  app.post("/api/callern/ai/test/pronunciation", async (req, res) => {
+    try {
+      if (!openai) {
+        return res.status(503).json({ error: "OpenAI service not configured" });
+      }
+
+      const { word } = req.body;
+      
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `Provide pronunciation guide for the word '${word}'. Return as JSON with 'pronunciation' (IPA), 'syllables', and 'tips' fields.`
+          },
+          {
+            role: "user",
+            content: word
+          }
+        ],
+        temperature: 0.3,
+        response_format: { type: "json_object" }
+      });
+
+      const result = JSON.parse(completion.choices[0].message.content || "{}");
+      res.json(result);
+    } catch (error: any) {
+      console.error("Pronunciation error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Translation endpoint
   app.post("/api/callern/ai/translate", authenticateToken, async (req: any, res) => {
     try {
