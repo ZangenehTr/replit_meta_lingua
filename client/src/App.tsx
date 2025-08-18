@@ -112,8 +112,7 @@ import UserManagement from "@/pages/admin/user-management";
 import TeacherStudentMatchingPage from "@/pages/admin/teacher-student-matching";
 import RoomManagement from "@/pages/admin/room-management";
 import { CallernManagement } from "@/pages/admin/callern-management";
-import CallernPackageMaker from "@/pages/admin/callern-package-maker";
-import RoadmapDesigner from "@/pages/admin/roadmap-designer-new";
+import RoadmapDesigner from "@/pages/admin/roadmap-designer";
 import CallernMobilePage from "@/pages/callern-mobile";
 import CallernEnhancements from "@/pages/callern-enhancements";
 import CallernVideoSession from "@/pages/callern-video-session";
@@ -623,11 +622,7 @@ function Router() {
           <CallernManagement />
         </ProtectedRoute>
       </Route>
-      <Route path="/admin/callern-package-maker">
-        <ProtectedRoute>
-          <CallernPackageMaker />
-        </ProtectedRoute>
-      </Route>
+
       <Route path="/callern-session/:packageId/:studentId/:teacherId">
         <ProtectedRoute>
           <CallernVideoSession />

@@ -372,6 +372,7 @@ export const callernRoadmapSteps = pgTable("callern_roadmap_steps", {
   title: varchar("title", { length: 200 }).notNull(),
   description: text("description"),
   objectives: text("objectives"), // Learning objectives for this step
+  teacherAITips: text("teacher_ai_tips"), // AI tips for teachers to keep the lesson engaging
   estimatedMinutes: integer("estimated_minutes").notNull().default(30),
   skillFocus: varchar("skill_focus", { length: 50 }), // speaking, listening, grammar, vocabulary
   materials: jsonb("materials"), // JSON object with teaching materials, links, etc.

@@ -46,7 +46,7 @@ export function CallernManagement() {
   });
   const [newPackageForm, setNewPackageForm] = useState({
     packageName: '',
-    totalHours: '',
+    roadmapId: '',
     price: '',
     description: '',
     isActive: true
@@ -118,6 +118,23 @@ export function CallernManagement() {
     }
   });
 
+  // Fetch existing roadmaps
+  const { data: roadmaps, isLoading: loadingRoadmaps } = useQuery({
+    queryKey: ['/api/roadmaps'],
+    queryFn: async () => {
+      const response = await fetch('/api/roadmaps', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch roadmaps: ${response.status}`);
+      }
+      return response.json();
+    }
+  });
+
   // Update teacher availability mutation
   const updateAvailabilityMutation = useMutation({
     mutationFn: async ({ teacherId, updates }: { teacherId: number; updates: any }) => {
@@ -159,7 +176,7 @@ export function CallernManagement() {
       setIsCreatePackageDialogOpen(false);
       setNewPackageForm({
         packageName: '',
-        totalHours: '',
+        roadmapId: '',
         price: '',
         description: '',
         isActive: true
@@ -847,13 +864,43 @@ export function CallernManagement() {
             </div>
             
             <div className="space-y-2">
-              <Label>{t('admin:callernManagement.hours')}</Label>
-              <Input 
-                type="number" 
-                placeholder="10"
-                value={newPackageForm.totalHours}
-                onChange={(e) => setNewPackageForm(prev => ({...prev, totalHours: e.target.value}))}
-              />
+              <Label>Select Roadmap</Label>
+              <Select 
+                value={newPackageForm.roadmapId} 
+                onValueChange={(value) => {
+                  const selectedRoadmap = roadmaps?.find((r: any) => r.id.toString() === value);
+                  setNewPackageForm(prev => ({
+                    ...prev, 
+                    roadmapId: value,
+                    // Auto-populate package name if empty
+                    packageName: prev.packageName || selectedRoadmap?.roadmapName || ''
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a roadmap" />
+                </SelectTrigger>
+                <SelectContent>
+                  {loadingRoadmaps ? (
+                    <SelectItem value="loading" disabled>Loading roadmaps...</SelectItem>
+                  ) : (
+                    Array.isArray(roadmaps) && roadmaps.length > 0 ? 
+                    roadmaps.map((roadmap: any) => (
+                      <SelectItem key={roadmap.id} value={roadmap.id.toString()}>
+                        {roadmap.roadmapName} ({roadmap.totalSteps} steps, ~{Math.round(roadmap.estimatedHours)} hours)
+                      </SelectItem>
+                    )) : (
+                      <SelectItem value="no-roadmaps" disabled>No roadmaps available. Create one in Roadmap Designer first.</SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+              {newPackageForm.roadmapId && roadmaps?.find((r: any) => r.id.toString() === newPackageForm.roadmapId) && (
+                <p className="text-sm text-muted-foreground">
+                  Selected roadmap has {roadmaps.find((r: any) => r.id.toString() === newPackageForm.roadmapId).totalSteps} steps 
+                  with approximately {Math.round(roadmaps.find((r: any) => r.id.toString() === newPackageForm.roadmapId).estimatedHours)} hours of content
+                </p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -887,17 +934,21 @@ export function CallernManagement() {
             <Button 
               className="w-full"
               onClick={() => {
-                if (!newPackageForm.packageName || !newPackageForm.totalHours || !newPackageForm.price) {
+                if (!newPackageForm.packageName || !newPackageForm.roadmapId || !newPackageForm.price) {
                   toast({
                     title: t('common:toast.error'),
-                    description: t('admin:callernManagement.fillRequiredFields'),
+                    description: 'Please fill in all required fields including selecting a roadmap',
                     variant: "destructive"
                   });
                   return;
                 }
+                const selectedRoadmap = roadmaps?.find((r: any) => r.id.toString() === newPackageForm.roadmapId);
+                const totalHours = Math.round(selectedRoadmap?.estimatedHours || 0);
+                
                 createPackageMutation.mutate({
                   packageName: newPackageForm.packageName,
-                  totalHours: parseInt(newPackageForm.totalHours) || 0,
+                  roadmapId: parseInt(newPackageForm.roadmapId),
+                  totalHours: totalHours,
                   price: parseFloat(newPackageForm.price) || 0,
                   description: newPackageForm.description,
                   isActive: newPackageForm.isActive
