@@ -465,6 +465,8 @@ export class DatabaseStorage implements IStorage {
       totalHours: packageData.totalHours,
       price: packageData.price,
       description: packageData.description,
+      packageType: packageData.packageType,
+      targetLevel: packageData.targetLevel,
       isActive: packageData.isActive || true
     }).returning();
     return newPackage;
