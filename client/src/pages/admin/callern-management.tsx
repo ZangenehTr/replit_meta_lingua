@@ -27,7 +27,11 @@ import {
   Timer,
   UserCheck,
   Edit,
-  Trash2
+  Trash2,
+  Sparkles,
+  BookOpen,
+  Languages,
+  Mic
 } from "lucide-react";
 
 export function CallernManagement() {
@@ -394,6 +398,126 @@ export function CallernManagement() {
           </Badge>
         </div>
       </div>
+
+      {/* AI Test Panel */}
+      <Card className="backdrop-blur-xl bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-purple-200 dark:border-purple-800">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-600" />
+            AI Integration Test Panel
+          </CardTitle>
+          <CardDescription>Test the AI features for Callern video calls</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Button
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/callern/ai/word-helper', {
+                    method: 'POST',
+                    headers: { 
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    },
+                    body: JSON.stringify({
+                      conversationContext: "We are discussing travel plans",
+                      studentLevel: "B1",
+                      targetLanguage: "English"
+                    })
+                  });
+                  const data = await response.json();
+                  alert(`AI Word Helper Response:\n${JSON.stringify(data, null, 2)}`);
+                } catch (error: any) {
+                  alert(`Error: ${error.message}`);
+                }
+              }}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
+            >
+              <BookOpen className="w-4 h-4 mr-2" />
+              Test AI Word Helper
+            </Button>
+            
+            <Button
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/callern/ai/grammar-check', {
+                    method: 'POST',
+                    headers: { 
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    },
+                    body: JSON.stringify({
+                      sentence: "I have went to the store yesterday",
+                      targetLanguage: "English"
+                    })
+                  });
+                  const data = await response.json();
+                  alert(`AI Grammar Check Response:\n${JSON.stringify(data, null, 2)}`);
+                } catch (error: any) {
+                  alert(`Error: ${error.message}`);
+                }
+              }}
+              className="bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Test Grammar Check
+            </Button>
+            
+            <Button
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/callern/ai/translate', {
+                    method: 'POST',
+                    headers: { 
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    },
+                    body: JSON.stringify({
+                      text: "Hello, how are you today?",
+                      fromLanguage: "English",
+                      toLanguage: "Persian"
+                    })
+                  });
+                  const data = await response.json();
+                  alert(`AI Translation Response:\n${JSON.stringify(data, null, 2)}`);
+                } catch (error: any) {
+                  alert(`Error: ${error.message}`);
+                }
+              }}
+              className="bg-gradient-to-r from-orange-600 to-red-600 text-white hover:from-orange-700 hover:to-red-700"
+            >
+              <Languages className="w-4 h-4 mr-2" />
+              Test Translation
+            </Button>
+            
+            <Button
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/callern/ai/pronunciation', {
+                    method: 'POST',
+                    headers: { 
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    },
+                    body: JSON.stringify({
+                      word: "entrepreneur",
+                      language: "English"
+                    })
+                  });
+                  const data = await response.json();
+                  alert(`AI Pronunciation Response:\n${JSON.stringify(data, null, 2)}`);
+                } catch (error: any) {
+                  alert(`Error: ${error.message}`);
+                }
+              }}
+              className="bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-700 hover:to-purple-700"
+            >
+              <Mic className="w-4 h-4 mr-2" />
+              Test Pronunciation
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="availability" className="w-full">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto sm:h-10">
