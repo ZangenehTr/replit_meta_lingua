@@ -413,13 +413,18 @@ export function CallernManagement() {
             <Button
               onClick={async () => {
                 try {
-                  // Use the same fetch configuration as the rest of the app
+                  const token = localStorage.getItem('auth_token');
+                  if (!token) {
+                    alert('Please log in again to test AI features');
+                    return;
+                  }
+                  
                   const response = await fetch('/api/callern/ai/word-helper', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json'
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
                     },
-                    credentials: 'include', // Include cookies for authentication
                     body: JSON.stringify({
                       conversationContext: "We are discussing travel plans",
                       studentLevel: "B1",
@@ -441,12 +446,18 @@ export function CallernManagement() {
             <Button
               onClick={async () => {
                 try {
+                  const token = localStorage.getItem('auth_token');
+                  if (!token) {
+                    alert('Please log in again to test AI features');
+                    return;
+                  }
+                  
                   const response = await fetch('/api/callern/ai/grammar-check', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json'
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
                     },
-                    credentials: 'include',
                     body: JSON.stringify({
                       sentence: "I have went to the store yesterday",
                       targetLanguage: "English"
@@ -467,12 +478,18 @@ export function CallernManagement() {
             <Button
               onClick={async () => {
                 try {
+                  const token = localStorage.getItem('auth_token');
+                  if (!token) {
+                    alert('Please log in again to test AI features');
+                    return;
+                  }
+                  
                   const response = await fetch('/api/callern/ai/translate', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json'
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
                     },
-                    credentials: 'include',
                     body: JSON.stringify({
                       text: "Hello, how are you today?",
                       fromLanguage: "English",
@@ -494,12 +511,18 @@ export function CallernManagement() {
             <Button
               onClick={async () => {
                 try {
+                  const token = localStorage.getItem('auth_token');
+                  if (!token) {
+                    alert('Please log in again to test AI features');
+                    return;
+                  }
+                  
                   const response = await fetch('/api/callern/ai/pronunciation', {
                     method: 'POST',
                     headers: { 
-                      'Content-Type': 'application/json'
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
                     },
-                    credentials: 'include',
                     body: JSON.stringify({
                       word: "entrepreneur",
                       language: "English"
