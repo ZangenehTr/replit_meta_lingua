@@ -1,0 +1,46 @@
+patibility for more details.
+WARNINGModule "events" has been externalized for browser compatibility. Cannot access "events.EventEmitter" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+WARNINGModule "util" has been externalized for browser compatibility. Cannot access "util.debuglog" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+WARNINGModule "util" has been externalized for browser compatibility. Cannot access "util.inspect" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+LOGError handler initialized for development
+LOGApplied RTL for language: fa
+LOGApplied RTL styles for fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOGApplied RTL styles for fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOGProcessing navigation for role: Teacher normalized: teacher
+LOGSidebar rendering with items: 9 items
+LOGCallern items: 
+LOGProcessing navigation for role: Teacher normalized: teacher
+LOGSidebar rendering with items: 9 items
+LOGCallern items: 
+LOGUnifiedDashboard rendering: [object Object]
+LOGUnifiedDashboard rendering: [object Object]
+LOGUnifiedDashboard rendering: [object Object]
+LOGUnifiedDashboard rendering: [object Object]
+LOGProcessing navigation for role: Teacher normalized: teacher
+LOGSidebar rendering with items: 9 items
+LOGCallern items: 
+LOGProcessing navigation for role: Teacher normalized: teacher
+LOGSidebar rendering with items: 9 items
+LOGCallern items: 
+LOGUnifiedDashboard rendering: [object Object]
+LOGUnifiedDashboard rendering: [object Object]
+LOGProcessing navigation for role: Teacher normalized: teacher
+LOGSidebar rendering with items: 9 items
+LOGCallern items: 
+LOGProcessing navigation for role: Teacher normalized: teacher
+LOGSidebar rendering with items: 9 items
+LOGCallern items: 
+WARNINGNetwork error on attempt 1/4 for /api/teacher/dashboard-stats. Retrying in 500ms...
+LOGWebSocket connected
+WARNINGNetwork error on attempt 2/4 for /api/teacher/dashboard-stats. Retrying in 1250ms...
+WARNINGNetwork error on attempt 3/4 for /api/teacher/dashboard-stats. Retrying in 3125ms...
+WARNINGNetwork error on attempt 4/4 for /api/teacher/dashboard-stats. Retrying in 7812.5ms...
+WARNINGNetwork error on attempt 1/4 for /api/teacher/dashboard-stats. Retrying in 500ms...
+WARNINGNetwork error on attempt 2/4 for /api/teacher/dashboard-stats. Retrying in 1250ms...
+WARNINGNetwork error on attempt 3/4 for /api/teacher/dashboard-stats. Retrying in 3125ms...
+WARNINGNetwork error on attempt 4/4 for /api/teacher/dashboard-stats. Retrying in 7812.5ms...
