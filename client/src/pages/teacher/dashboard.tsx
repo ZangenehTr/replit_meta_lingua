@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/hooks/useLanguage';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
+import { TeacherIncomingCall } from '@/components/callern/teacher-incoming-call';
 
 export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -121,6 +122,9 @@ export default function TeacherDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Incoming Call Handler - Always listening for calls */}
+      <TeacherIncomingCall />
+      
       {/* Welcome Banner */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
