@@ -80,7 +80,8 @@ export class CallernWebSocketServer {
           socket.emit('authenticated', { success: true, role: 'teacher' });
         } else if (role === 'student') {
           this.studentSockets.set(userId, socket.id);
-          console.log('Student registered:', userId);
+          console.log('Student registered:', userId, 'with socket:', socket.id);
+          console.log('Current student sockets:', Array.from(this.studentSockets.entries()));
           
           // Send confirmation back to student
           socket.emit('authenticated', { success: true, role: 'student' });
@@ -285,8 +286,11 @@ export class CallernWebSocketServer {
       socket.on('accept-call', async (data) => {
         const { roomId, teacherId, studentId } = data;
         
+        console.log('Teacher accepting call:', { roomId, teacherId, studentId });
+        
         const room = this.activeRooms.get(roomId);
         if (!room) {
+          console.log('Room not found for accept-call:', roomId);
           socket.emit('error', { message: 'Room not found' });
           return;
         }
@@ -294,14 +298,20 @@ export class CallernWebSocketServer {
         // Join teacher to room
         socket.join(roomId);
         room.participants.add(socket.id);
+        console.log('Teacher joined room:', roomId);
 
         // Notify student that call was accepted
         const studentSocketId = this.studentSockets.get(studentId);
+        console.log('Student socket lookup:', { studentId, socketId: studentSocketId });
+        
         if (studentSocketId) {
+          console.log('Emitting call-accepted to student socket:', studentSocketId);
           this.io.to(studentSocketId).emit('call-accepted', {
             roomId,
             teacherId,
           });
+        } else {
+          console.log('Student socket not found for ID:', studentId);
         }
 
         // Update call status
