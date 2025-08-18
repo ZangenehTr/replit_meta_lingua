@@ -417,7 +417,7 @@ export class CallernWebSocketServer {
         .where(
           and(
             eq(studentCallernPackages.studentId, studentId),
-            eq(studentCallernPackages.packageId, packageId),
+            eq(studentCallernPackages.id, packageId), // Check student package ID, not package definition ID
             eq(studentCallernPackages.status, 'active')
           )
         )
@@ -426,8 +426,9 @@ export class CallernWebSocketServer {
       if (!studentPackage.length) return false;
 
       const pkg = studentPackage[0];
-      const remainingMinutes = pkg.totalHours * 60 - pkg.usedMinutes;
+      const remainingMinutes = pkg.remainingMinutes; // Use remainingMinutes directly
       
+      console.log(`Student ${studentId} package verification: ${remainingMinutes} minutes remaining`);
       return remainingMinutes > 0;
     } catch (error) {
       console.error('Error verifying student package:', error);
