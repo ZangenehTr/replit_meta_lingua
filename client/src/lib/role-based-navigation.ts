@@ -66,6 +66,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
     // Callern Video Call Management
     { path: "/admin/callern-management", icon: "Video", label: t('common:navigation.callernManagement'), roles: ["Admin", "Supervisor"] },
     
+    // Callern Package Maker
+    { path: "/admin/callern-package-maker", icon: "Package", label: t('common:navigation.callernPackageMaker') || 'Callern Package Maker', roles: ["Admin", "Supervisor"] },
+    
     // Learning Roadmap Designer
     { path: "/admin/roadmap-designer", icon: "Map", label: t('common:navigation.roadmapDesigner') || 'Learning Roadmaps', roles: ["Admin", "Teacher/Tutor"] },
   
