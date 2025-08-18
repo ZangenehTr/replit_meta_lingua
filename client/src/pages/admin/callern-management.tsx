@@ -31,7 +31,8 @@ import {
   Sparkles,
   BookOpen,
   Languages,
-  Mic
+  Mic,
+  Video
 } from "lucide-react";
 
 export function CallernManagement() {
@@ -606,18 +607,35 @@ export function CallernManagement() {
                       ))}
                     </div>
                     
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => {
-                        setSelectedTeacher(teacher);
-                        setIsConfigDialogOpen(true);
-                      }}
-                    >
-                      <Settings className="h-3 w-3" />
-                      <span>{t('admin:callernManagement.configure')}</span>
-                    </Button>
+                    <div className="flex gap-2">
+                      {teacher.isOnline && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => {
+                            // Generate a unique call ID and navigate to video call
+                            const callId = `call-${Date.now()}-${teacher.teacherId}`;
+                            window.location.href = `/callern/video/${callId}`;
+                          }}
+                        >
+                          <Video className="h-3 w-3" />
+                          <span>{t('admin:callernManagement.startVideoCall')}</span>
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={teacher.isOnline ? "flex-1" : "w-full"}
+                        onClick={() => {
+                          setSelectedTeacher(teacher);
+                          setIsConfigDialogOpen(true);
+                        }}
+                      >
+                        <Settings className="h-3 w-3" />
+                        <span>{t('admin:callernManagement.configure')}</span>
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               )) : (
