@@ -1,0 +1,137 @@
+DEBUG[vite] connecting...
+DEBUG[vite] connected.
+WARNINGModule "events" has been externalized for browser compatibility. Cannot access "events.EventEmitter" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+WARNINGModule "events" has been externalized for browser compatibility. Cannot access "events.EventEmitter" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+WARNINGModule "util" has been externalized for browser compatibility. Cannot access "util.debuglog" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+WARNINGModule "util" has been externalized for browser compatibility. Cannot access "util.inspect" in client code. See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+LOGError handler initialized for development
+LOGApplied RTL for language: fa
+LOGApplied RTL styles for fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOGApplied RTL styles for fa
+LOGApplied RTL for language: fa
+LOGApplied RTL for language: fa
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: true
+LOGTeachers data: 
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: true
+LOGTeachers data: 
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: true
+LOGTeachers data: 
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: true
+LOGTeachers data: 
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: true
+LOGTeachers data: 
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: true
+LOGTeachers data: 
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: true
+LOGTeachers data: 
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: true
+LOGTeachers data: 
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: true
+LOGTeachers data: 
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: true
+LOGTeachers data: 
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: false
+LOGTeachers data: [object Object],[object Object]
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: false
+LOGTeachers data: [object Object],[object Object]
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOGWebSocket connected
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: false
+LOGTeachers data: [object Object],[object Object]
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: false
+LOGTeachers data: [object Object],[object Object]
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+ERRORCall error: [object Object]
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: false
+LOGTeachers data: [object Object],[object Object]
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: false
+LOGTeachers data: [object Object],[object Object]
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: false
+LOGTeachers data: [object Object],[object Object]
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: false
+LOGTeachers data: [object Object],[object Object]
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: false
+LOGTeachers data: [object Object],[object Object]
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
+LOG=== CALLERN DEBUG ===
+LOGTeachers loading: false
+LOGTeachers data: [object Object],[object Object]
+LOGTeachers error: 
+LOGUser role: Student
+LOG==================
