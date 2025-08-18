@@ -56,6 +56,7 @@ export class CallernWebSocketServer {
       // Authentication
       socket.on('authenticate', async (data) => {
         const { userId, role } = data;
+        console.log('Authentication received:', { userId, role, socketId: socket.id });
         
         if (role === 'teacher') {
           this.teacherSockets.set(userId, {
@@ -63,6 +64,8 @@ export class CallernWebSocketServer {
             teacherId: userId,
             isAvailable: true,
           });
+          console.log('Teacher registered:', userId);
+          console.log('Current teacher sockets after registration:', Array.from(this.teacherSockets.keys()));
           
           // Update teacher availability in database
           await this.updateTeacherAvailability(userId, true);
@@ -72,8 +75,15 @@ export class CallernWebSocketServer {
             teacherId: userId,
             status: 'online',
           });
+          
+          // Send confirmation back to teacher
+          socket.emit('authenticated', { success: true, role: 'teacher' });
         } else if (role === 'student') {
           this.studentSockets.set(userId, socket.id);
+          console.log('Student registered:', userId);
+          
+          // Send confirmation back to student
+          socket.emit('authenticated', { success: true, role: 'student' });
         }
       });
 
