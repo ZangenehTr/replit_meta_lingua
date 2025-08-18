@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import AppLayout from "@/components/AppLayout";
+// Layout is imported as MobileLayout above
 import { 
   Video, 
   Clock, 
@@ -128,18 +128,21 @@ export default function CallernSystem() {
     queryKey: ["/api/student/callern-history"],
   });
 
-  // Fetch available teachers
+  // Fetch available teachers - FORCE THIS TO RUN
   const { data: availableTeachers = [], isLoading: teachersLoading, error: teachersError } = useQuery({
     queryKey: ["/api/callern/online-teachers"],
+    enabled: true,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
   });
 
-  // Debug logging
-  useEffect(() => {
-    console.log('Teachers loading:', teachersLoading);
-    console.log('Teachers data:', availableTeachers);
-    console.log('Teachers error:', teachersError);
-    console.log('Selected language:', selectedLanguage);
-  }, [teachersLoading, availableTeachers, teachersError, selectedLanguage]);
+  // Debug logging - LOG IMMEDIATELY
+  console.log('=== CALLERN DEBUG ===');
+  console.log('Teachers loading:', teachersLoading);
+  console.log('Teachers data:', availableTeachers);
+  console.log('Teachers error:', teachersError);
+  console.log('User role:', user?.role);
+  console.log('==================');
 
   // Purchase package mutation
   const purchasePackageMutation = useMutation({
@@ -252,7 +255,7 @@ export default function CallernSystem() {
   }
 
   return (
-    <AppLayout>
+    <MobileLayout>
       <div className="container mx-auto py-6 space-y-6">
         {/* Welcome Banner */}
         <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl p-6 md:p-8 text-white shadow-xl">
@@ -732,6 +735,6 @@ export default function CallernSystem() {
           </DialogContent>
         </Dialog>
       </div>
-    </AppLayout>
+    </MobileLayout>
   );
 }
