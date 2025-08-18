@@ -222,7 +222,7 @@ export default function CallernSystem() {
     newSocket.emit('call-teacher', {
       teacherId: teacher.id,
       studentId: user?.id,
-      packageId: activePackage.packageId,
+      packageId: activePackage.id, // Use student package ID, not the package definition ID
       language: selectedLanguage,
       roomId: roomId
     });
@@ -244,7 +244,7 @@ export default function CallernSystem() {
         },
         // Store additional data for reference
         teacherId: teacher.id,
-        packageId: activePackage.packageId,
+        packageId: activePackage.id,
         teacherName: `${teacher.firstName} ${teacher.lastName}`,
       });
 
