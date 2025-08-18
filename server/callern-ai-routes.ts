@@ -3,14 +3,25 @@ import { authenticateToken } from "./auth-middleware";
 import OpenAI from "openai";
 
 // Initialize OpenAI with the provided API key
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || 'sk-proj-Gpt5YHbINy3U0w6PXJuP6wM4y86WsV0HKcT-meE6Fi6VlwLwm6YLqhr1RUHo2IS-heLZYEmk_T3BlbkFJSUKGXA4hvyZ5BJGs0gjDjVZKONlbUk9WoAXgeLBx3SwMbquV_pKXPtCf7cyWmbgp7PxPXiDzQA' 
-});
+let openai: OpenAI | null = null;
+
+if (process.env.OPENAI_API_KEY) {
+  openai = new OpenAI({ 
+    apiKey: process.env.OPENAI_API_KEY
+  });
+}
 
 export function registerCallernAIRoutes(app: Express) {
   // Translation endpoint
   app.post("/api/callern/ai/translate", authenticateToken, async (req: any, res) => {
     try {
+      if (!openai) {
+        return res.status(503).json({ 
+          error: "AI service not configured", 
+          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
+        });
+      }
+
       const { text, targetLanguage = 'fa' } = req.body;
       
       if (!text) {
@@ -48,6 +59,13 @@ export function registerCallernAIRoutes(app: Express) {
   // Word suggestions endpoint
   app.post("/api/callern/ai/suggest-words", authenticateToken, async (req: any, res) => {
     try {
+      if (!openai) {
+        return res.status(503).json({ 
+          error: "AI service not configured", 
+          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
+        });
+      }
+
       const { context, level = 'intermediate' } = req.body;
 
       const response = await openai.chat.completions.create({
@@ -97,6 +115,13 @@ export function registerCallernAIRoutes(app: Express) {
   // Grammar correction endpoint
   app.post("/api/callern/ai/grammar-correct", authenticateToken, async (req: any, res) => {
     try {
+      if (!openai) {
+        return res.status(503).json({ 
+          error: "AI service not configured", 
+          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
+        });
+      }
+
       const { text } = req.body;
       
       if (!text) {
@@ -136,6 +161,13 @@ export function registerCallernAIRoutes(app: Express) {
   // Pronunciation guide endpoint
   app.post("/api/callern/ai/pronunciation", authenticateToken, async (req: any, res) => {
     try {
+      if (!openai) {
+        return res.status(503).json({ 
+          error: "AI service not configured", 
+          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
+        });
+      }
+
       const { word } = req.body;
       
       if (!word) {
@@ -176,6 +208,13 @@ export function registerCallernAIRoutes(app: Express) {
   // Conversation starter endpoint
   app.post("/api/callern/ai/conversation-starter", authenticateToken, async (req: any, res) => {
     try {
+      if (!openai) {
+        return res.status(503).json({ 
+          error: "AI service not configured", 
+          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
+        });
+      }
+
       const { topic = 'general', level = 'intermediate' } = req.body;
 
       const response = await openai.chat.completions.create({
@@ -214,6 +253,102 @@ export function registerCallernAIRoutes(app: Express) {
           "What do you think about the weather?",
           "What's your favorite food?"
         ]
+      });
+    }
+  });
+
+  // Word helper endpoint (alias for suggest-words)
+  app.post("/api/callern/ai/word-helper", authenticateToken, async (req: any, res) => {
+    try {
+      if (!openai) {
+        return res.status(503).json({ 
+          error: "AI service not configured", 
+          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
+        });
+      }
+
+      const { conversationContext, studentLevel = 'B1', targetLanguage = 'English' } = req.body;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are a language learning assistant. Suggest helpful ${targetLanguage} words and phrases for the context: "${conversationContext}" at ${studentLevel} level. Return as JSON with 'words' array containing useful vocabulary.`
+          },
+          {
+            role: "user",
+            content: `Context: ${conversationContext || 'general conversation'}`
+          }
+        ],
+        temperature: 0.7,
+        response_format: { type: "json_object" }
+      });
+
+      const content = response.choices[0].message.content;
+      const parsed = JSON.parse(content || '{"words":[]}');
+      
+      res.json({
+        words: parsed.words || [
+          "travel", "journey", "destination", "itinerary", "accommodation"
+        ],
+        context: conversationContext,
+        level: studentLevel
+      });
+    } catch (error) {
+      console.error("Word helper error:", error);
+      res.status(500).json({ 
+        error: "Word suggestions failed",
+        message: "Could not generate word suggestions"
+      });
+    }
+  });
+
+  // Grammar check endpoint (alias for grammar-correct)
+  app.post("/api/callern/ai/grammar-check", authenticateToken, async (req: any, res) => {
+    try {
+      if (!openai) {
+        return res.status(503).json({ 
+          error: "AI service not configured", 
+          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
+        });
+      }
+
+      const { sentence, targetLanguage = 'English' } = req.body;
+      
+      if (!sentence) {
+        return res.status(400).json({ error: "Sentence is required" });
+      }
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are a grammar correction assistant for ${targetLanguage}. Correct any grammar mistakes in the given text and explain the corrections. Return as JSON with 'corrected' and 'explanation' fields.`
+          },
+          {
+            role: "user",
+            content: sentence
+          }
+        ],
+        temperature: 0.3,
+        response_format: { type: "json_object" }
+      });
+
+      const content = response.choices[0].message.content;
+      const parsed = JSON.parse(content || '{}');
+      
+      res.json({
+        corrected: parsed.corrected || sentence,
+        explanation: parsed.explanation || "No corrections needed",
+        original: sentence
+      });
+    } catch (error) {
+      console.error("Grammar check error:", error);
+      res.status(500).json({ 
+        error: "Grammar check failed",
+        message: "Could not check grammar"
       });
     }
   });
