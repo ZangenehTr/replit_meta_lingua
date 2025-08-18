@@ -112,13 +112,20 @@
     <div class="ai-panel">
         <h3>🤖 AI Language Assistant</h3>
         <div>
+            <label>Login first to use AI features:</label>
+            <input type="email" id="emailInput" placeholder="admin@test.com" value="admin@test.com">
+            <input type="password" id="passwordInput" placeholder="password" value="admin123">
+            <button id="loginBtn">Login</button>
+            <span id="loginStatus" style="margin-left: 10px;"></span>
+        </div>
+        <div style="margin-top: 15px;">
             <label>Enter a word or phrase to get help:</label>
             <input type="text" id="aiInput" placeholder="Type any English word or phrase...">
             <div style="margin-top: 10px;">
-                <button id="getTranslation">Get Translation</button>
-                <button id="getSuggestions">Word Suggestions</button>
-                <button id="getGrammar">Grammar Help</button>
-                <button id="getPronunciation">Pronunciation Guide</button>
+                <button id="getTranslation" disabled>Get Translation</button>
+                <button id="getSuggestions" disabled>Word Suggestions</button>
+                <button id="getGrammar" disabled>Grammar Help</button>
+                <button id="getPronunciation" disabled>Pronunciation Guide</button>
             </div>
         </div>
         <div class="ai-response" id="aiResponse">AI assistance will appear here...</div>
@@ -127,7 +134,7 @@
     <script>
         // Configuration
         const API_BASE = window.location.origin;
-        const AUTH_TOKEN = localStorage.getItem('auth_token') || '';
+        let AUTH_TOKEN = localStorage.getItem('auth_token') || '';
         
         let localStream = null;
         let peer = null;
@@ -140,6 +147,43 @@
         const connectionStatus = document.getElementById('connectionStatus');
         const aiResponse = document.getElementById('aiResponse');
         const aiInput = document.getElementById('aiInput');
+        
+        // Login functionality
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const loginStatus = document.getElementById('loginStatus');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Login failed');
+                }
+                
+                const data = await response.json();
+                AUTH_TOKEN = data.accessToken;
+                localStorage.setItem('auth_token', AUTH_TOKEN);
+                
+                loginStatus.textContent = '✅ Logged in successfully';
+                loginStatus.style.color = '#44ff44';
+                
+                // Enable AI buttons
+                document.getElementById('getTranslation').disabled = false;
+                document.getElementById('getSuggestions').disabled = false;
+                document.getElementById('getGrammar').disabled = false;
+                document.getElementById('getPronunciation').disabled = false;
+                
+                aiResponse.textContent = 'Ready! You can now use AI features.';
+            } catch (error) {
+                loginStatus.textContent = '❌ Login failed: ' + error.message;
+                loginStatus.style.color = '#ff4444';
+            }
+        });
         
         // Initialize WebSocket connection
         async function initWebSocket() {
