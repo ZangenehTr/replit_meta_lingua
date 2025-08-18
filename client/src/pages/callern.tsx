@@ -370,6 +370,143 @@ export default function CallernSystem() {
           </Alert>
         )}
 
+        {/* Available Teachers - MOVED UP FOR BETTER VISIBILITY */}
+        <Card className="border-2 border-primary/20 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                <span className="text-xl">{t('callern:availableTeachers')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <label htmlFor="language-select" className="text-sm font-normal">
+                  {t('callern:selectLanguage')}:
+                </label>
+                <select
+                  id="language-select"
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                  className="px-3 py-1 border rounded-md text-sm"
+                >
+                  <option value="English">English</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="French">French</option>
+                  <option value="German">German</option>
+                  <option value="Arabic">Arabic</option>
+                  <option value="Persian">Persian</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Korean">Korean</option>
+                  <option value="Portuguese">Portuguese</option>
+                  <option value="Italian">Italian</option>
+                  <option value="Russian">Russian</option>
+                </select>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {teachersLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                <p>{t('callern:loadingTeachers')}</p>
+              </div>
+            ) : availableTeachers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {t('callern:noTeachersAvailable', { language: selectedLanguage })}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {availableTeachers
+                  .filter((teacher: AvailableTeacher) => 
+                    teacher.languages.includes(selectedLanguage)
+                  )
+                  .map((teacher: AvailableTeacher) => (
+                  <div key={teacher.id} className="border rounded-lg p-4 space-y-3 hover:shadow-lg transition-shadow">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                          {teacher.firstName[0]}{teacher.lastName[0]}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">
+                            {teacher.firstName} {teacher.lastName}
+                          </h4>
+                          <div className="flex items-center gap-1 text-sm">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            <span>{teacher.rating}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <Badge 
+                        variant={teacher.isOnline ? "default" : "secondary"}
+                        className={teacher.isOnline ? "animate-pulse" : ""}
+                      >
+                        {teacher.isOnline ? (
+                          <>
+                            <Wifi className="mr-1 h-3 w-3" />
+                            {t('callern:online')}
+                          </>
+                        ) : (
+                          <>
+                            <WifiOff className="mr-1 h-3 w-3" />
+                            {t('callern:offline')}
+                          </>
+                        )}
+                      </Badge>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">{t('callern:languages')}: </span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {teacher.languages.map(lang => (
+                            <Badge key={lang} variant="outline" className="text-xs">
+                              <Globe className="h-3 w-3 mr-1" />
+                              {lang}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">{t('callern:specializations')}: </span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {teacher.specializations.map(spec => (
+                            <Badge key={spec} variant="secondary" className="text-xs">
+                              {spec}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center pt-2">
+                        <span className="font-semibold">{formatPrice(Number(teacher.hourlyRate))}{t('callern:perHour')}</span>
+                        <Button
+                          size="sm"
+                          variant={!teacher.isOnline || studentPackages.filter((p: StudentCallernPackage) => p.status === 'active' && p.remainingMinutes > 0).length === 0 ? "secondary" : "default"}
+                          disabled={!teacher.isOnline || studentPackages.filter((p: StudentCallernPackage) => p.status === 'active' && p.remainingMinutes > 0).length === 0}
+                          onClick={() => handleStartCall(teacher)}
+                          title={studentPackages.filter((p: StudentCallernPackage) => p.status === 'active' && p.remainingMinutes > 0).length === 0 ? t('callern:purchasePackageFirst') : ''}
+                        >
+                          {studentPackages.filter((p: StudentCallernPackage) => p.status === 'active' && p.remainingMinutes > 0).length === 0 ? (
+                            <>
+                              <ShoppingCart className="mr-1 h-4 w-4" />
+                              {t('callern:purchasePackageFirst')}
+                            </>
+                          ) : (
+                            <>
+                              <Video className="mr-1 h-4 w-4" />
+                              {t('callern:startVideoCall')}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" id="packages-section">
           {/* Available Packages */}
           <Card>
@@ -543,133 +680,7 @@ export default function CallernSystem() {
           </CardContent>
         </Card>
 
-        {/* Available Teachers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                {t('callern:availableTeachers')}
-              </div>
-              <div className="flex items-center gap-2">
-                <label htmlFor="language-select" className="text-sm font-normal">
-                  {t('callern:selectLanguage')}:
-                </label>
-                <select
-                  id="language-select"
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="px-3 py-1 border rounded-md text-sm"
-                >
-                  <option value="English">English</option>
-                  <option value="Spanish">Spanish</option>
-                  <option value="French">French</option>
-                  <option value="German">German</option>
-                  <option value="Arabic">Arabic</option>
-                  <option value="Persian">Persian</option>
-                  <option value="Chinese">Chinese</option>
-                  <option value="Japanese">Japanese</option>
-                  <option value="Korean">Korean</option>
-                  <option value="Portuguese">Portuguese</option>
-                  <option value="Italian">Italian</option>
-                  <option value="Russian">Russian</option>
-                </select>
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {teachersLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                <p>{t('callern:loadingTeachers')}</p>
-              </div>
-            ) : availableTeachers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                {t('callern:noTeachersAvailable', { language: selectedLanguage })}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {availableTeachers
-                  .filter((teacher: AvailableTeacher) => 
-                    teacher.languages.includes(selectedLanguage)
-                  )
-                  .map((teacher: AvailableTeacher) => (
-                  <div key={teacher.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                          {teacher.firstName[0]}{teacher.lastName[0]}
-                        </div>
-                        <div>
-                          <h4 className="font-semibold">
-                            {teacher.firstName} {teacher.lastName}
-                          </h4>
-                          <div className="flex items-center gap-1 text-sm">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span>{teacher.rating}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <Badge 
-                        variant={teacher.isOnline ? "default" : "secondary"}
-                        className="animate-pulse"
-                      >
-                        {teacher.isOnline ? t('callern:online') : t('callern:offline')}
-                      </Badge>
-                    </div>
 
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">{t('callern:languages')}: </span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {teacher.languages.map(lang => (
-                            <Badge key={lang} variant="outline" className="text-xs">
-                              <Globe className="h-3 w-3 mr-1" />
-                              {lang}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">{t('callern:specializations')}: </span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {teacher.specializations.map(spec => (
-                            <Badge key={spec} variant="secondary" className="text-xs">
-                              {spec}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center pt-2">
-                        <span className="font-semibold">${teacher.hourlyRate}{t('callern:perHour')}</span>
-                        <Button
-                          size="sm"
-                          variant={studentPackages.length === 0 ? "secondary" : "default"}
-                          disabled={!teacher.isOnline || studentPackages.length === 0}
-                          onClick={() => handleStartCall(teacher)}
-                          title={studentPackages.length === 0 ? t('callern:purchasePackageFirst') : ''}
-                          className={studentPackages.length === 0 ? "opacity-50 cursor-not-allowed" : ""}
-                        >
-                          {studentPackages.length === 0 ? (
-                            <>
-                              <ShoppingCart className="mr-1 h-4 w-4" />
-                              {t('callern:purchasePackageFirst')}
-                            </>
-                          ) : (
-                            <>
-                              <Video className="mr-1 h-4 w-4" />
-                              {t('callern:startVideoCall')}
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Purchase Confirmation Dialog */}
         <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
