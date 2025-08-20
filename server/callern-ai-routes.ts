@@ -1,30 +1,29 @@
 import { Express } from "express";
 import { authenticateToken } from "./auth-middleware";
-import OpenAI from "openai";
+import { ollamaService } from "./services/ollama-service";
 
-// Initialize OpenAI with the provided API key
-let openai: OpenAI | null = null;
-
-if (process.env.OPENAI_API_KEY) {
-  openai = new OpenAI({ 
-    apiKey: process.env.OPENAI_API_KEY
-  });
-}
+// Initialize Ollama service (using local instance or user's server)
 
 export function registerCallernAIRoutes(app: Express) {
   // Test endpoint (no auth required for testing)
   app.post("/api/callern/ai/test", async (req, res) => {
     try {
-      if (!openai) {
+      const isHealthy = await ollamaService.healthCheck();
+      
+      if (!isHealthy) {
         return res.status(503).json({ 
           error: "AI service not configured", 
-          message: "OpenAI API key is missing" 
+          message: "Ollama service is not available. Please ensure Ollama is running." 
         });
       }
       
+      const models = await ollamaService.listModels();
+      
       res.json({ 
-        status: "OpenAI connected successfully",
-        model: "gpt-4o",
+        status: "Ollama connected successfully",
+        models: models,
+        defaultModel: process.env.OLLAMA_MODEL || 'llama2',
+        host: process.env.OLLAMA_HOST || 'http://localhost:11434',
         timestamp: new Date().toISOString()
       });
     } catch (error) {
@@ -36,30 +35,15 @@ export function registerCallernAIRoutes(app: Express) {
   // Test Translation endpoint
   app.post("/api/callern/ai/test/translate", async (req, res) => {
     try {
-      if (!openai) {
-        return res.status(503).json({ error: "OpenAI service not configured" });
-      }
-
       const { text, targetLanguage = "fa" } = req.body;
       
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `Translate the following text to ${targetLanguage === 'fa' ? 'Persian/Farsi' : targetLanguage}. Return as JSON with 'translation' and 'pronunciation' fields.`
-          },
-          {
-            role: "user",
-            content: text
-          }
-        ],
-        temperature: 0.3,
-        response_format: { type: "json_object" }
+      const result = await ollamaService.translateText(text, targetLanguage);
+      
+      res.json({
+        translation: result.translatedText,
+        sourceLanguage: result.sourceLanguage,
+        confidence: result.confidence
       });
-
-      const result = JSON.parse(completion.choices[0].message.content || "{}");
-      res.json(result);
     } catch (error: any) {
       console.error("Translation error:", error);
       res.status(500).json({ error: error.message });
@@ -69,30 +53,21 @@ export function registerCallernAIRoutes(app: Express) {
   // Test Word Helper endpoint
   app.post("/api/callern/ai/test/word-helper", async (req, res) => {
     try {
-      if (!openai) {
-        return res.status(503).json({ error: "OpenAI service not configured" });
-      }
-
       const { context, level = "B1" } = req.body;
       
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `You are a language learning assistant. Suggest 5 helpful English words for the given context at ${level} level. Return as JSON with 'words' array containing objects with 'word', 'definition', and 'example' fields.`
-          },
-          {
-            role: "user",
-            content: `Context: ${context}`
-          }
-        ],
-        temperature: 0.7,
-        response_format: { type: "json_object" }
+      const suggestions = await ollamaService.generateWordSuggestions(
+        context || "general conversation",
+        "English",
+        level
+      );
+      
+      res.json({
+        words: suggestions.map(s => ({
+          word: s.word,
+          definition: s.translation,
+          example: s.usage
+        }))
       });
-
-      const result = JSON.parse(completion.choices[0].message.content || "{}");
-      res.json(result);
     } catch (error: any) {
       console.error("Word helper error:", error);
       res.status(500).json({ error: error.message });
@@ -102,30 +77,14 @@ export function registerCallernAIRoutes(app: Express) {
   // Test Grammar Check endpoint
   app.post("/api/callern/ai/test/grammar-check", async (req, res) => {
     try {
-      if (!openai) {
-        return res.status(503).json({ error: "OpenAI service not configured" });
-      }
-
       const { text } = req.body;
       
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: "You are a grammar correction assistant. Correct the grammar and explain the corrections. Return as JSON with 'corrected' and 'explanation' fields."
-          },
-          {
-            role: "user",
-            content: text
-          }
-        ],
-        temperature: 0.3,
-        response_format: { type: "json_object" }
+      const result = await ollamaService.correctGrammar(text, "English");
+      
+      res.json({
+        corrected: result.corrected,
+        explanation: result.explanation
       });
-
-      const result = JSON.parse(completion.choices[0].message.content || "{}");
-      res.json(result);
     } catch (error: any) {
       console.error("Grammar check error:", error);
       res.status(500).json({ error: error.message });
@@ -135,30 +94,15 @@ export function registerCallernAIRoutes(app: Express) {
   // Test Pronunciation endpoint
   app.post("/api/callern/ai/test/pronunciation", async (req, res) => {
     try {
-      if (!openai) {
-        return res.status(503).json({ error: "OpenAI service not configured" });
-      }
-
       const { word } = req.body;
       
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `Provide pronunciation guide for the word '${word}'. Return as JSON with 'pronunciation' (IPA), 'syllables', and 'tips' fields.`
-          },
-          {
-            role: "user",
-            content: word
-          }
-        ],
-        temperature: 0.3,
-        response_format: { type: "json_object" }
+      const result = await ollamaService.generatePronunciationGuide(word, "English");
+      
+      res.json({
+        pronunciation: result.phonetic,
+        syllables: result.syllables,
+        tips: result.tips
       });
-
-      const result = JSON.parse(completion.choices[0].message.content || "{}");
-      res.json(result);
     } catch (error: any) {
       console.error("Pronunciation error:", error);
       res.status(500).json({ error: error.message });
@@ -168,40 +112,20 @@ export function registerCallernAIRoutes(app: Express) {
   // Translation endpoint
   app.post("/api/callern/ai/translate", authenticateToken, async (req: any, res) => {
     try {
-      if (!openai) {
-        return res.status(503).json({ 
-          error: "AI service not configured", 
-          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
-        });
-      }
-
       const { text, targetLanguage = 'fa' } = req.body;
       
       if (!text) {
         return res.status(400).json({ error: "Text is required" });
       }
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o", // Latest model as per blueprint
-        messages: [
-          {
-            role: "system",
-            content: `You are a language translation assistant. Translate the given text to ${targetLanguage === 'fa' ? 'Persian/Farsi' : targetLanguage}. Also provide the pronunciation in Roman letters if applicable.`
-          },
-          {
-            role: "user",
-            content: text
-          }
-        ],
-        temperature: 0.3
-      });
-
-      const translation = response.choices[0].message.content;
+      const result = await ollamaService.translateText(text, targetLanguage);
       
       res.json({
-        translation,
+        translation: result.translatedText,
         originalText: text,
-        targetLanguage
+        targetLanguage,
+        sourceLanguage: result.sourceLanguage,
+        confidence: result.confidence
       });
     } catch (error) {
       console.error("Translation error:", error);
@@ -212,42 +136,16 @@ export function registerCallernAIRoutes(app: Express) {
   // Word suggestions endpoint
   app.post("/api/callern/ai/suggest-words", authenticateToken, async (req: any, res) => {
     try {
-      if (!openai) {
-        return res.status(503).json({ 
-          error: "AI service not configured", 
-          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
-        });
-      }
-
       const { context, level = 'intermediate' } = req.body;
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `You are a language learning assistant. Suggest 5-7 useful English words or phrases for the context: "${context}" at ${level} level. Return as a JSON array of strings.`
-          },
-          {
-            role: "user",
-            content: `Context: ${context || 'general conversation'}`
-          }
-        ],
-        temperature: 0.7,
-        response_format: { type: "json_object" }
-      });
-
-      const content = response.choices[0].message.content;
-      const parsed = JSON.parse(content || '{"suggestions":[]}');
+      const suggestions = await ollamaService.generateWordSuggestions(
+        context || "general conversation",
+        "English",
+        level
+      );
       
       res.json({
-        suggestions: parsed.suggestions || parsed.words || parsed.phrases || [
-          "Hello, how are you?",
-          "Nice to meet you",
-          "Could you help me?",
-          "Thank you very much",
-          "Have a great day"
-        ],
+        suggestions: suggestions.map(s => `${s.word} - ${s.translation}`),
         context,
         level
       });
@@ -255,11 +153,11 @@ export function registerCallernAIRoutes(app: Express) {
       console.error("Suggestion error:", error);
       res.json({
         suggestions: [
-          "Hello",
-          "Thank you",
-          "Please",
-          "Excuse me",
-          "Goodbye"
+          "Hello - سلام",
+          "Thank you - متشکرم",
+          "Please - لطفا",
+          "Excuse me - ببخشید",
+          "Goodbye - خداحافظ"
         ]
       });
     }
@@ -268,41 +166,17 @@ export function registerCallernAIRoutes(app: Express) {
   // Grammar correction endpoint
   app.post("/api/callern/ai/grammar-correct", authenticateToken, async (req: any, res) => {
     try {
-      if (!openai) {
-        return res.status(503).json({ 
-          error: "AI service not configured", 
-          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
-        });
-      }
-
       const { text } = req.body;
       
       if (!text) {
         return res.status(400).json({ error: "Text is required" });
       }
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: "You are a grammar correction assistant. Correct any grammar mistakes in the given text and explain the corrections briefly. Return as JSON with 'corrected' and 'explanation' fields."
-          },
-          {
-            role: "user",
-            content: text
-          }
-        ],
-        temperature: 0.3,
-        response_format: { type: "json_object" }
-      });
-
-      const content = response.choices[0].message.content;
-      const parsed = JSON.parse(content || '{}');
+      const result = await ollamaService.correctGrammar(text, "English");
       
       res.json({
-        corrected: parsed.corrected || text,
-        explanation: parsed.explanation || "No corrections needed",
+        corrected: result.corrected,
+        explanation: result.explanation,
         original: text
       });
     } catch (error) {
@@ -314,43 +188,19 @@ export function registerCallernAIRoutes(app: Express) {
   // Pronunciation guide endpoint
   app.post("/api/callern/ai/pronunciation", authenticateToken, async (req: any, res) => {
     try {
-      if (!openai) {
-        return res.status(503).json({ 
-          error: "AI service not configured", 
-          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
-        });
-      }
-
       const { word } = req.body;
       
       if (!word) {
         return res.status(400).json({ error: "Word is required" });
       }
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: "You are a pronunciation guide. Provide IPA pronunciation, syllable breakdown, and tips for pronouncing the given English word. Return as JSON with 'ipa', 'breakdown', and 'tips' fields."
-          },
-          {
-            role: "user",
-            content: word
-          }
-        ],
-        temperature: 0.3,
-        response_format: { type: "json_object" }
-      });
-
-      const content = response.choices[0].message.content;
-      const parsed = JSON.parse(content || '{}');
+      const result = await ollamaService.generatePronunciationGuide(word, "English");
       
       res.json({
         word,
-        ipa: parsed.ipa || "",
-        breakdown: parsed.breakdown || word,
-        tips: parsed.tips || "Practice slowly and clearly"
+        ipa: result.phonetic,
+        breakdown: result.syllables.join("-"),
+        tips: result.tips.join(". ")
       });
     } catch (error) {
       console.error("Pronunciation error:", error);
@@ -361,40 +211,23 @@ export function registerCallernAIRoutes(app: Express) {
   // Conversation starter endpoint
   app.post("/api/callern/ai/conversation-starter", authenticateToken, async (req: any, res) => {
     try {
-      if (!openai) {
-        return res.status(503).json({ 
-          error: "AI service not configured", 
-          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
-        });
-      }
-
       const { topic = 'general', level = 'intermediate' } = req.body;
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `Generate 3 conversation starter questions about ${topic} for ${level} English learners. Return as JSON with a 'questions' array.`
-          },
-          {
-            role: "user",
-            content: `Topic: ${topic}, Level: ${level}`
-          }
-        ],
-        temperature: 0.8,
-        response_format: { type: "json_object" }
-      });
-
-      const content = response.choices[0].message.content;
-      const parsed = JSON.parse(content || '{"questions":[]}');
+      const questions = await ollamaService.generateQuestions(
+        topic,
+        level,
+        "English",
+        3
+      );
       
       res.json({
-        questions: parsed.questions || [
-          "What do you like to do in your free time?",
-          "Tell me about your hometown.",
-          "What are your plans for the weekend?"
-        ],
+        questions: questions.length > 0 
+          ? questions.map(q => q.question)
+          : [
+              "What do you like to do in your free time?",
+              "Tell me about your hometown.",
+              "What are your plans for the weekend?"
+            ],
         topic,
         level
       });
@@ -413,38 +246,16 @@ export function registerCallernAIRoutes(app: Express) {
   // Word helper endpoint (alias for suggest-words)
   app.post("/api/callern/ai/word-helper", authenticateToken, async (req: any, res) => {
     try {
-      if (!openai) {
-        return res.status(503).json({ 
-          error: "AI service not configured", 
-          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
-        });
-      }
-
       const { conversationContext, studentLevel = 'B1', targetLanguage = 'English' } = req.body;
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `You are a language learning assistant. Suggest helpful ${targetLanguage} words and phrases for the context: "${conversationContext}" at ${studentLevel} level. Return as JSON with 'words' array containing useful vocabulary.`
-          },
-          {
-            role: "user",
-            content: `Context: ${conversationContext || 'general conversation'}`
-          }
-        ],
-        temperature: 0.7,
-        response_format: { type: "json_object" }
-      });
-
-      const content = response.choices[0].message.content;
-      const parsed = JSON.parse(content || '{"words":[]}');
+      const suggestions = await ollamaService.generateWordSuggestions(
+        conversationContext || "general conversation",
+        targetLanguage,
+        studentLevel
+      );
       
       res.json({
-        words: parsed.words || [
-          "travel", "journey", "destination", "itinerary", "accommodation"
-        ],
+        words: suggestions.map(s => s.word),
         context: conversationContext,
         level: studentLevel
       });
@@ -460,41 +271,17 @@ export function registerCallernAIRoutes(app: Express) {
   // Grammar check endpoint (alias for grammar-correct)
   app.post("/api/callern/ai/grammar-check", authenticateToken, async (req: any, res) => {
     try {
-      if (!openai) {
-        return res.status(503).json({ 
-          error: "AI service not configured", 
-          message: "OpenAI API key is missing. Please configure OPENAI_API_KEY." 
-        });
-      }
-
       const { sentence, targetLanguage = 'English' } = req.body;
       
       if (!sentence) {
         return res.status(400).json({ error: "Sentence is required" });
       }
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `You are a grammar correction assistant for ${targetLanguage}. Correct any grammar mistakes in the given text and explain the corrections. Return as JSON with 'corrected' and 'explanation' fields.`
-          },
-          {
-            role: "user",
-            content: sentence
-          }
-        ],
-        temperature: 0.3,
-        response_format: { type: "json_object" }
-      });
-
-      const content = response.choices[0].message.content;
-      const parsed = JSON.parse(content || '{}');
+      const result = await ollamaService.correctGrammar(sentence, targetLanguage);
       
       res.json({
-        corrected: parsed.corrected || sentence,
-        explanation: parsed.explanation || "No corrections needed",
+        corrected: result.corrected,
+        explanation: result.explanation,
         original: sentence
       });
     } catch (error) {
