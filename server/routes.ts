@@ -14628,18 +14628,28 @@ Return JSON format:
         });
       }
       
+      // Get teacher availability status from database
+      const teacherAvailability = await Promise.all(
+        filteredTeachers.map((teacher: any) => 
+          storage.getTeacherCallernAvailability(teacher.id)
+        )
+      );
+      
       // Format teacher data for student view with hourly rates
-      const formattedTeachers = filteredTeachers.map((teacher: any) => ({
-        id: teacher.id,
-        firstName: teacher.firstName || 'Teacher',
-        lastName: teacher.lastName || '',
-        languages: teacher.languages || ['English'],
-        specializations: teacher.specializations || [],
-        rating: teacher.rating || 4.5,
-        hourlyRate: teacher.email === 'teacher1@test.com' ? 500000 : 450000, // Teacher1: 500k, Teacher2: 450k
-        isOnline: true, // Set as online for testing
-        profileImageUrl: null
-      }));
+      const formattedTeachers = filteredTeachers.map((teacher: any, index: number) => {
+        const availability = teacherAvailability[index];
+        return {
+          id: teacher.id,
+          firstName: teacher.firstName || 'Teacher',
+          lastName: teacher.lastName || '',
+          languages: teacher.languages || ['English'],
+          specializations: teacher.specializations || [],
+          rating: teacher.rating || 4.5,
+          hourlyRate: teacher.email === 'teacher1@test.com' ? 500000 : 450000, // Teacher1: 500k, Teacher2: 450k
+          isOnline: availability?.isOnline || false, // Real online status from database
+          profileImageUrl: null
+        };
+      });
       
       res.json(formattedTeachers);
     } catch (error) {
@@ -17831,8 +17841,15 @@ Meta Lingua Academy`;
       // Get all teachers/tutors from the database
       const tutors = await storage.getTutors();
       
+      // Get teacher availability status from database
+      const tutorAvailability = await Promise.all(
+        tutors.map((tutor: any) => 
+          storage.getTeacherCallernAvailability(tutor.id)
+        )
+      );
+      
       // Transform the data to match the expected format
-      const tutorData = tutors.map(tutor => ({
+      const tutorData = tutors.map((tutor, index) => ({
         id: tutor.id,
         firstName: tutor.firstName || 'Teacher',
         lastName: tutor.lastName || '',
@@ -17840,13 +17857,13 @@ Meta Lingua Academy`;
         specialization: tutor.specialization || 'Language Teaching',
         experience: tutor.experience || 5,
         hourlyRate: tutor.hourlyRate || 150000,
-        rating: parseFloat(tutor.rating || '4.5'),
+        rating: tutor.rating ? parseFloat(tutor.rating) : 0, // Real rating from database
         totalSessions: tutor.totalSessions || 0,
-        languages: ['English', 'Persian', 'Arabic'],
-        availability: 'Available',
+        languages: tutor.languages || [], // Real languages from database
+        availability: tutorAvailability[index]?.availability || 'Unavailable',
         profileImage: tutor.profileImage || '',
         bio: tutor.bio || 'Experienced language teacher specializing in personalized learning.',
-        isOnline: true, // Always online for demo, should be tracked in real system
+        isOnline: tutorAvailability[index]?.isOnline || false, // Real online status from database
         isFavorite: false
       }));
       
@@ -17863,8 +17880,15 @@ Meta Lingua Academy`;
       // Get only teachers authorized for Callern service
       const tutors = await storage.getTeachersForCallern();
       
+      // Get teacher availability status from database
+      const tutorAvailability = await Promise.all(
+        tutors.map((tutor: any) => 
+          storage.getTeacherCallernAvailability(tutor.id)
+        )
+      );
+      
       // Transform the data to match the expected format
-      const tutorData = tutors.map(tutor => ({
+      const tutorData = tutors.map((tutor, index) => ({
         id: tutor.id,
         firstName: tutor.firstName || 'Teacher',
         lastName: tutor.lastName || '',
@@ -17872,13 +17896,13 @@ Meta Lingua Academy`;
         specialization: tutor.specialization || 'Language Teaching',
         experience: tutor.experience || 5,
         hourlyRate: tutor.hourlyRate || 150000,
-        rating: parseFloat(tutor.rating || '4.5'),
+        rating: tutor.rating ? parseFloat(tutor.rating) : 0, // Real rating from database
         totalSessions: tutor.totalSessions || 0,
-        languages: ['English', 'Persian', 'Arabic'],
-        availability: 'Available',
+        languages: tutor.languages || [], // Real languages from database
+        availability: tutorAvailability[index]?.availability || 'Unavailable',
         profileImage: tutor.profileImage || '',
         bio: tutor.bio || 'Experienced language teacher specializing in personalized learning.',
-        isOnline: true, // Always online for demo, should be tracked in real system
+        isOnline: tutorAvailability[index]?.isOnline || false, // Real online status from database
         isFavorite: false
       }));
       
@@ -18069,12 +18093,12 @@ Meta Lingua Academy`;
         });
       }
 
-      const { getWordSuggestions } = await import('./openai-service');
-      const suggestions = await getWordSuggestions({
+      const { ollamaService } = await import('./services/ollama-service');
+      const suggestions = await ollamaService.generateWordSuggestions(
         context,
         targetLanguage,
-        difficulty: difficulty || 'intermediate'
-      });
+        difficulty || 'intermediate'
+      );
       
       res.json({ suggestions });
     } catch (error) {
@@ -18097,8 +18121,8 @@ Meta Lingua Academy`;
         });
       }
 
-      const { getInstantTranslation } = await import('./openai-service');
-      const result = await getInstantTranslation(text, fromLang, toLang);
+      const { ollamaService } = await import('./services/ollama-service');
+      const result = await ollamaService.translateText(text, toLang, fromLang);
       
       res.json(result);
     } catch (error) {
@@ -18121,8 +18145,8 @@ Meta Lingua Academy`;
         });
       }
 
-      const { getGrammarCorrection } = await import('./openai-service');
-      const result = await getGrammarCorrection(text, language);
+      const { ollamaService } = await import('./services/ollama-service');
+      const result = await ollamaService.correctGrammar(text, language);
       
       res.json(result);
     } catch (error) {
@@ -18145,8 +18169,8 @@ Meta Lingua Academy`;
         });
       }
 
-      const { getPronunciationGuide } = await import('./openai-service');
-      const result = await getPronunciationGuide(word, language);
+      const { ollamaService } = await import('./services/ollama-service');
+      const result = await ollamaService.generatePronunciationGuide(word, language);
       
       res.json(result);
     } catch (error) {
