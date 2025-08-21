@@ -215,8 +215,8 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
       // Always use the stored target socket ID
       const targetId = peerTargetSocketId || remoteSocketId;
       
-      if (!targetId) {
-        console.error('No target socket ID available for signal:', signal.type);
+      if (!targetId || targetId === 'null' || targetId === null) {
+        console.error('No valid target socket ID available for signal:', signal.type, 'targetId:', targetId);
         // Queue ICE candidates until we have a target
         if (signal.type !== 'offer' && signal.type !== 'answer') {
           // Store ICE candidates for later
@@ -224,6 +224,7 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
             (peer as any).queuedCandidates = [];
           }
           (peer as any).queuedCandidates.push(signal);
+          console.log('Queued ICE candidate for later delivery');
         }
         return;
       }
@@ -306,15 +307,32 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
       if (joinedUserId !== userId) {
         setRemoteSocketId(socketId);
         
+        // If we already have a peer that's waiting for a target, update it
+        if (peerRef.current && (peerRef.current as any).updateTargetSocketId) {
+          console.log('Updating existing peer target socket ID to:', socketId);
+          (peerRef.current as any).updateTargetSocketId(socketId);
+        }
+        
         // Teacher waits for student, student initiates for teacher
         if (role === 'teacher' && joinedRole === 'student') {
           console.log('Teacher: Student joined, waiting for offer');
-          // Teacher waits for student's offer
+          // Initialize media but don't create peer yet - wait for offer
+          await initializeMedia();
         } else if (role === 'student' && joinedRole === 'teacher') {
-          console.log('Student: Teacher joined, initiating call');
+          console.log('Student: Teacher joined, initiating call with socket:', socketId);
+          // Make sure we have a valid socket ID before creating peer
+          if (!socketId || socketId === 'null') {
+            console.error('Invalid teacher socket ID:', socketId);
+            return;
+          }
           const stream = await initializeMedia();
           if (stream && !peerRef.current) {
-            peerRef.current = await createPeer(true, stream, socketId);
+            // Small delay to ensure socket is ready
+            setTimeout(async () => {
+              if (!peerRef.current) {
+                peerRef.current = await createPeer(true, stream, socketId);
+              }
+            }, 100);
           }
         }
       }
@@ -323,6 +341,12 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
     const handleOffer = async ({ offer, from }: any) => {
       console.log('Received offer from:', from);
       setRemoteSocketId(from);
+      
+      // Don't create duplicate peer connections
+      if (peerRef.current && !(peerRef.current as any).destroyed) {
+        console.log('Peer already exists, ignoring duplicate offer');
+        return;
+      }
       
       const stream = await initializeMedia();
       if (stream) {
@@ -431,6 +455,7 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
   
   // Initialize media on mount (for student waiting for teacher)
   useEffect(() => {
+    // Only initialize media, don't create peer connection yet
     if (role === 'student') {
       initializeMedia();
     }
