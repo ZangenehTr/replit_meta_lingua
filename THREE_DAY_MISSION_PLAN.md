@@ -15,8 +15,10 @@
 
 - [x] **Fix Hardcoded Data** ✅ IN PROGRESS
   - [x] Teacher online status (now fetches from database)
+  - [x] Teacher specializations (now from user profiles)
+  - [x] Mock user avatars (returns null for frontend to handle)
+  - [x] Video course progress (fetches real data from DB)
   - [ ] Sample courses data in routes
-  - [ ] Mock user avatars (use initials instead)
   - [ ] Test data in various endpoints
 
 ### DAY 2: Complete Functionality & WebRTC
@@ -83,11 +85,16 @@
 ## NON-FUNCTIONAL BUTTONS/FEATURES
 
 ### Admin Panel
-- Export buttons (CSV/PDF)
-- Bulk operations
-- Report generation
-- System backup
-- Data migration tools
+- [x] Export buttons (CSV) ✅ FIXED - Added 4 export endpoints
+  - [x] Students CSV export
+  - [x] Teachers CSV export  
+  - [x] Financial report CSV export
+  - [x] Attendance CSV export
+- [ ] Export buttons (PDF)
+- [ ] Bulk operations
+- [ ] Report generation
+- [ ] System backup
+- [ ] Data migration tools
 
 ### Teacher Dashboard
 - Schedule optimizer
