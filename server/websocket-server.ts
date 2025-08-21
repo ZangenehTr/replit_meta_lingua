@@ -58,7 +58,10 @@ export class CallernWebSocketServer {
         const { userId, role } = data;
         console.log('Authentication received:', { userId, role, socketId: socket.id });
         
-        if (role === 'teacher') {
+        // Convert role to lowercase for comparison
+        const roleLower = role.toLowerCase();
+        
+        if (roleLower === 'teacher') {
           this.teacherSockets.set(userId, {
             socketId: socket.id,
             teacherId: userId,
@@ -78,7 +81,7 @@ export class CallernWebSocketServer {
           
           // Send confirmation back to teacher
           socket.emit('authenticated', { success: true, role: 'teacher' });
-        } else if (role === 'student') {
+        } else if (roleLower === 'student') {
           this.studentSockets.set(userId, socket.id);
           console.log('Student registered:', userId, 'with socket:', socket.id);
           console.log('Current student sockets:', Array.from(this.studentSockets.entries()));
