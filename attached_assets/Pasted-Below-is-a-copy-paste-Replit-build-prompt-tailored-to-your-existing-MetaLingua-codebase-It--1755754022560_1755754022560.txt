@@ -1,0 +1,206 @@
+Below is a copy-paste **Replit build prompt** tailored to your existing **MetaLingua** codebase. It instructs Replit to first **analyze the repo to avoid duplication**, then add the missing **live AI scoring** to the **Call+Learn (“CallerN”)** one-to-one video classes. It also emphasizes **mobile-first** and a **heads-up overlay** (scores/clues rendered **on top of the video layer**, not in a box below). It assumes PostgreSQL is already in place.
+
+---
+
+# Replit Build Prompt — Extend MetaLingua with CallerN Live Scoring (PostgreSQL, Mobile-First, Heads-Up Overlay)
+
+## 0) Mission
+
+You are augmenting the existing **MetaLingua** codebase. Do **not** re-implement features that already exist. Your goals:
+
+1. **Review the entire repository** to understand current modules (DB, auth, WebRTC, signaling, analytics) and **avoid duplication**.
+2. Add **live AI scoring** for **Student Roles** and **Teacher Roles** during **CallerN** 1:1 video lessons.
+3. Enforce **camera + mic ON** policy and **Target Language (TL) only** rule with automatic scoring.
+4. Render **scores/clues as a mobile-first heads-up overlay directly on the video layer** (NOT in a separate box below the WebRTC area).
+5. Use existing **PostgreSQL** infrastructure, migrations, and patterns already used by MetaLingua.
+6. Keep everything **self-hosted**; no external APIs/SaaS.
+
+> Important UI requirement (repeat): **Heads-up policy (airplane style)** — all real-time feedback appears **as unobtrusive overlay elements on top of the video** (score ribbons, micro-toasts, icon badges), not beneath it.
+
+---
+
+## 1) Repository Analysis (must do first)
+
+* Scan codebase to locate:
+
+  * WebRTC / signaling modules used by CallerN (offer/answer, ICE, rooms).
+  * Existing audio pipelines (recording, VAD, any ASR hooks).
+  * DB access layer (PostgreSQL client, migrations tool, schema organization).
+  * Any scoring/analytics utilities already present (avoid re-creating).
+  * UI rendering of the call screen (where to layer overlays); identify mobile breakpoints & style system.
+* Produce a short internal report (as a Markdown file `/docs/callern_scoring_audit.md`) summarizing:
+
+  * Relevant modules/files and their responsibilities.
+  * Extension points you’ll use (functions/components you’ll hook).
+  * Potential duplication risks and how you’ll avoid them.
+
+---
+
+## 2) Data Model (PostgreSQL) — integrate with existing patterns
+
+Create migrations consistent with current migration tooling/naming. Reuse existing tables if functionally equivalent.
+
+**Tables (or extend existing ones):**
+
+* `lessons(id, teacher_id, student_id, scheduled_at, started_at, ended_at, …)` (likely exists)
+* `presence(lesson_id, user_id, camera_on boolean, mic_on boolean, timeline jsonb)`
+* `speech_segments(id, lesson_id, user_id, started_at, ended_at, transcript text, lang_code text, wpm numeric, pauses int, self_repairs int, asr_conf numeric)`
+* `scores_student(lesson_id, student_id, speaking_fluency numeric, pronunciation numeric, vocabulary numeric, grammar numeric, interaction numeric, target_lang_use numeric, presence numeric, total numeric)`
+* `scores_teacher(lesson_id, teacher_id, facilitator numeric, monitor numeric, feedback numeric, resource_model numeric, assessor numeric, engagement numeric, target_lang_use numeric, presence numeric, total numeric)`
+* `events(id, lesson_id, kind text, payload jsonb, created_at timestamptz default now())`
+* Optional: `admin_notes(id, lesson_id, author_id, note text, created_at timestamptz default now())`
+
+Add indexes on `lesson_id`, `user_id`, and frequent filters.
+
+---
+
+## 3) Scoring Rubrics (per 1:1 lesson)
+
+### Student (0–100 → stars/5)
+
+* Speaking Fluency **25%** (WPM banded per level; pause penalties)
+* Pronunciation **20%** (ASR confidence/timing proxy)
+* Vocabulary **15%** (TTR + rarity vs local Zipf list)
+* Grammar **15%** (rule heuristics; error rate per 100 words)
+* Interaction **10%** (initiations, latency <2.5s, proportion of student talk)
+* Target Language Use **10%** (penalize L1 proportion)
+* Presence **5%** (camera+mic ON fraction; –20 immediate cap if joined with either OFF)
+
+### Teacher (0–100 → stars/5)
+
+* Facilitator **25%** (STT/TTT target ≥60–75%; sigmoid mapping)
+* Monitor **10%** (% uninterrupted student turns)
+* Feedback Provider **20%** (corrections / (AI-detected errors+1) optimal band 0.3–0.7)
+* Resource/Model **10%** (lexical richness of teacher input)
+* Assessor **10%** (alignment with AI baseline; Spearman ρ targets)
+* Engagement **5%** (prompting/affect proxy)
+* Target Language Use **10%** (avoid L1)
+* Presence **10%** (camera+mic ON timeline)
+
+**Stars conversion:** `stars = round(total/20*2)/2` (half-stars).
+
+> Use configurable bands in `config/scoring.json` (levels, WPM targets, penalties).
+
+---
+
+## 4) Offline AI / Signal Processing (reuse if present)
+
+Check if MetaLingua already has ASR or NLP utilities. If none, add an **offline** abstraction with pluggable backends:
+
+* `services/asr` — wrapper that can call local **whisper.cpp** (preferred) or **Vosk**.
+* `services/langid` — fastText `lid.176.bin` or char-ngram detector (local file).
+* `services/nlp/metrics` — fluency (WPM, pauses), TTR, rarity scoring, self-repair detection, regex grammar heuristics.
+
+Do **not** block the UI on ASR; process chunks asynchronously and stream partial results over WebSocket.
+
+---
+
+## 5) Real-Time Flow (CallerN)
+
+1. Both users must **join with camera + mic ON**. If denied, block lesson start and display inline overlay cue.
+2. Client sends presence state changes; backend logs to `presence`.
+3. Audio chunks are periodically sent for ASR → transcripts, language, metrics → `speech_segments`.
+4. Scoring engine updates rolling category scores and emits **live updates**.
+5. TL rule: if L1 proportion rises, trigger a **heads-up overlay nudge** (brief, non-intrusive).
+
+---
+
+## 6) WebSocket / REST Integration (align to existing conventions)
+
+* **WebSocket events** (namespace under existing signaling channel if feasible):
+
+  * `presence.update` {lessonId, userId, cameraOn, micOn, ts}
+  * `speech.segment` {lessonId, userId, start, end, transcript, lang, wpm, pauses, repairs, conf}
+  * `score.update.student` {lessonId, studentId, categories, total, stars}
+  * `score.update.teacher` {lessonId, teacherId, roles, total, stars}
+  * `notice` {severity, message}  // for TL/presence nudges
+* **REST**:
+
+  * `POST /api/lesson/:id/end` → finalize scores
+  * `GET /api/lesson/:id/scores` → full breakdown
+  * `POST /api/override/student/:id` {lessonId, category, delta, reason}
+  * `POST /api/override/teacher/:id` {lessonId, category, delta, reason}
+
+Use the repo’s existing routing/auth patterns.
+
+---
+
+## 7) Mobile-First Heads-Up Overlay (critical requirement)
+
+* **Do not** place scores or cues in a panel **below** the video area.
+* Implement an overlay renderer that anchors to the **video container** (absolute-positioned, touch-safe, low z-height).
+* Components:
+
+  * **Top-edge micro-toasts** (1–2 lines, auto-dismiss in 2–3s).
+  * **Corner badges** (tiny icons with numeric pulses for category deltas).
+  * **Thin progress ribbons** along top or bottom edge (category aggregates).
+  * **Presence/TL status dots** near the local preview.
+* Gestures:
+
+  * Single-tap on overlay cycles compact → detailed popover (still **on video**).
+  * Auto-hide when no updates for N seconds.
+* Performance:
+
+  * Use CSS transforms/opacity, avoid layout thrash.
+  * Keep <2% CPU on mid-range mobile during idle.
+* Accessibility:
+
+  * High-contrast color tokens; prefers-reduced-motion respected; ARIA live regions for critical notices.
+
+---
+
+## 8) Camera/Mic/TL Enforcement
+
+* **Join gate**: both ON required; otherwise show inline overlay cue (“Enable mic/camera to begin”).
+* **Presence scoring**: track ON/OFF timeline; apply penalties in real time.
+* **TL rule**: continuous L1 detection over sliding window; when threshold crossed, show subtle overlay hint (“Try English”) and decrement TL score; ramp back up when TL resumes.
+
+---
+
+## 9) Supervisor Reporting
+
+* Add an **Admin/Supervisor** view (reuse existing admin shell) to show:
+
+  * Per-lesson student & teacher scores (breakdown + totals + stars).
+  * Trends per teacher over time; export CSV.
+  * TL compliance rate and presence compliance.
+
+---
+
+## 10) Testing & Acceptance
+
+* Unit tests for scoring functions (deterministic inputs → expected outputs).
+* Integration test: simulate a 5-minute lesson with mock segments; verify live overlays update **on video layer**; verify DB writes and final totals.
+* Manual QA checklist on mobile:
+
+  * Join flow requires cam+mic.
+  * Heads-up overlays are legible in portrait/landscape, no layout shift, no overflow.
+  * TL nudges appear/disappear smoothly; no blocking.
+  * Ending lesson persists results and they appear in supervisor view.
+
+**Acceptance criteria (must pass):**
+
+1. Replit produces `/docs/callern_scoring_audit.md` confirming reuse points and dedup plan.
+2. No duplicate ASR/NLP/scoring modules are introduced if equivalents exist.
+3. Overlays render **on top of the video element** (not below), remain touch-friendly on small screens.
+4. Real-time student/teacher score updates are visible within \~2s of speech.
+5. Presence and TL rules affect scores live and are reflected in overlays and stored totals.
+6. PostgreSQL migrations align with existing repo patterns; CI passes.
+
+---
+
+## 11) Run Notes
+
+* Use existing MetaLingua env/config.
+* If ASR/NLP models are required, place them under the repo’s standard assets directory and load from disk (no network fetch).
+* Provide a **demo mode** that uses synthetic transcripts for local testing without audio hardware.
+
+---
+
+### Final emphasis
+
+* **Mobile-first heads-up overlay over the video layer** is mandatory.
+* **Review before coding** to avoid duplication; integrate with current modules.
+* **Self-hosted only**, PostgreSQL already present—reuse the DB stack and patterns.
+
+Please proceed.
