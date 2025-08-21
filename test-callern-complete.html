@@ -686,6 +686,7 @@
         let videoEnabled = true;
         let audioEnabled = true;
         let roomParticipants = {}; // Track participants in the room
+        let targetSocketId = null; // Track the target socket for WebRTC signaling
         
         // Scoring state
         let currentScores = {
@@ -881,6 +882,16 @@
                 setupWebRTC(true);
                 // Initialize scoring overlay
                 initScoringOverlay();
+            });
+            
+            socket.on('user-joined', (data) => {
+                log('room', `User joined: ${data.userId} (${data.role}) - Socket: ${data.socketId}`, 'info');
+                roomParticipants[data.socketId] = data.role;
+            });
+            
+            socket.on('user-left', (data) => {
+                log('room', `User left: ${data.socketId}`, 'info');
+                delete roomParticipants[data.socketId];
             });
             
             socket.on('user-joined', (data) => {
@@ -1145,34 +1156,50 @@
                 document.getElementById('toggle-video-btn').disabled = false;
                 document.getElementById('toggle-audio-btn').disabled = false;
                 
-                // Create peer connection
+                // Create peer connection with TURN servers
                 peer = new SimplePeer({
                     initiator: isInitiator,
                     stream: localStream,
                     config: {
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' }
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            {
+                                urls: 'turn:a.relay.metered.ca:80',
+                                username: '8d9c6c5f8a69b5e5',
+                                credential: 'yNxUvKMfeP7gPKZZ'
+                            },
+                            {
+                                urls: 'turn:a.relay.metered.ca:443',
+                                username: '8d9c6c5f8a69b5e5',
+                                credential: 'yNxUvKMfeP7gPKZZ'
+                            }
                         ]
                     }
                 });
                 
                 peer.on('signal', (signal) => {
+                    // Get the first participant socket as target
+                    const target = Object.keys(roomParticipants)[0];
+                    
                     if (signal.type === 'offer') {
                         socket.emit('offer', {
                             roomId: roomId,
+                            to: target,
                             offer: signal
                         });
-                        log('webrtc', 'Sent offer', 'info');
+                        log('webrtc', `Sent offer to ${target}`, 'info');
                     } else if (signal.type === 'answer') {
                         socket.emit('answer', {
                             roomId: roomId,
+                            to: target,
                             answer: signal
                         });
-                        log('webrtc', 'Sent answer', 'info');
+                        log('webrtc', `Sent answer to ${target}`, 'info');
                     } else if (signal.candidate) {
                         socket.emit('ice-candidate', {
                             roomId: roomId,
+                            to: target,
                             candidate: signal
                         });
                     }
