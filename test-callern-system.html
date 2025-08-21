@@ -298,7 +298,7 @@
             });
             
             // CallerN event handlers
-            socket.on('incoming-call', (data) => {
+            socket.on('call-request', (data) => {
                 log('call', `📞 Incoming call from student ${data.studentId}`, 'info');
                 document.getElementById('accept-call-btn').disabled = false;
                 roomId = data.roomId;
@@ -348,7 +348,7 @@
         }
 
         async function startCallAsStudent() {
-            if (!socket || currentUser.role !== 'student') {
+            if (!socket || currentUser.role.toLowerCase() !== 'student') {
                 log('call', '✗ Must be logged in as student with active socket', 'error');
                 return;
             }
@@ -377,7 +377,7 @@
         }
 
         async function acceptCallAsTeacher() {
-            if (!socket || !roomId || currentUser.role !== 'teacher') {
+            if (!socket || !roomId || currentUser.role.toLowerCase() !== 'teacher') {
                 log('call', '✗ No incoming call to accept', 'error');
                 return;
             }
