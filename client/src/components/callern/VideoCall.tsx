@@ -190,31 +190,44 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
       stream
     });
     
-    // Store target socket ID for later use
-    const currentTargetSocketId = targetSocketId;
+    // Store target socket ID in closure to ensure it's available for all signals
+    let peerTargetSocketId = targetSocketId;
+    
+    // Update target socket ID when needed
+    (peer as any).updateTargetSocketId = (newSocketId: string) => {
+      peerTargetSocketId = newSocketId;
+    };
     
     peer.on('signal', (signal) => {
+      // Always use the stored target socket ID
+      const targetId = peerTargetSocketId;
+      
+      if (!targetId) {
+        console.error('No target socket ID available for signal:', signal.type);
+        return;
+      }
+      
       if (signal.type === 'offer') {
-        console.log('Sending offer to:', currentTargetSocketId);
+        console.log('Sending offer to:', targetId);
         socket?.emit('offer', {
           roomId,
           offer: signal,
-          to: currentTargetSocketId
+          to: targetId
         });
       } else if (signal.type === 'answer') {
-        console.log('Sending answer to:', currentTargetSocketId);
+        console.log('Sending answer to:', targetId);
         socket?.emit('answer', {
           roomId,
           answer: signal,
-          to: currentTargetSocketId
+          to: targetId
         });
-      } else if (currentTargetSocketId) {
-        // ICE candidate - only send if we have a valid target
-        console.log('Sending ICE candidate to:', currentTargetSocketId);
+      } else {
+        // ICE candidate
+        console.log('Sending ICE candidate to:', targetId);
         socket?.emit('ice-candidate', {
           roomId,
           candidate: signal,
-          to: currentTargetSocketId
+          to: targetId
         });
       }
     });
@@ -284,10 +297,18 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
       }
     };
     
-    const handleAnswer = ({ answer }: any) => {
-      console.log('Received answer');
-      if (peerRef.current) {
-        peerRef.current.signal(answer);
+    const handleAnswer = ({ answer, from }: any) => {
+      console.log('Received answer from:', from);
+      if (peerRef.current && peerRef.current.destroyed === false) {
+        // Ensure we have the correct remote socket ID
+        if (from) {
+          setRemoteSocketId(from);
+        }
+        try {
+          peerRef.current.signal(answer);
+        } catch (error) {
+          console.error('Error setting answer:', error);
+        }
       }
     };
     

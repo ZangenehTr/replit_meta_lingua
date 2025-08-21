@@ -680,7 +680,7 @@ export class CallernWebSocketServer {
       const minutes = Math.ceil(finalDuration / 60);
 
       // Update student package usage
-      if (minutes > 0) {
+      if (minutes > 0 && typeof room.packageId === 'number') {
         await db
           .update(studentCallernPackages)
           .set({
