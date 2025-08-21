@@ -196,15 +196,50 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
     // Update target socket ID when needed
     (peer as any).updateTargetSocketId = (newSocketId: string) => {
       peerTargetSocketId = newSocketId;
+      // Send any queued ICE candidates when target is updated
+      if ((peer as any).queuedCandidates && (peer as any).queuedCandidates.length > 0) {
+        const queued = (peer as any).queuedCandidates;
+        (peer as any).queuedCandidates = [];
+        queued.forEach((candidate: any) => {
+          console.log('Sending queued ICE candidate to:', newSocketId);
+          socket?.emit('ice-candidate', {
+            roomId,
+            candidate,
+            to: newSocketId
+          });
+        });
+      }
     };
     
     peer.on('signal', (signal) => {
       // Always use the stored target socket ID
-      const targetId = peerTargetSocketId;
+      const targetId = peerTargetSocketId || remoteSocketId;
       
       if (!targetId) {
         console.error('No target socket ID available for signal:', signal.type);
+        // Queue ICE candidates until we have a target
+        if (signal.type !== 'offer' && signal.type !== 'answer') {
+          // Store ICE candidates for later
+          if (!(peer as any).queuedCandidates) {
+            (peer as any).queuedCandidates = [];
+          }
+          (peer as any).queuedCandidates.push(signal);
+        }
         return;
+      }
+      
+      // Send any queued ICE candidates first
+      if ((peer as any).queuedCandidates && (peer as any).queuedCandidates.length > 0) {
+        const queued = (peer as any).queuedCandidates;
+        (peer as any).queuedCandidates = [];
+        queued.forEach((candidate: any) => {
+          console.log('Sending queued ICE candidate to:', targetId);
+          socket?.emit('ice-candidate', {
+            roomId,
+            candidate,
+            to: targetId
+          });
+        });
       }
       
       if (signal.type === 'offer') {
@@ -258,7 +293,7 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
     });
     
     return peer;
-  }, [socket, roomId]);
+  }, [socket, roomId, remoteSocketId]);
   
   // Socket event handlers
   useEffect(() => {
@@ -299,25 +334,40 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
     
     const handleAnswer = ({ answer, from }: any) => {
       console.log('Received answer from:', from);
-      if (peerRef.current && peerRef.current.destroyed === false) {
-        // Ensure we have the correct remote socket ID
-        if (from) {
-          setRemoteSocketId(from);
-          // Update peer's target socket ID
-          if ((peerRef.current as any).updateTargetSocketId) {
-            (peerRef.current as any).updateTargetSocketId(from);
-          }
+      if (!peerRef.current || peerRef.current.destroyed) {
+        console.log('No peer or peer destroyed, ignoring answer');
+        return;
+      }
+      
+      // Ensure we have the correct remote socket ID
+      if (from) {
+        setRemoteSocketId(from);
+        // Update peer's target socket ID
+        if ((peerRef.current as any).updateTargetSocketId) {
+          (peerRef.current as any).updateTargetSocketId(from);
         }
-        try {
-          // Only signal if peer is not already connected
-          if ((peerRef.current as any)._pc?.signalingState !== 'stable') {
-            peerRef.current.signal(answer);
-          } else {
-            console.log('Peer already in stable state, ignoring answer');
-          }
-        } catch (error) {
-          console.error('Error setting answer:', error);
+      }
+      
+      try {
+        const pc = (peerRef.current as any)._pc;
+        if (!pc) {
+          console.log('No peer connection, ignoring answer');
+          return;
         }
+        
+        const signalingState = pc.signalingState;
+        console.log('Current signaling state:', signalingState);
+        
+        // Only process answer if we're expecting one
+        if (signalingState === 'have-local-offer') {
+          peerRef.current.signal(answer);
+        } else if (signalingState === 'stable') {
+          console.log('Peer already in stable state, ignoring duplicate answer');
+        } else {
+          console.log(`Unexpected signaling state: ${signalingState}, ignoring answer`);
+        }
+      } catch (error) {
+        console.error('Error setting answer:', error);
       }
     };
     
