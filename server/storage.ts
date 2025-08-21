@@ -19,6 +19,7 @@ import {
   aiProgressTracking, aiActivitySessions, aiVocabularyTracking, aiGrammarTracking, aiPronunciationAnalysis,
   // Callern tables
   callernPackages, studentCallernPackages, teacherCallernAvailability, callernCallHistory,
+  callernPresence, callernSpeechSegments, callernScoresStudent, callernScoresTeacher, callernScoringEvents,
   // Supervision observation tables
   supervisionObservations, teacherObservationResponses,
   // Additional tables
@@ -77,6 +78,9 @@ import {
   // Callern types
   type CallernPackage, type InsertCallernPackage, type StudentCallernPackage, type InsertStudentCallernPackage,
   type TeacherCallernAvailability, type InsertTeacherCallernAvailability, type CallernCallHistory, type InsertCallernCallHistory,
+  type CallernPresence, type InsertCallernPresence, type CallernSpeechSegment, type InsertCallernSpeechSegment,
+  type CallernScoresStudent, type InsertCallernScoresStudent, type CallernScoresTeacher, type InsertCallernScoresTeacher,
+  type CallernScoringEvent, type InsertCallernScoringEvent,
   // Supervision observation types
   type SupervisionObservation, type InsertSupervisionObservation,
   type TeacherObservationResponse, type InsertTeacherObservationResponse
@@ -193,6 +197,25 @@ export interface IStorage {
     assignedTasks: any[];
     recentPerformance: any;
   }>;
+  
+  // CallerN Scoring System
+  createCallernPresence(presence: InsertCallernPresence): Promise<CallernPresence>;
+  updateCallernPresence(lessonId: number, userId: number, updates: Partial<CallernPresence>): Promise<CallernPresence | undefined>;
+  getCallernPresence(lessonId: number, userId: number): Promise<CallernPresence | undefined>;
+  
+  createCallernSpeechSegment(segment: InsertCallernSpeechSegment): Promise<CallernSpeechSegment>;
+  getCallernSpeechSegments(lessonId: number, userId?: number): Promise<CallernSpeechSegment[]>;
+  
+  createCallernScoresStudent(scores: InsertCallernScoresStudent): Promise<CallernScoresStudent>;
+  updateCallernScoresStudent(lessonId: number, studentId: number, updates: Partial<CallernScoresStudent>): Promise<CallernScoresStudent | undefined>;
+  getCallernScoresStudent(lessonId: number, studentId: number): Promise<CallernScoresStudent | undefined>;
+  
+  createCallernScoresTeacher(scores: InsertCallernScoresTeacher): Promise<CallernScoresTeacher>;
+  updateCallernScoresTeacher(lessonId: number, teacherId: number, updates: Partial<CallernScoresTeacher>): Promise<CallernScoresTeacher | undefined>;
+  getCallernScoresTeacher(lessonId: number, teacherId: number): Promise<CallernScoresTeacher | undefined>;
+  
+  createCallernScoringEvent(event: InsertCallernScoringEvent): Promise<CallernScoringEvent>;
+  getCallernScoringEvents(lessonId: number): Promise<CallernScoringEvent[]>;
   
   // Schedule Conflict Checking (Check-First Protocol)
   checkTeacherScheduleConflicts(teacherId: number, proposedHours: string[]): Promise<{

@@ -21,6 +21,7 @@ import {
   callernPackages, studentCallernPackages, teacherCallernAvailability,
   callernCallHistory, callernSyllabusTopics, studentCallernProgress, rooms,
   callernRoadmaps, callernRoadmapSteps, studentRoadmapProgress,
+  callernPresence, callernSpeechSegments, callernScoresStudent, callernScoresTeacher, callernScoringEvents,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
   type Course, type InsertCourse, type Enrollment, type InsertEnrollment,
@@ -39,6 +40,9 @@ import {
   type CallernPackage, type InsertCallernPackage, type StudentCallernPackage, type InsertStudentCallernPackage,
   type TeacherCallernAvailability, type InsertTeacherCallernAvailability, type CallernCallHistory, type InsertCallernCallHistory,
   type CallernSyllabusTopics, type InsertCallernSyllabusTopics, type StudentCallernProgress, type InsertStudentCallernProgress,
+  type CallernPresence, type InsertCallernPresence, type CallernSpeechSegment, type InsertCallernSpeechSegment,
+  type CallernScoresStudent, type InsertCallernScoresStudent, type CallernScoresTeacher, type InsertCallernScoresTeacher,
+  type CallernScoringEvent, type InsertCallernScoringEvent,
   type Room, type InsertRoom,
   // Testing subsystem types
   tests, testQuestions, testAttempts, testAnswers,
@@ -4894,6 +4898,112 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return progress;
+  }
+
+  // CallerN Scoring System Methods
+  async createCallernPresence(presence: InsertCallernPresence): Promise<CallernPresence> {
+    const [newPresence] = await db.insert(callernPresence).values(presence).returning();
+    return newPresence;
+  }
+
+  async updateCallernPresence(lessonId: number, userId: number, updates: Partial<CallernPresence>): Promise<CallernPresence | undefined> {
+    const [updated] = await db.update(callernPresence)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(
+        eq(callernPresence.lessonId, lessonId),
+        eq(callernPresence.userId, userId)
+      ))
+      .returning();
+    return updated;
+  }
+
+  async getCallernPresence(lessonId: number, userId: number): Promise<CallernPresence | undefined> {
+    const [presence] = await db.select().from(callernPresence)
+      .where(and(
+        eq(callernPresence.lessonId, lessonId),
+        eq(callernPresence.userId, userId)
+      ))
+      .limit(1);
+    return presence;
+  }
+
+  async createCallernSpeechSegment(segment: InsertCallernSpeechSegment): Promise<CallernSpeechSegment> {
+    const [newSegment] = await db.insert(callernSpeechSegments).values(segment).returning();
+    return newSegment;
+  }
+
+  async getCallernSpeechSegments(lessonId: number, userId?: number): Promise<CallernSpeechSegment[]> {
+    let query = db.select().from(callernSpeechSegments)
+      .where(eq(callernSpeechSegments.lessonId, lessonId));
+    
+    if (userId) {
+      query = query.where(eq(callernSpeechSegments.userId, userId));
+    }
+    
+    return await query.orderBy(callernSpeechSegments.startedAt);
+  }
+
+  async createCallernScoresStudent(scores: InsertCallernScoresStudent): Promise<CallernScoresStudent> {
+    const [newScores] = await db.insert(callernScoresStudent).values(scores).returning();
+    return newScores;
+  }
+
+  async updateCallernScoresStudent(lessonId: number, studentId: number, updates: Partial<CallernScoresStudent>): Promise<CallernScoresStudent | undefined> {
+    const [updated] = await db.update(callernScoresStudent)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(
+        eq(callernScoresStudent.lessonId, lessonId),
+        eq(callernScoresStudent.studentId, studentId)
+      ))
+      .returning();
+    return updated;
+  }
+
+  async getCallernScoresStudent(lessonId: number, studentId: number): Promise<CallernScoresStudent | undefined> {
+    const [scores] = await db.select().from(callernScoresStudent)
+      .where(and(
+        eq(callernScoresStudent.lessonId, lessonId),
+        eq(callernScoresStudent.studentId, studentId)
+      ))
+      .limit(1);
+    return scores;
+  }
+
+  async createCallernScoresTeacher(scores: InsertCallernScoresTeacher): Promise<CallernScoresTeacher> {
+    const [newScores] = await db.insert(callernScoresTeacher).values(scores).returning();
+    return newScores;
+  }
+
+  async updateCallernScoresTeacher(lessonId: number, teacherId: number, updates: Partial<CallernScoresTeacher>): Promise<CallernScoresTeacher | undefined> {
+    const [updated] = await db.update(callernScoresTeacher)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(
+        eq(callernScoresTeacher.lessonId, lessonId),
+        eq(callernScoresTeacher.teacherId, teacherId)
+      ))
+      .returning();
+    return updated;
+  }
+
+  async getCallernScoresTeacher(lessonId: number, teacherId: number): Promise<CallernScoresTeacher | undefined> {
+    const [scores] = await db.select().from(callernScoresTeacher)
+      .where(and(
+        eq(callernScoresTeacher.lessonId, lessonId),
+        eq(callernScoresTeacher.teacherId, teacherId)
+      ))
+      .limit(1);
+    return scores;
+  }
+
+  async createCallernScoringEvent(event: InsertCallernScoringEvent): Promise<CallernScoringEvent> {
+    const [newEvent] = await db.insert(callernScoringEvents).values(event).returning();
+    return newEvent;
+  }
+
+  async getCallernScoringEvents(lessonId: number): Promise<CallernScoringEvent[]> {
+    return await db.select().from(callernScoringEvents)
+      .where(eq(callernScoringEvents.lessonId, lessonId))
+      .orderBy(callernScoringEvents.createdAt);
   }
 
   // Helper method to get courses taught by a teacher
