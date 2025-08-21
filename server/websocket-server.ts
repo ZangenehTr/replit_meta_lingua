@@ -208,6 +208,56 @@ export class CallernWebSocketServer {
         });
       });
 
+      // Handle scoring events for CallerN Live Scoring
+      socket.on('scoring-update', (data) => {
+        const { roomId, scores } = data;
+        // Forward scoring update to all participants in the room
+        socket.to(roomId).emit('scoring-update', {
+          scores,
+          timestamp: new Date().toISOString()
+        });
+        console.log(`Scoring update forwarded to room ${roomId}:`, scores);
+      });
+
+      socket.on('ttt-update', (data) => {
+        const { roomId, studentPercentage, teacherPercentage, totalTime, studentTime, teacherTime } = data;
+        // Forward TTT update to all participants
+        socket.to(roomId).emit('ttt-update', {
+          studentPercentage,
+          teacherPercentage,
+          totalTime,
+          studentTime,
+          teacherTime,
+          timestamp: new Date().toISOString()
+        });
+        console.log(`TTT update forwarded to room ${roomId}: Student ${studentPercentage}%, Teacher ${teacherPercentage}%`);
+      });
+
+      socket.on('presence-update', (data) => {
+        const { roomId, cameraOn, micOn, userId } = data;
+        // Forward presence update to all participants
+        socket.to(roomId).emit('presence-update', {
+          cameraOn,
+          micOn,
+          userId: userId || this.userSockets.get(socket.id)?.userId,
+          timestamp: new Date().toISOString()
+        });
+        console.log(`Presence update forwarded to room ${roomId}: Camera ${cameraOn}, Mic ${micOn}`);
+      });
+
+      socket.on('tl-warning', (data) => {
+        const { roomId, message, severity, studentPercentage, teacherPercentage } = data;
+        // Forward target language warning to all participants
+        socket.to(roomId).emit('tl-warning', {
+          message,
+          severity,
+          studentPercentage,
+          teacherPercentage,
+          timestamp: new Date().toISOString()
+        });
+        console.log(`TL warning forwarded to room ${roomId}: ${message}`);
+      });
+
       // Handle call request from student
       socket.on('call-teacher', async (data) => {
         const { teacherId, studentId, packageId, language, roomId } = data;
