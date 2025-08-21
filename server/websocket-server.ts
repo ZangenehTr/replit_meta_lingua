@@ -407,6 +407,42 @@ export class CallernWebSocketServer {
         socket.to(roomId).emit('signal', signal);
       });
 
+      // Handle WebRTC offer
+      socket.on('offer', (data) => {
+        const { roomId, offer, to } = data;
+        console.log('WebRTC offer received for room:', roomId);
+        
+        // Broadcast offer to all other participants in the room
+        socket.to(roomId).emit('offer', {
+          offer,
+          from: socket.id
+        });
+      });
+
+      // Handle WebRTC answer
+      socket.on('answer', (data) => {
+        const { roomId, answer, to } = data;
+        console.log('WebRTC answer received for room:', roomId);
+        
+        // Broadcast answer to all other participants in the room
+        socket.to(roomId).emit('answer', {
+          answer,
+          from: socket.id
+        });
+      });
+
+      // Handle ICE candidate
+      socket.on('ice-candidate', (data) => {
+        const { roomId, candidate, to } = data;
+        console.log('ICE candidate received for room:', roomId);
+        
+        // Broadcast ICE candidate to all other participants in the room
+        socket.to(roomId).emit('ice-candidate', {
+          candidate,
+          from: socket.id
+        });
+      });
+
       // Handle call duration updates
       socket.on('update-duration', async (data) => {
         const { roomId, duration } = data;
