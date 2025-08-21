@@ -385,6 +385,7 @@
         let roomId = null;
         let videoEnabled = true;
         let audioEnabled = true;
+        let roomParticipants = {}; // Track participants in the room
         
         // Logging function
         function log(category, message, type = 'info') {
@@ -535,17 +536,19 @@
             });
             
             socket.on('offer', async (data) => {
-                log('webrtc', 'Received offer', 'info');
+                log('webrtc', `Received offer from ${data.from}`, 'info');
+                roomParticipants[data.from] = 'peer';
                 await handleOffer(data);
             });
             
             socket.on('answer', async (data) => {
-                log('webrtc', 'Received answer', 'info');
+                log('webrtc', `Received answer from ${data.from}`, 'info');
+                roomParticipants[data.from] = 'peer';
                 await handleAnswer(data);
             });
             
             socket.on('ice-candidate', async (data) => {
-                log('webrtc', 'Received ICE candidate', 'info');
+                log('webrtc', 'Received ICE candidate', 'debug');
                 await handleIceCandidate(data);
             });
             
@@ -653,22 +656,19 @@
                     if (signal.type === 'offer') {
                         socket.emit('offer', {
                             roomId: roomId,
-                            offer: signal,
-                            to: null
+                            offer: signal
                         });
                         log('webrtc', 'Sent offer', 'info');
                     } else if (signal.type === 'answer') {
                         socket.emit('answer', {
                             roomId: roomId,
-                            answer: signal,
-                            to: null
+                            answer: signal
                         });
                         log('webrtc', 'Sent answer', 'info');
                     } else if (signal.candidate) {
                         socket.emit('ice-candidate', {
                             roomId: roomId,
-                            candidate: signal,
-                            to: null
+                            candidate: signal
                         });
                     }
                 });
