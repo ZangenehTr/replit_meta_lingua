@@ -44,6 +44,9 @@ app.get('/test-video-simple.html', (_req, res) => {
 app.get('/test-callern-ai.html', (_req, res) => {
   res.sendFile(path.join(__dirname, '../test-callern-ai.html'));
 });
+app.get('/test-callern-scoring.html', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../test-callern-scoring.html'));
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
