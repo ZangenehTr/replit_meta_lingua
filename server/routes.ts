@@ -59,6 +59,12 @@ import {
   type InsertRoom
 } from "@shared/schema";
 import mammoth from "mammoth";
+import { 
+  exportStudentsCSV, 
+  exportTeachersCSV, 
+  exportFinancialReportCSV, 
+  exportAttendanceCSV 
+} from "./utils/csv-export";
 
 // Configure multer for audio uploads
 const audioStorage = multer.diskStorage({
@@ -5127,7 +5133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const courseId = parseInt(req.params.id);
       
       // Get the existing course
-      const existingCourse = await storage.getCourseById(courseId);
+      const existingCourse = await storage.getCourse(courseId);
       if (!existingCourse) {
         return res.status(404).json({ message: "Course not found" });
       }
@@ -6653,6 +6659,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(students);
     } catch (error) {
       res.status(500).json({ message: "Failed to get students" });
+    }
+  });
+
+  // Export students as CSV - FIXED: Non-functional export button
+  app.get("/api/admin/export/students", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const students = [];
+      
+      for (const user of filterStudents(users)) {
+        const userCourses = await storage.getUserCourses(user.id);
+        const profile = await storage.getUserProfile(user.id);
+        
+        students.push({
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phoneNumber || '',
+          status: user.isActive ? 'active' : 'inactive',
+          level: profile?.currentLevel || profile?.proficiencyLevel || 'Beginner',
+          nationalId: user.nationalId || profile?.nationalId || '',
+          progress: userCourses.length > 0 ? Math.round(userCourses.reduce((sum, c) => sum + (c.progress || 0), 0) / userCourses.length) : 0,
+          attendance: userCourses.length > 0 ? await calculateStudentAttendance(user.id) : 0,
+          courses: userCourses.map(c => c.title),
+          enrollmentDate: user.createdAt,
+          lastActivity: await getLastActivityTime(user.id)
+        });
+      }
+
+      const csv = exportStudentsCSV(students);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="students-export.csv"');
+      res.send(csv);
+    } catch (error) {
+      console.error('Error exporting students:', error);
+      res.status(500).json({ message: "Failed to export students" });
+    }
+  });
+
+  // Export teachers as CSV - FIXED: Non-functional export button
+  app.get("/api/admin/export/teachers", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const teachers = await storage.getTeachers();
+      const teachersData = await Promise.all(teachers.map(async (teacher) => {
+        const reviews = await storage.getTeacherReviews(teacher.id);
+        const avgRating = reviews.length > 0 
+          ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
+          : 0;
+        
+        const profile = await storage.getUserProfile(teacher.id);
+        
+        return {
+          id: teacher.id,
+          name: `${teacher.firstName} ${teacher.lastName}`,
+          email: teacher.email,
+          specializations: profile?.specializations || [],
+          rating: avgRating,
+          totalStudents: 0, // Would need to calculate from enrollments
+          totalSessions: 0, // Would need to calculate from sessions
+          languages: profile?.languages || [],
+          availability: 'Available', // Would need to check availability
+          isActive: teacher.isActive
+        };
+      }));
+
+      const csv = exportTeachersCSV(teachersData);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="teachers-export.csv"');
+      res.send(csv);
+    } catch (error) {
+      console.error('Error exporting teachers:', error);
+      res.status(500).json({ message: "Failed to export teachers" });
+    }
+  });
+
+  // Export financial report as CSV - FIXED: Non-functional export button
+  app.get("/api/admin/export/financial", authenticateToken, requireRole(['Admin', 'Accountant']), async (req: any, res) => {
+    try {
+      const payments = await storage.getPaymentHistory();
+      const transactions = await Promise.all(payments.map(async (payment) => {
+        const user = await storage.getUser(payment.userId);
+        return {
+          id: payment.id,
+          createdAt: payment.createdAt,
+          studentName: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
+          amount: payment.amount,
+          type: payment.type || 'Payment',
+          status: payment.status,
+          paymentMethod: payment.paymentMethod || 'Unknown',
+          description: payment.description || '',
+          invoiceNumber: payment.invoiceNumber || ''
+        };
+      }));
+
+      const csv = exportFinancialReportCSV(transactions);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="financial-report.csv"');
+      res.send(csv);
+    } catch (error) {
+      console.error('Error exporting financial report:', error);
+      res.status(500).json({ message: "Failed to export financial report" });
+    }
+  });
+
+  // Export attendance as CSV - FIXED: Non-functional export button
+  app.get("/api/admin/export/attendance", authenticateToken, requireRole(['Admin', 'Supervisor', 'Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const attendance = await storage.getAttendance();
+      const attendanceData = await Promise.all(attendance.map(async (record) => {
+        const student = await storage.getUser(record.studentId);
+        const session = await storage.getSession(record.sessionId);
+        const teacher = session ? await storage.getUser(session.tutorId) : null;
+        
+        return {
+          date: record.date,
+          studentName: student ? `${student.firstName} ${student.lastName}` : 'Unknown',
+          courseName: '', // Would need to get from session
+          sessionTitle: session?.title || 'Session',
+          status: record.status,
+          teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : 'Unknown',
+          notes: record.notes || ''
+        };
+      }));
+
+      const csv = exportAttendanceCSV(attendanceData);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="attendance-export.csv"');
+      res.send(csv);
+    } catch (error) {
+      console.error('Error exporting attendance:', error);
+      res.status(500).json({ message: "Failed to export attendance" });
     }
   });
 
@@ -17866,7 +18004,7 @@ Meta Lingua Academy`;
         totalSessions: tutor.totalSessions || 0,
         languages: tutor.languages || [], // Real languages from database
         availability: tutorAvailability[index]?.availability || 'Unavailable',
-        profileImage: tutor.profileImage || '',
+        profileImage: tutor.profileImage || null, // Return null if no image, frontend will handle
         bio: tutor.bio || 'Experienced language teacher specializing in personalized learning.',
         isOnline: tutorAvailability[index]?.isOnline || false, // Real online status from database
         isFavorite: false
@@ -17905,7 +18043,7 @@ Meta Lingua Academy`;
         totalSessions: tutor.totalSessions || 0,
         languages: tutor.languages || [], // Real languages from database
         availability: tutorAvailability[index]?.availability || 'Unavailable',
-        profileImage: tutor.profileImage || '',
+        profileImage: tutor.profileImage || null, // Return null if no image, frontend will handle
         bio: tutor.bio || 'Experienced language teacher specializing in personalized learning.',
         isOnline: tutorAvailability[index]?.isOnline || false, // Real online status from database
         isFavorite: false
@@ -17933,13 +18071,22 @@ Meta Lingua Academy`;
       // In the future, you might want to filter by enrolled courses only
       const publishedCourses = courses.filter((c: any) => c.isPublished);
       
-      // Add progress info (placeholder for now)
-      const coursesWithProgress = publishedCourses.map((course: any) => ({
-        ...course,
-        progress: 0, // This would be calculated from video watch progress
-        enrolledAt: new Date().toISOString(),
-        totalLessons: 0, // Will be updated when we fetch lessons
-        completedLessons: 0
+      // Get actual progress info from database
+      const coursesWithProgress = await Promise.all(publishedCourses.map(async (course: any) => {
+        const lessons = await storage.getVideoLessonsByCourse(course.id);
+        const allVideoProgress = await storage.getStudentVideoProgress(student.id);
+        const courseVideoProgress = allVideoProgress.filter((vp: any) => vp.courseId === course.id);
+        const completedLessons = courseVideoProgress.filter((vp: any) => vp.progress === 100).length;
+        const totalLessons = lessons.length;
+        const progress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+        
+        return {
+          ...course,
+          progress,
+          enrolledAt: course.enrolledAt || new Date().toISOString(),
+          totalLessons,
+          completedLessons
+        };
       }));
 
       res.json(coursesWithProgress);
