@@ -335,6 +335,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads/teacher-photos', express.static('uploads/teacher-photos'));
   app.use('/uploads/student-photos', express.static('uploads/student-photos'));
   
+  // Serve test files from root directory
+  app.get('/test-callern-system.html', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'test-callern-system.html'));
+  });
+  
   // Simple in-memory store for downloaded models (in production, use database)
   let downloadedModels: string[] = [
     'llama3.2:1b',

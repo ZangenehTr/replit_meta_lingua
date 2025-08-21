@@ -2753,16 +2753,16 @@ export class DatabaseStorage implements IStorage {
     const [activeStudentsData] = await db
       .select({ count: sql`count(distinct ${enrollments.userId})::int` })
       .from(enrollments)
-      .leftJoin(courses, eq(enrollments.course_id, courses.id))
-      .where(eq(courses.instructor_id, teacherId));
+      .leftJoin(courses, eq(enrollments.courseId, courses.id))
+      .where(eq(courses.instructorId, teacherId));
 
     const [scheduledClassesData] = await db
       .select({ count: sql`count(*)::int` })
       .from(sessions)
-      .leftJoin(courses, eq(sessions.course_id, courses.id))
+      .leftJoin(courses, eq(sessions.courseId, courses.id))
       .where(
         and(
-          eq(courses.instructor_id, teacherId),
+          eq(courses.instructorId, teacherId),
           eq(sessions.status, 'scheduled')
         )
       );

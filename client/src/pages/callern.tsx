@@ -218,6 +218,13 @@ export default function CallernSystem() {
       role: 'student'
     });
 
+    // Join the room first (VideoCall won't rejoin for students)
+    newSocket.emit('join-room', {
+      roomId: roomId,
+      userId: user?.id,
+      role: 'student'
+    });
+
     // Emit call request to teacher
     newSocket.emit('call-teacher', {
       teacherId: teacher.id,
