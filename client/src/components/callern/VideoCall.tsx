@@ -303,9 +303,18 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
         // Ensure we have the correct remote socket ID
         if (from) {
           setRemoteSocketId(from);
+          // Update peer's target socket ID
+          if ((peerRef.current as any).updateTargetSocketId) {
+            (peerRef.current as any).updateTargetSocketId(from);
+          }
         }
         try {
-          peerRef.current.signal(answer);
+          // Only signal if peer is not already connected
+          if ((peerRef.current as any)._pc?.signalingState !== 'stable') {
+            peerRef.current.signal(answer);
+          } else {
+            console.log('Peer already in stable state, ignoring answer');
+          }
         } catch (error) {
           console.error('Error setting answer:', error);
         }
