@@ -1,0 +1,233 @@
+
+
+
+
+MetaLingua – Dr. Z - Live AI Teacher (Self-Hosted)
+
+Goal: Implement a plug-in module called realtime-teacher that runs entirely self-hosted and can be embedded in MetaLingua’s Lesson Player as a widget. The module provides real-time ASR → LLM (Ollama) → TTS with viseme timings → avatar lip-sync, and adapts teaching based on client-side webcam-derived attention/affect metrics (no raw video leaves the browser).
+
+Success Criteria (acceptance tests)
+	1.	End-to-end demo (local): Speak into mic → see partial captions → hear teacher start talking within ≤1.5s (p50) while avatar lips move in sync.
+	2.	Adaptivity: If the browser sends learner_state.affect.label="tired" or attn.gazeAwayPct>0.6, response style changes (shorter utterance, check question).
+	3.	Self-hosted only: All services run via docker-compose with no external APIs.
+	4.	Feature-flag ready: Frontend exports a <LiveTeacherPanel/> that can be turned on/off by LIVE_TEACHER_ENABLED.
+	5.	No video uploads: Only derived metrics JSON is transmitted; raw audio is only streamed for ASR; no camera frames leave the browser.
+
+⸻
+
+Tech Stack (must use)
+	•	LLM: Ollama (/api/chat, stream:true) with a fast instruct model (e.g., qwen2.5:7b or mistral:7b).
+	•	ASR: whisper.cpp or faster-whisper server with WebSocket streaming and VAD.
+	•	TTS: Self-hosted Piper (preferred) or XTTS; must emit phoneme/viseme timings (phoneme JSON or SSML marks).
+	•	Gateway: Python FastAPI (or Node/Express if simpler) to orchestrate streams and expose a single WS to the browser.
+	•	Frontend: Vanilla JS or React + Three.js avatar (GLB) with morph targets for visemes.
+	•	Auth: Signed short-lived session token (JWT) issued by a simple /session call (no coupling to production auth yet).
+	•	Build/Run: docker-compose up -d for all services.
+
+⸻
+
+Repository Layout
+
+metalingua-ai-teacher/
+├─ docker-compose.yml
+├─ gateway/
+│  ├─ server.py            # FastAPI app
+│  ├─ llm_ollama.py        # streaming chat wrapper
+│  ├─ asr_ws_client.py     # connects to ASR service
+│  ├─ tts_client.py        # connects to TTS service (streams audio + phonemes)
+│  ├─ ws_protocol.py       # schema + WS handlers
+│  ├─ persona_prompts/
+│  │   └─ teacher_system.txt
+│  └─ requirements.txt
+├─ asr/
+│  ├─ Dockerfile
+│  └─ server.py            # WS server for streaming ASR (whisper.cpp/faster-whisper)
+├─ tts/
+│  ├─ Dockerfile
+│  └─ server.py            # HTTP/WS TTS: input text chunks → output audio stream + phonemes
+├─ client/
+│  ├─ index.html
+│  ├─ js/
+│  │  ├─ main.js           # connects to gateway WS, plays audio, sends mic & learner_state
+│  │  ├─ avatar.js         # three.js GLB loader + viseme morphs
+│  │  └─ state.js          # MediaPipe Face Landmarker → derived metrics
+│  └─ assets/avatar.glb
+└─ docs/
+   ├─ API.md               # final WS schemas & REST endpoints
+   └─ RUNBOOK.md
+
+
+⸻
+
+Docker Compose (spec)
+	•	Services: ollama, asr, tts, gateway, optional coturn (not required for LAN/local).
+	•	Env vars:
+	•	OLLAMA_HOST=http://ollama:11434
+	•	ASR_WS_URL=ws://asr:3001/stream
+	•	TTS_URL=http://tts:3002
+	•	JWT_SECRET=dev_secret
+	•	LIVE_TEACHER_ENABLED=true
+	•	TEACHER_LANGS=fa-IR,en-US
+
+Deliver a working docker-compose.yml that pulls/starts Ollama and builds the other three images.
+
+⸻
+
+Gateway – API & WS Protocol
+
+1) Create session
+
+POST /api/session
+Body: { "userId": "u123", "lessonId": "l456", "locale": "fa-IR" }
+Resp: { "sessionId": "sid", "wsUrl": "ws://.../ws?token=...", "modelId": "qwen2.5:7b", "voice": "fa-IR" }
+
+	•	Issues short-lived JWT token.
+	•	Loads docs/persona_prompts/teacher_system.txt.
+
+2) WebSocket (single pipe)
+
+Client → Server message types
+
+type ClientMsg =
+  | { type: "mic_chunk"; data: ArrayBuffer; seq: number }         // Opus or PCM16
+  | { type: "learner_state"; data: LearnerState }                  // every 500 ms
+  | { type: "control"; action: "pause"|"resume"|"end"|"textOnly" }
+  | { type: "meta"; data: { level?: "A2-B2", lang?: "fa-IR" } }
+  | { type: "user_text"; text: string };                           // fallback typed input
+type LearnerState = {
+  attn?: { gazeAwayPct?: number; blinksPerMin?: number; headPitchDeg?: number };
+  affect?: { label?: "tired"|"bored"|"neutral"; valence?: number; arousal?: number };
+  speech?: { wpm?: number; pauseMs?: number };
+};
+
+Server → Client message types
+
+type ServerMsg =
+  | { type: "status"; phase: "idle"|"listening"|"thinking"|"speaking"|"check" }
+  | { type: "partial_transcript"; text: string }
+  | { type: "llm_token"; text: string }                // stream tokens
+  | { type: "tts_audio"; mime: "audio/ogg"|"audio/wav"; chunk: ArrayBuffer; seq: number }
+  | { type: "viseme"; t: number; id: string; weight: number }   // mouth cue
+  | { type: "caption"; text: string }                   // full caption line
+  | { type: "metrics"; data: { asrMs: number; ttfbMs: number } }
+  | { type: "error"; code: string; message: string };
+
+Flow:
+	•	Gateway streams mic → ASR; emits partial_transcript.
+	•	On endpointing or pause, gateway forwards transcript + latest learner_state to Ollama with stream:true; as tokens arrive, it pipes them to TTS; sends tts_audio and viseme to client as they’re produced.
+
+⸻
+
+LLM (Ollama) – Required behavior
+	•	Implement gateway/llm_ollama.py with:
+	•	chat_stream(history, system_prompt, tools=None) → yield tokens.
+	•	Inject learner_state into each user turn (compact JSON).
+	•	Keep rolling window short (≤ 30 turns) to minimize latency.
+	•	Provide teacher persona (below) as the default system prompt.
+
+persona_prompts/teacher_system.txt (ship this exact text)
+
+You are “MetaLingua Teacher,” an adaptive ELT instructor for Farsi/English learners.
+You will receive a JSON called learner_state with attention and affect hints.
+Rules:
+- Keep turns 1–3 sentences. Start speaking as soon as possible.
+- If learner_state.attn.gazeAwayPct > 0.6 or blinksPerMin > 30 → switch to a 20-sec micro-task (call-and-response or 2-item MCQ).
+- If learner_state.affect.label == "tired" → reduce complexity and speed; add a 10-sec stretch/breath cue, then continue.
+- Recap briefly when the user hesitates; ask a single check question after each explanation.
+- Align content to lesson objectives if provided; otherwise default to short pronunciation/vocab drills.
+- Keep tone warm and encouraging.
+
+
+⸻
+
+ASR Service (WS)
+	•	Endpoint: GET /stream (WebSocket)
+	•	Input: client sends binary audio chunks (mic_chunk).
+	•	Output: server sends {type:"partial", text} and {type:"final", text} messages.
+	•	Use VAD to cut segments; language auto-detect or honor locale.
+	•	Deliver a Python server (FastAPI/Starlette) that wraps faster-whisper or a small Node server that wraps whisper.cpp via FFI/CLI; pick whichever you can stream quickly.
+
+⸻
+
+TTS Service (HTTP/WS)
+	•	Endpoint: POST /synthesize
+	•	Body: { "text": "...", "voice": "fa-IR", "format": "ogg", "stream": true }
+	•	Response: chunked audio and side-channel for phoneme/viseme timings (choose one):
+	•	Emit X-Viseme: t=123,id=AA,weight=.7 headers per chunk, or
+	•	Provide GET /visemes?sid=... SSE that streams {t,id,weight}.
+	•	Must support at least fa-IR and en-US voices locally.
+
+⸻
+
+Frontend Widget (client/)
+
+Components
+	•	state.js
+	•	Use MediaPipe Face Landmarker (Web) to compute: gazeAwayPct, blinksPerMin, headPitchDeg, rough affect label (neutral/bored/tired).
+	•	Send every 500 ms via WS learner_state.
+	•	avatar.js
+	•	Load assets/avatar.glb (with viseme morph targets).
+	•	Listen for viseme events, map to morph influences (e.g., 10-viseme set), interpolate smoothly.
+	•	main.js
+	•	Call /api/session, connect ws.
+	•	Capture mic via getUserMedia, encode PCM16 or Opus, send mic_chunk.
+	•	Play tts_audio chunks with a MediaSource buffer.
+	•	Render captions from partial_transcript/caption.
+	•	Expose a single function mountLiveTeacherPanel(container, opts) so MetaLingua can mount it inside the Lesson Player.
+	•	index.html – a simple standalone demo page (for acceptance test 1).
+
+⸻
+
+Feature Flags & Settings
+	•	LIVE_TEACHER_ENABLED gates rendering.
+	•	LIVE_TEACHER_BETA_USERS (array of IDs) optional for selective rollout.
+	•	TEACHER_LANGS default ["fa-IR","en-US"].
+	•	Frontend offers Text-only fallback, Mic toggle, Consent modal.
+
+⸻
+
+Telemetry (no PII, no raw A/V)
+	•	Gateway logs per session: asr_latency_ms, ttfb_ms (first token to first audio), token/sec, audio underruns.
+	•	Client can send heartbeat every 10s with networkRttMs, audioJitterMs.
+	•	Export Prometheus at gateway:/metrics.
+
+⸻
+
+Testing Plan
+	1.	Unit tests:
+	•	WS protocol parsing, JWT auth, Ollama stream tokenizer, viseme mapper.
+	2.	Integration tests:
+	•	Synthetic audio → ASR → LLM → TTS → ensure tts_audio and ≥1 viseme emitted.
+	3.	Latency test script:
+	•	Measure mic first byte → first tts_audio (expect ≤1.5 s p50, ≤2.2 s p95 on 4070/4090).
+	4.	Privacy test:
+	•	Verify no video frames/bitmaps are ever posted; only learner_state JSON leaves the browser.
+
+⸻
+
+Milestones (deliverables)
+	•	M1 (Core loop): docker-compose up yields mic→ASR→Ollama→TTS; audio plays; captions visible.
+	•	M2 (Avatar + visemes): GLB avatar lip-syncs in real time using TTS phoneme/viseme timings.
+	•	M3 (Adaptivity): learner_state influences teacher behavior per rules.
+	•	M4 (SDK & Flags): Export mountLiveTeacherPanel, Feature flagging, simple auth/session.
+	•	M5 (Docs & Tests): API.md, RUNBOOK.md, tests, metrics.
+
+⸻
+
+Implementation Notes & Hints
+	•	Keep Ollama context small; stream tokens immediately to TTS (“incremental TTS”).
+	•	If Piper lacks phoneme timing in your build, generate visemes with Rhubarb on the server per chunk; buffer 300–500 ms.
+	•	For Opus encoding in the browser, you can start with PCM16 over WS (simpler) and optimize later.
+	•	Viseme set: 10–15 shapes (AIUEO + labials) is enough; interpolate with 80–120 ms smoothing.
+	•	Strictly no external API calls; any pretrained models must be pulled at build time or volume-mounted.
+
+⸻
+
+What to deliver
+	•	A working repo matching the layout above, with docker-compose.yml.
+	•	Clear run steps in docs/RUNBOOK.md.
+	•	Short screen capture (or GIF) showing end-to-end latency & avatar lip-sync.
+
+⸻
+
+When you’re done with M1, stop and show the running demo. Then proceed to M2–M5.
