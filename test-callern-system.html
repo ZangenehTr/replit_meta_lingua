@@ -306,7 +306,11 @@
             
             socket.on('call-accepted', (data) => {
                 log('call', '✓ Call accepted by teacher!', 'success');
-                setupWebRTC(true);
+                log('call', `Room: ${data.roomId}, Teacher: ${data.teacherId}`, 'info');
+                // Student should initiate WebRTC as the caller
+                if (currentUser.role.toLowerCase() === 'student') {
+                    setupWebRTC(true);
+                }
             });
             
             socket.on('call-rejected', (data) => {
@@ -315,8 +319,9 @@
             
             socket.on('user-joined', (data) => {
                 log('call', `User joined room: ${data.role} (Socket: ${data.socketId})`, 'info');
-                if (currentUser.role === 'student' && data.role === 'teacher') {
-                    setupWebRTC(true);
+                // Teacher should wait for offer from student
+                if (currentUser.role.toLowerCase() === 'teacher' && data.role === 'student') {
+                    log('call', 'Waiting for student to initiate WebRTC...', 'info');
                 }
             });
             

@@ -104,14 +104,18 @@ export class CallernWebSocketServer {
           currentRoom: roomId
         });
         
-        // Create room if it doesn't exist
+        // Create room if it doesn't exist - this is temporary room for join
         if (!this.activeRooms.has(roomId)) {
-          this.activeRooms.set(roomId, {
-            id: roomId,
-            type: 'video',
-            participants: new Set(),
-            createdAt: new Date()
-          });
+          // Create a temporary room structure
+          const tempRoom: any = {
+            roomId: roomId,
+            studentId: userId === 'student' ? userId : 0,
+            teacherId: userId === 'teacher' ? userId : 0,
+            packageId: 0,
+            startTime: new Date(),
+            participants: new Set()
+          };
+          this.activeRooms.set(roomId, tempRoom);
         }
         
         // Add to room participants
@@ -239,12 +243,27 @@ export class CallernWebSocketServer {
           console.log('Teacher socket found:', teacherSocket ? 'yes' : 'no');
           console.log('Teacher socket details:', teacherSocket);
           
+          // Clean up any stale calls for the teacher
+          if (teacherSocket && teacherSocket.currentCall) {
+            const oldRoom = this.activeRooms.get(teacherSocket.currentCall);
+            if (oldRoom && oldRoom.startTime) {
+              const minutesElapsed = Math.floor((Date.now() - oldRoom.startTime.getTime()) / 60000);
+              if (minutesElapsed > 30) {
+                // If the call is older than 30 minutes, clean it up
+                console.log(`Cleaning up stale call: ${teacherSocket.currentCall}`);
+                this.activeRooms.delete(teacherSocket.currentCall);
+                teacherSocket.currentCall = undefined;
+                teacherSocket.isAvailable = true;
+              }
+            }
+          }
+          
           if (!teacherSocket || !teacherSocket.isAvailable || teacherSocket.currentCall) {
             console.log('Teacher not available, finding another...');
             // Try to find another teacher
             assignedTeacherId = await this.findAvailableTeacher(language, assignedTeacherId);
             if (!assignedTeacherId) {
-              socket.emit('error', { message: 'Teacher is busy' });
+              socket.emit('error', { message: 'No teachers available' });
               return;
             }
           }
@@ -621,7 +640,7 @@ export class CallernWebSocketServer {
           firstName: student.firstName || 'Student',
           lastName: student.lastName || '',
           email: student.email || '',
-          profileImageUrl: student.profileImageUrl || null,
+          profileImageUrl: student.profileImage || null,
         };
       }
       
