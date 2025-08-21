@@ -871,6 +871,11 @@
             socket.on('call-request', (data) => {
                 log('call', `📞 Incoming call from student ${data.studentId}`, 'info');
                 roomId = data.roomId;
+                // Store student socket from the call request
+                if (data.from) {
+                    roomParticipants[data.from] = 'Student';
+                    log('webrtc', `Tracked student socket from call: ${data.from}`, 'info');
+                }
                 document.getElementById('accept-call-btn').disabled = false;
                 updateStatus('call-status', 'connecting', 'Incoming Call');
             });
@@ -878,10 +883,13 @@
             socket.on('call-accepted', (data) => {
                 log('call', '✓ Call accepted!', 'success');
                 roomId = data.roomId;
+                // Track the teacher who accepted the call
+                if (data.teacherSocketId) {
+                    roomParticipants[data.teacherSocketId] = 'Teacher';
+                    log('webrtc', `Tracked teacher socket: ${data.teacherSocketId}`, 'info');
+                }
                 updateStatus('call-status', 'connected', 'Call Active');
                 setupWebRTC(true);
-                // Initialize scoring overlay
-                initScoringOverlay();
             });
             
             socket.on('user-joined', (data) => {
@@ -900,13 +908,17 @@
             
             socket.on('offer', async (data) => {
                 log('webrtc', `Received offer from ${data.from}`, 'info');
-                roomParticipants[data.from] = 'peer';
+                // Track the sender and use them as the target for responses
+                roomParticipants[data.from] = 'Student';
+                targetSocketId = data.from;
                 await handleOffer(data);
             });
             
             socket.on('answer', async (data) => {
                 log('webrtc', `Received answer from ${data.from}`, 'info');
-                roomParticipants[data.from] = 'peer';
+                // Track the sender
+                roomParticipants[data.from] = 'Teacher';
+                targetSocketId = data.from;
                 await handleAnswer(data);
             });
             
@@ -1188,8 +1200,19 @@
                 });
                 
                 peer.on('signal', (signal) => {
-                    // Get the first participant socket as target
-                    const target = Object.keys(roomParticipants)[0];
+                    // Use targetSocketId if available, otherwise get first participant
+                    const target = targetSocketId || Object.keys(roomParticipants)[0];
+                    
+                    if (!target) {
+                        log('webrtc', '⚠️ No target socket found, waiting for participant...', 'warning');
+                        // Retry in 500ms
+                        setTimeout(() => {
+                            if (targetSocketId || Object.keys(roomParticipants).length > 0) {
+                                peer.signal(signal); // Re-trigger the signal
+                            }
+                        }, 500);
+                        return;
+                    }
                     
                     if (signal.type === 'offer') {
                         socket.emit('offer', {
@@ -1350,6 +1373,29 @@
         // Initialize
         log('system', 'CallerN Complete Test System Ready', 'success');
         log('system', 'Please login to start testing', 'info');
+        
+        // Test scoring overlay - can be called from console
+        window.testScoringOverlay = function() {
+            console.log('Testing scoring overlay...');
+            
+            // Show overlay
+            document.getElementById('scoring-overlay').classList.add('active');
+            document.getElementById('ttt-monitor').classList.add('active');
+            
+            // Initialize scoring
+            initScoringOverlay();
+            
+            // Simulate scoring updates
+            setTimeout(() => {
+                const testData = {
+                    student: { fluency: 75, pronunciation: 80, vocabulary: 70, grammar: 85, stars: 4 },
+                    teacher: { facilitator: 90, monitor: 85, feedback: 88, engagement: 92, stars: 4.5 }
+                };
+                updateScoring(testData);
+                updateTTT({ studentPercent: 45, teacherPercent: 55 });
+                updatePresence({ cameraOn: true, micOn: true });
+            }, 500);
+        }
     </script>
 </body>
 </html>
