@@ -84,6 +84,7 @@ interface StudentBriefing {
 export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinutesUpdate }: VideoCallProps) {
   const { t } = useTranslation(['callern']);
   const socket = useSocket();
+  const [hasJoinedRoom, setHasJoinedRoom] = useState(false);
   
   // Video refs
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -438,8 +439,13 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
     socket.on('scoring:update', handleScoringUpdate);
     socket.on('scoring:tl-warning', handleTLWarning);
     
-    // Join the room
-    socket.emit('join-room', { roomId, userId, role });
+    // For students, check if we're already in the room (joined from parent component)
+    // For teachers, always join the room
+    if (role === 'teacher' || !hasJoinedRoom) {
+      console.log(`${role} joining room:`, roomId);
+      socket.emit('join-room', { roomId, userId, role });
+      setHasJoinedRoom(true);
+    }
     
     return () => {
       socket.off('user-joined', handleUserJoined);
@@ -451,7 +457,7 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
       socket.off('scoring:update', handleScoringUpdate);
       socket.off('scoring:tl-warning', handleTLWarning);
     };
-  }, [socket, roomId, userId, role, createPeer, initializeMedia]);
+  }, [socket, roomId, userId, role, createPeer, initializeMedia, hasJoinedRoom]);
   
   // Initialize media on mount (for student waiting for teacher)
   useEffect(() => {
