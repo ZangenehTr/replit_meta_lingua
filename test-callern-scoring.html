@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CallerN Video Call Test with Scoring</title>
+    <title>CallerN Live Scoring Test</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -14,485 +18,754 @@
             padding: 20px;
         }
         
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
             text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
         .test-controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
             display: flex;
             gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
         }
         
-        .btn-student {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-        
-        .btn-teacher {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        }
-        
-        .btn-call {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        }
-        
-        .btn:hover:not(:disabled) {
+        .button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
         
-        .btn:disabled {
+        .button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
         
-        .videos-container {
+        .button.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .button.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .video-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .video-box {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
         
         .video-wrapper {
             position: relative;
-            width: 100%;
-            padding-bottom: 56.25%;
-            background: #1f2937;
-            border-radius: 12px;
+            background: #1e293b;
+            border-radius: 15px;
             overflow: hidden;
+            aspect-ratio: 16/9;
+        }
+        
+        .video-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 1.2em;
+        }
+        
+        /* Scoring Overlay Styles */
+        .scoring-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .scoring-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .scoring-title {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        
+        .scoring-toggle {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .scoring-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .score-item {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .score-label {
+            font-size: 0.8em;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        
+        .score-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #f1f5f9;
+        }
+        
+        .score-bar {
+            height: 4px;
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 2px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+        
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+        
+        .ttt-monitor {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .ttt-title {
+            font-size: 0.9em;
+            color: #94a3b8;
             margin-bottom: 10px;
         }
         
-        video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .ttt-bars {
+            display: flex;
+            gap: 10px;
         }
         
-        .video-label {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            z-index: 10;
+        .ttt-bar {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.5);
+            padding: 10px;
+            border-radius: 8px;
         }
         
-        .logs {
+        .ttt-percentage {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .ttt-bar.warning {
+            border: 1px solid rgba(251, 146, 60, 0.5);
+            background: rgba(251, 146, 60, 0.1);
+        }
+        
+        .ttt-bar.warning .ttt-percentage {
+            color: #fb923c;
+        }
+        
+        .presence-indicator {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .presence-badge {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9em;
+        }
+        
+        .presence-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+        
+        .presence-icon.off {
+            background: #ef4444;
+        }
+        
+        .log-container {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 20px;
+            border-radius: 15px;
             padding: 20px;
-            margin-top: 20px;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .logs-content {
-            background: #1f2937;
-            border-radius: 12px;
-            padding: 15px;
-            height: 200px;
+            max-height: 400px;
             overflow-y: auto;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 12px;
-            color: #10b981;
         }
         
-        .status {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            margin: 5px;
+        .log-entry {
+            padding: 8px;
+            margin: 5px 0;
+            border-left: 3px solid #3b82f6;
+            background: #f1f5f9;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
         }
         
-        .status.connected {
-            background: #10b981;
-            color: white;
+        .log-entry.success {
+            border-left-color: #10b981;
+            background: #dcfce7;
         }
         
-        .status.disconnected {
-            background: #ef4444;
-            color: white;
+        .log-entry.warning {
+            border-left-color: #f59e0b;
+            background: #fef3c7;
         }
         
-        .status.calling {
-            background: #f59e0b;
-            color: white;
+        .log-entry.error {
+            border-left-color: #ef4444;
+            background: #fee2e2;
         }
     </style>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
 </head>
 <body>
-    <div class="header">
-        <h1>🎥 CallerN Video Call Test</h1>
-        <div id="status-bar">
-            <span id="auth-status" class="status disconnected">Not Logged In</span>
-            <span id="socket-status" class="status disconnected">Socket Disconnected</span>
-            <span id="call-status" class="status disconnected">No Call</span>
+    <div class="container">
+        <h1>📊 CallerN Live Scoring System Test</h1>
+        
+        <div class="test-controls">
+            <button class="button" onclick="startCall()">📞 Start Call</button>
+            <button class="button" onclick="simulateScoring()">📈 Simulate Scoring</button>
+            <button class="button" onclick="testTTTWarning()">⚠️ Test TTT Warning</button>
+            <button class="button" onclick="togglePresence()">🎥 Toggle Camera/Mic</button>
+            <button class="button success" onclick="testHighScores()">🌟 High Performance</button>
+            <button class="button danger" onclick="endCall()">📵 End Call</button>
         </div>
-    </div>
-    
-    <div class="test-controls">
-        <button id="login-student" class="btn btn-student" onclick="loginAsStudent()">
-            Login as Student
-        </button>
-        <button id="login-teacher" class="btn btn-teacher" onclick="loginAsTeacher()">
-            Login as Teacher
-        </button>
-        <button id="start-call" class="btn btn-call" onclick="startCall()" disabled>
-            📞 Start Call
-        </button>
-        <button id="accept-call" class="btn btn-call" onclick="acceptCall()" disabled style="display:none;">
-            ✅ Accept Call
-        </button>
-    </div>
-    
-    <div class="videos-container">
-        <div class="video-box">
-            <h3>Local Video</h3>
+        
+        <div class="video-container">
+            <!-- Student Video with Scoring Overlay -->
             <div class="video-wrapper">
-                <div class="video-label">You</div>
-                <video id="localVideo" autoplay muted playsinline></video>
+                <div class="video-placeholder">Student Video Stream</div>
+                <div class="scoring-overlay" id="student-scoring">
+                    <div class="scoring-header">
+                        <span class="scoring-title">📚 Student Performance</span>
+                        <button class="scoring-toggle" onclick="toggleScoring('student')">Hide</button>
+                    </div>
+                    <div class="scoring-grid">
+                        <div class="score-item">
+                            <div class="score-label">Speaking Fluency</div>
+                            <div class="score-value" id="student-fluency">0</div>
+                            <div class="score-bar">
+                                <div class="score-fill" id="student-fluency-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-label">Pronunciation</div>
+                            <div class="score-value" id="student-pronunciation">0</div>
+                            <div class="score-bar">
+                                <div class="score-fill" id="student-pronunciation-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-label">Grammar</div>
+                            <div class="score-value" id="student-grammar">0</div>
+                            <div class="score-bar">
+                                <div class="score-fill" id="student-grammar-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-label">Vocabulary</div>
+                            <div class="score-value" id="student-vocabulary">0</div>
+                            <div class="score-bar">
+                                <div class="score-fill" id="student-vocabulary-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ttt-monitor">
+                        <div class="ttt-title">Talk Time Tracking (TTT)</div>
+                        <div class="ttt-bars">
+                            <div class="ttt-bar" id="student-ttt-bar">
+                                <div class="ttt-percentage" id="student-ttt">60%</div>
+                                <div class="score-label">Student Talk Time</div>
+                            </div>
+                            <div class="ttt-bar" id="teacher-ttt-bar">
+                                <div class="ttt-percentage" id="teacher-ttt">40%</div>
+                                <div class="score-label">Teacher Talk Time</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="presence-indicator">
+                    <div class="presence-badge">
+                        <div class="presence-icon" id="student-camera"></div>
+                        <span>Camera</span>
+                    </div>
+                    <div class="presence-badge">
+                        <div class="presence-icon" id="student-mic"></div>
+                        <span>Mic</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Teacher Video with Scoring Overlay -->
+            <div class="video-wrapper">
+                <div class="video-placeholder">Teacher Video Stream</div>
+                <div class="scoring-overlay" id="teacher-scoring">
+                    <div class="scoring-header">
+                        <span class="scoring-title">👨‍🏫 Teacher Performance</span>
+                        <button class="scoring-toggle" onclick="toggleScoring('teacher')">Hide</button>
+                    </div>
+                    <div class="scoring-grid">
+                        <div class="score-item">
+                            <div class="score-label">Facilitator</div>
+                            <div class="score-value" id="teacher-facilitator">0</div>
+                            <div class="score-bar">
+                                <div class="score-fill" id="teacher-facilitator-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-label">Engagement</div>
+                            <div class="score-value" id="teacher-engagement">0</div>
+                            <div class="score-bar">
+                                <div class="score-fill" id="teacher-engagement-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-label">Feedback</div>
+                            <div class="score-value" id="teacher-feedback">0</div>
+                            <div class="score-bar">
+                                <div class="score-fill" id="teacher-feedback-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-label">Assessment</div>
+                            <div class="score-value" id="teacher-assessment">0</div>
+                            <div class="score-bar">
+                                <div class="score-fill" id="teacher-assessment-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="presence-indicator">
+                    <div class="presence-badge">
+                        <div class="presence-icon" id="teacher-camera"></div>
+                        <span>Camera</span>
+                    </div>
+                    <div class="presence-badge">
+                        <div class="presence-icon" id="teacher-mic"></div>
+                        <span>Mic</span>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <div class="video-box">
-            <h3>Remote Video</h3>
-            <div class="video-wrapper">
-                <div class="video-label">Remote User</div>
-                <video id="remoteVideo" autoplay playsinline></video>
-            </div>
+        <div class="log-container" id="log">
+            <div class="log-entry">System ready. Click "Start Call" to begin testing.</div>
         </div>
     </div>
     
-    <div class="logs">
-        <h3>System Logs</h3>
-        <div class="logs-content" id="logs"></div>
-    </div>
-    
+    <script src="/socket.io/socket.io.js"></script>
     <script>
         let socket = null;
-        let peer = null;
-        let localStream = null;
-        let currentUser = null;
-        let roomId = null;
+        let isCallActive = false;
+        let scoringInterval = null;
+        const roomId = `test-scoring-${Date.now()}`;
         
-        function log(message) {
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = `[${timestamp}] ${message}\n`;
-            const logsEl = document.getElementById('logs');
-            logsEl.textContent += logEntry;
-            logsEl.scrollTop = logsEl.scrollHeight;
-            console.log(message);
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
         }
         
-        function updateStatus(elementId, status, text) {
-            const el = document.getElementById(elementId);
-            if (el) {
-                el.className = `status ${status}`;
-                el.textContent = text || el.textContent;
+        function startCall() {
+            if (isCallActive) {
+                addLog('Call already active', 'warning');
+                return;
             }
-        }
-        
-        async function loginAsStudent() {
-            log('Logging in as Student...');
-            const response = await fetch('http://localhost:5000/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: 'student1@test.com', password: 'Test@123' })
-            });
             
-            const data = await response.json();
-            if (data.user) {
-                currentUser = data.user;
-                localStorage.setItem('auth_token', data.auth_token);
-                log(`✓ Logged in as Student: ${currentUser.firstName}`);
-                updateStatus('auth-status', 'connected', `Student: ${currentUser.firstName}`);
-                connectSocket();
-                document.getElementById('start-call').disabled = false;
-            }
-        }
-        
-        async function loginAsTeacher() {
-            log('Logging in as Teacher...');
-            const response = await fetch('http://localhost:5000/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: 'teacher1@test.com', password: 'password' })
-            });
+            isCallActive = true;
+            addLog('Initializing WebSocket connection...', 'info');
             
-            const data = await response.json();
-            if (data.user) {
-                currentUser = data.user;
-                localStorage.setItem('auth_token', data.auth_token);
-                log(`✓ Logged in as Teacher: ${currentUser.firstName}`);
-                updateStatus('auth-status', 'connected', `Teacher: ${currentUser.firstName}`);
-                connectSocket();
-                document.getElementById('accept-call').style.display = 'inline-block';
-            }
-        }
-        
-        function connectSocket() {
-            if (socket) socket.disconnect();
-            
-            log('Connecting to WebSocket...');
-            updateStatus('socket-status', 'calling', 'Connecting...');
-            
-            socket = io('http://localhost:5000', {
+            // Connect socket
+            socket = io({
                 path: '/socket.io/',
-                transports: ['websocket']
+                transports: ['websocket', 'polling']
             });
             
             socket.on('connect', () => {
-                log('✓ WebSocket connected');
-                updateStatus('socket-status', 'connected', 'Socket Connected');
+                addLog(`Socket connected: ${socket.id}`, 'success');
                 
+                // Authenticate as student
                 socket.emit('authenticate', {
-                    userId: currentUser.id,
-                    role: currentUser.role
+                    userId: 8469,
+                    role: 'Student'
                 });
             });
             
-            socket.on('authenticated', (data) => {
-                log(`✓ Authenticated as ${data.role}`);
-            });
-            
-            socket.on('call-request', (data) => {
-                log(`📞 Incoming call from student ${data.studentId}`);
-                roomId = data.roomId;
-                document.getElementById('accept-call').disabled = false;
-                updateStatus('call-status', 'calling', 'Incoming Call');
-            });
-            
-            socket.on('call-accepted', async (data) => {
-                log('✓ Call accepted!');
-                roomId = data.roomId;
-                updateStatus('call-status', 'connected', 'Call Active');
+            socket.on('authenticated', () => {
+                addLog('Authentication successful', 'success');
                 
-                // Student initiates WebRTC
-                if (currentUser.role === 'Student') {
-                    await setupWebRTC(true);
-                }
+                // Join room
+                socket.emit('join-room', {
+                    roomId: roomId,
+                    userId: 8469,
+                    role: 'student'
+                });
+                
+                addLog(`Joined room: ${roomId}`, 'success');
+                
+                // Set up scoring event listeners
+                setupScoringListeners();
             });
             
-            socket.on('offer', async (data) => {
-                log('📡 Received WebRTC offer');
-                if (!peer) {
-                    await setupWebRTC(false);
-                }
-                if (peer && data.offer) {
-                    peer.signal(data.offer);
-                }
-            });
-            
-            socket.on('answer', async (data) => {
-                log('📡 Received WebRTC answer');
-                if (peer && data.answer) {
-                    peer.signal(data.answer);
-                }
-            });
-            
-            socket.on('ice-candidate', async (data) => {
-                log('🧊 Received ICE candidate');
-                if (peer && data.candidate) {
-                    peer.signal(data.candidate);
-                }
-            });
-            
-            socket.on('disconnect', () => {
-                log('✗ WebSocket disconnected');
-                updateStatus('socket-status', 'disconnected', 'Socket Disconnected');
+            socket.on('error', (error) => {
+                addLog(`Socket error: ${error.message || error}`, 'error');
             });
         }
         
-        async function startCall() {
-            if (!socket || currentUser.role !== 'Student') return;
+        function setupScoringListeners() {
+            // Listen for scoring updates
+            socket.on('scoring-update', (data) => {
+                addLog(`Scoring update received: Student ${data.scores.student}, Teacher ${data.scores.teacher}`, 'info');
+                updateScores(data.scores);
+            });
             
-            roomId = `test-room-${Date.now()}`;
-            log(`Starting call with room: ${roomId}`);
+            // Listen for TTT updates
+            socket.on('ttt-update', (data) => {
+                addLog(`TTT update: Student ${data.studentPercentage}%, Teacher ${data.teacherPercentage}%`, 'info');
+                updateTTT(data);
+            });
             
-            // Get user media first
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
-                    audio: true
-                });
-                document.getElementById('localVideo').srcObject = localStream;
-                log('✓ Got local media');
-            } catch (err) {
-                log(`✗ Media error: ${err.message}`);
+            // Listen for presence updates
+            socket.on('presence-update', (data) => {
+                addLog(`Presence update: Camera ${data.cameraOn ? 'ON' : 'OFF'}, Mic ${data.micOn ? 'ON' : 'OFF'}`, 'info');
+                updatePresence(data);
+            });
+            
+            // Listen for TL warnings
+            socket.on('tl-warning', (data) => {
+                addLog(`⚠️ Target Language Warning: ${data.message}`, 'warning');
+                showTLWarning(data.message);
+            });
+            
+            addLog('Scoring listeners configured', 'success');
+        }
+        
+        function simulateScoring() {
+            if (!isCallActive) {
+                addLog('Please start a call first', 'warning');
                 return;
             }
             
-            // Join room
-            socket.emit('join-room', {
-                roomId: roomId,
-                userId: currentUser.id,
-                role: 'student'
-            });
+            addLog('Starting scoring simulation...', 'info');
             
-            // Request call
-            socket.emit('call-teacher', {
-                teacherId: 73,
-                studentId: currentUser.id,
-                packageId: 1,
-                language: 'english',
-                roomId: roomId
-            });
+            let studentScores = {
+                fluency: 0,
+                pronunciation: 0,
+                grammar: 0,
+                vocabulary: 0
+            };
             
-            updateStatus('call-status', 'calling', 'Calling Teacher...');
+            let teacherScores = {
+                facilitator: 0,
+                engagement: 0,
+                feedback: 0,
+                assessment: 0
+            };
+            
+            scoringInterval = setInterval(() => {
+                // Increment scores randomly
+                studentScores.fluency = Math.min(100, studentScores.fluency + Math.random() * 10);
+                studentScores.pronunciation = Math.min(100, studentScores.pronunciation + Math.random() * 8);
+                studentScores.grammar = Math.min(100, studentScores.grammar + Math.random() * 7);
+                studentScores.vocabulary = Math.min(100, studentScores.vocabulary + Math.random() * 9);
+                
+                teacherScores.facilitator = Math.min(100, teacherScores.facilitator + Math.random() * 9);
+                teacherScores.engagement = Math.min(100, teacherScores.engagement + Math.random() * 10);
+                teacherScores.feedback = Math.min(100, teacherScores.feedback + Math.random() * 8);
+                teacherScores.assessment = Math.min(100, teacherScores.assessment + Math.random() * 7);
+                
+                // Update UI
+                updateStudentScores(studentScores);
+                updateTeacherScores(teacherScores);
+                
+                // Emit scoring update
+                if (socket && socket.connected) {
+                    socket.emit('scoring-update', {
+                        roomId: roomId,
+                        scores: {
+                            student: Math.round((studentScores.fluency + studentScores.pronunciation + studentScores.grammar + studentScores.vocabulary) / 4),
+                            teacher: Math.round((teacherScores.facilitator + teacherScores.engagement + teacherScores.feedback + teacherScores.assessment) / 4)
+                        }
+                    });
+                }
+                
+                // Stop when all scores reach 100
+                if (studentScores.fluency >= 100 && teacherScores.engagement >= 100) {
+                    clearInterval(scoringInterval);
+                    addLog('Scoring simulation complete', 'success');
+                }
+            }, 1000);
         }
         
-        async function acceptCall() {
-            if (!socket || !roomId || currentUser.role !== 'Teacher') return;
+        function updateStudentScores(scores) {
+            document.getElementById('student-fluency').textContent = Math.round(scores.fluency);
+            document.getElementById('student-fluency-bar').style.width = scores.fluency + '%';
             
-            log('Accepting call...');
+            document.getElementById('student-pronunciation').textContent = Math.round(scores.pronunciation);
+            document.getElementById('student-pronunciation-bar').style.width = scores.pronunciation + '%';
             
-            // Get user media first
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
-                    audio: true
-                });
-                document.getElementById('localVideo').srcObject = localStream;
-                log('✓ Got local media');
-            } catch (err) {
-                log(`✗ Media error: ${err.message}`);
+            document.getElementById('student-grammar').textContent = Math.round(scores.grammar);
+            document.getElementById('student-grammar-bar').style.width = scores.grammar + '%';
+            
+            document.getElementById('student-vocabulary').textContent = Math.round(scores.vocabulary);
+            document.getElementById('student-vocabulary-bar').style.width = scores.vocabulary + '%';
+        }
+        
+        function updateTeacherScores(scores) {
+            document.getElementById('teacher-facilitator').textContent = Math.round(scores.facilitator);
+            document.getElementById('teacher-facilitator-bar').style.width = scores.facilitator + '%';
+            
+            document.getElementById('teacher-engagement').textContent = Math.round(scores.engagement);
+            document.getElementById('teacher-engagement-bar').style.width = scores.engagement + '%';
+            
+            document.getElementById('teacher-feedback').textContent = Math.round(scores.feedback);
+            document.getElementById('teacher-feedback-bar').style.width = scores.feedback + '%';
+            
+            document.getElementById('teacher-assessment').textContent = Math.round(scores.assessment);
+            document.getElementById('teacher-assessment-bar').style.width = scores.assessment + '%';
+        }
+        
+        function updateTTT(data) {
+            document.getElementById('student-ttt').textContent = data.studentPercentage + '%';
+            document.getElementById('teacher-ttt').textContent = data.teacherPercentage + '%';
+            
+            // Add warning class if imbalanced
+            const studentBar = document.getElementById('student-ttt-bar');
+            const teacherBar = document.getElementById('teacher-ttt-bar');
+            
+            if (data.studentPercentage < 40) {
+                studentBar.classList.add('warning');
+                addLog('⚠️ Student talk time below 40%', 'warning');
+            } else {
+                studentBar.classList.remove('warning');
+            }
+            
+            if (data.teacherPercentage > 60) {
+                teacherBar.classList.add('warning');
+                addLog('⚠️ Teacher talk time above 60%', 'warning');
+            } else {
+                teacherBar.classList.remove('warning');
+            }
+        }
+        
+        function testTTTWarning() {
+            if (!isCallActive) {
+                addLog('Please start a call first', 'warning');
                 return;
             }
             
-            // Join room
-            socket.emit('join-room', {
-                roomId: roomId,
-                userId: currentUser.id,
-                role: 'teacher'
-            });
+            // Simulate imbalanced talk time
+            const imbalancedData = {
+                studentPercentage: 25,
+                teacherPercentage: 75
+            };
             
-            // Accept call
-            socket.emit('accept-call', {
-                roomId: roomId,
-                teacherId: currentUser.id,
-                studentId: 8469
-            });
+            updateTTT(imbalancedData);
             
-            updateStatus('call-status', 'connected', 'Call Active');
-            
-            // Teacher waits for offer from student
-            log('Waiting for student to initiate WebRTC...');
-        }
-        
-        async function setupWebRTC(isInitiator) {
-            log(`Setting up WebRTC as ${isInitiator ? 'initiator' : 'receiver'}`);
-            
-            if (!localStream) {
-                try {
-                    localStream = await navigator.mediaDevices.getUserMedia({
-                        video: true,
-                        audio: true
-                    });
-                    document.getElementById('localVideo').srcObject = localStream;
-                    log('✓ Got local media');
-                } catch (err) {
-                    log(`✗ Media error: ${err.message}`);
-                    return;
-                }
+            if (socket && socket.connected) {
+                socket.emit('ttt-update', {
+                    roomId: roomId,
+                    ...imbalancedData
+                });
             }
             
-            // Create peer connection
-            peer = new SimplePeer({
-                initiator: isInitiator,
-                stream: localStream,
-                trickle: true,
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' },
-                        { urls: 'stun:stun2.l.google.com:19302' }
-                    ]
-                }
-            });
-            
-            peer.on('signal', (signal) => {
-                log(`📤 Sending ${signal.type || 'ICE candidate'}`);
-                
-                if (signal.type === 'offer') {
-                    socket.emit('offer', {
-                        roomId: roomId,
-                        offer: signal
-                    });
-                } else if (signal.type === 'answer') {
-                    socket.emit('answer', {
-                        roomId: roomId,
-                        answer: signal
-                    });
-                } else if (signal.candidate) {
-                    socket.emit('ice-candidate', {
-                        roomId: roomId,
-                        candidate: signal
-                    });
-                }
-            });
-            
-            peer.on('stream', (remoteStream) => {
-                log('🎉 Remote stream received!');
-                document.getElementById('remoteVideo').srcObject = remoteStream;
-            });
-            
-            peer.on('connect', () => {
-                log('✓ Peer connection established!');
-            });
-            
-            peer.on('error', (err) => {
-                log(`✗ Peer error: ${err}`);
-            });
-            
-            peer.on('close', () => {
-                log('Peer connection closed');
-            });
+            addLog('Testing TTT warning with imbalanced talk time', 'warning');
         }
         
-        // Initialize
-        log('CallerN Test System Ready');
-        log('1. Login as Student in one browser tab');
-        log('2. Login as Teacher in another tab (or incognito)');
-        log('3. Student clicks "Start Call"');
-        log('4. Teacher clicks "Accept Call"');
+        function togglePresence() {
+            const cameraIcons = [
+                document.getElementById('student-camera'),
+                document.getElementById('teacher-camera')
+            ];
+            const micIcons = [
+                document.getElementById('student-mic'),
+                document.getElementById('teacher-mic')
+            ];
+            
+            cameraIcons.forEach(icon => {
+                icon.classList.toggle('off');
+            });
+            
+            micIcons.forEach(icon => {
+                icon.classList.toggle('off');
+            });
+            
+            const cameraOn = !cameraIcons[0].classList.contains('off');
+            const micOn = !micIcons[0].classList.contains('off');
+            
+            if (socket && socket.connected) {
+                socket.emit('presence-update', {
+                    roomId: roomId,
+                    cameraOn: cameraOn,
+                    micOn: micOn
+                });
+            }
+            
+            addLog(`Presence toggled: Camera ${cameraOn ? 'ON' : 'OFF'}, Mic ${micOn ? 'ON' : 'OFF'}`, 'info');
+        }
+        
+        function updatePresence(data) {
+            const studentCamera = document.getElementById('student-camera');
+            const studentMic = document.getElementById('student-mic');
+            
+            if (data.cameraOn) {
+                studentCamera.classList.remove('off');
+            } else {
+                studentCamera.classList.add('off');
+            }
+            
+            if (data.micOn) {
+                studentMic.classList.remove('off');
+            } else {
+                studentMic.classList.add('off');
+            }
+        }
+        
+        function testHighScores() {
+            if (!isCallActive) {
+                addLog('Please start a call first', 'warning');
+                return;
+            }
+            
+            addLog('Testing high performance scores...', 'success');
+            
+            const highScores = {
+                student: {
+                    fluency: 95,
+                    pronunciation: 92,
+                    grammar: 88,
+                    vocabulary: 90
+                },
+                teacher: {
+                    facilitator: 93,
+                    engagement: 96,
+                    feedback: 91,
+                    assessment: 89
+                }
+            };
+            
+            updateStudentScores(highScores.student);
+            updateTeacherScores(highScores.teacher);
+            
+            // Update TTT to ideal balance
+            updateTTT({
+                studentPercentage: 60,
+                teacherPercentage: 40
+            });
+            
+            addLog('🌟 Excellent performance! Student: 91/100, Teacher: 92/100', 'success');
+        }
+        
+        function toggleScoring(role) {
+            const overlay = document.getElementById(`${role}-scoring`);
+            const button = overlay.querySelector('.scoring-toggle');
+            
+            if (overlay.style.display === 'none') {
+                overlay.style.display = 'block';
+                button.textContent = 'Hide';
+            } else {
+                overlay.style.display = 'none';
+                button.textContent = 'Show';
+            }
+        }
+        
+        function showTLWarning(message) {
+            // Flash the TTT monitor to show warning
+            const tttMonitor = document.querySelector('.ttt-monitor');
+            tttMonitor.style.borderColor = '#fb923c';
+            tttMonitor.style.backgroundColor = 'rgba(251, 146, 60, 0.1)';
+            
+            setTimeout(() => {
+                tttMonitor.style.borderColor = '';
+                tttMonitor.style.backgroundColor = '';
+            }, 3000);
+        }
+        
+        function endCall() {
+            if (!isCallActive) {
+                addLog('No active call to end', 'warning');
+                return;
+            }
+            
+            isCallActive = false;
+            
+            if (scoringInterval) {
+                clearInterval(scoringInterval);
+            }
+            
+            if (socket) {
+                socket.emit('end-call', { roomId: roomId });
+                socket.disconnect();
+                socket = null;
+            }
+            
+            addLog('Call ended', 'error');
+            
+            // Reset scores
+            updateStudentScores({ fluency: 0, pronunciation: 0, grammar: 0, vocabulary: 0 });
+            updateTeacherScores({ facilitator: 0, engagement: 0, feedback: 0, assessment: 0 });
+            updateTTT({ studentPercentage: 60, teacherPercentage: 40 });
+        }
     </script>
 </body>
 </html>
