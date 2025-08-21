@@ -225,8 +225,8 @@
                 
                 const data = await response.json();
                 
-                if (response.ok) {
-                    authToken = data.token;
+                if (response.ok && data.auth_token) {
+                    authToken = data.auth_token;  // Changed from data.token to data.auth_token
                     currentUser = data.user;
                     localStorage.setItem('auth_token', authToken);
                     log('auth', `✓ Login successful! User: ${currentUser.email} (${currentUser.role})`, 'success');
