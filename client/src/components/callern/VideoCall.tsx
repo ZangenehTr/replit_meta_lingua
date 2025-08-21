@@ -26,6 +26,7 @@ interface VideoCallProps {
   studentId?: number; // For teachers to know which student they're calling
   onCallEnd: () => void;
   onMinutesUpdate?: (minutes: number) => void;
+  socket?: any; // Allow passing socket from parent for students
 }
 
 interface StudentBriefing {
@@ -81,10 +82,13 @@ interface StudentBriefing {
   };
 }
 
-export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinutesUpdate }: VideoCallProps) {
+export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinutesUpdate, socket: propsSocket }: VideoCallProps) {
   const { t } = useTranslation(['callern']);
-  const socket = useSocket();
-  const [hasJoinedRoom, setHasJoinedRoom] = useState(false);
+  const defaultSocket = useSocket();
+  // For students, use the socket passed from parent (if available), otherwise use default
+  const socket = role === 'student' && propsSocket ? propsSocket : defaultSocket;
+  // Students already joined room in parent component, teachers need to join
+  const [hasJoinedRoom, setHasJoinedRoom] = useState(role === 'student');
   
   // Video refs
   const localVideoRef = useRef<HTMLVideoElement>(null);
