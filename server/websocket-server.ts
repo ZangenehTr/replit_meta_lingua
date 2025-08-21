@@ -347,6 +347,35 @@ export class CallernWebSocketServer {
           teacher.currentCall = undefined;
         }
       });
+      
+      socket.on('call-rejected', async (data) => {
+        const { roomId, studentId, reason } = data;
+        
+        const room = this.activeRooms.get(roomId);
+        if (!room) return;
+
+        // Notify student
+        const studentSocketId = this.studentSockets.get(studentId);
+        if (studentSocketId) {
+          this.io.to(studentSocketId).emit('call-rejected', {
+            roomId,
+            reason,
+          });
+        }
+
+        // Clean up room
+        this.activeRooms.delete(roomId);
+        
+        // Update call status
+        await this.updateCallStatus(roomId, 'rejected');
+        
+        // Make teacher available again
+        const teacher = this.teacherSockets.get(room.teacherId);
+        if (teacher) {
+          teacher.isAvailable = true;
+          teacher.currentCall = undefined;
+        }
+      });
 
       // Handle WebRTC signaling
       socket.on('signal', (data) => {
@@ -679,8 +708,21 @@ export class CallernWebSocketServer {
       const finalDuration = duration || Math.floor((Date.now() - room.startTime.getTime()) / 1000);
       const minutes = Math.ceil(finalDuration / 60);
 
+      // Parse packageId if it's a string
+      let studentPackageId: number | null = null;
+      if (room.packageId) {
+        if (typeof room.packageId === 'number') {
+          studentPackageId = room.packageId;
+        } else if (typeof room.packageId === 'string') {
+          const parsed = parseInt(room.packageId, 10);
+          if (!isNaN(parsed)) {
+            studentPackageId = parsed;
+          }
+        }
+      }
+
       // Update student package usage
-      if (minutes > 0 && typeof room.packageId === 'number') {
+      if (minutes > 0 && studentPackageId) {
         await db
           .update(studentCallernPackages)
           .set({
@@ -688,7 +730,7 @@ export class CallernWebSocketServer {
             remainingMinutes: studentCallernPackages.remainingMinutes - minutes,
           })
           .where(
-            eq(studentCallernPackages.id, room.packageId) // packageId is actually the student package ID
+            eq(studentCallernPackages.id, studentPackageId) // packageId is actually the student package ID
           );
       }
 
