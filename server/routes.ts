@@ -5085,7 +5085,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { title, description, language, level, price, thumbnail, category, skillFocus, instructorId } = req.body;
       
       // Get the existing course
-      const existingCourse = await storage.getCourseById(courseId);
+      const existingCourse = await storage.getCourse(courseId);
       if (!existingCourse) {
         return res.status(404).json({ message: "Course not found" });
       }
@@ -6134,6 +6134,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
               : null;
             
+            // Get teacher's actual specializations and languages
+            const teacherProfile = await storage.getUserProfile(teacher.id);
+            const languages = teacherProfile?.languages || [];
+            const specializations = teacherProfile?.specializations || [];
+            
             return {
               id: teacher.id,
               name: `${teacher.firstName} ${teacher.lastName}`,
@@ -6141,9 +6146,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               lastName: teacher.lastName,
               email: teacher.email,
               role: teacher.role,
-              specializations: ['Persian', 'English', 'Arabic'], // TODO: Get from teacher profile
+              specializations: specializations.length > 0 ? specializations : languages, // Use languages if no specializations
               availability: [],
-              rating: avgRating || 4.0 // Default to 4.0 if no reviews
+              rating: avgRating || 0 // Use 0 if no reviews (no fake data)
             };
           })
       );
@@ -6641,7 +6646,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           courses: userCourses.map(c => c.title),
           enrollmentDate: user.createdAt,
           lastActivity: await getLastActivityTime(user.id),
-          avatar: user.avatar || '/api/placeholder/40/40'
+          avatar: user.avatar || null, // Return null if no avatar, frontend will show initials
         });
       }
 
