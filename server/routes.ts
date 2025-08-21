@@ -18356,7 +18356,6 @@ Meta Lingua Academy`;
   
   // Initialize Callern WebSocket server
   const callernWS = new CallernWebSocketServer(httpServer);
-  console.log('Callern WebSocket server initialized');
   
   return httpServer;
 }

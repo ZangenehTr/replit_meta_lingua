@@ -247,10 +247,17 @@
                 return;
             }
             
+            // Check if socket.io is loaded
+            if (typeof io === 'undefined') {
+                log('socket', '✗ Socket.io library not loaded. Please refresh the page.', 'error');
+                return;
+            }
+            
             log('socket', 'Connecting WebSocket...', 'info');
             
-            socket = io('/', {
-                auth: { token: authToken },
+            // Connect without auth in options - will authenticate after connection
+            socket = io(window.location.origin, {
+                path: '/socket.io/',
                 transports: ['websocket', 'polling']
             });
             
@@ -260,16 +267,26 @@
                 document.getElementById('connect-btn').disabled = true;
                 document.getElementById('disconnect-btn').disabled = false;
                 
-                // Authenticate
+                // Authenticate after connection
+                log('socket', `Authenticating as ${currentUser.role} (ID: ${currentUser.id})...`, 'info');
                 socket.emit('authenticate', {
                     userId: currentUser.id,
                     role: currentUser.role
                 });
-                
-                if (currentUser.role === 'student') {
-                    document.getElementById('start-call-btn').disabled = false;
-                } else if (currentUser.role === 'teacher') {
-                    document.getElementById('accept-call-btn').disabled = false;
+            });
+            
+            // Listen for authentication confirmation
+            socket.on('authenticated', (data) => {
+                if (data.success) {
+                    log('socket', `✓ Authenticated successfully as ${data.role}`, 'success');
+                    
+                    if (currentUser.role === 'Student') {
+                        document.getElementById('start-call-btn').disabled = false;
+                    } else if (currentUser.role === 'Teacher') {
+                        document.getElementById('accept-call-btn').disabled = false;
+                    }
+                } else {
+                    log('socket', '✗ Authentication failed', 'error');
                 }
             });
             

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Socket Test</title>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <h1>Simple Socket.io Test</h1>
+    <button onclick="testConnection()">Test Socket Connection</button>
+    <div id="log"></div>
+    
+    <script>
+        function log(msg) {
+            document.getElementById('log').innerHTML += `<p>${new Date().toLocaleTimeString()}: ${msg}</p>`;
+        }
+        
+        function testConnection() {
+            log('Creating socket connection...');
+            
+            const socket = io('http://localhost:5000', {
+                transports: ['websocket', 'polling'],
+                path: '/socket.io/'
+            });
+            
+            socket.on('connect', () => {
+                log(`✅ Connected! Socket ID: ${socket.id}`);
+            });
+            
+            socket.on('connect_error', (error) => {
+                log(`❌ Connection error: ${error.message}`);
+            });
+            
+            socket.on('disconnect', () => {
+                log('⚠️ Disconnected');
+            });
+        }
+    </script>
+</body>
+</html>
