@@ -1185,6 +1185,8 @@
                 
                 peer.on('connect', () => {
                     log('webrtc', '✓ Peer connection established', 'success');
+                    // Show scoring overlay when peer connects
+                    initScoringOverlay();
                 });
                 
                 peer.on('error', (err) => {
@@ -1247,6 +1249,14 @@
             
             roomId = null;
             updateStatus('call-status', 'disconnected', 'No Active Call');
+            
+            // Hide scoring overlay
+            const overlay = document.getElementById('scoring-overlay');
+            const tttMonitor = document.getElementById('ttt-monitor');
+            const tlWarning = document.getElementById('tl-warning');
+            if (overlay) overlay.classList.remove('active');
+            if (tttMonitor) tttMonitor.classList.remove('active');
+            if (tlWarning) tlWarning.classList.remove('active');
             
             // Reset buttons
             document.getElementById('end-call-btn').disabled = true;
