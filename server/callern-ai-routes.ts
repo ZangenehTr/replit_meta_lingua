@@ -1,29 +1,52 @@
 import { Express } from "express";
 import { authenticateToken } from "./auth-middleware";
 import { ollamaService } from "./services/ollama-service";
+import { openAIService } from "./services/openai-service";
 
-// Initialize Ollama service (using local instance or user's server)
+// Initialize AI services with OpenAI as fallback
+
+// Helper function to get available AI service
+async function getAvailableAIService() {
+  // First try Ollama
+  const ollamaHealthy = await ollamaService.healthCheck();
+  if (ollamaHealthy) {
+    return { service: ollamaService, type: 'ollama' };
+  }
+  
+  // Fallback to OpenAI
+  const openAIHealthy = await openAIService.healthCheck();
+  if (openAIHealthy) {
+    return { service: openAIService, type: 'openai' };
+  }
+  
+  return null;
+}
 
 export function registerCallernAIRoutes(app: Express) {
   // Test endpoint (no auth required for testing)
   app.post("/api/callern/ai/test", async (req, res) => {
     try {
-      const isHealthy = await ollamaService.healthCheck();
+      const aiServiceInfo = await getAvailableAIService();
       
-      if (!isHealthy) {
+      if (!aiServiceInfo) {
         return res.status(503).json({ 
-          error: "AI service not configured", 
-          message: "Ollama service is not available. Please ensure Ollama is running." 
+          error: "No AI service available", 
+          message: "Neither Ollama nor OpenAI service is available. Please check configuration." 
         });
       }
       
-      const models = await ollamaService.listModels();
+      const models = await aiServiceInfo.service.listModels();
       
       res.json({ 
-        status: "Ollama connected successfully",
+        status: `${aiServiceInfo.type === 'ollama' ? 'Ollama' : 'OpenAI'} connected successfully`,
+        serviceType: aiServiceInfo.type,
         models: models,
-        defaultModel: process.env.OLLAMA_MODEL || 'llama2',
-        host: process.env.OLLAMA_HOST || 'http://localhost:11434',
+        defaultModel: aiServiceInfo.type === 'ollama' ? 
+          (process.env.OLLAMA_MODEL || 'llama2') : 
+          'gpt-4o',
+        host: aiServiceInfo.type === 'ollama' ? 
+          (process.env.OLLAMA_HOST || 'http://localhost:11434') : 
+          'OpenAI API',
         timestamp: new Date().toISOString()
       });
     } catch (error) {
@@ -37,12 +60,18 @@ export function registerCallernAIRoutes(app: Express) {
     try {
       const { text, targetLanguage = "fa" } = req.body;
       
-      const result = await ollamaService.translateText(text, targetLanguage);
+      const aiServiceInfo = await getAvailableAIService();
+      if (!aiServiceInfo) {
+        return res.status(503).json({ error: "No AI service available" });
+      }
+      
+      const result = await aiServiceInfo.service.translateText(text, targetLanguage);
       
       res.json({
         translation: result.translatedText,
         sourceLanguage: result.sourceLanguage,
-        confidence: result.confidence
+        confidence: result.confidence,
+        serviceUsed: aiServiceInfo.type
       });
     } catch (error: any) {
       console.error("Translation error:", error);
@@ -55,7 +84,12 @@ export function registerCallernAIRoutes(app: Express) {
     try {
       const { context, level = "B1" } = req.body;
       
-      const suggestions = await ollamaService.generateWordSuggestions(
+      const aiServiceInfo = await getAvailableAIService();
+      if (!aiServiceInfo) {
+        return res.status(503).json({ error: "No AI service available" });
+      }
+      
+      const suggestions = await aiServiceInfo.service.generateWordSuggestions(
         context || "general conversation",
         "English",
         level
@@ -66,7 +100,8 @@ export function registerCallernAIRoutes(app: Express) {
           word: s.word,
           definition: s.translation,
           example: s.usage
-        }))
+        })),
+        serviceUsed: aiServiceInfo.type
       });
     } catch (error: any) {
       console.error("Word helper error:", error);
@@ -79,11 +114,17 @@ export function registerCallernAIRoutes(app: Express) {
     try {
       const { text } = req.body;
       
-      const result = await ollamaService.correctGrammar(text, "English");
+      const aiServiceInfo = await getAvailableAIService();
+      if (!aiServiceInfo) {
+        return res.status(503).json({ error: "No AI service available" });
+      }
+      
+      const result = await aiServiceInfo.service.correctGrammar(text, "English");
       
       res.json({
         corrected: result.corrected,
-        explanation: result.explanation
+        explanation: result.explanation,
+        serviceUsed: aiServiceInfo.type
       });
     } catch (error: any) {
       console.error("Grammar check error:", error);
@@ -96,12 +137,18 @@ export function registerCallernAIRoutes(app: Express) {
     try {
       const { word } = req.body;
       
-      const result = await ollamaService.generatePronunciationGuide(word, "English");
+      const aiServiceInfo = await getAvailableAIService();
+      if (!aiServiceInfo) {
+        return res.status(503).json({ error: "No AI service available" });
+      }
+      
+      const result = await aiServiceInfo.service.generatePronunciationGuide(word, "English");
       
       res.json({
         pronunciation: result.phonetic,
         syllables: result.syllables,
-        tips: result.tips
+        tips: result.tips,
+        serviceUsed: aiServiceInfo.type
       });
     } catch (error: any) {
       console.error("Pronunciation error:", error);
@@ -118,14 +165,20 @@ export function registerCallernAIRoutes(app: Express) {
         return res.status(400).json({ error: "Text is required" });
       }
 
-      const result = await ollamaService.translateText(text, targetLanguage);
+      const aiServiceInfo = await getAvailableAIService();
+      if (!aiServiceInfo) {
+        return res.status(503).json({ error: "No AI service available" });
+      }
+
+      const result = await aiServiceInfo.service.translateText(text, targetLanguage);
       
       res.json({
         translation: result.translatedText,
         originalText: text,
         targetLanguage,
         sourceLanguage: result.sourceLanguage,
-        confidence: result.confidence
+        confidence: result.confidence,
+        serviceUsed: aiServiceInfo.type
       });
     } catch (error) {
       console.error("Translation error:", error);
@@ -138,7 +191,24 @@ export function registerCallernAIRoutes(app: Express) {
     try {
       const { context, level = 'intermediate' } = req.body;
 
-      const suggestions = await ollamaService.generateWordSuggestions(
+      const aiServiceInfo = await getAvailableAIService();
+      if (!aiServiceInfo) {
+        // Return fallback suggestions if no service available
+        return res.json({
+          suggestions: [
+            "Hello - سلام",
+            "Thank you - متشکرم",
+            "Please - لطفا",
+            "Excuse me - ببخشید",
+            "Goodbye - خداحافظ"
+          ],
+          context,
+          level,
+          serviceUsed: 'fallback'
+        });
+      }
+
+      const suggestions = await aiServiceInfo.service.generateWordSuggestions(
         context || "general conversation",
         "English",
         level
@@ -147,7 +217,8 @@ export function registerCallernAIRoutes(app: Express) {
       res.json({
         suggestions: suggestions.map(s => `${s.word} - ${s.translation}`),
         context,
-        level
+        level,
+        serviceUsed: aiServiceInfo.type
       });
     } catch (error) {
       console.error("Suggestion error:", error);
@@ -158,7 +229,8 @@ export function registerCallernAIRoutes(app: Express) {
           "Please - لطفا",
           "Excuse me - ببخشید",
           "Goodbye - خداحافظ"
-        ]
+        ],
+        serviceUsed: 'fallback'
       });
     }
   });
@@ -172,7 +244,12 @@ export function registerCallernAIRoutes(app: Express) {
         return res.status(400).json({ error: "Text is required" });
       }
 
-      const result = await ollamaService.correctGrammar(text, "English");
+      const aiServiceInfo = await getAvailableAIService();
+      if (!aiServiceInfo) {
+        return res.status(503).json({ error: "No AI service available" });
+      }
+
+      const result = await aiServiceInfo.service.correctGrammar(text, "English");
       
       res.json({
         corrected: result.corrected,
@@ -194,13 +271,19 @@ export function registerCallernAIRoutes(app: Express) {
         return res.status(400).json({ error: "Word is required" });
       }
 
-      const result = await ollamaService.generatePronunciationGuide(word, "English");
+      const aiServiceInfo = await getAvailableAIService();
+      if (!aiServiceInfo) {
+        return res.status(503).json({ error: "No AI service available" });
+      }
+
+      const result = await aiServiceInfo.service.generatePronunciationGuide(word, "English");
       
       res.json({
         word,
         ipa: result.phonetic,
         breakdown: result.syllables.join("-"),
-        tips: result.tips.join(". ")
+        tips: result.tips.join(". "),
+        serviceUsed: aiServiceInfo.type
       });
     } catch (error) {
       console.error("Pronunciation error:", error);
