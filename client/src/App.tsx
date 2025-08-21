@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/hooks/use-branding";
 import { LanguageProvider } from "@/hooks/useLanguage";
+import { SocketProvider } from "@/hooks/use-socket";
 import { useTranslation } from "react-i18next";
 import "./i18n"; // Initialize i18n
 import { AppLayout } from "@/components/layout/app-layout";
@@ -745,9 +746,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <RTLLayout>
-          <AppWithBranding />
-        </RTLLayout>
+        <SocketProvider>
+          <RTLLayout>
+            <AppWithBranding />
+          </RTLLayout>
+        </SocketProvider>
       </LanguageProvider>
     </QueryClientProvider>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import SimplePeer from 'simple-peer';
-import { useSocket } from '@/hooks/useSocket';
+import { useSocket } from '@/hooks/use-socket';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -27,7 +27,6 @@ interface VideoCallProps {
   remoteSocketId?: string; // The remote peer's socket ID (for students, this is the teacher's socket ID)
   onCallEnd: () => void;
   onMinutesUpdate?: (minutes: number) => void;
-  socket?: any; // Allow passing socket from parent for students
 }
 
 interface StudentBriefing {
@@ -83,11 +82,9 @@ interface StudentBriefing {
   };
 }
 
-export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: propsRemoteSocketId, onCallEnd, onMinutesUpdate, socket: propsSocket }: VideoCallProps) {
+export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: propsRemoteSocketId, onCallEnd, onMinutesUpdate }: VideoCallProps) {
   const { t } = useTranslation(['callern']);
-  const defaultSocket = useSocket();
-  // For students, use the socket passed from parent (if available), otherwise use default
-  const socket = role === 'student' && propsSocket ? propsSocket : defaultSocket;
+  const { socket } = useSocket();
   // Students already joined room in parent component, teachers need to join
   const [hasJoinedRoom, setHasJoinedRoom] = useState(role === 'student');
   

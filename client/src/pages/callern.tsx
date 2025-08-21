@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { VideoCall } from "@/components/callern/video-call";
 import { useAuth } from "@/hooks/use-auth";
+import { useSocket } from "@/hooks/use-socket";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/mobile/MobileLayout";
 import { MobileCard } from "@/components/mobile/MobileCard";
-import io, { Socket } from 'socket.io-client';
 import {
   Card,
   CardContent,
@@ -105,6 +105,7 @@ interface AvailableTeacher {
 export default function CallernSystem() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { socket, isConnected } = useSocket();
   const { t } = useTranslation(['callern', 'common']);
   const [selectedPackage, setSelectedPackage] = useState<CallernPackage | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
@@ -113,7 +114,6 @@ export default function CallernSystem() {
   const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
   const [activeCallConfig, setActiveCallConfig] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'packages' | 'teachers' | 'history'>('teachers');
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [waitingForTeacher, setWaitingForTeacher] = useState(false);
 
   // Fetch available Callern packages
@@ -184,6 +184,16 @@ export default function CallernSystem() {
   };
 
   const handleStartCall = (teacher: AvailableTeacher) => {
+    // Check if socket is connected
+    if (!socket || !isConnected) {
+      toast({
+        title: t('callern:connectionError'),
+        description: t('callern:notConnectedToServer'),
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Check if student has active package with minutes
     const activePackage = studentPackages.find(
       (pkg: StudentCallernPackage) => pkg.status === 'active' && pkg.remainingMinutes > 0
@@ -203,30 +213,17 @@ export default function CallernSystem() {
       .reduce((acc, byte) => acc + byte.toString(36), '');
     const roomId = `callern-${Date.now()}-${randomStr}`;
 
-    // Connect to WebSocket and emit call request
-    const newSocket = io({
-      path: '/socket.io/',
-      transports: ['websocket', 'polling']
-    });
-
-    setSocket(newSocket);
     setWaitingForTeacher(true);
 
-    // Authenticate as student
-    newSocket.emit('authenticate', {
-      userId: user?.id,
-      role: 'student'
-    });
-
     // Join the room first (VideoCall won't rejoin for students)
-    newSocket.emit('join-room', {
+    socket.emit('join-room', {
       roomId: roomId,
       userId: user?.id,
       role: 'student'
     });
 
     // Emit call request to teacher
-    newSocket.emit('call-teacher', {
+    socket.emit('call-teacher', {
       teacherId: teacher.id,
       studentId: user?.id,
       packageId: activePackage.id, // Use student package ID, not the package definition ID
@@ -234,61 +231,20 @@ export default function CallernSystem() {
       roomId: roomId
     });
 
-    // Listen for teacher's response
-    newSocket.on('call-accepted', (data) => {
-      console.log('Call accepted by teacher:', data);
-      setWaitingForTeacher(false);
-
-      // Set up call configuration with proper props for VideoCall component
-      setActiveCallConfig({
-        roomId,
-        userId: user?.id || 0,
-        role: 'student' as const,
-        remoteSocketId: data.teacherSocketId, // Pass teacher's socket ID to VideoCall
-        onMinutesUpdate: (minutes: number) => {
-          console.log(`Call duration: ${minutes} minutes`);
-          // Update package minutes here
-          queryClient.invalidateQueries({ queryKey: ["/api/student/my-callern-packages"] });
-        },
-        // Store additional data for reference
-        teacherId: teacher.id,
-        packageId: activePackage.id,
-        teacherName: `${teacher.firstName} ${teacher.lastName}`,
-      });
-
-      setSelectedTeacher(teacher);
-      setIsInCall(true);
-
-      toast({
-        title: t('callern:callAccepted'),
-        description: t('callern:connectingToTeacher'),
-      });
-    });
-
-    newSocket.on('call-rejected', (data) => {
-      console.log('Call rejected by teacher:', data);
-      setWaitingForTeacher(false);
-      newSocket.disconnect();
-      setSocket(null);
-
-      toast({
-        title: t('callern:callRejected'),
-        description: data.reason || t('callern:teacherUnavailable'),
-        variant: "destructive",
-      });
-    });
-
-    newSocket.on('error', (data) => {
-      console.error('Call error:', data);
-      setWaitingForTeacher(false);
-      newSocket.disconnect();
-      setSocket(null);
-
-      toast({
-        title: t('callern:callError'),
-        description: data.message || t('callern:connectionFailed'),
-        variant: "destructive",
-      });
+    // Store call information for when the call is accepted
+    setSelectedTeacher(teacher);
+    setActiveCallConfig({
+      roomId,
+      userId: user?.id || 0,
+      role: 'student' as const,
+      teacherId: teacher.id,
+      packageId: activePackage.id,
+      teacherName: `${teacher.firstName} ${teacher.lastName}`,
+      onMinutesUpdate: (minutes: number) => {
+        console.log(`Call duration: ${minutes} minutes`);
+        // Update package minutes here
+        queryClient.invalidateQueries({ queryKey: ["/api/student/my-callern-packages"] });
+      },
     });
 
     // Show waiting dialog
@@ -298,17 +254,72 @@ export default function CallernSystem() {
     });
   };
 
+  // Set up socket event listeners
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleCallAccepted = (data: any) => {
+      console.log('Call accepted by teacher:', data);
+      setWaitingForTeacher(false);
+
+      // Update the call config with the teacher's socket ID
+      setActiveCallConfig((prev: any) => ({
+        ...prev,
+        remoteSocketId: data.teacherSocketId, // Pass teacher's socket ID to VideoCall
+      }));
+
+      setIsInCall(true);
+
+      toast({
+        title: t('callern:callAccepted'),
+        description: t('callern:connectingToTeacher'),
+      });
+    };
+
+    const handleCallRejected = (data: any) => {
+      console.log('Call rejected:', data);
+      setWaitingForTeacher(false);
+      setActiveCallConfig(null);
+      setSelectedTeacher(null);
+
+      toast({
+        title: t('callern:callRejected'),
+        description: data.reason || t('callern:teacherUnavailable'),
+        variant: "destructive",
+      });
+    };
+
+    const handleCallError = (data: any) => {
+      console.error('Call error:', data);
+      setWaitingForTeacher(false);
+      setActiveCallConfig(null);
+      setSelectedTeacher(null);
+
+      toast({
+        title: t('callern:callError'),
+        description: data.message || t('callern:connectionFailed'),
+        variant: "destructive",
+      });
+    };
+
+    // Register event listeners
+    socket.on('call-accepted', handleCallAccepted);
+    socket.on('call-rejected', handleCallRejected);
+    socket.on('error', handleCallError);
+
+    // Cleanup function
+    return () => {
+      socket.off('call-accepted', handleCallAccepted);
+      socket.off('call-rejected', handleCallRejected);
+      socket.off('error', handleCallError);
+    };
+  }, [socket, t, toast]);
+
   const handleEndCall = () => {
     setIsInCall(false);
     setSelectedTeacher(null);
     setActiveCallConfig(null);
     setWaitingForTeacher(false);
-    
-    // Disconnect socket if connected
-    if (socket) {
-      socket.disconnect();
-      setSocket(null);
-    }
     
     // Refresh packages and history
     queryClient.invalidateQueries({ queryKey: ["/api/student/my-callern-packages"] });
