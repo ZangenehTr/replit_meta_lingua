@@ -343,6 +343,7 @@ export default function CallernSystem() {
       <VideoCall
         {...activeCallConfig}
         onCallEnd={handleEndCall}
+        socket={socket}
       />
     );
   }
