@@ -74,6 +74,261 @@
             50% { opacity: 0.5; }
         }
         
+        /* Glassmorphic Scoring Overlay */
+        .scoring-overlay {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .scoring-overlay.active {
+            display: block;
+        }
+        
+        .score-ribbon {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .score-ribbon:hover {
+            background: rgba(0, 0, 0, 0.3);
+            transform: scale(1.02);
+        }
+        
+        .score-categories {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        
+        .score-categories::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .score-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            min-width: 80px;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        .score-badge.expanded {
+            min-width: 120px;
+        }
+        
+        .score-badge.fluency { color: #60a5fa; }
+        .score-badge.pronunciation { color: #34d399; }
+        .score-badge.vocabulary { color: #a78bfa; }
+        .score-badge.grammar { color: #fbbf24; }
+        .score-badge.facilitator { color: #60a5fa; }
+        .score-badge.monitor { color: #34d399; }
+        .score-badge.feedback { color: #a78bfa; }
+        .score-badge.engagement { color: #fbbf24; }
+        
+        .score-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .score-value {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        
+        .score-delta {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 4px;
+            border-radius: 4px;
+            animation: scorePulse 1s ease-in-out;
+        }
+        
+        .score-delta.positive {
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .score-delta.negative {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        @keyframes scorePulse {
+            0% { opacity: 0; transform: translateY(5px); }
+            50% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 1; }
+        }
+        
+        .stars-container {
+            display: flex;
+            gap: 3px;
+            margin-left: 12px;
+        }
+        
+        .star {
+            width: 14px;
+            height: 14px;
+            color: #fbbf24;
+            transition: all 0.3s ease;
+        }
+        
+        .star svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .star.filled svg {
+            fill: #fbbf24;
+        }
+        
+        .star.empty svg {
+            fill: none;
+            stroke: #6b7280;
+            stroke-width: 1.5;
+        }
+        
+        .presence-indicators {
+            display: flex;
+            gap: 8px;
+            margin-left: 12px;
+        }
+        
+        .presence-indicator {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+        
+        .presence-indicator.camera-on {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #10b981;
+        }
+        
+        .presence-indicator.camera-off {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #ef4444;
+        }
+        
+        .presence-indicator.mic-on {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #10b981;
+        }
+        
+        .presence-indicator.mic-off {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #ef4444;
+        }
+        
+        .tl-warning {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            background: rgba(239, 68, 68, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            pointer-events: none;
+            animation: slideDown 0.3s ease-out;
+            z-index: 1001;
+            display: none;
+        }
+        
+        .tl-warning.active {
+            display: block;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
+        .ttt-monitor {
+            position: fixed;
+            bottom: 100px;
+            right: 10px;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            pointer-events: none;
+            display: none;
+        }
+        
+        .ttt-monitor.active {
+            display: block;
+        }
+        
+        .ttt-bar {
+            display: flex;
+            width: 200px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .ttt-student {
+            background: linear-gradient(90deg, #60a5fa, #3b82f6);
+            transition: width 0.3s ease;
+        }
+        
+        .ttt-teacher {
+            background: linear-gradient(90deg, #34d399, #10b981);
+            transition: width 0.3s ease;
+        }
+        
+        .ttt-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 4px;
+        }
+        
         .main-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -270,6 +525,51 @@
     <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
 </head>
 <body>
+    <!-- Glassmorphic Scoring Overlay -->
+    <div class="scoring-overlay" id="scoring-overlay">
+        <div class="score-ribbon">
+            <div class="score-categories" id="score-categories">
+                <!-- Score badges will be added dynamically -->
+            </div>
+            <div class="stars-container" id="stars-container">
+                <!-- Stars will be added dynamically -->
+            </div>
+            <div class="presence-indicators">
+                <div class="presence-indicator camera-off" id="presence-camera">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="7" width="14" height="10" rx="2"></rect>
+                        <polyline points="17 7 22 4 22 20 17 17"></polyline>
+                    </svg>
+                </div>
+                <div class="presence-indicator mic-off" id="presence-mic">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- TL Warning -->
+    <div class="tl-warning" id="tl-warning">
+        ⚠️ <span id="tl-warning-text">Please use more target language!</span>
+    </div>
+    
+    <!-- TTT Monitor -->
+    <div class="ttt-monitor" id="ttt-monitor">
+        <div class="ttt-label">Talk Time (TTT)</div>
+        <div class="ttt-bar">
+            <div class="ttt-student" id="ttt-student" style="width: 50%"></div>
+            <div class="ttt-teacher" id="ttt-teacher" style="width: 50%"></div>
+        </div>
+        <div class="ttt-percentages">
+            <span>Student: <span id="ttt-student-percent">50%</span></span>
+            <span>Teacher: <span id="ttt-teacher-percent">50%</span></span>
+        </div>
+    </div>
+    
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -386,6 +686,56 @@
         let videoEnabled = true;
         let audioEnabled = true;
         let roomParticipants = {}; // Track participants in the room
+        
+        // Scoring state
+        let currentScores = {
+            student: {
+                speakingFluency: 0,
+                pronunciation: 0,
+                vocabulary: 0,
+                grammar: 0,
+                interaction: 0,
+                targetLangUse: 0,
+                presence: 0,
+                total: 0,
+                stars: 0
+            },
+            teacher: {
+                facilitator: 0,
+                monitor: 0,
+                feedbackProvider: 0,
+                resourceModel: 0,
+                assessor: 0,
+                engagement: 0,
+                targetLangUse: 0,
+                presence: 0,
+                total: 0,
+                stars: 0
+            }
+        };
+        let tttBalance = { student: 50, teacher: 50 };
+        
+        // Scoring variables
+        let scoringData = {
+            student: {
+                fluency: 0,
+                pronunciation: 0,
+                vocabulary: 0,
+                grammar: 0,
+                total: 0,
+                stars: 0
+            },
+            teacher: {
+                facilitator: 0,
+                monitor: 0,
+                feedback: 0,
+                engagement: 0,
+                total: 0,
+                stars: 0
+            }
+        };
+        let tttData = { studentPercent: 50, teacherPercent: 50 };
+        let scoreDeltas = {};
         
         // Logging function
         function log(category, message, type = 'info') {
@@ -529,6 +879,8 @@
                 roomId = data.roomId;
                 updateStatus('call-status', 'connected', 'Call Active');
                 setupWebRTC(true);
+                // Initialize scoring overlay
+                initScoringOverlay();
             });
             
             socket.on('user-joined', (data) => {
@@ -552,6 +904,27 @@
                 await handleIceCandidate(data);
             });
             
+            // Scoring event handlers
+            socket.on('scoring-update', (data) => {
+                log('scoring', `Score update: ${JSON.stringify(data)}`, 'info');
+                updateScoring(data);
+            });
+            
+            socket.on('presence-update', (data) => {
+                log('scoring', `Presence update: Camera=${data.cameraOn}, Mic=${data.micOn}`, 'info');
+                updatePresenceIndicators(data.cameraOn, data.micOn);
+            });
+            
+            socket.on('ttt-update', (data) => {
+                log('scoring', `TTT update: Student=${data.studentPercent}%, Teacher=${data.teacherPercent}%`, 'info');
+                updateTTTMonitor(data.studentPercent, data.teacherPercent);
+            });
+            
+            socket.on('tl-warning', (data) => {
+                log('scoring', `TL Warning: ${data.message}`, 'warning');
+                showTLWarning(data.message);
+            });
+            
             socket.on('disconnect', () => {
                 log('socket', '✗ WebSocket disconnected', 'warning');
                 updateStatus('socket-status', 'disconnected', 'Disconnected');
@@ -560,6 +933,138 @@
             socket.on('error', (error) => {
                 log('socket', `✗ Error: ${error.message || error}`, 'error');
             });
+        }
+        
+        // Scoring UI functions
+        function initScoringOverlay() {
+            const overlay = document.getElementById('scoring-overlay');
+            if (overlay) {
+                overlay.classList.add('active');
+                updateScoreCategories();
+                updateStarRating();
+                document.getElementById('ttt-monitor').classList.add('active');
+            }
+        }
+        
+        function updateScoreCategories() {
+            const categoriesEl = document.getElementById('score-categories');
+            if (!categoriesEl) return;
+            
+            const role = currentUser?.role === 'Teacher' ? 'teacher' : 'student';
+            const scores = scoringData[role];
+            
+            const categories = role === 'student' ? [
+                { key: 'fluency', label: 'Fluency', value: scores.fluency },
+                { key: 'pronunciation', label: 'Pronunciation', value: scores.pronunciation },
+                { key: 'vocabulary', label: 'Vocabulary', value: scores.vocabulary },
+                { key: 'grammar', label: 'Grammar', value: scores.grammar }
+            ] : [
+                { key: 'facilitator', label: 'Facilitator', value: scores.facilitator },
+                { key: 'monitor', label: 'Monitor', value: scores.monitor },
+                { key: 'feedback', label: 'Feedback', value: scores.feedback },
+                { key: 'engagement', label: 'Engagement', value: scores.engagement }
+            ];
+            
+            categoriesEl.innerHTML = categories.map(cat => `
+                <div class="score-badge ${cat.key}">
+                    <span class="score-label">${cat.label}</span>
+                    <span class="score-value">${cat.value}</span>
+                    ${scoreDeltas[cat.key] ? `<span class="score-delta ${scoreDeltas[cat.key] > 0 ? 'positive' : 'negative'}">${scoreDeltas[cat.key] > 0 ? '+' : ''}${scoreDeltas[cat.key]}</span>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        function updateStarRating() {
+            const starsEl = document.getElementById('stars-container');
+            if (!starsEl) return;
+            
+            const role = currentUser?.role === 'Teacher' ? 'teacher' : 'student';
+            const stars = scoringData[role].stars || 0;
+            const fullStars = Math.floor(stars);
+            const hasHalfStar = stars % 1 >= 0.5;
+            
+            let starsHTML = '';
+            for (let i = 0; i < 5; i++) {
+                if (i < fullStars) {
+                    starsHTML += '<span class="star filled"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>';
+                } else if (i === fullStars && hasHalfStar) {
+                    starsHTML += '<span class="star filled"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>';
+                } else {
+                    starsHTML += '<span class="star empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>';
+                }
+            }
+            starsEl.innerHTML = starsHTML;
+        }
+        
+        function updateScoring(data) {
+            const role = currentUser?.role === 'Teacher' ? 'teacher' : 'student';
+            
+            // Update score deltas for animation
+            Object.keys(data[role] || {}).forEach(key => {
+                if (key !== 'total' && key !== 'stars') {
+                    const oldValue = scoringData[role][key] || 0;
+                    const newValue = data[role][key] || 0;
+                    if (newValue !== oldValue) {
+                        scoreDeltas[key] = newValue - oldValue;
+                        setTimeout(() => {
+                            delete scoreDeltas[key];
+                            updateScoreCategories();
+                        }, 3000);
+                    }
+                }
+            });
+            
+            // Update scoring data
+            Object.assign(scoringData[role], data[role]);
+            
+            // Update UI
+            updateScoreCategories();
+            updateStarRating();
+        }
+        
+        function updatePresenceIndicators(cameraOn, micOn) {
+            const cameraEl = document.getElementById('presence-camera');
+            const micEl = document.getElementById('presence-mic');
+            
+            if (cameraEl) {
+                cameraEl.className = `presence-indicator ${cameraOn ? 'camera-on' : 'camera-off'}`;
+            }
+            if (micEl) {
+                micEl.className = `presence-indicator ${micOn ? 'mic-on' : 'mic-off'}`;
+            }
+        }
+        
+        function updateTTTMonitor(studentPercent, teacherPercent) {
+            const studentEl = document.getElementById('ttt-student');
+            const teacherEl = document.getElementById('ttt-teacher');
+            const studentPercentEl = document.getElementById('ttt-student-percent');
+            const teacherPercentEl = document.getElementById('ttt-teacher-percent');
+            
+            if (studentEl) studentEl.style.width = `${studentPercent}%`;
+            if (teacherEl) teacherEl.style.width = `${teacherPercent}%`;
+            if (studentPercentEl) studentPercentEl.textContent = `${studentPercent}%`;
+            if (teacherPercentEl) teacherPercentEl.textContent = `${teacherPercent}%`;
+            
+            // Check TTT thresholds (40/60 rule)
+            if (currentUser?.role === 'Teacher' && studentPercent < 40) {
+                showTLWarning('Encourage student to speak more (TTT < 40%)');
+            } else if (currentUser?.role === 'Teacher' && teacherPercent > 60) {
+                showTLWarning('You are speaking too much (TTT > 60%)');
+            }
+        }
+        
+        function showTLWarning(message) {
+            const warningEl = document.getElementById('tl-warning');
+            const warningTextEl = document.getElementById('tl-warning-text');
+            
+            if (warningEl && warningTextEl) {
+                warningTextEl.textContent = message;
+                warningEl.classList.add('active');
+                
+                setTimeout(() => {
+                    warningEl.classList.remove('active');
+                }, 3000);
+            }
         }
         
         // Start call (Student)
