@@ -3184,3 +3184,134 @@ export type TeacherObservationResponse = typeof teacherObservationResponses.$inf
 export type InsertTeacherObservationResponse = z.infer<typeof insertTeacherObservationResponseSchema>;
 export type ScheduledObservation = typeof scheduledObservations.$inferSelect;
 export type InsertScheduledObservation = z.infer<typeof insertScheduledObservationSchema>;
+
+// ===== CALLERN LIVE SCORING SYSTEM =====
+
+// Track camera/mic presence for scoring
+export const callernPresence = pgTable("callern_presence", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lesson_id").references(() => callernCallHistory.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  cameraOn: boolean("camera_on").default(false),
+  micOn: boolean("mic_on").default(false),
+  timeline: jsonb("timeline").$type<Array<{
+    timestamp: number;
+    cameraOn: boolean;
+    micOn: boolean;
+  }>>().default([]),
+  totalCameraOnSeconds: integer("total_camera_on_seconds").default(0),
+  totalMicOnSeconds: integer("total_mic_on_seconds").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Speech segments from ASR processing
+export const callernSpeechSegments = pgTable("callern_speech_segments", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lesson_id").references(() => callernCallHistory.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  startedAt: timestamp("started_at").notNull(),
+  endedAt: timestamp("ended_at").notNull(),
+  transcript: text("transcript"),
+  langCode: text("lang_code"), // detected language
+  wpm: decimal("wpm", { precision: 5, scale: 2 }), // words per minute
+  pauses: integer("pauses").default(0),
+  selfRepairs: integer("self_repairs").default(0),
+  asrConfidence: decimal("asr_confidence", { precision: 3, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Student scoring for each lesson
+export const callernScoresStudent = pgTable("callern_scores_student", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lesson_id").references(() => callernCallHistory.id).notNull(),
+  studentId: integer("student_id").references(() => users.id).notNull(),
+  // Category scores (0-100)
+  speakingFluency: decimal("speaking_fluency", { precision: 5, scale: 2 }).default("0"),
+  pronunciation: decimal("pronunciation", { precision: 5, scale: 2 }).default("0"),
+  vocabulary: decimal("vocabulary", { precision: 5, scale: 2 }).default("0"),
+  grammar: decimal("grammar", { precision: 5, scale: 2 }).default("0"),
+  interaction: decimal("interaction", { precision: 5, scale: 2 }).default("0"),
+  targetLangUse: decimal("target_lang_use", { precision: 5, scale: 2 }).default("0"),
+  presence: decimal("presence", { precision: 5, scale: 2 }).default("0"),
+  // Totals
+  total: decimal("total", { precision: 5, scale: 2 }).default("0"),
+  stars: decimal("stars", { precision: 2, scale: 1 }).default("0"), // 0-5 with half stars
+  // Metadata
+  scoreBreakdown: jsonb("score_breakdown"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Teacher scoring for each lesson
+export const callernScoresTeacher = pgTable("callern_scores_teacher", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lesson_id").references(() => callernCallHistory.id).notNull(),
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  // Role scores (0-100)
+  facilitator: decimal("facilitator", { precision: 5, scale: 2 }).default("0"),
+  monitor: decimal("monitor", { precision: 5, scale: 2 }).default("0"),
+  feedbackProvider: decimal("feedback_provider", { precision: 5, scale: 2 }).default("0"),
+  resourceModel: decimal("resource_model", { precision: 5, scale: 2 }).default("0"),
+  assessor: decimal("assessor", { precision: 5, scale: 2 }).default("0"),
+  engagement: decimal("engagement", { precision: 5, scale: 2 }).default("0"),
+  targetLangUse: decimal("target_lang_use", { precision: 5, scale: 2 }).default("0"),
+  presence: decimal("presence", { precision: 5, scale: 2 }).default("0"),
+  // Totals
+  total: decimal("total", { precision: 5, scale: 2 }).default("0"),
+  stars: decimal("stars", { precision: 2, scale: 1 }).default("0"), // 0-5 with half stars
+  // Metadata
+  scoreBreakdown: jsonb("score_breakdown"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Real-time scoring events
+export const callernScoringEvents = pgTable("callern_scoring_events", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lesson_id").references(() => callernCallHistory.id).notNull(),
+  kind: text("kind").notNull(), // 'tl_violation', 'presence_warning', 'score_update', 'milestone'
+  payload: jsonb("payload").notNull(),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Insert schemas for scoring
+export const insertCallernPresenceSchema = createInsertSchema(callernPresence).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCallernSpeechSegmentSchema = createInsertSchema(callernSpeechSegments).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertCallernScoresStudentSchema = createInsertSchema(callernScoresStudent).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCallernScoresTeacherSchema = createInsertSchema(callernScoresTeacher).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCallernScoringEventSchema = createInsertSchema(callernScoringEvents).omit({
+  id: true,
+  createdAt: true
+});
+
+// Scoring types
+export type CallernPresence = typeof callernPresence.$inferSelect;
+export type InsertCallernPresence = z.infer<typeof insertCallernPresenceSchema>;
+export type CallernSpeechSegment = typeof callernSpeechSegments.$inferSelect;
+export type InsertCallernSpeechSegment = z.infer<typeof insertCallernSpeechSegmentSchema>;
+export type CallernScoresStudent = typeof callernScoresStudent.$inferSelect;
+export type InsertCallernScoresStudent = z.infer<typeof insertCallernScoresStudentSchema>;
+export type CallernScoresTeacher = typeof callernScoresTeacher.$inferSelect;
+export type InsertCallernScoresTeacher = z.infer<typeof insertCallernScoresTeacherSchema>;
+export type CallernScoringEvent = typeof callernScoringEvents.$inferSelect;
+export type InsertCallernScoringEvent = z.infer<typeof insertCallernScoringEventSchema>;

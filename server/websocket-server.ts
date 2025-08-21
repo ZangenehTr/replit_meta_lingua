@@ -380,6 +380,95 @@ export class CallernWebSocketServer {
         await this.endCall(roomId, reason, duration);
       });
 
+      // ===== SCORING EVENTS =====
+      
+      // Handle presence updates (camera/mic status)
+      socket.on('scoring:presence', (data) => {
+        const { roomId, userId, cameraOn, micOn } = data;
+        
+        // Broadcast presence update to room
+        socket.to(roomId).emit('scoring:presence-update', {
+          userId,
+          cameraOn,
+          micOn
+        });
+        
+        // Calculate presence score (100 if both on, 50 if one on, 0 if both off)
+        const presenceScore = (cameraOn && micOn) ? 100 : (cameraOn || micOn) ? 50 : 0;
+        
+        // Emit score update
+        socket.to(roomId).emit('scoring:update', {
+          role: this.userSockets.get(socket.id)?.role || 'student',
+          scores: {
+            presence: presenceScore
+          }
+        });
+        
+        console.log(`Presence update for user ${userId}: camera=${cameraOn}, mic=${micOn}`);
+      });
+      
+      // Handle speech segment for scoring
+      socket.on('scoring:speech-segment', (data) => {
+        const { roomId, userId, transcript, langCode, duration } = data;
+        
+        // Check for target language usage
+        const expectedLang = 'en'; // TODO: Get from user profile
+        if (langCode !== expectedLang) {
+          socket.to(roomId).emit('scoring:tl-warning', {
+            userId,
+            message: `Please use ${expectedLang === 'en' ? 'English' : 'Target Language'}`
+          });
+        }
+        
+        // Calculate basic scores (simplified for now)
+        const wpm = (transcript.split(' ').length / duration) * 60;
+        const fluencyScore = Math.min(100, wpm * 0.7);
+        
+        // Emit score update
+        socket.to(roomId).emit('scoring:update', {
+          role: this.userSockets.get(socket.id)?.role || 'student',
+          scores: {
+            speakingFluency: fluencyScore,
+            targetLangUse: langCode === expectedLang ? 100 : 0
+          }
+        });
+      });
+      
+      // Handle scoring request
+      socket.on('scoring:request-update', (data) => {
+        const { roomId } = data;
+        const userInfo = this.userSockets.get(socket.id);
+        
+        if (userInfo) {
+          // Send current scores (simplified demo scores)
+          socket.emit('scoring:update', {
+            role: userInfo.role,
+            scores: userInfo.role === 'student' ? {
+              speakingFluency: 75,
+              pronunciation: 80,
+              vocabulary: 70,
+              grammar: 85,
+              interaction: 90,
+              targetLangUse: 95,
+              presence: 100,
+              total: 85,
+              stars: 4.2
+            } : {
+              facilitator: 90,
+              monitor: 85,
+              feedbackProvider: 88,
+              resourceModel: 92,
+              assessor: 87,
+              engagement: 95,
+              targetLangUse: 100,
+              presence: 100,
+              total: 92,
+              stars: 4.6
+            }
+          });
+        }
+      });
+
       // Handle disconnect
       socket.on('disconnect', async () => {
         console.log(`Socket disconnected: ${socket.id}`);

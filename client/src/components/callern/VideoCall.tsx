@@ -17,6 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { ScoringOverlay } from './ScoringOverlay';
 
 interface VideoCallProps {
   roomId: string;
@@ -102,6 +103,39 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
   const [showWordHelper, setShowWordHelper] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showBriefing, setShowBriefing] = useState(role === 'teacher');
+  
+  // Scoring state
+  const [showScoring, setShowScoring] = useState(true);
+  const [scoringData, setScoringData] = useState({
+    student: {
+      speakingFluency: 0,
+      pronunciation: 0,
+      vocabulary: 0,
+      grammar: 0,
+      interaction: 0,
+      targetLangUse: 0,
+      presence: 0,
+      total: 0,
+      stars: 0,
+    },
+    teacher: {
+      facilitator: 0,
+      monitor: 0,
+      feedbackProvider: 0,
+      resourceModel: 0,
+      assessor: 0,
+      engagement: 0,
+      targetLangUse: 0,
+      presence: 0,
+      total: 0,
+      stars: 0,
+    }
+  });
+  const [tlWarning, setTlWarning] = useState<string | undefined>();
+  const [presenceData, setPresenceData] = useState({
+    cameraOn: !isVideoOff,
+    micOn: !isMuted
+  });
   
   // Fetch student briefing for teachers
   const { data: briefing, isLoading: briefingLoading } = useQuery<StudentBriefing>({
@@ -262,6 +296,22 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
       console.log('Peer audio toggled:', enabled);
     };
     
+    // Scoring event handlers
+    const handleScoringUpdate = (data: any) => {
+      console.log('Scoring update:', data);
+      if (data.role === 'student' && data.scores) {
+        setScoringData(prev => ({ ...prev, student: data.scores }));
+      } else if (data.role === 'teacher' && data.scores) {
+        setScoringData(prev => ({ ...prev, teacher: data.scores }));
+      }
+    };
+    
+    const handleTLWarning = (data: any) => {
+      console.log('TL warning:', data);
+      setTlWarning(data.message);
+      setTimeout(() => setTlWarning(undefined), 3000);
+    };
+    
     // Register event listeners
     socket.on('user-joined', handleUserJoined);
     socket.on('offer', handleOffer);
@@ -269,6 +319,8 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
     socket.on('ice-candidate', handleIceCandidate);
     socket.on('peer-video-toggle', handlePeerVideoToggle);
     socket.on('peer-audio-toggle', handlePeerAudioToggle);
+    socket.on('scoring:update', handleScoringUpdate);
+    socket.on('scoring:tl-warning', handleTLWarning);
     
     // Join the room
     socket.emit('join-room', { roomId, userId, role });
@@ -280,6 +332,8 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
       socket.off('ice-candidate', handleIceCandidate);
       socket.off('peer-video-toggle', handlePeerVideoToggle);
       socket.off('peer-audio-toggle', handlePeerAudioToggle);
+      socket.off('scoring:update', handleScoringUpdate);
+      socket.off('scoring:tl-warning', handleTLWarning);
     };
   }, [socket, roomId, userId, role, createPeer, initializeMedia]);
   
@@ -307,7 +361,15 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setIsMuted(!audioTrack.enabled);
+        setPresenceData(prev => ({ ...prev, micOn: audioTrack.enabled }));
         socket?.emit('toggle-audio', { roomId, enabled: audioTrack.enabled });
+        // Emit scoring presence update
+        socket?.emit('scoring:presence', { 
+          roomId, 
+          userId, 
+          cameraOn: !isVideoOff, 
+          micOn: audioTrack.enabled 
+        });
       }
     }
   };
@@ -318,7 +380,15 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
         setIsVideoOff(!videoTrack.enabled);
+        setPresenceData(prev => ({ ...prev, cameraOn: videoTrack.enabled }));
         socket?.emit('toggle-video', { roomId, enabled: videoTrack.enabled });
+        // Emit scoring presence update
+        socket?.emit('scoring:presence', { 
+          roomId, 
+          userId, 
+          cameraOn: videoTrack.enabled, 
+          micOn: !isMuted 
+        });
       }
     }
   };
@@ -604,6 +674,18 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
             >
               <MessageSquare className="h-4 w-4" />
             </Button>
+            {/* Test Scoring Button */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                // Request scoring update from server
+                socket?.emit('scoring:request-update', { roomId });
+              }}
+              className="text-white hover:bg-gray-700"
+            >
+              <Target className="h-4 w-4" />
+            </Button>
             <Button
               size="sm"
               variant="ghost"
@@ -671,6 +753,16 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
             </div>
           </div>
         )}
+        
+        {/* Scoring Overlay */}
+        <ScoringOverlay
+          role={role}
+          isVisible={showScoring}
+          scores={scoringData}
+          presence={presenceData}
+          tlWarning={tlWarning}
+          onToggleDetail={() => setShowScoring(!showScoring)}
+        />
       </div>
       
       {/* Controls */}
