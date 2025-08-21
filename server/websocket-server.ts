@@ -2,7 +2,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { Server } from 'http';
 import { db } from './db';
 import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users } from '../shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, like, sql } from 'drizzle-orm';
 
 interface CallRoom {
   roomId: string;
@@ -644,7 +644,7 @@ export class CallernWebSocketServer {
         packageId,
         startTime: new Date(),
         status: 'connecting',
-        roomId,
+        notes: `Room ID: ${roomId}` // Store roomId in notes field
       });
     } catch (error) {
       console.error('Error creating call record:', error);
@@ -653,10 +653,19 @@ export class CallernWebSocketServer {
 
   private async updateCallStatus(roomId: string, status: string) {
     try {
-      await db
-        .update(callernCallHistory)
-        .set({ status })
-        .where(eq(callernCallHistory.roomId, roomId));
+      // Find call record by notes containing roomId
+      const calls = await db
+        .select()
+        .from(callernCallHistory)
+        .where(like(callernCallHistory.notes, `%Room ID: ${roomId}%`))
+        .limit(1);
+      
+      if (calls.length > 0) {
+        await db
+          .update(callernCallHistory)
+          .set({ status })
+          .where(eq(callernCallHistory.id, calls[0].id));
+      }
     } catch (error) {
       console.error('Error updating call status:', error);
     }
@@ -664,10 +673,20 @@ export class CallernWebSocketServer {
 
   private async updateCallDuration(roomId: string, duration: number) {
     try {
-      await db
-        .update(callernCallHistory)
-        .set({ duration })
-        .where(eq(callernCallHistory.roomId, roomId));
+      // Find call record by notes containing roomId
+      const calls = await db
+        .select()
+        .from(callernCallHistory)
+        .where(like(callernCallHistory.notes, `%Room ID: ${roomId}%`))
+        .limit(1);
+      
+      if (calls.length > 0) {
+        const durationMinutes = Math.ceil(duration / 60);
+        await db
+          .update(callernCallHistory)
+          .set({ durationMinutes })
+          .where(eq(callernCallHistory.id, calls[0].id));
+      }
     } catch (error) {
       console.error('Error updating call duration:', error);
     }
@@ -723,26 +742,45 @@ export class CallernWebSocketServer {
 
       // Update student package usage
       if (minutes > 0 && studentPackageId) {
-        await db
-          .update(studentCallernPackages)
-          .set({
-            usedMinutes: studentCallernPackages.usedMinutes + minutes,
-            remainingMinutes: studentCallernPackages.remainingMinutes - minutes,
-          })
-          .where(
-            eq(studentCallernPackages.id, studentPackageId) // packageId is actually the student package ID
-          );
+        // First fetch the current values
+        const packageData = await db
+          .select()
+          .from(studentCallernPackages)
+          .where(eq(studentCallernPackages.id, studentPackageId))
+          .limit(1);
+        
+        if (packageData.length > 0) {
+          const pkg = packageData[0];
+          const newUsedMinutes = pkg.usedMinutes + minutes;
+          const newRemainingMinutes = Math.max(0, pkg.remainingMinutes - minutes);
+          
+          await db
+            .update(studentCallernPackages)
+            .set({
+              usedMinutes: newUsedMinutes,
+              remainingMinutes: newRemainingMinutes,
+            })
+            .where(eq(studentCallernPackages.id, studentPackageId));
+        }
       }
 
-      // Update call record
-      await db
-        .update(callernCallHistory)
-        .set({
-          endTime: new Date(),
-          duration: finalDuration,
-          status: 'completed',
-        })
-        .where(eq(callernCallHistory.roomId, roomId));
+      // Update call record - find by notes containing roomId
+      const calls = await db
+        .select()
+        .from(callernCallHistory)
+        .where(like(callernCallHistory.notes, `%Room ID: ${roomId}%`))
+        .limit(1);
+      
+      if (calls.length > 0) {
+        await db
+          .update(callernCallHistory)
+          .set({
+            endTime: new Date(),
+            durationMinutes: minutes,
+            status: 'completed',
+          })
+          .where(eq(callernCallHistory.id, calls[0].id));
+      }
 
       // Notify all participants
       this.io.to(roomId).emit('call-ended', { reason });
