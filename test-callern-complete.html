@@ -1142,6 +1142,14 @@
         async function setupWebRTC(isInitiator) {
             log('webrtc', `Setting up WebRTC as ${isInitiator ? 'initiator' : 'receiver'}`, 'info');
             
+            // Check if SimplePeer is loaded
+            if (typeof SimplePeer === 'undefined') {
+                log('webrtc', '✗ SimplePeer not loaded', 'error');
+                // Try again in 1 second
+                setTimeout(() => setupWebRTC(isInitiator), 1000);
+                return;
+            }
+            
             try {
                 // Get user media
                 localStream = await navigator.mediaDevices.getUserMedia({
@@ -1157,6 +1165,7 @@
                 document.getElementById('toggle-audio-btn').disabled = false;
                 
                 // Create peer connection with TURN servers
+                log('webrtc', '✓ SimplePeer loaded, creating peer connection', 'success');
                 peer = new SimplePeer({
                     initiator: isInitiator,
                     stream: localStream,
