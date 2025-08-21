@@ -24,6 +24,7 @@ interface VideoCallProps {
   userId: number;
   role: 'student' | 'teacher';
   studentId?: number; // For teachers to know which student they're calling
+  remoteSocketId?: string; // The remote peer's socket ID (for students, this is the teacher's socket ID)
   onCallEnd: () => void;
   onMinutesUpdate?: (minutes: number) => void;
   socket?: any; // Allow passing socket from parent for students
@@ -82,7 +83,7 @@ interface StudentBriefing {
   };
 }
 
-export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinutesUpdate, socket: propsSocket }: VideoCallProps) {
+export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: propsRemoteSocketId, onCallEnd, onMinutesUpdate, socket: propsSocket }: VideoCallProps) {
   const { t } = useTranslation(['callern']);
   const defaultSocket = useSocket();
   // For students, use the socket passed from parent (if available), otherwise use default
@@ -103,7 +104,7 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
-  const [remoteSocketId, setRemoteSocketId] = useState<string | null>(null);
+  const [remoteSocketId, setRemoteSocketId] = useState<string | null>(propsRemoteSocketId || null);
   const [showChat, setShowChat] = useState(false);
   const [showWordHelper, setShowWordHelper] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -480,6 +481,25 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
       }
     };
   }, [role, initializeMedia]);
+  
+  // For students who already have the teacher's socket ID from props
+  useEffect(() => {
+    if (role === 'student' && propsRemoteSocketId && !peerRef.current && socket) {
+      console.log('Student: Have teacher socket ID from props, initiating call with:', propsRemoteSocketId);
+      
+      // Small delay to ensure socket is ready
+      const timer = setTimeout(async () => {
+        if (!peerRef.current) {
+          const stream = await initializeMedia();
+          if (stream) {
+            peerRef.current = await createPeer(true, stream, propsRemoteSocketId);
+          }
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [role, propsRemoteSocketId, socket, createPeer, initializeMedia]);
   
   // Control functions
   const toggleMute = () => {

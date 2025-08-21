@@ -244,6 +244,7 @@ export default function CallernSystem() {
         roomId,
         userId: user?.id || 0,
         role: 'student' as const,
+        remoteSocketId: data.teacherSocketId, // Pass teacher's socket ID to VideoCall
         onMinutesUpdate: (minutes: number) => {
           console.log(`Call duration: ${minutes} minutes`);
           // Update package minutes here
