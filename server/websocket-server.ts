@@ -331,6 +331,7 @@ export class CallernWebSocketServer {
           this.io.to(studentSocketId).emit('call-accepted', {
             roomId,
             teacherId,
+            teacherSocketId: socket.id  // Include teacher's socket ID for WebRTC signaling
           });
         } else {
           console.log('Student socket not found for ID:', studentId);
