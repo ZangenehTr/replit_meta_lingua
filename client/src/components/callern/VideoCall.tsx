@@ -190,25 +190,31 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
       stream
     });
     
+    // Store target socket ID for later use
+    const currentTargetSocketId = targetSocketId;
+    
     peer.on('signal', (signal) => {
       if (signal.type === 'offer') {
+        console.log('Sending offer to:', currentTargetSocketId);
         socket?.emit('offer', {
           roomId,
           offer: signal,
-          to: targetSocketId
+          to: currentTargetSocketId
         });
       } else if (signal.type === 'answer') {
+        console.log('Sending answer to:', currentTargetSocketId);
         socket?.emit('answer', {
           roomId,
           answer: signal,
-          to: targetSocketId
+          to: currentTargetSocketId
         });
-      } else {
-        // ICE candidate
+      } else if (currentTargetSocketId) {
+        // ICE candidate - only send if we have a valid target
+        console.log('Sending ICE candidate to:', currentTargetSocketId);
         socket?.emit('ice-candidate', {
           roomId,
           candidate: signal,
-          to: targetSocketId
+          to: currentTargetSocketId
         });
       }
     });
@@ -245,15 +251,21 @@ export function VideoCall({ roomId, userId, role, studentId, onCallEnd, onMinute
   useEffect(() => {
     if (!socket) return;
     
-    const handleUserJoined = async ({ userId: joinedUserId, socketId }: any) => {
-      console.log('User joined:', joinedUserId, socketId);
+    const handleUserJoined = async ({ userId: joinedUserId, socketId, role: joinedRole }: any) => {
+      console.log('User joined:', { userId: joinedUserId, socketId, role: joinedRole });
+      
+      // Only connect if it's a different user
       if (joinedUserId !== userId) {
         setRemoteSocketId(socketId);
         
-        // If we're the teacher, initiate the call
-        if (role === 'teacher') {
+        // Teacher waits for student, student initiates for teacher
+        if (role === 'teacher' && joinedRole === 'student') {
+          console.log('Teacher: Student joined, waiting for offer');
+          // Teacher waits for student's offer
+        } else if (role === 'student' && joinedRole === 'teacher') {
+          console.log('Student: Teacher joined, initiating call');
           const stream = await initializeMedia();
-          if (stream) {
+          if (stream && !peerRef.current) {
             peerRef.current = await createPeer(true, stream, socketId);
           }
         }
