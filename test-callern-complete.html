@@ -885,6 +885,7 @@
                 roomId = data.roomId;
                 // Track the teacher who accepted the call
                 if (data.teacherSocketId) {
+                    targetSocketId = data.teacherSocketId;  // Set target for WebRTC signaling
                     roomParticipants[data.teacherSocketId] = 'Teacher';
                     log('webrtc', `Tracked teacher socket: ${data.teacherSocketId}`, 'info');
                 }
@@ -895,15 +896,20 @@
             socket.on('user-joined', (data) => {
                 log('room', `User joined: ${data.userId} (${data.role}) - Socket: ${data.socketId}`, 'info');
                 roomParticipants[data.socketId] = data.role;
+                
+                // Set target socket for WebRTC signaling
+                if (currentUser.role === 'Student' && data.role === 'teacher') {
+                    targetSocketId = data.socketId;
+                    log('webrtc', `Teacher joined, setting target socket: ${data.socketId}`, 'info');
+                } else if (currentUser.role === 'Teacher' && data.role === 'student') {
+                    targetSocketId = data.socketId;
+                    log('webrtc', `Student joined, setting target socket: ${data.socketId}`, 'info');
+                }
             });
             
             socket.on('user-left', (data) => {
                 log('room', `User left: ${data.socketId}`, 'info');
                 delete roomParticipants[data.socketId];
-            });
-            
-            socket.on('user-joined', (data) => {
-                log('call', `User joined: ${data.role}`, 'info');
             });
             
             socket.on('offer', async (data) => {
@@ -1246,6 +1252,8 @@
                     log('webrtc', '✓ Peer connection established', 'success');
                     // Show scoring overlay when peer connects
                     initScoringOverlay();
+                    document.getElementById('scoring-overlay').classList.add('active');
+                    document.getElementById('ttt-monitor').classList.add('active');
                 });
                 
                 peer.on('error', (err) => {
