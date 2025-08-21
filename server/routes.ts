@@ -7945,16 +7945,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Teacher dashboard stats endpoint
-  app.get("/api/teacher/dashboard-stats", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
-    try {
-      const teacherId = req.user.id;
-      const stats = await storage.getTeacherDashboardStats(teacherId);
-      res.json(stats);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch teacher dashboard stats" });
-    }
-  });
+  // Teacher dashboard stats endpoint - REMOVED: duplicate endpoint exists at line 11501
+  // app.get("/api/teacher/dashboard-stats", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+  //   try {
+  //     const teacherId = req.user.id;
+  //     const stats = await storage.getTeacherDashboardStats(teacherId);
+  //     res.json(stats);
+  //   } catch (error) {
+  //     res.status(500).json({ message: "Failed to fetch teacher dashboard stats" });
+  //   }
+  // });
 
   // Send announcement endpoint
   app.post("/api/teacher/announcements", authenticateToken, async (req: any, res) => {
