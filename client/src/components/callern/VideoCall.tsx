@@ -107,7 +107,7 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showBriefing, setShowBriefing] = useState(role === 'teacher');
   
-  // Scoring state
+  // Scoring state - always show for educational purposes
   const [showScoring, setShowScoring] = useState(true);
   const [scoringData, setScoringData] = useState({
     student: {
@@ -316,12 +316,19 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
           (peerRef.current as any).updateTargetSocketId(socketId);
         }
         
+        // Normalize roles for comparison
+        const normalizedJoinedRole = joinedRole?.toLowerCase();
+        const normalizedMyRole = role?.toLowerCase();
+        
         // Teacher waits for student, student initiates for teacher
-        if (role === 'teacher' && joinedRole === 'student') {
+        if (normalizedMyRole === 'teacher' && normalizedJoinedRole === 'student') {
           console.log('Teacher: Student joined, waiting for offer');
           // Initialize media but don't create peer yet - wait for offer
-          await initializeMedia();
-        } else if (role === 'student' && joinedRole === 'teacher') {
+          const stream = await initializeMedia();
+          if (!stream) {
+            console.error('Failed to initialize media for teacher');
+          }
+        } else if (normalizedMyRole === 'student' && normalizedJoinedRole === 'teacher') {
           console.log('Student: Teacher joined, initiating call with socket:', socketId);
           // Make sure we have a valid socket ID before creating peer
           if (!socketId || socketId === 'null') {
@@ -335,7 +342,7 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
               if (!peerRef.current) {
                 peerRef.current = await createPeer(true, stream, socketId);
               }
-            }, 100);
+            }, 500); // Increased delay for stability
           }
         }
       }
@@ -499,40 +506,95 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
   }, [role, propsRemoteSocketId, socket, createPeer, initializeMedia]);
   
   // Control functions
-  const toggleMute = () => {
+  const toggleMute = async () => {
     if (localStreamRef.current) {
       const audioTrack = localStreamRef.current.getAudioTracks()[0];
       if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsMuted(!audioTrack.enabled);
-        setPresenceData(prev => ({ ...prev, micOn: audioTrack.enabled }));
-        socket?.emit('toggle-audio', { roomId, enabled: audioTrack.enabled });
-        // Emit scoring presence update
-        socket?.emit('scoring:presence', { 
-          roomId, 
-          userId, 
-          cameraOn: !isVideoOff, 
-          micOn: audioTrack.enabled 
-        });
+        // If track is currently disabled and we're enabling it
+        if (!audioTrack.enabled) {
+          // First check if we still have permission
+          try {
+            const newStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const newAudioTrack = newStream.getAudioTracks()[0];
+            
+            // Replace the old track with the new one
+            localStreamRef.current.removeTrack(audioTrack);
+            localStreamRef.current.addTrack(newAudioTrack);
+            
+            // Replace in peer connection if it exists
+            if (peerRef.current && (peerRef.current as any)._pc) {
+              const senders = (peerRef.current as any)._pc.getSenders();
+              const audioSender = senders.find((s: any) => s.track?.kind === 'audio');
+              if (audioSender) {
+                audioSender.replaceTrack(newAudioTrack);
+              }
+            }
+            
+            setIsMuted(false);
+            setPresenceData(prev => ({ ...prev, micOn: true }));
+            socket?.emit('toggle-audio', { roomId, enabled: true });
+            socket?.emit('scoring:presence', { roomId, userId, cameraOn: !isVideoOff, micOn: true });
+          } catch (error) {
+            console.error('Failed to re-enable microphone:', error);
+            alert(t('callern:errors.microphoneAccess'));
+          }
+        } else {
+          // Simply disable the track
+          audioTrack.enabled = false;
+          setIsMuted(true);
+          setPresenceData(prev => ({ ...prev, micOn: false }));
+          socket?.emit('toggle-audio', { roomId, enabled: false });
+          socket?.emit('scoring:presence', { roomId, userId, cameraOn: !isVideoOff, micOn: false });
+        }
       }
     }
   };
   
-  const toggleVideo = () => {
+  const toggleVideo = async () => {
     if (localStreamRef.current) {
       const videoTrack = localStreamRef.current.getVideoTracks()[0];
       if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setIsVideoOff(!videoTrack.enabled);
-        setPresenceData(prev => ({ ...prev, cameraOn: videoTrack.enabled }));
-        socket?.emit('toggle-video', { roomId, enabled: videoTrack.enabled });
-        // Emit scoring presence update
-        socket?.emit('scoring:presence', { 
-          roomId, 
-          userId, 
-          cameraOn: videoTrack.enabled, 
-          micOn: !isMuted 
-        });
+        // If track is currently disabled and we're enabling it
+        if (!videoTrack.enabled) {
+          // First check if we still have permission
+          try {
+            const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const newVideoTrack = newStream.getVideoTracks()[0];
+            
+            // Replace the old track with the new one
+            localStreamRef.current.removeTrack(videoTrack);
+            localStreamRef.current.addTrack(newVideoTrack);
+            
+            // Update local video element
+            if (localVideoRef.current) {
+              localVideoRef.current.srcObject = localStreamRef.current;
+            }
+            
+            // Replace in peer connection if it exists
+            if (peerRef.current && (peerRef.current as any)._pc) {
+              const senders = (peerRef.current as any)._pc.getSenders();
+              const videoSender = senders.find((s: any) => s.track?.kind === 'video');
+              if (videoSender) {
+                videoSender.replaceTrack(newVideoTrack);
+              }
+            }
+            
+            setIsVideoOff(false);
+            setPresenceData(prev => ({ ...prev, cameraOn: true }));
+            socket?.emit('toggle-video', { roomId, enabled: true });
+            socket?.emit('scoring:presence', { roomId, userId, cameraOn: true, micOn: !isMuted });
+          } catch (error) {
+            console.error('Failed to re-enable camera:', error);
+            alert(t('callern:errors.cameraAccess'));
+          }
+        } else {
+          // Simply disable the track
+          videoTrack.enabled = false;
+          setIsVideoOff(true);
+          setPresenceData(prev => ({ ...prev, cameraOn: false }));
+          socket?.emit('toggle-video', { roomId, enabled: false });
+          socket?.emit('scoring:presence', { roomId, userId, cameraOn: false, micOn: !isMuted });
+        }
       }
     }
   };
@@ -842,17 +904,20 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
         </div>
       
       {/* Video Area */}
-      <div className="flex-1 relative overflow-hidden">
-        {/* Remote Video (Main) */}
-        <video
-          ref={remoteVideoRef}
-          autoPlay
-          playsInline
-          className="w-full h-full object-cover"
-        />
+      <div className="flex-1 relative overflow-hidden bg-gray-900">
+        {/* Remote Video (Main) - Better sizing for education */}
+        <div className="w-full h-full flex items-center justify-center">
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            className="w-full h-full object-contain"
+            style={{ maxHeight: 'calc(100vh - 200px)' }}
+          />
+        </div>
         
-        {/* Local Video (PiP) */}
-        <div className="absolute bottom-4 right-4 w-48 h-36 bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+        {/* Local Video (PiP) - Larger for educational purposes */}
+        <div className="absolute bottom-4 right-4 w-80 h-60 bg-gray-800 rounded-lg overflow-hidden shadow-2xl border-2 border-gray-600 transition-all hover:scale-105">
           <video
             ref={localVideoRef}
             autoPlay
@@ -862,9 +927,13 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
           />
           {isVideoOff && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-              <VideoOff className="h-8 w-8 text-gray-400" />
+              <VideoOff className="h-12 w-12 text-gray-400" />
             </div>
           )}
+          {/* Label for local video */}
+          <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 rounded text-xs text-white font-medium">
+            {role === 'teacher' ? 'You (Teacher)' : 'You (Student)'}
+          </div>
         </div>
         
         {/* Connecting Overlay */}
@@ -898,15 +967,17 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
           </div>
         )}
         
-        {/* Scoring Overlay */}
-        <ScoringOverlay
-          role={role}
-          isVisible={showScoring}
-          scores={scoringData}
-          presence={presenceData}
-          tlWarning={tlWarning}
-          onToggleDetail={() => setShowScoring(!showScoring)}
-        />
+        {/* Scoring Overlay - Enhanced visibility */}
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 50 }}>
+          <ScoringOverlay
+            role={role}
+            isVisible={showScoring}
+            scores={scoringData}
+            presence={presenceData}
+            tlWarning={tlWarning}
+            onToggleDetail={() => setShowScoring(!showScoring)}
+          />
+        </div>
       </div>
       
       {/* Controls */}
