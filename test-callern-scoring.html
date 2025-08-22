@@ -109,6 +109,35 @@
             transition: all 0.3s ease;
         }
         
+        .scoring-overlay.collapsed {
+            right: auto;
+            width: auto;
+            padding: 8px 12px;
+        }
+        
+        .scoring-overlay.collapsed .scoring-content {
+            display: none;
+        }
+        
+        .show-button {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            display: none;
+        }
+        
+        .scoring-overlay.collapsed .show-button {
+            display: inline-block;
+        }
+        
+        .scoring-overlay.collapsed .scoring-header {
+            margin-bottom: 0;
+        }
+        
         .scoring-header {
             display: flex;
             justify-content: space-between;
@@ -296,7 +325,9 @@
                     <div class="scoring-header">
                         <span class="scoring-title">📚 Student Performance</span>
                         <button class="scoring-toggle" onclick="toggleScoring('student')">Hide</button>
+                        <button class="show-button" onclick="toggleScoring('student')">📊 Show Scores</button>
                     </div>
+                    <div class="scoring-content">
                     <div class="scoring-grid">
                         <div class="score-item">
                             <div class="score-label">Speaking Fluency</div>
@@ -340,6 +371,7 @@
                             </div>
                         </div>
                     </div>
+                    </div>
                 </div>
                 <div class="presence-indicator">
                     <div class="presence-badge">
@@ -360,7 +392,9 @@
                     <div class="scoring-header">
                         <span class="scoring-title">👨‍🏫 Teacher Performance</span>
                         <button class="scoring-toggle" onclick="toggleScoring('teacher')">Hide</button>
+                        <button class="show-button" onclick="toggleScoring('teacher')">📊 Show Scores</button>
                     </div>
+                    <div class="scoring-content">
                     <div class="scoring-grid">
                         <div class="score-item">
                             <div class="score-label">Facilitator</div>
@@ -390,6 +424,7 @@
                                 <div class="score-fill" id="teacher-assessment-bar" style="width: 0%"></div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
                 <div class="presence-indicator">
@@ -718,14 +753,22 @@
         
         function toggleScoring(role) {
             const overlay = document.getElementById(`${role}-scoring`);
-            const button = overlay.querySelector('.scoring-toggle');
+            const hideButton = overlay.querySelector('.scoring-toggle');
+            const showButton = overlay.querySelector('.show-button');
+            const title = overlay.querySelector('.scoring-title');
             
-            if (overlay.style.display === 'none') {
-                overlay.style.display = 'block';
-                button.textContent = 'Hide';
+            if (overlay.classList.contains('collapsed')) {
+                // Expand
+                overlay.classList.remove('collapsed');
+                hideButton.style.display = 'inline-block';
+                showButton.style.display = 'none';
+                title.style.display = 'inline';
             } else {
-                overlay.style.display = 'none';
-                button.textContent = 'Show';
+                // Collapse
+                overlay.classList.add('collapsed');
+                hideButton.style.display = 'none';
+                showButton.style.display = 'inline-block';
+                title.style.display = 'none';
             }
         }
         
