@@ -866,10 +866,18 @@ export default function CallernSystem() {
                 variant="outline"
                 onClick={() => {
                   setWaitingForTeacher(false);
-                  if (socket) {
-                    socket.disconnect();
-                    setSocket(null);
+                  if (socket && activeCallConfig) {
+                    // Emit cancel event to notify the teacher
+                    socket.emit('cancel-call', {
+                      roomId: activeCallConfig.roomId,
+                      teacherId: activeCallConfig.teacherId,
+                      studentId: user?.id
+                    });
                   }
+                  // Clear the active call config
+                  setActiveCallConfig(null);
+                  setSelectedTeacher(null);
+                  
                   toast({
                     title: t('callern:callCancelled', 'Call Cancelled'),
                     description: t('callern:youCancelledCall', 'You have cancelled the call request.'),
