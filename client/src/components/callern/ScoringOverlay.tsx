@@ -179,17 +179,23 @@ export function ScoringOverlay({
   if (!currentScores) return null;
 
   // Prepare score categories for display
-  const categories: ScoreCategory[] = role === 'student' ? [
-    { name: 'Fluency', value: currentScores.speakingFluency || 0, delta: scoreDeltas.speakingFluency || 0, color: 'text-blue-400' },
-    { name: 'Pronunciation', value: currentScores.pronunciation || 0, delta: scoreDeltas.pronunciation || 0, color: 'text-green-400' },
-    { name: 'Vocabulary', value: currentScores.vocabulary || 0, delta: scoreDeltas.vocabulary || 0, color: 'text-purple-400' },
-    { name: 'Grammar', value: currentScores.grammar || 0, delta: scoreDeltas.grammar || 0, color: 'text-yellow-400' },
-  ] : [
-    { name: 'Facilitator', value: currentScores.facilitator || 0, delta: scoreDeltas.facilitator || 0, color: 'text-blue-400' },
-    { name: 'Monitor', value: currentScores.monitor || 0, delta: scoreDeltas.monitor || 0, color: 'text-green-400' },
-    { name: 'Feedback', value: currentScores.feedbackProvider || 0, delta: scoreDeltas.feedbackProvider || 0, color: 'text-purple-400' },
-    { name: 'Engagement', value: currentScores.engagement || 0, delta: scoreDeltas.engagement || 0, color: 'text-yellow-400' },
-  ];
+  const categories: ScoreCategory[] = [];
+  
+  if (role === 'student' && scores.student) {
+    categories.push(
+      { name: 'Fluency', value: scores.student.speakingFluency || 0, delta: scoreDeltas.speakingFluency || 0, color: 'text-blue-400' },
+      { name: 'Pronunciation', value: scores.student.pronunciation || 0, delta: scoreDeltas.pronunciation || 0, color: 'text-green-400' },
+      { name: 'Vocabulary', value: scores.student.vocabulary || 0, delta: scoreDeltas.vocabulary || 0, color: 'text-purple-400' },
+      { name: 'Grammar', value: scores.student.grammar || 0, delta: scoreDeltas.grammar || 0, color: 'text-yellow-400' }
+    );
+  } else if (role === 'teacher' && scores.teacher) {
+    categories.push(
+      { name: 'Facilitator', value: scores.teacher.facilitator || 0, delta: scoreDeltas.facilitator || 0, color: 'text-blue-400' },
+      { name: 'Monitor', value: scores.teacher.monitor || 0, delta: scoreDeltas.monitor || 0, color: 'text-green-400' },
+      { name: 'Feedback', value: scores.teacher.feedbackProvider || 0, delta: scoreDeltas.feedbackProvider || 0, color: 'text-purple-400' },
+      { name: 'Engagement', value: scores.teacher.engagement || 0, delta: scoreDeltas.engagement || 0, color: 'text-yellow-400' }
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -205,8 +211,8 @@ export function ScoringOverlay({
             exit={{ opacity: 0, y: -20 }}
             className={cn(
               "absolute top-2 left-2 right-2 z-40",
-              "flex items-center justify-between gap-2 p-2",
-              "backdrop-blur-md bg-black/10 rounded-lg",
+              "flex items-center justify-between gap-2 p-3",
+              "backdrop-blur-md bg-black/30 rounded-lg border border-white/30 shadow-lg",
               "pointer-events-auto"
             )}
             onClick={() => setIsExpanded(!isExpanded)}
