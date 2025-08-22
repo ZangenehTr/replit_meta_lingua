@@ -117,35 +117,31 @@ export default function CallernSystem() {
   const [waitingForTeacher, setWaitingForTeacher] = useState(false);
 
   // Fetch available Callern packages
-  const { data: packages = [], isLoading: packagesLoading } = useQuery({
+  const { data: packages = [], isLoading: packagesLoading } = useQuery<CallernPackage[]>({
     queryKey: ["/api/student/callern-packages"],
   });
 
   // Fetch student's purchased packages
-  const { data: studentPackages = [], isLoading: studentPackagesLoading } = useQuery({
+  const { data: studentPackages = [], isLoading: studentPackagesLoading } = useQuery<StudentCallernPackage[]>({
     queryKey: ["/api/student/my-callern-packages"],
   });
 
-  // Fetch call history
-  const { data: callHistory = [], isLoading: historyLoading } = useQuery({
+  // Fetch call history - only when history tab is active
+  const { data: callHistory = [], isLoading: historyLoading } = useQuery<CallHistory[]>({
     queryKey: ["/api/student/callern-history"],
+    enabled: activeTab === 'history',
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
-  // Fetch available teachers - FORCE THIS TO RUN
-  const { data: availableTeachers = [], isLoading: teachersLoading, error: teachersError } = useQuery({
+  // Fetch available teachers - optimized with caching
+  const { data: availableTeachers = [], isLoading: teachersLoading } = useQuery<AvailableTeacher[]>({
     queryKey: ["/api/callern/online-teachers"],
-    enabled: true,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: false,
+    enabled: activeTab === 'teachers',
+    staleTime: 30 * 1000, // Cache for 30 seconds
+    gcTime: 60 * 1000, // Keep in cache for 1 minute
+    refetchInterval: 30 * 1000, // Refresh every 30 seconds when tab is active
   });
-
-  // Debug logging - LOG IMMEDIATELY
-  console.log('=== CALLERN DEBUG ===');
-  console.log('Teachers loading:', teachersLoading);
-  console.log('Teachers data:', availableTeachers);
-  console.log('Teachers error:', teachersError);
-  console.log('User role:', user?.role);
-  console.log('==================');
 
   // Purchase package mutation
   const purchasePackageMutation = useMutation({
