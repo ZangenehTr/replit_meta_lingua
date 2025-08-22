@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -167,6 +167,47 @@ export default function CallernSystem() {
       });
     },
   });
+
+  // Memoized calculations for performance
+  const activePackages = useMemo(() => 
+    studentPackages.filter((pkg: StudentCallernPackage) => pkg.status === 'active'),
+    [studentPackages]
+  );
+
+  const totalRemainingMinutes = useMemo(() => 
+    studentPackages.reduce((total: number, pkg: StudentCallernPackage) => 
+      total + (pkg.status === 'active' ? pkg.remainingMinutes : 0), 0
+    ),
+    [studentPackages]
+  );
+
+  const totalCalls = useMemo(() => callHistory.length, [callHistory]);
+
+  const monthlyCallsCount = useMemo(() => {
+    const thisMonth = new Date();
+    return callHistory.filter((call: CallHistory) => {
+      const callDate = new Date(call.startedAt);
+      return callDate.getMonth() === thisMonth.getMonth() && 
+             callDate.getFullYear() === thisMonth.getFullYear();
+    }).length;
+  }, [callHistory]);
+
+  const onlineTeachers = useMemo(() => 
+    availableTeachers.filter((teacher: AvailableTeacher) => teacher.isOnline),
+    [availableTeachers]
+  );
+
+  const offlineTeachers = useMemo(() => 
+    availableTeachers.filter((teacher: AvailableTeacher) => !teacher.isOnline),
+    [availableTeachers]
+  );
+
+  const hasActivePackageWithMinutes = useMemo(() => 
+    studentPackages.some((p: StudentCallernPackage) => 
+      p.status === 'active' && p.remainingMinutes > 0
+    ),
+    [studentPackages]
+  );
 
   const handlePurchasePackage = (pkg: CallernPackage) => {
     setSelectedPackage(pkg);
@@ -374,9 +415,7 @@ export default function CallernSystem() {
               <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
                 <p className="text-xs opacity-90">{t('callern:availableBalance')}</p>
                 <p className="text-xl font-bold">
-                  {studentPackages.reduce((total: number, pkg: StudentCallernPackage) => 
-                    total + (pkg.status === 'active' ? pkg.remainingMinutes : 0), 0
-                  )} {t('callern:minutes')}
+                  {totalRemainingMinutes} {t('callern:minutes')}
                 </p>
               </div>
             </div>
@@ -394,7 +433,7 @@ export default function CallernSystem() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                {studentPackages.filter((pkg: StudentCallernPackage) => pkg.status === 'active').length}
+                {activePackages.length}
               </div>
               <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{t('callern:packagesAvailable')}</p>
             </CardContent>
@@ -409,9 +448,7 @@ export default function CallernSystem() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-900 dark:text-green-100">
-                {studentPackages.reduce((total: number, pkg: StudentCallernPackage) => 
-                  total + (pkg.status === 'active' ? pkg.remainingMinutes : 0), 0
-                )}
+                {totalRemainingMinutes}
               </div>
               <p className="text-xs text-green-600 dark:text-green-400 mt-1">{t('callern:minutesRemaining')}</p>
             </CardContent>
@@ -425,7 +462,7 @@ export default function CallernSystem() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{callHistory.length}</div>
+              <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{totalCalls}</div>
               <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">{t('callern:callsCompleted')}</p>
             </CardContent>
           </Card>
@@ -439,12 +476,7 @@ export default function CallernSystem() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-900 dark:text-orange-100">
-                {callHistory.filter((call: CallHistory) => {
-                  const callDate = new Date(call.startedAt);
-                  const thisMonth = new Date();
-                  return callDate.getMonth() === thisMonth.getMonth() && 
-                         callDate.getFullYear() === thisMonth.getFullYear();
-                }).length}
+                {monthlyCallsCount}
               </div>
               <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">{t('callern:monthlyCalls')}</p>
             </CardContent>
@@ -590,12 +622,12 @@ export default function CallernSystem() {
                         <span className="font-semibold">{formatPrice(Number(teacher.hourlyRate))}{t('callern:perHour')}</span>
                         <Button
                           size="sm"
-                          variant={!teacher.isOnline || studentPackages.filter((p: StudentCallernPackage) => p.status === 'active' && p.remainingMinutes > 0).length === 0 ? "secondary" : "default"}
-                          disabled={!teacher.isOnline || studentPackages.filter((p: StudentCallernPackage) => p.status === 'active' && p.remainingMinutes > 0).length === 0}
+                          variant={!teacher.isOnline || !hasActivePackageWithMinutes ? "secondary" : "default"}
+                          disabled={!teacher.isOnline || !hasActivePackageWithMinutes}
                           onClick={() => handleStartCall(teacher)}
-                          title={studentPackages.filter((p: StudentCallernPackage) => p.status === 'active' && p.remainingMinutes > 0).length === 0 ? t('callern:purchasePackageFirst') : ''}
+                          title={!hasActivePackageWithMinutes ? t('callern:purchasePackageFirst') : ''}
                         >
-                          {studentPackages.filter((p: StudentCallernPackage) => p.status === 'active' && p.remainingMinutes > 0).length === 0 ? (
+                          {!hasActivePackageWithMinutes ? (
                             <>
                               <ShoppingCart className="mr-1 h-4 w-4" />
                               {t('callern:purchasePackageFirst')}

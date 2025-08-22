@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CallerN Performance Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .test-result {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .success { background-color: #d4edda; }
+    .warning { background-color: #fff3cd; }
+    .error { background-color: #f8d7da; }
+    .timing { 
+      font-weight: bold;
+      color: #007bff;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px 5px;
+      cursor: pointer;
+    }
+    #results {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>CallerN Performance Test</h1>
+  <p>Testing API endpoints and measuring response times</p>
+  
+  <div>
+    <button onclick="runPerformanceTest()">Run Performance Test</button>
+    <button onclick="clearResults()">Clear Results</button>
+  </div>
+  
+  <div id="results"></div>
+
+  <script>
+    const API_BASE = 'http://localhost:5000/api';
+    const STUDENT_TOKEN = localStorage.getItem('authToken') || '';
+    
+    async function measureApiCall(endpoint, name) {
+      const startTime = performance.now();
+      
+      try {
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+          headers: {
+            'Authorization': `Bearer ${STUDENT_TOKEN}`
+          }
+        });
+        
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+        const data = await response.json();
+        
+        return {
+          name,
+          endpoint,
+          duration: Math.round(duration),
+          status: response.status,
+          dataSize: JSON.stringify(data).length,
+          success: response.ok,
+          itemCount: Array.isArray(data) ? data.length : 'N/A'
+        };
+      } catch (error) {
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+        
+        return {
+          name,
+          endpoint,
+          duration: Math.round(duration),
+          status: 'ERROR',
+          error: error.message,
+          success: false
+        };
+      }
+    }
+    
+    async function runPerformanceTest() {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<h2>Testing...</h2>';
+      
+      // Test endpoints in parallel like the real app does
+      const tests = [
+        measureApiCall('/users/me', 'User Info'),
+        measureApiCall('/branding', 'Branding'),
+        measureApiCall('/student/callern-packages', 'Available Packages'),
+        measureApiCall('/student/my-callern-packages', 'My Packages'),
+        measureApiCall('/callern/online-teachers', 'Online Teachers')
+      ];
+      
+      const startTime = performance.now();
+      const results = await Promise.all(tests);
+      const totalTime = performance.now() - startTime;
+      
+      // Test sequential loading (history tab)
+      const historyResult = await measureApiCall('/student/callern-history', 'Call History');
+      results.push(historyResult);
+      
+      // Display results
+      let html = '<h2>Performance Test Results</h2>';
+      html += `<div class="test-result ${totalTime > 3000 ? 'error' : totalTime > 1000 ? 'warning' : 'success'}">`;
+      html += `<strong>Total Parallel Load Time:</strong> <span class="timing">${Math.round(totalTime)}ms</span>`;
+      html += totalTime > 3000 ? ' ⚠️ VERY SLOW' : totalTime > 1000 ? ' ⚠️ SLOW' : ' ✅ FAST';
+      html += '</div>';
+      
+      // Individual endpoint results
+      results.forEach(result => {
+        const cssClass = result.success ? 
+          (result.duration > 500 ? 'warning' : 'success') : 
+          'error';
+        
+        html += `<div class="test-result ${cssClass}">`;
+        html += `<strong>${result.name}</strong> (${result.endpoint})<br>`;
+        html += `Duration: <span class="timing">${result.duration}ms</span>`;
+        
+        if (result.success) {
+          html += ` | Status: ${result.status}`;
+          html += ` | Size: ${Math.round(result.dataSize / 1024)}KB`;
+          if (result.itemCount !== 'N/A') {
+            html += ` | Items: ${result.itemCount}`;
+          }
+          if (result.duration > 500) {
+            html += ' ⚠️ SLOW';
+          }
+        } else {
+          html += ` | Error: ${result.error}`;
+        }
+        
+        html += '</div>';
+      });
+      
+      // Performance summary
+      const avgDuration = results.reduce((sum, r) => sum + r.duration, 0) / results.length;
+      const slowEndpoints = results.filter(r => r.duration > 500);
+      
+      html += '<h3>Summary</h3>';
+      html += `<div class="test-result ${slowEndpoints.length > 0 ? 'warning' : 'success'}">`;
+      html += `Average Response Time: <span class="timing">${Math.round(avgDuration)}ms</span><br>`;
+      html += `Slow Endpoints (>500ms): ${slowEndpoints.length}<br>`;
+      if (slowEndpoints.length > 0) {
+        html += 'Slow: ' + slowEndpoints.map(e => e.name).join(', ');
+      }
+      html += '</div>';
+      
+      // Recommendations
+      if (totalTime > 2000 || avgDuration > 500) {
+        html += '<h3>Performance Issues Detected</h3>';
+        html += '<div class="test-result error">';
+        html += '<strong>Recommendations:</strong><br>';
+        html += '• Database queries may be slow - check indexes<br>';
+        html += '• Consider implementing server-side caching<br>';
+        html += '• Reduce data payload sizes<br>';
+        html += '• Check database connection latency<br>';
+        html += '</div>';
+      }
+      
+      resultsDiv.innerHTML = html;
+    }
+    
+    function clearResults() {
+      document.getElementById('results').innerHTML = '';
+    }
+    
+    // Auto-run test on page load
+    window.addEventListener('load', () => {
+      if (STUDENT_TOKEN) {
+        console.log('Auth token found, running test...');
+        runPerformanceTest();
+      } else {
+        document.getElementById('results').innerHTML = 
+          '<div class="test-result error">No auth token found. Please login as a student first.</div>';
+      }
+    });
+  </script>
+</body>
+</html>
