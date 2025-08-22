@@ -52,13 +52,16 @@ export function TeacherIncomingCall() {
     // Listen for authentication confirmation
     newSocket.on('authenticated', (data) => {
       console.log('Teacher authentication confirmed:', data);
+      console.log('📡 Now listening for incoming calls...');
     });
 
-    // Listen for incoming calls
-    const handleCallRequest = (data: IncomingCallData) => {
-      console.log('Incoming call from student:', data);
+    // Listen for incoming calls - matching server event name
+    const handleIncomingCall = (data: IncomingCallData) => {
+      console.log('🔔 INCOMING CALL RECEIVED from student:', data);
+      console.log('Setting incoming call state:', data);
       setIncomingCall(data);
       setIsRinging(true);
+      console.log('Ringing state set to true');
 
       // Play ringtone (you can add an audio element for this)
       const audio = new Audio('/sounds/ringtone.mp3');
@@ -69,10 +72,17 @@ export function TeacherIncomingCall() {
       (window as any).ringtoneAudio = audio;
     };
 
-    newSocket.on('call-request', handleCallRequest);
+    // Listen for the correct event name that server emits
+    newSocket.on('incoming-call', handleIncomingCall);
+    console.log('✅ Registered listener for incoming-call event');
+    
+    // Also listen for call-request for backwards compatibility
+    newSocket.on('call-request', handleIncomingCall);
+    console.log('✅ Registered listener for call-request event (backwards compat)');
 
     return () => {
-      newSocket.off('call-request', handleCallRequest);
+      newSocket.off('incoming-call', handleIncomingCall);
+      newSocket.off('call-request', handleIncomingCall);
       newSocket.disconnect();
       // Stop ringtone if component unmounts
       if ((window as any).ringtoneAudio) {

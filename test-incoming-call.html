@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Incoming Call</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Simulate Student Call to Teacher</h1>
+  <button id="callBtn">Send Call to Teacher</button>
+  <div id="status"></div>
+
+  <script>
+    const socket = io('http://localhost:5000', {
+      path: '/socket.io/',
+      transports: ['websocket', 'polling']
+    });
+
+    const status = document.getElementById('status');
+    
+    socket.on('connect', () => {
+      status.innerHTML += '<p>✅ Connected as student</p>';
+      // Authenticate as student
+      socket.emit('authenticate', {
+        userId: 8469,
+        role: 'Student'
+      });
+    });
+
+    socket.on('authenticated', (data) => {
+      status.innerHTML += '<p>✅ Student authenticated</p>';
+    });
+
+    document.getElementById('callBtn').onclick = () => {
+      const roomId = 'test-room-' + Date.now();
+      socket.emit('join-room', roomId);
+      
+      // Send call request
+      socket.emit('call-request', {
+        teacherId: 73,
+        studentId: 8469,
+        packageId: 1,
+        language: 'English',
+        roomId: roomId
+      });
+      
+      status.innerHTML += `<p>📞 Call request sent to teacher 73 in room ${roomId}</p>`;
+    };
+
+    socket.on('call-accepted', (data) => {
+      status.innerHTML += '<p>✅ Teacher accepted the call!</p>';
+    });
+
+    socket.on('call-rejected', (data) => {
+      status.innerHTML += '<p>❌ Teacher rejected: ' + data.reason + '</p>';
+    });
+  </script>
+</body>
+</html>
