@@ -332,13 +332,16 @@ export class CallernWebSocketServer {
           // Notify teacher
           const teacher = this.teacherSockets.get(assignedTeacherId);
           if (teacher) {
-            this.io.to(teacher.socketId).emit('call-request', {
+            // Emit incoming-call event to match what teacher's frontend expects
+            this.io.to(teacher.socketId).emit('incoming-call', {
               roomId,
               studentId,
               packageId,
               language,
               studentInfo: await this.getStudentInfo(studentId),
             });
+            
+            console.log(`Emitted incoming-call to teacher ${assignedTeacherId} on socket ${teacher.socketId}`);
 
             // Set teacher as busy
             teacher.currentCall = roomId;
