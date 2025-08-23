@@ -192,7 +192,9 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
     
     const peer = new SimplePeer({
       ...peerConfig,
-      stream
+      stream,
+      trickle: true, // Enable trickle ICE for faster connection
+      reconnectTimer: 3000, // Attempt reconnection after 3 seconds
     });
     
     // Store target socket ID in closure to ensure it's available for all signals
@@ -262,7 +264,7 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
           answer: signal,
           to: targetId
         });
-      } else {
+      } else if (signal.candidate) {
         // ICE candidate
         console.log('Sending ICE candidate to:', targetId);
         socket?.emit('ice-candidate', {
@@ -270,6 +272,8 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
           candidate: signal,
           to: targetId
         });
+      } else {
+        console.warn('Unknown signal type:', signal);
       }
     });
     
@@ -407,10 +411,19 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
       }
     };
     
-    const handleIceCandidate = ({ candidate }: any) => {
-      console.log('Received ICE candidate');
-      if (peerRef.current) {
-        peerRef.current.signal(candidate);
+    const handleIceCandidate = ({ candidate, from }: any) => {
+      console.log('Received ICE candidate from:', from);
+      if (peerRef.current && candidate) {
+        try {
+          // Check if the candidate has the required fields
+          if (candidate.candidate || candidate.type === 'candidate') {
+            peerRef.current.signal(candidate);
+          } else {
+            console.warn('Invalid ICE candidate format:', candidate);
+          }
+        } catch (error) {
+          console.error('Error adding ICE candidate:', error);
+        }
       }
     };
     
