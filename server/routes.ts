@@ -8678,6 +8678,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const availability = callernAvailability.find(a => a.teacherId === teacher.id);
         const isTeacher1 = teacher.email === 'teacher1@test.com';
         
+        // Use actual online status from database availability
+        const isOnline = availability?.isOnline || false;
+        
         return {
           id: teacher.id,
           firstName: teacher.firstName,
@@ -8690,9 +8693,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           rating: 4.8,
           reviewCount: isTeacher1 ? 156 : 89,
           totalMinutes: isTeacher1 ? 8900 : 4500,
-          isOnline: isTeacher1, // teacher1 is online, teacher2 is offline
-          status: isTeacher1 ? 'online' : 'offline',
-          responseTime: isTeacher1 ? "Usually responds within 2 minutes" : "Usually responds within 5 minutes",
+          isOnline: isOnline, // Use real online status from database
+          status: isOnline ? 'online' : 'offline', // Status based on actual online state
+          responseTime: isOnline ? "Usually responds within 2 minutes" : "Currently offline",
           hourlyRate: availability?.hourlyRate || 120000, // Default 120,000 IRR per hour
           successRate: isTeacher1 ? 96 : 92,
           description: isTeacher1 ? 
