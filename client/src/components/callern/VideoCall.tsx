@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import SimplePeer from 'simple-peer';
+import SimplePeer from '@/lib/simple-peer-wrapper';
 import { useSocket } from '@/hooks/use-socket';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
