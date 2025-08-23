@@ -73,9 +73,12 @@ export class WebRTCService {
       this.handleIncomingCall(data);
     });
 
-    this.socket.on('call-accepted', (data: any) => {
+    this.socket.on('call-accepted', async (data: any) => {
       console.log('Call accepted:', data);
-      this.createPeerConnection(true, data.roomId);
+      // Only create peer if not already created
+      if (!this.peer) {
+        await this.createPeerConnection(true, data.roomId);
+      }
     });
 
     this.socket.on('call-rejected', (data: any) => {
@@ -83,7 +86,7 @@ export class WebRTCService {
       this.endCall('Call rejected by teacher');
     });
 
-    this.socket.on('signal', (data: SignalData) => {
+    this.socket.on('signal', (data: any) => {
       console.log('Received signal:', data.type);
       if (this.peer) {
         this.peer.signal(data);
@@ -114,8 +117,8 @@ export class WebRTCService {
         userId: config.studentId,
         role: 'student',
       });
-
-      // Send call request to teacher
+      
+      // Send call request to teacher (peer will be created after acceptance)
       this.socket?.emit('call-teacher', {
         teacherId: config.teacherId,
         studentId: config.studentId,
@@ -144,7 +147,7 @@ export class WebRTCService {
         studentId: callData.studentId,
       });
 
-      this.createPeerConnection(false, callData.roomId);
+      await this.createPeerConnection(false, callData.roomId);
       this.startCallTimer();
     } catch (error) {
       console.error('Failed to accept call:', error);
@@ -183,23 +186,37 @@ export class WebRTCService {
     }
   }
 
-  private createPeerConnection(initiator: boolean, roomId: string) {
-    // Self-hosted configuration - no external dependencies
-    // For production: deploy your own TURN server (e.g., coturn)
-    // and configure it here with your internal IP addresses
-    const iceServers: RTCIceServer[] = [
-      // Example for self-hosted TURN server (uncomment and configure):
-      // {
-      //   urls: 'turn:your-server.local:3478',
-      //   username: 'your-username',
-      //   credential: 'your-password',
-      // }
-    ];
-
-    // Note: Without STUN/TURN servers, WebRTC will only work:
-    // 1. On the same local network
-    // 2. When both parties have public IP addresses
-    // 3. When proper port forwarding is configured
+  private async createPeerConnection(initiator: boolean, roomId: string) {
+    // Fetch TURN credentials from the server
+    let iceServers: RTCIceServer[] = [];
+    
+    try {
+      const response = await fetch('/api/callern/turn-credentials', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        iceServers = data.iceServers;
+        console.log('Using dynamic TURN servers:', iceServers.length);
+      } else {
+        console.warn('Failed to fetch TURN credentials, using fallback');
+        // Fallback to basic STUN servers
+        iceServers = [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+        ];
+      }
+    } catch (error) {
+      console.error('Error fetching TURN credentials:', error);
+      // Fallback to basic STUN servers
+      iceServers = [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+      ];
+    }
 
     this.peer = new SimplePeer({
       initiator,
@@ -253,9 +270,11 @@ export class WebRTCService {
       this.reconnectAttempts++;
       console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
       
-      setTimeout(() => {
-        if (this.callConfig && this.peer) {
-          this.createPeerConnection(this.peer.initiator, this.callConfig.roomId);
+      setTimeout(async () => {
+        if (this.callConfig) {
+          // Determine if we should be initiator based on role
+          const wasInitiator = (this.peer as any)?.initiator || false;
+          await this.createPeerConnection(wasInitiator, this.callConfig.roomId);
         }
       }, 2000);
     } else {

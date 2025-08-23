@@ -13199,6 +13199,103 @@ Return JSON format:
     }
   });
 
+  // Simple in-memory rate limiter for TURN credentials
+  const turnRateLimiter = new Map<string, { count: number; resetTime: number }>();
+  const TURN_RATE_LIMIT = 10; // 10 requests per minute
+  const TURN_RATE_WINDOW = 60000; // 1 minute in milliseconds
+
+  // Get dynamic TURN server credentials for WebRTC with rate limiting
+  app.get("/api/callern/turn-credentials", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.id.toString();
+      const now = Date.now();
+      
+      // Rate limiting check
+      const userLimit = turnRateLimiter.get(userId);
+      if (userLimit) {
+        if (now < userLimit.resetTime) {
+          if (userLimit.count >= TURN_RATE_LIMIT) {
+            return res.status(429).json({ 
+              message: 'Too many requests. Please wait before requesting TURN credentials again.',
+              retryAfter: Math.ceil((userLimit.resetTime - now) / 1000)
+            });
+          }
+          userLimit.count++;
+        } else {
+          // Reset the window
+          turnRateLimiter.set(userId, { count: 1, resetTime: now + TURN_RATE_WINDOW });
+        }
+      } else {
+        // First request from this user
+        turnRateLimiter.set(userId, { count: 1, resetTime: now + TURN_RATE_WINDOW });
+      }
+      
+      // Clean up old entries periodically (every 100 requests)
+      if (Math.random() < 0.01) {
+        for (const [key, value] of turnRateLimiter.entries()) {
+          if (value.resetTime < now) {
+            turnRateLimiter.delete(key);
+          }
+        }
+      }
+
+      // Use environment variables if available, otherwise use free servers
+      const customTurnUrl = process.env.TURN_SERVER_URL;
+      const customTurnUsername = process.env.TURN_SERVER_USERNAME;
+      const customTurnCredential = process.env.TURN_SERVER_CREDENTIAL;
+      
+      const iceServers = [];
+      
+      // Always include STUN servers
+      iceServers.push(
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun.services.mozilla.com' }
+      );
+      
+      if (customTurnUrl && customTurnUsername && customTurnCredential) {
+        // Use custom TURN server (for production)
+        iceServers.push({
+          urls: customTurnUrl,
+          username: customTurnUsername,
+          credential: customTurnCredential
+        });
+      } else {
+        // Fallback to free TURN servers with both UDP and TCP transports
+        iceServers.push(
+          {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          },
+          {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject', 
+            credential: 'openrelayproject'
+          },
+          {
+            urls: 'turns:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          }
+        );
+      }
+
+      // Add cache headers to reduce repeated requests
+      res.set({
+        'Cache-Control': 'private, max-age=300', // Cache for 5 minutes
+        'X-RateLimit-Limit': TURN_RATE_LIMIT.toString(),
+        'X-RateLimit-Remaining': Math.max(0, TURN_RATE_LIMIT - (userLimit?.count || 1)).toString(),
+        'X-RateLimit-Reset': new Date((userLimit?.resetTime || now + TURN_RATE_WINDOW)).toISOString()
+      });
+
+      res.json({ iceServers });
+    } catch (error) {
+      console.error('Error fetching TURN credentials:', error);
+      res.status(500).json({ message: 'Failed to fetch TURN credentials' });
+    }
+  });
+
   // Get teacher session details for payment period
   app.get("/api/admin/teacher-payments/:teacherId/sessions/:period", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {

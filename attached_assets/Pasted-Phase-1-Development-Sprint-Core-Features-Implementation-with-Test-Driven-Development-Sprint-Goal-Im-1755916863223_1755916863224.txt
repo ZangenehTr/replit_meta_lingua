@@ -1,0 +1,202 @@
+Phase 1 Development Sprint: Core Features Implementation with Test-Driven Development
+Sprint Goal
+Implement critical real-time communication features and fix non-functional components using test-driven development (TDD) to ensure reliability and maintainability.
+
+Development Methodology: Test-Driven Development (TDD)
+MANDATORY WORKFLOW:
+
+Write failing tests FIRST for each feature
+Implement code to make tests pass
+Refactor if needed while keeping tests green
+DO NOT proceed to next task until ALL tests pass
+Maintain minimum 80% code coverage
+Development Tasks
+Task 1: WebRTC Video Calling Implementation (Highest Priority)
+Test Requirements FIRST:
+
+// tests/webrtc-video.test.ts - Write these tests BEFORE implementation
+describe('WebRTC Video Calling', () => {
+  test('should establish peer connection between two users')
+  test('should exchange offer/answer through signaling server')
+  test('should handle ICE candidates properly')
+  test('should establish video stream within 5 seconds')
+  test('should establish audio stream within 5 seconds')
+  test('should handle connection failure and retry')
+  test('should disconnect cleanly when call ends')
+  test('should reconnect when network changes')
+  test('should handle TURN server authentication')
+  test('should record call when recording is enabled')
+})
+// tests/websocket-signaling.test.ts
+describe('WebSocket Signaling Server', () => {
+  test('should create room when first user joins')
+  test('should add second user to existing room')
+  test('should relay offer from caller to callee')
+  test('should relay answer from callee to caller')
+  test('should relay ICE candidates between peers')
+  test('should handle user disconnection')
+  test('should clean up empty rooms')
+  test('should prevent more than 2 users per room')
+})
+Implementation Requirements:
+
+Fix the existing WebRTC implementation in /client/src/components/VideoCall.tsx
+Enhance the WebSocket signaling server at /server/websocket-server.ts
+Integration tests:
+// tests/e2e/callern-flow.test.ts
+test('complete call flow: student initiates, teacher accepts, video established, call ends')
+Success Criteria:
+
+ All 18 WebRTC tests passing
+ Integration test passing
+ Code coverage > 80%
+Task 2: Fix Critical Broken Features
+Test Requirements FIRST:
+
+// tests/teacher-dashboard.test.ts
+describe('Teacher Dashboard Stats', () => {
+  test('should return 200 status for /api/teacher/dashboard/stats')
+  test('should return correct total students count')
+  test('should return upcoming classes within 7 days')
+  test('should calculate earnings for current month')
+  test('should handle teacher with no students gracefully')
+  test('should return data within 500ms')
+})
+// tests/pdf-export.test.ts
+describe('PDF Export Functionality', () => {
+  test('should generate student report PDF with correct data')
+  test('should generate financial report PDF with transactions')
+  test('should generate attendance report PDF with dates')
+  test('should handle empty data sets')
+  test('should complete PDF generation within 3 seconds')
+  test('should save PDF to correct directory')
+  test('should return downloadable PDF link')
+})
+// tests/session-recording.test.ts
+describe('Session Recording', () => {
+  test('should start recording when call begins')
+  test('should save recording to /uploads/recordings/')
+  test('should generate unique filename with timestamp')
+  test('should stop recording when call ends')
+  test('should handle recording errors gracefully')
+  test('should allow playback of recorded sessions')
+  test('should track recording duration accurately')
+})
+Implementation Requirements:
+
+Fix Teacher Dashboard Stats endpoint
+Implement PDF generation with puppeteer or pdfkit
+Complete RecordRTC implementation
+Success Criteria:
+
+ All 20 feature tests passing
+ No 500 errors in any endpoint
+ PDF exports work for all report types
+ Recordings playable after call
+Task 3: Complete Ollama AI Integration
+Test Requirements FIRST:
+
+// tests/ollama-integration.test.ts
+describe('Ollama AI Service', () => {
+  test('should connect to Ollama at http://46.62.131.206')
+  test('should load 3.2B model successfully')
+  test('should fallback gracefully when Ollama unavailable')
+  test('should cache repeated requests')
+  test('should timeout after 5 seconds')
+})
+// tests/ai-endpoints.test.ts
+describe('AI Endpoints', () => {
+  test('POST /api/callern/ai/word-suggestions returns suggestions within 2s')
+  test('POST /api/callern/ai/instant-translation translates text correctly')
+  test('POST /api/callern/ai/grammar-correction fixes grammar errors')
+  test('POST /api/callern/ai/pronunciation-guide returns IPA notation')
+  test('should handle non-English text properly')
+  test('should return cached responses for identical requests')
+  test('should handle concurrent requests without blocking')
+})
+Implementation Requirements:
+
+Verify Ollama service connection
+Test all AI endpoints with real Ollama
+Implement response caching
+Success Criteria:
+
+ All 12 AI tests passing
+ Response time < 2 seconds
+ Cache hit rate > 50% for common requests
+Testing Infrastructure Requirements
+Setup Before Starting:
+
+# Install testing dependencies if needed
+npm install --save-dev @testing-library/react vitest @vitest/ui supertest
+# Test commands to use
+npm test                 # Run all tests
+npm run test:watch      # Watch mode during development
+npm run test:coverage   # Check coverage report
+npm run test:e2e        # Run integration tests only
+Test File Structure:
+
+tests/
+├── unit/
+│   ├── webrtc-video.test.ts
+│   ├── websocket-signaling.test.ts
+│   ├── teacher-dashboard.test.ts
+│   ├── pdf-export.test.ts
+│   ├── session-recording.test.ts
+│   ├── ollama-integration.test.ts
+│   └── ai-endpoints.test.ts
+├── integration/
+│   ├── callern-flow.test.ts
+│   ├── export-flow.test.ts
+│   └── ai-flow.test.ts
+└── e2e/
+    └── full-call-scenario.test.ts
+Quality Gates - MANDATORY
+Before Moving to Next Task:
+
+✅ All tests for current task passing (100% pass rate)
+✅ Code coverage > 80% for new code
+✅ No console errors or warnings
+✅ Performance tests passing (response times met)
+✅ Integration tests passing
+✅ Manual testing completed with test accounts
+Test Reporting:
+After each task completion, generate test report:
+
+npm run test:coverage -- --reporter=html
+# Report available at coverage/index.html
+Development Flow - STRICT ORDER
+START: Write failing tests for Task 1 (WebRTC)
+Implement WebRTC until all tests pass
+Run integration tests
+GATE: All Task 1 tests passing? If NO, continue fixing. If YES, proceed.
+Write failing tests for Task 2 (Broken Features)
+Implement fixes until all tests pass
+GATE: All Task 2 tests passing? If NO, continue fixing. If YES, proceed.
+Write failing tests for Task 3 (Ollama AI)
+Implement AI features until all tests pass
+GATE: All Task 3 tests passing? If NO, continue fixing. If YES, proceed.
+FINAL: Run full test suite - must be 100% passing
+Generate coverage report - must be > 80%
+Testing Best Practices
+Use realistic test data from existing test accounts
+Mock external services (Ollama, TURN servers) for unit tests
+Use real services for integration tests
+Test error scenarios, not just happy paths
+Test with network delays and failures
+Test concurrent operations
+Continuous Testing
+# Keep this running in a terminal during development
+npm run test:watch
+# Before any commit
+npm run test && npm run test:coverage
+Definition of Done
+A task is ONLY complete when:
+
+ All unit tests passing
+ All integration tests passing
+ Code coverage > 80%
+ No regression in existing tests
+ Performance benchmarks met
+ Manual testing verified with test accounts
+ Test report generated and reviewed
