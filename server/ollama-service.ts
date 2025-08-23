@@ -30,7 +30,7 @@ export class OllamaService {
   private async checkAvailability(): Promise<void> {
     try {
       const response = await axios.get(`${this.baseUrl}/api/tags`, { 
-        timeout: 3000,
+        timeout: 10000, // Increased timeout to 10 seconds for remote server
         validateStatus: (status) => status === 200
       });
       this.isAvailable = response.status === 200;
