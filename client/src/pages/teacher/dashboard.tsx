@@ -13,6 +13,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { TeacherIncomingCall } from '@/components/callern/teacher-incoming-call';
+import { TeacherOnlineToggle } from '@/components/callern/teacher-online-toggle';
 
 export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -124,6 +125,11 @@ export default function TeacherDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Incoming Call Handler - Always listening for calls */}
       <TeacherIncomingCall />
+      
+      {/* Callern Online Toggle - allows teacher to go online/offline for video calls */}
+      <div className="mb-6 max-w-md mx-auto">
+        <TeacherOnlineToggle />
+      </div>
       
       {/* Welcome Banner */}
       <motion.div
