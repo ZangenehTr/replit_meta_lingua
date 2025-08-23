@@ -21,7 +21,7 @@ export class OllamaService {
   private defaultModel: string;
   private isAvailable: boolean = false;
 
-  constructor(baseUrl: string = 'http://45.89.239.250:11434', defaultModel: string = 'llama3.2:3b') {
+  constructor(baseUrl: string = 'http://127.0.0.1:11434', defaultModel: string = 'llama3.2:3b') {
     this.baseUrl = baseUrl;
     this.defaultModel = defaultModel;
     this.checkAvailability();
