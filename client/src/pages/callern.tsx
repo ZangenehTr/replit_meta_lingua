@@ -339,16 +339,25 @@ export default function CallernSystem() {
       });
     };
 
+    // Handle real-time teacher status updates
+    const handleTeacherStatusUpdate = (data: any) => {
+      console.log('Teacher status update:', data);
+      // Invalidate the teachers query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["/api/callern/online-teachers"] });
+    };
+
     // Register event listeners
     socket.on('call-accepted', handleCallAccepted);
     socket.on('call-rejected', handleCallRejected);
     socket.on('error', handleCallError);
+    socket.on('teacher-status-update', handleTeacherStatusUpdate);
 
     // Cleanup function
     return () => {
       socket.off('call-accepted', handleCallAccepted);
       socket.off('call-rejected', handleCallRejected);
       socket.off('error', handleCallError);
+      socket.off('teacher-status-update', handleTeacherStatusUpdate);
     };
   }, [socket, t, toast]);
 
