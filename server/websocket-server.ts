@@ -50,8 +50,22 @@ export class CallernWebSocketServer {
       path: '/socket.io',
     });
 
+    // Clear all teachers' online status on server start
+    this.clearAllTeachersOnlineStatus();
+    
     this.setupEventHandlers();
     console.log('Callern WebSocket server initialized');
+  }
+  
+  private async clearAllTeachersOnlineStatus() {
+    try {
+      // Set all teachers to offline on server start
+      await db.update(teacherCallernAvailability)
+        .set({ isOnline: false });
+      console.log('Cleared all teachers online status on server start');
+    } catch (error) {
+      console.error('Error clearing teacher online status:', error);
+    }
   }
 
   private setupEventHandlers() {
@@ -161,6 +175,60 @@ export class CallernWebSocketServer {
           // Broadcast to all other participants in the room
           socket.to(roomId).emit('signal', signal);
           console.log(`[SIGNAL] Broadcasted to room ${roomId}`)
+        }
+      });
+      
+      // Handle WebRTC offer
+      socket.on('offer', (data) => {
+        const { roomId, offer, to } = data;
+        console.log(`[OFFER] From ${socket.id} in room ${roomId} to ${to}`);
+        
+        if (to && this.io.sockets.sockets.has(to)) {
+          this.io.to(to).emit('offer', {
+            offer,
+            from: socket.id,
+            roomId
+          });
+          console.log(`[OFFER] Forwarded to ${to}`);
+        } else {
+          console.log(`[OFFER] ERROR: Target socket ${to} not found`);
+        }
+      });
+      
+      // Handle WebRTC answer
+      socket.on('answer', (data) => {
+        const { roomId, answer, to } = data;
+        console.log(`[ANSWER] From ${socket.id} in room ${roomId} to ${to}`);
+        
+        if (to && this.io.sockets.sockets.has(to)) {
+          this.io.to(to).emit('answer', {
+            answer,
+            from: socket.id,
+            roomId
+          });
+          console.log(`[ANSWER] Forwarded to ${to}`);
+        } else {
+          console.log(`[ANSWER] ERROR: Target socket ${to} not found`);
+        }
+      });
+      
+      // Handle ICE candidates
+      socket.on('ice-candidate', (data) => {
+        const { roomId, candidate, to } = data;
+        console.log(`[ICE] From ${socket.id} in room ${roomId}`);
+        
+        if (to && this.io.sockets.sockets.has(to)) {
+          this.io.to(to).emit('ice-candidate', {
+            candidate,
+            from: socket.id
+          });
+          console.log(`[ICE] Forwarded to ${to}`);
+        } else if (roomId) {
+          socket.to(roomId).emit('ice-candidate', {
+            candidate,
+            from: socket.id
+          });
+          console.log(`[ICE] Broadcasted to room`);
         }
       });
       
