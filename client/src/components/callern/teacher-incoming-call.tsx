@@ -77,7 +77,11 @@ export function TeacherIncomingCall() {
       (window as any).ringtoneAudio = null;
     }
 
-    // Emit accept-call event to notify the student
+    // First, join the room
+    socket.emit('join-room', incomingCall.roomId);
+    console.log('Teacher joining room:', incomingCall.roomId);
+
+    // Then emit accept-call event to notify the student
     socket.emit('accept-call', {
       roomId: incomingCall.roomId,
       teacherId: user?.id,
@@ -128,7 +132,6 @@ export function TeacherIncomingCall() {
     return (
       <VideoCall
         {...activeCallConfig}
-        socket={socket}
       />
     );
   }

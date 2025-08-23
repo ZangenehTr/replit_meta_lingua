@@ -268,7 +268,7 @@ export default function CallernSystem() {
       roomId: roomId
     });
 
-    // Store call information for when the call is accepted
+    // Store call information and immediately start VideoCall
     setSelectedTeacher(teacher);
     setActiveCallConfig({
       roomId,
@@ -283,6 +283,9 @@ export default function CallernSystem() {
         queryClient.invalidateQueries({ queryKey: ["/api/student/my-callern-packages"] });
       },
     });
+
+    // Immediately show VideoCall (student waits for teacher in VideoCall component)
+    setIsInCall(true);
 
     // Show waiting dialog
     toast({
@@ -299,13 +302,13 @@ export default function CallernSystem() {
       console.log('Call accepted by teacher:', data);
       setWaitingForTeacher(false);
 
-      // Update the call config with the teacher's socket ID
+      // Update the call config with the teacher's socket ID if needed
       setActiveCallConfig((prev: any) => ({
         ...prev,
         remoteSocketId: data.teacherSocketId, // Pass teacher's socket ID to VideoCall
       }));
 
-      setIsInCall(true);
+      // Don't set isInCall here - student is already in VideoCall
 
       toast({
         title: t('callern:callAccepted'),

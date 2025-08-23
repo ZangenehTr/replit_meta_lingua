@@ -483,12 +483,15 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
     };
   }, [socket, roomId, userId, role, createPeer, initializeMedia, hasJoinedRoom]);
   
-  // Initialize media on mount (for student waiting for teacher)
+  // Initialize media on mount for both roles
   useEffect(() => {
-    // Only initialize media, don't create peer connection yet
-    if (role === 'student') {
-      initializeMedia();
-    }
+    // Initialize media for both teacher and student
+    // Teachers need media ready to respond to offers quickly
+    initializeMedia().then((stream) => {
+      if (stream) {
+        console.log(`${role} media initialized successfully`);
+      }
+    });
     
     return () => {
       // Cleanup on unmount
