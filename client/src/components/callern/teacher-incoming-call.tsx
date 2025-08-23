@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
-import { useLocation } from 'wouter';
-import io, { Socket } from 'socket.io-client';
+import { useSocket } from '@/hooks/use-socket';
+import { VideoCall } from './VideoCall';
 
 interface IncomingCallData {
   roomId: string;
@@ -22,38 +22,15 @@ interface IncomingCallData {
 export function TeacherIncomingCall() {
   const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null);
   const [isRinging, setIsRinging] = useState(false);
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const [isInCall, setIsInCall] = useState(false);
+  const [activeCallConfig, setActiveCallConfig] = useState<any>(null);
   const { user } = useAuth();
-  const [, setLocation] = useLocation();
+  const { socket } = useSocket(); // Use the existing socket from context
 
   useEffect(() => {
-    if (!user || (user.role !== 'Teacher' && user.role !== 'Teacher/Tutor')) return;
+    if (!user || (user.role !== 'Teacher' && user.role !== 'Teacher/Tutor') || !socket) return;
 
     console.log('TeacherIncomingCall component mounted for user:', user.id, user.role);
-
-    // Initialize socket connection
-    const newSocket = io({
-      path: '/socket.io/',
-      transports: ['websocket', 'polling']
-    });
-
-    setSocket(newSocket);
-
-    // Wait for connection before authenticating
-    newSocket.on('connect', () => {
-      console.log('Teacher WebSocket connected, authenticating with ID:', user.id);
-      // Authenticate with WebSocket as teacher
-      newSocket.emit('authenticate', {
-        userId: user.id,
-        role: 'teacher'
-      });
-    });
-    
-    // Listen for authentication confirmation
-    newSocket.on('authenticated', (data) => {
-      console.log('Teacher authentication confirmed:', data);
-      console.log('📡 Now listening for incoming calls...');
-    });
 
     // Listen for incoming calls - matching server event name
     const handleIncomingCall = (data: IncomingCallData) => {
@@ -73,24 +50,23 @@ export function TeacherIncomingCall() {
     };
 
     // Listen for the correct event name that server emits
-    newSocket.on('incoming-call', handleIncomingCall);
+    socket.on('incoming-call', handleIncomingCall);
     console.log('✅ Registered listener for incoming-call event');
     
     // Also listen for call-request for backwards compatibility
-    newSocket.on('call-request', handleIncomingCall);
+    socket.on('call-request', handleIncomingCall);
     console.log('✅ Registered listener for call-request event (backwards compat)');
 
     return () => {
-      newSocket.off('incoming-call', handleIncomingCall);
-      newSocket.off('call-request', handleIncomingCall);
-      newSocket.disconnect();
+      socket.off('incoming-call', handleIncomingCall);
+      socket.off('call-request', handleIncomingCall);
       // Stop ringtone if component unmounts
       if ((window as any).ringtoneAudio) {
         (window as any).ringtoneAudio.pause();
         (window as any).ringtoneAudio = null;
       }
     };
-  }, [user]);
+  }, [user, socket]);
 
   const handleAccept = () => {
     if (!incomingCall || !socket) return;
@@ -108,11 +84,17 @@ export function TeacherIncomingCall() {
       studentId: incomingCall.studentId
     });
 
-    // Navigate to video call page with room info
-    setLocation(`/callern/video/${incomingCall.roomId}?role=teacher&studentId=${incomingCall.studentId}`);
+    // Set up the call configuration
+    setActiveCallConfig({
+      roomId: incomingCall.roomId,
+      userId: user?.id || 0,
+      role: 'teacher' as const,
+      studentId: incomingCall.studentId,
+      onCallEnd: handleEndCall
+    });
     
     setIsRinging(false);
-    setIncomingCall(null);
+    setIsInCall(true);
   };
 
   const handleReject = () => {
@@ -135,8 +117,26 @@ export function TeacherIncomingCall() {
     setIncomingCall(null);
   };
 
+  const handleEndCall = () => {
+    setIsInCall(false);
+    setActiveCallConfig(null);
+    setIncomingCall(null);
+  };
+
+  // If in a call, show the VideoCall component
+  if (isInCall && activeCallConfig) {
+    return (
+      <VideoCall
+        {...activeCallConfig}
+        socket={socket}
+      />
+    );
+  }
+
+  // If not ringing, don't show anything
   if (!isRinging || !incomingCall) return null;
 
+  // Show the incoming call dialog
   return (
     <Dialog open={isRinging} onOpenChange={(open) => {
       if (!open) handleReject();
