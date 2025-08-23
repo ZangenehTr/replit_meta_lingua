@@ -54,13 +54,21 @@ export class OllamaService {
   private defaultModel: string;
 
   constructor() {
-    // Use environment variable or default to localhost
-    const host = process.env.OLLAMA_HOST || 'http://localhost:11434';
+    // Use environment variable or hardcoded server address
+    const host = process.env.OLLAMA_HOST === '127.0.0.1' || process.env.OLLAMA_HOST === 'localhost' 
+      ? 'http://45.89.239.250:11434'  // Use your actual Ollama server
+      : (process.env.OLLAMA_HOST || 'http://45.89.239.250:11434');
+    
     // Ensure the host has proper protocol
     this.baseUrl = host.startsWith('http://') || host.startsWith('https://') 
       ? host 
       : `http://${host}`;
-    this.defaultModel = process.env.OLLAMA_MODEL || 'llama2';
+    
+    // Use configured model or default
+    this.defaultModel = process.env.OLLAMA_MODEL === 'llama3.2b' 
+      ? 'llama3.2:3b'  // Correct model name format
+      : (process.env.OLLAMA_MODEL || 'llama3.2:3b');
+      
     console.log(`Ollama service initialized with host: ${this.baseUrl}, model: ${this.defaultModel}`);
   }
 
