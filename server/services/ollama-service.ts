@@ -54,8 +54,12 @@ export class OllamaService {
   private defaultModel: string;
 
   constructor() {
-    // Use local Ollama server
-    let host = process.env.OLLAMA_HOST || '127.0.0.1';
+    // Use Ollama server on 45.89.239.250
+    // Override localhost with actual server address
+    let host = process.env.OLLAMA_HOST;
+    if (!host || host === '127.0.0.1' || host === 'localhost') {
+      host = '45.89.239.250';
+    }
     
     // Ensure the host has proper protocol and port
     if (!host.startsWith('http://') && !host.startsWith('https://')) {
