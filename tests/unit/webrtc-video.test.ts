@@ -80,7 +80,19 @@ describe('WebRTC Video Calling', () => {
       roomId: 'test-room-123',
     };
     
+    // Setup fetch mock for TURN credentials
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+    });
+    
+    // Initialize call (peer not created yet)
     await webRTCService.initializeCall(config);
+    
+    // Simulate call acceptance (this creates the peer)
+    const mockSocket = { emit: vi.fn(), on: vi.fn() };
+    (webRTCService as any).socket = mockSocket;
+    await (webRTCService as any).createPeerConnection(true, config.roomId);
     
     expect(SimplePeer).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -96,6 +108,12 @@ describe('WebRTC Video Calling', () => {
   });
 
   test('should exchange offer/answer through signaling server', async () => {
+    // Setup fetch mock for TURN credentials
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+    });
+    
     const mockSocket = {
       on: vi.fn(),
       emit: vi.fn(),
@@ -137,6 +155,12 @@ describe('WebRTC Video Calling', () => {
   });
 
   test('should handle ICE candidates properly', async () => {
+    // Setup fetch mock for TURN credentials
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+    });
+    
     const mockSocket = {
       on: vi.fn(),
       emit: vi.fn(),
@@ -184,6 +208,12 @@ describe('WebRTC Video Calling', () => {
   });
 
   test('should establish video stream within 5 seconds', async () => {
+    // Setup fetch mock for TURN credentials
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+    });
+    
     const mockPeer = {
       on: vi.fn((event, callback) => {
         if (event === 'stream') {
@@ -222,6 +252,12 @@ describe('WebRTC Video Calling', () => {
   });
 
   test('should establish audio stream within 5 seconds', async () => {
+    // Setup fetch mock for TURN credentials
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+    });
+    
     const mockPeer = {
       on: vi.fn((event, callback) => {
         if (event === 'stream') {
@@ -262,6 +298,12 @@ describe('WebRTC Video Calling', () => {
   });
 
   test('should handle connection failure and retry', async () => {
+    // Setup fetch mock for TURN credentials
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+    });
+    
     const mockPeer = {
       on: vi.fn((event, callback) => {
         if (event === 'error') {
@@ -342,6 +384,12 @@ describe('WebRTC Video Calling', () => {
   });
 
   test('should reconnect when network changes', async () => {
+    // Setup fetch mock for TURN credentials
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+    });
+    
     const mockPeer = {
       on: vi.fn((event, callback) => {
         if (event === 'close') {
