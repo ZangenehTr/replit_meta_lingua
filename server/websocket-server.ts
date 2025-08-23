@@ -34,6 +34,11 @@ export class CallernWebSocketServer {
   private teacherSockets: Map<number, TeacherSocket> = new Map();
   private studentSockets: Map<number, string> = new Map();
   private userSockets: Map<string, UserSocket> = new Map(); // socketId -> user info
+  
+  // Public method to get connected teachers
+  public getConnectedTeachers(): number[] {
+    return Array.from(this.teacherSockets.keys());
+  }
   private roomTimers: Map<string, NodeJS.Timeout> = new Map();
 
   constructor(httpServer: Server) {
@@ -350,6 +355,32 @@ export class CallernWebSocketServer {
         socket.join(roomId);
         room.participants.add(socket.id);
         console.log('Teacher joined room:', roomId);
+        
+        // Clear the teacher's availability and current call properly
+        const teacherSocket = this.teacherSockets.get(teacherId);
+        if (teacherSocket) {
+          // Clear any old call state
+          if (teacherSocket.currentCall && teacherSocket.currentCall !== roomId) {
+            // Clean up old room if exists
+            const oldRoom = this.activeRooms.get(teacherSocket.currentCall);
+            if (oldRoom) {
+              oldRoom.participants.delete(teacherSocket.socketId);
+              if (oldRoom.participants.size === 0) {
+                this.activeRooms.delete(teacherSocket.currentCall);
+              }
+            }
+          }
+          
+          // Set new call state
+          teacherSocket.currentCall = roomId;
+          teacherSocket.isAvailable = false;
+          
+          console.log('Updated teacher socket state:', {
+            teacherId,
+            currentCall: teacherSocket.currentCall,
+            isAvailable: teacherSocket.isAvailable
+          });
+        }
 
         // Notify student that call was accepted
         const studentSocketId = this.studentSockets.get(studentId);
