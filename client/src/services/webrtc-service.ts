@@ -1,4 +1,4 @@
-import SimplePeer from 'simple-peer';
+import SimplePeer from '@/lib/simple-peer-wrapper';
 import { io, Socket } from 'socket.io-client';
 import RecordRTC from 'recordrtc';
 
