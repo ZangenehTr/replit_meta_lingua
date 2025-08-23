@@ -8668,6 +8668,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allTeachers = await storage.getTeachers();
       const callernAvailability = await storage.getTeacherCallernAvailability();
       
+      // Get currently connected teachers from WebSocket server
+      const connectedTeacherIds = app.locals.websocketServer?.getConnectedTeachers?.() || [];
+      
       // Filter for our test teachers (teacher1 and teacher2)
       const testTeachers = allTeachers.filter(t => 
         t.email === 'teacher1@test.com' || t.email === 'teacher2@test.com'
@@ -8678,8 +8681,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const availability = callernAvailability.find(a => a.teacherId === teacher.id);
         const isTeacher1 = teacher.email === 'teacher1@test.com';
         
-        // Use actual online status from database availability
-        const isOnline = availability?.isOnline || false;
+        // Teacher is online only if they're actually connected via WebSocket
+        const isOnline = connectedTeacherIds.includes(teacher.id);
         
         return {
           id: teacher.id,
@@ -18599,6 +18602,9 @@ Meta Lingua Academy`;
   
   // Initialize Callern WebSocket server
   const callernWS = new CallernWebSocketServer(httpServer);
+  
+  // Expose WebSocket server to routes via app.locals
+  app.locals.websocketServer = callernWS;
   
   return httpServer;
 }
