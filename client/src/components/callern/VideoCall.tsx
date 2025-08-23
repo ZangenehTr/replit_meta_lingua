@@ -7,7 +7,8 @@ import {
   Mic, MicOff, Video, VideoOff, PhoneOff, 
   Monitor, MonitorOff, MessageSquare, HelpCircle,
   Volume2, VolumeX, Maximize2, Minimize2,
-  User, Target, Clock, BookOpen, CheckCircle, AlertCircle
+  User, Target, Clock, BookOpen, CheckCircle, AlertCircle,
+  Circle, Square
 } from 'lucide-react';
 import { getSimplePeerConfig } from '../../../../shared/webrtc-config';
 import { useTranslation } from 'react-i18next';
@@ -100,6 +101,7 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [remoteSocketId, setRemoteSocketId] = useState<string | null>(propsRemoteSocketId || null);
   const [showChat, setShowChat] = useState(false);
@@ -686,6 +688,27 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
       setIsFullscreen(false);
     }
   };
+
+  const toggleRecording = async () => {
+    try {
+      // Import webRTCService dynamically to access recording methods
+      const { webRTCService } = await import('../../services/webrtc-service');
+      
+      if (!isRecording) {
+        // Start recording
+        await webRTCService.startRecording();
+        setIsRecording(true);
+        console.log('Recording started');
+      } else {
+        // Stop and download recording
+        await webRTCService.downloadRecording();
+        setIsRecording(false);
+        console.log('Recording stopped and downloaded');
+      }
+    } catch (error) {
+      console.error('Recording error:', error);
+    }
+  };
   
   return (
     <div className="flex h-screen bg-gray-900">
@@ -1009,6 +1032,17 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
             disabled={!isConnected}
           >
             {isScreenSharing ? <MonitorOff className="h-6 w-6" /> : <Monitor className="h-6 w-6" />}
+          </Button>
+          
+          <Button
+            size="lg"
+            variant={isRecording ? "destructive" : "secondary"}
+            onClick={toggleRecording}
+            className="rounded-full w-14 h-14"
+            disabled={!isConnected}
+            title={isRecording ? "Stop Recording" : "Start Recording"}
+          >
+            {isRecording ? <Square className="h-6 w-6" /> : <Circle className="h-6 w-6 text-red-500" />}
           </Button>
           
           <Button
