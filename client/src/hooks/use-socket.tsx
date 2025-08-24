@@ -36,6 +36,11 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    // Don't recreate socket if we already have one connected
+    if (socket && socket.connected) {
+      return;
+    }
+
     // Create a single socket connection for the entire app
     const newSocket = io({
       path: '/socket.io/',
@@ -43,6 +48,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      autoConnect: true,
     });
 
     // Authenticate the socket with user credentials
@@ -62,6 +68,15 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       setIsConnected(false);
     });
 
+    newSocket.on('reconnect', () => {
+      console.log('Socket reconnected');
+      // Re-authenticate on reconnection
+      newSocket.emit('authenticate', {
+        userId: user.id,
+        role: user.role
+      });
+    });
+
     newSocket.on('error', (error) => {
       console.error('Socket error:', error);
     });
@@ -70,9 +85,12 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
     // Cleanup on unmount or user change
     return () => {
-      newSocket.disconnect();
+      // Don't disconnect if user hasn't changed
+      if (!user) {
+        newSocket.disconnect();
+      }
     };
-  }, [user?.id, user?.role]); // Only recreate socket when user changes
+  }, [user?.id]); // Only recreate socket when user ID changes (not role)
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>

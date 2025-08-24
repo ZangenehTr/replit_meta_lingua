@@ -412,6 +412,23 @@ export default function CallernSystem() {
   return (
     <MobileLayout>
       <div className="container mx-auto py-6 space-y-6">
+        {/* Connection Status */}
+        <div className="flex justify-end px-4">
+          <div className={`flex items-center gap-2 text-sm ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
+            {isConnected ? (
+              <>
+                <Wifi className="h-4 w-4" />
+                <span>Connected</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-4 w-4" />
+                <span>Not Connected</span>
+              </>
+            )}
+          </div>
+        </div>
+
         {/* Welcome Banner */}
         <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl p-6 md:p-8 text-white shadow-xl">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
