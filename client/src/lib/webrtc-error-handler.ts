@@ -63,15 +63,24 @@ function setupHandlers() {
       message.includes('RTCPeerConnection') ||
       message.includes('Failed to execute') ||
       message.includes('Called in wrong state') ||
+      message.includes('stable') ||
       message.includes('The remote description was null');
     
     if (isWebRTCError) {
-      // Prevent the error from appearing in console
+      // Prevent the error from appearing in console and UI
       event.preventDefault();
+      event.stopImmediatePropagation();
       
-      // Log as info instead of error
-      console.info('WebRTC timing issue (normal during connection setup):', message);
-      return;
+      // Log as debug only - these are normal timing issues
+      console.debug('WebRTC timing (normal):', message);
+      
+      // Hide Vite error overlay if it exists
+      const errorOverlay = document.querySelector('vite-error-overlay');
+      if (errorOverlay) {
+        (errorOverlay as HTMLElement).style.display = 'none';
+      }
+      
+      return false;
     }
   }, true); // Use capture phase to catch errors earlier
   
