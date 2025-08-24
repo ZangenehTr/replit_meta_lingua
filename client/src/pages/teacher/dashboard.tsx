@@ -127,7 +127,7 @@ export default function TeacherDashboard() {
       <TeacherIncomingCall />
       
       {/* Callern Online Toggle - allows teacher to go online/offline for video calls */}
-      <div className="mb-6 max-w-md mx-auto">
+      <div className="fixed top-4 right-4 z-50 md:relative md:top-auto md:right-auto md:mb-6 md:max-w-md md:mx-auto">
         <TeacherOnlineToggle />
       </div>
       
@@ -215,13 +215,13 @@ export default function TeacherDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:grid-cols-6">
-            <TabsTrigger value="overview">{t('teacher:overview')}</TabsTrigger>
-            <TabsTrigger value="classes">{t('teacher:classes')}</TabsTrigger>
-            <TabsTrigger value="assignments">{t('teacher:assignments')}</TabsTrigger>
-            <TabsTrigger value="schedule">{t('teacher:schedule')}</TabsTrigger>
-            <TabsTrigger value="availability">{t('teacher:availability')}</TabsTrigger>
-            <TabsTrigger value="observations" className="relative">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:w-auto lg:grid-cols-6 gap-1">
+            <TabsTrigger value="overview" className="text-xs md:text-sm">{t('teacher:overview', 'Overview')}</TabsTrigger>
+            <TabsTrigger value="classes" className="text-xs md:text-sm">{t('teacher:classes.title', 'Classes')}</TabsTrigger>
+            <TabsTrigger value="assignments" className="text-xs md:text-sm">{t('teacher:assignments.title', 'Tasks')}</TabsTrigger>
+            <TabsTrigger value="schedule" className="text-xs md:text-sm">{t('teacher:schedule.title', 'Schedule')}</TabsTrigger>
+            <TabsTrigger value="availability" className="text-xs md:text-sm">{t('teacher:callern.availability', 'Available')}</TabsTrigger>
+            <TabsTrigger value="observations" className="relative text-xs md:text-sm">
               {t('teacher:observations')}
               {(unacknowledgedObservations as any)?.length > 0 && (
                 <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs">

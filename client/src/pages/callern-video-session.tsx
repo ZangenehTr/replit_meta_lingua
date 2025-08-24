@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { VideoCall } from "@/components/callern/VideoCall";
+import { VideoCallFinal } from "@/components/callern/VideoCallFinal";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 
@@ -53,7 +53,7 @@ export default function CallernVideoSession() {
   }, [refetchTeachers]);
 
   // Calculate available minutes
-  const availableMinutes = myPackages?.reduce((total: number, pkg: any) => {
+  const availableMinutes = (myPackages as any[])?.reduce((total: number, pkg: any) => {
     if (pkg.status === 'active') {
       return total + (pkg.minutesRemaining || 0);
     }
@@ -104,11 +104,15 @@ export default function CallernVideoSession() {
 
   if (isInCall && callRoomId) {
     return (
-      <VideoCall
+      <VideoCallFinal
         roomId={callRoomId}
         userId={user?.id || 0}
         role="student"
         teacherName={`${selectedTeacher?.firstName} ${selectedTeacher?.lastName}`}
+        studentName={`${user?.firstName} ${user?.lastName}`}
+        roadmapTitle="General Conversation Practice"
+        sessionStep="Free Talk Session"
+        packageMinutesRemaining={availableMinutes}
         onCallEnd={handleEndCall}
       />
     );
@@ -157,7 +161,7 @@ export default function CallernVideoSession() {
                     <Award className="w-4 h-4 text-blue-600" />
                     <div>
                       <p className="text-xs text-muted-foreground">{t('callern:totalCalls')}</p>
-                      <p className="text-2xl font-bold text-blue-600">{callHistory?.length || 0}</p>
+                      <p className="text-2xl font-bold text-blue-600">{(callHistory as any[])?.length || 0}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -189,9 +193,9 @@ export default function CallernVideoSession() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
                     <p className="mt-2 text-sm text-muted-foreground">{t('callern:loadingTeachers')}</p>
                   </div>
-                ) : onlineTeachers && onlineTeachers.length > 0 ? (
+                ) : onlineTeachers && (onlineTeachers as any[]).length > 0 ? (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {onlineTeachers.map((teacher: any) => (
+                    {(onlineTeachers as any[]).map((teacher: any) => (
                       <Card key={teacher.id} className="hover:shadow-lg transition-shadow">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-3">
@@ -256,9 +260,9 @@ export default function CallernVideoSession() {
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
                   </div>
-                ) : myPackages && myPackages.length > 0 ? (
+                ) : myPackages && (myPackages as any[]).length > 0 ? (
                   <div className="space-y-3">
-                    {myPackages.map((pkg: any) => (
+                    {(myPackages as any[]).map((pkg: any) => (
                       <Card key={pkg.id} className={pkg.status === 'active' ? 'border-green-500' : 'border-gray-300'}>
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
@@ -303,9 +307,9 @@ export default function CallernVideoSession() {
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
                   </div>
-                ) : callHistory && callHistory.length > 0 ? (
+                ) : callHistory && (callHistory as any[]).length > 0 ? (
                   <div className="space-y-3">
-                    {callHistory.map((call: any) => (
+                    {(callHistory as any[]).map((call: any) => (
                       <Card key={call.id}>
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">

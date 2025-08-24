@@ -91,5 +91,46 @@
     "notifications": "اطلاعیه‌ها",
     "announcements": "اعلان‌ها",
     "chatWithStudents": "گفتگو با دانشجویان"
-  }
+  },
+  "callern": {
+    "title": "کالِرن",
+    "incomingCall": "تماس ورودی",
+    "onlineStatus": "وضعیت آنلاین",
+    "goOnline": "آنلاین شوید",
+    "goOffline": "آفلاین شوید",
+    "availability": "دسترسی",
+    "todaySchedule": "برنامه امروز",
+    "upcomingCalls": "تماس‌های آینده",
+    "callHistory": "تاریخچه تماس‌ها",
+    "earnings": "درآمد",
+    "totalCalls": "کل تماس‌ها",
+    "avgCallDuration": "میانگین مدت تماس",
+    "rating": "امتیاز",
+    "reviews": "نظرات",
+    "studentInfo": "اطلاعات دانشجو",
+    "accept": "پذیرش",
+    "reject": "رد کردن",
+    "endCall": "پایان تماس",
+    "minutes": "دقیقه",
+    "perHour": "در ساعت"
+  },
+  "observations": {
+    "title": "مشاهدات",
+    "unacknowledged": "تایید نشده",
+    "acknowledged": "تایید شده",
+    "viewObservations": "مشاهده بازرسی‌ها",
+    "feedback": "بازخورد",
+    "score": "امتیاز"
+  },
+  "overview": "نمای کلی",
+  "upcomingSessions": "جلسات آینده",
+  "recentActivity": "فعالیت‌های اخیر",
+  "notifications": "اعلان‌ها",
+  "viewAll": "مشاهده همه",
+  "joinNow": "الان وارد شوید",
+  "startIn": "شروع در",
+  "classChat": "چت کلاس",
+  "viewAssignment": "مشاهده تکلیف",
+  "setAvailability": "تنظیم دسترسی",
+  "viewSchedule": "مشاهده برنامه"
 }
