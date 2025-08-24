@@ -1,7 +1,13 @@
 // client/src/components/VideoCall.tsx
 import React, { useEffect, useRef, useState } from "react";
 import io, { Socket } from "socket.io-client";
-import { wrapPeerConnection } from "@/lib/webrtc-error-handler";
+import {
+  installWebRTCErrorHandler,
+  wrapPeerConnection,
+} from "@/lib/webrtc-error-handler";
+
+// Install global WebRTC error handler once
+installWebRTCErrorHandler();
 
 interface VideoCallProps {
   roomId: string;
