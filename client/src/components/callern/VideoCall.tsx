@@ -108,6 +108,7 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
   const [showWordHelper, setShowWordHelper] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showBriefing, setShowBriefing] = useState(role === 'teacher');
+  const pendingCandidatesRef = useRef<any[]>([]);
   
   // Scoring state - always show for educational purposes
   const [showScoring, setShowScoring] = useState(true);
@@ -194,7 +195,6 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
       ...peerConfig,
       stream,
       trickle: true, // Enable trickle ICE for faster connection
-      reconnectTimer: 3000, // Attempt reconnection after 3 seconds
     });
     
     // Store target socket ID in closure to ensure it's available for all signals
@@ -264,7 +264,7 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
           answer: signal,
           to: targetId
         });
-      } else if (signal.candidate) {
+      } else if ((signal as any).candidate) {
         // ICE candidate
         console.log('Sending ICE candidate to:', targetId);
         socket?.emit('ice-candidate', {
@@ -316,10 +316,13 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
       if (joinedUserId !== userId) {
         setRemoteSocketId(socketId);
         
-        // If we already have a peer that's waiting for a target, update it
-        if (peerRef.current && (peerRef.current as any).updateTargetSocketId) {
-          console.log('Updating existing peer target socket ID to:', socketId);
-          (peerRef.current as any).updateTargetSocketId(socketId);
+        // If we already have a peer connection, don't create another one
+        if (peerRef.current && !(peerRef.current as any).destroyed) {
+          console.log('Already have an active peer connection, updating target socket ID');
+          if ((peerRef.current as any).updateTargetSocketId) {
+            (peerRef.current as any).updateTargetSocketId(socketId);
+          }
+          return;
         }
         
         // Normalize roles for comparison
@@ -343,12 +346,14 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
           }
           const stream = await initializeMedia();
           if (stream && !peerRef.current) {
+            // Clear any pending candidates from previous attempts
+            pendingCandidatesRef.current = [];
             // Small delay to ensure socket is ready
             setTimeout(async () => {
               if (!peerRef.current) {
                 peerRef.current = await createPeer(true, stream, socketId);
               }
-            }, 500); // Increased delay for stability
+            }, 1000); // Increased delay for better stability
           }
         }
       }
@@ -367,8 +372,15 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
       const stream = await initializeMedia();
       if (stream) {
         const peer = await createPeer(false, stream, from);
-        peer.signal(offer);
         peerRef.current = peer;
+        
+        // Signal the offer to set remote description
+        peer.signal(offer);
+        
+        // Process any pending ICE candidates after a short delay
+        setTimeout(() => {
+          processPendingCandidates();
+        }, 100);
       }
     };
     
@@ -401,6 +413,11 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
         // Only process answer if we're expecting one
         if (signalingState === 'have-local-offer') {
           peerRef.current.signal(answer);
+          
+          // Process any pending ICE candidates after a short delay
+          setTimeout(() => {
+            processPendingCandidates();
+          }, 100);
         } else if (signalingState === 'stable') {
           console.log('Peer already in stable state, ignoring duplicate answer');
         } else {
@@ -413,18 +430,62 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
     
     const handleIceCandidate = ({ candidate, from }: any) => {
       console.log('Received ICE candidate from:', from);
-      if (peerRef.current && candidate) {
+      
+      if (!candidate) {
+        return;
+      }
+      
+      // Check if we have a peer connection
+      if (!peerRef.current || peerRef.current.destroyed) {
+        console.log('No peer connection yet, queuing ICE candidate');
+        pendingCandidatesRef.current.push({ candidate, from });
+        return;
+      }
+      
+      // Check if remote description is set
+      const pc = (peerRef.current as any)._pc;
+      if (!pc || !pc.remoteDescription) {
+        console.log('Remote description not set yet, queuing ICE candidate');
+        pendingCandidatesRef.current.push({ candidate, from });
+        return;
+      }
+      
+      try {
+        // Check if the candidate has the required fields
+        if (candidate.candidate || candidate.type === 'candidate') {
+          peerRef.current.signal(candidate);
+        } else {
+          console.warn('Invalid ICE candidate format:', candidate);
+        }
+      } catch (error) {
+        console.error('Error adding ICE candidate:', error);
+      }
+    };
+    
+    const processPendingCandidates = () => {
+      if (!peerRef.current || pendingCandidatesRef.current.length === 0) {
+        return;
+      }
+      
+      const pc = (peerRef.current as any)._pc;
+      if (!pc || !pc.remoteDescription) {
+        console.log('Still no remote description, keeping candidates queued');
+        return;
+      }
+      
+      console.log(`Processing ${pendingCandidatesRef.current.length} pending ICE candidates`);
+      const candidates = [...pendingCandidatesRef.current];
+      pendingCandidatesRef.current = [];
+      
+      candidates.forEach(({ candidate }) => {
         try {
-          // Check if the candidate has the required fields
           if (candidate.candidate || candidate.type === 'candidate') {
-            peerRef.current.signal(candidate);
-          } else {
-            console.warn('Invalid ICE candidate format:', candidate);
+            peerRef.current?.signal(candidate);
           }
         } catch (error) {
-          console.error('Error adding ICE candidate:', error);
+          console.error('Error processing pending ICE candidate:', error);
         }
-      }
+      });
     };
     
     const handlePeerVideoToggle = ({ enabled }: any) => {
@@ -508,6 +569,9 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
   useEffect(() => {
     if (role === 'student' && propsRemoteSocketId && !peerRef.current && socket) {
       console.log('Student: Have teacher socket ID from props, initiating call with:', propsRemoteSocketId);
+      
+      // Clear any pending candidates from previous attempts
+      pendingCandidatesRef.current = [];
       
       // Small delay to ensure socket is ready
       const timer = setTimeout(async () => {
