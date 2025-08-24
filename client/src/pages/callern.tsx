@@ -375,14 +375,8 @@ export default function CallernSystem() {
     queryClient.invalidateQueries({ queryKey: ["/api/student/callern-history"] });
   };
 
-  // Clean up socket on component unmount
-  useEffect(() => {
-    return () => {
-      if (socket) {
-        socket.disconnect();
-      }
-    };
-  }, [socket]);
+  // Don't disconnect socket on unmount - let SocketProvider manage it
+  // The socket should persist across navigation
 
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);

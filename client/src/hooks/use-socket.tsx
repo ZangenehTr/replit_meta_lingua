@@ -50,18 +50,40 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       setIsConnected(false);
     };
 
+    const handleReconnect = () => {
+      console.log('Socket provider: reconnected');
+      setIsConnected(true);
+      // Re-authenticate after reconnection
+      managedSocket.emit('authenticate', {
+        userId: user.id,
+        role: user.role
+      });
+    };
+
+    const handleError = (error: any) => {
+      console.error('Socket provider error:', error);
+      setIsConnected(false);
+    };
+
     managedSocket.on('connect', handleConnect);
     managedSocket.on('disconnect', handleDisconnect);
+    managedSocket.on('reconnect', handleReconnect);
+    managedSocket.on('connect_error', handleError);
 
     // Check initial connection state
     if (managedSocket.connected) {
+      console.log('Socket already connected on mount');
       setIsConnected(true);
+    } else {
+      console.log('Socket not connected on mount, waiting for connection...');
     }
 
     // Cleanup listeners on unmount
     return () => {
       managedSocket.off('connect', handleConnect);
       managedSocket.off('disconnect', handleDisconnect);
+      managedSocket.off('reconnect', handleReconnect);
+      managedSocket.off('connect_error', handleError);
       // Don't disconnect the socket here - let it persist
     };
   }, [user?.id, user?.role]);

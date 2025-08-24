@@ -16,8 +16,13 @@ class SocketManager {
 
   connect(userId: number, role: string): Socket {
     // Don't recreate if we already have a socket for this user
-    if (this.socket && this.socket.connected && this.currentUserId === userId) {
-      console.log('Using existing socket connection:', this.socket.id);
+    if (this.socket && this.currentUserId === userId) {
+      console.log('Using existing socket for user:', userId);
+      // If socket exists but is disconnected, reconnect it
+      if (!this.socket.connected) {
+        console.log('Reconnecting existing socket...');
+        this.socket.connect();
+      }
       return this.socket;
     }
 
@@ -34,8 +39,10 @@ class SocketManager {
       path: '/socket.io/',
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
       autoConnect: true,
     });
 
