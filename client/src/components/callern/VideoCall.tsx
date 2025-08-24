@@ -374,22 +374,43 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
       
       // Don't create duplicate peer connections
       if (peerRef.current && !(peerRef.current as any).destroyed) {
-        console.log('Peer already exists, ignoring duplicate offer');
+        const pc = (peerRef.current as any)._pc;
+        if (pc) {
+          const signalingState = pc.signalingState;
+          console.log(`Peer already exists in state: ${signalingState}, ignoring duplicate offer`);
+          
+          // If we're in stable state and get another offer, it might be a renegotiation
+          if (signalingState === 'stable') {
+            console.log('Received offer in stable state - possible renegotiation attempt, ignoring');
+          }
+        }
         return;
       }
       
       const stream = await initializeMedia();
       if (stream) {
+        // Clear any pending candidates from previous attempts
+        pendingCandidatesRef.current = [];
+        
         const peer = await createPeer(false, stream, from);
         peerRef.current = peer;
         
         // Signal the offer to set remote description
-        peer.signal(offer);
-        
-        // Process any pending ICE candidates after a short delay
-        setTimeout(() => {
-          processPendingCandidates();
-        }, 100);
+        try {
+          peer.signal(offer);
+          
+          // Process any pending ICE candidates after a short delay
+          setTimeout(() => {
+            processPendingCandidates();
+          }, 100);
+        } catch (error) {
+          console.error('Error signaling offer:', error);
+          // Clean up on error
+          if (peerRef.current) {
+            peerRef.current.destroy();
+            peerRef.current = null;
+          }
+        }
       }
     };
     
@@ -428,12 +449,16 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
             processPendingCandidates();
           }, 100);
         } else if (signalingState === 'stable') {
-          console.log('Peer already in stable state, ignoring duplicate answer');
+          console.log('Peer already in stable state, possibly duplicate answer - ignoring');
+          // Don't try to process this answer as it would cause an error
+        } else if (signalingState === 'have-remote-offer') {
+          console.log('Have remote offer, cannot set answer - ignoring');
         } else {
           console.log(`Unexpected signaling state: ${signalingState}, ignoring answer`);
         }
       } catch (error) {
-        console.error('Error setting answer:', error);
+        console.error('Error handling answer:', error);
+        // Don't throw, just log the error
       }
     };
     
@@ -451,10 +476,20 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
         return;
       }
       
-      // Check if remote description is set
+      // Check if remote description is set and signaling state is valid
       const pc = (peerRef.current as any)._pc;
-      if (!pc || !pc.remoteDescription) {
-        console.log('Remote description not set yet, queuing ICE candidate');
+      if (!pc) {
+        console.log('No internal peer connection, queuing ICE candidate');
+        pendingCandidatesRef.current.push({ candidate, from });
+        return;
+      }
+      
+      const signalingState = pc.signalingState;
+      const hasRemoteDesc = pc.remoteDescription;
+      
+      // Only add ICE candidates when in stable state or have-remote-offer
+      if (!hasRemoteDesc || (signalingState !== 'stable' && signalingState !== 'have-remote-offer')) {
+        console.log(`Cannot add ICE candidate in state: ${signalingState}, remote desc: ${!!hasRemoteDesc}, queuing`);
         pendingCandidatesRef.current.push({ candidate, from });
         return;
       }
@@ -463,19 +498,35 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
         // Ensure candidate has all required fields
         const formattedCandidate = {
           candidate: candidate.candidate || candidate,
-          sdpMLineIndex: candidate.sdpMLineIndex ?? 0,
-          sdpMid: candidate.sdpMid ?? '0',
+          sdpMLineIndex: candidate.sdpMLineIndex !== undefined ? candidate.sdpMLineIndex : 0,
+          sdpMid: candidate.sdpMid !== undefined ? candidate.sdpMid : '0',
           type: 'candidate' as const
         };
         
-        // Only signal if we have a valid candidate string
-        if (formattedCandidate.candidate && typeof formattedCandidate.candidate === 'string') {
-          peerRef.current.signal(formattedCandidate);
-        } else {
+        // Validate candidate string
+        if (!formattedCandidate.candidate || typeof formattedCandidate.candidate !== 'string') {
           console.warn('Invalid ICE candidate format:', candidate);
+          return;
         }
+        
+        // Additional validation for required fields
+        if (formattedCandidate.sdpMLineIndex === null || formattedCandidate.sdpMid === null) {
+          console.warn('ICE candidate missing required fields, using defaults');
+          formattedCandidate.sdpMLineIndex = 0;
+          formattedCandidate.sdpMid = '0';
+        }
+        
+        console.log('Adding ICE candidate with fields:', {
+          hasCandidate: !!formattedCandidate.candidate,
+          sdpMLineIndex: formattedCandidate.sdpMLineIndex,
+          sdpMid: formattedCandidate.sdpMid
+        });
+        
+        peerRef.current.signal(formattedCandidate);
       } catch (error) {
         console.error('Error adding ICE candidate:', error);
+        // Queue it for retry
+        pendingCandidatesRef.current.push({ candidate, from });
       }
     };
     
@@ -485,8 +536,17 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
       }
       
       const pc = (peerRef.current as any)._pc;
-      if (!pc || !pc.remoteDescription) {
-        console.log('Still no remote description, keeping candidates queued');
+      if (!pc) {
+        console.log('No peer connection, keeping candidates queued');
+        return;
+      }
+      
+      const signalingState = pc.signalingState;
+      const hasRemoteDesc = pc.remoteDescription;
+      
+      // Only process candidates when in stable state or have-remote-offer
+      if (!hasRemoteDesc || (signalingState !== 'stable' && signalingState !== 'have-remote-offer')) {
+        console.log(`Cannot process pending candidates in state: ${signalingState}, remote desc: ${!!hasRemoteDesc}`);
         return;
       }
       
@@ -499,18 +559,33 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
           // Ensure candidate has all required fields
           const formattedCandidate = {
             candidate: candidate.candidate || candidate,
-            sdpMLineIndex: candidate.sdpMLineIndex ?? 0,
-            sdpMid: candidate.sdpMid ?? '0',
+            sdpMLineIndex: candidate.sdpMLineIndex !== undefined ? candidate.sdpMLineIndex : 0,
+            sdpMid: candidate.sdpMid !== undefined ? candidate.sdpMid : '0',
             type: 'candidate' as const
           };
           
+          // Validate before signaling
           if (formattedCandidate.candidate && typeof formattedCandidate.candidate === 'string') {
-            peerRef.current?.signal(formattedCandidate);
+            // Double-check signaling state before each candidate
+            const currentState = (peerRef.current as any)?._pc?.signalingState;
+            if (currentState === 'stable' || currentState === 'have-remote-offer') {
+              peerRef.current?.signal(formattedCandidate);
+            } else {
+              // Re-queue if state changed
+              pendingCandidatesRef.current.push({ candidate });
+            }
           }
         } catch (error) {
           console.error('Error processing pending ICE candidate:', error);
+          // Re-queue failed candidates
+          pendingCandidatesRef.current.push({ candidate });
         }
       });
+      
+      // If we re-queued any candidates, try again after a delay
+      if (pendingCandidatesRef.current.length > 0) {
+        setTimeout(() => processPendingCandidates(), 500);
+      }
     };
     
     const handlePeerVideoToggle = ({ enabled }: any) => {
