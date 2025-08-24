@@ -20,6 +20,9 @@ export const useSocket = () => {
   return context;
 };
 
+// Create socket instance outside component to persist across renders
+let globalSocket: Socket | null = null;
+
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -28,69 +31,71 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!user) {
       // Clean up socket if user logs out
-      if (socket) {
-        socket.disconnect();
+      if (globalSocket) {
+        globalSocket.disconnect();
+        globalSocket = null;
         setSocket(null);
         setIsConnected(false);
       }
       return;
     }
 
-    // Don't recreate socket if we already have one connected
-    if (socket && socket.connected) {
+    // Use existing global socket if available and connected
+    if (globalSocket && globalSocket.connected) {
+      setSocket(globalSocket);
+      setIsConnected(true);
       return;
     }
 
-    // Create a single socket connection for the entire app
-    const newSocket = io({
-      path: '/socket.io/',
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      autoConnect: true,
-    });
-
-    // Authenticate the socket with user credentials
-    newSocket.on('connect', () => {
-      console.log('Socket connected:', newSocket.id);
-      setIsConnected(true);
-
-      // Authenticate based on user role
-      newSocket.emit('authenticate', {
-        userId: user.id,
-        role: user.role
+    // Create socket only if it doesn't exist
+    if (!globalSocket) {
+      globalSocket = io({
+        path: '/socket.io/',
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        autoConnect: true,
       });
-    });
 
-    newSocket.on('disconnect', () => {
-      console.log('Socket disconnected');
-      setIsConnected(false);
-    });
+      // Authenticate the socket with user credentials
+      globalSocket.on('connect', () => {
+        console.log('Socket connected:', globalSocket!.id);
+        setIsConnected(true);
 
-    newSocket.on('reconnect', () => {
-      console.log('Socket reconnected');
-      // Re-authenticate on reconnection
-      newSocket.emit('authenticate', {
-        userId: user.id,
-        role: user.role
+        // Authenticate based on user role
+        globalSocket!.emit('authenticate', {
+          userId: user.id,
+          role: user.role
+        });
       });
-    });
 
-    newSocket.on('error', (error) => {
-      console.error('Socket error:', error);
-    });
+      globalSocket.on('disconnect', () => {
+        console.log('Socket disconnected');
+        setIsConnected(false);
+      });
 
-    setSocket(newSocket);
+      globalSocket.on('reconnect', () => {
+        console.log('Socket reconnected');
+        // Re-authenticate on reconnection
+        globalSocket!.emit('authenticate', {
+          userId: user.id,
+          role: user.role
+        });
+      });
 
-    // Cleanup on unmount or user change
+      globalSocket.on('error', (error) => {
+        console.error('Socket error:', error);
+      });
+    }
+
+    setSocket(globalSocket);
+
+    // Cleanup only on user logout
     return () => {
-      // Don't disconnect if user hasn't changed
-      if (!user) {
-        newSocket.disconnect();
-      }
+      // Don't disconnect socket on navigation
     };
-  }, [user?.id]); // Only recreate socket when user ID changes (not role)
+  }, [user?.id]); // Only recreate socket when user ID changes
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>
