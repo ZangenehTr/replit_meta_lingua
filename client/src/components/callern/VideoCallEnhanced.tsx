@@ -1,4 +1,4 @@
-// client/src/components/VideoCall.tsx
+// Enhanced VideoCall with real AI integration
 import React, { useEffect, useRef, useState } from "react";
 import io, { Socket } from "socket.io-client";
 import {
@@ -35,14 +35,14 @@ export function VideoCall({
   const localStreamRef = useRef<MediaStream | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
-  // Signaling safety / state
-  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+  // State guards for WebRTC signaling
   const remoteDescSetRef = useRef(false);
   const madeOfferRef = useRef(false);
   const gotAnswerRef = useRef(false);
   const isSettingRemoteRef = useRef(false);
-  const mountedRef = useRef(false);
-  const remoteSocketIdRef = useRef<string | null>(null); // who we talk to
+  const remoteSocketIdRef = useRef<string | null>(null);
+  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+  const signalingStateRef = useRef<RTCSignalingState>("stable");
 
   // UI
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
@@ -51,7 +51,7 @@ export function VideoCall({
   const [callSeconds, setCallSeconds] = useState(0);
   const [connected, setConnected] = useState(false);
   const [showAIOverlay, setShowAIOverlay] = useState(true);
-  
+
   // AI Monitoring
   const speechDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -66,7 +66,7 @@ export function VideoCall({
     const t = setInterval(() => setCallSeconds((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, []);
-  
+
   // Initialize AI monitoring
   const initializeAIMonitoring = (localStream: MediaStream, socket: Socket) => {
     try {
@@ -146,150 +146,216 @@ export function VideoCall({
     }
   };
 
+  // Setup effect
   useEffect(() => {
-    // Prevent double init in React 18 StrictMode / Vite HMR
-    if (mountedRef.current) return;
-    mountedRef.current = true;
+    let cleanup = false;
 
-    // Hard cleanup in case of hot reload
-    safeCleanup();
+    const safeCleanup = () => {
+      if (cleanup) return;
+      cleanup = true;
+
+      // Stop AI monitoring
+      if (speechDetectionIntervalRef.current) {
+        clearInterval(speechDetectionIntervalRef.current);
+        speechDetectionIntervalRef.current = null;
+      }
+      
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+
+      // Stop local stream
+      try {
+        localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      } catch {}
+      localStreamRef.current = null;
+
+      // Close peer connection
+      try {
+        pcRef.current?.close();
+      } catch {}
+      pcRef.current = null;
+
+      // Cleanup socket
+      try {
+        if (socketRef.current?.connected) {
+          socketRef.current.emit("leave-room", { roomId });
+        }
+        socketRef.current?.off();
+        socketRef.current?.disconnect();
+      } catch {}
+      socketRef.current = null;
+
+      // Reset guards
+      remoteDescSetRef.current = false;
+      madeOfferRef.current = false;
+      gotAnswerRef.current = false;
+      isSettingRemoteRef.current = false;
+      remoteSocketIdRef.current = null;
+      pendingCandidatesRef.current = [];
+      signalingStateRef.current = "stable";
+      setConnected(false);
+    };
 
     (async () => {
       try {
-        // 1) Get media
+        // Get user media
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true,
         });
         localStreamRef.current = stream;
+
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          localVideoRef.current.play().catch(() => {});
         }
 
-        // 2) RTCPeerConnection
-        pcRef.current = wrapPeerConnection(
+        // Setup socket
+        const socket = io({
+          reconnectionAttempts: 5,
+          reconnectionDelay: 1000,
+        });
+        socketRef.current = socket;
+
+        socket.on("connect", () => {
+          console.log("Socket connected:", socket.id);
+          setStatus("Joining room…");
+          socket.emit("join-room", { roomId, userId, role });
+          
+          // Initialize AI monitoring after connection
+          initializeAIMonitoring(stream, socket);
+        });
+
+        socket.on("disconnect", () => {
+          console.log("Socket disconnected");
+          setStatus("Disconnected - reconnecting…");
+          setConnected(false);
+        });
+
+        socket.on("room-users", ({ users }) => {
+          console.log("Room users:", users);
+          if (users.length > 1) {
+            setStatus("Peer joined. Starting call…");
+          }
+        });
+
+        // Setup peer connection
+        const pc = wrapPeerConnection(
           new RTCPeerConnection({
             iceServers: [
               { urls: "stun:stun.l.google.com:19302" },
-              // TODO: add your Metered TURN here, e.g.
-              // { urls: "turn:global.turn.metered.ca:80", username: "...", credential: "..." },
+              { urls: "stun:stun1.l.google.com:19302" },
             ],
-          }),
+          })
         );
+        pcRef.current = pc;
 
-        // 3) Add local tracks
-        stream
-          .getTracks()
-          .forEach((track) => pcRef.current!.addTrack(track, stream));
-
-        // 4) Remote track
-        pcRef.current.ontrack = (e) => {
-          if (!e.streams || !e.streams[0]) return;
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = e.streams[0];
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            remoteVideoRef.current.play().catch(() => {});
-          }
-          setConnected(true);
-          setStatus("Connected");
+        // Monitor signaling state
+        pc.onsignalingstatechange = () => {
+          console.log("Signaling state:", pc.signalingState);
+          signalingStateRef.current = pc.signalingState;
         };
 
-        // 5) Outgoing ICE
-        pcRef.current.onicecandidate = (e) => {
-          if (!e.candidate) return;
-          const to = remoteSocketIdRef.current || undefined;
-          socketRef.current?.emit("ice-candidate", {
-            roomId,
-            candidate: e.candidate,
-            to,
-          });
-        };
-
-        // 6) State updates
-        pcRef.current.onconnectionstatechange = () => {
-          const st = pcRef.current?.connectionState;
-          if (st) setStatus(st);
-        };
-
-        // 7) Socket.IO
-        socketRef.current = io({
-          path: "/socket.io", // your server uses "/socket.io"
-          transports: ["websocket", "polling"],
+        // Add local tracks
+        stream.getTracks().forEach((track) => {
+          pc.addTrack(track, stream);
         });
 
-        // make sure no duplicate handlers
-        socketRef.current.removeAllListeners?.();
+        // Handle remote stream
+        pc.ontrack = ({ streams }) => {
+          console.log("Got remote track");
+          if (remoteVideoRef.current && streams[0]) {
+            remoteVideoRef.current.srcObject = streams[0];
+            setConnected(true);
+            setStatus("Connected");
+          }
+        };
 
-        // 8) Join room
-        socketRef.current.emit("join-room", { roomId, userId, role });
-        
-        // Start AI monitoring after joining room
-        if (stream && socketRef.current) {
-          initializeAIMonitoring(stream, socketRef.current);
-        }
+        // Handle ICE candidates
+        pc.onicecandidate = ({ candidate }) => {
+          if (candidate) {
+            socket.emit("ice-candidate", { roomId, candidate });
+          }
+        };
 
-        // --- Socket handlers ---
+        pc.onconnectionstatechange = () => {
+          console.log("Connection state:", pc.connectionState);
+          if (pc.connectionState === "connected") {
+            setConnected(true);
+            setStatus("Connected");
+          } else if (pc.connectionState === "failed") {
+            setStatus("Connection failed");
+            endCall();
+          }
+        };
 
-        // Someone else joined (student initiates exactly once)
-        socketRef.current.on(
-          "user-joined",
-          async ({ socketId, role: joinedRole }) => {
-            // remember the peer
-            if (!remoteSocketIdRef.current)
-              remoteSocketIdRef.current = socketId;
-
-            if (role !== "student") return; // teacher never initiates
-            if (!pcRef.current) return;
-            if (madeOfferRef.current) return; // already offered
-            if (pcRef.current.signalingState !== "stable") return;
-
+        // Socket event handlers
+        socket.on("room-ready", async ({ roomId, socketId }) => {
+          if (role === "student") {
+            console.log("Student initiating call");
             try {
-              madeOfferRef.current = true;
-              setStatus("Creating offer…");
-              const offer = await pcRef.current.createOffer();
-              await pcRef.current.setLocalDescription(offer);
-              socketRef.current?.emit("offer", {
-                roomId,
-                offer,
-                to: remoteSocketIdRef.current ?? socketId,
-              });
+              // Check signaling state before creating offer
+              if (signalingStateRef.current !== "stable") {
+                console.log("Skipping offer - not in stable state");
+                return;
+              }
+              
+              if (!madeOfferRef.current) {
+                madeOfferRef.current = true;
+                setStatus("Creating offer…");
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                socket.emit("offer", {
+                  roomId,
+                  offer,
+                  to: socketId,
+                });
+              }
             } catch (err) {
-              madeOfferRef.current = false; // allow retry on failure
-              console.error("Offer flow failed:", err);
+              madeOfferRef.current = false;
+              console.error("Offer creation failed:", err);
             }
-          },
-        );
+          }
+        });
 
-        // Offer received (typically teacher side)
-        socketRef.current.on("offer", async ({ offer, from }) => {
-          if (!pcRef.current) return;
-          // pin target
+        // Handle offer (teacher side)
+        socket.on("offer", async ({ offer, from }) => {
+          if (!pc) return;
+          
+          // Check if we're already processing
+          if (isSettingRemoteRef.current) {
+            console.log("Already processing an offer, ignoring duplicate");
+            return;
+          }
+          
+          // Check signaling state
+          if (signalingStateRef.current !== "stable") {
+            console.log("Cannot process offer - not in stable state");
+            return;
+          }
+          
           remoteSocketIdRef.current = from;
-
-          // avoid re-entrant/duplicate processing
-          if (isSettingRemoteRef.current) return;
           isSettingRemoteRef.current = true;
 
           try {
             setStatus("Received offer. Answering…");
-            await pcRef.current.setRemoteDescription(offer);
+            await pc.setRemoteDescription(offer);
             remoteDescSetRef.current = true;
 
-            // Drain queued ICE
+            // Process pending ICE candidates
             for (const c of pendingCandidatesRef.current) {
               try {
-                await pcRef.current.addIceCandidate(c);
+                await pc.addIceCandidate(c);
               } catch (e) {
-                console.warn("Queued ICE add failed", e);
+                console.warn("Failed to add queued ICE:", e);
               }
             }
             pendingCandidatesRef.current = [];
 
-            const answer = await pcRef.current.createAnswer();
-            await pcRef.current.setLocalDescription(answer);
-            socketRef.current?.emit("answer", { roomId, answer, to: from });
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            socket.emit("answer", { roomId, answer, to: from });
           } catch (err) {
             console.error("Error handling offer:", err);
           } finally {
@@ -297,18 +363,22 @@ export function VideoCall({
           }
         });
 
-        // Answer received (student side)
-        socketRef.current.on("answer", async ({ answer, from }) => {
-          const pc = pcRef.current;
+        // Handle answer (student side)
+        socket.on("answer", async ({ answer, from }) => {
           if (!pc) return;
 
-          // remember who we're talking to
+          // Remember peer
           if (!remoteSocketIdRef.current) remoteSocketIdRef.current = from;
 
-          // ignore duplicates/late answers
-          if (gotAnswerRef.current) return;
-          if (pc.signalingState !== "have-local-offer") {
-            // already stable or unexpected state → ignore
+          // Check if we already got an answer
+          if (gotAnswerRef.current) {
+            console.log("Already got answer, ignoring duplicate");
+            return;
+          }
+
+          // Verify we're in the right state
+          if (signalingStateRef.current !== "have-local-offer") {
+            console.log(`Cannot set answer in state: ${signalingStateRef.current}`);
             return;
           }
 
@@ -317,34 +387,29 @@ export function VideoCall({
             gotAnswerRef.current = true;
             remoteDescSetRef.current = true;
 
+            // Process pending ICE
             for (const c of pendingCandidatesRef.current) {
               try {
                 await pc.addIceCandidate(c);
               } catch (e) {
-                console.warn("Queued ICE add failed", e);
+                console.warn("Failed to add queued ICE:", e);
               }
             }
             pendingCandidatesRef.current = [];
           } catch (err) {
-            // If you see "called in wrong state: stable", it was a duplicate – safe to ignore.
-            console.warn("Error setting remote answer (handled):", err);
+            console.error("Error setting remote answer:", err);
           }
         });
 
-        // Incoming ICE
-        socketRef.current.on("ice-candidate", async ({ candidate, from }) => {
-          const pc = pcRef.current;
+        // Handle ICE candidates
+        socket.on("ice-candidate", async ({ candidate, from }) => {
           if (!pc || !candidate) return;
 
-          // ignore candidates from anyone except our pinned peer
-          if (
-            remoteSocketIdRef.current &&
-            from &&
-            from !== remoteSocketIdRef.current
-          )
+          // Only accept from our peer
+          if (remoteSocketIdRef.current && from !== remoteSocketIdRef.current) {
             return;
-          if (!remoteSocketIdRef.current && from)
-            remoteSocketIdRef.current = from;
+          }
+          if (!remoteSocketIdRef.current) remoteSocketIdRef.current = from;
 
           const cand: RTCIceCandidateInit = {
             candidate: candidate.candidate || candidate,
@@ -356,28 +421,30 @@ export function VideoCall({
             pendingCandidatesRef.current.push(cand);
             return;
           }
+
           try {
             await pc.addIceCandidate(cand);
           } catch (err) {
-            // timing race: keep it for later retry
+            console.warn("Failed to add ICE candidate:", err);
             pendingCandidatesRef.current.push(cand);
           }
         });
 
-        socketRef.current.on("call-ended", ({ reason }) => {
+        socket.on("call-ended", ({ reason }) => {
           console.log("Call ended by peer:", reason);
           endCall();
         });
 
-        socketRef.current.on("user-left", ({ socketId }) => {
+        socket.on("user-left", ({ socketId }) => {
           if (remoteSocketIdRef.current === socketId) {
+            setStatus("Peer disconnected");
             endCall();
           }
         });
 
         setStatus("Waiting for peer…");
       } catch (err) {
-        console.error("Init error:", err);
+        console.error("Setup error:", err);
         setStatus("Could not access camera/mic");
       }
     })();
@@ -385,21 +452,14 @@ export function VideoCall({
     return () => {
       safeCleanup();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, userId, role]);
 
-  // Controls
+  // Control functions
   const toggleVideo = () => {
     const track = localStreamRef.current?.getVideoTracks()[0];
     if (!track) return;
     track.enabled = !track.enabled;
     setIsVideoEnabled(track.enabled);
-    const to = remoteSocketIdRef.current || undefined;
-    socketRef.current?.emit("toggle-video", {
-      roomId,
-      enabled: track.enabled,
-      to,
-    });
   };
 
   const toggleAudio = () => {
@@ -407,71 +467,32 @@ export function VideoCall({
     if (!track) return;
     track.enabled = !track.enabled;
     setIsAudioEnabled(track.enabled);
-    const to = remoteSocketIdRef.current || undefined;
-    socketRef.current?.emit("toggle-audio", {
-      roomId,
-      enabled: track.enabled,
-      to,
-    });
   };
 
   const endCall = () => {
-    socketRef.current?.emit("end-call", { roomId, duration: callSeconds });
-    safeCleanup();
+    try {
+      if (socketRef.current?.connected) {
+        socketRef.current.emit("end-call", {
+          roomId,
+          duration: callSeconds,
+        });
+      }
+    } catch (err) {
+      console.error("Error ending call:", err);
+    }
     onCallEnd();
   };
 
-  function safeCleanup() {
-    // Stop AI monitoring
-    if (speechDetectionIntervalRef.current) {
-      clearInterval(speechDetectionIntervalRef.current);
-      speechDetectionIntervalRef.current = null;
-    }
-    
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-    
-    try {
-      localStreamRef.current?.getTracks().forEach((t) => t.stop());
-    } catch {}
-    try {
-      if (pcRef.current) {
-        pcRef.current.onicecandidate = null;
-        pcRef.current.ontrack = null;
-        pcRef.current.close();
-      }
-    } catch {}
-    pcRef.current = null;
-
-    try {
-      socketRef.current?.off();
-      socketRef.current?.disconnect();
-    } catch {}
-    socketRef.current = null;
-
-    // reset guards
-    remoteDescSetRef.current = false;
-    madeOfferRef.current = false;
-    gotAnswerRef.current = false;
-    isSettingRemoteRef.current = false;
-    remoteSocketIdRef.current = null;
-    pendingCandidatesRef.current = [];
-    setConnected(false);
-  }
-
-  // UI helpers
+  // Format time
   const fmt = (s: number) => {
     const m = Math.floor(s / 60);
     const r = s % 60;
     return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
   };
 
-  // Render
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
-      {/* AI Overlay */}
+      {/* AI Overlay with real data */}
       <AIOverlay 
         roomId={roomId} 
         role={role} 
@@ -497,14 +518,12 @@ export function VideoCall({
 
       {/* Videos */}
       <div className="flex-1 relative">
-        {/* Remote full-screen */}
         <video
           ref={remoteVideoRef}
           autoPlay
           playsInline
           className="w-full h-full object-cover"
         />
-        {/* Local PiP */}
         <div className="absolute bottom-24 right-4 w-32 h-48 md:w-48 md:h-64 rounded-lg overflow-hidden shadow-2xl border-2 border-white/20 bg-black/40">
           <video
             ref={localVideoRef}
@@ -513,13 +532,6 @@ export function VideoCall({
             playsInline
             className="w-full h-full object-cover"
           />
-          {!isVideoEnabled && (
-            <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                <path d="M10 8l6 4-6 4V8z" stroke="white" strokeWidth="2" />
-              </svg>
-            </div>
-          )}
         </div>
       </div>
 
