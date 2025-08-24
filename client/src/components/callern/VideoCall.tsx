@@ -5,6 +5,8 @@ import {
   installWebRTCErrorHandler,
   wrapPeerConnection,
 } from "@/lib/webrtc-error-handler";
+import { AIOverlay } from "./AIOverlay";
+import { Brain } from "lucide-react";
 
 // Install global WebRTC error handler once
 installWebRTCErrorHandler();
@@ -48,6 +50,7 @@ export function VideoCall({
   const [status, setStatus] = useState("Connecting…");
   const [callSeconds, setCallSeconds] = useState(0);
   const [connected, setConnected] = useState(false);
+  const [showAIOverlay, setShowAIOverlay] = useState(true);
 
   // Timer
   useEffect(() => {
@@ -364,6 +367,14 @@ export function VideoCall({
   // Render
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
+      {/* AI Overlay */}
+      <AIOverlay 
+        roomId={roomId} 
+        role={role} 
+        isVisible={showAIOverlay}
+        onClose={() => setShowAIOverlay(false)}
+      />
+      
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/70 to-transparent z-10">
         <div className="flex justify-between items-center text-white">
@@ -433,6 +444,14 @@ export function VideoCall({
             title="End call"
           >
             ⛔
+          </button>
+
+          <button
+            onClick={() => setShowAIOverlay(!showAIOverlay)}
+            className={`rounded-full w-14 h-14 text-white ${showAIOverlay ? "bg-purple-600" : "bg-white/20"}`}
+            title="Toggle AI Assistant"
+          >
+            <Brain className="w-6 h-6 mx-auto" />
           </button>
         </div>
       </div>
