@@ -298,25 +298,51 @@ export function VideoCall({
         });
 
         // Answer received (student side)
+        const processedAnswers = new Set<string>();
         socketRef.current.on("answer", async ({ answer, from }) => {
           const pc = pcRef.current;
           if (!pc) return;
 
-          // remember who we're talking to
-          if (!remoteSocketIdRef.current) remoteSocketIdRef.current = from;
-
-          // ignore duplicates/late answers
-          if (gotAnswerRef.current) return;
-          if (pc.signalingState !== "have-local-offer") {
-            // already stable or unexpected state → ignore
+          // Create unique key for this answer
+          const answerKey = `${from}-${Date.now()}`;
+          
+          // Check if we already processed an answer from this peer
+          if (gotAnswerRef.current) {
+            console.log("Already have an answer, ignoring duplicate from:", from);
             return;
           }
 
-          try {
-            await pc.setRemoteDescription(answer);
-            gotAnswerRef.current = true;
-            remoteDescSetRef.current = true;
+          // Check signaling state
+          if (pc.signalingState === "stable") {
+            console.log("Already in stable state, ignoring late answer from:", from);
+            return;
+          }
+          
+          if (pc.signalingState !== "have-local-offer") {
+            console.log(`Wrong state (${pc.signalingState}) for answer, ignoring from:`, from);
+            return;
+          }
 
+          // Check if this specific answer was already processed
+          if (processedAnswers.has(from)) {
+            console.log("Already processing answer from this peer:", from);
+            return;
+          }
+
+          // remember who we're talking to
+          if (!remoteSocketIdRef.current) remoteSocketIdRef.current = from;
+
+          try {
+            // Mark as processing immediately to prevent race conditions
+            processedAnswers.add(from);
+            gotAnswerRef.current = true;
+            
+            await pc.setRemoteDescription(answer);
+            remoteDescSetRef.current = true;
+            setStatus("Connected");
+            setConnected(true);
+
+            // Process pending ICE candidates
             for (const c of pendingCandidatesRef.current) {
               try {
                 await pc.addIceCandidate(c);
@@ -326,8 +352,16 @@ export function VideoCall({
             }
             pendingCandidatesRef.current = [];
           } catch (err) {
-            // If you see "called in wrong state: stable", it was a duplicate – safe to ignore.
-            console.warn("Error setting remote answer (handled):", err);
+            // Only reset if it's not a "stable state" error
+            const errorMsg = err?.toString() || "";
+            if (!errorMsg.includes("stable")) {
+              gotAnswerRef.current = false;
+              processedAnswers.delete(from);
+              console.error("Failed to set answer:", err);
+            } else {
+              // This is a duplicate answer after we're already stable - safe to ignore
+              console.log("Duplicate answer received (already stable), ignoring");
+            }
           }
         });
 
