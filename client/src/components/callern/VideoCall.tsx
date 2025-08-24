@@ -8,7 +8,7 @@ import {
   Monitor, MonitorOff, MessageSquare, HelpCircle,
   Volume2, VolumeX, Maximize2, Minimize2,
   User, Target, Clock, BookOpen, CheckCircle, AlertCircle,
-  Circle, Square
+  Circle, Square, Sparkles
 } from 'lucide-react';
 import { getSimplePeerConfig } from '../../../../shared/webrtc-config';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +19,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { ScoringOverlay } from './ScoringOverlay';
+import { VideoCallLayout } from './VideoCallLayout';
+import { AIHelper } from './AIHelper';
 
 interface VideoCallProps {
   roomId: string;
@@ -105,7 +107,7 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
   const [callDuration, setCallDuration] = useState(0);
   const [remoteSocketId, setRemoteSocketId] = useState<string | null>(propsRemoteSocketId || null);
   const [showChat, setShowChat] = useState(false);
-  const [showWordHelper, setShowWordHelper] = useState(false);
+  const [showAIHelper, setShowAIHelper] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showBriefing, setShowBriefing] = useState(role === 'teacher');
   const pendingCandidatesRef = useRef<any[]>([]);
@@ -969,11 +971,11 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => setShowWordHelper(!showWordHelper)}
+              onClick={() => setShowAIHelper(!showAIHelper)}
               className="text-white hover:bg-gray-700"
             >
-              <HelpCircle className="h-4 w-4 mr-2" />
-              {t('callern:wordHelper')}
+              <Sparkles className="h-4 w-4 mr-2" />
+              {t('callern:aiAssistant')}
             </Button>
             <Button
               size="sm"
@@ -1006,38 +1008,17 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
           </div>
         </div>
       
-      {/* Video Area */}
+      {/* Video Area with new Layout */}
       <div className="flex-1 relative overflow-hidden bg-gray-900">
-        {/* Remote Video (Main) - Better sizing for education */}
-        <div className="w-full h-full flex items-center justify-center">
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className="w-full h-full object-contain"
-            style={{ maxHeight: 'calc(100vh - 200px)' }}
-          />
-        </div>
-        
-        {/* Local Video (PiP) - Larger for educational purposes */}
-        <div className="absolute bottom-4 right-4 w-80 h-60 bg-gray-800 rounded-lg overflow-hidden shadow-2xl border-2 border-gray-600 transition-all hover:scale-105">
-          <video
-            ref={localVideoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover"
-          />
-          {isVideoOff && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-              <VideoOff className="h-12 w-12 text-gray-400" />
-            </div>
-          )}
-          {/* Label for local video */}
-          <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 rounded text-xs text-white font-medium">
-            {role === 'teacher' ? 'You (Teacher)' : 'You (Student)'}
-          </div>
-        </div>
+        <VideoCallLayout
+          localVideoRef={localVideoRef}
+          remoteVideoRef={remoteVideoRef}
+          isVideoOff={isVideoOff}
+          isConnected={isConnected}
+          role={role}
+          userName={role === 'teacher' ? 'Teacher' : 'Student'}
+          remoteName={role === 'teacher' ? 'Student' : 'Teacher'}
+        />
         
         {/* Connecting Overlay */}
         {isConnecting && (
@@ -1049,26 +1030,13 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
           </div>
         )}
         
-        {/* Word Helper Panel */}
-        {showWordHelper && (
-          <div className="absolute top-4 left-4 w-80 bg-white rounded-lg shadow-lg p-4">
-            <h3 className="font-semibold mb-2">{t('callern:wordHelper')}</h3>
-            <input
-              type="text"
-              placeholder={t('callern:typeWordForHelp')}
-              className="w-full px-3 py-2 border rounded-md mb-2"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  // TODO: Call AI service for translation
-                  console.log('Getting help for:', e.currentTarget.value);
-                }
-              }}
-            />
-            <div className="text-sm text-gray-600">
-              {t('callern:pressEnterForTranslation')}
-            </div>
-          </div>
-        )}
+        {/* AI Helper Panel */}
+        <AIHelper 
+          isOpen={showAIHelper} 
+          onClose={() => setShowAIHelper(false)}
+          targetLanguage={role === 'teacher' ? 'fa' : 'en'}
+          studentLevel="B1"
+        />
         
         {/* Scoring Overlay - Enhanced visibility */}
         <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 50 }}>

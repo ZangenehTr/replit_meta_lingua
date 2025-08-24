@@ -93,6 +93,7 @@ import TeacherVideoCourses from "@/pages/teacher/video-courses";
 import TeacherAvailability from "@/pages/teacher/teacher-availability";
 import ClassCommunication from "@/pages/teacher/class-communication";
 import TeacherObservationsPage from "@/pages/teacher/observations";
+import TeacherCallernSystem from "@/pages/teacher/callern";
 
 // Mentor pages
 import MentorStudentsPage from "@/pages/mentor/students";
@@ -580,6 +581,11 @@ function Router() {
       <Route path="/teacher/observations">
         <ProtectedRoute>
           <TeacherObservationsPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/teacher/callern">
+        <ProtectedRoute>
+          <TeacherCallernSystem />
         </ProtectedRoute>
       </Route>
 
