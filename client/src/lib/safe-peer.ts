@@ -53,9 +53,27 @@ export class SafePeer {
     // Patch setRemoteDescription to handle promise rejections
     const originalSetRemoteDescription = pc.setRemoteDescription.bind(pc);
     pc.setRemoteDescription = (desc: RTCSessionDescriptionInit) => {
+      // Check state before attempting
+      if (pc.signalingState === 'closed') {
+        console.log('PC closed, not setting remote description');
+        return Promise.resolve();
+      }
+      
+      // Check if we're in the right state for this operation
+      if (desc.type === 'answer' && pc.signalingState !== 'have-local-offer') {
+        console.log(`Cannot set answer in state: ${pc.signalingState}`);
+        return Promise.resolve();
+      }
+      
+      if (desc.type === 'offer' && pc.signalingState === 'have-local-offer') {
+        console.log('Already have local offer, ignoring remote offer');
+        return Promise.resolve();
+      }
+      
       return originalSetRemoteDescription(desc).catch((error: any) => {
-        console.error('Error setting remote description:', error);
-        // Don't re-throw, just log
+        console.warn('Error setting remote description (handled):', error?.message || error);
+        // Don't re-throw, just resolve
+        return Promise.resolve();
       });
     };
     
@@ -78,9 +96,33 @@ export class SafePeer {
         return Promise.resolve();
       }
       
+      // Only add candidates in stable or have-remote-offer state
+      if (pc.signalingState !== 'stable' && pc.signalingState !== 'have-remote-offer') {
+        console.log(`Cannot add ICE in state: ${pc.signalingState}`);
+        return Promise.resolve();
+      }
+      
       return originalAddIceCandidate(candidate).catch((error: any) => {
         // Log but don't throw - ICE failures are often transient
-        console.warn('Error adding ICE candidate (non-fatal):', error?.message || error);
+        console.warn('Error adding ICE candidate (handled):', error?.message || error);
+        return Promise.resolve();
+      });
+    };
+    
+    // Also patch createOffer and createAnswer to handle errors
+    const originalCreateOffer = pc.createOffer.bind(pc);
+    (pc as any).createOffer = (options?: RTCOfferOptions) => {
+      return originalCreateOffer(options).catch((error: any) => {
+        console.error('Error creating offer:', error);
+        throw error; // Re-throw for offer creation as it's critical
+      });
+    };
+    
+    const originalCreateAnswer = pc.createAnswer.bind(pc);
+    (pc as any).createAnswer = (options?: RTCAnswerOptions) => {
+      return originalCreateAnswer(options).catch((error: any) => {
+        console.error('Error creating answer:', error);
+        throw error; // Re-throw for answer creation as it's critical
       });
     };
   }
