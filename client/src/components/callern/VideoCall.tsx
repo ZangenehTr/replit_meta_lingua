@@ -1,12 +1,8 @@
 // client/src/components/VideoCall.tsx
 import React, { useEffect, useRef, useState } from "react";
 import io, { Socket } from "socket.io-client";
-import { installWebRTCErrorHandler, wrapPeerConnection } from "@/lib/webrtc-error-handler";
+import { wrapPeerConnection } from "@/lib/webrtc-error-handler";
 
-// Install the global WebRTC error handler once
-installWebRTCErrorHandler();
-
-// ---- Props ----
 interface VideoCallProps {
   roomId: string;
   userId: number;
@@ -15,7 +11,6 @@ interface VideoCallProps {
   onCallEnd: () => void;
 }
 
-// ---- Component ----
 export function VideoCall({
   roomId,
   userId,
@@ -32,11 +27,16 @@ export function VideoCall({
   const localStreamRef = useRef<MediaStream | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
-  // Signaling safety
+  // Signaling safety / state
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
-  const remoteDescSetRef = useRef(false); // true after we call setRemoteDescription successfully
+  const remoteDescSetRef = useRef(false);
+  const madeOfferRef = useRef(false);
+  const gotAnswerRef = useRef(false);
+  const isSettingRemoteRef = useRef(false);
+  const mountedRef = useRef(false);
+  const remoteSocketIdRef = useRef<string | null>(null); // who we talk to
 
-  // UI state
+  // UI
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [status, setStatus] = useState("Connecting…");
@@ -49,40 +49,45 @@ export function VideoCall({
     return () => clearInterval(t);
   }, []);
 
-  // Mount
   useEffect(() => {
-    let mounted = true;
+    // Prevent double init in React 18 StrictMode / Vite HMR
+    if (mountedRef.current) return;
+    mountedRef.current = true;
+
+    // Hard cleanup in case of hot reload
+    safeCleanup();
+
     (async () => {
       try {
-        // 1) Get camera + mic
+        // 1) Get media
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true,
         });
-        if (!mounted) return;
         localStreamRef.current = stream;
-
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
-          // ignore autoplay promise
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
           localVideoRef.current.play().catch(() => {});
         }
 
-        // 2) Make RTCPeerConnection with error handling wrapper
-        pcRef.current = wrapPeerConnection(new RTCPeerConnection({
-          iceServers: [
-            // Your STUN + TURN. Metered.com TURN will go here if you have creds.
-            { urls: "stun:stun.l.google.com:19302" },
-          ],
-        }));
+        // 2) RTCPeerConnection
+        pcRef.current = wrapPeerConnection(
+          new RTCPeerConnection({
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" },
+              // TODO: add your Metered TURN here, e.g.
+              // { urls: "turn:global.turn.metered.ca:80", username: "...", credential: "..." },
+            ],
+          }),
+        );
 
         // 3) Add local tracks
         stream
           .getTracks()
           .forEach((track) => pcRef.current!.addTrack(track, stream));
 
-        // 4) When we get remote tracks, show them
+        // 4) Remote track
         pcRef.current.ontrack = (e) => {
           if (!e.streams || !e.streams[0]) return;
           if (remoteVideoRef.current) {
@@ -94,68 +99,83 @@ export function VideoCall({
           setStatus("Connected");
         };
 
-        // 5) Send ICE to peer (but only via server to the correct socket)
+        // 5) Outgoing ICE
         pcRef.current.onicecandidate = (e) => {
           if (!e.candidate) return;
+          const to = remoteSocketIdRef.current || undefined;
           socketRef.current?.emit("ice-candidate", {
             roomId,
-            candidate: e.candidate, // server forwards to the other peer (target decided client-side)
-            // we let server-side "to" stay null if you manage routing per room
-            // but your server supports "to", so we keep it null and let server broadcast to room,
-            // or you can pass a specific 'to' if you have it.
+            candidate: e.candidate,
+            to,
           });
         };
 
-        // 6) Connection state info (nice to have)
+        // 6) State updates
         pcRef.current.onconnectionstatechange = () => {
           const st = pcRef.current?.connectionState;
           if (st) setStatus(st);
         };
 
-        // 7) Connect Socket.IO
+        // 7) Socket.IO
         socketRef.current = io({
           path: "/socket.io", // your server uses "/socket.io"
           transports: ["websocket", "polling"],
         });
 
+        // make sure no duplicate handlers
+        socketRef.current.removeAllListeners?.();
+
         // 8) Join room
         socketRef.current.emit("join-room", { roomId, userId, role });
 
-        // --- Socket listeners ---
+        // --- Socket handlers ---
 
-        // Someone else joined the room (we are student → we SHOULD create offer)
+        // Someone else joined (student initiates exactly once)
         socketRef.current.on(
           "user-joined",
           async ({ socketId, role: joinedRole }) => {
-            // Only the student creates the first offer
-            if (role !== "student") return;
-            if (!pcRef.current) return;
+            // remember the peer
+            if (!remoteSocketIdRef.current)
+              remoteSocketIdRef.current = socketId;
 
-            // Prevent double offers if already in a non-stable state
+            if (role !== "student") return; // teacher never initiates
+            if (!pcRef.current) return;
+            if (madeOfferRef.current) return; // already offered
             if (pcRef.current.signalingState !== "stable") return;
 
             try {
+              madeOfferRef.current = true;
               setStatus("Creating offer…");
               const offer = await pcRef.current.createOffer();
               await pcRef.current.setLocalDescription(offer);
-              socketRef.current?.emit("offer", { roomId, offer, to: socketId });
+              socketRef.current?.emit("offer", {
+                roomId,
+                offer,
+                to: remoteSocketIdRef.current ?? socketId,
+              });
             } catch (err) {
+              madeOfferRef.current = false; // allow retry on failure
               console.error("Offer flow failed:", err);
             }
           },
         );
 
-        // We received an offer (we are teacher → we ANSWER)
+        // Offer received (typically teacher side)
         socketRef.current.on("offer", async ({ offer, from }) => {
           if (!pcRef.current) return;
+          // pin target
+          remoteSocketIdRef.current = from;
+
+          // avoid re-entrant/duplicate processing
+          if (isSettingRemoteRef.current) return;
+          isSettingRemoteRef.current = true;
+
           try {
             setStatus("Received offer. Answering…");
-
-            // 1) Set remote description
             await pcRef.current.setRemoteDescription(offer);
             remoteDescSetRef.current = true;
 
-            // 2) Drain any early ICE we queued
+            // Drain queued ICE
             for (const c of pendingCandidatesRef.current) {
               try {
                 await pcRef.current.addIceCandidate(c);
@@ -165,82 +185,92 @@ export function VideoCall({
             }
             pendingCandidatesRef.current = [];
 
-            // 3) Create + send answer
             const answer = await pcRef.current.createAnswer();
             await pcRef.current.setLocalDescription(answer);
             socketRef.current?.emit("answer", { roomId, answer, to: from });
           } catch (err) {
             console.error("Error handling offer:", err);
+          } finally {
+            isSettingRemoteRef.current = false;
           }
         });
 
-        // We received an answer (we are student → we SET it)
-        socketRef.current.on("answer", async ({ answer }) => {
+        // Answer received (student side)
+        socketRef.current.on("answer", async ({ answer, from }) => {
           const pc = pcRef.current;
           if (!pc) return;
 
-          // Only set the answer if we’re expecting one
+          // remember who we're talking to
+          if (!remoteSocketIdRef.current) remoteSocketIdRef.current = from;
+
+          // ignore duplicates/late answers
+          if (gotAnswerRef.current) return;
           if (pc.signalingState !== "have-local-offer") {
-            // Already stable? Ignore duplicate/late answer
-            if (pc.signalingState === "stable") {
-              console.log(
-                "Answer received in stable state; ignoring duplicate.",
-              );
-            } else {
-              console.log("Unexpected state for answer:", pc.signalingState);
-            }
+            // already stable or unexpected state → ignore
             return;
           }
 
           try {
             await pc.setRemoteDescription(answer);
+            gotAnswerRef.current = true;
             remoteDescSetRef.current = true;
 
-            // Drain queued ICE now that remote description exists
             for (const c of pendingCandidatesRef.current) {
               try {
                 await pc.addIceCandidate(c);
               } catch (e) {
-                console.warn("Queued ICE add failed (handled):", e);
+                console.warn("Queued ICE add failed", e);
               }
             }
             pendingCandidatesRef.current = [];
           } catch (err) {
+            // If you see "called in wrong state: stable", it was a duplicate – safe to ignore.
             console.warn("Error setting remote answer (handled):", err);
-            // Don't throw - this is usually a timing issue
           }
         });
 
-        // We received an ICE candidate from the other peer
-        socketRef.current.on("ice-candidate", async ({ candidate }) => {
+        // Incoming ICE
+        socketRef.current.on("ice-candidate", async ({ candidate, from }) => {
           const pc = pcRef.current;
           if (!pc || !candidate) return;
 
-          // Normalize candidate shape (some libs send plain strings)
+          // ignore candidates from anyone except our pinned peer
+          if (
+            remoteSocketIdRef.current &&
+            from &&
+            from !== remoteSocketIdRef.current
+          )
+            return;
+          if (!remoteSocketIdRef.current && from)
+            remoteSocketIdRef.current = from;
+
           const cand: RTCIceCandidateInit = {
             candidate: candidate.candidate || candidate,
             sdpMid: candidate.sdpMid ?? "0",
             sdpMLineIndex: candidate.sdpMLineIndex ?? 0,
           };
 
-          // If remoteDescription is not set yet, queue it
           if (!remoteDescSetRef.current || !pc.remoteDescription) {
             pendingCandidatesRef.current.push(cand);
             return;
           }
-
           try {
             await pc.addIceCandidate(cand);
           } catch (err) {
-            console.warn("addIceCandidate failed (handled); queueing", err);
+            // timing race: keep it for later retry
             pendingCandidatesRef.current.push(cand);
           }
         });
 
-        // If the other side ends the call
         socketRef.current.on("call-ended", ({ reason }) => {
           console.log("Call ended by peer:", reason);
           endCall();
+        });
+
+        socketRef.current.on("user-left", ({ socketId }) => {
+          if (remoteSocketIdRef.current === socketId) {
+            endCall();
+          }
         });
 
         setStatus("Waiting for peer…");
@@ -251,19 +281,23 @@ export function VideoCall({
     })();
 
     return () => {
-      mounted = false;
-      cleanup();
+      safeCleanup();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, userId, role]);
 
-  // --- Controls ---
+  // Controls
   const toggleVideo = () => {
     const track = localStreamRef.current?.getVideoTracks()[0];
     if (!track) return;
     track.enabled = !track.enabled;
     setIsVideoEnabled(track.enabled);
-    socketRef.current?.emit("toggle-video", { roomId, enabled: track.enabled });
+    const to = remoteSocketIdRef.current || undefined;
+    socketRef.current?.emit("toggle-video", {
+      roomId,
+      enabled: track.enabled,
+      to,
+    });
   };
 
   const toggleAudio = () => {
@@ -271,36 +305,57 @@ export function VideoCall({
     if (!track) return;
     track.enabled = !track.enabled;
     setIsAudioEnabled(track.enabled);
-    socketRef.current?.emit("toggle-audio", { roomId, enabled: track.enabled });
+    const to = remoteSocketIdRef.current || undefined;
+    socketRef.current?.emit("toggle-audio", {
+      roomId,
+      enabled: track.enabled,
+      to,
+    });
   };
 
   const endCall = () => {
     socketRef.current?.emit("end-call", { roomId, duration: callSeconds });
-    cleanup();
+    safeCleanup();
     onCallEnd();
   };
 
-  function cleanup() {
+  function safeCleanup() {
     try {
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
-      pcRef.current?.close();
-      pcRef.current = null;
-      socketRef.current?.disconnect();
-      socketRef.current = null;
-      remoteDescSetRef.current = false;
-      pendingCandidatesRef.current = [];
-      setConnected(false);
     } catch {}
+    try {
+      if (pcRef.current) {
+        pcRef.current.onicecandidate = null;
+        pcRef.current.ontrack = null;
+        pcRef.current.close();
+      }
+    } catch {}
+    pcRef.current = null;
+
+    try {
+      socketRef.current?.off();
+      socketRef.current?.disconnect();
+    } catch {}
+    socketRef.current = null;
+
+    // reset guards
+    remoteDescSetRef.current = false;
+    madeOfferRef.current = false;
+    gotAnswerRef.current = false;
+    isSettingRemoteRef.current = false;
+    remoteSocketIdRef.current = null;
+    pendingCandidatesRef.current = [];
+    setConnected(false);
   }
 
-  // --- UI helpers ---
+  // UI helpers
   const fmt = (s: number) => {
     const m = Math.floor(s / 60);
     const r = s % 60;
     return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
   };
 
-  // --- Render ---
+  // Render
   return (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
       {/* Header */}

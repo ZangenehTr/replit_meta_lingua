@@ -11,6 +11,24 @@ export function installWebRTCErrorHandler() {
   
   handlerInstalled = true;
   
+  // Install handler immediately on first error to catch early issues
+  const installHandler = () => {
+    if (!handlerInstalled) {
+      handlerInstalled = true;
+      setupHandlers();
+    }
+  };
+  
+  // Try to install as early as possible
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installHandler);
+  } else {
+    installHandler();
+  }
+}
+
+function setupHandlers() {
+  
   // Override console.error to filter out WebRTC errors we're handling
   const originalConsoleError = console.error;
   console.error = (...args: any[]) => {
@@ -33,7 +51,7 @@ export function installWebRTCErrorHandler() {
     originalConsoleError.apply(console, args);
   };
   
-  // Handle unhandled promise rejections
+  // Handle unhandled promise rejections - add to capture phase
   window.addEventListener('unhandledrejection', (event) => {
     const reason = event.reason;
     const message = reason?.message || reason?.toString() || '';
@@ -55,7 +73,7 @@ export function installWebRTCErrorHandler() {
       console.info('WebRTC timing issue (normal during connection setup):', message);
       return;
     }
-  });
+  }, true); // Use capture phase to catch errors earlier
   
   // Handle uncaught errors
   window.addEventListener('error', (event) => {
