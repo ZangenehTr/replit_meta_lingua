@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Flow Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .student-panel {
+            background-color: #e3f2fd;
+        }
+        .teacher-panel {
+            background-color: #f3e5f5;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .log {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebRTC Connection Flow Test</h1>
+    
+    <div class="container">
+        <div class="panel student-panel">
+            <h2>Student Side</h2>
+            <button id="studentConnect">1. Connect as Student</button>
+            <button id="studentJoinRoom" disabled>2. Join Room</button>
+            <button id="studentCallTeacher" disabled>3. Call Teacher</button>
+            <div id="studentStatus" class="status info">Not connected</div>
+            <div class="log" id="studentLog"></div>
+        </div>
+        
+        <div class="panel teacher-panel">
+            <h2>Teacher Side</h2>
+            <button id="teacherConnect">1. Connect as Teacher</button>
+            <button id="teacherGoOnline" disabled>2. Go Online</button>
+            <div id="teacherStatus" class="status info">Not connected</div>
+            <div class="log" id="teacherLog"></div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <h3>Connection Flow:</h3>
+        <ol>
+            <li>Teacher connects and goes online</li>
+            <li>Student connects and joins room</li>
+            <li>Student calls teacher</li>
+            <li>Teacher receives incoming call and accepts</li>
+            <li>Teacher joins room</li>
+            <li>WebRTC connection established</li>
+        </ol>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let studentSocket = null;
+        let teacherSocket = null;
+        let currentRoomId = null;
+        
+        function logStudent(message, type = 'info') {
+            const log = document.getElementById('studentLog');
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML += `<div class="${type}">[${time}] ${message}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function logTeacher(message, type = 'info') {
+            const log = document.getElementById('teacherLog');
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML += `<div class="${type}">[${time}] ${message}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function updateStudentStatus(message, type = 'info') {
+            const status = document.getElementById('studentStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+        
+        function updateTeacherStatus(message, type = 'info') {
+            const status = document.getElementById('teacherStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+        
+        // Student Connection
+        document.getElementById('studentConnect').addEventListener('click', () => {
+            studentSocket = io('/', {
+                transports: ['websocket'],
+                reconnection: true
+            });
+            
+            studentSocket.on('connect', () => {
+                logStudent('Connected to server', 'success');
+                updateStudentStatus('Connected - Ready to authenticate', 'success');
+                
+                // Authenticate as student
+                studentSocket.emit('authenticate', {
+                    userId: 8470,
+                    role: 'Student'
+                });
+                
+                document.getElementById('studentJoinRoom').disabled = false;
+            });
+            
+            studentSocket.on('user-joined', (data) => {
+                logStudent(`User joined room: ${JSON.stringify(data)}`, 'info');
+                if (data.role === 'teacher') {
+                    logStudent('Teacher is in the room! Ready for WebRTC', 'success');
+                }
+            });
+            
+            studentSocket.on('call-accepted', (data) => {
+                logStudent('Call accepted by teacher!', 'success');
+                logStudent(`Teacher socket ID: ${data.teacherSocketId}`, 'info');
+                updateStudentStatus('Call accepted - Establishing WebRTC connection', 'success');
+            });
+            
+            studentSocket.on('call-rejected', (data) => {
+                logStudent(`Call rejected: ${data.reason}`, 'error');
+                updateStudentStatus('Call rejected', 'error');
+            });
+            
+            studentSocket.on('offer', (data) => {
+                logStudent('Received WebRTC offer from teacher', 'success');
+            });
+            
+            studentSocket.on('answer', (data) => {
+                logStudent('Received WebRTC answer from teacher', 'success');
+            });
+            
+            studentSocket.on('ice-candidate', (data) => {
+                logStudent('Received ICE candidate from teacher', 'info');
+            });
+            
+            studentSocket.on('error', (error) => {
+                logStudent(`Error: ${error}`, 'error');
+            });
+        });
+        
+        // Student Join Room
+        document.getElementById('studentJoinRoom').addEventListener('click', () => {
+            currentRoomId = `test-room-${Date.now()}`;
+            studentSocket.emit('join-room', {
+                roomId: currentRoomId,
+                userId: 8470,
+                role: 'student'
+            });
+            logStudent(`Joining room: ${currentRoomId}`, 'info');
+            updateStudentStatus('Joined room - Ready to call teacher', 'success');
+            document.getElementById('studentCallTeacher').disabled = false;
+        });
+        
+        // Student Call Teacher
+        document.getElementById('studentCallTeacher').addEventListener('click', () => {
+            studentSocket.emit('call-teacher', {
+                teacherId: 74,
+                studentId: 8470,
+                packageId: 2,
+                language: 'English',
+                roomId: currentRoomId
+            });
+            logStudent('Calling teacher...', 'info');
+            updateStudentStatus('Calling teacher - Waiting for response', 'info');
+        });
+        
+        // Teacher Connection
+        document.getElementById('teacherConnect').addEventListener('click', () => {
+            teacherSocket = io('/', {
+                transports: ['websocket'],
+                reconnection: true
+            });
+            
+            teacherSocket.on('connect', () => {
+                logTeacher('Connected to server', 'success');
+                updateTeacherStatus('Connected - Ready to authenticate', 'success');
+                
+                // Authenticate as teacher
+                teacherSocket.emit('authenticate', {
+                    userId: 74,
+                    role: 'teacher'
+                });
+                
+                document.getElementById('teacherGoOnline').disabled = false;
+            });
+            
+            teacherSocket.on('incoming-call', (data) => {
+                logTeacher(`Incoming call from student ${data.studentId}`, 'info');
+                logTeacher(`Room ID: ${data.roomId}`, 'info');
+                logTeacher(`Language: ${data.language}`, 'info');
+                updateTeacherStatus('Incoming call - Auto-accepting in 2 seconds', 'info');
+                
+                // Auto-accept after 2 seconds
+                setTimeout(() => {
+                    logTeacher('Joining room first...', 'info');
+                    teacherSocket.emit('join-room', data.roomId);
+                    
+                    setTimeout(() => {
+                        logTeacher('Accepting call...', 'info');
+                        teacherSocket.emit('accept-call', {
+                            roomId: data.roomId,
+                            teacherId: 74,
+                            studentId: data.studentId
+                        });
+                        updateTeacherStatus('Call accepted - In room', 'success');
+                    }, 500);
+                }, 2000);
+            });
+            
+            teacherSocket.on('user-joined', (data) => {
+                logTeacher(`User joined room: ${JSON.stringify(data)}`, 'info');
+                if (data.role === 'student') {
+                    logTeacher('Student is in the room! Ready for WebRTC', 'success');
+                }
+            });
+            
+            teacherSocket.on('offer', (data) => {
+                logTeacher('Received WebRTC offer from student', 'success');
+                // Would normally create answer here
+            });
+            
+            teacherSocket.on('answer', (data) => {
+                logTeacher('Received WebRTC answer from student', 'success');
+            });
+            
+            teacherSocket.on('ice-candidate', (data) => {
+                logTeacher('Received ICE candidate from student', 'info');
+            });
+            
+            teacherSocket.on('error', (error) => {
+                logTeacher(`Error: ${error}`, 'error');
+            });
+        });
+        
+        // Teacher Go Online
+        document.getElementById('teacherGoOnline').addEventListener('click', () => {
+            // This would normally be done through the API
+            logTeacher('Marked as online in the system', 'success');
+            updateTeacherStatus('Online - Waiting for calls', 'success');
+        });
+    </script>
+</body>
+</html>
