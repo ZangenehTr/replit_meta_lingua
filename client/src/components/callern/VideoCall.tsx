@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import SimplePeer, { type Instance } from '@/lib/simple-peer-wrapper';
+import SafePeer from '@/lib/safe-peer';
 import { useSocket } from '@/hooks/use-socket';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -94,7 +94,7 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
   // Video refs
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const peerRef = useRef<Instance | null>(null);
+  const peerRef = useRef<SafePeer | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   
   // State management
@@ -193,7 +193,7 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
   const createPeer = useCallback(async (initiator: boolean, stream: MediaStream, targetSocketId: string) => {
     const peerConfig = await getSimplePeerConfig(initiator);
     
-    const peer = new SimplePeer({
+    const peer = new SafePeer({
       ...peerConfig,
       stream,
       trickle: true, // Enable trickle ICE for faster connection
@@ -313,6 +313,29 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
     
     return peer;
   }, [socket, roomId, remoteSocketId]);
+  
+  // Handle unhandled promise rejections from WebRTC
+  useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      // Check if this is a WebRTC-related error
+      if (event.reason && event.reason.message) {
+        const message = event.reason.message;
+        if (message.includes('addIceCandidate') || 
+            message.includes('setRemoteDescription') ||
+            message.includes('RTCPeerConnection')) {
+          // Prevent the error from bubbling up to the console
+          event.preventDefault();
+          console.warn('WebRTC operation failed (handled):', message);
+        }
+      }
+    };
+    
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
   
   // Socket event handlers
   useEffect(() => {
