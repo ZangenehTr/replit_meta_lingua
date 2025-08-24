@@ -116,16 +116,6 @@ export default function CallernSystem() {
   const [activeTab, setActiveTab] = useState<'packages' | 'teachers' | 'history'>('teachers');
   const [waitingForTeacher, setWaitingForTeacher] = useState(false);
 
-  // Monitor socket connection status
-  useEffect(() => {
-    console.log('Callern page - Socket status update:', {
-      socket: !!socket,
-      isConnected,
-      socketId: socket?.id,
-      socketConnected: socket?.connected
-    });
-  }, [socket, isConnected]);
-
   // Fetch available Callern packages
   const { data: packages = [], isLoading: packagesLoading } = useQuery<CallernPackage[]>({
     queryKey: ["/api/student/callern-packages"],
@@ -231,14 +221,6 @@ export default function CallernSystem() {
   };
 
   const handleStartCall = (teacher: AvailableTeacher) => {
-    // Debug socket status
-    console.log('Start Call - Socket status:', {
-      socket: !!socket,
-      isConnected,
-      socketId: socket?.id,
-      socketConnected: socket?.connected
-    });
-
     // Check if socket is connected
     if (!socket || !isConnected) {
       toast({
