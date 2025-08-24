@@ -57,6 +57,43 @@ if (typeof window !== 'undefined') {
 // Now import SimplePeer after polyfills are set
 import SimplePeer from 'simple-peer';
 
-// Export SimplePeer with polyfills applied
-export default SimplePeer;
+// Create a safe wrapper that handles stream property access
+const OriginalSimplePeer = SimplePeer;
+
+class SafeSimplePeer extends OriginalSimplePeer {
+  constructor(opts?: any) {
+    super(opts);
+    
+    // Patch the stream property to avoid readableState errors
+    if (this._pc && this._pc.addStream) {
+      const originalAddStream = this._pc.addStream.bind(this._pc);
+      this._pc.addStream = (stream: any) => {
+        // Ensure stream has required properties
+        if (stream && !stream.readableState) {
+          Object.defineProperty(stream, 'readableState', {
+            value: { flowing: null, ended: false },
+            writable: true,
+            configurable: true
+          });
+        }
+        return originalAddStream(stream);
+      };
+    }
+  }
+  
+  // Override addStream to handle missing properties
+  addStream(stream: any) {
+    if (stream && !stream.readableState) {
+      Object.defineProperty(stream, 'readableState', {
+        value: { flowing: null, ended: false },
+        writable: true,
+        configurable: true
+      });
+    }
+    return super.addStream(stream);
+  }
+}
+
+// Export the safe wrapper
+export default SafeSimplePeer;
 export type { Instance, Options, SignalData } from 'simple-peer';
