@@ -1,0 +1,1645 @@
+
+video-call.tsx:93 User joined: Object
+video-call.tsx:93 User joined: Object
+3video-call.tsx:136 Received ICE candidate from: C3GLK8OQW3y8HlwjAAAe
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+4video-call.tsx:136 Received ICE candidate from: C3GLK8OQW3y8HlwjAAAe
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+5video-call.tsx:136 Received ICE candidate from: C3GLK8OQW3y8HlwjAAAe
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidStateError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': The remote description was null
+(anonymous) @ main.tsx:13Understand this error
+video-call.tsx:110 Received offer from: wh1LZ0kLl7xIhsq2AAAc
+2video-call.tsx:182 Received remote track
+video-call.tsx:203 Connection state: connecting
+video-call.tsx:93 User joined: Object
+video-call.tsx:93 User joined: Object
+video-call.tsx:93 User joined: Object
+video-call.tsx:93 User joined: Object
+video-call.tsx:127 Received answer from: C3GLK8OQW3y8HlwjAAAe
+3video-call.tsx:136 Received ICE candidate from: C3GLK8OQW3y8HlwjAAAe
+error-handler.ts:7 Unhandled promise rejection: InvalidAccessError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport.
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport.
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: InvalidAccessError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport.
+(anonymous) @ main.tsx:13Understand this error
+3video-call.tsx:136 Received ICE candidate from: C3GLK8OQW3y8HlwjAAAe
+video-call.tsx:93 User joined: Object
+video-call.tsx:93 User joined: Object
+error-handler.ts:7 Unhandled promise rejection: OperationError: Failed to execute 'createOffer' on 'RTCPeerConnection': Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'createOffer' on 'RTCPeerConnection': Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: OperationError: Failed to execute 'createOffer' on 'RTCPeerConnection': Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: OperationError: Failed to execute 'createOffer' on 'RTCPeerConnection': Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'createOffer' on 'RTCPeerConnection': Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: OperationError: Failed to execute 'createOffer' on 'RTCPeerConnection': Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ main.tsx:13Understand this error
+video-call.tsx:136 Received ICE candidate from: C3GLK8OQW3y8HlwjAAAe
+2video-call.tsx:127 Received answer from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ main.tsx:13Understand this error
+video-call.tsx:127 Received answer from: 8nhcdiLCYBrVARYcAAAU
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+video-call.tsx:127 Received answer from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ main.tsx:13Understand this error
+2video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+3video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+4video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:127 Received answer from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ main.tsx:13Understand this error
+2video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:127 Received answer from: 8nhcdiLCYBrVARYcAAAU
+6video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ main.tsx:13Understand this error
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+3video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+3video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+video-call.tsx:127 Received answer from: 8nhcdiLCYBrVARYcAAAU
+14video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+video-call.tsx:127 Received answer from: 8nhcdiLCYBrVARYcAAAU
+2video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ main.tsx:13Understand this error
+error-handler.ts:7 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: OperationError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Session error code: ERROR_CONTENT. Session error description: Failed to apply the description for m= section with mid='0': Failed to set SSL role for the transport..
+(anonymous) @ main.tsx:13Understand this error
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+3video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+2video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+3video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+3video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
+video-call.tsx:136 Received ICE candidate from: 8nhcdiLCYBrVARYcAAAU
+error-handler.ts:7 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ error-handler.ts:7Understand this error
+error-handler.ts:14 Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+(anonymous) @ error-handler.ts:14Understand this error
+main.tsx:13 Unhandled promise rejection: TypeError: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+    at Socket2.<anonymous> (video-call.tsx:139:43)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at Socket2.emitEvent (socket__io-client.js?v=ee3cad79:2655:16)
+    at Socket2.onevent (socket__io-client.js?v=ee3cad79:2643:12)
+    at Socket2.onpacket (socket__io-client.js?v=ee3cad79:2614:14)
+    at Emitter.emit (socket__io-client.js?v=ee3cad79:354:20)
+    at socket__io-client.js?v=ee3cad79:3218:12
+(anonymous) @ main.tsx:13Understand this error
+main.tsx:19 Network error handled gracefully
+(anonymous) @ main.tsx:19Understand this warning
