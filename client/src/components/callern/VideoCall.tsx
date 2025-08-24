@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import SimplePeer from '@/lib/simple-peer-wrapper';
+import SimplePeer, { type Instance } from '@/lib/simple-peer-wrapper';
 import { useSocket } from '@/hooks/use-socket';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -94,7 +94,7 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
   // Video refs
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const peerRef = useRef<SimplePeer.Instance | null>(null);
+  const peerRef = useRef<Instance | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   
   // State management
@@ -269,9 +269,16 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
       } else if ((signal as any).candidate) {
         // ICE candidate
         console.log('Sending ICE candidate to:', targetId);
+        // Ensure the ICE candidate has all required fields
+        const candidateData = {
+          candidate: (signal as any).candidate,
+          sdpMLineIndex: (signal as any).sdpMLineIndex ?? 0,
+          sdpMid: (signal as any).sdpMid ?? '0',
+          type: 'candidate' as const
+        };
         socket?.emit('ice-candidate', {
           roomId,
-          candidate: signal,
+          candidate: candidateData,
           to: targetId
         });
       } else {
@@ -453,9 +460,17 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
       }
       
       try {
-        // Check if the candidate has the required fields
-        if (candidate.candidate || candidate.type === 'candidate') {
-          peerRef.current.signal(candidate);
+        // Ensure candidate has all required fields
+        const formattedCandidate = {
+          candidate: candidate.candidate || candidate,
+          sdpMLineIndex: candidate.sdpMLineIndex ?? 0,
+          sdpMid: candidate.sdpMid ?? '0',
+          type: 'candidate' as const
+        };
+        
+        // Only signal if we have a valid candidate string
+        if (formattedCandidate.candidate && typeof formattedCandidate.candidate === 'string') {
+          peerRef.current.signal(formattedCandidate);
         } else {
           console.warn('Invalid ICE candidate format:', candidate);
         }
@@ -481,8 +496,16 @@ export function VideoCall({ roomId, userId, role, studentId, remoteSocketId: pro
       
       candidates.forEach(({ candidate }) => {
         try {
-          if (candidate.candidate || candidate.type === 'candidate') {
-            peerRef.current?.signal(candidate);
+          // Ensure candidate has all required fields
+          const formattedCandidate = {
+            candidate: candidate.candidate || candidate,
+            sdpMLineIndex: candidate.sdpMLineIndex ?? 0,
+            sdpMid: candidate.sdpMid ?? '0',
+            type: 'candidate' as const
+          };
+          
+          if (formattedCandidate.candidate && typeof formattedCandidate.candidate === 'string') {
+            peerRef.current?.signal(formattedCandidate);
           }
         } catch (error) {
           console.error('Error processing pending ICE candidate:', error);

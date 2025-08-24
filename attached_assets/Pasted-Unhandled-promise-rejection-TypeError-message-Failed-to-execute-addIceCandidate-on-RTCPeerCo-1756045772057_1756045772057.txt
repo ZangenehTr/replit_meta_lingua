@@ -1,0 +1,36 @@
+Unhandled promise rejection: 
+TypeError {message: "Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both…"}
+
+Network error handled gracefully
+Received ICE candidate from: L9oZXHPpxmWzhwvyAAAk
+Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+Unhandled promise rejection: 
+TypeError {message: "Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both…"}
+
+Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+Unhandled promise rejection: 
+TypeError {message: "Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both…"}
+
+Network error handled gracefully
+Received ICE candidate from: L9oZXHPpxmWzhwvyAAAk
+Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+Unhandled promise rejection: 
+TypeError {message: "Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both…"}
+
+Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+Unhandled promise rejection: 
+TypeError {message: "Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both…"}
+
+Network error handled gracefully
+Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+Unhandled promise rejection: 
+TypeError {message: "Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both…"}
+
+Error message: Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both sdpMid and sdpMLineIndex
+Unhandled promise rejection: 
+TypeError {message: "Failed to execute 'addIceCandidate' on 'RTCPeerConnection': Candidate missing values for both…"}
+
+Network error handled gracefully
+Call ended: Teacher disconnected
+Teacher status update: 
+Object {teacherId: 74, status: "offline"}

@@ -144,8 +144,12 @@ export default function StudentDashboard() {
     }
   });
 
-  const progressPercentage = stats ? (stats.completedLessons / Math.max(stats.totalLessons, 1)) * 100 : 0;
-  const xpProgress = stats ? ((stats.totalXP % 1000) / 1000) * 100 : 0;
+  const progressPercentage = stats && stats.totalLessons > 0 
+    ? Math.min((stats.completedLessons / stats.totalLessons) * 100, 100) 
+    : 0;
+  const xpProgress = stats && !isNaN(stats.totalXP)
+    ? Math.min(((stats.totalXP % 1000) / 1000) * 100, 100) 
+    : 0;
 
   return (
     <div className="mobile-gradient-primary min-h-screen">
