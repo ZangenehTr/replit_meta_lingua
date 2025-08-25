@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/hooks/use-socket';
-import { VideoCall } from './VideoCall';
+import { VideoCallFinal } from './VideoCallFinal';
 
 interface IncomingCallData {
   roomId: string;
@@ -130,8 +130,16 @@ export function TeacherIncomingCall() {
   // If in a call, show the VideoCall component
   if (isInCall && activeCallConfig) {
     return (
-      <VideoCall
-        {...activeCallConfig}
+      <VideoCallFinal
+        roomId={activeCallConfig.roomId}
+        userId={activeCallConfig.userId || 0}
+        role={activeCallConfig.role || 'teacher'}
+        studentName="Student"
+        teacherName="Teacher"
+        roadmapTitle="General Conversation"
+        sessionStep="Free Talk Session"
+        packageMinutesRemaining={600}
+        onCallEnd={activeCallConfig.onCallEnd}
       />
     );
   }
