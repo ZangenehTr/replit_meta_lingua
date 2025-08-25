@@ -33,20 +33,38 @@ export class CallernSupervisorHandlers {
     // Handle audio chunks from clients
     socket.on('audio-chunk', async (data: {
       sessionId: string;
-      role: 'teacher' | 'student';
-      audio: ArrayBuffer;
-      timestamp: number;
+      role?: 'teacher' | 'student';
+      speaker?: 'teacher' | 'student';
+      audio?: ArrayBuffer | string;
+      chunk?: ArrayBuffer | string;
+      timestamp?: number;
     }) => {
       try {
-        // Convert ArrayBuffer to Buffer
-        const buffer = Buffer.from(data.audio);
+        // Handle both formats (chunk or audio field)
+        const audioData = data.audio || data.chunk;
+        const role = data.role || data.speaker || 'student';
+        
+        if (!audioData) {
+          console.warn('No audio data provided in audio-chunk event');
+          return;
+        }
+        
+        // Convert to Buffer
+        let buffer: Buffer;
+        if (typeof audioData === 'string') {
+          // Base64 encoded string
+          buffer = Buffer.from(audioData, 'base64');
+        } else {
+          // ArrayBuffer
+          buffer = Buffer.from(audioData);
+        }
         
         // Process audio chunk
         await this.audioProcessor.processAudioChunk({
           sessionId: data.sessionId,
-          role: data.role,
+          role,
           audio: buffer,
-          timestamp: data.timestamp
+          timestamp: data.timestamp || Date.now()
         });
       } catch (error) {
         console.error('Error processing audio chunk:', error);
@@ -134,7 +152,50 @@ export class CallernSupervisorHandlers {
       socket.emit('feedback-stack', { sessionId: data.sessionId, stack });
     });
 
-    // Handle word suggestions request
+    // Handle word help request (from AIOverlay)
+    socket.on('request-word-help', async (data: {
+      roomId?: string;
+      sessionId?: string;
+      context?: string;
+    }) => {
+      try {
+        // Generate suggestions based on context
+        const prompt = `Generate 5 helpful vocabulary words for an English language learner. Context: ${data.context || 'general conversation'}. Format as JSON array with {word, translation, usage}.`;
+        
+        const response = await this.ollama.generateResponse(prompt, 'assistant');
+        
+        // Parse response and emit suggestions
+        try {
+          const suggestions = JSON.parse(response);
+          socket.emit('word-suggestions', {
+            suggestions: suggestions.slice(0, 5)
+          });
+        } catch {
+          // Fallback suggestions if parsing fails
+          socket.emit('word-suggestions', {
+            suggestions: [
+              { word: 'conversation', translation: 'گفتگو', usage: 'Let\'s have a conversation' },
+              { word: 'practice', translation: 'تمرین', usage: 'I need to practice more' },
+              { word: 'understand', translation: 'فهمیدن', usage: 'Do you understand?' },
+              { word: 'explain', translation: 'توضیح دادن', usage: 'Can you explain that?' },
+              { word: 'improve', translation: 'بهبود', usage: 'I want to improve my English' }
+            ]
+          });
+        }
+      } catch (error) {
+        console.error('Error generating word help:', error);
+        // Send fallback suggestions
+        socket.emit('word-suggestions', {
+          suggestions: [
+            { word: 'hello', translation: 'سلام', usage: 'Hello, how are you?' },
+            { word: 'thank you', translation: 'متشکرم', usage: 'Thank you for your help' },
+            { word: 'please', translation: 'لطفا', usage: 'Please help me' }
+          ]
+        });
+      }
+    });
+    
+    // Handle word suggestions request (original handler)
     socket.on('request-word-suggestions', async (data: {
       sessionId: string;
       context?: string;
