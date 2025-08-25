@@ -149,10 +149,10 @@ export function VideoCall({
         // Calculate average volume
         const average = dataArray.reduce((a, b) => a + b, 0) / bufferLength;
         const isSpeaking = average > 30; // Threshold for speech detection
+        const speaker = role === "student" ? "student" : "teacher";
 
         if (isSpeaking) {
           const now = Date.now();
-          const speaker = role === "student" ? "student" : "teacher";
           
           // Calculate speech duration
           if (now - lastSpeechTimeRef.current[speaker] < 2000) {
@@ -171,6 +171,17 @@ export function VideoCall({
             duration: speechDurationRef.current[speaker],
             volumeLevel: average
           });
+          
+          // Calculate performance scores based on speech activity
+          const baseScore = 70;
+          const volumeBonus = Math.min(20, average / 10);
+          const consistencyBonus = speechDurationRef.current[speaker] > 5 ? 10 : 0;
+          const score = Math.round(baseScore + volumeBonus + consistencyBonus);
+          
+          setLiveScore(prev => ({
+            ...prev,
+            [speaker]: score
+          }));
         }
 
         // Update attention score based on activity
@@ -190,19 +201,6 @@ export function VideoCall({
           roomId,
           score: attentionScoreRef.current
         });
-        
-        // Calculate performance scores based on speech activity
-        if (isSpeaking) {
-          const baseScore = 70;
-          const volumeBonus = Math.min(20, average / 10);
-          const consistencyBonus = speechDurationRef.current[speaker] > 5 ? 10 : 0;
-          const score = Math.round(baseScore + volumeBonus + consistencyBonus);
-          
-          setLiveScore(prev => ({
-            ...prev,
-            [speaker]: score
-          }));
-        }
 
       }, 1000);
 
