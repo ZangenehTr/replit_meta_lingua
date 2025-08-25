@@ -180,6 +180,10 @@ export default function TeacherCallernSystem() {
         userId={user!.id}
         role="teacher"
         teacherName={`${user?.firstName} ${user?.lastName}`}
+        studentName={activeCallConfig.studentName || "Student"}
+        roadmapTitle="General Conversation"
+        sessionStep="Free Talk Session"
+        packageMinutesRemaining={600}
         onCallEnd={handleEndCall}
       />
     );

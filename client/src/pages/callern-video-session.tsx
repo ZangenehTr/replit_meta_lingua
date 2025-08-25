@@ -109,6 +109,10 @@ export default function CallernVideoSession() {
         userId={user?.id || 0}
         role="student"
         teacherName={`${selectedTeacher?.firstName} ${selectedTeacher?.lastName}`}
+        studentName={`${user?.firstName} ${user?.lastName}`}
+        roadmapTitle="General Conversation Practice"
+        sessionStep="Free Talk Session"
+        packageMinutesRemaining={availableMinutes}
         onCallEnd={handleEndCall}
       />
     );

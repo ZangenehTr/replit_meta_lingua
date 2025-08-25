@@ -222,6 +222,10 @@ export default function CallernMobilePage() {
         userId={user?.id || 0}
         role="student"
         teacherName={activeCallConfig.teacherName}
+        studentName={`${user?.firstName} ${user?.lastName}`}
+        roadmapTitle="General Conversation"
+        sessionStep="Free Talk Session"
+        packageMinutesRemaining={600}
         onCallEnd={handleEndCall}
       />
     );
