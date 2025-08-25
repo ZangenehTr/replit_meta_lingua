@@ -4,7 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { VideoCallFinal } from "@/components/callern/VideoCallFinal";
+import { VideoCall } from "@/components/callern/VideoCall";
 import { useAuth } from "@/hooks/use-auth";
 import { useSocket } from "@/hooks/use-socket";
 import { useTranslation } from "react-i18next";
@@ -395,15 +395,11 @@ export default function CallernSystem() {
   // Show video call interface when in call
   if (isInCall && activeCallConfig) {
     return (
-      <VideoCallFinal
+      <VideoCall
         roomId={activeCallConfig.roomId}
         userId={user?.id || 0}
         role="student"
         teacherName={activeCallConfig.teacherName}
-        studentName={`${user?.firstName} ${user?.lastName}`}
-        roadmapTitle="General Conversation"
-        sessionStep="Free Talk Session"
-        packageMinutesRemaining={600}
         onCallEnd={handleEndCall}
       />
     );
