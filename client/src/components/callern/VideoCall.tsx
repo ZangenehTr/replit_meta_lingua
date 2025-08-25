@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useTranslation } from "react-i18next";
+import { useAudioStream } from "@/hooks/use-audio-stream";
 import { 
   Phone, PhoneOff, Mic, MicOff, Video, VideoOff,
   Monitor, MonitorOff, Brain, Clock, Circle,
@@ -79,6 +80,11 @@ export function VideoCall({
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [minutesUsed, setMinutesUsed] = useState(0);
   const [attentionScore, setAttentionScore] = useState(0);
+  const [supervisorReady, setSupervisorReady] = useState(false);
+  const sessionId = useRef(`${roomId}-${Date.now()}`).current;
+  
+  // AI Audio Stream Hook
+  const { startStreaming, stopStreaming } = useAudioStream(sessionId, role);
   
   // AI Monitoring
   const speechDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -221,6 +227,92 @@ export function VideoCall({
     }
   };
 
+  // Initialize AI Supervisor
+  const initializeSupervisor = (socket: Socket) => {
+    // Initialize supervisor session
+    socket.emit('supervisor-init', {
+      sessionId,
+      studentId: role === 'student' ? userId : undefined,
+      teacherId: role === 'teacher' ? userId : undefined,
+      lessonTitle: roadmapTitle || 'Conversation Practice',
+      objectives: ['Practice speaking', 'Improve vocabulary', 'Build confidence'],
+      studentLevel: 'B1'
+    });
+    
+    // Start audio streaming
+    startStreaming().catch(console.error);
+  };
+  
+  // Setup supervisor WebSocket handlers
+  const setupSupervisorHandlers = (socket: Socket) => {
+    // Supervisor ready
+    socket.on('supervisor-ready', (data) => {
+      console.log('AI Supervisor ready:', data);
+      setSupervisorReady(true);
+    });
+    
+    // Transcripts
+    socket.on('transcript', (data) => {
+      console.log('Transcript:', data.text, `(${data.speaker})`);
+    });
+    
+    // Teacher tips
+    socket.on('teacher-tip', (data) => {
+      console.log('Teacher tip:', data.text);
+      if (role === 'teacher') {
+        setAiSuggestions(prev => [...prev, data.text].slice(-5));
+      }
+    });
+    
+    // Student tips
+    socket.on('student-tip', (data) => {
+      console.log('Student tip:', data.text);
+      if (role === 'student') {
+        setAiSuggestions(prev => [...prev, data.text].slice(-5));
+      }
+    });
+    
+    // Word suggestions
+    socket.on('word-suggestions', (data) => {
+      if (data.suggestions && data.suggestions.length > 0) {
+        const suggestions = data.suggestions.map((s: any) => 
+          `${s.word}: ${s.translation || s.usage || ''}`
+        );
+        setAiSuggestions(suggestions.slice(0, 5));
+      }
+    });
+    
+    // Metrics update
+    socket.on('metrics-update', (data) => {
+      // Update TTT ratio with real data
+      setTttRatio({ 
+        teacher: data.ttt || 50, 
+        student: data.stt || 50 
+      });
+    });
+    
+    // Pronunciation guide
+    socket.on('pronunciation-guide', (data) => {
+      console.log('Pronunciation:', data);
+    });
+    
+    // Grammar correction
+    socket.on('grammar-correction', (data) => {
+      console.log('Grammar:', data);
+    });
+  };
+  
+  // Handle help request
+  const handleHelpRequest = () => {
+    if (!socketRef.current || !supervisorReady) return;
+    
+    socketRef.current.emit('request-word-suggestions', {
+      sessionId,
+      context: 'User requested help during conversation',
+      targetLanguage: 'English'
+    });
+  };
+
   useEffect(() => {
     // Prevent double init in React 18 StrictMode / Vite HMR
     if (mountedRef.current) return;
@@ -300,11 +392,15 @@ export function VideoCall({
         // 8) Join room
         socketRef.current.emit("join-room", { roomId, userId, role });
         
-        // Start AI monitoring after joining room
+        // Start AI monitoring and supervisor after joining room
         if (stream && socketRef.current) {
           initializeAIMonitoring(stream, socketRef.current);
+          initializeSupervisor(socketRef.current);
         }
 
+        // Setup supervisor handlers
+        setupSupervisorHandlers(socketRef.current);
+        
         // --- Socket handlers ---
 
         // Someone else joined (student initiates exactly once)
@@ -598,7 +694,15 @@ export function VideoCall({
   };
 
   const endCall = () => {
-    socketRef.current?.emit("end-call", { roomId, duration: callSeconds });
+    // Stop audio streaming
+    stopStreaming();
+    
+    // Notify supervisor of session end
+    if (socketRef.current) {
+      socketRef.current.emit('supervisor-cleanup', { sessionId });
+      socketRef.current.emit("end-call", { roomId, duration: callSeconds });
+    }
+    
     safeCleanup();
     onCallEnd();
   };
