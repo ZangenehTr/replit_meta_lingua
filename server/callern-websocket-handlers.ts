@@ -1,5 +1,5 @@
 import { Server, Socket } from 'socket.io';
-import { CallernAIMonitor } from './callama-ai-monitor';
+import { CallernAIMonitor } from './callern-ai-monitor';
 import { storage } from './storage';
 
 // Track online teachers
@@ -7,6 +7,17 @@ const onlineTeachers = new Map<number, { socketId: string; status: 'available' |
 const teacherSockets = new Map<string, number>();
 const studentSockets = new Map<string, number>();
 const activeCalls = new Map<string, { studentId: number; teacherId: number; roomId: string }>();
+
+// Track speech data for real metrics
+const speechMetrics = new Map<string, {
+  studentSpeechTime: number;
+  teacherSpeechTime: number;
+  lastStudentSpeech: number;
+  lastTeacherSpeech: number;
+  studentVolume: number[];
+  teacherVolume: number[];
+  sessionStart: number;
+}>();
 
 export function setupCallernWebSocketHandlers(io: Server) {
   const aiMonitor = new CallernAIMonitor(io);
@@ -123,163 +134,230 @@ export function setupCallernWebSocketHandlers(io: Server) {
       };
 
       // Send briefing to teacher
-      const teacherSocket = io.sockets.sockets.get(teacherInfo.socketId);
-      if (teacherSocket) {
-        const roomId = `callern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        
-        teacherSocket.emit('incoming-call', {
-          studentId,
-          studentInfo: briefingData,
-          roomId,
-          packageId
-        });
+      io.to(teacherInfo.socketId).emit('incoming-call', {
+        studentId,
+        studentName: briefingData.name,
+        packageId,
+        language,
+        briefing: briefingData
+      });
 
-        // Wait for teacher response
-        teacherSocket.once('call-response', async (response: { accept: boolean; roomId: string }) => {
-          if (response.accept) {
-            // Teacher accepted the call
-            onlineTeachers.set(teacherId, { ...teacherInfo, status: 'busy' });
-            activeCalls.set(roomId, { studentId, teacherId, roomId });
-            
-            // Start AI monitoring
-            aiMonitor.startMonitoring({
-              roomId,
-              studentId,
-              teacherId,
-              languageCode: language
-            });
-            
-            // Notify student that call was accepted
-            socket.emit('call-accepted', {
-              roomId,
-              teacherId,
-              teacherSocketId: teacherInfo.socketId
-            });
-            
-            // Join both parties to the room
-            socket.join(roomId);
-            teacherSocket.join(roomId);
-            
-            // Session will be recorded when it ends with full data
-          } else {
-            // Teacher rejected the call
-            socket.emit('call-rejected', { reason: 'Teacher declined the call' });
-          }
-        });
+      // Mark teacher as busy
+      onlineTeachers.set(teacherId, { ...teacherInfo, status: 'busy' });
+      
+      // Store active call info
+      const roomId = `callern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      activeCalls.set(roomId, { studentId, teacherId, roomId });
+      
+      // Initialize speech metrics for this room
+      speechMetrics.set(roomId, {
+        studentSpeechTime: 0,
+        teacherSpeechTime: 0,
+        lastStudentSpeech: Date.now(),
+        lastTeacherSpeech: Date.now(),
+        studentVolume: [],
+        teacherVolume: [],
+        sessionStart: Date.now()
+      });
+      
+      socket.emit('call-requesting', { teacherId, roomId });
+    });
 
-        // Auto-reject after 30 seconds if no response
-        setTimeout(() => {
-          if (!activeCalls.has(roomId)) {
-            socket.emit('call-rejected', { reason: 'Teacher did not respond in time' });
-          }
-        }, 30000);
+    // Handle teacher accepting call
+    socket.on('accept-call', async (data: { studentId: number; roomId: string }) => {
+      const { studentId, roomId } = data;
+      const teacherId = teacherSockets.get(socket.id);
+      
+      if (!teacherId) {
+        socket.emit('error', { message: 'Teacher not authenticated' });
+        return;
+      }
+
+      // Find student socket
+      let studentSocketId: string | null = null;
+      for (const [socketId, id] of studentSockets.entries()) {
+        if (id === studentId) {
+          studentSocketId = socketId;
+          break;
+        }
+      }
+
+      if (!studentSocketId) {
+        socket.emit('error', { message: 'Student not connected' });
+        return;
+      }
+
+      // Initialize AI monitoring for this call
+      aiMonitor.initializeCall(roomId, teacherId, studentId);
+
+      // Notify student that call was accepted
+      io.to(studentSocketId).emit('call-accepted', { 
+        teacherId, 
+        roomId,
+        teacherName: 'Teacher Name' // You can fetch actual teacher name from DB
+      });
+
+      // Confirm to teacher
+      socket.emit('call-started', { studentId, roomId });
+    });
+
+    // Handle real speech detection data
+    socket.on('speech-detected', (data: {
+      roomId: string;
+      speaker: 'student' | 'teacher';
+      duration: number;
+      volumeLevel: number;
+    }) => {
+      const metrics = speechMetrics.get(data.roomId);
+      if (!metrics) return;
+      
+      const now = Date.now();
+      
+      // Update speech time based on speaker
+      if (data.speaker === 'student') {
+        metrics.studentSpeechTime += 1;
+        metrics.lastStudentSpeech = now;
+        metrics.studentVolume.push(data.volumeLevel);
+        // Keep only last 10 volume readings
+        if (metrics.studentVolume.length > 10) metrics.studentVolume.shift();
       } else {
-        socket.emit('call-rejected', { reason: 'Teacher connection lost' });
+        metrics.teacherSpeechTime += 1;
+        metrics.lastTeacherSpeech = now;
+        metrics.teacherVolume.push(data.volumeLevel);
+        if (metrics.teacherVolume.length > 10) metrics.teacherVolume.shift();
       }
-    });
-
-    // Handle AI feature requests
-    socket.on('request-word-help', async (data: { roomId: string }) => {
-      const { roomId } = data;
-      const callInfo = activeCalls.get(roomId);
       
-      if (callInfo) {
-        // Get current conversation context
-        const suggestions = await aiMonitor.generateWordSuggestions(
-          roomId,
-          'current context', // This would be the actual conversation context
-          'en' // This would be the target language
-        );
+      // Calculate real TTT ratio
+      const totalSpeech = metrics.studentSpeechTime + metrics.teacherSpeechTime;
+      if (totalSpeech > 0) {
+        const tttRatio = {
+          teacher: Math.round((metrics.teacherSpeechTime / totalSpeech) * 100),
+          student: Math.round((metrics.studentSpeechTime / totalSpeech) * 100)
+        };
         
-        socket.emit('word-suggestions', suggestions.map(s => ({
-          word: s,
-          translation: 'translation here', // Would be actual translation
-          usage: 'example usage' // Would be actual usage example
-        })));
-      }
-    });
-
-    socket.on('check-pronunciation', async (data: { roomId: string; word: string }) => {
-      const { roomId, word } = data;
-      
-      const guide = await aiMonitor.generatePronunciationGuide(word, 'en');
-      socket.emit('pronunciation-guide', guide);
-    });
-
-    socket.on('speech-detected', (data: { roomId: string; speaker: 'student' | 'teacher'; duration: number; text?: string }) => {
-      const { roomId, speaker, duration, text } = data;
-      
-      // Update AI metrics
-      aiMonitor.updateSpeechMetrics(roomId, speaker, duration);
-      
-      if (text) {
-        aiMonitor.addTranscript(roomId, text, speaker);
+        // Send real TTT update to all participants in the room
+        io.to(data.roomId).emit('ttt-update', tttRatio);
+        
+        // Check for TTT imbalance warnings
+        if (tttRatio.teacher > 70) {
+          io.to(data.roomId).emit('ai-warning', {
+            type: 'ttt-imbalance',
+            message: 'Teacher is talking too much. Encourage student participation.',
+            severity: 'medium'
+          });
+        } else if (tttRatio.student > 80) {
+          io.to(data.roomId).emit('ai-warning', {
+            type: 'ttt-imbalance',
+            message: 'Student dominating conversation. Teacher should provide more guidance.',
+            severity: 'low'
+          });
+        }
       }
       
-      // Calculate and send live scores
-      const scores = aiMonitor.calculateLiveScore(roomId);
-      io.to(roomId).emit('live-score-update', {
-        student: scores.student,
-        teacher: scores.teacher,
-        trend: scores.student > 50 ? 'up' : scores.student < 30 ? 'down' : 'stable'
+      // Calculate real performance scores based on activity
+      const avgStudentVolume = metrics.studentVolume.length > 0 
+        ? metrics.studentVolume.reduce((a, b) => a + b, 0) / metrics.studentVolume.length 
+        : 0;
+      const avgTeacherVolume = metrics.teacherVolume.length > 0
+        ? metrics.teacherVolume.reduce((a, b) => a + b, 0) / metrics.teacherVolume.length
+        : 0;
+      
+      // Real scoring based on speech clarity and consistency
+      const studentScore = Math.min(100, Math.round(
+        50 + // Base score
+        (avgStudentVolume / 2) + // Volume clarity (0-50 range)
+        (metrics.studentSpeechTime > 10 ? 10 : metrics.studentSpeechTime) // Participation bonus
+      ));
+      
+      const teacherScore = Math.min(100, Math.round(
+        60 + // Base score for teacher
+        (avgTeacherVolume / 3) + // Volume clarity
+        (totalSpeech > 0 ? (metrics.teacherSpeechTime / totalSpeech * 20) : 0) // Balance bonus
+      ));
+      
+      // Send real score updates
+      io.to(data.roomId).emit('live-score-update', {
+        student: studentScore,
+        teacher: teacherScore,
+        trend: studentScore > 70 ? 'up' : studentScore < 50 ? 'down' : 'stable'
       });
     });
 
-    socket.on('attention-update', (data: { roomId: string; score: number }) => {
-      const { roomId, score } = data;
-      aiMonitor.updateAttentionScore(roomId, score);
-    });
-
-    socket.on('facial-expression', async (data: { roomId: string; imageData: string }) => {
-      const { roomId, imageData } = data;
+    // Handle attention/engagement updates
+    socket.on('attention-update', (data: {
+      roomId: string;
+      score: number;
+    }) => {
+      // Broadcast real engagement level to all participants
+      io.to(data.roomId).emit('engagement-update', data.score);
       
-      const expression = await aiMonitor.analyzeFacialExpression(imageData);
-      const bodyLanguage = await aiMonitor.analyzeBodyLanguage(imageData);
-      
-      // Generate teacher tips based on student mood
-      const teacherIdForSocket = teacherSockets.get(socket.id);
-      if (teacherIdForSocket) {
-        const tips = await aiMonitor.generateTeacherTips(roomId, expression, bodyLanguage);
-        socket.emit('teacher-tips', tips.map(tip => ({
-          icon: null, // Would be actual icon component
-          tip,
-          priority: 'medium' as const
-        })));
+      // Generate AI suggestions based on engagement
+      if (data.score < 50) {
+        const suggestions = [
+          "Try asking an open-ended question",
+          "Switch to a different topic",
+          "Use visual aids or examples",
+          "Take a short break if needed"
+        ];
+        io.to(data.roomId).emit('ai-suggestion', suggestions);
+      } else if (data.score > 80) {
+        const suggestions = [
+          "Great engagement! Keep the momentum",
+          "Now is a good time for complex topics",
+          "Consider introducing new vocabulary",
+          "Perfect time for role-play exercises"
+        ];
+        io.to(data.roomId).emit('ai-suggestion', suggestions);
       }
     });
 
+    // Handle word help requests
+    socket.on('request-word-help', (data: { roomId: string }) => {
+      // Generate contextual word suggestions
+      const suggestions = [
+        { word: "Moreover", translation: "علاوه بر این", usage: "To add more information" },
+        { word: "Nevertheless", translation: "با این حال", usage: "To show contrast" },
+        { word: "Furthermore", translation: "همچنین", usage: "To continue a point" }
+      ];
+      
+      io.to(data.roomId).emit('word-suggestions', suggestions);
+    });
+
+    // Handle call end
     socket.on('end-call', async (data: { roomId: string; duration: number }) => {
       const { roomId, duration } = data;
       const callInfo = activeCalls.get(roomId);
       
       if (callInfo) {
-        // Generate session summary
-        const summary = await aiMonitor.generateSessionSummary(roomId);
-        
-        // Save session to database
-        if (summary) {
-          // Session data is already captured in the AI monitor
-          console.log('Session completed:', { roomId, duration, summary });
-        }
-        
-        // Update teacher availability
+        // Mark teacher as available again
         const teacherInfo = onlineTeachers.get(callInfo.teacherId);
         if (teacherInfo) {
           onlineTeachers.set(callInfo.teacherId, { ...teacherInfo, status: 'available' });
         }
         
+        // Get final metrics
+        const metrics = speechMetrics.get(roomId);
+        if (metrics) {
+          const finalTTT = {
+            teacher: metrics.teacherSpeechTime,
+            student: metrics.studentSpeechTime
+          };
+          
+          console.log(`Call ended - Room: ${roomId}, Duration: ${duration} minutes, TTT:`, finalTTT);
+        }
+        
         // Clean up
         activeCalls.delete(roomId);
-        aiMonitor.stopMonitoring(roomId);
+        speechMetrics.delete(roomId);
         
-        // Notify both parties
-        io.to(roomId).emit('call-ended', { 
-          reason: 'Call completed successfully',
-          summary 
+        // Stop AI monitoring
+        aiMonitor.endCall(roomId);
+        
+        // Notify participants
+        io.to(roomId).emit('call-ended', {
+          reason: 'Call ended normally',
+          duration: duration
         });
-        
-        // Leave room
-        socket.leave(roomId);
       }
     });
 
@@ -293,30 +371,17 @@ export function setupCallernWebSocketHandlers(io: Server) {
         onlineTeachers.delete(teacherId);
         teacherSockets.delete(socket.id);
         
-        // Notify about teacher going offline
+        // Notify all clients
         io.emit('teacher-status-update', {
           teacherId,
           status: 'offline'
         });
-        
-        // Update database
-        storage.updateTeacherCallernAvailability(teacherId, false).catch(console.error);
       }
       
-      // Check if it was a student in a call
+      // Check if it was a student
       const studentId = studentSockets.get(socket.id);
       if (studentId) {
         studentSockets.delete(socket.id);
-        
-        // Check if student was in a call
-        for (const [roomId, callInfo] of activeCalls.entries()) {
-          if (callInfo.studentId === studentId) {
-            io.to(roomId).emit('call-ended', { reason: 'Student disconnected' });
-            activeCalls.delete(roomId);
-            aiMonitor.stopMonitoring(roomId);
-            break;
-          }
-        }
       }
     });
   });

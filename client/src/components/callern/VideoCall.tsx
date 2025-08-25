@@ -73,15 +73,12 @@ export function VideoCall({
   const [connected, setConnected] = useState(false);
   const [showAIOverlay, setShowAIOverlay] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
-  const [liveScore, setLiveScore] = useState({ student: 85, teacher: 92 });
-  const [engagementLevel, setEngagementLevel] = useState(100);
-  const [tttRatio, setTttRatio] = useState({ teacher: 40, student: 60 });
-  const [aiSuggestions, setAiSuggestions] = useState<string[]>([
-    "Try asking about their day",
-    "Practice present tense verbs",
-    "Review vocabulary from last session"
-  ]);
+  const [liveScore, setLiveScore] = useState({ student: 0, teacher: 0 });
+  const [engagementLevel, setEngagementLevel] = useState(0);
+  const [tttRatio, setTttRatio] = useState({ teacher: 0, student: 0 });
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [minutesUsed, setMinutesUsed] = useState(0);
+  const [attentionScore, setAttentionScore] = useState(0);
   
   // AI Monitoring
   const speechDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -116,36 +113,18 @@ export function VideoCall({
     return () => clearInterval(t);
   }, [packageMinutesRemaining]);
   
-  // Simulate AI updates
+  // Real-time TTT calculation
   useEffect(() => {
-    // Update scores
-    const scoreInterval = setInterval(() => {
-      setLiveScore({
-        student: Math.floor(80 + Math.random() * 20),
-        teacher: Math.floor(85 + Math.random() * 15)
-      });
-    }, 5000);
-    
-    // Update engagement
-    const engagementInterval = setInterval(() => {
-      setEngagementLevel(Math.floor(70 + Math.random() * 30));
-    }, 3000);
-    
-    // Update TTT ratio
     const tttInterval = setInterval(() => {
-      const teacherTalk = 30 + Math.random() * 40;
-      setTttRatio({
-        teacher: Math.round(teacherTalk),
-        student: Math.round(100 - teacherTalk)
-      });
-    }, 4000);
+      const totalSpeech = speechDurationRef.current.student + speechDurationRef.current.teacher;
+      if (totalSpeech > 0) {
+        const studentPercent = Math.round((speechDurationRef.current.student / totalSpeech) * 100);
+        const teacherPercent = Math.round((speechDurationRef.current.teacher / totalSpeech) * 100);
+        setTttRatio({ teacher: teacherPercent, student: studentPercent });
+      }
+    }, 1000);
     
-    // Clean up intervals on unmount
-    return () => {
-      clearInterval(scoreInterval);
-      clearInterval(engagementInterval);
-      clearInterval(tttInterval);
-    };
+    return () => clearInterval(tttInterval);
   }, []);
   
   // Initialize AI monitoring
@@ -201,12 +180,29 @@ export function VideoCall({
         } else {
           attentionScoreRef.current = Math.min(100, attentionScoreRef.current + 2);
         }
+        
+        // Update UI with real attention score
+        setAttentionScore(attentionScoreRef.current);
+        setEngagementLevel(attentionScoreRef.current);
 
         // Emit attention update
         socket.emit("attention-update", {
           roomId,
           score: attentionScoreRef.current
         });
+        
+        // Calculate performance scores based on speech activity
+        if (isSpeaking) {
+          const baseScore = 70;
+          const volumeBonus = Math.min(20, average / 10);
+          const consistencyBonus = speechDurationRef.current[speaker] > 5 ? 10 : 0;
+          const score = Math.round(baseScore + volumeBonus + consistencyBonus);
+          
+          setLiveScore(prev => ({
+            ...prev,
+            [speaker]: score
+          }));
+        }
 
       }, 1000);
 
@@ -479,21 +475,29 @@ export function VideoCall({
           }
         });
 
-        // AI event handlers
+        // AI event handlers for real data from server
         socketRef.current.on("ai-suggestion", (suggestions: string[]) => {
-          setAiSuggestions(suggestions);
+          if (suggestions && suggestions.length > 0) {
+            setAiSuggestions(suggestions);
+          }
         });
         
         socketRef.current.on("live-score-update", (score: any) => {
-          setLiveScore(score);
+          if (score) {
+            setLiveScore(score);
+          }
         });
         
         socketRef.current.on("engagement-update", (level: number) => {
-          setEngagementLevel(level);
+          if (typeof level === 'number') {
+            setEngagementLevel(level);
+          }
         });
         
         socketRef.current.on("ttt-update", (ratio: any) => {
-          setTttRatio(ratio);
+          if (ratio) {
+            setTttRatio(ratio);
+          }
         });
 
         socketRef.current.on("call-ended", ({ reason }) => {
