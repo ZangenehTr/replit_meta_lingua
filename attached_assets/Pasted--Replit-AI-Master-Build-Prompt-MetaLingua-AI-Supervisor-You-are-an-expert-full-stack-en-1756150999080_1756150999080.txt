@@ -1,0 +1,261 @@
+
+
+
+⸻
+
+🔧 Replit AI — Master Build Prompt (MetaLingua AI Supervisor)
+
+You are an expert full-stack engineer. Create a self-hosted, low-latency AI Supervisor for MetaLingua called “Callern Supervisor”. The runtime LLM is Ollama (Llama-3.2) already available on a private server. Build a modular monorepo with production-ready code, tests, and Docker. Prioritize clean architecture, easy swaps, and privacy.
+
+0) Non-functional targets
+	•	Latency: live tips under 2–3s E2E on GPU; hard rate-limit of 1 tip/role/20s to avoid spam.
+	•	Privacy: transcripts and video never leave our infra; camera analytics default off and opt-in per user.
+	•	Reliability: graceful degradation (if ASR or LLM stalls, UI keeps running; queues buffer).
+	•	Internationalization: English + Persian.
+
+1) Monorepo layout
+
+/callern-supervisor
+  /web              # Next.js + React + TS (teacher/student dashboards)
+  /api              # FastAPI (ASR, LLM, rules, tips, feedback stack, Joy Box, games API)
+  /worker           # Celery/RQ worker for aggregation, reports, game builds
+  /shared           # Types, prompt templates, rubrics, utils
+  /infra            # docker-compose, Dockerfiles, env templates, Nginx/Caddy
+  /tests            # Pytests + Playwright E2E
+  README.md
+
+2) Core pipeline overview
+	1.	Audio ingest (teacher & student separate) → WebSocket → ASR (Whisper/faster-whisper + Silero VAD).
+	2.	Transcript windows (3–5s, speaker-labeled) → LLM event extractor (Ollama Llama-3.2 8B).
+	3.	Supervisor engine merges:
+	•	Student scaffolding (openers, gap fillers, ideas, collocations, synonyms),
+	•	Teacher correction queue (grammar, lexicon, pronunciation notes),
+	•	Delayed Feedback Stack (aggregate errors selected by teacher),
+	•	Flow/microlearning scheduler (small challenges, spaced refocus).
+	4.	Tips emitter (debounced) → role-specific panels.
+	5.	Report writer (end of session, uses 13B if available) aligned to lesson title/objectives.
+	6.	Joy Box (post-session): fetch a very short passage / song snippet / video clip rich in session grammar/lexis.
+	7.	Games generator: session → new level for vocab/grammar/spelling/pronunciation.
+	8.	Attention/affect hints (optional, opt-in): client-side camera heuristics → send low-rate events; inform tips/content selection.
+	9.	Gamification: teacher quality leaderboard; student progress leaderboard.
+
+3) Frontend (/web)
+	•	Next.js + TS, Tailwind, Zustand (state).
+	•	Views:
+	•	Teacher Dashboard: live transcript, Teacher Tips (subtle, non-interruptive), Error Stack (editable queue), metrics (TTT/STT, turns, wait time), opt-in toggles.
+	•	Student Dashboard: Student Tips (scaffolds), targeted word bank, sentence starters, collocations, pronunciation helper, micro-tasks.
+	•	After-class: Report, Joy Box widget, Games/Levels.
+	•	Leaderboards: teacher quality rank; student progress rank.
+	•	WebRTC / Media:
+	•	For dev: simple mic capture → PCM 16k over WS to /ws/audio?role=teacher|student.
+	•	(We will add TURN/SFU later; keep adapter interfaces ready.)
+	•	Client-side attention heuristics (opt-in):
+	•	Use @mediapipe/face_mesh or tfjs blazeface to compute light features at 1–2 fps max:
+	•	head pose (yaw/pitch), eye aspect ratio (blink), gaze off-screen (rough), mouth aspect ratio (yawn proxy).
+	•	Emit hints as probabilistic events (e.g., possible_boredom, possible_confusion) no more than 1/10s and never store raw frames.
+	•	UX constraints:
+	•	Tips are one-liners with an optional “More” expander.
+	•	Student “scaffold strip” shows openers, gap fillers, collocations, ideas tied to current topic.
+	•	Teacher “Delay button” pushes an item to the Delayed Feedback Stack for end-of-class review/slide.
+
+4) Backend API (/api) — FastAPI
+
+4.1 Realtime endpoints
+	•	GET /health
+	•	WS /ws/audio?session_id&role → receive PCM chunks; ASR partials; return rolling transcripts.
+	•	POST /llm/events → body: {lesson, objectives, transcript_window} → returns strict JSON events.
+	•	POST /llm/tips → body: {lesson, objectives, events, metrics, context} → returns {teacher_tip, student_tip}.
+	•	POST /supervisor/stack → manage teacher’s Delayed Feedback Stack (add/remove/list).
+	•	GET /metrics/live?session_id → stream server-sent events of TTT/STT, turns, wait-time.
+
+4.2 Post-session endpoints
+	•	POST /reports/generate → produce structured JSON + markdown summary aligned to objectives.
+	•	POST /joybox/generate → input {lesson, objectives, key_lexis, patterns} → output curated very short content item with source link. (Implement Fetcher interface; start with stubs and a small curated corpus; add adapters for YouTube/lyrics later.)
+	•	POST /games/generate → produce / update level N games (vocab cloze, sentence scramble, match pairs, dictation/pronunciation mimic). Return JSON config playable on /web.
+
+4.3 Admin / Gamification
+	•	GET /leaderboards/teachers → rank by composite quality score.
+	•	GET /leaderboards/students → rank by learning velocity (XP gained / time), streaks.
+	•	POST /ratings/teacher & POST /ratings/session → accept stars + short feedback.
+
+5) Workers (/worker)
+	•	Queue framework: Celery (Redis broker) or RQ.
+	•	Jobs:
+	•	aggregate session events → compute hard metrics (TTT/STT, wait-time, error counts),
+	•	run Report writer LLM,
+	•	generate Joy Box item,
+	•	build/update Games level assets,
+	•	recalc leaderboards nightly.
+
+6) ASR & diarization
+	•	ASR: faster-whisper (CTranslate2), language auto-detect (fa/en), small/medium model.
+	•	VAD: Silero; chunk 0.6–1.2s.
+	•	Speaker: rely on role query param (teacher/student). Optional pyannote when tracks are mixed.
+
+7) LLM (Ollama) clients
+	•	Use Ollama REST at http://<ollama-host>:11434/api/generate (configurable).
+	•	Models:
+	•	Live extraction/tips: llama3.2:8b-instruct (fast).
+	•	Reports & content: llama3.2:13b-instruct if GPU allows; else 8B.
+	•	Always force JSON with robust stop tokens; include temperature=0.2 for determinism.
+
+7.1 Prompt templates (put in /shared/prompts)
+
+Event extractor (system)
+
+You are an ELT classroom event tagger. Output STRICT JSON:
+{"events":[
+ {"t":"00:07:12","speaker":"student","type":"error_form","target":"present perfect","utt":"I have seen him yesterday"},
+ {"t":"00:07:18","speaker":"teacher","type":"feedback_recast","utt":"Oh, you saw him yesterday."}
+]}
+Allowed types:
+ICQ, CCQ, prompt, student_attempt, idea_request, hesitation,
+scaffold_request, error_form, error_lex, error_pron,
+feedback_recast, feedback_explicit, feedback_elicitation,
+praise, instruction, task_transition, check_understanding.
+No prose. Reject hallucinated events.
+
+Tip generator (system)
+
+You output at most ONE short actionable tip per role per 20s.
+Focus on the NEXT move, not critique.
+Teacher tips: pedagogy, staging, ICQ/CCQ, corrective feedback choices.
+Student tips: openers, gap fillers, collocations, sentence starters, idea seeds; if hesitation detected, offer 1-2 words only.
+Return {"teacher_tip":"...", "student_tip":"..."}; keep each tip ≤ 18 words.
+
+Teacher correction validator (system)
+
+If the teacher's utterance is factually or linguistically incorrect, return
+{"flag":true,"note":"...","suggestion":"..."} else {"flag":false}.
+Keep false positives minimal; be conservative.
+
+Report writer (system)
+
+Write a concise session report aligned to the lesson objectives.
+Ground ONLY in provided events + metrics.
+Output JSON:
+{"session_title":"", "what_student_learned":["..."],
+ "evidence":[{"event_ref":2,"note":"..."}],
+ "scores":{"accuracy":1-5,"fluency":1-5,"task_completion":1-5},
+ "next_steps":["..."]}
+
+Joy Box curator (system)
+
+Given key lexis/grammar, propose ONE ultra-short content item (≤120 words text OR ≤30s video OR 10-20s song excerpt idea) densely featuring targets.
+Return JSON: {"type":"text|video|audio","title":"...","source_hint":"...", "snippet_or_query":"...","why_fit":"..."}
+Do NOT invent URLs; if no suitable item, return a precise search query string.
+
+Game generator (system)
+
+Create one micro-game config based on session content. Types:
+"cloze", "match", "scramble", "dictation", "pronunciation-mimic".
+Return JSON with "type", "instructions", "items":[...], "answer_key".
+Keep total playtime 2–3 minutes (microlearning).
+
+8) Rules/metrics (hybrid: code + LLM)
+	•	Compute TTT/STT from timestamps (code, not LLM).
+	•	Wait-time: teacher question → student first token time.
+	•	Hesitation: ASR pauses >1.0s mid-utterance → trigger scaffold_request.
+	•	Error stack: teacher presses “stack” on any event → store in queue; UI renders Delayed Feedback section at end with examples/corrections.
+	•	Pronunciation: use Whisper tokens + phonemizer for a rough rhyme/mismatch hint; keep as “suggestion,” not a score.
+	•	Flow/microlearning: every ~6–8 minutes inject a 30–90s micro-task; show a focus nudge if boredom hint + long wait-times.
+
+9) Database schema (Postgres, /api/db/schema.sql)
+
+TABLE users (
+  id uuid pk, role text check (role in ('teacher','student','admin')),
+  name text, email text, created_at timestamptz
+);
+
+TABLE lessons (
+  id uuid pk, course_id uuid, title text,
+  objectives jsonb, rubric jsonb, created_at timestamptz
+);
+
+TABLE sessions (
+  id uuid pk, lesson_id uuid, teacher_id uuid, student_id uuid,
+  started_at timestamptz, ended_at timestamptz, metrics jsonb
+);
+
+TABLE events (
+  id uuid pk, session_id uuid, t_ms int, speaker text,
+  type text, payload jsonb
+);
+
+TABLE feedback_stack (
+  id uuid pk, session_id uuid, event_id uuid, note text, created_at timestamptz
+);
+
+TABLE reports (
+  id uuid pk, session_id uuid, summary_md text,
+  outcomes jsonb, scores jsonb, next_steps jsonb, created_at timestamptz
+);
+
+TABLE joybox (
+  id uuid pk, session_id uuid, item jsonb, created_at timestamptz
+);
+
+TABLE games (
+  id uuid pk, session_id uuid, level int, config jsonb, created_at timestamptz
+);
+
+TABLE ratings (
+  id uuid pk, session_id uuid, teacher_id uuid, student_id uuid,
+  stars int, comment text, created_at timestamptz
+);
+
+10) Gamification
+	•	Teacher Quality Score (per session):
+	•	rubric-weighted blend of: appropriate CF usage, ICQ/CCQ presence, TTT/STT target, student improvement delta, student rating.
+	•	Student XP:
+	•	earned by completing micro-tasks, accuracy streaks, timely responses, game levels.
+	•	Nightly job updates leaderboards with decay (recent sessions weigh more).
+
+11) Config & Secrets
+	•	.env template: OLAMA_HOST, OLAMA_MODEL_FAST, OLAMA_MODEL_REPORT, DB_URL, REDIS_URL, ASR_MODEL_SIZE, ENABLE_CAMERA_HINTS (default false).
+	•	All network targets configurable; write a single settings.py.
+
+12) Docker & Dev
+	•	docker-compose.yml with services:
+	•	web, api, worker, redis, postgres, (optional) nginx/caddy.
+	•	Healthchecks; hot reload in dev; Playwright E2E for tip flow.
+
+13) Tests
+	•	Unit tests for: event JSON schema, tip rate-limit, stack operations, metrics.
+	•	Integration test with fake transcript to produce: events → tips → report → joybox → game config.
+
+14) Initial tasks for the agent
+	1.	Scaffold the monorepo structure above.
+	2.	Implement /ws/audio with Silero VAD + faster-whisper streaming and return partials.
+	3.	Implement OllamaClient with timeout/retries; add prompt templates.
+	4.	Implement SupervisorEngine:
+	•	merges events → metrics,
+	•	calls LLM for tips (role-specific),
+	•	enforces rate limit (per role).
+	5.	Build teacher/student dashboards; wire live tips + stack UI.
+	6.	Implement report endpoint + end-of-session job.
+	7.	Implement Joy Box (start with curated corpus in /shared/corpus/short_texts.json and return a snippet or a search query string).
+	8.	Implement Games generator with 2 game types (cloze, match) and a simple runner in /web/games/[sessionId].
+	9.	Add leaderboards and placeholder scoring functions; compute nightly in worker.
+	10.	Add opt-in camera heuristics in the client; send low-rate events to /api/attention/hint.
+
+15) Acceptance criteria
+	•	Speaking into teacher/student mics produces rolling transcripts.
+	•	Every ~5–10s, each role gets at most one tip; student tips include openers/gap-fillers/collocations/ideas when hesitations occur.
+	•	Teacher can push items to Delayed Feedback Stack and see a clean end-of-class review.
+	•	End-of-session report JSON + markdown is generated and stored.
+	•	Joy Box produces one tiny content item or a precise search query.
+	•	A level of games is generated and playable.
+	•	Leaderboards render with mock data.
+	•	All services run via docker-compose up.
+
+⸻
+
+Notes for the Replit agent
+	•	Favor deterministic JSON from LLM (add stop tokens and surrounding guards).
+	•	Don’t block on external media APIs for Joy Box; start with local corpus then leave adapters.
+	•	Keep attention/emotion as hints only—never present as truth.
+	•	Include README with setup, env vars, and a 10-minute “quick start”.
+
+⸻
+

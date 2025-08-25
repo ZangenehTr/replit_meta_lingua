@@ -3,6 +3,7 @@ import { Server } from 'http';
 import { db } from './db';
 import { callernCallHistory, callernPackages, studentCallernPackages, teacherCallernAvailability, users } from '../shared/schema';
 import { eq, and, like, sql } from 'drizzle-orm';
+import { CallernSupervisorHandlers } from './callern-supervisor-handlers';
 
 interface CallRoom {
   roomId: string;
@@ -34,6 +35,7 @@ export class CallernWebSocketServer {
   private teacherSockets: Map<number, TeacherSocket> = new Map();
   private studentSockets: Map<number, string> = new Map();
   private userSockets: Map<string, UserSocket> = new Map(); // socketId -> user info
+  private supervisorHandlers: CallernSupervisorHandlers;
   
   // Public method to get connected teachers
   public getConnectedTeachers(): number[] {
@@ -48,13 +50,17 @@ export class CallernWebSocketServer {
         credentials: true,
       },
       path: '/socket.io',
+      maxHttpBufferSize: 1e7 // 10MB for audio chunks
     });
+
+    // Initialize AI Supervisor
+    this.supervisorHandlers = new CallernSupervisorHandlers(this.io);
 
     // Clear all teachers' online status on server start
     this.clearAllTeachersOnlineStatus();
     
     this.setupEventHandlers();
-    console.log('Callern WebSocket server initialized');
+    console.log('Callern WebSocket server with AI Supervisor initialized');
   }
   
   private async clearAllTeachersOnlineStatus() {
@@ -71,6 +77,9 @@ export class CallernWebSocketServer {
   private setupEventHandlers() {
     this.io.on('connection', (socket) => {
       console.log(`New socket connection: ${socket.id}`);
+      
+      // Setup AI Supervisor handlers for this socket
+      this.supervisorHandlers.setupHandlers(socket);
 
       // Authentication
       socket.on('authenticate', async (data) => {
