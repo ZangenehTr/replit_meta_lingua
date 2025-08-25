@@ -159,7 +159,14 @@ Tag pedagogical events in this utterance. Output JSON array only.`;
       
       try {
         // Parse JSON response
-        const parsed = JSON.parse(response);
+        // Try to parse as JSON, fallback if not valid JSON
+        let parsed;
+        try {
+          parsed = JSON.parse(response);
+        } catch (parseError) {
+          console.log('Event extraction response not JSON, skipping');
+          return [];
+        }
         const events = Array.isArray(parsed) ? parsed : parsed.events || [];
         
         // Validate and clean events
@@ -284,7 +291,14 @@ Generate ONE contextual tip for ${canSendTeacherTip ? 'teacher' : ''} ${canSendS
       });
       
       try {
-        const tips = JSON.parse(response);
+        // Try to parse as JSON, fallback if not valid JSON
+        let tips;
+        try {
+          tips = JSON.parse(response);
+        } catch (parseError) {
+          console.log('Tips response not JSON, using fallback');
+          return this.getFallbackTips(forRole);
+        }
         
         // Send teacher tip
         if (canSendTeacherTip && tips.teacher_tip) {
@@ -475,7 +489,14 @@ Generate session report.`;
         model: 'llama3.2:3b'
       });
       
-      return JSON.parse(response);
+      // Try to parse as JSON, fallback if not valid JSON
+      try {
+        return JSON.parse(response);
+      } catch (parseError) {
+        // If response is not JSON, use fallback
+        console.log('Response not JSON, using fallback report');
+        return this.getFallbackReport(session);
+      }
     } catch (error) {
       console.error('Report generation error:', error);
       return this.getFallbackReport(session);

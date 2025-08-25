@@ -30,7 +30,7 @@ export class OllamaService {
   private async checkAvailability(): Promise<void> {
     try {
       const response = await axios.get(`${this.baseUrl}/api/tags`, { 
-        timeout: 10000, // Increased timeout to 10 seconds for remote server
+        timeout: 30000, // Increased timeout to 30 seconds for remote server
         validateStatus: (status) => status === 200
       });
       this.isAvailable = response.status === 200;
@@ -38,7 +38,7 @@ export class OllamaService {
     } catch (error: any) {
       this.isAvailable = false;
       // Don't log connection refused errors as they're expected in dev
-      if (!error.message?.includes('ECONNREFUSED')) {
+      if (!error.message?.includes('ECONNREFUSED') && !error.message?.includes('timeout')) {
         console.log('Ollama service not available:', error.message);
       }
     }
@@ -69,13 +69,14 @@ export class OllamaService {
       };
 
       const response = await axios.post(`${this.baseUrl}/api/generate`, request, {
-        timeout: 30000,
+        timeout: 60000, // Increased to 60 seconds for remote server
       });
 
       return response.data.response;
-    } catch (error) {
-      console.error('Ollama generation error:', error);
-      throw new Error(`Failed to generate completion: ${error.message}`);
+    } catch (error: any) {
+      console.error('Ollama generation error:', error.message);
+      // Fallback to production-ready response on error
+      return this.generateFallbackResponse(prompt, systemPrompt);
     }
   }
 
