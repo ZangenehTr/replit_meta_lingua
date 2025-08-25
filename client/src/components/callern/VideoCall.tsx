@@ -6,7 +6,18 @@ import {
   wrapPeerConnection,
 } from "@/lib/webrtc-error-handler";
 import { AIOverlay } from "./AIOverlay";
-import { Brain } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { useTranslation } from "react-i18next";
+import { 
+  Phone, PhoneOff, Mic, MicOff, Video, VideoOff,
+  Monitor, MonitorOff, Brain, Clock, Circle,
+  Wifi, WifiOff, BookOpen, User,
+  Sparkles, Activity, TrendingUp
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // Install global WebRTC error handler once
 installWebRTCErrorHandler();
@@ -16,6 +27,10 @@ interface VideoCallProps {
   userId: number;
   role: "student" | "teacher";
   teacherName?: string;
+  studentName?: string;
+  roadmapTitle?: string;
+  sessionStep?: string;
+  packageMinutesRemaining?: number;
   onCallEnd: () => void;
 }
 
@@ -24,8 +39,13 @@ export function VideoCall({
   userId,
   role,
   teacherName,
+  studentName,
+  roadmapTitle,
+  sessionStep,
+  packageMinutesRemaining = 600,
   onCallEnd,
 }: VideoCallProps) {
+  const { t } = useTranslation(['callern', 'common']);
   // Video elements
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -47,10 +67,21 @@ export function VideoCall({
   // UI
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [status, setStatus] = useState("Connecting…");
   const [callSeconds, setCallSeconds] = useState(0);
   const [connected, setConnected] = useState(false);
   const [showAIOverlay, setShowAIOverlay] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [liveScore, setLiveScore] = useState({ student: 85, teacher: 92 });
+  const [engagementLevel, setEngagementLevel] = useState(100);
+  const [tttRatio, setTttRatio] = useState({ teacher: 40, student: 60 });
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([
+    "Try asking about their day",
+    "Practice present tense verbs",
+    "Review vocabulary from last session"
+  ]);
+  const [minutesUsed, setMinutesUsed] = useState(0);
   
   // AI Monitoring
   const speechDetectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -63,8 +94,58 @@ export function VideoCall({
 
   // Timer
   useEffect(() => {
-    const t = setInterval(() => setCallSeconds((s) => s + 1), 1000);
+    const t = setInterval(() => {
+      setCallSeconds((s) => {
+        const newSeconds = s + 1;
+        const currentMinutesUsed = Math.ceil(newSeconds / 60);
+        setMinutesUsed(currentMinutesUsed);
+        
+        // Check package minutes
+        const remainingMinutes = packageMinutesRemaining - currentMinutesUsed;
+        if (remainingMinutes === 5) {
+          console.log("⚠️ Only 5 minutes remaining in your package!");
+        } else if (remainingMinutes === 1) {
+          console.log("⚠️ 1 minute left! Call will end soon.");
+        } else if (remainingMinutes <= 0) {
+          endCall();
+        }
+        
+        return newSeconds;
+      });
+    }, 1000);
     return () => clearInterval(t);
+  }, [packageMinutesRemaining]);
+  
+  // Simulate AI updates
+  useEffect(() => {
+    // Update scores
+    const scoreInterval = setInterval(() => {
+      setLiveScore({
+        student: Math.floor(80 + Math.random() * 20),
+        teacher: Math.floor(85 + Math.random() * 15)
+      });
+    }, 5000);
+    
+    // Update engagement
+    const engagementInterval = setInterval(() => {
+      setEngagementLevel(Math.floor(70 + Math.random() * 30));
+    }, 3000);
+    
+    // Update TTT ratio
+    const tttInterval = setInterval(() => {
+      const teacherTalk = 30 + Math.random() * 40;
+      setTttRatio({
+        teacher: Math.round(teacherTalk),
+        student: Math.round(100 - teacherTalk)
+      });
+    }, 4000);
+    
+    // Clean up intervals on unmount
+    return () => {
+      clearInterval(scoreInterval);
+      clearInterval(engagementInterval);
+      clearInterval(tttInterval);
+    };
   }, []);
   
   // Initialize AI monitoring
@@ -398,6 +479,23 @@ export function VideoCall({
           }
         });
 
+        // AI event handlers
+        socketRef.current.on("ai-suggestion", (suggestions: string[]) => {
+          setAiSuggestions(suggestions);
+        });
+        
+        socketRef.current.on("live-score-update", (score: any) => {
+          setLiveScore(score);
+        });
+        
+        socketRef.current.on("engagement-update", (level: number) => {
+          setEngagementLevel(level);
+        });
+        
+        socketRef.current.on("ttt-update", (ratio: any) => {
+          setTttRatio(ratio);
+        });
+
         socketRef.current.on("call-ended", ({ reason }) => {
           console.log("Call ended by peer:", reason);
           endCall();
@@ -448,6 +546,54 @@ export function VideoCall({
       to,
     });
   };
+  
+  const toggleScreenShare = async () => {
+    if (!isScreenSharing) {
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false
+        });
+        
+        const videoTrack = screenStream.getVideoTracks()[0];
+        const sender = pcRef.current?.getSenders().find(
+          s => s.track?.kind === 'video'
+        );
+        
+        if (sender) {
+          sender.replaceTrack(videoTrack);
+        }
+        
+        setIsScreenSharing(true);
+        
+        videoTrack.onended = () => {
+          stopScreenShare();
+        };
+      } catch (error) {
+        console.error("Failed to share screen:", error);
+      }
+    } else {
+      stopScreenShare();
+    }
+  };
+  
+  const stopScreenShare = () => {
+    const videoTrack = localStreamRef.current?.getVideoTracks()[0];
+    const sender = pcRef.current?.getSenders().find(
+      s => s.track?.kind === 'video'
+    );
+    
+    if (sender && videoTrack) {
+      sender.replaceTrack(videoTrack);
+    }
+    
+    setIsScreenSharing(false);
+  };
+  
+  const toggleRecording = () => {
+    setIsRecording(!isRecording);
+    socketRef.current?.emit("toggle-recording", { roomId, recording: !isRecording });
+  };
 
   const endCall = () => {
     socketRef.current?.emit("end-call", { roomId, duration: callSeconds });
@@ -497,100 +643,285 @@ export function VideoCall({
 
   // UI helpers
   const fmt = (s: number) => {
-    const m = Math.floor(s / 60);
-    const r = s % 60;
-    return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+    const hours = Math.floor(s / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    if (hours > 0) {
+      return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   // Render
   return (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative">
       {/* AI Overlay */}
-      <AIOverlay 
-        roomId={roomId} 
-        role={role} 
-        isVisible={showAIOverlay}
-        onClose={() => setShowAIOverlay(false)}
-      />
-      
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/70 to-transparent z-10">
-        <div className="flex justify-between items-center text-white">
-          <div>
-            <h2 className="text-lg font-semibold">
-              {role === "student" ? teacherName || "Teacher" : "Student"}
-            </h2>
-            <p className="text-sm opacity-80">{status}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-2xl font-mono">{fmt(callSeconds)}</p>
-            <p className="text-sm opacity-80">Room: {roomId.slice(-8)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Videos */}
-      <div className="flex-1 relative">
-        {/* Remote full-screen */}
-        <video
-          ref={remoteVideoRef}
-          autoPlay
-          playsInline
-          className="w-full h-full object-cover"
+      {showAIOverlay && (
+        <AIOverlay
+          roomId={roomId}
+          role={role}
+          isVisible={true}
+          onClose={() => setShowAIOverlay(false)}
         />
-        {/* Local PiP */}
-        <div className="absolute bottom-24 right-4 w-32 h-48 md:w-48 md:h-64 rounded-lg overflow-hidden shadow-2xl border-2 border-white/20 bg-black/40">
-          <video
-            ref={localVideoRef}
-            autoPlay
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          />
-          {!isVideoEnabled && (
-            <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                <path d="M10 8l6 4-6 4V8z" stroke="white" strokeWidth="2" />
-              </svg>
+      )}
+      
+      {/* Main Content */}
+      <div className="relative z-10 h-screen flex flex-col">
+        {/* Header */}
+        <div className="bg-black/30 backdrop-blur-lg border-b border-white/10 p-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {/* Roadmap Title */}
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-purple-400" />
+                <div>
+                  <h2 className="text-white font-semibold">
+                    {roadmapTitle || "General Conversation"}
+                  </h2>
+                  {sessionStep && (
+                    <p className="text-xs text-white/70">{sessionStep}</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Connection Status */}
+              <Badge 
+                variant={connected ? "default" : "secondary"}
+                className={cn(
+                  "flex items-center gap-1",
+                  connected && "bg-green-500/20 text-green-400 border-green-500/30"
+                )}
+              >
+                {connected ? (
+                  <>
+                    <Wifi className="w-3 h-3" />
+                    Connected
+                  </>
+                ) : status === "Connecting…" ? (
+                  <>
+                    <Circle className="w-3 h-3 animate-pulse" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-3 h-3" />
+                    {status}
+                  </>
+                )}
+              </Badge>
+              
+              {/* Call Duration */}
+              <div className="flex items-center gap-2 text-white">
+                <Clock className="w-4 h-4" />
+                <span className="font-mono text-lg">{fmt(callSeconds)}</span>
+              </div>
+              
+              {/* Package Minutes */}
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col">
+                  <span className="text-xs text-white/70">Package Minutes</span>
+                  <div className="flex items-center gap-2">
+                    <Progress 
+                      value={(minutesUsed / packageMinutesRemaining) * 100} 
+                      className="w-24 h-2"
+                    />
+                    <span className="text-sm text-white font-semibold">
+                      {Math.max(0, packageMinutesRemaining - minutesUsed)} min
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
+            
+            {/* Status Indicators */}
+            <div className="flex items-center gap-3">
+              {/* AI Active */}
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="flex items-center gap-2 px-3 py-1 bg-purple-500/20 rounded-full border border-purple-500/30"
+              >
+                <Brain className="w-4 h-4 text-purple-400" />
+                <span className="text-xs text-purple-300">AI Active</span>
+                <Sparkles className="w-3 h-3 text-purple-300 animate-pulse" />
+              </motion.div>
+              
+              {/* Recording */}
+              {isRecording && (
+                <motion.div
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="flex items-center gap-2 px-3 py-1 bg-red-500/20 rounded-full border border-red-500/30"
+                >
+                  <Circle className="w-3 h-3 text-red-400 fill-red-400" />
+                  <span className="text-xs text-red-300">Recording</span>
+                </motion.div>
+              )}
+              
+              {/* Live Scores */}
+              <div className="flex items-center gap-4 px-4 py-2 bg-black/20 rounded-lg border border-white/10">
+                <div className="text-center">
+                  <p className="text-xs text-white/60">Student</p>
+                  <div className="flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-green-400" />
+                    <p className="text-lg font-bold text-white">{liveScore.student}</p>
+                  </div>
+                </div>
+                <div className="w-px h-8 bg-white/20" />
+                <div className="text-center">
+                  <p className="text-xs text-white/60">Teacher</p>
+                  <div className="flex items-center gap-1">
+                    <Activity className="w-3 h-3 text-blue-400" />
+                    <p className="text-lg font-bold text-white">{liveScore.teacher}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* TTT Ratio */}
+              <div className="px-3 py-2 bg-black/20 rounded-lg border border-white/10">
+                <p className="text-xs text-white/60 mb-1">Talk Time</p>
+                <div className="flex items-center gap-2">
+                  <div className="text-xs text-blue-300">T: {tttRatio.teacher}%</div>
+                  <div className="text-xs text-green-300">S: {tttRatio.student}%</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Controls */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
-        <div className="flex justify-center gap-4">
-          <button
-            onClick={toggleAudio}
-            className={`rounded-full w-14 h-14 text-white ${isAudioEnabled ? "bg-white/20" : "bg-red-600"}`}
-            title={isAudioEnabled ? "Mute" : "Unmute"}
-          >
-            {isAudioEnabled ? "🎤" : "🔇"}
-          </button>
-
-          <button
-            onClick={toggleVideo}
-            className={`rounded-full w-14 h-14 text-white ${isVideoEnabled ? "bg-white/20" : "bg-red-600"}`}
-            title={isVideoEnabled ? "Turn camera off" : "Turn camera on"}
-          >
-            {isVideoEnabled ? "📷" : "🚫"}
-          </button>
-
-          <button
-            onClick={endCall}
-            className="rounded-full w-14 h-14 text-white bg-red-700"
-            title="End call"
-          >
-            ⛔
-          </button>
-
-          <button
-            onClick={() => setShowAIOverlay(!showAIOverlay)}
-            className={`rounded-full w-14 h-14 text-white ${showAIOverlay ? "bg-purple-600" : "bg-white/20"}`}
-            title="Toggle AI Assistant"
-          >
-            <Brain className="w-6 h-6 mx-auto" />
-          </button>
+        
+        {/* Video Grid */}
+        <div className="flex-1 p-4">
+          <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Remote Video */}
+            <div className="relative rounded-2xl overflow-hidden bg-black/30 backdrop-blur">
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute top-4 left-4 px-3 py-1 bg-black/50 rounded-full">
+                <p className="text-white text-sm flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  {role === "student" ? teacherName || "Teacher" : studentName || "Student"}
+                </p>
+              </div>
+              {!connected && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <div className="text-white text-center">
+                    <Circle className="w-12 h-12 mx-auto mb-2 animate-pulse" />
+                    <p>Waiting for {role === "student" ? "teacher" : "student"}...</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Local Video */}
+            <div className="relative rounded-2xl overflow-hidden bg-black/30 backdrop-blur">
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute top-4 left-4 px-3 py-1 bg-black/50 rounded-full">
+                <p className="text-white text-sm">You</p>
+              </div>
+              
+              {/* Engagement Meter */}
+              <div className="absolute bottom-4 left-4 right-4">
+                <div className="bg-black/50 backdrop-blur rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-white/60">Engagement Level</span>
+                    <span className="text-xs text-white font-semibold">{engagementLevel}%</span>
+                  </div>
+                  <Progress 
+                    value={engagementLevel} 
+                    className="h-2"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* AI Suggestions Bar */}
+        <div className="bg-black/20 backdrop-blur border-t border-white/10 px-4 py-2">
+          <div className="flex items-center gap-3">
+            <Brain className="w-4 h-4 text-purple-400" />
+            <div className="flex gap-2 overflow-x-auto">
+              {aiSuggestions.map((suggestion, i) => (
+                <Badge 
+                  key={i} 
+                  variant="secondary" 
+                  className="bg-purple-500/20 text-purple-300 border-purple-500/30 whitespace-nowrap"
+                >
+                  {suggestion}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Control Bar */}
+        <div className="bg-black/30 backdrop-blur-lg border-t border-white/10 p-4">
+          <div className="max-w-4xl mx-auto flex items-center justify-center gap-4">
+            <Button
+              onClick={toggleAudio}
+              variant={isAudioEnabled ? "secondary" : "destructive"}
+              size="lg"
+              className="rounded-full h-14 w-14"
+            >
+              {isAudioEnabled ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+            </Button>
+            
+            <Button
+              onClick={toggleVideo}
+              variant={isVideoEnabled ? "secondary" : "destructive"}
+              size="lg"
+              className="rounded-full h-14 w-14"
+            >
+              {isVideoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+            </Button>
+            
+            <Button
+              onClick={toggleScreenShare}
+              variant={isScreenSharing ? "default" : "secondary"}
+              size="lg"
+              className="rounded-full h-14 w-14"
+            >
+              {isScreenSharing ? <MonitorOff className="w-6 h-6" /> : <Monitor className="w-6 h-6" />}
+            </Button>
+            
+            <Button
+              onClick={() => setShowAIOverlay(!showAIOverlay)}
+              variant={showAIOverlay ? "default" : "secondary"}
+              size="lg"
+              className="rounded-full h-14 w-14"
+            >
+              <Brain className="w-6 h-6" />
+            </Button>
+            
+            <Button
+              onClick={toggleRecording}
+              variant={isRecording ? "destructive" : "secondary"}
+              size="lg"
+              className="rounded-full h-14 w-14"
+            >
+              <Circle className={cn("w-6 h-6", isRecording && "fill-current animate-pulse")} />
+            </Button>
+            
+            <Button
+              onClick={endCall}
+              variant="destructive"
+              size="lg"
+              className="rounded-full h-14 w-20 ml-8"
+            >
+              <PhoneOff className="w-6 h-6 mr-2" />
+              End
+            </Button>
+          </div>
         </div>
       </div>
     </div>
