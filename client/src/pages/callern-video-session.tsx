@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { VideoCallFinal } from "@/components/callern/VideoCallFinal";
+import { VideoCall } from "@/components/callern/VideoCall";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 
@@ -104,15 +104,11 @@ export default function CallernVideoSession() {
 
   if (isInCall && callRoomId) {
     return (
-      <VideoCallFinal
+      <VideoCall
         roomId={callRoomId}
         userId={user?.id || 0}
         role="student"
         teacherName={`${selectedTeacher?.firstName} ${selectedTeacher?.lastName}`}
-        studentName={`${user?.firstName} ${user?.lastName}`}
-        roadmapTitle="General Conversation Practice"
-        sessionStep="Free Talk Session"
-        packageMinutesRemaining={availableMinutes}
         onCallEnd={handleEndCall}
       />
     );

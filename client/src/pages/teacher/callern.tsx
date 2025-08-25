@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { VideoCallFinal } from "@/components/callern/VideoCallFinal";
+import { VideoCall } from "@/components/callern/VideoCall";
 import { useAuth } from "@/hooks/use-auth";
 import { useSocket } from "@/hooks/use-socket";
 import { useTranslation } from "react-i18next";
@@ -175,15 +175,11 @@ export default function TeacherCallernSystem() {
 
   if (isInCall && activeCallConfig) {
     return (
-      <VideoCallFinal
+      <VideoCall
         roomId={activeCallConfig.roomId}
         userId={user!.id}
         role="teacher"
-        studentName={activeCallConfig.studentName || "Student"}
         teacherName={`${user?.firstName} ${user?.lastName}`}
-        roadmapTitle="General Conversation"
-        sessionStep="Free Talk Session"
-        packageMinutesRemaining={600}
         onCallEnd={handleEndCall}
       />
     );
