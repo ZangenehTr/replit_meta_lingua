@@ -6,6 +6,7 @@ import {
   wrapPeerConnection,
 } from "@/lib/webrtc-error-handler";
 import { AIOverlay } from "./AIOverlay";
+import { AdaptiveContentPanel } from "./AdaptiveContentPanel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -76,6 +77,7 @@ export function VideoCall({
   const [callSeconds, setCallSeconds] = useState(0);
   const [connected, setConnected] = useState(false);
   const [showAIOverlay, setShowAIOverlay] = useState(true);
+  const [showAdaptiveContent, setShowAdaptiveContent] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const recorderRef = useRef<RecordRTC | null>(null);
   const recordedBlobsRef = useRef<Blob[]>([]);
@@ -842,6 +844,24 @@ export function VideoCall({
           isVisible={true}
           onClose={() => setShowAIOverlay(false)}
         />
+      )}
+      
+      {/* Adaptive Content Panel */}
+      {showAdaptiveContent && (
+        <div className="fixed top-20 right-4 w-96 max-h-[80vh] overflow-y-auto z-50">
+          <AdaptiveContentPanel
+            sessionId={sessionId}
+            studentId={role === 'student' ? userId : 1}
+            teacherId={role === 'teacher' ? userId : 1}
+            studentLevel="B1"
+            onContentGenerated={(content) => {
+              console.log('New adaptive content:', content);
+            }}
+            onExerciseComplete={(result) => {
+              console.log('Exercise completed:', result);
+            }}
+          />
+        </div>
       )}
       
       {/* Main Content */}
