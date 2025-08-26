@@ -19777,6 +19777,10 @@ Meta Lingua Academy`;
   app.use('/api', aiWebhookRoutes);
   console.log('✅ AI Webhook routes registered (Call processing, Transcription, Lead scoring)');
 
+  // Setup Phase 2 AI routes (Persian NLP, Real-time Processing, Knowledge RAG)
+  const { registerPhase2AIRoutes } = await import('./ai-phase2-routes');
+  registerPhase2AIRoutes(app);
+
   const httpServer = createServer(app);
   
   // Initialize Callern WebSocket server
