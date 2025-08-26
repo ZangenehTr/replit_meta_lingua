@@ -1,4 +1,11 @@
+/**
+ * Ollama Service - Self-hosted LLM integration for Persian language support
+ * Uses Gemma3Persian model for optimal Persian text processing
+ * Completely self-hosted, no external API dependencies
+ */
+
 import axios from 'axios';
+import { EventEmitter } from 'events';
 
 export interface OllamaResponse {
   model: string;
@@ -16,12 +23,35 @@ export interface OllamaRequest {
   max_tokens?: number;
 }
 
-export class OllamaService {
+export interface CallSummaryResult {
+  intent: string;
+  summary_bullets: string[];
+  sentiment: 'positive' | 'neutral' | 'negative';
+  entities: {
+    name?: string;
+    phone?: string;
+    email?: string;
+    course?: string;
+    budget?: string;
+    city?: string;
+  };
+  next_actions: Array<{
+    type: string;
+    when?: string;
+    channel?: string;
+    to?: string;
+  }>;
+  lead_stage_suggestion: 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
+  confidence: number;
+}
+
+export class OllamaService extends EventEmitter {
   private baseUrl: string;
   private defaultModel: string;
   private isAvailable: boolean = false;
 
-  constructor(baseUrl: string = 'http://45.89.239.250:11434', defaultModel: string = 'llama3.2:3b') {
+  constructor(baseUrl: string = process.env.OLLAMA_HOST || 'http://localhost:11434', defaultModel: string = process.env.OLLAMA_MODEL || 'mshojaei77/gemma3persian') {
+    super();
     this.baseUrl = baseUrl;
     this.defaultModel = defaultModel;
     this.checkAvailability();
@@ -65,7 +95,7 @@ export class OllamaService {
         prompt: prompt,
         stream: false,
         system: systemPrompt,
-        temperature: options?.temperature || 0.7,
+        temperature: options?.temperature || 0.6,
       };
 
       const response = await axios.post(`${this.baseUrl}/api/generate`, request, {
@@ -77,6 +107,146 @@ export class OllamaService {
       console.error('Ollama generation error:', error.message);
       // Fallback to production-ready response on error
       return this.generateFallbackResponse(prompt, systemPrompt);
+    }
+  }
+
+  /**
+   * Summarize a call transcript for CRM integration
+   */
+  async summarizeCallTranscript(transcript: string): Promise<CallSummaryResult> {
+    const systemPrompt = `You are a call-center summarizer for MetaLingua. Output strict JSON with fields:
+intent (string), summary_bullets (array of strings), sentiment (positive|neutral|negative),
+entities {name?, phone?, email?, course?, budget?, city?},
+next_actions [{type, when?, channel?, to?}],
+lead_stage_suggestion (new|contacted|qualified|converted|lost),
+confidence (0-1 float).
+Be concise and faithful to transcript. Output ONLY valid JSON, no additional text.`;
+
+    const userPrompt = `TRANSCRIPT:\n${transcript}`;
+
+    try {
+      const response = await this.generateCompletion(userPrompt, systemPrompt, {
+        temperature: 0.5,
+        model: this.defaultModel
+      });
+      
+      // Extract JSON from response (handle potential markdown formatting)
+      let jsonStr = response;
+      if (response.includes('```json')) {
+        jsonStr = response.split('```json')[1].split('```')[0].trim();
+      } else if (response.includes('```')) {
+        jsonStr = response.split('```')[1].split('```')[0].trim();
+      }
+      
+      const summary = JSON.parse(jsonStr) as CallSummaryResult;
+      
+      // Validate and normalize confidence
+      summary.confidence = Math.max(0, Math.min(1, summary.confidence || 0.5));
+      
+      return summary;
+    } catch (error) {
+      console.error('Error summarizing call transcript:', error);
+      // Return a basic summary if parsing fails
+      return {
+        intent: 'Unable to determine',
+        summary_bullets: ['Call transcript processed but summary generation failed'],
+        sentiment: 'neutral',
+        entities: {},
+        next_actions: [],
+        lead_stage_suggestion: 'contacted',
+        confidence: 0.1
+      };
+    }
+  }
+
+  /**
+   * Extract entities from text using Persian-optimized model
+   */
+  async extractEntities(text: string): Promise<Record<string, any>> {
+    const systemPrompt = `Extract key entities from the Persian/English text. Return JSON with:
+{name, phone, email, course, budget, city, language, dates[], important_keywords[]}.
+Only include fields that are found. Be accurate with Persian names and locations.`;
+
+    try {
+      const response = await this.generateCompletion(text, systemPrompt, {
+        temperature: 0.3,
+        model: this.defaultModel
+      });
+      
+      let jsonStr = response;
+      if (response.includes('```')) {
+        jsonStr = response.split('```')[1].split('```')[0].trim();
+      }
+      
+      return JSON.parse(jsonStr);
+    } catch (error) {
+      console.error('Entity extraction error:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Analyze sentiment of text
+   */
+  async analyzeSentiment(text: string): Promise<{ sentiment: string, confidence: number }> {
+    const systemPrompt = `Analyze the sentiment of this text. Return JSON: {sentiment: "positive"|"neutral"|"negative", confidence: 0-1}`;
+
+    try {
+      const response = await this.generateCompletion(text, systemPrompt, {
+        temperature: 0.3,
+        model: this.defaultModel
+      });
+      
+      let jsonStr = response;
+      if (response.includes('```')) {
+        jsonStr = response.split('```')[1].split('```')[0].trim();
+      }
+      
+      const result = JSON.parse(jsonStr);
+      return {
+        sentiment: result.sentiment || 'neutral',
+        confidence: Math.max(0, Math.min(1, result.confidence || 0.5))
+      };
+    } catch (error) {
+      console.error('Sentiment analysis error:', error);
+      return { sentiment: 'neutral', confidence: 0.5 };
+    }
+  }
+
+  /**
+   * Generate follow-up suggestions based on call context
+   */
+  async generateFollowUpSuggestions(context: {
+    transcript: string;
+    sentiment: string;
+    intent: string;
+  }): Promise<string[]> {
+    const prompt = `Based on this call context:
+Intent: ${context.intent}
+Sentiment: ${context.sentiment}
+Transcript summary: ${context.transcript.substring(0, 500)}
+
+Suggest 3-5 specific follow-up actions in Persian and English. Return as JSON array of strings.`;
+
+    try {
+      const response = await this.generateCompletion(prompt, undefined, {
+        temperature: 0.7,
+        model: this.defaultModel
+      });
+      
+      let jsonStr = response;
+      if (response.includes('[')) {
+        jsonStr = response.substring(response.indexOf('['), response.lastIndexOf(']') + 1);
+      }
+      
+      return JSON.parse(jsonStr);
+    } catch (error) {
+      console.error('Follow-up suggestion error:', error);
+      return [
+        'Follow up with customer within 24 hours',
+        'Send course information via email',
+        'Schedule a placement test'
+      ];
     }
   }
 

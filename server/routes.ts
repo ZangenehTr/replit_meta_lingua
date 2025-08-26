@@ -13,6 +13,7 @@ import { setupCallernPackageRoutes } from "./callern-package-routes";
 import { setupCallernRecordingRoutes } from "./callern-recording-routes";
 import callernRoadmapRoutes from "./routes/callern-roadmap-routes";
 import tttRoutes from "./ttt-routes";
+import aiWebhookRoutes from "./ai-webhook-routes";
 import { 
   filterTeachers, 
   filterActiveTeachers,
@@ -19771,6 +19772,10 @@ Meta Lingua Academy`;
   const teacherQARouter = createTeacherQARouter(storage);
   app.use('/api/teacher-qa', teacherQARouter);
   console.log('✅ Teacher QA routes registered (Performance Metrics, Peer Reviews, Quality Scoring)');
+
+  // Setup AI Webhook routes for CRM integration
+  app.use('/api', aiWebhookRoutes);
+  console.log('✅ AI Webhook routes registered (Call processing, Transcription, Lead scoring)');
 
   const httpServer = createServer(app);
   
