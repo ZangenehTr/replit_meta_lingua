@@ -1,0 +1,279 @@
+Absolutely—your CRM is already rich. You don’t need to rewrite it; just add an **AI pipeline** that plugs into the events and APIs you already have.
+
+Below is a **minimal-change, fully self-hosted integration plan** that maps directly onto your features and endpoints.
+
+---
+
+# 🎯 What AI should do for the CRM (Call Center + Leads)
+
+**During/after every call**
+
+1. **Transcribe** (Whisper/faster-whisper)
+2. **Summarize & extract** (Ollama Llama 3.2)
+
+   * call reason / intent
+   * entities (name, phone, email, course, budget, city)
+   * sentiment & urgency
+   * next actions (callback, docs needed, appointment)
+   * lead stage (new/contacted/qualified/converted/lost) suggestion
+3. **Auto-log** (to your existing endpoints)
+
+   * POST a concise **call note**, tags, and structured fields
+   * Optional: **QA score** for supervisors (clarity, empathy, compliance)
+4. **Trigger follow-ups**
+
+   * schedule callback (create task + SMS template)
+   * send confirmation email/SMS
+   * update lead status/priority
+
+**Between calls**
+5\) **Lead Scoring (lightweight IRT-style confidence + heuristic)**
+6\) **Knowledge Assist** (agent side panel)
+
+* retrieve answers from your internal KB with **embeddings** (self-hosted)
+
+All of this is 100% self-hosted: **Whisper** (ASR), **Ollama** (LLM), **Piper** (TTS if needed), **Qdrant/PGVector** (embeddings), **Redis** (jobs).
+
+---
+
+# 🧩 Architecture (adds to your current stack)
+
+```
+[Isabel/VoIP or WebRTC] --> [Call Recording + Realtime audio]
+           |                                |
+           v                                v
+      [Webhook: onCallEnd]            [Streaming (optional)]
+           |                                |
+           v                                v
+       AI-Orchestrator  <----- Redis ----> Workers
+         |   |   |                          |
+         |   |   +--> Whisper (ASR)         +--> Ollama (LLM)
+         |   +------> Embeddings (Qdrant/PGVector)
+         +---------> CRM API (/api/leads, /api/leads/:id/communication, etc.)
+```
+
+* **AI-Orchestrator**: tiny Node/TS (or Python) service that listens to **call events** and runs the jobs.
+* **Workers**: do ASR → LLM → NER/intent → write back to CRM.
+* **No mocks**: all real services via Docker, local network.
+
+---
+
+# 🛠️ New (small) APIs to add to CRM
+
+(Keep your existing endpoints; just add these.)
+
+1. **Event Hooks (CRM receives/raises)**
+
+* `POST /api/voip/events/call-ended`
+
+  ```json
+  {
+    "callId": "abc123",
+    "leadId": 987,
+    "agentId": 42,
+    "direction": "inbound|outbound",
+    "startedAt": "2025-08-26T18:20:03Z",
+    "endedAt": "2025-08-26T18:32:10Z",
+    "recordingUrl": "/recordings/2025-08/abc123.webm",
+    "transcriptUrl": null
+  }
+  ```
+
+  The AI-orchestrator subscribes to this (or you forward it) and starts the pipeline.
+
+2. **AI Write-back (from Orchestrator to CRM)**
+
+* `POST /api/leads/:id/communication` (already exists) → use it to save **AI note**:
+
+  ```json
+  {
+    "type": "call_summary",
+    "source": "ai",
+    "content": "Intent: placement test request... Next step: schedule 10:30 tomorrow.",
+    "tags": ["intent:placement","priority:high","sentiment:positive"],
+    "metadata": {
+      "callId": "abc123",
+      "summary_bullets": ["Asked about IELTS prep", "Budget: 5M IRR"],
+      "entities": {"course":"IELTS", "budget":"5,000,000 IRR"},
+      "next_actions": [{"type":"callback","when":"2025-08-27T07:00:00Z"}],
+      "confidence": 0.83
+    }
+  }
+  ```
+* `PUT /api/leads/:id` (already exists) → AI can **suggest** updates (you can gate with a flag):
+
+  ```json
+  {"status":"qualified","priority":"high","assignedAgentId":42}
+  ```
+* `POST /api/tasks` (add if missing) → create follow-ups:
+
+  ```json
+  {"leadId":987,"type":"callback","dueAt":"2025-08-27T07:00:00Z","note":"Confirm IELTS schedule"}
+  ```
+
+3. **Search/assist (for agent side panel)**
+
+* `POST /api/ai/assist/search`
+
+  ```json
+  {"query":"refund policy for placement test","leadId":987}
+  ```
+
+  Returns RAG snippets (pulled from embeddings DB) for agent live view.
+
+---
+
+# 🧱 Minimal DB additions
+
+* `ai_call_insights`
+
+  * `id, call_id, lead_id, agent_id, intent, sentiment, summary, entities jsonb, next_actions jsonb, confidence float, created_at`
+* `tasks` (if not present)
+
+  * `id, lead_id, type, due_at, status, note, created_by`
+* `embeddings` (if not present)
+
+  * `id, doc_id, source, chunk, vector, created_at`
+
+No need to touch core `leads` unless you want `ai_score` and `ai_last_seen_at` (handy).
+
+---
+
+# 🧪 LLM prompts (Ollama, concise)
+
+**Call Summarizer (system):**
+
+```
+You are a call-center summarizer for MetaLingua. Output strict JSON with fields:
+intent, summary_bullets[], sentiment ∈ {positive, neutral, negative}, 
+entities {name?, phone?, email?, course?, budget?, city?}, 
+next_actions [{type, when?, channel?, to?}], 
+lead_stage_suggestion ∈ {new, contacted, qualified, converted, lost}, confidence ∈ [0,1].
+Be concise and faithful to transcript. No extra text.
+```
+
+**User (transcript supplied):**
+
+```
+TRANSCRIPT:
+<full transcript text here>
+```
+
+Then `JSON.parse()` and POST to `/api/leads/:id/communication`.
+
+---
+
+# 🔌 Docker Compose (adds only AI pieces)
+
+```yaml
+services:
+  whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    ports: ["8000:8000"]
+    environment:
+      FASTER_WHISPER__DEFAULT_MODEL: "Systran/faster-distil-whisper-large-v3"
+
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes: ["ollama:/root/.ollama"]
+    # make sure your systemd Ollama isn't also binding this port; keep one instance
+
+  piper:
+    image: rhasspy/wyoming-piper
+    ports: ["10200:10200"]
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports: ["6333:6333"]
+    volumes: ["qdrant:/qdrant/storage"]
+
+  ai-orchestrator:
+    build: ./services/ai-orchestrator
+    environment:
+      CRM_BASE_URL: "http://crm:3000"
+      WHISPER_URL:  "http://whisper:8000"
+      OLLAMA_URL:   "http://ollama:11434"
+      QDRANT_URL:   "http://qdrant:6333"
+      CRM_API_KEY:  "${CRM_API_KEY}"
+    depends_on: [whisper, ollama, qdrant]
+    restart: unless-stopped
+
+volumes:
+  ollama: {}
+  qdrant: {}
+```
+
+---
+
+# 🔁 Where to hook in (with what you already have)
+
+* You already have **Call Recording** + **/api/voip/test-connection** + **performance stats**.
+* On **call end**, emit `POST /api/voip/events/call-ended` (or let the PBX call the Orchestrator directly).
+* Orchestrator pulls **recordingUrl**, runs ASR → LLM, posts **/api/leads/\:id/communication** and optional **/api/tasks** and **PUT /api/leads/\:id**.
+* Supervisors see **AI notes** + can review the **recording** (you already store URLs).
+* Agents see **summary and next steps** right in the lead view.
+
+---
+
+# 🔐 Security / RBAC
+
+* New writebacks use an **internal API key** (scoped to AI service) with RBAC limited to:
+
+  * create communications, create tasks, update lead status/priority.
+* Validate recording ownership (lead↔callId) server-side.
+* Rate-limit AI endpoints; queue job retries with backoff.
+
+---
+
+# ✅ QA & Testing (no mocks)
+
+1. **Integration (Postman/newman)**
+
+   * Simulate a `call-ended` webhook with a real local recording file → expect transcript, summary, new communication log, optional task & status update.
+
+2. **E2E**
+
+   * Make a real dev call (or use a real WebM in `/recordings/`), verify pipeline completes and UI shows AI note.
+
+3. **Load**
+
+   * 50 parallel call summaries; monitor CPU/RAM; ensure Redis queue backpressure works.
+
+4. **Accuracy spot-checks**
+
+   * Supervisors can click “Accept/Reject AI analysis”; log corrections to improve prompts.
+
+---
+
+# 🎛️ Optional “nice to have” (still self-hosted)
+
+* **Realtime assist** (during call): stream audio chunks to Whisper; show **live intent** & KB suggestions in the agent panel.
+* **Auto-disposition** buttons drafted by AI (agent confirms in one click).
+* **TTS**: Piper generates a quick follow-up voicemail with the agent’s script (if a call drops).
+
+---
+
+# 🧠 Mapping to your feature list
+
+* **1. VoIP**: unchanged; AI consumes recordings/events.
+* **2. Lead Management**: AI auto-fills comm logs, suggests status/priority.
+* **3. Recording**: input to ASR; URLs preserved.
+* **4. Performance Dashboard**: add AI metrics (avg sentiment, intents).
+* **5. CRM**: richer notes, faster data entry.
+* **6. Communication**: AI suggests/send SMS/email via your Kavenegar/SMTP.
+* **7. Permissions**: AI key with constrained scope.
+* **8. APIs**: reuse `/api/leads`, `/api/leads/:id/communication`; add minimal webhooks.
+* **9. Queue**: AI can set callbacks and priorities.
+* **10. QA**: AI scores + supervisor review.
+* **11. Technical**: works with your resilience/fallback.
+* **12. Integration**: stays in Iran, fully self-hosted.
+
+---
+
+If you want, I can provide a **ready-to-run `services/ai-orchestrator` boilerplate (Node/TS)** with:
+
+* job consumer (BullMQ),
+* Whisper & Ollama clients,
+* JSON schema validation,
+* and the exact POST calls into your `/api/leads/:id/communication` + `/api/tasks`.
