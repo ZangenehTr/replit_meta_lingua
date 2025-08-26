@@ -7,6 +7,7 @@ import {
 } from "@/lib/webrtc-error-handler";
 import { AIOverlay } from "./AIOverlay";
 import { AdaptiveContentPanel } from "./AdaptiveContentPanel";
+import { TeacherReminderPanel } from "./TeacherReminderPanel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -862,6 +863,16 @@ export function VideoCall({
             }}
           />
         </div>
+      )}
+      
+      {/* Teacher Reminder Panel - Only show for teachers */}
+      {role === 'teacher' && connected && (
+        <TeacherReminderPanel
+          sessionId={sessionId}
+          teacherId={userId}
+          studentId={role === 'teacher' ? 1 : userId}
+          position="bottom-right"
+        />
       )}
       
       {/* Main Content */}

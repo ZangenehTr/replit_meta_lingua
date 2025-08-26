@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { CallernAIMonitor } from './callern-ai-monitor';
 import { storage } from './storage';
+import { teacherCoachingService } from './services/teacher-coaching-service';
 
 // Track online teachers
 const onlineTeachers = new Map<number, { socketId: string; status: 'available' | 'busy' }>();
@@ -21,6 +22,29 @@ const speechMetrics = new Map<string, {
 
 export function setupCallernWebSocketHandlers(io: Server) {
   const aiMonitor = new CallernAIMonitor(io);
+
+  // Set up coaching service listeners
+  teacherCoachingService.on('coaching-reminder', (data) => {
+    // Send to teacher in the session
+    const teacherSocket = Array.from(teacherSockets.entries())
+      .find(([_, id]) => id === data.teacherId)?.[0];
+    
+    if (teacherSocket) {
+      io.to(teacherSocket).emit('coaching-reminder', data);
+    }
+    
+    // Also send to the room for monitoring
+    if (data.sessionId) {
+      io.to(data.sessionId).emit('coaching-reminder', data);
+    }
+  });
+
+  teacherCoachingService.on('coaching-session-ended', (data) => {
+    console.log(`Coaching session ended for teacher ${data.teacherId}:`, {
+      duration: data.duration,
+      reminders: data.reminderCount
+    });
+  });
 
   io.on('connection', (socket: Socket) => {
     console.log('New Callern socket connection:', socket.id);
@@ -189,6 +213,9 @@ export function setupCallernWebSocketHandlers(io: Server) {
 
       // Initialize AI monitoring for this call
       aiMonitor.initializeCall(roomId, teacherId, studentId);
+      
+      // Start coaching session for the teacher
+      teacherCoachingService.startCoachingSession(teacherId, studentId, roomId);
 
       // Notify student that call was accepted
       io.to(studentSocketId).emit('call-accepted', { 
@@ -229,16 +256,30 @@ export function setupCallernWebSocketHandlers(io: Server) {
       
       // Calculate real TTT ratio
       const totalSpeech = metrics.studentSpeechTime + metrics.teacherSpeechTime;
+      const sessionDuration = (now - metrics.sessionStart) / 1000; // in seconds
+      const totalTime = Math.max(sessionDuration, totalSpeech);
+      
       if (totalSpeech > 0) {
         const tttRatio = {
           teacher: Math.round((metrics.teacherSpeechTime / totalSpeech) * 100),
           student: Math.round((metrics.studentSpeechTime / totalSpeech) * 100)
         };
         
+        // Calculate silence percentage
+        const silenceTime = totalTime - totalSpeech;
+        const silencePercentage = totalTime > 0 ? Math.round((silenceTime / totalTime) * 100) : 0;
+        
         // Send real TTT update to all participants in the room
         io.to(data.roomId).emit('ttt-update', tttRatio);
         
-        // Check for TTT imbalance warnings
+        // Update coaching service with real-time metrics
+        teacherCoachingService.updateMetrics(data.roomId, {
+          tttPercentage: tttRatio.teacher,
+          silencePercentage: silencePercentage,
+          sessionDuration: sessionDuration
+        });
+        
+        // Check for TTT imbalance warnings (handled by coaching service now)
         if (tttRatio.teacher > 70) {
           io.to(data.roomId).emit('ai-warning', {
             type: 'ttt-imbalance',
@@ -291,6 +332,11 @@ export function setupCallernWebSocketHandlers(io: Server) {
       // Broadcast real engagement level to all participants
       io.to(data.roomId).emit('engagement-update', data.score);
       
+      // Update coaching service with engagement metrics
+      teacherCoachingService.updateMetrics(data.roomId, {
+        studentEngagement: data.score
+      });
+      
       // Generate AI suggestions based on engagement
       if (data.score < 50) {
         const suggestions = [
@@ -323,12 +369,69 @@ export function setupCallernWebSocketHandlers(io: Server) {
       io.to(data.roomId).emit('word-suggestions', suggestions);
     });
 
+    // Handle coaching session start
+    socket.on('start-coaching-session', (data: {
+      sessionId: string;
+      teacherId: number;
+      studentId: number;
+    }) => {
+      teacherCoachingService.startCoachingSession(
+        data.teacherId,
+        data.studentId,
+        data.sessionId
+      );
+      
+      socket.emit('coaching-session-started', { sessionId: data.sessionId });
+      console.log(`Coaching session started for teacher ${data.teacherId}`);
+    });
+
+    // Handle coaching metrics update
+    socket.on('update-teaching-metrics', (data: {
+      sessionId: string;
+      metrics: any;
+    }) => {
+      // Update coaching service with latest metrics
+      if (data.metrics.tttPercentage !== undefined || 
+          data.metrics.studentEngagement !== undefined ||
+          data.metrics.questionCount !== undefined) {
+        teacherCoachingService.updateMetrics(data.sessionId, data.metrics);
+      }
+      
+      // Broadcast metrics to room for monitoring
+      io.to(data.sessionId).emit('teaching-metrics-update', {
+        sessionId: data.sessionId,
+        metrics: data.metrics
+      });
+    });
+
+    // Handle manual coaching reminder trigger
+    socket.on('trigger-coaching-reminder', (data: {
+      sessionId: string;
+      type: string;
+      message: string;
+    }) => {
+      teacherCoachingService.triggerManualReminder(
+        data.sessionId,
+        data.type as any,
+        data.message
+      );
+    });
+
+    // Handle coaching session end
+    socket.on('end-coaching-session', (data: { sessionId: string }) => {
+      teacherCoachingService.endCoachingSession(data.sessionId);
+      socket.emit('coaching-session-ended', { sessionId: data.sessionId });
+    });
+
     // Handle call end
     socket.on('end-call', async (data: { roomId: string; duration: number }) => {
       const { roomId, duration } = data;
       const callInfo = activeCalls.get(roomId);
       
       if (callInfo) {
+        // End coaching session if active
+        teacherCoachingService.endCoachingSession(roomId);
+        
         // Mark teacher as available again
         const teacherInfo = onlineTeachers.get(callInfo.teacherId);
         if (teacherInfo) {
