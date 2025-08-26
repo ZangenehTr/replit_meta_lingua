@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { TeacherIncomingCall } from '@/components/callern/teacher-incoming-call';
 import { TeacherOnlineToggle } from '@/components/callern/teacher-online-toggle';
+import { CallernHistory } from '@/components/callern/CallernHistory';
 
 export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -215,7 +216,7 @@ export default function TeacherDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:w-auto lg:grid-cols-6 gap-1">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-7 lg:w-auto lg:grid-cols-7 gap-1">
             <TabsTrigger value="overview" className="text-xs md:text-sm">{t('teacher:overview', 'Overview')}</TabsTrigger>
             <TabsTrigger value="classes" className="text-xs md:text-sm">{t('teacher:classes.title', 'Classes')}</TabsTrigger>
             <TabsTrigger value="assignments" className="text-xs md:text-sm">{t('teacher:assignments.title', 'Tasks')}</TabsTrigger>
@@ -228,6 +229,9 @@ export default function TeacherDashboard() {
                   {(unacknowledgedObservations as any).length}
                 </Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="callern-history" className="text-xs md:text-sm">
+              {t('callern.history', 'تاریخچه')}
             </TabsTrigger>
           </TabsList>
 
@@ -486,6 +490,11 @@ export default function TeacherDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Callern History Tab */}
+          <TabsContent value="callern-history" className="space-y-6">
+            <CallernHistory />
           </TabsContent>
 
           {/* Observations Tab */}

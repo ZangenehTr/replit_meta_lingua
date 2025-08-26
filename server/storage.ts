@@ -168,6 +168,11 @@ export interface IStorage {
   getStudentCallernPackages(studentId: number): Promise<any[]>;
   createStudentCallernPackage(packageData: any): Promise<any>;
   
+  // Callern Call History
+  getCallernCallHistory(): Promise<any[]>;
+  createCallernCallHistory(historyData: any): Promise<any>;
+  updateCallernCallHistory(id: number, updates: any): Promise<any>;
+  
   // Callern Roadmaps
   createCallernRoadmap(roadmapData: any): Promise<any>;
   getCallernRoadmaps(): Promise<any[]>;
@@ -3999,6 +4004,22 @@ export class MemStorage implements IStorage {
   
   async createStudentCallernPackage(packageData: any): Promise<any> {
     return packageData;
+  }
+  
+  // Callern Call History Implementation
+  async getCallernCallHistory(): Promise<any[]> {
+    // Mock implementation - in production would query database
+    return [];
+  }
+  
+  async createCallernCallHistory(historyData: any): Promise<any> {
+    // Mock implementation - in production would insert into database
+    return { id: 1, ...historyData, createdAt: new Date() };
+  }
+  
+  async updateCallernCallHistory(id: number, updates: any): Promise<any> {
+    // Mock implementation - in production would update database
+    return { id, ...updates, updatedAt: new Date() };
   }
   
   async checkTeacherScheduleConflicts(teacherId: number, proposedHours: string[]): Promise<any> {

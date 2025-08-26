@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useTranslation } from "react-i18next";
 import { useAudioStream } from "@/hooks/use-audio-stream";
+import { useToast } from "@/hooks/use-toast";
+import RecordRTC from "recordrtc";
 import { 
   Phone, PhoneOff, Mic, MicOff, Video, VideoOff,
   Monitor, MonitorOff, Brain, Clock, Circle,
@@ -47,6 +49,7 @@ export function VideoCall({
   onCallEnd,
 }: VideoCallProps) {
   const { t } = useTranslation(['callern', 'common']);
+  const { toast } = useToast();
   // Video elements
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -74,6 +77,8 @@ export function VideoCall({
   const [connected, setConnected] = useState(false);
   const [showAIOverlay, setShowAIOverlay] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
+  const recorderRef = useRef<RecordRTC | null>(null);
+  const recordedBlobsRef = useRef<Blob[]>([]);
   const [liveScore, setLiveScore] = useState({ student: 0, teacher: 0 });
   const [engagementLevel, setEngagementLevel] = useState(0);
   const [tttRatio, setTttRatio] = useState({ teacher: 0, student: 0 });
@@ -361,6 +366,8 @@ export function VideoCall({
           }
           setConnected(true);
           setStatus("Connected");
+          // Start automatic recording when connected
+          startAutomaticRecording();
         };
 
         // 5) Outgoing ICE
@@ -688,12 +695,78 @@ export function VideoCall({
     setIsScreenSharing(false);
   };
   
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    socketRef.current?.emit("toggle-recording", { roomId, recording: !isRecording });
+  // Start automatic recording when call connects
+  const startAutomaticRecording = () => {
+    if (!localStreamRef.current || recorderRef.current) return;
+    
+    const recorder = new RecordRTC(localStreamRef.current, {
+      type: 'video',
+      mimeType: 'video/webm',
+      bitsPerSecond: 256000, // Low bitrate for smaller files
+      frameInterval: 20 // Lower frame rate for smaller files
+    });
+    
+    recorder.startRecording();
+    recorderRef.current = recorder;
+    setIsRecording(true);
+    console.log('Recording started automatically');
+  };
+  
+  // Stop recording and save to server
+  const stopAndSaveRecording = async () => {
+    if (!recorderRef.current) return;
+    
+    return new Promise<void>((resolve) => {
+      recorderRef.current!.stopRecording(async () => {
+        const blob = recorderRef.current!.getBlob();
+        
+        // Create FormData to upload
+        const formData = new FormData();
+        formData.append('recording', blob, `call-${roomId}-${Date.now()}.webm`);
+        formData.append('roomId', roomId);
+        formData.append('duration', String(callSeconds));
+        formData.append('studentId', String(userId));
+        formData.append('teacherId', String(role === 'student' ? '1' : userId));
+        
+        try {
+          // Upload recording to server
+          const response = await fetch('/api/callern/upload-recording', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            },
+            body: formData
+          });
+          
+          if (response.ok) {
+            console.log('Recording saved successfully');
+            toast({
+              title: t('callern.recordingSaved', 'Recording Saved'),
+              description: t('callern.recordingSavedDesc', 'Your call has been saved to history'),
+            });
+          } else {
+            console.error('Failed to save recording');
+            toast({
+              title: t('callern.recordingError', 'Recording Error'),
+              description: t('callern.recordingErrorDesc', 'Failed to save recording'),
+              variant: 'destructive'
+            });
+          }
+        } catch (error) {
+          console.error('Error uploading recording:', error);
+        }
+        
+        recorderRef.current = null;
+        setIsRecording(false);
+        resolve();
+      });
+    });
   };
 
-  const endCall = () => {
+  const endCall = async () => {
+    // Stop recording and save
+    await stopAndSaveRecording();
+    
     // Stop audio streaming
     stopStreaming();
     
@@ -1009,14 +1082,13 @@ export function VideoCall({
               <Brain className="w-6 h-6" />
             </Button>
             
-            <Button
-              onClick={toggleRecording}
-              variant={isRecording ? "destructive" : "secondary"}
-              size="lg"
-              className="rounded-full h-14 w-14"
-            >
-              <Circle className={cn("w-6 h-6", isRecording && "fill-current animate-pulse")} />
-            </Button>
+            {/* Auto Recording Indicator */}
+            {isRecording && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-red-500/20 rounded-full">
+                <Circle className="w-4 h-4 fill-red-500 animate-pulse" />
+                <span className="text-sm text-red-400">{t('callern.recording', 'Recording')}</span>
+              </div>
+            )}
             
             <Button
               onClick={endCall}
