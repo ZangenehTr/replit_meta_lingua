@@ -19306,6 +19306,128 @@ Meta Lingua Academy`;
       });
     }
   });
+
+  // Quiz Generation from Session Content Routes
+  app.post("/api/callern/sessions/:sessionId/generate-quiz", authenticateToken, async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { vocabulary, topics, grammarPoints, corrections, studentLevel } = req.body;
+      
+      const { QuizGenerationService } = await import('./services/quiz-generation-service');
+      const quizService = new QuizGenerationService(storage as any);
+      
+      const quiz = await quizService.generateQuizFromSession({
+        sessionId,
+        vocabulary: vocabulary || [],
+        topics: topics || [],
+        grammarPoints: grammarPoints || [],
+        speakingPhrases: [],
+        corrections: corrections || [],
+        studentLevel: studentLevel || 'B1',
+        duration: 30
+      });
+      
+      res.json(quiz);
+    } catch (error) {
+      console.error('Error generating quiz:', error);
+      res.status(500).json({ message: "Failed to generate quiz" });
+    }
+  });
+
+  // Get quiz for session
+  app.get("/api/callern/sessions/:sessionId/quiz", authenticateToken, async (req: any, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      // For now, generate a quiz on demand
+      const { QuizGenerationService } = await import('./services/quiz-generation-service');
+      const quizService = new QuizGenerationService(storage as any);
+      
+      // Get session content from adaptive content generator
+      const sessionContent = await storage.getAdaptiveContentHistory?.(sessionId) || {
+        vocabulary: ['listen', 'speak', 'understand', 'practice', 'improve'],
+        topics: ['Daily Conversation', 'Vocabulary Building'],
+        grammarPoints: ['Present Simple', 'Past Simple'],
+        corrections: []
+      };
+      
+      const quiz = await quizService.generateQuizFromSession({
+        sessionId,
+        vocabulary: sessionContent.vocabulary || ['listen', 'speak', 'understand'],
+        topics: sessionContent.topics || ['General English'],
+        grammarPoints: sessionContent.grammarPoints || [],
+        speakingPhrases: [],
+        corrections: sessionContent.corrections || [],
+        studentLevel: 'B1',
+        duration: 30
+      });
+      
+      res.json(quiz);
+    } catch (error) {
+      console.error('Error fetching quiz:', error);
+      res.status(500).json({ message: "Failed to fetch quiz" });
+    }
+  });
+
+  // Submit quiz answers
+  app.post("/api/callern/quiz/:quizId/submit", authenticateToken, async (req: any, res) => {
+    try {
+      const { quizId } = req.params;
+      const { answers } = req.body;
+      const studentId = req.user.userId;
+      
+      const { QuizGenerationService } = await import('./services/quiz-generation-service');
+      const quizService = new QuizGenerationService(storage as any);
+      
+      const result = await quizService.submitQuizAnswers(quizId, studentId, answers);
+      
+      // Calculate XP gained
+      const xpGained = Math.floor(result.score * 2);
+      
+      res.json({
+        ...result,
+        xpGained,
+        message: `Great job! You earned ${xpGained} XP!`
+      });
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      res.status(500).json({ message: "Failed to submit quiz" });
+    }
+  });
+
+  // Get student quiz history
+  app.get("/api/student/quiz-history", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.userId;
+      
+      const { QuizGenerationService } = await import('./services/quiz-generation-service');
+      const quizService = new QuizGenerationService(storage as any);
+      
+      const history = await quizService.getStudentQuizHistory(studentId);
+      
+      res.json(history);
+    } catch (error) {
+      console.error('Error fetching quiz history:', error);
+      res.status(500).json({ message: "Failed to fetch quiz history" });
+    }
+  });
+
+  // Get quiz analytics for teachers
+  app.get("/api/teacher/quiz/:quizId/analytics", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
+    try {
+      const { quizId } = req.params;
+      
+      const { QuizGenerationService } = await import('./services/quiz-generation-service');
+      const quizService = new QuizGenerationService(storage as any);
+      
+      const analytics = await quizService.getQuizAnalytics(quizId);
+      
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching quiz analytics:', error);
+      res.status(500).json({ message: "Failed to fetch quiz analytics" });
+    }
+  });
   
   // Setup roadmap routes
   setupRoadmapRoutes(app, authenticateToken, requireRole);
