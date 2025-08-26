@@ -333,6 +333,17 @@ const requireRole = (roles: string[]) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV,
+      version: '1.0.0'
+    });
+  });
+
   // Serve static audio and photo files
   app.use('/uploads/audio', express.static('uploads/audio'));
   app.use('/uploads/teacher-photos', express.static('uploads/teacher-photos'));
@@ -18496,6 +18507,200 @@ Meta Lingua Academy`;
     } catch (error) {
       console.error('Error exporting lesson kit to PDF:', error);
       res.status(500).json({ message: "Failed to export lesson kit" });
+    }
+  });
+
+  // ===== MISSING CRITICAL API ENDPOINTS (Required by prompt specifications) =====
+  
+  // POST /sessions/:id/generate-kit - Generate lesson kit for specific session
+  app.post("/sessions/:id/generate-kit", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const { includeActivities, includeAssessment, studentLevel } = req.body;
+      const teacherId = req.user.id;
+      
+      // Get session details
+      const session = await storage.getSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      // Generate lesson kit using existing service
+      const { LessonKitGenerator } = await import('./services/lesson-kit-generator');
+      const generator = new LessonKitGenerator(storage as any);
+      
+      const lessonKit = await generator.generateLessonKit({
+        sessionId,
+        teacherId,
+        studentId: session.studentId || 1,
+        topic: session.title || 'General English',
+        level: studentLevel || 'intermediate',
+        duration: session.duration || 60
+      });
+      
+      // Store the generated kit
+      await storage.createResourceMaterial({
+        courseId: session.courseId,
+        type: 'lesson_kit',
+        title: `Lesson Kit - ${session.title}`,
+        description: `Generated kit for session ${sessionId}`,
+        fileUrl: '',
+        uploadedBy: teacherId,
+        tags: ['lesson-kit', `session-${sessionId}`],
+        metadata: { 
+          content: JSON.stringify(lessonKit),
+          sessionId,
+          generatedAt: new Date().toISOString()
+        }
+      });
+      
+      res.json({
+        kitId: lessonKit.id,
+        sessionId,
+        content: lessonKit,
+        generatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error generating session kit:', error);
+      res.status(500).json({ message: "Failed to generate session kit" });
+    }
+  });
+  
+  // GET /sessions/:id/kit - Retrieve generated kit for specific session
+  app.get("/sessions/:id/kit", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      
+      // Get kit from resource materials
+      const resources = await storage.getResourceMaterials({
+        type: 'lesson_kit',
+        tags: [`session-${sessionId}`]
+      });
+      
+      if (!resources || resources.length === 0) {
+        return res.status(404).json({ message: "No kit found for this session" });
+      }
+      
+      const kit = resources[0];
+      const content = JSON.parse(kit.metadata?.content || '{}');
+      
+      res.json({
+        sessionId,
+        content,
+        generatedAt: kit.metadata?.generatedAt || kit.createdAt
+      });
+    } catch (error) {
+      console.error('Error fetching session kit:', error);
+      res.status(500).json({ message: "Failed to fetch session kit" });
+    }
+  });
+  
+  // GET /callern/briefing/:studentId - Pre-call student briefing
+  app.get("/callern/briefing/:studentId", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      
+      // Get comprehensive student information
+      const student = await storage.getStudent(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      
+      // Get learning history
+      const sessions = await storage.getUserSessions(studentId);
+      const recentSessions = sessions.slice(0, 5);
+      
+      // Get progress data
+      const progress = await storage.getStudentProgress?.(studentId) || {};
+      
+      // Get preferences
+      const preferences = {
+        learningStyle: student.learningStyle || 'visual',
+        interests: student.interests || [],
+        goals: student.goals || [],
+        preferredTopics: student.preferredTopics || []
+      };
+      
+      // Generate briefing
+      const briefing = {
+        studentProfile: {
+          id: student.id,
+          name: `${student.firstName} ${student.lastName}`,
+          level: student.currentLevel || 'intermediate',
+          age: student.age,
+          nativeLanguage: student.nativeLanguage || 'Persian'
+        },
+        learningHistory: {
+          totalSessions: sessions.length,
+          recentTopics: recentSessions.map(s => s.title || 'General Practice'),
+          strengths: progress.strengths || [],
+          weaknesses: progress.weaknesses || []
+        },
+        preferences,
+        recentProgress: {
+          lastSessionDate: recentSessions[0]?.scheduledAt,
+          completedObjectives: progress.completedObjectives || [],
+          currentObjectives: progress.currentObjectives || []
+        },
+        suggestedTopics: [
+          'Grammar Review',
+          'Conversation Practice',
+          'Pronunciation',
+          'Vocabulary Building'
+        ],
+        warningsOrNotes: student.notes || 'No special notes'
+      };
+      
+      res.json(briefing);
+    } catch (error) {
+      console.error('Error generating student briefing:', error);
+      res.status(500).json({ message: "Failed to generate student briefing" });
+    }
+  });
+  
+  // POST /irt/update - Update IRT assessment progress
+  app.post("/irt/update", authenticateToken, async (req: any, res) => {
+    try {
+      const { sessionId, questionId, isCorrect, responseTime, difficulty, discrimination } = req.body;
+      const studentId = req.user.id;
+      
+      // Import IRT service
+      const { IRTService } = await import('./services/irt-service');
+      const irtService = new IRTService();
+      
+      // Update ability estimate
+      const currentAbility = req.session?.irtAbility || 0;
+      const updatedAbility = await irtService.updateAbilityEstimate(
+        currentAbility,
+        difficulty || 0.5,
+        discrimination || 1.0,
+        isCorrect
+      );
+      
+      // Store updated ability in session
+      req.session.irtAbility = updatedAbility;
+      
+      // Calculate confidence interval
+      const confidenceInterval = {
+        lower: updatedAbility - 0.3,
+        upper: updatedAbility + 0.3
+      };
+      
+      // Get next question
+      const nextQuestion = await irtService.selectNextQuestion(updatedAbility, []);
+      
+      // Calculate progress
+      const progressPercentage = Math.min(100, (questionId / 20) * 100);
+      
+      res.json({
+        updatedAbility,
+        confidenceInterval,
+        nextQuestion,
+        progressPercentage
+      });
+    } catch (error) {
+      console.error('Error updating IRT assessment:', error);
+      res.status(500).json({ message: "Failed to update IRT assessment" });
     }
   });
 

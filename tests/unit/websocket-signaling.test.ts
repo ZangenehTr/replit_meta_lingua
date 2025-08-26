@@ -25,47 +25,53 @@ describe('WebSocket Signaling Server', () => {
   let clientSocket2: ClientSocket;
   const TEST_PORT = 3001;
 
-  beforeEach((done) => {
+  beforeEach(async () => {
     // Create HTTP server
     httpServer = require('http').createServer();
-    httpServer.listen(TEST_PORT, () => {
-      // Create WebSocket server
-      wsServer = new CallernWebSocketServer(httpServer);
-      done();
+    await new Promise<void>((resolve) => {
+      httpServer.listen(TEST_PORT, () => {
+        // Create WebSocket server
+        wsServer = new CallernWebSocketServer(httpServer);
+        resolve();
+      });
     });
   });
 
-  afterEach((done) => {
+  afterEach(async () => {
     // Cleanup
     if (clientSocket1) clientSocket1.disconnect();
     if (clientSocket2) clientSocket2.disconnect();
-    httpServer.close(done);
+    await new Promise<void>((resolve) => {
+      httpServer.close(() => resolve());
+    });
   });
 
-  test('should create room when first user joins', (done) => {
+  test('should create room when first user joins', async () => {
     clientSocket1 = ioClient(`http://localhost:${TEST_PORT}`, {
       path: '/socket.io',
-      transports: ['websocket'],
+      transports: ['websocket',
     });
 
-    clientSocket1.on('connect', () => {
-      clientSocket1.emit('join-room', {
-        roomId: 'test-room-1',
-        userId: 1,
-        role: 'student',
-      });
+    await new Promise<void>((resolve) => {
+      clientSocket1.on('connect', () => {
+        clientSocket1.emit('join-room', {
+          roomId: 'test-room-1',
+          userId: 1,
+          role: 'student',
+        });
 
-      // Give server time to process
-      setTimeout(() => {
-        // Check that room was created (would need access to activeRooms)
-        // For now, we verify by joining with second client
-        expect(clientSocket1.connected).toBe(true);
-        done();
-      }, 100);
+        // Give server time to process
+        setTimeout(() => {
+          // Check that room was created (would need access to activeRooms)
+          // For now, we verify by joining with second client
+          expect(clientSocket1.connected).toBe(true);
+          resolve();
+        }, 100);
+      });
     });
   });
 
-  test('should add second user to existing room', (done) => {
+  test('should add second user to existing room', async () => {
     clientSocket1 = ioClient(`http://localhost:${TEST_PORT}`, {
       path: '/socket.io',
       transports: ['websocket'],
@@ -78,6 +84,10 @@ describe('WebSocket Signaling Server', () => {
 
     let user1Joined = false;
     let user2JoinNotification = false;
+    let resolveTest: () => void;
+    const testPromise = new Promise<void>((resolve) => {
+      resolveTest = resolve;
+    });
 
     clientSocket1.on('connect', () => {
       clientSocket1.emit('join-room', {
@@ -94,7 +104,7 @@ describe('WebSocket Signaling Server', () => {
       user2JoinNotification = true;
       
       if (user1Joined && user2JoinNotification) {
-        done();
+        resolveTest();
       }
     });
 
@@ -109,7 +119,7 @@ describe('WebSocket Signaling Server', () => {
     });
   });
 
-  test('should relay offer from caller to callee', (done) => {
+  test('should relay offer from caller to callee', async () => {
     clientSocket1 = ioClient(`http://localhost:${TEST_PORT}`, {
       path: '/socket.io',
       transports: ['websocket'],
@@ -129,7 +139,7 @@ describe('WebSocket Signaling Server', () => {
       clientSocket2.on('offer', (data) => {
         expect(data.offer).toEqual(mockOffer);
         expect(data.from).toBe(clientSocket1.id);
-        done();
+        resolveTest();
       });
     });
 
@@ -145,7 +155,7 @@ describe('WebSocket Signaling Server', () => {
     });
   });
 
-  test('should relay answer from callee to caller', (done) => {
+  test('should relay answer from callee to caller', async () => {
     clientSocket1 = ioClient(`http://localhost:${TEST_PORT}`, {
       path: '/socket.io',
       transports: ['websocket'],
@@ -165,7 +175,7 @@ describe('WebSocket Signaling Server', () => {
       clientSocket1.on('answer', (data) => {
         expect(data.answer).toEqual(mockAnswer);
         expect(data.from).toBe(clientSocket2.id);
-        done();
+        resolveTest();
       });
     });
 
@@ -180,7 +190,7 @@ describe('WebSocket Signaling Server', () => {
     });
   });
 
-  test('should relay ICE candidates between peers', (done) => {
+  test('should relay ICE candidates between peers', async () => {
     clientSocket1 = ioClient(`http://localhost:${TEST_PORT}`, {
       path: '/socket.io',
       transports: ['websocket'],
@@ -201,7 +211,7 @@ describe('WebSocket Signaling Server', () => {
       clientSocket2.on('ice-candidate', (data) => {
         expect(data.candidate).toEqual(mockCandidate);
         expect(data.from).toBe(clientSocket1.id);
-        done();
+        resolveTest();
       });
     });
 
@@ -216,7 +226,7 @@ describe('WebSocket Signaling Server', () => {
     });
   });
 
-  test('should handle user disconnection', (done) => {
+  test('should handle user disconnection', async () => {
     clientSocket1 = ioClient(`http://localhost:${TEST_PORT}`, {
       path: '/socket.io',
       transports: ['websocket'],
@@ -237,13 +247,13 @@ describe('WebSocket Signaling Server', () => {
         setTimeout(() => {
           // In real test, we'd check activeRooms and teacherSockets
           expect(clientSocket1.connected).toBe(false);
-          done();
+          resolveTest();
         }, 100);
       }, 100);
     });
   });
 
-  test('should clean up empty rooms', (done) => {
+  test('should clean up empty rooms', async () => {
     clientSocket1 = ioClient(`http://localhost:${TEST_PORT}`, {
       path: '/socket.io',
       transports: ['websocket'],
@@ -281,13 +291,13 @@ describe('WebSocket Signaling Server', () => {
           // In real implementation, check activeRooms.has(roomId) === false
           expect(clientSocket1.connected).toBe(false);
           expect(clientSocket2.connected).toBe(false);
-          done();
+          resolveTest();
         }, 200);
       }, 100);
     });
   });
 
-  test('should prevent more than 2 users per room', (done) => {
+  test('should prevent more than 2 users per room', async () => {
     clientSocket1 = ioClient(`http://localhost:${TEST_PORT}`, {
       path: '/socket.io',
       transports: ['websocket'],
@@ -332,7 +342,7 @@ describe('WebSocket Signaling Server', () => {
           clientSocket3.on('error', (data) => {
             expect(data.message).toContain('full');
             clientSocket3.disconnect();
-            done();
+            resolveTest();
           });
 
           // If no error after timeout, test should fail
