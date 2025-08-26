@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Video, Calendar, Clock, User, Play, Download } from 'lucide-react';
 import { format } from 'date-fns';
-import { fa } from 'date-fns/locale';
+import { faIR } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 
 interface CallHistory {
@@ -70,7 +70,7 @@ export function CallernHistory() {
 
   const formatDate = (date: Date | string) => {
     const d = new Date(date);
-    const locale = i18n.language === 'fa' ? fa : undefined;
+    const locale = i18n.language === 'fa' ? faIR : undefined;
     return format(d, 'dd MMM yyyy', { locale });
   };
 

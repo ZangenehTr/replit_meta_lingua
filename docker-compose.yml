@@ -1,0 +1,147 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (for local development/testing)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: metalingua
+      POSTGRES_PASSWORD: metalingua123
+      POSTGRES_DB: metalingua
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metalingua"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Queue Management
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Ollama for LLM (already integrated)
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 4G
+
+  # Whisper ASR Service
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    ports:
+      - "9000:9000"
+    environment:
+      - ASR_MODEL=base
+      - ASR_ENGINE=openai_whisper
+    volumes:
+      - whisper_models:/app/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # Piper TTS Service for Farsi
+  piper:
+    build:
+      context: ./docker/piper
+      dockerfile: Dockerfile
+    ports:
+      - "5005:5005"
+    volumes:
+      - piper_models:/app/models
+    environment:
+      - DEFAULT_VOICE=fa_IR-amir-medium
+      - PIPER_UPDATE_VOICES=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5005/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+  # TURN Server for WebRTC (coturn)
+  turnserver:
+    image: coturn/coturn:latest
+    network_mode: host
+    environment:
+      - DETECT_EXTERNAL_IP=yes
+      - EXTERNAL_IP=auto
+      - LISTENING_PORT=3478
+      - MIN_PORT=10000
+      - MAX_PORT=10100
+      - REALM=metalingua.local
+      - USERNAME=metalingua
+      - PASSWORD=turnpassword123
+    command: >
+      -n
+      --log-file=stdout
+      --external-ip=$$(detect-external-ip)
+      --realm=metalingua.local
+      --user=metalingua:turnpassword123
+      --lt-cred-mech
+
+  # Local SMTP for email (development)
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    environment:
+      - MH_HOSTNAME=mailhog.local
+
+  # SMS Gateway Mock (development)
+  sms-gateway:
+    build:
+      context: ./docker/sms-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
+    environment:
+      - API_KEY=dev_sms_key_123
+      - WEBHOOK_URL=http://host.docker.internal:5000/api/sms/webhook
+
+volumes:
+  postgres_data:
+  redis_data:
+  ollama_data:
+  whisper_models:
+  piper_models:
+
+networks:
+  default:
+    name: metalingua_network
+    driver: bridge

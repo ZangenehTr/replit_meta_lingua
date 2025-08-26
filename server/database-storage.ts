@@ -697,7 +697,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(callernRoadmapSteps).where(eq(callernRoadmapSteps.id, id));
   }
 
-  async getRoadmapStepById(id: number): Promise<any | undefined> {
+  async getRoadmapStep(id: number): Promise<any | undefined> {
     const [step] = await db
       .select()
       .from(callernRoadmapSteps)
@@ -1129,6 +1129,62 @@ export class DatabaseStorage implements IStorage {
     } else {
       // Normal ranges - check standard overlap
       return !(end1Minutes <= start2Minutes || start1Minutes >= end2Minutes);
+    }
+  }
+
+  // IRT (Item Response Theory) System
+  async getStudentIRTAbility(studentId: number): Promise<{
+    theta: number;
+    standardError: number;
+    totalResponses: number;
+  } | undefined> {
+    try {
+      // For now, return mock data - will integrate with actual IRT tables later
+      return {
+        theta: 0,
+        standardError: 1,
+        totalResponses: 0
+      };
+    } catch (error) {
+      console.error('Error getting student IRT ability:', error);
+      return undefined;
+    }
+  }
+
+  async updateStudentIRTAbility(studentId: number, ability: {
+    theta: number;
+    standardError: number;
+    totalResponses: number;
+    lastUpdated: Date;
+  }): Promise<void> {
+    try {
+      // Store IRT ability in user profile or dedicated IRT table
+      console.log('Updating IRT ability for student:', studentId, ability);
+      // Implementation will be added when IRT table is created
+    } catch (error) {
+      console.error('Error updating student IRT ability:', error);
+    }
+  }
+
+  async createIRTResponse(response: {
+    studentId: number;
+    sessionId: number;
+    itemId: string;
+    correct: boolean;
+    responseTime: number;
+    theta: number;
+  }): Promise<any> {
+    try {
+      // Store IRT response data
+      console.log('Creating IRT response:', response);
+      return {
+        id: Math.floor(Math.random() * 10000),
+        ...response,
+        createdAt: new Date()
+      };
+    } catch (error) {
+      console.error('Error creating IRT response:', error);
+      throw error;
     }
   }
 
