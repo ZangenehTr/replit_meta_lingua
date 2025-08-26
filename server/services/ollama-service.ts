@@ -1,5 +1,12 @@
 import fetch from 'node-fetch';
 
+export interface OllamaConfig {
+  host: string;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
 interface OllamaResponse {
   model: string;
   created_at: string;
@@ -50,10 +57,11 @@ interface PronunciationGuide {
 }
 
 export class OllamaService {
+  private config: OllamaConfig;
   private baseUrl: string;
   private defaultModel: string;
 
-  constructor() {
+  constructor(config?: Partial<OllamaConfig>) {
     // Use Ollama server on 45.89.239.250
     // Override localhost with actual server address
     let host = process.env.OLLAMA_HOST;
@@ -68,12 +76,22 @@ export class OllamaService {
     if (!host.includes(':11434')) {
       host = `${host}:11434`;
     }
-    this.baseUrl = host;
     
     // Use configured model or default
-    this.defaultModel = process.env.OLLAMA_MODEL === 'llama3.2b' 
+    const model = process.env.OLLAMA_MODEL === 'llama3.2b' 
       ? 'llama3.2:3b'  // Correct model name format
       : (process.env.OLLAMA_MODEL || 'llama3.2:3b');
+    
+    this.config = {
+      host: host,
+      model: model,
+      temperature: 0.7,
+      maxTokens: 2000,
+      ...config,
+    };
+    
+    this.baseUrl = this.config.host;
+    this.defaultModel = this.config.model;
       
     console.log(`Ollama service initialized with host: ${this.baseUrl}, model: ${this.defaultModel}`);
   }
@@ -353,6 +371,54 @@ Return ONLY the JSON array.`;
     } catch (error) {
       console.error('Error generating questions:', error);
       return [];
+    }
+  }
+
+  // Generate text with options
+  async generateText(prompt: string, options?: {
+    temperature?: number;
+    maxTokens?: number;
+    systemPrompt?: string;
+  }): Promise<{ content: string; model: string }> {
+    try {
+      const response = await this.generate({
+        prompt: options?.systemPrompt ? `${options.systemPrompt}\n\n${prompt}` : prompt,
+        system: options?.systemPrompt,
+        temperature: options?.temperature || this.config.temperature,
+        max_tokens: options?.maxTokens || this.config.maxTokens,
+        stream: false,
+      });
+
+      return {
+        content: response || '',
+        model: this.defaultModel,
+      };
+    } catch (error) {
+      console.error('Ollama generation error:', error);
+      throw error;
+    }
+  }
+
+  // Generate JSON response
+  async generateJSON(prompt: string, systemPrompt?: string): Promise<any> {
+    const jsonPrompt = `${prompt}\n\nImportant: Return only valid JSON with no additional text or markdown formatting.`;
+    
+    const response = await this.generateText(jsonPrompt, {
+      systemPrompt: systemPrompt || 'You are a helpful assistant that only responds with valid JSON.',
+      temperature: 0.5, // Lower temperature for structured output
+    });
+
+    try {
+      // Clean the response and parse JSON
+      const cleaned = response.content
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+      
+      return JSON.parse(cleaned);
+    } catch (error) {
+      console.error('Failed to parse JSON response:', response.content);
+      throw new Error('Invalid JSON response from Ollama');
     }
   }
 

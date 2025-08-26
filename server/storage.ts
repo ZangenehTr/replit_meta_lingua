@@ -184,6 +184,7 @@ export interface IStorage {
   // Callern Roadmap Steps
   createRoadmapStep(stepData: any): Promise<any>;
   getRoadmapSteps(roadmapId: number): Promise<any[]>;
+  getRoadmapStep(id: number): Promise<any | undefined>;
   updateRoadmapStep(id: number, updates: any): Promise<any | undefined>;
   deleteRoadmapStep(id: number): Promise<void>;
   
@@ -229,6 +230,27 @@ export interface IStorage {
     conflictType: string;
     conflictingHours: string[];
   }>;
+
+  // IRT (Item Response Theory) System
+  getStudentIRTAbility(studentId: number): Promise<{
+    theta: number;
+    standardError: number;
+    totalResponses: number;
+  } | undefined>;
+  updateStudentIRTAbility(studentId: number, ability: {
+    theta: number;
+    standardError: number;
+    totalResponses: number;
+    lastUpdated: Date;
+  }): Promise<void>;
+  createIRTResponse(response: {
+    studentId: number;
+    sessionId: number;
+    itemId: string;
+    correct: boolean;
+    responseTime: number;
+    theta: number;
+  }): Promise<any>;
 
   // Sessions
   getUserSessions(userId: number): Promise<(Session & { tutorName: string })[]>;
@@ -4024,6 +4046,43 @@ export class MemStorage implements IStorage {
   
   async checkTeacherScheduleConflicts(teacherId: number, proposedHours: string[]): Promise<any> {
     return { hasConflicts: false, conflicts: [], conflictType: '', conflictingHours: [] };
+  }
+
+  // IRT (Item Response Theory) System
+  async getStudentIRTAbility(studentId: number): Promise<{
+    theta: number;
+    standardError: number;
+    totalResponses: number;
+  } | undefined> {
+    return {
+      theta: 0,
+      standardError: 1,
+      totalResponses: 0
+    };
+  }
+
+  async updateStudentIRTAbility(studentId: number, ability: {
+    theta: number;
+    standardError: number;
+    totalResponses: number;
+    lastUpdated: Date;
+  }): Promise<void> {
+    console.log('Mock: Updating IRT ability for student:', studentId, ability);
+  }
+
+  async createIRTResponse(response: {
+    studentId: number;
+    sessionId: number;
+    itemId: string;
+    correct: boolean;
+    responseTime: number;
+    theta: number;
+  }): Promise<any> {
+    return {
+      id: Math.floor(Math.random() * 10000),
+      ...response,
+      createdAt: new Date()
+    };
   }
 }
 
