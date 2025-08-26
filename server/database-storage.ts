@@ -705,6 +705,16 @@ export class DatabaseStorage implements IStorage {
     return step;
   }
 
+  // Alias for createRoadmapStep
+  async createCallernRoadmapStep(stepData: any): Promise<any> {
+    return this.createRoadmapStep(stepData);
+  }
+
+  // Delete all steps for a roadmap
+  async deleteRoadmapSteps(roadmapId: number): Promise<void> {
+    await db.delete(callernRoadmapSteps).where(eq(callernRoadmapSteps.roadmapId, roadmapId));
+  }
+
   // Student Roadmap Progress Implementation
   async getStudentRoadmapProgress(studentId: number, packageId: number): Promise<any[]> {
     const progress = await db
