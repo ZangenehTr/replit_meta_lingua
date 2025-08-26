@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
+import { CallernHistory } from "@/components/callern/CallernHistory";
 import { 
   Trophy, 
   Flame, 
@@ -428,6 +429,16 @@ export default function StudentDashboard() {
               </div>
             </motion.div>
           )}
+
+          {/* Callern History */}
+          <motion.div
+            className="mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.55 }}
+          >
+            <CallernHistory />
+          </motion.div>
 
           {/* Wallet Balance Card */}
           <motion.div 
