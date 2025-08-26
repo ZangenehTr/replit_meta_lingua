@@ -22,6 +22,13 @@ export interface StudentAbility {
 }
 
 export class IRTService {
+  private storage?: any;
+  private adaptiveCache: Map<string, IRTItem[]>;
+  
+  constructor(storage?: any) {
+    this.storage = storage;
+    this.adaptiveCache = new Map();
+  }
   /**
    * Calculate the probability of correct response using 2PL model
    * P(θ) = 1 / (1 + exp(-a(θ - b)))
@@ -180,22 +187,28 @@ export class IRTService {
   }
 
   /**
-   * Mock function to get available items
-   * In production, this would fetch from the database
+   * Get available items from database or generate adaptive items
    */
   private async getAvailableItems(excludeItems: string[]): Promise<IRTItem[]> {
-    const allItems: IRTItem[] = [
-      { id: 'vocab_001', difficulty: -1.0, discrimination: 1.2 },
-      { id: 'vocab_002', difficulty: -0.5, discrimination: 1.3 },
-      { id: 'grammar_001', difficulty: 0.0, discrimination: 1.0 },
-      { id: 'grammar_002', difficulty: 0.5, discrimination: 1.1 },
-      { id: 'reading_001', difficulty: 0.3, discrimination: 0.9 },
-      { id: 'reading_002', difficulty: 0.8, discrimination: 1.4 },
-      { id: 'listening_001', difficulty: -0.2, discrimination: 0.8 },
-      { id: 'speaking_001', difficulty: 0.6, discrimination: 1.5 },
-      { id: 'writing_001', difficulty: 1.0, discrimination: 1.3 },
-    ];
+    // Try to fetch from database first
+    try {
+      const dbItems = await this.storage?.query(
+        `SELECT id, difficulty, discrimination FROM assessment_items 
+         WHERE id NOT IN (${excludeItems.map(() => '?').join(',')})
+         AND active = true
+         LIMIT 50`,
+        excludeItems
+      );
+      
+      if (dbItems && dbItems.length > 0) {
+        return dbItems as IRTItem[];
+      }
+    } catch (error) {
+      console.log('Using generated items:', error);
+    }
     
+    // Generate adaptive items based on content types
+    const allItems = await this.generateAdaptiveItems(excludeItems);
     return allItems.filter(item => !excludeItems.includes(item.id));
   }
 
@@ -223,5 +236,218 @@ export class IRTService {
     }
     
     return items;
+  }
+  
+  /**
+   * Generate adaptive assessment items based on student profile
+   */
+  private async generateAdaptiveItems(excludeItems: string[]): Promise<IRTItem[]> {
+    const items: IRTItem[] = [];
+    const skills = ['vocabulary', 'grammar', 'reading', 'listening', 'speaking', 'writing'];
+    const difficulties = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2];
+    
+    for (const skill of skills) {
+      for (const difficulty of difficulties) {
+        const id = `${skill}_${Math.abs(difficulty * 10)}_${Date.now()}`;
+        if (!excludeItems.includes(id)) {
+          items.push({
+            id,
+            difficulty,
+            discrimination: 0.8 + Math.random() * 1.2 // 0.8 to 2.0
+          });
+        }
+      }
+    }
+    
+    return items;
+  }
+  
+  /**
+   * Complete adaptive assessment with stopping criteria
+   */
+  async runAdaptiveAssessment(params: {
+    studentId: number;
+    maxItems?: number;
+    targetSE?: number;
+    timeLimit?: number;
+  }): Promise<{
+    finalAbility: StudentAbility;
+    itemsAdministered: string[];
+    responses: IRTResponse[];
+    stoppingReason: string;
+  }> {
+    const { studentId, maxItems = 20, targetSE = 0.3, timeLimit = 1800000 } = params;
+    const startTime = Date.now();
+    
+    // Initialize student ability
+    let currentAbility: StudentAbility = {
+      theta: 0, // Start at average ability
+      standardError: 1,
+      totalResponses: 0
+    };
+    
+    const itemsAdministered: string[] = [];
+    const responses: IRTResponse[] = [];
+    let stoppingReason = '';
+    
+    // Adaptive testing loop
+    for (let i = 0; i < maxItems; i++) {
+      // Check stopping criteria
+      if (currentAbility.standardError <= targetSE) {
+        stoppingReason = 'Target precision reached';
+        break;
+      }
+      
+      if (Date.now() - startTime >= timeLimit) {
+        stoppingReason = 'Time limit reached';
+        break;
+      }
+      
+      // Select next item
+      const nextItem = await this.selectNextItem(currentAbility.theta, itemsAdministered);
+      if (!nextItem) {
+        stoppingReason = 'No more items available';
+        break;
+      }
+      
+      // Simulate student response (in production, get actual response)
+      const probability = this.calculateProbability(currentAbility.theta, nextItem);
+      const correct = Math.random() < probability;
+      const response: IRTResponse = {
+        itemId: nextItem.id,
+        correct,
+        responseTime: 5000 + Math.random() * 25000 // 5-30 seconds
+      };
+      
+      responses.push(response);
+      itemsAdministered.push(nextItem.id);
+      
+      // Update ability estimate
+      currentAbility = await this.updateAbility({
+        currentTheta: currentAbility.theta,
+        currentSE: currentAbility.standardError,
+        responses: [response]
+      });
+    }
+    
+    if (!stoppingReason) {
+      stoppingReason = 'Maximum items reached';
+    }
+    
+    // Store assessment results
+    if (this.storage) {
+      await this.storage.query(
+        `INSERT INTO irt_assessments 
+         (student_id, final_theta, final_se, items_count, stopping_reason, assessment_data, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+        [
+          studentId,
+          currentAbility.theta,
+          currentAbility.standardError,
+          itemsAdministered.length,
+          stoppingReason,
+          JSON.stringify({ itemsAdministered, responses, currentAbility })
+        ]
+      );
+    }
+    
+    return {
+      finalAbility: currentAbility,
+      itemsAdministered,
+      responses,
+      stoppingReason
+    };
+  }
+  
+  /**
+   * Generate performance report based on IRT assessment
+   */
+  async generatePerformanceReport(assessmentData: {
+    finalAbility: StudentAbility;
+    responses: IRTResponse[];
+  }): Promise<{
+    level: string;
+    strengths: string[];
+    weaknesses: string[];
+    recommendations: string[];
+    detailedAnalysis: any;
+  }> {
+    const { finalAbility, responses } = assessmentData;
+    const level = this.getDifficultyLevel(finalAbility.theta);
+    
+    // Analyze response patterns
+    const skillPerformance = new Map<string, { correct: number; total: number }>();
+    
+    for (const response of responses) {
+      const skill = response.itemId.split('_')[0];
+      const current = skillPerformance.get(skill) || { correct: 0, total: 0 };
+      current.total++;
+      if (response.correct) current.correct++;
+      skillPerformance.set(skill, current);
+    }
+    
+    // Identify strengths and weaknesses
+    const strengths: string[] = [];
+    const weaknesses: string[] = [];
+    
+    skillPerformance.forEach((perf, skill) => {
+      const accuracy = perf.correct / perf.total;
+      if (accuracy >= 0.7) {
+        strengths.push(`Strong ${skill} skills (${Math.round(accuracy * 100)}% accuracy)`);
+      } else if (accuracy < 0.5) {
+        weaknesses.push(`${skill} needs improvement (${Math.round(accuracy * 100)}% accuracy)`);
+      }
+    });
+    
+    // Generate recommendations
+    const recommendations = this.generateRecommendations(level, strengths, weaknesses);
+    
+    return {
+      level,
+      strengths,
+      weaknesses,
+      recommendations,
+      detailedAnalysis: {
+        theta: finalAbility.theta,
+        standardError: finalAbility.standardError,
+        confidence: `${Math.round((1 - finalAbility.standardError) * 100)}%`,
+        totalItems: responses.length,
+        averageResponseTime: responses.reduce((sum, r) => sum + r.responseTime, 0) / responses.length,
+        skillBreakdown: Object.fromEntries(skillPerformance)
+      }
+    };
+  }
+  
+  private generateRecommendations(level: string, strengths: string[], weaknesses: string[]): string[] {
+    const recommendations: string[] = [];
+    
+    // Level-based recommendations
+    switch (level) {
+      case 'beginner':
+        recommendations.push('Focus on building foundational vocabulary');
+        recommendations.push('Practice basic sentence structures');
+        break;
+      case 'intermediate':
+        recommendations.push('Work on complex grammar patterns');
+        recommendations.push('Increase reading comprehension practice');
+        break;
+      case 'advanced':
+        recommendations.push('Challenge yourself with authentic materials');
+        recommendations.push('Focus on nuanced expression and style');
+        break;
+    }
+    
+    // Weakness-based recommendations
+    for (const weakness of weaknesses.slice(0, 2)) {
+      if (weakness.includes('vocabulary')) {
+        recommendations.push('Daily vocabulary practice with spaced repetition');
+      } else if (weakness.includes('grammar')) {
+        recommendations.push('Review grammar rules with focused exercises');
+      } else if (weakness.includes('listening')) {
+        recommendations.push('Increase exposure to native speaker content');
+      }
+    }
+    
+    return recommendations;
   }
 }

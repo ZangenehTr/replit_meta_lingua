@@ -19753,6 +19753,12 @@ Meta Lingua Academy`;
   
   // Setup Callern Roadmap routes
   app.use('/api', callernRoadmapRoutes);
+  
+  // Setup Advanced Features routes (CEFR, IRT, AI Supervisor, Mood Intelligence, etc.)
+  const { createAdvancedFeaturesRouter } = await import('./routes/advanced-features');
+  const advancedFeaturesRouter = createAdvancedFeaturesRouter(storage);
+  app.use('/api/advanced', advancedFeaturesRouter);
+  console.log('✅ Advanced features routes registered (CEFR, IRT, AI Supervisor, Mood Intelligence)');
 
   const httpServer = createServer(app);
   
