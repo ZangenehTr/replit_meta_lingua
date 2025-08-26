@@ -11990,3 +11990,128 @@ export class DatabaseStorage implements IStorage {
     }
   }
 }
+
+  // Quiz-related methods
+  async saveQuiz(quizData: any): Promise<void> {
+    await this.db.insert(schema.resources).values({
+      type: 'quiz',
+      title: quizData.title,
+      description: quizData.description,
+      data: JSON.stringify({
+        id: quizData.id,
+        sessionId: quizData.sessionId,
+        questions: quizData.questions,
+        totalPoints: quizData.totalPoints,
+        estimatedTime: quizData.estimatedTime,
+        targetLevel: quizData.targetLevel,
+        topics: quizData.topics
+      }),
+      metadata: JSON.stringify({
+        generatedAt: quizData.generatedAt
+      })
+    });
+  }
+
+  async getQuiz(quizId: string): Promise<any> {
+    const rows = await this.db
+      .select()
+      .from(schema.resources)
+      .where(
+        sql`${schema.resources.type} = 'quiz' AND 
+            JSON_EXTRACT(${schema.resources.data}, '$.id') = ${quizId}`
+      )
+      .limit(1);
+
+    if (rows.length === 0) return null;
+
+    const resource = rows[0];
+    const data = JSON.parse(resource.data || '{}');
+    const metadata = JSON.parse(resource.metadata || '{}');
+
+    return {
+      ...data,
+      title: resource.title,
+      description: resource.description,
+      ...metadata
+    };
+  }
+
+  async saveQuizResult(result: any): Promise<void> {
+    await this.db.insert(schema.resources).values({
+      type: 'quiz_result',
+      title: `Quiz Result - ${result.studentId}`,
+      data: JSON.stringify({
+        quizId: result.quizId,
+        studentId: result.studentId,
+        answers: result.answers,
+        score: result.score,
+        totalPoints: result.totalPoints
+      }),
+      metadata: JSON.stringify({
+        completedAt: result.completedAt
+      })
+    });
+  }
+
+  async getQuizResultsByStudent(studentId: number): Promise<any[]> {
+    const rows = await this.db
+      .select()
+      .from(schema.resources)
+      .where(
+        sql`${schema.resources.type} = 'quiz_result' AND 
+            JSON_EXTRACT(${schema.resources.data}, '$.studentId') = ${studentId}`
+      )
+      .orderBy(sql`JSON_EXTRACT(${schema.resources.metadata}, '$.completedAt') DESC`);
+
+    return rows.map(row => {
+      const data = JSON.parse(row.data || '{}');
+      const metadata = JSON.parse(row.metadata || '{}');
+      return { ...data, ...metadata };
+    });
+  }
+
+  async getQuizResults(quizId: string): Promise<any[]> {
+    const rows = await this.db
+      .select()
+      .from(schema.resources)
+      .where(
+        sql`${schema.resources.type} = 'quiz_result' AND 
+            JSON_EXTRACT(${schema.resources.data}, '$.quizId') = ${quizId}`
+      );
+
+    return rows.map(row => {
+      const data = JSON.parse(row.data || '{}');
+      const metadata = JSON.parse(row.metadata || '{}');
+      return { ...data, ...metadata };
+    });
+  }
+
+  async addStudentXP(studentId: number, xpAmount: number): Promise<void> {
+    const profiles = await this.db
+      .select()
+      .from(schema.studentProfiles)
+      .where(eq(schema.studentProfiles.userId, studentId))
+      .limit(1);
+
+    if (profiles.length > 0) {
+      const currentXP = profiles[0].totalXP || 0;
+      await this.db
+        .update(schema.studentProfiles)
+        .set({ 
+          totalXP: currentXP + xpAmount,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.studentProfiles.userId, studentId));
+    }
+  }
+
+  async trackActivity(activity: any): Promise<void> {
+    await this.db.insert(schema.activities).values({
+      userId: activity.userId,
+      activityType: activity.activityType,
+      xpEarned: activity.details?.xpGained || 0,
+      details: JSON.stringify(activity.details),
+      createdAt: activity.timestamp
+    });
+  }
+}
