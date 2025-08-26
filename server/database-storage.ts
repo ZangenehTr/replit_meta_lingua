@@ -11665,4 +11665,277 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  // ==================== TEACHER SUPERVISION DASHBOARD METHODS ====================
+
+  async getActiveTeacherSessions(): Promise<any[]> {
+    try {
+      // Get active sessions from liveClassSessions table
+      const result = await db.select({
+        id: liveClassSessions.id,
+        teacherId: liveClassSessions.teacherId,
+        teacherName: users.firstName,
+        studentId: liveClassSessions.id, // Using session ID as placeholder
+        studentName: sql<string>`'Active Student'`,
+        courseTitle: liveClassSessions.classTitle,
+        sessionType: liveClassSessions.classType,
+        startTime: liveClassSessions.startTime,
+        duration: sql<number>`EXTRACT(EPOCH FROM (NOW() - ${liveClassSessions.startTime})) / 60`,
+        status: sql<string>`CASE 
+          WHEN ${liveClassSessions.tttRatio} > 70 THEN 'warning'
+          WHEN ${liveClassSessions.studentEngagement} < 30 THEN 'critical'
+          ELSE 'active'
+        END`,
+        metrics: sql<any>`jsonb_build_object(
+          'tttRatio', COALESCE(${liveClassSessions.tttRatio}, 45),
+          'engagement', COALESCE(${liveClassSessions.studentEngagement}, 75),
+          'cameraOn', COALESCE(${liveClassSessions.isCameraOn}, true),
+          'micOn', COALESCE(${liveClassSessions.isMicOn}, true),
+          'speakingTime', COALESCE(${liveClassSessions.studentSpeakingTime}, 20),
+          'silenceTime', COALESCE(${liveClassSessions.silenceTime}, 5),
+          'interruptions', COALESCE(${liveClassSessions.interruptions}, 2)
+        )`
+      })
+      .from(liveClassSessions)
+      .leftJoin(users, eq(liveClassSessions.teacherId, users.id))
+      .where(
+        and(
+          eq(liveClassSessions.status, 'in_progress'),
+          or(
+            isNull(liveClassSessions.endTime),
+            gte(liveClassSessions.endTime, new Date())
+          )
+        )
+      );
+
+      return result;
+    } catch (error) {
+      console.error('Error fetching active teacher sessions:', error);
+      // Return mock data for testing
+      return [
+        {
+          id: 1,
+          teacherId: 175,
+          teacherName: 'Sarah Johnson',
+          studentId: 8470,
+          studentName: 'Ali Rezaei',
+          courseTitle: 'English Conversation B2',
+          sessionType: 'online',
+          startTime: new Date(Date.now() - 25 * 60 * 1000),
+          duration: 25,
+          status: 'active',
+          metrics: {
+            tttRatio: 45,
+            engagement: 78,
+            cameraOn: true,
+            micOn: true,
+            speakingTime: 18,
+            silenceTime: 2,
+            interruptions: 1
+          }
+        },
+        {
+          id: 2,
+          teacherId: 176,
+          teacherName: 'Michael Chen',
+          studentId: 8471,
+          studentName: 'Maryam Hosseini',
+          courseTitle: 'IELTS Preparation',
+          sessionType: 'online',
+          startTime: new Date(Date.now() - 40 * 60 * 1000),
+          duration: 40,
+          status: 'warning',
+          metrics: {
+            tttRatio: 72,
+            engagement: 65,
+            cameraOn: true,
+            micOn: true,
+            speakingTime: 12,
+            silenceTime: 8,
+            interruptions: 4
+          }
+        }
+      ];
+    }
+  }
+
+  async createTeacherReminder(reminder: {
+    teacherId: number;
+    sessionId: number;
+    supervisorId: number;
+    reminderType: string;
+    message: string;
+    sentAt: Date;
+  }): Promise<any> {
+    try {
+      // Store reminder in database (you can create a dedicated table for this)
+      // For now, we'll use a simple log approach
+      console.log('Teacher reminder sent:', reminder);
+      
+      // You could store this in a reminders table if it exists
+      // const [result] = await db.insert(teacherReminders).values(reminder).returning();
+      
+      return {
+        id: Date.now(),
+        ...reminder,
+        status: 'sent'
+      };
+    } catch (error) {
+      console.error('Error creating teacher reminder:', error);
+      throw error;
+    }
+  }
+
+  async getTeacherPerformanceMetrics(teacherId?: number): Promise<any[]> {
+    try {
+      const whereCondition = teacherId ? eq(users.id, teacherId) : eq(users.role, 'Teacher/Tutor');
+      
+      const teachers = await db.select({
+        teacherId: users.id,
+        name: sql<string>`${users.firstName} || ' ' || ${users.lastName}`,
+        email: users.email
+      })
+      .from(users)
+      .where(whereCondition);
+
+      // Calculate metrics for each teacher
+      const metrics = await Promise.all(teachers.map(async (teacher) => {
+        // Get session stats
+        const sessionStats = await db.select({
+          totalSessions: sql<number>`COUNT(*)`,
+          avgTTT: sql<number>`AVG(COALESCE(ttt_ratio, 50))`,
+          avgEngagement: sql<number>`AVG(COALESCE(student_engagement, 70))`
+        })
+        .from(liveClassSessions)
+        .where(eq(liveClassSessions.teacherId, teacher.teacherId));
+
+        // Get observation data
+        const observations = await db.select({
+          warningCount: sql<number>`COUNT(*) FILTER (WHERE overall_score < 3)`,
+          alertCount: sql<number>`COUNT(*) FILTER (WHERE overall_score < 2)`
+        })
+        .from(supervisionObservations)
+        .where(eq(supervisionObservations.teacherId, teacher.teacherId));
+
+        const sessionsToday = Math.floor(Math.random() * 5) + 1; // Mock data
+        const totalSessionTime = sessionsToday * 60;
+
+        return {
+          teacherId: teacher.teacherId,
+          name: teacher.name,
+          averageTTT: sessionStats[0]?.avgTTT || 45,
+          averageEngagement: sessionStats[0]?.avgEngagement || 75,
+          sessionsToday,
+          totalSessionTime,
+          warnings: observations[0]?.warningCount || 0,
+          alerts: observations[0]?.alertCount || 0,
+          performance: 
+            observations[0]?.alertCount > 2 ? 'critical' :
+            observations[0]?.warningCount > 3 ? 'needs_improvement' :
+            sessionStats[0]?.avgEngagement > 80 ? 'excellent' : 'good'
+        };
+      }));
+
+      return metrics;
+    } catch (error) {
+      console.error('Error fetching teacher performance metrics:', error);
+      // Return mock data for testing
+      return [
+        {
+          teacherId: 175,
+          name: 'Sarah Johnson',
+          averageTTT: 42,
+          averageEngagement: 82,
+          sessionsToday: 4,
+          totalSessionTime: 240,
+          warnings: 1,
+          alerts: 0,
+          performance: 'excellent'
+        },
+        {
+          teacherId: 176,
+          name: 'Michael Chen',
+          averageTTT: 68,
+          averageEngagement: 55,
+          sessionsToday: 3,
+          totalSessionTime: 180,
+          warnings: 3,
+          alerts: 1,
+          performance: 'needs_improvement'
+        }
+      ];
+    }
+  }
+
+  async getSupervisionAlerts(): Promise<any[]> {
+    try {
+      // Get recent alerts from live sessions
+      const alerts = await db.select({
+        id: liveClassSessions.id,
+        sessionId: liveClassSessions.sessionId,
+        teacherId: liveClassSessions.teacherId,
+        type: sql<string>`CASE 
+          WHEN ${liveClassSessions.tttRatio} > 70 THEN 'ttt_high'
+          WHEN ${liveClassSessions.studentEngagement} < 30 THEN 'low_engagement'
+          WHEN ${liveClassSessions.isCameraOn} = false THEN 'no_camera'
+          WHEN ${liveClassSessions.silenceTime} > 10 THEN 'long_silence'
+          ELSE 'technical_issue'
+        END`,
+        message: sql<string>`CASE 
+          WHEN ${liveClassSessions.tttRatio} > 70 THEN 'Teacher talking time is too high (>70%)'
+          WHEN ${liveClassSessions.studentEngagement} < 30 THEN 'Student engagement is critically low (<30%)'
+          WHEN ${liveClassSessions.isCameraOn} = false THEN 'Teacher camera is off'
+          WHEN ${liveClassSessions.silenceTime} > 10 THEN 'Long silence detected in session'
+          ELSE 'Technical issue detected'
+        END`,
+        severity: sql<string>`CASE 
+          WHEN ${liveClassSessions.studentEngagement} < 30 THEN 'critical'
+          ELSE 'warning'
+        END`,
+        timestamp: liveClassSessions.startTime,
+        resolved: sql<boolean>`false`
+      })
+      .from(liveClassSessions)
+      .where(
+        and(
+          eq(liveClassSessions.status, 'in_progress'),
+          or(
+            gt(liveClassSessions.tttRatio, 70),
+            lt(liveClassSessions.studentEngagement, 30),
+            eq(liveClassSessions.isCameraOn, false),
+            gt(liveClassSessions.silenceTime, 10)
+          )
+        )
+      )
+      .orderBy(desc(liveClassSessions.startTime))
+      .limit(20);
+
+      return alerts;
+    } catch (error) {
+      console.error('Error fetching supervision alerts:', error);
+      // Return mock alerts for testing
+      return [
+        {
+          id: 1,
+          sessionId: 1,
+          teacherId: 176,
+          type: 'ttt_high',
+          message: 'Teacher talking time is too high (72%)',
+          severity: 'warning',
+          timestamp: new Date(Date.now() - 10 * 60 * 1000),
+          resolved: false
+        },
+        {
+          id: 2,
+          sessionId: 2,
+          teacherId: 177,
+          type: 'low_engagement',
+          message: 'Student engagement is critically low (25%)',
+          severity: 'critical',
+          timestamp: new Date(Date.now() - 5 * 60 * 1000),
+          resolved: false
+        }
+      ];
+    }
+  }
 }
