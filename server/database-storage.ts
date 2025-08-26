@@ -11989,7 +11989,6 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
-}
 
   // Quiz-related methods
   async saveQuiz(quizData: any): Promise<void> {
