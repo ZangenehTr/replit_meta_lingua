@@ -3128,6 +3128,23 @@ export type InsertPushNotification = z.infer<typeof insertPushNotificationSchema
 export type NotificationDeliveryLog = typeof notificationDeliveryLogs.$inferSelect;
 export type InsertNotificationDeliveryLog = z.infer<typeof insertNotificationDeliveryLogSchema>;
 
+// AI Call Insights Table for CRM Integration
+export const aiCallInsights = pgTable("ai_call_insights", {
+  id: serial("id").primaryKey(),
+  callId: varchar("call_id", { length: 100 }).notNull().unique(),
+  leadId: integer("lead_id").notNull().references(() => leads.id),
+  agentId: integer("agent_id").notNull().references(() => users.id),
+  transcript: text("transcript").notNull(),
+  intent: varchar("intent", { length: 200 }),
+  sentiment: varchar("sentiment", { length: 50 }), // positive, neutral, negative
+  summary: text("summary"),
+  entities: jsonb("entities"), // extracted entities like name, phone, email, etc.
+  nextActions: jsonb("next_actions"), // AI suggested next actions
+  confidence: decimal("confidence", { precision: 3, scale: 2 }).default("0.5"),
+  processedAt: timestamp("processed_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
 // Teacher Availability Table (Legacy - kept for backward compatibility)
 export const teacherAvailability = pgTable("teacher_availability", {
   id: serial("id").primaryKey(),
@@ -3176,6 +3193,16 @@ export const insertTeacherAvailabilityPeriodSchema = createInsertSchema(teacherA
 
 export type TeacherAvailabilityPeriod = typeof teacherAvailabilityPeriods.$inferSelect;
 export type InsertTeacherAvailabilityPeriod = z.infer<typeof insertTeacherAvailabilityPeriodSchema>;
+
+// AI Call Insights Schema
+export const insertAICallInsightSchema = createInsertSchema(aiCallInsights).omit({
+  id: true,
+  processedAt: true,
+  createdAt: true
+});
+
+export type AICallInsight = typeof aiCallInsights.$inferSelect;
+export type InsertAICallInsight = z.infer<typeof insertAICallInsightSchema>;
 
 // Supervision observation types
 export type SupervisionObservation = typeof supervisionObservations.$inferSelect;
