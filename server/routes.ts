@@ -18395,6 +18395,109 @@ Meta Lingua Academy`;
       res.status(500).json({ message: "Failed to generate bulk lesson kits" });
     }
   });
+  
+  // Export lesson kit to PDF
+  app.post("/api/teacher/lesson-kit/export-pdf", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const { kitId } = req.body;
+      
+      // Get the lesson kit data
+      const resources = await storage.getResourceMaterials({
+        type: 'lesson_kit',
+        tags: []
+      });
+      
+      const kit = resources.find((r: any) => {
+        const metadata = JSON.parse(r.metadata || '{}');
+        return metadata.id === kitId;
+      });
+      
+      if (!kit) {
+        return res.status(404).json({ message: "Lesson kit not found" });
+      }
+      
+      const kitData = JSON.parse(kit.metadata.content || '{}');
+      
+      // Generate PDF content (simplified HTML version for now)
+      const pdfContent = `
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #333; }
+            h2 { color: #555; margin-top: 20px; }
+            h3 { color: #777; }
+            .section { margin-bottom: 30px; }
+            .vocabulary-item { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+            .exercise { margin: 15px 0; padding: 15px; border: 1px solid #ddd; }
+            ul { list-style-type: disc; margin-left: 20px; }
+          </style>
+        </head>
+        <body>
+          <h1>${kitData.topic}</h1>
+          <p>Level: ${kitData.level} | Generated: ${new Date(kitData.generatedAt).toLocaleDateString()}</p>
+          
+          <div class="section">
+            <h2>Learning Objectives</h2>
+            <ul>
+              ${kitData.objectives.map((obj: string) => `<li>${obj}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <div class="section">
+            <h2>Vocabulary</h2>
+            ${kitData.vocabulary.map((item: any) => `
+              <div class="vocabulary-item">
+                <strong>${item.word}</strong> ${item.pronunciation}<br/>
+                Definition: ${item.definition}<br/>
+                Example: <em>${item.example}</em>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="section">
+            <h2>Exercises</h2>
+            ${kitData.exercises.map((ex: any) => `
+              <div class="exercise">
+                <h3>${ex.title}</h3>
+                <p><strong>Type:</strong> ${ex.type} | <strong>Duration:</strong> ${ex.duration} minutes</p>
+                <p><strong>Instructions:</strong> ${ex.instructions}</p>
+                <pre>${ex.content}</pre>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="section">
+            <h2>Speaking Prompts</h2>
+            <ul>
+              ${kitData.speakingPrompts.map((prompt: string) => `<li>${prompt}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <div class="section">
+            <h2>Homework Assignments</h2>
+            ${kitData.homework.map((hw: any) => `
+              <div>
+                <h3>${hw.title} (${hw.estimatedTime} min)</h3>
+                <p>${hw.description}</p>
+                <p><strong>Resources:</strong> ${hw.resources.join(', ')}</p>
+              </div>
+            `).join('')}
+          </div>
+        </body>
+        </html>
+      `;
+      
+      // Send as HTML for now (client can convert to PDF)
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', `attachment; filename="lesson-kit-${kitData.topic}.html"`);
+      res.send(pdfContent);
+      
+    } catch (error) {
+      console.error('Error exporting lesson kit to PDF:', error);
+      res.status(500).json({ message: "Failed to export lesson kit" });
+    }
+  });
 
   // ===== HOMEWORK & ASSIGNMENTS API ENDPOINTS =====
   
