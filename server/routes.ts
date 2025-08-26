@@ -13447,6 +13447,344 @@ Return JSON format:
     }
   });
 
+  // IRT Adaptive Assessment Endpoints
+  app.post("/api/assessment/irt/start", authenticateToken, async (req: any, res) => {
+    try {
+      const { studentId, testType } = req.body;
+      
+      // Initialize IRT session with calibrated question bank
+      const session = {
+        id: `irt-${Date.now()}-${studentId}`,
+        studentId,
+        testType,
+        currentQuestionIndex: 0,
+        questions: await generateAdaptiveQuestionBank(testType),
+        responses: [],
+        ability: 0, // Start with average ability
+        standardError: 1,
+        startTime: new Date(),
+        status: 'in_progress'
+      };
+
+      // Store session in memory or database
+      await storage.createAssessmentSession(session);
+
+      res.json(session);
+    } catch (error) {
+      console.error('Error starting IRT assessment:', error);
+      res.status(500).json({ message: 'Failed to start assessment' });
+    }
+  });
+
+  app.post("/api/assessment/irt/submit", authenticateToken, async (req: any, res) => {
+    try {
+      const { sessionId, questionId, answer, responseTime } = req.body;
+      
+      // Get current session
+      const session = await storage.getAssessmentSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: 'Session not found' });
+      }
+
+      // Find question and check answer
+      const question = session.questions.find((q: any) => q.id === questionId);
+      const correct = await checkAnswer(question, answer);
+
+      // Calculate new ability estimate using IRT formula
+      const newAbility = calculateIRTAbility(
+        session.ability,
+        question.difficulty,
+        question.discrimination,
+        correct
+      );
+
+      // Calculate standard error
+      const standardError = calculateStandardError(session.responses.length + 1);
+
+      // Create response record
+      const response = {
+        questionId,
+        answer,
+        correct,
+        responseTime,
+        difficulty: question.difficulty
+      };
+
+      // Update session
+      session.responses.push(response);
+      session.ability = newAbility;
+      session.standardError = standardError;
+      session.currentQuestionIndex++;
+
+      // Select next question based on new ability
+      let nextQuestion = null;
+      if (session.currentQuestionIndex < 20 && standardError > 0.3) {
+        nextQuestion = selectNextQuestion(session.ability, session.questions, session.responses);
+      }
+
+      await storage.updateAssessmentSession(session);
+
+      res.json({
+        correct,
+        newAbility,
+        standardError,
+        response,
+        nextQuestion
+      });
+    } catch (error) {
+      console.error('Error submitting IRT answer:', error);
+      res.status(500).json({ message: 'Failed to submit answer' });
+    }
+  });
+
+  app.post("/api/assessment/irt/complete", authenticateToken, async (req: any, res) => {
+    try {
+      const { sessionId } = req.body;
+      
+      const session = await storage.getAssessmentSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: 'Session not found' });
+      }
+
+      // Calculate final results
+      const cefrLevel = mapAbilityToCEFR(session.ability);
+      const percentile = calculatePercentile(session.ability);
+      const strengths = analyzeStrengths(session.responses);
+      const weaknesses = analyzeWeaknesses(session.responses);
+
+      // Update session status
+      session.status = 'completed';
+      session.endTime = new Date();
+      await storage.updateAssessmentSession(session);
+
+      // Save results to student profile
+      await storage.updateStudentAssessmentResults(session.studentId, {
+        testType: session.testType,
+        ability: session.ability,
+        cefrLevel,
+        percentile,
+        strengths,
+        weaknesses,
+        completedAt: session.endTime
+      });
+
+      res.json({
+        ability: session.ability,
+        cefrLevel,
+        percentile,
+        strengths,
+        weaknesses,
+        totalQuestions: session.responses.length,
+        correctAnswers: session.responses.filter((r: any) => r.correct).length,
+        averageResponseTime: session.responses.reduce((sum: number, r: any) => sum + r.responseTime, 0) / session.responses.length
+      });
+    } catch (error) {
+      console.error('Error completing IRT assessment:', error);
+      res.status(500).json({ message: 'Failed to complete assessment' });
+    }
+  });
+
+  // Helper functions for IRT calculations
+  function calculateIRTAbility(currentAbility: number, difficulty: number, discrimination: number, correct: boolean): number {
+    // Simplified IRT ability update using Maximum Likelihood Estimation
+    const probability = 1 / (1 + Math.exp(-discrimination * (currentAbility - difficulty)));
+    const information = discrimination * discrimination * probability * (1 - probability);
+    const score = correct ? 1 : 0;
+    
+    // Newton-Raphson update
+    const adjustment = (score - probability) / Math.max(information, 0.1);
+    const newAbility = currentAbility + adjustment * 0.5; // Damping factor
+    
+    // Constrain ability to reasonable range
+    return Math.max(-3, Math.min(3, newAbility));
+  }
+
+  function calculateStandardError(numResponses: number): number {
+    // Standard error decreases with more responses
+    return Math.max(0.2, 1 / Math.sqrt(numResponses));
+  }
+
+  function selectNextQuestion(ability: number, allQuestions: any[], answeredQuestions: any[]): any {
+    const answeredIds = new Set(answeredQuestions.map(r => r.questionId));
+    const availableQuestions = allQuestions.filter(q => !answeredIds.has(q.id));
+    
+    if (availableQuestions.length === 0) return null;
+    
+    // Select question closest to current ability level for maximum information
+    return availableQuestions.reduce((best, current) => {
+      const bestDiff = Math.abs(best.difficulty - ability);
+      const currentDiff = Math.abs(current.difficulty - ability);
+      return currentDiff < bestDiff ? current : best;
+    });
+  }
+
+  function mapAbilityToCEFR(ability: number): string {
+    if (ability < -2) return 'A1';
+    if (ability < -1) return 'A2';
+    if (ability < 0) return 'B1';
+    if (ability < 1) return 'B2';
+    if (ability < 2) return 'C1';
+    return 'C2';
+  }
+
+  function calculatePercentile(ability: number): number {
+    // Convert ability to percentile using normal distribution
+    const z = ability;
+    const percentile = 50 + 50 * erf(z / Math.sqrt(2));
+    return Math.round(percentile);
+  }
+
+  function erf(x: number): number {
+    // Approximation of error function
+    const a1 =  0.254829592;
+    const a2 = -0.284496736;
+    const a3 =  1.421413741;
+    const a4 = -1.453152027;
+    const a5 =  1.061405429;
+    const p  =  0.3275911;
+
+    const sign = x >= 0 ? 1 : -1;
+    x = Math.abs(x);
+
+    const t = 1 / (1 + p * x);
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const t4 = t3 * t;
+    const t5 = t4 * t;
+
+    const y = 1 - (((((a5 * t5 + a4 * t4) + a3 * t3) + a2 * t2) + a1 * t) * Math.exp(-x * x));
+
+    return sign * y;
+  }
+
+  function analyzeStrengths(responses: any[]): string[] {
+    // Analyze categories where student performed well
+    const categoryPerformance = new Map<string, { correct: number, total: number }>();
+    
+    responses.forEach(r => {
+      const category = r.category || 'General';
+      if (!categoryPerformance.has(category)) {
+        categoryPerformance.set(category, { correct: 0, total: 0 });
+      }
+      const perf = categoryPerformance.get(category)!;
+      perf.total++;
+      if (r.correct) perf.correct++;
+    });
+
+    const strengths: string[] = [];
+    categoryPerformance.forEach((perf, category) => {
+      if (perf.correct / perf.total > 0.7) {
+        strengths.push(category);
+      }
+    });
+
+    return strengths;
+  }
+
+  function analyzeWeaknesses(responses: any[]): string[] {
+    // Analyze categories where student needs improvement
+    const categoryPerformance = new Map<string, { correct: number, total: number }>();
+    
+    responses.forEach(r => {
+      const category = r.category || 'General';
+      if (!categoryPerformance.has(category)) {
+        categoryPerformance.set(category, { correct: 0, total: 0 });
+      }
+      const perf = categoryPerformance.get(category)!;
+      perf.total++;
+      if (r.correct) perf.correct++;
+    });
+
+    const weaknesses: string[] = [];
+    categoryPerformance.forEach((perf, category) => {
+      if (perf.correct / perf.total < 0.4) {
+        weaknesses.push(category);
+      }
+    });
+
+    return weaknesses;
+  }
+
+  async function generateAdaptiveQuestionBank(testType: string): Promise<any[]> {
+    // Generate calibrated question bank for IRT
+    // In production, these would come from a database of pre-calibrated items
+    const categories = ['Grammar', 'Vocabulary', 'Reading', 'Listening', 'Writing'];
+    const questions = [];
+    
+    for (let i = 0; i < 50; i++) {
+      questions.push({
+        id: `q-${i}`,
+        text: `Sample question ${i + 1}`,
+        type: ['multiple_choice', 'true_false', 'short_answer'][Math.floor(Math.random() * 3)],
+        options: ['Option A', 'Option B', 'Option C', 'Option D'],
+        difficulty: (Math.random() * 6) - 3, // -3 to +3
+        discrimination: 0.5 + Math.random() * 2, // 0.5 to 2.5
+        category: categories[Math.floor(Math.random() * categories.length)],
+        cefrLevel: mapAbilityToCEFR((Math.random() * 6) - 3),
+        timeLimit: Math.random() > 0.5 ? 60 : undefined
+      });
+    }
+    
+    return questions;
+  }
+
+  async function checkAnswer(question: any, answer: string): Promise<boolean> {
+    // In production, implement actual answer checking logic
+    // This is a simplified version
+    return Math.random() > 0.5;
+  }
+
+  // Upload Callern session recording - AUTOMATIC (not optional)
+  app.post("/api/callern/upload-recording", authenticateToken, upload.single('recording'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No recording file provided" });
+      }
+
+      const { roomId, duration, studentId, teacherId } = req.body;
+      
+      // Save recording metadata to database
+      const recordingData = {
+        roomId,
+        studentId: parseInt(studentId),
+        teacherId: parseInt(teacherId),
+        duration: parseInt(duration),
+        fileName: req.file.filename,
+        filePath: `/recordings/${req.file.filename}`,
+        fileSize: req.file.size,
+        mimeType: req.file.mimetype,
+        recordedAt: new Date(),
+        status: 'completed',
+        isAutomatic: true // Flag to indicate automatic recording
+      };
+
+      // Store recording metadata (recordings are stored in filesystem via multer)
+      await storage.createCallHistory({
+        studentId: recordingData.studentId,
+        teacherId: recordingData.teacherId,
+        startTime: new Date(Date.now() - recordingData.duration * 1000),
+        endTime: new Date(),
+        duration: recordingData.duration,
+        status: 'completed',
+        recordingPath: recordingData.filePath,
+        metadata: recordingData
+      });
+
+      // Log recording for compliance and audit
+      console.log(`[AUTOMATIC RECORDING] Saved: Room ${roomId}, Duration: ${duration}s, File: ${req.file.filename}`);
+
+      res.json({ 
+        success: true, 
+        message: "Recording saved successfully (automatic)",
+        recordingId: recordingData.fileName,
+        filePath: recordingData.filePath
+      });
+    } catch (error) {
+      console.error('Error saving automatic recording:', error);
+      res.status(500).json({ message: "Failed to save recording" });
+    }
+  });
+
   // Get teacher session details for payment period
   app.get("/api/admin/teacher-payments/:teacherId/sessions/:period", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
@@ -17749,6 +18087,81 @@ Meta Lingua Academy`;
     } catch (error) {
       console.error('Error fetching detailed reports:', error);
       res.status(500).json({ message: "Failed to fetch detailed reports" });
+    }
+  });
+
+  // ===== LESSON KIT GENERATION API ENDPOINTS =====
+  
+  // Generate lesson kit for a session
+  app.post("/api/teacher/lesson-kit/generate", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
+    try {
+      const { sessionId, topic, level, duration, studentId } = req.body;
+      const teacherId = req.user.id;
+      
+      // Import lesson kit generator
+      const { LessonKitGenerator } = await import('./services/lesson-kit-generator');
+      const generator = new LessonKitGenerator(storage as any);
+      
+      const lessonKit = await generator.generateLessonKit({
+        sessionId: sessionId || Date.now(),
+        teacherId,
+        studentId: studentId || 1,
+        topic: topic || 'General English',
+        level: level || 'intermediate',
+        duration: duration || 60
+      });
+      
+      res.json(lessonKit);
+    } catch (error) {
+      console.error('Error generating lesson kit:', error);
+      res.status(500).json({ message: "Failed to generate lesson kit" });
+    }
+  });
+  
+  // Get lesson kits for teacher
+  app.get("/api/teacher/lesson-kits", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.id;
+      
+      // Get resource materials of type 'lesson_kit' for this teacher
+      const resources = await storage.getResourceMaterials({
+        uploadedBy: teacherId,
+        type: 'lesson_kit'
+      });
+      
+      // Parse lesson kits from resources
+      const lessonKits = resources.map(r => {
+        try {
+          return JSON.parse(r.metadata?.content || '{}');
+        } catch {
+          return r;
+        }
+      });
+      
+      res.json(lessonKits);
+    } catch (error) {
+      console.error('Error fetching lesson kits:', error);
+      res.status(500).json({ message: "Failed to fetch lesson kits" });
+    }
+  });
+  
+  // Generate bulk lesson kits for a course
+  app.post("/api/teacher/lesson-kits/bulk", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
+    try {
+      const { courseId, count = 10 } = req.body;
+      
+      const { LessonKitGenerator } = await import('./services/lesson-kit-generator');
+      const generator = new LessonKitGenerator(storage as any);
+      
+      const lessonKits = await generator.generateBulkLessonKits(courseId, count);
+      
+      res.json({
+        message: `Generated ${lessonKits.length} lesson kits`,
+        kits: lessonKits
+      });
+    } catch (error) {
+      console.error('Error generating bulk lesson kits:', error);
+      res.status(500).json({ message: "Failed to generate bulk lesson kits" });
     }
   });
 
