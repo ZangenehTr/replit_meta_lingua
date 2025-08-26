@@ -13734,6 +13734,237 @@ Return JSON format:
     return Math.random() > 0.5;
   }
 
+  // Adaptive Content Generation Endpoints
+  app.post("/api/callern/adaptive-content/generate", authenticateToken, async (req: any, res) => {
+    try {
+      const { sessionId, studentId, contentType, sessionMetrics, currentLevel } = req.body;
+      
+      // Import the adaptive content generator
+      const { AdaptiveContentGenerator } = await import('./services/adaptive-content-generator.js');
+      const generator = new AdaptiveContentGenerator();
+      
+      // Get student profile
+      const student = await storage.getUser(studentId);
+      const studentProfile = {
+        id: studentId,
+        currentLevel: currentLevel || 'B1',
+        irtAbility: sessionMetrics?.confidenceScore ? (sessionMetrics.confidenceScore - 0.5) * 6 : 0,
+        strengths: [],
+        weaknesses: [],
+        recentErrors: [],
+        learningStyle: 'mixed' as const,
+        interests: [],
+        nativeLanguage: student?.language || 'Persian'
+      };
+      
+      // Create session context
+      const context = {
+        sessionId,
+        studentId,
+        teacherId: req.user.id,
+        currentTopic: 'general conversation',
+        sessionDuration: 0,
+        performanceMetrics: sessionMetrics || {
+          correctAnswers: 0,
+          totalQuestions: 0,
+          responseTime: [],
+          engagementLevel: 75,
+          confidenceScore: 0.5
+        },
+        conversationHistory: []
+      };
+      
+      // Generate adaptive content
+      const content = await generator.generateAdaptiveContent(
+        studentProfile,
+        context,
+        contentType as any
+      );
+      
+      res.json(content);
+    } catch (error) {
+      console.error('Error generating adaptive content:', error);
+      res.status(500).json({ message: 'Failed to generate adaptive content' });
+    }
+  });
+
+  app.post("/api/callern/adaptive-content/submit", authenticateToken, async (req: any, res) => {
+    try {
+      const { sessionId, studentId, contentId, answer, responseTime, isCorrect } = req.body;
+      
+      // Update session metrics based on response
+      const newConfidence = isCorrect 
+        ? Math.min(1, (req.body.confidence || 0.5) + 0.05)
+        : Math.max(0, (req.body.confidence || 0.5) - 0.03);
+      
+      // Store response for analytics
+      await storage.createIRTResponse({
+        studentId,
+        sessionId: Date.now(), // Convert sessionId to number
+        itemId: contentId,
+        correct: isCorrect,
+        responseTime,
+        theta: (newConfidence - 0.5) * 6 // Convert to IRT scale
+      });
+      
+      res.json({
+        isCorrect,
+        newConfidence,
+        feedback: isCorrect ? 'Great job!' : 'Keep practicing!'
+      });
+    } catch (error) {
+      console.error('Error submitting adaptive content response:', error);
+      res.status(500).json({ message: 'Failed to submit response' });
+    }
+  });
+
+  app.post("/api/callern/vocabulary/generate", authenticateToken, async (req: any, res) => {
+    try {
+      const { sessionId, studentId, targetWords } = req.body;
+      
+      const { AdaptiveContentGenerator } = await import('./services/adaptive-content-generator.js');
+      const generator = new AdaptiveContentGenerator();
+      
+      // Get student data
+      const student = await storage.getUser(studentId);
+      const studentProfile = {
+        id: studentId,
+        currentLevel: 'B1',
+        irtAbility: 0,
+        strengths: [],
+        weaknesses: [],
+        recentErrors: [],
+        learningStyle: 'mixed' as const,
+        interests: [],
+        nativeLanguage: student?.language || 'Persian'
+      };
+      
+      const context = {
+        sessionId,
+        studentId,
+        teacherId: req.user.id,
+        currentTopic: 'vocabulary practice',
+        sessionDuration: 0,
+        performanceMetrics: {
+          correctAnswers: 0,
+          totalQuestions: 0,
+          responseTime: [],
+          engagementLevel: 75,
+          confidenceScore: 0.5
+        },
+        conversationHistory: []
+      };
+      
+      const exercise = await generator.generateVocabularyExercise(
+        studentProfile,
+        context,
+        targetWords
+      );
+      
+      res.json(exercise);
+    } catch (error) {
+      console.error('Error generating vocabulary exercise:', error);
+      res.status(500).json({ message: 'Failed to generate vocabulary exercise' });
+    }
+  });
+
+  app.post("/api/callern/grammar/generate", authenticateToken, async (req: any, res) => {
+    try {
+      const { sessionId, studentId, targetGrammar } = req.body;
+      
+      const { AdaptiveContentGenerator } = await import('./services/adaptive-content-generator.js');
+      const generator = new AdaptiveContentGenerator();
+      
+      const student = await storage.getUser(studentId);
+      const studentProfile = {
+        id: studentId,
+        currentLevel: 'B1',
+        irtAbility: 0,
+        strengths: [],
+        weaknesses: [],
+        recentErrors: [],
+        learningStyle: 'mixed' as const,
+        interests: [],
+        nativeLanguage: student?.language || 'Persian'
+      };
+      
+      const context = {
+        sessionId,
+        studentId,
+        teacherId: req.user.id,
+        currentTopic: 'grammar practice',
+        sessionDuration: 0,
+        performanceMetrics: {
+          correctAnswers: 0,
+          totalQuestions: 0,
+          responseTime: [],
+          engagementLevel: 75,
+          confidenceScore: 0.5
+        },
+        conversationHistory: []
+      };
+      
+      const exercise = await generator.generateGrammarExercise(
+        studentProfile,
+        context,
+        targetGrammar
+      );
+      
+      res.json(exercise);
+    } catch (error) {
+      console.error('Error generating grammar exercise:', error);
+      res.status(500).json({ message: 'Failed to generate grammar exercise' });
+    }
+  });
+
+  app.post("/api/callern/conversation/generate", authenticateToken, async (req: any, res) => {
+    try {
+      const { sessionId, studentId } = req.body;
+      
+      const { AdaptiveContentGenerator } = await import('./services/adaptive-content-generator.js');
+      const generator = new AdaptiveContentGenerator();
+      
+      const student = await storage.getUser(studentId);
+      const studentProfile = {
+        id: studentId,
+        currentLevel: 'B1',
+        irtAbility: 0,
+        strengths: [],
+        weaknesses: [],
+        recentErrors: [],
+        learningStyle: 'mixed' as const,
+        interests: ['daily life', 'hobbies', 'travel'],
+        nativeLanguage: student?.language || 'Persian'
+      };
+      
+      const context = {
+        sessionId,
+        studentId,
+        teacherId: req.user.id,
+        currentTopic: 'conversation',
+        sessionDuration: Math.floor(Math.random() * 30),
+        performanceMetrics: {
+          correctAnswers: 0,
+          totalQuestions: 0,
+          responseTime: [],
+          engagementLevel: 75,
+          confidenceScore: 0.5
+        },
+        conversationHistory: []
+      };
+      
+      const prompt = await generator.generateConversationPrompt(
+        studentProfile,
+        context
+      );
+      
+      res.json(prompt);
+    } catch (error) {
+      console.error('Error generating conversation prompt:', error);
+      res.status(500).json({ message: 'Failed to generate conversation prompt' });
+    }
+  });
+
   // Upload Callern session recording - AUTOMATIC (not optional)
   app.post("/api/callern/upload-recording", authenticateToken, upload.single('recording'), async (req: any, res) => {
     try {
