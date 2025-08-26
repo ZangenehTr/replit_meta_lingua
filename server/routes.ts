@@ -19760,6 +19760,18 @@ Meta Lingua Academy`;
   app.use('/api/advanced', advancedFeaturesRouter);
   console.log('✅ Advanced features routes registered (CEFR, IRT, AI Supervisor, Mood Intelligence)');
 
+  // Setup Gamification routes (Daily Challenges, Leaderboards, Achievements, Age-based Games)
+  const { createGamificationRouter } = await import('./routes/gamification-routes');
+  const gamificationRouter = createGamificationRouter(storage);
+  app.use('/api/gamification', gamificationRouter);
+  console.log('✅ Gamification routes registered (Daily Challenges, Achievements, Leaderboards)');
+
+  // Setup Teacher QA routes (Performance Evaluation, Peer Review, Quality Scoring)
+  const { createTeacherQARouter } = await import('./routes/teacher-qa-routes');
+  const teacherQARouter = createTeacherQARouter(storage);
+  app.use('/api/teacher-qa', teacherQARouter);
+  console.log('✅ Teacher QA routes registered (Performance Metrics, Peer Reviews, Quality Scoring)');
+
   const httpServer = createServer(app);
   
   // Initialize Callern WebSocket server
