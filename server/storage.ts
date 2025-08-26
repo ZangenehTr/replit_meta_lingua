@@ -950,6 +950,15 @@ export interface IStorage {
   }): Promise<any>;
   getTeacherPerformanceMetrics(teacherId?: number): Promise<any[]>;
   getSupervisionAlerts(): Promise<any[]>;
+
+  // IRT Assessment Session Methods
+  createAssessmentSession(session: any): Promise<void>;
+  getAssessmentSession(sessionId: string): Promise<any>;
+  updateAssessmentSession(session: any): Promise<void>;
+  updateStudentAssessmentResults(studentId: number, results: any): Promise<void>;
+
+  // Call Recording Methods
+  createCallHistory(data: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -4094,6 +4103,39 @@ export class MemStorage implements IStorage {
     return {
       id: Math.floor(Math.random() * 10000),
       ...response,
+      createdAt: new Date()
+    };
+  }
+
+  // IRT Assessment Session Methods
+  private assessmentSessions = new Map<string, any>();
+
+  async createAssessmentSession(session: any): Promise<void> {
+    this.assessmentSessions.set(session.id, session);
+  }
+
+  async getAssessmentSession(sessionId: string): Promise<any> {
+    return this.assessmentSessions.get(sessionId);
+  }
+
+  async updateAssessmentSession(session: any): Promise<void> {
+    this.assessmentSessions.set(session.id, session);
+  }
+
+  async updateStudentAssessmentResults(studentId: number, results: any): Promise<void> {
+    // Store assessment results (in production, save to database)
+    const student = this.users.find(u => u.id === studentId);
+    if (student) {
+      (student as any).assessmentResults = results;
+    }
+  }
+
+  // Call Recording Methods
+  async createCallHistory(data: any): Promise<any> {
+    const id = Math.floor(Math.random() * 10000);
+    return {
+      id,
+      ...data,
       createdAt: new Date()
     };
   }

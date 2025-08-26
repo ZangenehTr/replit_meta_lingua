@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { TeacherIncomingCall } from '@/components/callern/teacher-incoming-call';
 import { TeacherOnlineToggle } from '@/components/callern/teacher-online-toggle';
 import { CallernHistory } from '@/components/callern/CallernHistory';
+import { LessonKitGenerator } from '@/components/teacher/LessonKitGenerator';
 
 export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -216,7 +217,7 @@ export default function TeacherDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-7 lg:w-auto lg:grid-cols-7 gap-1">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-8 lg:w-auto lg:grid-cols-8 gap-1">
             <TabsTrigger value="overview" className="text-xs md:text-sm">{t('teacher:overview', 'Overview')}</TabsTrigger>
             <TabsTrigger value="classes" className="text-xs md:text-sm">{t('teacher:classes.title', 'Classes')}</TabsTrigger>
             <TabsTrigger value="assignments" className="text-xs md:text-sm">{t('teacher:assignments.title', 'Tasks')}</TabsTrigger>
@@ -232,6 +233,9 @@ export default function TeacherDashboard() {
             </TabsTrigger>
             <TabsTrigger value="callern-history" className="text-xs md:text-sm">
               {t('callern.history', 'تاریخچه')}
+            </TabsTrigger>
+            <TabsTrigger value="lesson-kits" className="text-xs md:text-sm">
+              {t('teacher:lessonKits', 'Lesson Kits')}
             </TabsTrigger>
           </TabsList>
 
@@ -531,6 +535,11 @@ export default function TeacherDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Lesson Kit Generator Tab */}
+          <TabsContent value="lesson-kits" className="space-y-6">
+            <LessonKitGenerator />
           </TabsContent>
         </Tabs>
       </div>
