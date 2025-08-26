@@ -60,6 +60,7 @@ import AccountantDashboard from "@/pages/accountant/dashboard";
 import MentorDashboard from "@/pages/mentor/dashboard";
 import StudentDashboard from "@/pages/student/dashboard";
 import SupervisorDashboard from "@/pages/supervisor/supervisor-dashboard";
+import TeacherSupervisionDashboard from "@/pages/supervisor/teacher-supervision-dashboard";
 import ScheduleObservationReview from "@/components/supervision/ScheduleObservationReview";
 
 // Student pages
@@ -593,6 +594,11 @@ function Router() {
       <Route path="/supervisor/dashboard">
         <ProtectedRoute>
           <SupervisorDashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/supervisor/teacher-supervision">
+        <ProtectedRoute>
+          <TeacherSupervisionDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/supervisor/schedule-review">

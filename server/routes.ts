@@ -17107,6 +17107,82 @@ Meta Lingua Academy`;
     }
   });
 
+  // ===== Teacher Supervision Dashboard Routes =====
+  
+  // Get active teacher sessions for real-time monitoring
+  app.get("/api/supervision/active-sessions", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const activeSessions = await storage.getActiveTeacherSessions();
+      res.json(activeSessions);
+    } catch (error) {
+      console.error('Error fetching active sessions:', error);
+      res.status(500).json({ message: 'Failed to fetch active sessions' });
+    }
+  });
+
+  // Send reminder to teacher during session
+  app.post("/api/supervision/send-reminder", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const { teacherId, sessionId, reminderType, message } = req.body;
+      
+      // Store reminder in database
+      await storage.createTeacherReminder({
+        teacherId,
+        sessionId,
+        supervisorId: req.user.id,
+        reminderType,
+        message,
+        sentAt: new Date()
+      });
+
+      // Send real-time reminder via WebSocket
+      io.to(`teacher_${teacherId}`).emit('supervision-reminder', {
+        sessionId,
+        type: reminderType,
+        message,
+        timestamp: new Date()
+      });
+
+      res.json({ success: true, message: 'Reminder sent successfully' });
+    } catch (error) {
+      console.error('Error sending reminder:', error);
+      res.status(500).json({ message: 'Failed to send reminder' });
+    }
+  });
+
+  // Get teacher performance metrics
+  app.get("/api/supervision/teacher-metrics", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const metrics = await storage.getTeacherPerformanceMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error('Error fetching teacher metrics:', error);
+      res.status(500).json({ message: 'Failed to fetch teacher metrics' });
+    }
+  });
+
+  // Get individual teacher performance metrics
+  app.get("/api/supervision/teacher-metrics/:teacherId", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const metrics = await storage.getTeacherPerformanceMetrics(parseInt(req.params.teacherId));
+      res.json(metrics);
+    } catch (error) {
+      console.error('Error fetching teacher metrics:', error);
+      res.status(500).json({ message: 'Failed to fetch teacher metrics' });
+    }
+  });
+
+  // Get supervision alerts
+  app.get("/api/supervision/alerts", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const alerts = await storage.getSupervisionAlerts();
+      res.json(alerts);
+    } catch (error) {
+      console.error('Error fetching supervision alerts:', error);
+      res.status(500).json({ message: 'Failed to fetch alerts' });
+    }
+  });
+
   // Update teacher improvement plan
   app.put("/api/teacher/observations/:id/improvement-plan", authenticateToken, requireRole(['Teacher/Tutor']), async (req: any, res) => {
     try {
