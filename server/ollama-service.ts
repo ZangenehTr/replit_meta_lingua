@@ -52,24 +52,54 @@ export class OllamaService extends EventEmitter {
 
   constructor(baseUrl: string = process.env.OLLAMA_HOST || 'http://localhost:11434', defaultModel: string = process.env.OLLAMA_MODEL || 'mshojaei77/gemma3persian') {
     super();
-    this.baseUrl = baseUrl;
+    // Ensure baseUrl is properly formatted
+    this.baseUrl = this.normalizeUrl(baseUrl);
     this.defaultModel = defaultModel;
+    console.log('Ollama service initialized with host:', this.baseUrl, ', model:', this.defaultModel);
     this.checkAvailability();
+  }
+
+  private normalizeUrl(url: string): string {
+    try {
+      // Remove any trailing slashes and ensure proper format
+      url = url.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'http://' + url;
+      }
+      // Remove trailing slash if present
+      if (url.endsWith('/')) {
+        url = url.slice(0, -1);
+      }
+      return url;
+    } catch (error) {
+      console.error('Error normalizing URL:', error);
+      return 'http://localhost:11434';
+    }
   }
 
   private async checkAvailability(): Promise<void> {
     try {
-      const response = await axios.get(`${this.baseUrl}/api/tags`, { 
+      // Simple URL concatenation instead of URL constructor
+      const url = `${this.baseUrl}/api/tags`;
+      const response = await axios.get(url, { 
         timeout: 30000, // Increased timeout to 30 seconds for remote server
-        validateStatus: (status) => status === 200
+        validateStatus: (status) => status === 200,
+        headers: {
+          'Accept': 'application/json'
+        }
       });
       this.isAvailable = response.status === 200;
-      console.log('Ollama service is available:', this.isAvailable);
+      console.log('✅ Ollama service is available at:', this.baseUrl);
+      console.log('Available models:', response.data?.models?.map((m: any) => m.name).join(', ') || 'No models listed');
     } catch (error: any) {
       this.isAvailable = false;
-      // Don't log connection refused errors as they're expected in dev
-      if (!error.message?.includes('ECONNREFUSED') && !error.message?.includes('timeout')) {
-        console.log('Ollama service not available:', error.message);
+      // More detailed error logging
+      if (error.code === 'ECONNREFUSED') {
+        console.log('❌ Ollama service connection refused at:', this.baseUrl);
+      } else if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
+        console.log('❌ Ollama service timeout at:', this.baseUrl);
+      } else {
+        console.log('❌ Ollama service not available:', error.message || error);
       }
     }
   }
@@ -98,8 +128,12 @@ export class OllamaService extends EventEmitter {
         temperature: options?.temperature || 0.6,
       };
 
-      const response = await axios.post(`${this.baseUrl}/api/generate`, request, {
+      const url = `${this.baseUrl}/api/generate`;
+      const response = await axios.post(url, request, {
         timeout: 60000, // Increased to 60 seconds for remote server
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       return response.data.response;
