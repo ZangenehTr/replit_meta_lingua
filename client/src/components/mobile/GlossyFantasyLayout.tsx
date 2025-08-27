@@ -88,7 +88,7 @@ export function GlossyFantasyLayout({
                 className="p-2 rounded-full glass-button relative"
               >
                 <Bell className="w-5 h-5 text-white" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
               </motion.button>
             )}
             
