@@ -62,25 +62,21 @@ export class OllamaService {
   private defaultModel: string;
 
   constructor(config?: Partial<OllamaConfig>) {
-    // Use Ollama server on 45.89.239.250
-    // Override localhost with actual server address
-    let host = process.env.OLLAMA_HOST;
-    if (!host || host === '127.0.0.1' || host === 'localhost') {
-      host = '45.89.239.250';
-    }
+    // Use environment variable OLLAMA_HOST as configured
+    let host = process.env.OLLAMA_HOST || 'http://localhost:11434';
     
-    // Ensure the host has proper protocol and port
+    // Ensure the host has proper protocol
     if (!host.startsWith('http://') && !host.startsWith('https://')) {
       host = `http://${host}`;
     }
-    if (!host.includes(':11434')) {
-      host = `${host}:11434`;
+    
+    // Remove trailing slash if present
+    if (host.endsWith('/')) {
+      host = host.slice(0, -1);
     }
     
-    // Use configured model or default
-    const model = process.env.OLLAMA_MODEL === 'llama3.2b' 
-      ? 'llama3.2:3b'  // Correct model name format
-      : (process.env.OLLAMA_MODEL || 'llama3.2:3b');
+    // Use configured model from environment
+    const model = process.env.OLLAMA_MODEL || 'llama3.2:3b';
     
     this.config = {
       host: host,
