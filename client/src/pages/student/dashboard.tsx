@@ -347,48 +347,59 @@ export default function StudentDashboard() {
               <CardTitle className="text-base">{t('student:quickActions', 'دسترسی سریع')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-5 gap-2">
+                <Link href="/callern">
+                  <motion.div 
+                    className="flex flex-col items-center p-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Package className="h-6 w-6 text-indigo-500 mb-1" />
+                    <span className="text-xs text-gray-600 text-center">{t('student:packages', 'بسته‌ها')}</span>
+                  </motion.div>
+                </Link>
+
                 <Link href="/student/sessions">
                   <motion.div 
-                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    className="flex flex-col items-center p-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <Video className="h-6 w-6 text-blue-500 mb-1" />
-                    <span className="text-xs text-gray-600">{t('student:callern', 'کالرن')}</span>
+                    <span className="text-xs text-gray-600 text-center">{t('student:callern', 'کالرن')}</span>
                   </motion.div>
                 </Link>
                 
                 <Link href="/student/courses">
                   <motion.div 
-                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    className="flex flex-col items-center p-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <BookOpen className="h-6 w-6 text-green-500 mb-1" />
-                    <span className="text-xs text-gray-600">{t('student:courses', 'دوره‌ها')}</span>
+                    <span className="text-xs text-gray-600 text-center">{t('student:courses', 'دوره‌ها')}</span>
                   </motion.div>
                 </Link>
                 
                 <Link href="/student/achievements">
                   <motion.div 
-                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    className="flex flex-col items-center p-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <Trophy className="h-6 w-6 text-amber-500 mb-1" />
-                    <span className="text-xs text-gray-600">{t('student:achievements', 'دستاوردها')}</span>
+                    <span className="text-xs text-gray-600 text-center">{t('student:achievements', 'دستاوردها')}</span>
                   </motion.div>
                 </Link>
                 
                 <Link href="/student/homework">
                   <motion.div 
-                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer relative"
+                    className="flex flex-col items-center p-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer relative"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <Target className="h-6 w-6 text-purple-500 mb-1" />
-                    <span className="text-xs text-gray-600">{t('student:homework', 'تکالیف')}</span>
+                    <span className="text-xs text-gray-600 text-center">{t('student:homework', 'تکالیف')}</span>
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">3</span>
                   </motion.div>
                 </Link>
@@ -443,11 +454,61 @@ export default function StudentDashboard() {
           </Card>
         </motion.div>
 
-        {/* Upcoming Sessions */}
+        {/* Callern Packages */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
+        >
+          <Card className="shadow-xl bg-gradient-to-r from-indigo-50 to-purple-50">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Package className="h-4 w-4 text-indigo-500" />
+                  {t('student:callernPackages', 'بسته‌های کالرن')}
+                </CardTitle>
+                <Link href="/callern">
+                  <Button variant="ghost" size="sm" className="text-xs">
+                    {t('common:viewAll', 'مشاهده همه')}
+                    <ChevronRight className="h-3 w-3 mr-1" />
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white p-3 rounded-lg border border-indigo-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-gray-500">{t('student:activePackage', 'بسته فعال')}</span>
+                    <Badge variant="secondary" className="text-xs">VIP</Badge>
+                  </div>
+                  <p className="text-lg font-bold text-indigo-600">450 {t('student:minutes', 'دقیقه')}</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('student:remaining', 'باقیمانده')}</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-purple-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-gray-500">{t('student:totalUsed', 'استفاده شده')}</span>
+                    <Clock className="h-4 w-4 text-purple-500" />
+                  </div>
+                  <p className="text-lg font-bold text-purple-600">150 {t('student:minutes', 'دقیقه')}</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('student:thisMonth', 'این ماه')}</p>
+                </div>
+              </div>
+              <Link href="/callern">
+                <Button variant="outline" className="w-full mt-3" size="sm">
+                  <Package className="h-4 w-4 mr-2" />
+                  {t('student:purchaseNewPackage', 'خرید بسته جدید')}
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Upcoming Sessions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
         >
           <Card className="shadow-xl">
             <CardHeader className="pb-2">
@@ -487,7 +548,7 @@ export default function StudentDashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.8 }}
         >
           <Card className="shadow-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white">
             <CardContent className="p-4">
