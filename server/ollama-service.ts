@@ -642,18 +642,9 @@ Return JSON format:
     }
   }
 
-  async listModels(): Promise<string[]> {
-    if (!await this.isServiceAvailable()) {
-      return [];
-    }
-
-    try {
-      const response = await axios.get(`${this.baseUrl}/api/tags`);
-      return response.data.models?.map((m: any) => m.name) || [];
-    } catch (error) {
-      console.error('Failed to list models:', error);
-      return [];
-    }
+  // Add testConnection method for status checking
+  async testConnection(): Promise<boolean> {
+    return await this.isServiceAvailable();
   }
 
   async getAvailableModels(): Promise<string[]> {
@@ -688,14 +679,7 @@ Return JSON format:
     }
   }
 
-  setActiveModel(modelName: string): void {
-    this.defaultModel = modelName;
-    console.log(`Active model set to: ${modelName}`);
-  }
-
-  getActiveModel(): string {
-    return this.defaultModel;
-  }
+  // Removed duplicate non-async methods - using the async versions above
 
   async validateModel(modelName: string): Promise<boolean> {
     const availableModels = await this.getAvailableModels();
