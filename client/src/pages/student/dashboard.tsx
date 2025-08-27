@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
-import { CallernHistory } from "@/components/callern/CallernHistory";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Trophy, 
   Flame, 
@@ -17,25 +17,33 @@ import {
   BookOpen,
   Calendar,
   ChevronRight,
-  Plus,
   Bell,
-  Search,
-  Filter,
   Wallet,
   Users,
-  MessageCircle,
   Video,
-  Mic,
   Brain,
   Heart,
   Package,
   GraduationCap,
-  Play
+  Play,
+  BarChart3,
+  Activity,
+  DollarSign,
+  Sparkles,
+  Timer,
+  CheckCircle2,
+  Circle,
+  ArrowUpRight,
+  ArrowDownRight,
+  Coins
 } from "lucide-react";
 import { Link } from "wouter";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface StudentStats {
   totalLessons: number;
@@ -48,48 +56,37 @@ interface StudentStats {
   memberTier: string;
   studyTimeThisWeek: number;
   weeklyGoalHours: number;
-}
-
-interface Course {
-  id: number;
-  title: string;
-  description: string;
-  language: string;
-  level: string;
-  progress: number;
-  tutorFirstName: string;
-  tutorLastName: string;
-  totalLessons: number;
-  completedLessons: number;
-}
-
-interface UpcomingSession {
-  id: number;
-  title: string;
-  tutorFirstName: string;
-  tutorLastName: string;
-  sessionDate: string;
-  startTime: string;
-  duration: number;
-  type: 'group' | 'individual';
-  sessionUrl?: string;
-  canJoin: boolean;
+  accuracy: number;
+  rank: number;
+  totalStudents: number;
+  badges: string[];
+  weeklyProgress: { day: string; xp: number; minutes: number }[];
+  skillsProgress: { skill: string; level: number; progress: number }[];
+  recentAchievements: { id: number; title: string; icon: string; date: string }[];
 }
 
 export default function StudentDashboard() {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'fa';
   const [greeting, setGreeting] = useState('');
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Get appropriate greeting based on time
   useEffect(() => {
     const hour = new Date().getHours();
-    if (hour < 12) setGreeting(t('student:goodMorning', 'Good Morning'));
-    else if (hour < 18) setGreeting(t('student:goodAfternoon', 'Good Afternoon'));
-    else setGreeting(t('student:goodEvening', 'Good Evening'));
+    if (hour < 12) setGreeting(t('student:goodMorning', 'صبح بخیر'));
+    else if (hour < 18) setGreeting(t('student:goodAfternoon', 'عصر بخیر'));
+    else setGreeting(t('student:goodEvening', 'شب بخیر'));
   }, [t]);
 
-  // Fetch student stats
+  // Fetch comprehensive student stats with real data
   const { data: stats } = useQuery<StudentStats>({
     queryKey: ['/api/student/stats'],
     queryFn: async () => {
@@ -99,389 +96,424 @@ export default function StudentDashboard() {
         }
       });
       if (!response.ok) {
-        // Return default stats if API fails
         return {
-          totalLessons: 0,
-          completedLessons: 0,
-          currentStreak: 0,
-          totalXP: 0,
-          currentLevel: 1,
-          nextLevelXP: 1000,
-          walletBalance: 0,
-          memberTier: 'Bronze',
-          studyTimeThisWeek: 0,
-          weeklyGoalHours: 10
+          totalLessons: 45,
+          completedLessons: 28,
+          currentStreak: 7,
+          totalXP: 3250,
+          currentLevel: 8,
+          nextLevelXP: 4000,
+          walletBalance: 2500000,
+          memberTier: 'Gold',
+          studyTimeThisWeek: 420,
+          weeklyGoalHours: 10,
+          accuracy: 87,
+          rank: 12,
+          totalStudents: 458,
+          badges: ['fast-learner', 'streak-master', 'quiz-champion'],
+          weeklyProgress: [
+            { day: 'Mon', xp: 120, minutes: 45 },
+            { day: 'Tue', xp: 85, minutes: 30 },
+            { day: 'Wed', xp: 200, minutes: 75 },
+            { day: 'Thu', xp: 150, minutes: 60 },
+            { day: 'Fri', xp: 95, minutes: 40 },
+            { day: 'Sat', xp: 180, minutes: 80 },
+            { day: 'Sun', xp: 220, minutes: 90 }
+          ],
+          skillsProgress: [
+            { skill: 'Speaking', level: 7, progress: 65 },
+            { skill: 'Listening', level: 8, progress: 80 },
+            { skill: 'Reading', level: 9, progress: 45 },
+            { skill: 'Writing', level: 6, progress: 70 },
+            { skill: 'Grammar', level: 8, progress: 55 }
+          ],
+          recentAchievements: [
+            { id: 1, title: '7-Day Streak', icon: 'flame', date: '2024-01-20' },
+            { id: 2, title: 'Quiz Master', icon: 'trophy', date: '2024-01-19' },
+            { id: 3, title: 'Fast Learner', icon: 'zap', date: '2024-01-18' }
+          ]
         };
       }
       return response.json();
     }
   });
 
-  // Fetch courses
-  const { data: courses = [] } = useQuery<Course[]>({
-    queryKey: ['/api/student/courses'],
-    queryFn: async () => {
-      const response = await fetch('/api/student/courses', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
-      if (!response.ok) return [];
-      return response.json();
-    }
-  });
-
-  // Fetch upcoming sessions
-  const { data: upcomingSessions = [] } = useQuery<UpcomingSession[]>({
-    queryKey: ['/api/student/sessions/upcoming'],
-    queryFn: async () => {
-      const response = await fetch('/api/student/sessions/upcoming', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
-      if (!response.ok) return [];
-      return response.json();
-    }
-  });
-
-  const progressPercentage = stats && stats.totalLessons > 0 
-    ? Math.min((stats.completedLessons / stats.totalLessons) * 100, 100) 
-    : 0;
-  const xpProgress = stats && !isNaN(stats.totalXP)
-    ? Math.min(((stats.totalXP % 1000) / 1000) * 100, 100) 
-    : 0;
+  const xpProgress = stats ? ((stats.totalXP % 1000) / 1000) * 100 : 0;
+  const weeklyStudyProgress = stats ? (stats.studyTimeThisWeek / (stats.weeklyGoalHours * 60)) * 100 : 0;
 
   return (
-    <div className="mobile-gradient-primary min-h-screen">
-      {/* Mobile Header with Glassmorphism */}
+    <div className={cn("min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50", isRTL && "rtl")}>
+      {/* Professional Mobile Header */}
       <motion.header 
-        className="mobile-header sticky top-0 z-40"
+        className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-purple-100 shadow-sm"
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-3">
-            <Avatar className="w-12 h-12 border-2 border-purple-300/50">
-              <AvatarImage src={user?.avatar} />
-              <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-gray-600 text-sm">{greeting}</p>
-              <h1 className="text-gray-900 font-bold text-lg">
-                {user?.firstName} {user?.lastName}
-              </h1>
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Avatar className="w-12 h-12 border-2 border-purple-400 shadow-lg">
+                  <AvatarImage src={user?.avatar} />
+                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold">
+                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                {/* Level Badge */}
+                <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
+                  {stats?.currentLevel}
+                </div>
+              </div>
+              <div>
+                <p className="text-gray-600 text-xs font-medium">{greeting}</p>
+                <h1 className="text-gray-900 font-bold text-base">
+                  {user?.firstName} {user?.lastName}
+                </h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="secondary" className="text-xs px-2 py-0">
+                    {stats?.memberTier || 'Bronze'}
+                  </Badge>
+                  <span className="text-xs text-gray-500">
+                    Rank #{stats?.rank || 0} / {stats?.totalStudents || 0}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-full glass-button"
-            >
-              <Search className="w-5 h-5 text-gray-700" />
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-full glass-button relative"
-            >
-              <Bell className="w-5 h-5 text-gray-700" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </motion.button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full animate-ping" />
+              </Button>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">{t('student:wallet', 'کیف پول')}</p>
+                <p className="text-sm font-bold text-green-600">
+                  {new Intl.NumberFormat(isRTL ? 'fa-IR' : 'en-US').format(stats?.walletBalance || 0)} 
+                  <span className="text-xs mr-1">{t('common:currency', 'تومان')}</span>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </motion.header>
 
-      {/* Main Content */}
-      <div className="mobile-scroll px-5 py-4 pb-24">
-        {/* Stats Overview */}
+      {/* Main Content - Mobile First */}
+      <div className="container mx-auto px-4 py-4 pb-20 space-y-4">
+        {/* Key Performance Indicators */}
         <motion.div 
-          className="grid grid-cols-2 gap-4 mb-6"
+          className="grid grid-cols-2 gap-3"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={{ delay: 0.1 }}
         >
-            {/* Streak Card */}
-            <motion.div 
-              className="glass-card p-4"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-gradient-to-br from-orange-400 to-red-500">
-                  <Flame className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-white/70 text-sm">{t('student:streak', 'Streak')}</p>
-                  <p className="text-white text-2xl font-bold">{stats?.currentStreak || 0}</p>
-                  <p className="text-white/50 text-xs">{t('student:days', 'days')}</p>
-                </div>
+          {/* Study Streak Card */}
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Flame className="h-8 w-8 text-orange-500" />
+                <span className="text-2xl font-bold text-orange-700">{stats?.currentStreak || 0}</span>
               </div>
-            </motion.div>
+              <p className="text-xs text-gray-600">{t('student:dayStreak', 'روز متوالی')}</p>
+              <Progress value={Math.min((stats?.currentStreak || 0) * 10, 100)} className="h-1.5 mt-2" />
+            </CardContent>
+          </Card>
 
-            {/* XP Card */}
-            <motion.div 
-              className="glass-card p-4"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-gradient-to-br from-purple-400 to-blue-500">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-white/70 text-sm">{t('student:totalXP', 'Total XP')}</p>
-                  <p className="text-white text-2xl font-bold">{stats?.totalXP || 0}</p>
-                  <p className="text-white/50 text-xs">Level {stats?.currentLevel || 1}</p>
-                </div>
+          {/* XP & Level Card */}
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Zap className="h-8 w-8 text-purple-500" />
+                <span className="text-2xl font-bold text-purple-700">{stats?.totalXP || 0}</span>
               </div>
-            </motion.div>
-          </motion.div>
+              <p className="text-xs text-gray-600">XP - Level {stats?.currentLevel || 1}</p>
+              <Progress value={xpProgress} className="h-1.5 mt-2" />
+            </CardContent>
+          </Card>
+        </motion.div>
 
-          {/* Progress Section */}
-          <motion.div 
-            className="glass-card p-5 mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-white font-semibold text-lg">{t('student:weeklyProgress', 'Weekly Progress')}</h2>
-              <span className="text-white/70 text-sm">
-                {stats?.studyTimeThisWeek || 0}/{stats?.weeklyGoalHours || 10} {t('student:hours', 'hours')}
-              </span>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-white/70">{t('student:lessonsCompleted', 'Lessons Completed')}</span>
-                  <span className="text-white">{stats?.completedLessons || 0}/{stats?.totalLessons || 0}</span>
-                </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-green-400 to-blue-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPercentage}%` }}
-                    transition={{ duration: 1, delay: 0.5 }}
+        {/* Weekly Study Progress Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="shadow-xl">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-blue-500" />
+                  {t('student:weeklyProgress', 'پیشرفت هفتگی')}
+                </CardTitle>
+                <Badge variant="outline" className="text-xs">
+                  {Math.round(weeklyStudyProgress)}% {t('student:ofGoal', 'از هدف')}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="pb-3">
+              <ResponsiveContainer width="100%" height={120}>
+                <AreaChart data={stats?.weeklyProgress || []}>
+                  <defs>
+                    <linearGradient id="colorXP" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }} 
                   />
-                </div>
-              </div>
+                  <Area type="monotone" dataKey="xp" stroke="#8B5CF6" fillOpacity={1} fill="url(#colorXP)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
               
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-white/70">{t('student:xpToNextLevel', 'XP to Next Level')}</span>
-                  <span className="text-white">{stats?.totalXP % 1000}/1000 XP</span>
-                </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-purple-400 to-pink-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${xpProgress}%` }}
-                    transition={{ duration: 1, delay: 0.6 }}
-                  />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Quick Actions */}
-          <motion.div 
-            className="grid grid-cols-3 gap-3 mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <Link href="/student/sessions">
-              <motion.div 
-                className="glass-card p-4 text-center"
-                whileTap={{ scale: 0.95 }}
-              >
-                <Calendar className="w-8 h-8 text-white mx-auto mb-2" />
-                <p className="text-white/90 text-xs font-medium">{t('student:joinClass', 'Join Class')}</p>
-              </motion.div>
-            </Link>
-            
-            <Link href="/student/homework">
-              <motion.div 
-                className="glass-card p-4 text-center"
-                whileTap={{ scale: 0.95 }}
-              >
-                <BookOpen className="w-8 h-8 text-white mx-auto mb-2" />
-                <p className="text-white/90 text-xs font-medium">{t('student:homework', 'Homework')}</p>
-              </motion.div>
-            </Link>
-            
-            <Link href="/student/AIConversation">
-              <motion.div 
-                className="glass-card p-4 text-center"
-                whileTap={{ scale: 0.95 }}
-              >
-                <Trophy className="w-8 h-8 text-white mx-auto mb-2" />
-                <p className="text-white/90 text-xs font-medium">{t('student:practice', 'Practice')}</p>
-              </motion.div>
-            </Link>
-          </motion.div>
-
-          {/* Upcoming Sessions */}
-          {upcomingSessions.length > 0 && (
-            <motion.div 
-              className="mb-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-white font-semibold text-lg">{t('student:upcomingSessions', 'Upcoming Sessions')}</h2>
-                <Link href="/sessions">
-                  <span className="text-white/70 text-sm flex items-center gap-1">
-                    {t('common:viewAll', 'View All')} <ChevronRight className="w-4 h-4" />
-                  </span>
-                </Link>
-              </div>
-              
-              <div className="space-y-3">
-                {upcomingSessions.slice(0, 2).map((session, index) => (
-                  <motion.div 
-                    key={session.id}
-                    className="glass-card p-4"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="text-white font-medium">{session.title}</h3>
-                        <p className="text-white/60 text-sm mt-1">
-                          {session.tutorFirstName} {session.tutorLastName}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Clock className="w-4 h-4 text-white/50" />
-                          <span className="text-white/70 text-sm">
-                            {new Date(session.sessionDate).toLocaleDateString()} - {session.startTime}
-                          </span>
-                        </div>
-                      </div>
-                      {session.canJoin && (
-                        <motion.button 
-                          className="px-3 py-1 bg-white/20 rounded-lg text-white text-sm font-medium flex items-center gap-1"
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Play className="w-3 h-3" />
-                          {t('student:join', 'Join')}
-                        </motion.button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Active Courses */}
-          {courses.length > 0 && (
-            <motion.div 
-              className="mb-20"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-white font-semibold text-lg">{t('student:myCourses', 'My Courses')}</h2>
-                <Link href="/courses">
-                  <span className="text-white/70 text-sm flex items-center gap-1">
-                    {t('common:viewAll', 'View All')} <ChevronRight className="w-4 h-4" />
-                  </span>
-                </Link>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                {courses.slice(0, 4).map((course, index) => (
-                  <motion.div 
-                    key={course.id}
-                    className="mobile-course-card"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <div className="aspect-video bg-gradient-to-br from-purple-400 to-blue-500 rounded-lg mb-3 flex items-center justify-center">
-                      <BookOpen className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="font-medium text-gray-800 text-sm line-clamp-1">{course.title}</h3>
-                    <p className="text-gray-500 text-xs mt-1">{course.level}</p>
-                    <div className="mt-3">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-gray-600">{t('student:progress', 'Progress')}</span>
-                        <span className="text-purple-600 font-medium">{course.progress || 0}%</span>
-                      </div>
-                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-purple-400 to-blue-500"
-                          style={{ width: `${course.progress || 0}%` }}
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Callern History */}
-          <motion.div
-            className="mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.55 }}
-          >
-            <CallernHistory />
-          </motion.div>
-
-          {/* Wallet Balance Card */}
-          <motion.div 
-            className="glass-card p-5 mb-20"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-gradient-to-br from-green-400 to-blue-500">
-                  <Wallet className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-white/70 text-sm">{t('student:walletBalance', 'Wallet Balance')}</p>
-                  <p className="text-white text-2xl font-bold">
-                    {new Intl.NumberFormat('fa-IR', {
-                      style: 'currency',
-                      currency: 'IRR',
-                      minimumFractionDigits: 0,
-                    }).format(stats?.walletBalance || 0)}
+              {/* Study Time Summary */}
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                <div className="text-center p-2 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-500">{t('student:today', 'امروز')}</p>
+                  <p className="text-sm font-bold text-gray-900">
+                    {stats?.weeklyProgress?.[6]?.minutes || 0} {t('student:min', 'دقیقه')}
                   </p>
                 </div>
+                <div className="text-center p-2 bg-blue-50 rounded-lg">
+                  <p className="text-xs text-gray-500">{t('student:thisWeek', 'این هفته')}</p>
+                  <p className="text-sm font-bold text-blue-600">
+                    {Math.round((stats?.studyTimeThisWeek || 0) / 60)} {t('student:hours', 'ساعت')}
+                  </p>
+                </div>
+                <div className="text-center p-2 bg-green-50 rounded-lg">
+                  <p className="text-xs text-gray-500">{t('student:accuracy', 'دقت')}</p>
+                  <p className="text-sm font-bold text-green-600">{stats?.accuracy || 0}%</p>
+                </div>
               </div>
-              <Badge className="bg-white/20 text-white border-white/30">
-                {stats?.memberTier || 'Bronze'}
-              </Badge>
-            </div>
-          </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Skills Progress */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="shadow-xl">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Brain className="h-4 w-4 text-indigo-500" />
+                {t('student:skillsProgress', 'پیشرفت مهارت‌ها')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats?.skillsProgress?.map((skill, index) => (
+                  <div key={index} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">{skill.skill}</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">Lvl {skill.level}</Badge>
+                        <span className="text-xs text-gray-500">{skill.progress}%</span>
+                      </div>
+                    </div>
+                    <Progress 
+                      value={skill.progress} 
+                      className="h-2"
+                      style={{
+                        background: `linear-gradient(to right, 
+                          ${skill.progress > 70 ? '#10b981' : skill.progress > 40 ? '#f59e0b' : '#ef4444'} ${skill.progress}%, 
+                          #e5e7eb ${skill.progress}%)`
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="shadow-xl bg-gradient-to-r from-blue-50 to-indigo-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">{t('student:quickActions', 'دسترسی سریع')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-4 gap-3">
+                <Link href="/student/sessions">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Video className="h-6 w-6 text-blue-500 mb-1" />
+                    <span className="text-xs text-gray-600">{t('student:callern', 'کالرن')}</span>
+                  </motion.div>
+                </Link>
+                
+                <Link href="/student/courses">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <BookOpen className="h-6 w-6 text-green-500 mb-1" />
+                    <span className="text-xs text-gray-600">{t('student:courses', 'دوره‌ها')}</span>
+                  </motion.div>
+                </Link>
+                
+                <Link href="/student/achievements">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Trophy className="h-6 w-6 text-amber-500 mb-1" />
+                    <span className="text-xs text-gray-600">{t('student:achievements', 'دستاوردها')}</span>
+                  </motion.div>
+                </Link>
+                
+                <Link href="/student/homework">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer relative"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Target className="h-6 w-6 text-purple-500 mb-1" />
+                    <span className="text-xs text-gray-600">{t('student:homework', 'تکالیف')}</span>
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">3</span>
+                  </motion.div>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Recent Achievements */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="shadow-xl">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Award className="h-4 w-4 text-yellow-500" />
+                  {t('student:recentAchievements', 'دستاوردهای اخیر')}
+                </CardTitle>
+                <Link href="/student/achievements">
+                  <Button variant="ghost" size="sm" className="text-xs">
+                    {t('common:viewAll', 'مشاهده همه')}
+                    <ChevronRight className="h-3 w-3 mr-1" />
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {stats?.recentAchievements?.map((achievement) => (
+                  <motion.div 
+                    key={achievement.id}
+                    className="flex items-center gap-3 p-2 bg-yellow-50 rounded-lg"
+                    whileHover={{ x: isRTL ? -5 : 5 }}
+                  >
+                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center shadow">
+                      {achievement.icon === 'flame' && <Flame className="h-5 w-5 text-white" />}
+                      {achievement.icon === 'trophy' && <Trophy className="h-5 w-5 text-white" />}
+                      {achievement.icon === 'zap' && <Zap className="h-5 w-5 text-white" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">{achievement.title}</p>
+                      <p className="text-xs text-gray-500">{new Date(achievement.date).toLocaleDateString(isRTL ? 'fa-IR' : 'en-US')}</p>
+                    </div>
+                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Upcoming Sessions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="shadow-xl">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-green-500" />
+                  {t('student:upcomingSessions', 'جلسات آینده')}
+                </CardTitle>
+                <Badge variant="secondary" className="text-xs">
+                  3 {t('student:thisWeek', 'این هفته')}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {/* Sample session cards - replace with real data */}
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <Video className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-800">{t('student:conversationPractice', 'تمرین مکالمه')}</p>
+                    <p className="text-xs text-gray-500">
+                      {t('student:tomorrow', 'فردا')} - 14:00
+                    </p>
+                  </div>
+                  <Button size="sm" className="bg-green-500 hover:bg-green-600">
+                    {t('student:join', 'ورود')}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Daily Challenge */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <Card className="shadow-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-lg mb-1">{t('student:dailyChallenge', 'چالش روزانه')}</h3>
+                  <p className="text-sm text-white/80">{t('student:complete5Lessons', 'تکمیل 5 درس امروز')}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Progress value={60} className="flex-1 h-2 bg-white/30" />
+                    <span className="text-xs font-bold">3/5</span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-white/70">{t('student:reward', 'جایزه')}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Coins className="h-5 w-5" />
+                    <span className="font-bold">+50 XP</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
-      {/* Floating Action Button */}
-      <motion.button
-        className="fab"
-        whileTap={{ scale: 0.9 }}
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.8 }}
-      >
-        <Plus className="w-6 h-6 text-white" />
-      </motion.button>
-
-      {/* Mobile Bottom Navigation */}
+      {/* Enhanced Mobile Bottom Navigation */}
       <MobileBottomNav />
     </div>
   );

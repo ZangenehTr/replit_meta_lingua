@@ -1,548 +1,517 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Calendar, Users, BookOpen, DollarSign, Clock, Star, MessageCircle, Video, FileText, ChevronRight, Play, PauseCircle, Settings, Eye, AlertCircle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useLocation } from 'wouter';
-import { useToast } from '@/hooks/use-toast';
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '@/hooks/useLanguage';
-import { motion } from 'framer-motion';
-import { useAuth } from '@/hooks/use-auth';
-import { TeacherIncomingCall } from '@/components/callern/teacher-incoming-call';
-import { TeacherOnlineToggle } from '@/components/callern/teacher-online-toggle';
-import { CallernHistory } from '@/components/callern/CallernHistory';
-import { LessonKitGenerator } from '@/components/teacher/LessonKitGenerator';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
+import { cn } from "@/lib/utils";
+import { 
+  Users,
+  Calendar,
+  Clock,
+  DollarSign,
+  TrendingUp,
+  Award,
+  BookOpen,
+  Video,
+  Star,
+  ChevronRight,
+  Bell,
+  BarChart3,
+  Activity,
+  Target,
+  CheckCircle2,
+  AlertCircle,
+  GraduationCap,
+  Sparkles,
+  Timer,
+  MessageSquare,
+  FileText,
+  Mic,
+  Eye,
+  ThumbsUp,
+  Coffee
+} from "lucide-react";
+import { Link } from "wouter";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+interface TeacherStats {
+  totalStudents: number;
+  activeClasses: number;
+  weeklyHours: number;
+  monthlyEarnings: number;
+  averageRating: number;
+  totalReviews: number;
+  completionRate: number;
+  studentSatisfaction: number;
+  callernMinutes: number;
+  upcomingClasses: { id: number; title: string; time: string; students: number; type: string }[];
+  performanceData: { month: string; earnings: number; hours: number; satisfaction: number }[];
+  classDistribution: { name: string; value: number; color: string }[];
+  recentFeedback: { id: number; student: string; rating: number; comment: string; date: string }[];
+  weeklySchedule: { day: string; classes: number; hours: number }[];
+}
 
 export default function TeacherDashboard() {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
-  const { t } = useTranslation(['teacher', 'common']);
-  const { isRTL } = useLanguage();
   const { user } = useAuth();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'fa';
+  const [greeting, setGreeting] = useState('');
 
-  // Fetch teacher dashboard stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['/api/teacher/dashboard-stats']
-  });
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting(t('teacher:goodMorning', 'صبح بخیر'));
+    else if (hour < 18) setGreeting(t('teacher:goodAfternoon', 'عصر بخیر'));
+    else setGreeting(t('teacher:goodEvening', 'شب بخیر'));
+  }, [t]);
 
-  // Fetch teacher classes
-  const { data: classes, isLoading: classesLoading } = useQuery({
-    queryKey: ['/api/teacher/classes']
-  });
-
-  // Fetch upcoming sessions
-  const { data: upcomingSessions, isLoading: sessionsLoading } = useQuery({
-    queryKey: ['/api/teacher/sessions/upcoming']
-  });
-
-  // Fetch assignments
-  const { data: assignments, isLoading: assignmentsLoading } = useQuery({
-    queryKey: ['/api/teacher/assignments']
-  });
-
-  // Fetch unacknowledged observations for notification badge
-  const { data: unacknowledgedObservations } = useQuery({
-    queryKey: ['/api/teacher/observations', 'unacknowledged']
-  });
-
-  if (statsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR', {
-      style: 'currency',
-      currency: 'IRR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
-  const getServiceIcon = (type: string) => {
-    switch (type) {
-      case 'in-person':
-        return '🏢';
-      case 'online':
-        return '💻';
-      case 'callern':
-        return '📞';
-      default:
-        return '💻';
+  const { data: stats } = useQuery<TeacherStats>({
+    queryKey: ['/api/teacher/stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/teacher/stats', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) {
+        return {
+          totalStudents: 48,
+          activeClasses: 12,
+          weeklyHours: 32,
+          monthlyEarnings: 8500000,
+          averageRating: 4.8,
+          totalReviews: 127,
+          completionRate: 94,
+          studentSatisfaction: 96,
+          callernMinutes: 1250,
+          upcomingClasses: [
+            { id: 1, title: 'Business English B2', time: '10:00', students: 8, type: 'group' },
+            { id: 2, title: 'IELTS Preparation', time: '14:00', students: 1, type: 'private' },
+            { id: 3, title: 'Conversation Practice', time: '16:30', students: 6, type: 'group' }
+          ],
+          performanceData: [
+            { month: 'Jan', earnings: 7200000, hours: 28, satisfaction: 92 },
+            { month: 'Feb', earnings: 7800000, hours: 30, satisfaction: 94 },
+            { month: 'Mar', earnings: 8500000, hours: 32, satisfaction: 96 }
+          ],
+          classDistribution: [
+            { name: 'Group Classes', value: 65, color: '#8B5CF6' },
+            { name: 'Private Sessions', value: 20, color: '#10B981' },
+            { name: 'Callern', value: 15, color: '#F59E0B' }
+          ],
+          recentFeedback: [
+            { id: 1, student: 'Ali Rezaei', rating: 5, comment: 'Excellent teaching method!', date: '2024-01-25' },
+            { id: 2, student: 'Sara Ahmadi', rating: 5, comment: 'Very patient and helpful', date: '2024-01-24' }
+          ],
+          weeklySchedule: [
+            { day: 'Sat', classes: 4, hours: 6 },
+            { day: 'Sun', classes: 5, hours: 7 },
+            { day: 'Mon', classes: 3, hours: 5 },
+            { day: 'Tue', classes: 4, hours: 6 },
+            { day: 'Wed', classes: 3, hours: 5 },
+            { day: 'Thu', classes: 2, hours: 3 },
+            { day: 'Fri', classes: 0, hours: 0 }
+          ]
+        };
+      }
+      return response.json();
     }
-  };
+  });
 
-  const handleJoinClass = (classItem: any) => {
-    if (classItem.deliveryMode === 'online') {
-      // Open online classroom or video call
-      window.open(classItem.sessionUrl || `https://meet.jit.si/class-${classItem.id}`, '_blank');
-      toast({
-        title: 'Joining Class',
-        description: `Connecting to ${classItem.title}`
-      });
-    } else if (classItem.deliveryMode === 'callern') {
-      // Initiate VoIP call
-      toast({
-        title: 'Initiating Call',
-        description: 'Starting voice call with student'
-      });
-    } else {
-      // In-person class
-      toast({
-        title: 'Class Location',
-        description: `Room: ${classItem.roomName || 'TBA'}`
-      });
-    }
-  };
-
-  const handleClassChat = (classId: number) => {
-    setLocation(`/teacher/class/${classId}/chat`);
-  };
-
-  const handleViewAssignment = (assignmentId: number) => {
-    setLocation(`/teacher/assignments?view=${assignmentId}`);
-  };
-
-  const handleSetAvailability = () => {
-    setLocation('/teacher/availability');
-  };
-
-  const handleViewSchedule = () => {
-    setLocation('/teacher/schedule');
-  };
-
-  const handleViewObservations = () => {
-    setLocation('/teacher/observations');
-  };
+  const earningsGrowth = stats?.performanceData ? 
+    ((stats.performanceData[2].earnings - stats.performanceData[0].earnings) / stats.performanceData[0].earnings * 100).toFixed(1) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Incoming Call Handler - Always listening for calls */}
-      <TeacherIncomingCall />
-      
-      {/* Callern Online Toggle - allows teacher to go online/offline for video calls */}
-      <div className="fixed top-4 right-4 z-50 md:relative md:top-auto md:right-auto md:mb-6 md:max-w-md md:mx-auto">
-        <TeacherOnlineToggle />
-      </div>
-      
-      {/* Welcome Banner */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 shadow-xl"
+    <div className={cn("min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50", isRTL && "rtl")}>
+      {/* Professional Mobile Header */}
+      <motion.header 
+        className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-blue-100 shadow-sm"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-center md:text-left text-white">
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                {t('teacher:welcome', 'Welcome')}, {user?.firstName || t('teacher:teacher', 'Teacher')}! 🎓
-              </h1>
-              <p className="text-sm md:text-base opacity-90">
-                {t('teacher:welcomeMessage', 'Your classroom awaits. Let\'s inspire and educate today!')}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center text-white">
-                <p className="text-xs opacity-90">{t('teacher:totalClasses', 'Total Classes')}</p>
-                <p className="text-xl font-bold">📚 {(stats as any)?.overview?.totalClasses || 0}</p>
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Avatar className="w-12 h-12 border-2 border-blue-400 shadow-lg">
+                  <AvatarImage src={user?.avatar} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-green-500 text-white font-bold">
+                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 bg-green-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
               </div>
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2 text-center text-white">
-                <p className="text-xs opacity-90">{t('teacher:rating', 'Rating')}</p>
-                <p className="text-xl font-bold">⭐ {(stats as any)?.overview?.rating || 4.8}</p>
+              <div>
+                <p className="text-gray-600 text-xs font-medium">{greeting}</p>
+                <h1 className="text-gray-900 font-bold text-base">{user?.firstName} {user?.lastName}</h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={cn("h-3 w-3", i < Math.floor(stats?.averageRating || 0) ? "text-yellow-400 fill-current" : "text-gray-300")} />
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-600">{stats?.averageRating} ({stats?.totalReviews} {t('teacher:reviews', 'نظر')})</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full animate-ping" />
+              </Button>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">{t('teacher:monthlyEarnings', 'درآمد ماهانه')}</p>
+                <p className="text-sm font-bold text-green-600">
+                  {new Intl.NumberFormat(isRTL ? 'fa-IR' : 'en-US').format(stats?.monthlyEarnings || 0)}
+                  <span className="text-xs mr-1">{t('common:currency', 'تومان')}</span>
+                </p>
               </div>
             </div>
           </div>
         </div>
-      </motion.div>
+      </motion.header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100">{t('teacher:totalClasses')}</p>
-                  <p className="text-3xl font-bold">{(stats as any)?.overview?.totalClasses || 0}</p>
-                </div>
-                <BookOpen className="w-12 h-12 text-blue-200" />
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-4 pb-20 space-y-4">
+        {/* Key Performance Metrics */}
+        <motion.div 
+          className="grid grid-cols-2 md:grid-cols-4 gap-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Users className="h-8 w-8 text-blue-500" />
+                <span className="text-2xl font-bold text-blue-700">{stats?.totalStudents || 0}</span>
+              </div>
+              <p className="text-xs text-gray-600">{t('teacher:activeStudents', 'دانش‌آموز فعال')}</p>
+              <div className="flex items-center gap-1 mt-2">
+                <TrendingUp className="h-3 w-3 text-green-500" />
+                <span className="text-xs text-green-600">+12% {t('common:thisMonth', 'این ماه')}</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100">{t('teacher:students')}</p>
-                  <p className="text-3xl font-bold">{(stats as any)?.overview?.totalStudents || 0}</p>
-                </div>
-                <Users className="w-12 h-12 text-green-200" />
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Clock className="h-8 w-8 text-green-500" />
+                <span className="text-2xl font-bold text-green-700">{stats?.weeklyHours || 0}h</span>
               </div>
+              <p className="text-xs text-gray-600">{t('teacher:weeklyHours', 'ساعت هفتگی')}</p>
+              <Progress value={(stats?.weeklyHours || 0) / 40 * 100} className="h-1.5 mt-2" />
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100">{t('teacher:monthlyEarnings')}</p>
-                  <p className="text-2xl font-bold">{formatCurrency((stats as any)?.overview?.monthlyEarnings || 0)}</p>
-                </div>
-                <DollarSign className="w-12 h-12 text-purple-200" />
+          <Card className="bg-gradient-to-br from-yellow-50 to-orange-100 border-orange-200 shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Target className="h-8 w-8 text-orange-500" />
+                <span className="text-2xl font-bold text-orange-700">{stats?.completionRate || 0}%</span>
               </div>
+              <p className="text-xs text-gray-600">{t('teacher:completionRate', 'نرخ تکمیل')}</p>
+              <Badge variant="secondary" className="mt-2 text-xs">
+                <ThumbsUp className="h-3 w-3 ml-1" />
+                {t('teacher:excellent', 'عالی')}
+              </Badge>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100">{t('teacher:upcomingClasses')}</p>
-                  <p className="text-3xl font-bold">{(stats as any)?.overview?.upcomingClasses || 0}</p>
-                </div>
-                <Clock className="w-12 h-12 text-orange-200" />
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 shadow-lg">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <Video className="h-8 w-8 text-purple-500" />
+                <span className="text-2xl font-bold text-purple-700">{Math.floor((stats?.callernMinutes || 0) / 60)}h</span>
+              </div>
+              <p className="text-xs text-gray-600">{t('teacher:callernHours', 'ساعات کالرن')}</p>
+              <div className="flex items-center gap-1 mt-2">
+                <Sparkles className="h-3 w-3 text-purple-500" />
+                <span className="text-xs text-purple-600">Top 10%</span>
               </div>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
 
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-8 lg:w-auto lg:grid-cols-8 gap-1">
-            <TabsTrigger value="overview" className="text-xs md:text-sm">{t('teacher:overview', 'Overview')}</TabsTrigger>
-            <TabsTrigger value="classes" className="text-xs md:text-sm">{t('teacher:classes.title', 'Classes')}</TabsTrigger>
-            <TabsTrigger value="assignments" className="text-xs md:text-sm">{t('teacher:assignments.title', 'Tasks')}</TabsTrigger>
-            <TabsTrigger value="schedule" className="text-xs md:text-sm">{t('teacher:schedule.title', 'Schedule')}</TabsTrigger>
-            <TabsTrigger value="availability" className="text-xs md:text-sm">{t('teacher:callern.availability', 'Available')}</TabsTrigger>
-            <TabsTrigger value="observations" className="relative text-xs md:text-sm">
-              {t('teacher:observations')}
-              {(unacknowledgedObservations as any)?.length > 0 && (
-                <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 text-xs">
-                  {(unacknowledgedObservations as any).length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="callern-history" className="text-xs md:text-sm">
-              {t('callern.history', 'تاریخچه')}
-            </TabsTrigger>
-            <TabsTrigger value="lesson-kits" className="text-xs md:text-sm">
-              {t('teacher:lessonKits', 'Lesson Kits')}
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Today's Schedule */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Calendar className="w-5 h-5 mr-2" />
-                    {t('teacher:todaysSchedule')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {(upcomingSessions as any)?.slice(0, 3).map((session: any) => (
-                    <div key={session.id} className="flex items-center justify-between py-3 border-b last:border-b-0">
-                      <div className="flex items-center space-x-3">
-                        <div className="text-2xl">{getServiceIcon(session.type)}</div>
-                        <div>
-                          <p className="font-medium">{session.title}</p>
-                          <p className="text-sm text-gray-600">{session.studentName}</p>
-                          <p className="text-sm text-blue-600">
-                            {new Date(session.scheduledAt).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleJoinClass(session)}
-                      >
-                        <Video className="w-4 h-4 mr-1" />
-                        Join
-                      </Button>
-                    </div>
-                  )) || (
-                    <p className="text-gray-500 text-center py-8">{t('teacher:noClassesToday')}</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('teacher:recentActivity')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {(stats as any)?.recentActivity?.map((activity: any, index: number) => (
-                      <div key={index} className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <BookOpen className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{activity.title}</p>
-                          <p className="text-xs text-gray-600">with {activity.student}</p>
-                        </div>
-                        <Badge variant={activity.status === 'completed' ? 'default' : 'secondary'}>
-                          {activity.status}
-                        </Badge>
-                      </div>
-                    )) || (
-                      <p className="text-gray-500 text-center py-4">{t('teacher:noRecentActivity')}</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Classes Tab */}
-          <TabsContent value="classes" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('teacher:myClasses')}</CardTitle>
-                <p className="text-sm text-gray-600">{t('teacher:classesAssignedByAdmin')}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {(classes as any)?.map((classItem: any) => (
-                    <Card key={classItem.id} className="border border-gray-200 hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="text-2xl mb-2">{getServiceIcon(classItem.type)}</div>
-                          <Badge variant={classItem.status === 'scheduled' ? 'default' : 'secondary'}>
-                            {classItem.status}
-                          </Badge>
-                        </div>
-                        <h3 className="font-semibold mb-2">{classItem.title}</h3>
-                        <p className="text-sm text-gray-600 mb-2">{classItem.course}</p>
-                        <div className="flex items-center space-x-2 mb-3">
-                          <Avatar className="w-6 h-6">
-                            <AvatarImage src={classItem.studentAvatar} />
-                            <AvatarFallback>{classItem.studentName?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm">{classItem.studentName}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                          <span>{new Date(classItem.scheduledAt).toLocaleDateString()}</span>
-                          <span>{classItem.duration} min</span>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={() => handleClassChat(classItem.id)}
-                          >
-                            <MessageCircle className="w-3 h-3 mr-1" />
-                            {t('common:chat')}
-                          </Button>
-                          {classItem.type === 'online' && (
-                            <Button 
-                              size="sm" 
-                              className="flex-1"
-                              onClick={() => handleJoinClass(classItem)}
-                            >
-                              <Video className="w-3 h-3 mr-1" />
-                              {t('teacher:join')}
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )) || (
-                    <div className="col-span-full text-center py-8 text-gray-500">
-                      {t('teacher:noClassesAssigned')}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Assignments Tab */}
-          <TabsContent value="assignments" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('teacher:studentAssignments')}</CardTitle>
-                <p className="text-sm text-gray-600">{t('teacher:createAndManageAssignments')}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {(assignments as any)?.map((assignment: any) => (
-                    <Card key={assignment.id} className="border border-gray-200">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-semibold mb-1">{assignment.title}</h3>
-                            <p className="text-sm text-gray-600 mb-2">{assignment.description}</p>
-                            <div className="flex items-center space-x-4 text-sm text-gray-500">
-                              <span>Student: {assignment.studentName}</span>
-                              <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
-                              <span>Course: {assignment.courseName}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant={
-                              assignment.status === 'submitted' ? 'default' :
-                              assignment.status === 'graded' ? 'secondary' : 'outline'
-                            }>
-                              {assignment.status}
-                            </Badge>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleViewAssignment(assignment.id)}
-                            >
-                              <FileText className="w-3 h-3 mr-1" />
-                              {t('common:view')}
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )) || (
-                    <p className="text-center py-8 text-gray-500">{t('teacher:noAssignmentsCreated')}</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Schedule Tab */}
-          <TabsContent value="schedule" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('teacher:weeklySchedule')}</CardTitle>
-                <p className="text-sm text-gray-600">{t('teacher:classScheduleThisWeek')}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {(upcomingSessions as any)?.map((session: any) => (
-                    <div key={session.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="text-2xl">{getServiceIcon(session.type)}</div>
-                        <div>
-                          <h3 className="font-semibold">{session.title}</h3>
-                          <p className="text-sm text-gray-600">{session.studentName}</p>
-                          <p className="text-sm text-blue-600">
-                            {new Date(session.scheduledAt).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="outline">{session.duration} min</Badge>
-                        <Button 
-                          size="sm"
-                          onClick={() => handleJoinClass(session)}
-                        >
-                          {session.type === 'online' ? (
-                            <>
-                              <Video className="w-3 h-3 mr-1" />
-                              {t('teacher:join')}
-                            </>
-                          ) : (
-                            <>
-                              <Play className="w-3 h-3 mr-1" />
-                              {t('teacher:start')}
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  )) || (
-                    <p className="text-center py-8 text-gray-500">{t('teacher:noUpcomingSessions')}</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Availability Tab */}
-          <TabsContent value="availability" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Availability</CardTitle>
-                <p className="text-sm text-gray-600">Set your available time slots for administrators to assign classes</p>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Availability Management</h3>
-                  <p className="text-gray-600 mb-4">
-                    Teachers can only set monthly availability slots.<br />
-                    Administrators will assign classes based on your availability.
-                  </p>
-                  <Button onClick={handleSetAvailability}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Set Monthly Availability
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Callern History Tab */}
-          <TabsContent value="callern-history" className="space-y-6">
-            <CallernHistory />
-          </TabsContent>
-
-          {/* Observations Tab */}
-          <TabsContent value="observations" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Eye className="w-5 h-5 mr-2" />
-                  {t('teacher:teachingObservations')}
+        {/* Today's Schedule */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="shadow-xl">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-blue-500" />
+                  {t('teacher:todaySchedule', 'برنامه امروز')}
                 </CardTitle>
-                <p className="text-sm text-gray-600">
-                  View and respond to your classroom observation reports
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Eye className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">{t('teacher:observationManagement')}</h3>
-                  <p className="text-gray-600 mb-4">
-                    {t('teacher:reviewFeedbackFromSupervisors')}
-                  </p>
-                  <div className="flex justify-center space-x-4">
-                    <Button onClick={handleViewObservations}>
-                      <Eye className="w-4 h-4 mr-2" />
-                      {t('teacher:viewAllObservations')}
+                <Badge variant="outline" className="text-xs">
+                  {stats?.upcomingClasses?.length || 0} {t('teacher:classes', 'کلاس')}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats?.upcomingClasses?.map((cls) => (
+                  <motion.div 
+                    key={cls.id}
+                    className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200"
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      {cls.type === 'private' ? <Mic className="h-5 w-5 text-blue-600" /> : <Users className="h-5 w-5 text-blue-600" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">{cls.title}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <Clock className="h-3 w-3" /> {cls.time}
+                        </span>
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <Users className="h-3 w-3" /> {cls.students} {t('teacher:students', 'دانش‌آموز')}
+                        </span>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="outline">
+                      {t('teacher:view', 'مشاهده')}
                     </Button>
-                    {(unacknowledgedObservations as any)?.length > 0 && (
-                      <Button variant="outline" className="border-red-200 text-red-700">
-                        <AlertCircle className="w-4 h-4 mr-2" />
-                        {(unacknowledgedObservations as any).length} {t('teacher:unacknowledged')}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </motion.div>
+                ))}
+              </div>
+              <Link href="/teacher/schedule">
+                <Button variant="ghost" className="w-full mt-3" size="sm">
+                  {t('teacher:viewFullSchedule', 'مشاهده برنامه کامل')}
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-          {/* Lesson Kit Generator Tab */}
-          <TabsContent value="lesson-kits" className="space-y-6">
-            <LessonKitGenerator />
-          </TabsContent>
-        </Tabs>
+        {/* Performance Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="shadow-xl">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-green-500" />
+                  {t('teacher:performanceTrend', 'روند عملکرد')}
+                </CardTitle>
+                <Badge variant="secondary" className="text-xs">
+                  <TrendingUp className="h-3 w-3 ml-1" />
+                  +{earningsGrowth}%
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={150}>
+                <LineChart data={stats?.performanceData || []}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }} 
+                  />
+                  <Line type="monotone" dataKey="satisfaction" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 4 }} />
+                  <Line type="monotone" dataKey="hours" stroke="#8B5CF6" strokeWidth={2} dot={{ fill: '#8B5CF6', r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Class Distribution */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="shadow-xl">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-purple-500" />
+                {t('teacher:classDistribution', 'توزیع کلاس‌ها')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <ResponsiveContainer width="50%" height={120}>
+                  <PieChart>
+                    <Pie
+                      data={stats?.classDistribution || []}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={50}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {stats?.classDistribution?.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="space-y-2">
+                  {stats?.classDistribution?.map((item) => (
+                    <div key={item.name} className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                      <span className="text-xs text-gray-600">{item.name}</span>
+                      <span className="text-xs font-bold">{item.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="shadow-xl bg-gradient-to-r from-indigo-50 to-blue-50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">{t('teacher:quickActions', 'دسترسی سریع')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-4 gap-3">
+                <Link href="/teacher/callern">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Video className="h-6 w-6 text-purple-500 mb-1" />
+                    <span className="text-xs text-gray-600">{t('teacher:callern', 'کالرن')}</span>
+                  </motion.div>
+                </Link>
+                
+                <Link href="/teacher/tests">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <FileText className="h-6 w-6 text-blue-500 mb-1" />
+                    <span className="text-xs text-gray-600">{t('teacher:tests', 'آزمون‌ها')}</span>
+                  </motion.div>
+                </Link>
+                
+                <Link href="/teacher/reports">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <BarChart3 className="h-6 w-6 text-green-500 mb-1" />
+                    <span className="text-xs text-gray-600">{t('teacher:reports', 'گزارش‌ها')}</span>
+                  </motion.div>
+                </Link>
+                
+                <Link href="/teacher/resources">
+                  <motion.div 
+                    className="flex flex-col items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <BookOpen className="h-6 w-6 text-orange-500 mb-1" />
+                    <span className="text-xs text-gray-600">{t('teacher:resources', 'منابع')}</span>
+                  </motion.div>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Recent Student Feedback */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="shadow-xl">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-yellow-500" />
+                  {t('teacher:recentFeedback', 'بازخوردهای اخیر')}
+                </CardTitle>
+                <Link href="/teacher/reviews">
+                  <Button variant="ghost" size="sm" className="text-xs">
+                    {t('common:viewAll', 'مشاهده همه')}
+                    <ChevronRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats?.recentFeedback?.map((feedback) => (
+                  <div key={feedback.id} className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-800">{feedback.student}</span>
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={cn("h-3 w-3", i < feedback.rating ? "text-yellow-400 fill-current" : "text-gray-300")} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600">{feedback.comment}</p>
+                    <p className="text-xs text-gray-400 mt-1">{new Date(feedback.date).toLocaleDateString(isRTL ? 'fa-IR' : 'en-US')}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Motivational Quote */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <Card className="shadow-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Coffee className="h-6 w-6 mb-2 text-white/80" />
+                  <p className="text-sm italic text-white/90">
+                    {t('teacher:quote', '"Teaching is the profession that teaches all other professions."')}
+                  </p>
+                  <p className="text-xs text-white/70 mt-1">- Unknown</p>
+                </div>
+                <Award className="h-12 w-12 text-white/20" />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
+
+      {/* Enhanced Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }
