@@ -1,0 +1,86 @@
+[plugin:runtime-error-plugin] stats?.upcomingClasses?.map is not a function. (In 'stats?.upcomingClasses?.map(
+                (cls) => /* @__PURE__ */ jsxDEV(
+                  motion.div,
+                  {
+                    "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:265:16",
+                    "data-component-name": "motion.div",
+                    className: "flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200",
+                    whileHover: { scale: 1.02 },
+                    children: [
+                      /* @__PURE__ */ jsxDEV("div", { "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:270:20", "data-component-name": "div", className: "w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center", children: cls.type === "private" ? /* @__PURE__ */ jsxDEV(Mic, { "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:271:48", "data-component-name": "Mic", className: "h-5 w-5 text-blue-600" }, void 0, false, {
+                        fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                        lineNumber: 271,
+                        columnNumber: 49
+                      }, this) : /* @__PURE__ */ jsxDEV(Users, { "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:271:92", "data-component-name": "Users", className: "h-5 w-5 text-blue-600" }, void 0, false, {
+                        fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                        lineNumber: 271,
+                        columnNumber: 188
+                      }, this) }, void 0, false, {
+                        fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                        lineNumber: 270,
+                        columnNumber: 21
+                      }, this),
+                      /* @__PURE__ */ jsxDEV("div", { "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:273:20", "data-component-name": "div", className: "flex-1", children: [
+                        /* @__PURE__ */ jsxDEV("p", { "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:274:22", "data-component-name": "p", className: "text-sm font-medium text-gray-800", children: cls.title }, void 0, false, {
+                          fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                          lineNumber: 274,
+                          columnNumber: 23
+                        }, this),
+                        /* @__PURE__ */ jsxDEV("div", { "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:275:22", "data-component-name": "div", className: "flex items-center gap-3 mt-1", children: [
+                          /* @__PURE__ */ jsxDEV("span", { "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:276:24", "data-component-name": "span", className: "text-xs text-gray-500 flex items-center gap-1", children: [
+                            /* @__PURE__ */ jsxDEV(Clock, { "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:277:26", "data-component-name": "Clock", className: "h-3 w-3" }, void 0, false, {
+                              fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                              lineNumber: 277,
+                              columnNumber: 27
+                            }, this),
+                            " ",
+                            cls.time
+                          ] }, void 0, true, {
+                            fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                            lineNumber: 276,
+                            columnNumber: 25
+                          }, this),
+                          /* @__PURE__ */ jsxDEV("span", { "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:279:24", "data-component-name": "span", className: "text-xs text-gray-500 flex items-center gap-1", children: [
+                            /* @__PURE__ */ jsxDEV(Users, { "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:280:26", "data-component-name": "Users", className: "h-3 w-3" }, void 0, false, {
+                              fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                              lineNumber: 280,
+                              columnNumber: 27
+                            }, this),
+                            " ",
+                            cls.students,
+                            " ",
+                            t("teacher:students", "دانش‌آموز")
+                          ] }, void 0, true, {
+                            fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                            lineNumber: 279,
+                            columnNumber: 25
+                          }, this)
+                        ] }, void 0, true, {
+                          fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                          lineNumber: 275,
+                          columnNumber: 23
+                        }, this)
+                      ] }, void 0, true, {
+                        fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                        lineNumber: 273,
+                        columnNumber: 21
+                      }, this),
+                      /* @__PURE__ */ jsxDEV(Button, { "data-replit-metadata": "client/src/pages/teacher/dashboard.tsx:284:20", "data-component-name": "Button", size: "sm", variant: "outline", children: t("teacher:view", "مشاهده") }, void 0, false, {
+                        fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                        lineNumber: 284,
+                        columnNumber: 21
+                      }, this)
+                    ]
+                  },
+                  cls.id,
+                  true,
+                  {
+                    fileName: "/home/runner/workspace/client/src/pages/teacher/dashboard.tsx",
+                    lineNumber: 265,
+                    columnNumber: 17
+                  },
+                  this
+                )
+              )', 'stats?.upcomingClasses?.map' is undefined)
+Click outside, press Esc key, or fix the code to dismiss.
+You can also disable this overlay by setting server.hmr.overlay to false in vite.config.js.
