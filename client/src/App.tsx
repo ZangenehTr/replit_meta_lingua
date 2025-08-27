@@ -25,7 +25,7 @@ import GamificationProgress from "@/pages/gamification-progress";
 import UserProfile from "@/pages/user-profile";
 import CRMDashboard from "@/pages/crm-dashboard";
 import StudentInformationSystem from "@/pages/student-information-system";
-import { AdminDashboard as EnhancedAdminDashboard } from "@/pages/admin/admin-dashboard";
+import EnhancedAdminDashboard from "@/pages/admin/admin-dashboard";
 import { AdminStudents } from "@/pages/admin/students";
 import { AdminCourses } from "@/pages/admin/courses";
 import AdminVideoCourses from "@/pages/admin/video-courses";
@@ -78,10 +78,8 @@ import StudentProfile from "@/pages/student/profile";
 import LevelAssessment from "@/pages/level-assessment";
 import GamesPage from "@/pages/games";
 import GamePlayer from "@/pages/game-player";
-import EnhancedStudentDashboard from "@/pages/student/dashboard-enhanced";
 
 // Teacher pages
-import EnhancedTeacherDashboard from "@/pages/teacher/dashboard-enhanced";
 import TeacherClassesPage from "@/pages/teacher/classes";
 import TeacherSchedulePage from "@/pages/teacher/schedule";
 import TeacherHomeworkPage from "@/pages/teacher/homework";
@@ -109,7 +107,6 @@ import ProspectsPage from "@/pages/callcenter/prospects";
 import CampaignsPage from "@/pages/callcenter/campaigns";
 
 // Admin pages
-import EnhancedAdminDashboardPage from "@/pages/admin/dashboard-enhanced";
 import AdminClassesPage from "@/pages/admin/classes";
 import AdminReportsPage from "@/pages/admin/reports";
 import AdminCommunicationsPage from "@/pages/admin/communications";
@@ -410,11 +407,6 @@ function Router() {
       </Route>
       
       {/* Student Routes */}
-      <Route path="/student/dashboard-enhanced">
-        <ProtectedRoute>
-          <EnhancedStudentDashboard />
-        </ProtectedRoute>
-      </Route>
       <Route path="/tutors">
         <ProtectedRoute>
           <TutorsPage />
@@ -520,11 +512,6 @@ function Router() {
       <Route path="/teacher/dashboard">
         <ProtectedRoute>
           <TeacherDashboardNew />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/teacher/dashboard-enhanced">
-        <ProtectedRoute>
-          <EnhancedTeacherDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/teacher/classes">
@@ -660,11 +647,6 @@ function Router() {
       </Route>
 
       {/* Admin Routes */}
-      <Route path="/admin/dashboard-enhanced">
-        <ProtectedRoute>
-          <EnhancedAdminDashboardPage />
-        </ProtectedRoute>
-      </Route>
       <Route path="/admin/classes">
         <ProtectedRoute>
           <AdminClassesPage />
