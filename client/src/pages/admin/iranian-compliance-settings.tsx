@@ -13,14 +13,15 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from 'react-i18next';
-import { Save, TestTube, Phone, CreditCard, MessageSquare, Settings, CheckCircle2, CheckCircle, AlertCircle, Info, Eye, EyeOff } from "lucide-react";
+import { Save, TestTube, Phone, CreditCard, MessageSquare, Settings, CheckCircle2, CheckCircle, AlertCircle, Info, Eye, EyeOff, Brain, Video, Cpu } from "lucide-react";
 
 export function IranianComplianceSettings() {
   const { t } = useTranslation(['admin', 'common']);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"voip" | "shetab" | "sms" | "general">("voip");
+  const [activeTab, setActiveTab] = useState<"voip" | "shetab" | "sms" | "general" | "ai">("voip");
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
 
   // Fetch current admin settings
   const { data: settings, isLoading } = useQuery({
@@ -191,7 +192,8 @@ export function IranianComplianceSettings() {
           { key: "voip", label: t('admin:iranianCompliance.voipTab'), icon: Phone },
           { key: "shetab", label: t('admin:iranianCompliance.shetabTab'), icon: CreditCard },
           { key: "sms", label: t('admin:iranianCompliance.smsTab'), icon: MessageSquare },
-          { key: "general", label: t('admin:iranianCompliance.generalTab'), icon: Settings }
+          { key: "general", label: t('admin:iranianCompliance.generalTab'), icon: Settings },
+          { key: "ai", label: "AI Services", icon: Brain }
         ].map(({ key, label, icon: Icon }) => (
           <Button
             key={key}
@@ -743,6 +745,200 @@ export function IranianComplianceSettings() {
         </Card>
       )}
 
+      {/* AI Services Settings */}
+      {activeTab === "ai" && (
+        <div className="space-y-6">
+          {/* Ollama AI Server */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Ollama AI Server Configuration
+              </CardTitle>
+              <CardDescription>Configure self-hosted AI server for Persian and English language processing</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="ollama-host">Ollama Server URL</Label>
+                  <Input
+                    id="ollama-host"
+                    placeholder="http://localhost:11434"
+                    defaultValue={process.env.OLLAMA_HOST || settings?.ollamaHost || "http://45.89.239.250:11434"}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="ollama-model">Default Model</Label>
+                  <Select defaultValue={settings?.ollamaModel || "llama3.2b"}>
+                    <SelectTrigger id="ollama-model">
+                      <SelectValue placeholder="Select AI model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="llama3.2b">Llama 3.2B (Fast)</SelectItem>
+                      <SelectItem value="llama3.2:3b">Llama 3.2 3B</SelectItem>
+                      <SelectItem value="llama3.2:1b">Llama 3.2 1B (Fastest)</SelectItem>
+                      <SelectItem value="mistral:7b">Mistral 7B</SelectItem>
+                      <SelectItem value="mshojaei77/gemma3persian">Gemma 3 Persian (Optimized)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="ollama-enabled"
+                  defaultChecked={settings?.ollamaEnabled !== false}
+                />
+                <Label htmlFor="ollama-enabled">Enable Ollama AI Service</Label>
+              </div>
+
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => {
+                    apiRequest('/api/admin/test/ollama', { method: 'POST' })
+                      .then(() => toast({ title: "Ollama Connected", description: "AI server connection successful" }))
+                      .catch((error) => toast({ 
+                        title: "Connection Failed", 
+                        description: error.message || "Failed to connect to Ollama server", 
+                        variant: "destructive" 
+                      }));
+                  }}
+                  variant="outline"
+                >
+                  <TestTube className="h-4 w-4" />
+                  <span>Test Connection</span>
+                </Button>
+                <Button 
+                  onClick={() => {
+                    apiRequest('/api/admin/ollama/models', { method: 'GET' })
+                      .then((data: any) => toast({ 
+                        title: "Available Models", 
+                        description: `Found ${data.models?.length || 0} models on server` 
+                      }))
+                      .catch((error) => toast({ 
+                        title: "Failed to List Models", 
+                        description: error.message, 
+                        variant: "destructive" 
+                      }));
+                  }}
+                  variant="outline"
+                >
+                  <Cpu className="h-4 w-4" />
+                  <span>List Models</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* WebRTC TURN Server */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Video className="h-5 w-5" />
+                WebRTC TURN/STUN Server Configuration
+              </CardTitle>
+              <CardDescription>Configure TURN/STUN servers for reliable video calling in Callern service</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="turn-url">TURN Server URL</Label>
+                  <Input
+                    id="turn-url"
+                    placeholder="turn:your-server.com:3478"
+                    defaultValue={settings?.turnServerUrl || ""}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="stun-url">STUN Server URL</Label>
+                  <Input
+                    id="stun-url"
+                    placeholder="stun:stun.l.google.com:19302"
+                    defaultValue={settings?.stunServerUrl || "stun:stun.l.google.com:19302"}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="turn-username">TURN Username</Label>
+                  <Input
+                    id="turn-username"
+                    placeholder="Username for TURN authentication"
+                    defaultValue={settings?.turnServerUsername || ""}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="turn-password">TURN Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="turn-password"
+                      type={showSecrets.turnPassword ? "text" : "password"}
+                      placeholder="Password for TURN authentication"
+                      defaultValue={settings?.turnServerPassword || ""}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      onClick={() => setShowSecrets(prev => ({ ...prev, turnPassword: !prev.turnPassword }))}
+                    >
+                      {showSecrets.turnPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="turn-enabled"
+                  defaultChecked={settings?.turnServerEnabled || false}
+                />
+                <Label htmlFor="turn-enabled">Enable TURN Server for WebRTC</Label>
+              </div>
+
+              <Button 
+                onClick={() => {
+                  apiRequest('/api/admin/test/turn', { method: 'POST' })
+                    .then(() => toast({ 
+                      title: "TURN Server Connected", 
+                      description: "WebRTC relay server connection successful" 
+                    }))
+                    .catch((error) => toast({ 
+                      title: "TURN Connection Failed", 
+                      description: error.message || "Failed to connect to TURN server", 
+                      variant: "destructive" 
+                    }));
+                }}
+                variant="outline"
+              >
+                <TestTube className="h-4 w-4" />
+                <span>Test TURN Server</span>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Button 
+            onClick={() => handleSave("ai", {
+              ollamaHost: (document.getElementById("ollama-host") as HTMLInputElement)?.value,
+              ollamaModel: (document.querySelector("#ollama-model") as HTMLSelectElement)?.value,
+              ollamaEnabled: (document.getElementById("ollama-enabled") as HTMLInputElement)?.checked,
+              turnServerUrl: (document.getElementById("turn-url") as HTMLInputElement)?.value,
+              stunServerUrl: (document.getElementById("stun-url") as HTMLInputElement)?.value,
+              turnServerUsername: (document.getElementById("turn-username") as HTMLInputElement)?.value,
+              turnServerPassword: (document.getElementById("turn-password") as HTMLInputElement)?.value,
+              turnServerEnabled: (document.getElementById("turn-enabled") as HTMLInputElement)?.checked
+            })}
+            disabled={updateSettings.isPending}
+            className="w-full"
+          >
+            <Save className="h-4 w-4" />
+            <span>Save AI Services Settings</span>
+          </Button>
+        </div>
+      )}
+
       {/* Status Summary */}
       <Card>
         <CardHeader>
@@ -750,7 +946,7 @@ export function IranianComplianceSettings() {
           <CardDescription>{t('admin:iranianCompliance.currentStatusIntegrations')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${settings?.voipEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
               <span className="text-sm">Isabel VoIP</span>
@@ -766,6 +962,14 @@ export function IranianComplianceSettings() {
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${settings?.persianCalendarEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
               <span className="text-sm">{t('admin:iranianCompliance.persianCalendar')}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${settings?.ollamaEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
+              <span className="text-sm">Ollama AI</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${settings?.turnServerEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
+              <span className="text-sm">TURN Server</span>
             </div>
           </div>
         </CardContent>
