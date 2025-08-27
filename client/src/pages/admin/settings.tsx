@@ -24,7 +24,10 @@ import {
   Phone,
   DollarSign,
   Eye,
-  EyeOff
+  EyeOff,
+  Brain,
+  Video,
+  Cpu
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BackButton } from "@/components/ui/back-button";
@@ -84,6 +87,23 @@ interface AdminSettings {
   // File Storage
   fileStorageProvider: 'local' | 's3' | 'cloudinary';
   fileStorageConfig: Record<string, any>;
+  
+  // Third Party AI Services
+  ollamaHost: string;
+  ollamaModel: string;
+  ollamaEnabled: boolean;
+  ollamaApiKey: string;
+  
+  // WebRTC TURN Server Settings
+  turnServerUrl: string;
+  turnServerUsername: string;
+  turnServerPassword: string;
+  turnServerEnabled: boolean;
+  stunServerUrl: string;
+  
+  // Whisper Service Settings
+  whisperServiceUrl: string;
+  whisperServiceEnabled: boolean;
   
   updatedAt: string;
 }
@@ -217,7 +237,7 @@ export default function AdminSettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="payment" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             Payment
@@ -241,6 +261,10 @@ export default function AdminSettings() {
           <TabsTrigger value="api" className="flex items-center gap-2">
             <Globe className="h-4 w-4" />
             API
+          </TabsTrigger>
+          <TabsTrigger value="thirdparty" className="flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            Third Party
           </TabsTrigger>
         </TabsList>
 
@@ -807,6 +831,289 @@ export default function AdminSettings() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Third Party Services Settings */}
+        <TabsContent value="thirdparty">
+          <div className="space-y-6">
+            {/* Ollama AI Server Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  Ollama AI Server Configuration
+                </CardTitle>
+                <CardDescription>
+                  Configure self-hosted AI server for Persian language processing
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="ollama-enabled">Enable Ollama AI Service</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Use self-hosted AI for Persian/English language processing
+                    </p>
+                  </div>
+                  <Switch
+                    id="ollama-enabled"
+                    checked={settings?.ollamaEnabled || false}
+                    onCheckedChange={(checked) => handleSettingUpdate('ollamaEnabled', checked)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="ollama-host">Ollama Server Host</Label>
+                    <Input
+                      id="ollama-host"
+                      placeholder="http://localhost:11434"
+                      value={settings?.ollamaHost || process.env.OLLAMA_HOST || ''}
+                      onChange={(e) => handleSettingUpdate('ollamaHost', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ollama-model">Default AI Model</Label>
+                    <select
+                      id="ollama-model"
+                      className="w-full p-2 border rounded-md"
+                      value={settings?.ollamaModel || 'llama3.2b'}
+                      onChange={(e) => handleSettingUpdate('ollamaModel', e.target.value)}
+                    >
+                      <option value="llama3.2b">Llama 3.2B (Fast)</option>
+                      <option value="llama3.2:3b">Llama 3.2 3B</option>
+                      <option value="llama3.2:1b">Llama 3.2 1B (Fastest)</option>
+                      <option value="mistral:7b">Mistral 7B</option>
+                      <option value="mshojaei77/gemma3persian">Gemma 3 Persian</option>
+                      <option value="custom">Custom Model</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ollama-api-key">API Key (Optional)</Label>
+                  <div className="relative">
+                    <Input
+                      id="ollama-api-key"
+                      type={showSecrets.ollamaApiKey ? "text" : "password"}
+                      placeholder="Enter API key if authentication is enabled"
+                      value={settings?.ollamaApiKey || ''}
+                      onChange={(e) => handleSettingUpdate('ollamaApiKey', e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      onClick={() => toggleSecret('ollamaApiKey')}
+                    >
+                      {showSecrets.ollamaApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => apiRequest("/api/admin/test/ollama", { method: 'POST' }).then(() => {
+                      toast({
+                        title: "Ollama Connected",
+                        description: "AI server connection successful"
+                      });
+                    }).catch((error) => {
+                      toast({
+                        title: "Connection Failed",
+                        description: error.message || "Failed to connect to Ollama server",
+                        variant: "destructive"
+                      });
+                    })}
+                    variant="outline"
+                  >
+                    <TestTube className="h-4 w-4" />
+                    <span>Test Connection</span>
+                  </Button>
+                  <Button
+                    onClick={() => apiRequest("/api/admin/ollama/models", { method: 'GET' }).then((data) => {
+                      toast({
+                        title: "Available Models",
+                        description: `Found ${data.models?.length || 0} models on server`
+                      });
+                    }).catch((error) => {
+                      toast({
+                        title: "Failed to List Models",
+                        description: error.message,
+                        variant: "destructive"
+                      });
+                    })}
+                    variant="outline"
+                  >
+                    <Cpu className="h-4 w-4" />
+                    <span>List Models</span>
+                  </Button>
+                  <Badge variant={settings?.ollamaEnabled ? "default" : "secondary"}>
+                    {settings?.ollamaEnabled ? "Enabled" : "Disabled"}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* WebRTC TURN Server Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Video className="h-5 w-5" />
+                  WebRTC TURN/STUN Server Configuration
+                </CardTitle>
+                <CardDescription>
+                  Configure TURN/STUN servers for reliable video calling
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="turn-enabled">Enable TURN Server</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Use TURN server for NAT traversal in video calls
+                    </p>
+                  </div>
+                  <Switch
+                    id="turn-enabled"
+                    checked={settings?.turnServerEnabled || false}
+                    onCheckedChange={(checked) => handleSettingUpdate('turnServerEnabled', checked)}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="turn-url">TURN Server URL</Label>
+                    <Input
+                      id="turn-url"
+                      placeholder="turn:your-server.com:3478"
+                      value={settings?.turnServerUrl || ''}
+                      onChange={(e) => handleSettingUpdate('turnServerUrl', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="stun-url">STUN Server URL</Label>
+                    <Input
+                      id="stun-url"
+                      placeholder="stun:stun.l.google.com:19302"
+                      value={settings?.stunServerUrl || 'stun:stun.l.google.com:19302'}
+                      onChange={(e) => handleSettingUpdate('stunServerUrl', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="turn-username">TURN Username</Label>
+                    <Input
+                      id="turn-username"
+                      placeholder="Enter TURN username"
+                      value={settings?.turnServerUsername || ''}
+                      onChange={(e) => handleSettingUpdate('turnServerUsername', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="turn-password">TURN Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="turn-password"
+                        type={showSecrets.turnServerPassword ? "text" : "password"}
+                        placeholder="Enter TURN password"
+                        value={settings?.turnServerPassword || ''}
+                        onChange={(e) => handleSettingUpdate('turnServerPassword', e.target.value)}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-2 top-1/2 -translate-y-1/2"
+                        onClick={() => toggleSecret('turnServerPassword')}
+                      >
+                        {showSecrets.turnServerPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => apiRequest("/api/admin/test/turn", { method: 'POST' }).then(() => {
+                    toast({
+                      title: "TURN Server Connected",
+                      description: "WebRTC server connection successful"
+                    });
+                  }).catch((error) => {
+                    toast({
+                      title: "TURN Connection Failed",
+                      description: error.message || "Failed to connect to TURN server",
+                      variant: "destructive"
+                    });
+                  })}
+                  variant="outline"
+                >
+                  <TestTube className="h-4 w-4" />
+                  <span>Test TURN Server</span>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Whisper Service Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Cpu className="h-5 w-5" />
+                  Whisper Speech Recognition Service
+                </CardTitle>
+                <CardDescription>
+                  Configure Whisper service for audio transcription
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="whisper-enabled">Enable Whisper Service</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Use Whisper for automatic speech-to-text transcription
+                    </p>
+                  </div>
+                  <Switch
+                    id="whisper-enabled"
+                    checked={settings?.whisperServiceEnabled || false}
+                    onCheckedChange={(checked) => handleSettingUpdate('whisperServiceEnabled', checked)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="whisper-url">Whisper Service URL</Label>
+                  <Input
+                    id="whisper-url"
+                    placeholder="http://localhost:8000"
+                    value={settings?.whisperServiceUrl || ''}
+                    onChange={(e) => handleSettingUpdate('whisperServiceUrl', e.target.value)}
+                  />
+                </div>
+
+                <Button
+                  onClick={() => apiRequest("/api/admin/test/whisper", { method: 'POST' }).then(() => {
+                    toast({
+                      title: "Whisper Connected",
+                      description: "Speech recognition service connected"
+                    });
+                  }).catch((error) => {
+                    toast({
+                      title: "Whisper Connection Failed",
+                      description: error.message || "Failed to connect to Whisper service",
+                      variant: "destructive"
+                    });
+                  })}
+                  variant="outline"
+                >
+                  <TestTube className="h-4 w-4" />
+                  <span>Test Whisper Service</span>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
