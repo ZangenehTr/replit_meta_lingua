@@ -83,7 +83,7 @@ interface AdminStats {
   };
 }
 
-export default function AdminDashboard() {
+export const AdminDashboard = () => {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'fa';
