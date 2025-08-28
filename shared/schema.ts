@@ -277,20 +277,36 @@ export const messages = pgTable("messages", {
   sentAt: timestamp("sent_at").defaultNow()
 });
 
-// Homework assignments
+// Homework assignments - Enhanced with more fields
 export const homework = pgTable("homework", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").references(() => users.id).notNull(),
   teacherId: integer("teacher_id").references(() => users.id).notNull(),
   courseId: integer("course_id").references(() => courses.id),
+  classId: integer("class_id").references(() => classes.id),
   title: text("title").notNull(),
   description: text("description"),
+  instructions: text("instructions"), // Detailed instructions
   dueDate: timestamp("due_date"),
-  status: text("status").default("pending"), // pending, submitted, graded
-  submission: text("submission"),
+  status: text("status").default("pending"), // pending, in_progress, submitted, graded, late, excused
+  submission: text("submission"), // Text submission
+  submissionUrl: text("submission_url"), // File upload URL
+  submittedAt: timestamp("submitted_at"),
   grade: integer("grade"), // 0-100
+  maxGrade: integer("max_grade").default(100),
   feedback: text("feedback"),
-  assignedAt: timestamp("assigned_at").defaultNow()
+  difficulty: text("difficulty").default("medium"), // easy, medium, hard
+  estimatedTime: integer("estimated_time").default(30), // in minutes
+  xpReward: integer("xp_reward").default(50), // XP points for completion
+  attachments: jsonb("attachments").$type<string[]>().default([]), // Teacher's attachment files
+  submissionFiles: jsonb("submission_files").$type<string[]>().default([]), // Student's submitted files
+  rubric: jsonb("rubric").$type<{criteria: string, points: number}[]>(), // Grading rubric
+  tags: text("tags").array().default([]), // homework tags for categorization
+  isVisible: boolean("is_visible").default(true),
+  allowLateSubmission: boolean("allow_late_submission").default(true),
+  latePenaltyPercent: integer("late_penalty_percent").default(10), // Percentage penalty per day
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Payment transactions with enhanced Shetab integration

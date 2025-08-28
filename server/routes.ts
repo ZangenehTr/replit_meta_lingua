@@ -19792,6 +19792,356 @@ Meta Lingua Academy`;
   const { registerPhase2AIRoutes } = await import('./ai-phase2-routes');
   registerPhase2AIRoutes(app);
 
+  // ===== HOMEWORK API ENDPOINTS =====
+  
+  // Get homework for a student
+  app.get("/api/student/homework", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.userId;
+      const { status } = req.query;
+      
+      const { homework, courses, users, classes } = await import("@shared/schema");
+      
+      let query = db
+        .select({
+          id: homework.id,
+          title: homework.title,
+          description: homework.description,
+          instructions: homework.instructions,
+          courseTitle: courses.title,
+          className: classes.name,
+          teacherName: users.firstName,
+          teacherLastName: users.lastName,
+          assignedDate: homework.assignedAt,
+          dueDate: homework.dueDate,
+          status: homework.status,
+          grade: homework.grade,
+          maxGrade: homework.maxGrade,
+          feedback: homework.feedback,
+          attachments: homework.attachments,
+          submissionUrl: homework.submissionUrl,
+          submissionFiles: homework.submissionFiles,
+          difficulty: homework.difficulty,
+          estimatedTime: homework.estimatedTime,
+          xpReward: homework.xpReward,
+          submittedAt: homework.submittedAt,
+          allowLateSubmission: homework.allowLateSubmission,
+          latePenaltyPercent: homework.latePenaltyPercent
+        })
+        .from(homework)
+        .leftJoin(courses, eq(homework.courseId, courses.id))
+        .leftJoin(classes, eq(homework.classId, classes.id))
+        .leftJoin(users, eq(homework.teacherId, users.id))
+        .where(eq(homework.studentId, studentId));
+      
+      if (status && status !== 'all') {
+        query = query.where(eq(homework.status, status));
+      }
+      
+      const homeworkList = await query;
+      
+      // Format the response
+      const formattedHomework = homeworkList.map(hw => ({
+        id: hw.id,
+        title: hw.title,
+        description: hw.description,
+        instructions: hw.instructions,
+        courseTitle: hw.courseTitle || 'General',
+        className: hw.className || 'N/A',
+        teacherName: `${hw.teacherName || ''} ${hw.teacherLastName || ''}`.trim(),
+        assignedDate: hw.assignedDate,
+        dueDate: hw.dueDate,
+        status: hw.status,
+        grade: hw.grade,
+        maxGrade: hw.maxGrade,
+        feedback: hw.feedback,
+        attachments: hw.attachments || [],
+        submissionUrl: hw.submissionUrl,
+        submissionFiles: hw.submissionFiles || [],
+        difficulty: hw.difficulty,
+        estimatedTime: hw.estimatedTime,
+        xpReward: hw.xpReward,
+        submittedAt: hw.submittedAt,
+        allowLateSubmission: hw.allowLateSubmission,
+        latePenaltyPercent: hw.latePenaltyPercent
+      }));
+      
+      res.json(formattedHomework);
+    } catch (error) {
+      console.error('Error fetching homework:', error);
+      res.status(500).json({ message: "Failed to fetch homework" });
+    }
+  });
+  
+  // Submit homework
+  app.post("/api/student/homework/:id/submit", authenticateToken, upload.single('file'), async (req: any, res) => {
+    try {
+      const studentId = req.user.userId;
+      const homeworkId = parseInt(req.params.id);
+      const { submission } = req.body;
+      const file = req.file;
+      
+      const { homework, users } = await import("@shared/schema");
+      
+      // Check if homework exists and belongs to student
+      const [existingHomework] = await db
+        .select()
+        .from(homework)
+        .where(eq(homework.id, homeworkId))
+        .limit(1);
+      
+      if (!existingHomework) {
+        return res.status(404).json({ message: "Homework not found" });
+      }
+      
+      if (existingHomework.studentId !== studentId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      // Check if late submission is allowed
+      const now = new Date();
+      const dueDate = existingHomework.dueDate ? new Date(existingHomework.dueDate) : null;
+      let status = 'submitted';
+      
+      if (dueDate && now > dueDate) {
+        if (!existingHomework.allowLateSubmission) {
+          return res.status(400).json({ message: "Late submission not allowed" });
+        }
+        status = 'late';
+      }
+      
+      // Handle file upload
+      let submissionUrl = existingHomework.submissionUrl;
+      let submissionFiles = existingHomework.submissionFiles || [];
+      
+      if (file) {
+        submissionUrl = `/uploads/homework/${file.filename}`;
+        submissionFiles = [...submissionFiles, file.filename];
+      }
+      
+      // Update homework
+      await db
+        .update(homework)
+        .set({
+          submission: submission || existingHomework.submission,
+          submissionUrl,
+          submissionFiles,
+          status,
+          submittedAt: now,
+          updatedAt: now
+        })
+        .where(eq(homework.id, homeworkId));
+      
+      // Award XP for submission
+      if (existingHomework.xpReward && existingHomework.status === 'pending') {
+        const [student] = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, studentId))
+          .limit(1);
+        
+        if (student) {
+          const newXp = (student.totalCredits || 0) + existingHomework.xpReward;
+          await db
+            .update(users)
+            .set({ totalCredits: newXp })
+            .where(eq(users.id, studentId));
+        }
+      }
+      
+      res.json({ 
+        message: "Homework submitted successfully", 
+        status,
+        xpAwarded: existingHomework.xpReward
+      });
+    } catch (error) {
+      console.error('Error submitting homework:', error);
+      res.status(500).json({ message: "Failed to submit homework" });
+    }
+  });
+  
+  // Download homework attachment
+  app.get("/api/homework/:id/attachment/:filename", authenticateToken, async (req: any, res) => {
+    try {
+      const { id, filename } = req.params;
+      const studentId = req.user.userId;
+      
+      const { homework } = await import("@shared/schema");
+      
+      // Verify student has access to this homework
+      const [hw] = await db
+        .select()
+        .from(homework)
+        .where(eq(homework.id, parseInt(id)))
+        .limit(1);
+      
+      if (!hw || hw.studentId !== studentId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const filePath = path.join(__dirname, 'uploads', 'homework', filename);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      res.download(filePath);
+    } catch (error) {
+      console.error('Error downloading attachment:', error);
+      res.status(500).json({ message: "Failed to download attachment" });
+    }
+  });
+  
+  // Teacher: Create homework assignment
+  app.post("/api/teacher/homework", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
+    try {
+      const teacherId = req.user.userId;
+      const {
+        studentIds,
+        courseId,
+        classId,
+        title,
+        description,
+        instructions,
+        dueDate,
+        difficulty,
+        estimatedTime,
+        xpReward,
+        attachments,
+        rubric,
+        tags,
+        allowLateSubmission,
+        latePenaltyPercent
+      } = req.body;
+      
+      const { homework } = await import("@shared/schema");
+      
+      // Create homework for each student
+      const homeworkEntries = studentIds.map((studentId: number) => ({
+        studentId,
+        teacherId,
+        courseId,
+        classId,
+        title,
+        description,
+        instructions,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        difficulty: difficulty || 'medium',
+        estimatedTime: estimatedTime || 30,
+        xpReward: xpReward || 50,
+        attachments: attachments || [],
+        rubric,
+        tags: tags || [],
+        allowLateSubmission: allowLateSubmission !== false,
+        latePenaltyPercent: latePenaltyPercent || 10,
+        status: 'pending',
+        maxGrade: 100
+      }));
+      
+      await db.insert(homework).values(homeworkEntries);
+      
+      res.json({ message: "Homework assigned successfully" });
+    } catch (error) {
+      console.error('Error creating homework:', error);
+      res.status(500).json({ message: "Failed to create homework" });
+    }
+  });
+  
+  // Teacher: Grade homework
+  app.put("/api/teacher/homework/:id/grade", authenticateToken, requireRole(['Teacher/Tutor', 'Admin']), async (req: any, res) => {
+    try {
+      const homeworkId = parseInt(req.params.id);
+      const { grade, feedback } = req.body;
+      
+      const { homework, users } = await import("@shared/schema");
+      
+      // Update homework with grade
+      await db
+        .update(homework)
+        .set({
+          grade,
+          feedback,
+          status: 'graded',
+          updatedAt: new Date()
+        })
+        .where(eq(homework.id, homeworkId));
+      
+      // Get homework details for XP calculation
+      const [hw] = await db
+        .select()
+        .from(homework)
+        .where(eq(homework.id, homeworkId))
+        .limit(1);
+      
+      if (hw && hw.xpReward) {
+        // Award bonus XP based on grade
+        const gradePercent = (grade / (hw.maxGrade || 100)) * 100;
+        let bonusXp = 0;
+        
+        if (gradePercent >= 90) bonusXp = Math.floor(hw.xpReward * 0.5); // 50% bonus
+        else if (gradePercent >= 80) bonusXp = Math.floor(hw.xpReward * 0.25); // 25% bonus
+        else if (gradePercent >= 70) bonusXp = Math.floor(hw.xpReward * 0.1); // 10% bonus
+        
+        if (bonusXp > 0) {
+          const [student] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, hw.studentId))
+            .limit(1);
+          
+          if (student) {
+            const newXp = (student.totalCredits || 0) + bonusXp;
+            await db
+              .update(users)
+              .set({ totalCredits: newXp })
+              .where(eq(users.id, hw.studentId));
+          }
+        }
+      }
+      
+      res.json({ message: "Homework graded successfully" });
+    } catch (error) {
+      console.error('Error grading homework:', error);
+      res.status(500).json({ message: "Failed to grade homework" });
+    }
+  });
+  
+  // Get homework statistics for student dashboard
+  app.get("/api/student/homework/stats", authenticateToken, async (req: any, res) => {
+    try {
+      const studentId = req.user.userId;
+      
+      const { homework } = await import("@shared/schema");
+      
+      const allHomework = await db
+        .select()
+        .from(homework)
+        .where(eq(homework.studentId, studentId));
+      
+      const stats = {
+        total: allHomework.length,
+        pending: allHomework.filter(h => h.status === 'pending').length,
+        submitted: allHomework.filter(h => h.status === 'submitted' || h.status === 'late').length,
+        graded: allHomework.filter(h => h.status === 'graded').length,
+        averageGrade: allHomework
+          .filter(h => h.status === 'graded' && h.grade !== null)
+          .reduce((acc, h) => acc + (h.grade || 0), 0) / 
+          (allHomework.filter(h => h.status === 'graded').length || 1),
+        totalXpEarned: allHomework
+          .filter(h => h.status !== 'pending')
+          .reduce((acc, h) => acc + (h.xpReward || 0), 0),
+        upcomingDeadlines: allHomework
+          .filter(h => h.status === 'pending' && h.dueDate && new Date(h.dueDate) > new Date())
+          .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
+          .slice(0, 3)
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching homework stats:', error);
+      res.status(500).json({ message: "Failed to fetch homework stats" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize Callern WebSocket server
