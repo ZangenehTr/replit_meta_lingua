@@ -377,7 +377,7 @@ export default function StudentDashboard() {
                     whileTap={{ scale: 0.95 }}
                   >
                     <BookOpen className="h-6 w-6 text-green-500 mb-1" />
-                    <span className="text-xs text-gray-600 text-center">{t('student:courses', 'دوره‌ها')}</span>
+                    <span className="text-xs text-gray-600 text-center">{t('student:courses.title', 'دوره‌ها')}</span>
                   </motion.div>
                 </Link>
                 
