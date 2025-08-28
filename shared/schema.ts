@@ -283,7 +283,7 @@ export const homework = pgTable("homework", {
   studentId: integer("student_id").references(() => users.id).notNull(),
   teacherId: integer("teacher_id").references(() => users.id).notNull(),
   courseId: integer("course_id").references(() => courses.id),
-  classId: integer("class_id").references(() => classes.id),
+  // classId: integer("class_id").references(() => classes.id), // TODO: Add after migration
   title: text("title").notNull(),
   description: text("description"),
   instructions: text("instructions"), // Detailed instructions

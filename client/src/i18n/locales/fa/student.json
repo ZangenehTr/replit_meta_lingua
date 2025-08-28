@@ -196,7 +196,16 @@
     "attachments": "ضمیمه‌ها",
     "feedback": "بازخورد",
     "score": "نمره",
-    "status": "وضعیت"
+    "status": "وضعیت",
+    "all": "همه",
+    "pending": "ارسال نشده",
+    "submitted": "ارسال شده",
+    "graded": "نمره داده شده",
+    "noHomework": "هیچ تکلیفی وجود ندارد",
+    "overallProgress": "پیشرفت کلی",
+    "xpEarned": "XP کسب شده",
+    "avgGrade": "میانگین نمره",
+    "upcoming": "پیش رو"
   },
   "payment": {
     "title": "پرداخت",

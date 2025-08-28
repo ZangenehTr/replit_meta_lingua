@@ -19802,11 +19802,14 @@ Meta Lingua Academy`;
       
       const { homework, courses, users } = await import("@shared/schema");
       
-      // Simple query without complex joins
-      const homeworkList = await db
-        .select()
-        .from(homework)
-        .where(eq(homework.studentId, studentId));
+      // Get homework for the student - simple query
+      let homeworkQuery = db.select().from(homework);
+      
+      if (studentId) {
+        homeworkQuery = homeworkQuery.where(eq(homework.studentId, studentId));
+      }
+      
+      const homeworkList = await homeworkQuery;
       
       // Get teacher and course info separately
       const teacherIds = [...new Set(homeworkList.map(h => h.teacherId))];
