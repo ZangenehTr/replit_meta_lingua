@@ -100,7 +100,23 @@
   },
   "homework": {
     "title": "Homework & Assignments",
-    "subtitle": "Complete your assignments and track your progress"
+    "subtitle": "Complete your assignments and track your progress",
+    "submit": "Submit",
+    "download": "Download",
+    "instructions": "Instructions",
+    "attachments": "Attachments",
+    "feedback": "Feedback",
+    "score": "Score",
+    "status": "Status",
+    "all": "All",
+    "pending": "Pending",
+    "submitted": "Submitted",
+    "graded": "Graded",
+    "noHomework": "No homework assignments",
+    "overallProgress": "Overall Progress",
+    "xpEarned": "XP Earned",
+    "avgGrade": "Avg Grade",
+    "upcoming": "Upcoming"
   },
   "messages": {
     "title": "Messages",
