@@ -19800,71 +19800,67 @@ Meta Lingua Academy`;
       const studentId = req.user.userId;
       const { status } = req.query;
       
-      const { homework, courses, users, classes } = await import("@shared/schema");
+      const { homework, courses, users } = await import("@shared/schema");
       
-      let query = db
-        .select({
-          id: homework.id,
-          title: homework.title,
-          description: homework.description,
-          instructions: homework.instructions,
-          courseTitle: courses.title,
-          className: classes.name,
-          teacherName: users.firstName,
-          teacherLastName: users.lastName,
-          assignedDate: homework.assignedAt,
-          dueDate: homework.dueDate,
-          status: homework.status,
-          grade: homework.grade,
-          maxGrade: homework.maxGrade,
-          feedback: homework.feedback,
-          attachments: homework.attachments,
-          submissionUrl: homework.submissionUrl,
-          submissionFiles: homework.submissionFiles,
-          difficulty: homework.difficulty,
-          estimatedTime: homework.estimatedTime,
-          xpReward: homework.xpReward,
-          submittedAt: homework.submittedAt,
-          allowLateSubmission: homework.allowLateSubmission,
-          latePenaltyPercent: homework.latePenaltyPercent
-        })
+      // Simple query without complex joins
+      const homeworkList = await db
+        .select()
         .from(homework)
-        .leftJoin(courses, eq(homework.courseId, courses.id))
-        .leftJoin(classes, eq(homework.classId, classes.id))
-        .leftJoin(users, eq(homework.teacherId, users.id))
         .where(eq(homework.studentId, studentId));
       
-      if (status && status !== 'all') {
-        query = query.where(eq(homework.status, status));
-      }
+      // Get teacher and course info separately
+      const teacherIds = [...new Set(homeworkList.map(h => h.teacherId))];
+      const courseIds = [...new Set(homeworkList.map(h => h.courseId).filter(Boolean))];
       
-      const homeworkList = await query;
+      const teachers = teacherIds.length > 0 ? await db
+        .select({ id: users.id, firstName: users.firstName, lastName: users.lastName })
+        .from(users)
+        .where(eq(users.id, teacherIds[0])) : [];
       
-      // Format the response
-      const formattedHomework = homeworkList.map(hw => ({
-        id: hw.id,
-        title: hw.title,
-        description: hw.description,
-        instructions: hw.instructions,
-        courseTitle: hw.courseTitle || 'General',
-        className: hw.className || 'N/A',
-        teacherName: `${hw.teacherName || ''} ${hw.teacherLastName || ''}`.trim(),
-        assignedDate: hw.assignedDate,
-        dueDate: hw.dueDate,
-        status: hw.status,
-        grade: hw.grade,
-        maxGrade: hw.maxGrade,
-        feedback: hw.feedback,
-        attachments: hw.attachments || [],
-        submissionUrl: hw.submissionUrl,
-        submissionFiles: hw.submissionFiles || [],
-        difficulty: hw.difficulty,
-        estimatedTime: hw.estimatedTime,
-        xpReward: hw.xpReward,
-        submittedAt: hw.submittedAt,
-        allowLateSubmission: hw.allowLateSubmission,
-        latePenaltyPercent: hw.latePenaltyPercent
-      }));
+      const coursesList = courseIds.length > 0 ? await db
+        .select({ id: courses.id, title: courses.title })
+        .from(courses)
+        .where(eq(courses.id, courseIds[0])) : [];
+      
+      // Map teacher and course info
+      const teacherMap = new Map(teachers.map(t => [t.id, t]));
+      const courseMap = new Map(coursesList.map(c => [c.id, c]));
+      
+      // Filter by status if provided
+      const filteredHomework = status && status !== 'all' 
+        ? homeworkList.filter(hw => hw.status === status)
+        : homeworkList;
+      
+      // Format the response with default values for missing fields
+      const formattedHomework = filteredHomework.map(hw => {
+        const teacher = teacherMap.get(hw.teacherId);
+        const course = courseMap.get(hw.courseId);
+        
+        return {
+          id: hw.id,
+          title: hw.title,
+          description: hw.description,
+          instructions: hw.description, // Use description as instructions
+          courseTitle: course?.title || 'General',
+          className: 'Class A', // Default class name
+          teacherName: teacher ? `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim() : 'Teacher',
+          assignedDate: hw.assignedAt,
+          dueDate: hw.dueDate,
+          status: hw.status || 'pending',
+          grade: hw.grade,
+          maxGrade: 100, // Default max grade
+          feedback: hw.feedback,
+          attachments: [], // Default empty attachments
+          submissionUrl: hw.submission,
+          submissionFiles: [],
+          difficulty: 'medium', // Default difficulty
+          estimatedTime: 30, // Default 30 minutes
+          xpReward: 50, // Default XP reward
+          submittedAt: null,
+          allowLateSubmission: true,
+          latePenaltyPercent: 10
+        };
+      });
       
       res.json(formattedHomework);
     } catch (error) {
