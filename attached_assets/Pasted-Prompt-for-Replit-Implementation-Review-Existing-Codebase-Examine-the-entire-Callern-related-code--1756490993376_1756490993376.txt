@@ -1,0 +1,63 @@
+Prompt for Replit Implementation
+
+Review Existing Codebase
+
+Examine the entire Callern-related code to determine which components (availability slots, dashboards, analytics, permissions) are already implemented and which are missing.
+
+Restrict Dashboard Access
+
+Ensure only teachers who are explicitly approved by admin/supervisor can access the Callern dashboard. Implement role checks to enforce this.
+
+Teacher Availability & Compensation
+
+Locate the predefined four time slots (used by existing Callern logic) and display them on the teacher’s Callern dashboard.
+
+Allow teachers to set their availability for these slots.
+
+Display the agreed hourly pay for Callern sessions alongside the availability information.
+
+Session Dashboard Enhancements
+
+Recordings & Transcripts: Provide teachers with links to session recordings and transcripts for review.
+
+Automatic Content Bundles: Trigger automatic generation of personalized learning materials after each call; do not require manual teacher input.
+
+Privacy: Show only learner IDs; omit all personal contact details (phone numbers, emails).
+
+Session Metrics: Show call counts and total durations aggregated daily, weekly, and monthly.
+
+Leaderboards: Add a leaderboard ranked by supervisor ratings and student feedback. Data should be sourced from existing AI/human supervisor evaluations and post-call ratings.
+
+Connectivity Indicators: Show real-time internet strength indicators for the teacher, and, once a call is connected, display the student’s connection status as well.
+
+Missed Shifts & Calls: Track and display the number of missed scheduled shifts (when teacher was supposed to be online but wasn’t) and missed incoming calls during active availability.
+
+Separate Analytics: Ensure that Callern analytics remain separate from the general teacher report page to avoid confusing teachers who aren’t part of Callern.
+
+Support Button
+
+Add a persistent support button to both teacher and student Callern pages that initiates contact with the support department.
+
+Student-facing Features
+
+On the student Callern page, show a list of available teachers with their profile photos and star ratings, including the number of ratings.
+
+Do not display the list of available teachers on the teacher dashboard (only for students).
+
+Data & Internationalization
+
+Use real data flows and functional API calls throughout. Do not implement any mocked or placeholder logic.
+
+Implement comprehensive i18n support for Farsi and English across all Callern-related views, ensuring proper RTL/LTR handling, translations of labels, and date/time formatting.
+
+Testing
+
+Write unit and integration tests for all Callern features, covering both teacher and student roles. Tests must verify availability selection, data visibility (recordings, transcripts, leaderboards, metrics), privacy constraints, support button behavior, and i18n.
+
+Implementation Constraints
+
+Maintain existing conventions and architecture in the codebase.
+
+Document any new modules or changes clearly.
+
+Ensure end-to-end functionality; after implementation, all features should work seamlessly with real API calls and real data.
