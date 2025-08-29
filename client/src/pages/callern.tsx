@@ -45,7 +45,15 @@ import {
   ChevronRight,
   Wifi,
   WifiOff,
-  AlertCircle
+  AlertCircle,
+  Award,
+  Signal,
+  SignalHigh,
+  SignalLow,
+  SignalZero,
+  LifeBuoy,
+  TrendingUp,
+  MessageSquare
 } from "lucide-react";
 import {
   Dialog,
@@ -97,9 +105,19 @@ interface AvailableTeacher {
   languages: string[];
   specializations: string[];
   rating: number;
+  totalRatings: number;
   hourlyRate: number;
   isOnline: boolean;
   profileImageUrl?: string;
+  totalCalls?: number;
+  connectionQuality?: 'excellent' | 'good' | 'fair' | 'poor';
+  badges?: string[];
+  availability?: {
+    morningSlot: boolean;
+    afternoonSlot: boolean;
+    eveningSlot: boolean;
+    nightSlot: boolean;
+  };
 }
 
 export default function CallernSystem() {
@@ -193,12 +211,16 @@ export default function CallernSystem() {
   }, [callHistory]);
 
   const onlineTeachers = useMemo(() => 
-    availableTeachers.filter((teacher: AvailableTeacher) => teacher.isOnline),
+    availableTeachers
+      .filter((teacher: AvailableTeacher) => teacher.isOnline)
+      .sort((a, b) => b.rating - a.rating),
     [availableTeachers]
   );
 
   const offlineTeachers = useMemo(() => 
-    availableTeachers.filter((teacher: AvailableTeacher) => !teacher.isOnline),
+    availableTeachers
+      .filter((teacher: AvailableTeacher) => !teacher.isOnline)
+      .sort((a, b) => b.rating - a.rating),
     [availableTeachers]
   );
 
@@ -411,6 +433,18 @@ export default function CallernSystem() {
 
   return (
     <MobileLayout>
+      {/* Support Button - Fixed Position */}
+      <Button
+        className="fixed bottom-20 right-4 rounded-full shadow-lg z-50 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+        size="lg"
+        onClick={() => {
+          // Open support dialog or redirect to support
+          window.location.href = '/support';
+        }}
+      >
+        <LifeBuoy className="h-5 w-5" />
+      </Button>
+      
       <div className="container mx-auto py-6 space-y-6">
         {/* Connection Status */}
         <div className="flex justify-end px-4">
@@ -591,20 +625,45 @@ export default function CallernSystem() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {availableTeachers.map((teacher: AvailableTeacher) => (
-                  <div key={teacher.id} className="border rounded-lg p-4 space-y-3 hover:shadow-lg transition-shadow">
+                  <div key={teacher.id} className="border rounded-lg p-4 space-y-3 hover:shadow-lg transition-shadow bg-gradient-to-br from-white to-gray-50">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                          {teacher.firstName[0]}{teacher.lastName[0]}
+                        <div className="relative">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                            {teacher.firstName[0]}{teacher.lastName[0]}
+                          </div>
+                          {teacher.connectionQuality && (
+                            <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
+                              {teacher.connectionQuality === 'excellent' && <SignalHigh className="h-3 w-3 text-green-500" />}
+                              {teacher.connectionQuality === 'good' && <Signal className="h-3 w-3 text-green-500" />}
+                              {teacher.connectionQuality === 'fair' && <SignalLow className="h-3 w-3 text-yellow-500" />}
+                              {teacher.connectionQuality === 'poor' && <SignalZero className="h-3 w-3 text-red-500" />}
+                            </div>
+                          )}
                         </div>
                         <div>
-                          <h4 className="font-semibold">
+                          <h4 className="font-semibold flex items-center gap-2">
                             {teacher.firstName} {teacher.lastName}
+                            {teacher.rating >= 4.5 && <Award className="h-4 w-4 text-yellow-500" />}
                           </h4>
-                          <div className="flex items-center gap-1 text-sm">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span>{teacher.rating}</span>
+                          <div className="flex items-center gap-2 text-sm">
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <Star 
+                                  key={i} 
+                                  className={`h-3 w-3 ${i < Math.floor(teacher.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                                />
+                              ))}
+                            </div>
+                            <span className="font-semibold">{teacher.rating.toFixed(1)}</span>
+                            <span className="text-gray-500">({teacher.totalRatings || 0})</span>
                           </div>
+                          {teacher.totalCalls && (
+                            <div className="flex items-center gap-1 text-xs text-gray-600">
+                              <Phone className="h-3 w-3" />
+                              <span>{teacher.totalCalls} {t('callern:calls')}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <Badge 
