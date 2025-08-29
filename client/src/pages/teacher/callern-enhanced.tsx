@@ -180,20 +180,7 @@ export default function EnhancedTeacherCallernSystem() {
   const [connectionStrength, setConnectionStrength] = useState<'excellent' | 'good' | 'fair' | 'poor'>('good');
   const [studentConnectionStrength, setStudentConnectionStrength] = useState<string | null>(null);
   
-  // Immediate redirect for non-teachers
-  if (user && user.role === 'Student') {
-    window.location.replace('/callern');
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-2">Redirecting to student Callern...</p>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Redirect non-teachers to appropriate page
+  // Redirect non-teachers to appropriate page (keep only in useEffect)
   useEffect(() => {
     if (user && user.role !== 'Teacher' && user.role !== 'Teacher/Tutor') {
       if (user.role === 'Student') {
@@ -381,19 +368,6 @@ export default function EnhancedTeacherCallernSystem() {
     setCurrentStudent(null);
   };
 
-  // Check if user is a teacher first (before authorization check)
-  if (user && user.role !== 'Teacher' && user.role !== 'Teacher/Tutor') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-center h-screen">
-          <div className="text-center">
-            <p className="text-gray-600 mb-2">Redirecting to your dashboard...</p>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // Check authorization for teachers
   if (!authLoading && authorizationStatus?.isAuthorized === false) {
