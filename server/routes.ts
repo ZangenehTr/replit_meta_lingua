@@ -19802,14 +19802,25 @@ Meta Lingua Academy`;
       
       const { homework, courses, users } = await import("@shared/schema");
       
-      // Get homework for the student - simple query
-      let homeworkQuery = db.select().from(homework);
-      
-      if (studentId) {
-        homeworkQuery = homeworkQuery.where(eq(homework.studentId, studentId));
-      }
-      
-      const homeworkList = await homeworkQuery;
+      // Get homework for the student - only select existing columns
+      const homeworkList = await db
+        .select({
+          id: homework.id,
+          studentId: homework.studentId,
+          teacherId: homework.teacherId,
+          courseId: homework.courseId,
+          title: homework.title,
+          description: homework.description,
+          instructions: homework.instructions,
+          dueDate: homework.dueDate,
+          status: homework.status,
+          submission: homework.submission,
+          grade: homework.grade,
+          feedback: homework.feedback,
+          assignedAt: homework.assignedAt
+        })
+        .from(homework)
+        .where(eq(homework.studentId, studentId));
       
       // Get teacher and course info separately
       const teacherIds = [...new Set(homeworkList.map(h => h.teacherId))];
@@ -19940,7 +19951,7 @@ Meta Lingua Academy`;
           .limit(1);
         
         if (student) {
-          const newXp = (student.totalCredits || 0) + existingHomework.xpReward;
+          const newXp = (student.totalCredits || 0) + 50; // Default XP award
           await db
             .update(users)
             .set({ totalCredits: newXp })
@@ -19951,7 +19962,7 @@ Meta Lingua Academy`;
       res.json({ 
         message: "Homework submitted successfully", 
         status,
-        xpAwarded: existingHomework.xpReward
+        xpAwarded: 50 // Default XP
       });
     } catch (error) {
       console.error('Error submitting homework:', error);
@@ -20125,9 +20136,7 @@ Meta Lingua Academy`;
           .filter(h => h.status === 'graded' && h.grade !== null)
           .reduce((acc, h) => acc + (h.grade || 0), 0) / 
           (allHomework.filter(h => h.status === 'graded').length || 1),
-        totalXpEarned: allHomework
-          .filter(h => h.status !== 'pending')
-          .reduce((acc, h) => acc + (h.xpReward || 0), 0),
+        totalXpEarned: 0, // XP calculation disabled until column exists
         upcomingDeadlines: allHomework
           .filter(h => h.status === 'pending' && h.dueDate && new Date(h.dueDate) > new Date())
           .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
