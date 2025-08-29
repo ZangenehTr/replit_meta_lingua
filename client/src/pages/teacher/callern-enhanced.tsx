@@ -180,13 +180,26 @@ export default function EnhancedTeacherCallernSystem() {
   const [connectionStrength, setConnectionStrength] = useState<'excellent' | 'good' | 'fair' | 'poor'>('good');
   const [studentConnectionStrength, setStudentConnectionStrength] = useState<string | null>(null);
   
+  // Immediate redirect for non-teachers
+  if (user && user.role === 'Student') {
+    window.location.replace('/callern');
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-2">Redirecting to student Callern...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+  
   // Redirect non-teachers to appropriate page
   useEffect(() => {
     if (user && user.role !== 'Teacher' && user.role !== 'Teacher/Tutor') {
       if (user.role === 'Student') {
-        window.location.href = '/callern'; // Redirect students to student Callern page
+        window.location.replace('/callern'); // Force redirect students to student Callern page
       } else {
-        window.location.href = '/dashboard'; // Redirect others to dashboard
+        window.location.replace('/dashboard'); // Force redirect others to dashboard
       }
     }
   }, [user]);
