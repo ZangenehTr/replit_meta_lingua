@@ -11,6 +11,7 @@ import { setupCallernEnhancementRoutes } from "./callern-enhancement-routes";
 import { registerCallernAIRoutes } from "./callern-ai-routes";
 import { setupCallernPackageRoutes } from "./callern-package-routes";
 import { setupCallernRecordingRoutes } from "./callern-recording-routes";
+import { registerCallernTeacherRoutes } from "./callern-teacher-routes";
 import callernRoadmapRoutes from "./routes/callern-roadmap-routes";
 import tttRoutes from "./ttt-routes";
 import aiWebhookRoutes from "./ai-webhook-routes";
@@ -19759,6 +19760,7 @@ Meta Lingua Academy`;
   registerCallernAIRoutes(app);
   setupCallernPackageRoutes(app, requireRole);
   setupCallernRecordingRoutes(app);
+  registerCallernTeacherRoutes(app, storage);
   
   // Setup TTT monitoring routes
   app.use(tttRoutes);

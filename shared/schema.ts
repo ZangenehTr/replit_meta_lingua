@@ -432,6 +432,19 @@ export const studentCallernPackages = pgTable("student_callern_packages", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Teacher Callern Authorization - Controls who can access Callern dashboard
+export const teacherCallernAuthorization = pgTable("teacher_callern_authorization", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").notNull().references(() => users.id),
+  authorizedBy: integer("authorized_by").notNull().references(() => users.id), // Admin/Supervisor who authorized
+  isAuthorized: boolean("is_authorized").default(true).notNull(),
+  authorizedAt: timestamp("authorized_at").defaultNow().notNull(),
+  revokedAt: timestamp("revoked_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
 // Teacher Callern Availability
 export const teacherCallernAvailability = pgTable("teacher_callern_availability", {
   id: serial("id").primaryKey(),
@@ -439,6 +452,17 @@ export const teacherCallernAvailability = pgTable("teacher_callern_availability"
   isOnline: boolean("is_online").default(false).notNull(),
   lastActiveAt: timestamp("last_active_at"),
   hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }), // Optional teacher-specific rate
+  // Predefined time slots (Morning, Afternoon, Evening, Night)
+  morningSlot: boolean("morning_slot").default(false).notNull(), // 6:00 - 12:00
+  afternoonSlot: boolean("afternoon_slot").default(false).notNull(), // 12:00 - 18:00
+  eveningSlot: boolean("evening_slot").default(false).notNull(), // 18:00 - 22:00
+  nightSlot: boolean("night_slot").default(false).notNull(), // 22:00 - 06:00
+  // Tracking
+  missedShifts: integer("missed_shifts").default(0).notNull(),
+  missedCalls: integer("missed_calls").default(0).notNull(),
+  totalCallsHandled: integer("total_calls_handled").default(0).notNull(),
+  // Connection quality
+  lastConnectionStrength: text("last_connection_strength"), // excellent, good, fair, poor
   availableHours: text("available_hours").array(), // JSON array of available time slots
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -460,6 +484,13 @@ export const callernCallHistory = pgTable("callern_call_history", {
   transcriptUrl: text("transcript_url"),
   transcriptLang: varchar("transcript_lang", { length: 10 }), // e.g., 'en', 'fa', 'ar'
   aiSummaryJson: jsonb("ai_summary_json"), // AI-generated summary
+  contentBundleUrl: text("content_bundle_url"), // Auto-generated learning materials
+  // Ratings
+  studentRating: integer("student_rating"), // 1-5 rating from student
+  supervisorRating: integer("supervisor_rating"), // 1-5 rating from supervisor
+  // Connection quality
+  teacherConnectionQuality: text("teacher_connection_quality"), // excellent, good, fair, poor
+  studentConnectionQuality: text("student_connection_quality"), // excellent, good, fair, poor
   consentRecordingAt: timestamp("consent_recording_at"), // When consent was given
   studentConsentRecording: boolean("student_consent_recording").default(false),
   teacherConsentRecording: boolean("teacher_consent_recording").default(false),
@@ -2706,6 +2737,12 @@ export const insertStudentCallernPackageSchema = createInsertSchema(studentCalle
   updatedAt: true
 });
 
+export const insertTeacherCallernAuthorizationSchema = createInsertSchema(teacherCallernAuthorization).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 export const insertTeacherCallernAvailabilitySchema = createInsertSchema(teacherCallernAvailability).omit({
   id: true,
   createdAt: true,
@@ -2771,6 +2808,8 @@ export type CallernPackage = typeof callernPackages.$inferSelect;
 export type InsertCallernPackage = z.infer<typeof insertCallernPackageSchema>;
 export type StudentCallernPackage = typeof studentCallernPackages.$inferSelect;
 export type InsertStudentCallernPackage = z.infer<typeof insertStudentCallernPackageSchema>;
+export type TeacherCallernAuthorization = typeof teacherCallernAuthorization.$inferSelect;
+export type InsertTeacherCallernAuthorization = z.infer<typeof insertTeacherCallernAuthorizationSchema>;
 export type TeacherCallernAvailability = typeof teacherCallernAvailability.$inferSelect;
 export type InsertTeacherCallernAvailability = z.infer<typeof insertTeacherCallernAvailabilitySchema>;
 export type CallernCallHistory = typeof callernCallHistory.$inferSelect;
