@@ -751,11 +751,11 @@ export default function EnhancedTeacherCallernSystem() {
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 {getConnectionIcon(call.teacherConnectionQuality)}
-                                <span className="text-xs">You</span>
+                                <span className="text-xs">{t('teacher:youLabel')}</span>
                               </div>
                               <div className="flex items-center gap-2">
                                 {getConnectionIcon(call.studentConnectionQuality)}
-                                <span className="text-xs">Student</span>
+                                <span className="text-xs">{t('teacher:studentLabel')}</span>
                               </div>
                             </TableCell>
                             <TableCell>

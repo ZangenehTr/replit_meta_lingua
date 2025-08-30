@@ -173,5 +173,20 @@
   "analytics": "تجزیه و تحلیل",
   "leaderboard": "جدول امتیازات",
   "dashboard": "داشبورد",
-  "sessions": "جلسات"
+  "sessions": "جلسات",
+  "monthlyOverview": "بررسی ماهانه",
+  "totalCalls": "کل تماس‌ها",
+  "totalMinutes": "کل دقایق",
+  "performanceMetrics": "معیارهای عملکرد",
+  "studentRating": "امتیاز دانشجو",
+  "leaderboardRank": "رتبه در جدول امتیازات",
+  "topPerformers": "برترین عملکردها",
+  "you": "شما",
+  "calls": "تماس",
+  "noLeaderboardData": "هنوز داده‌ای برای جدول امتیازات در دسترس نیست",
+  "viewRecording": "مشاهده ضبط",
+  "totalHours": "کل ساعات",
+  "monthlyTotal": "مجموع ماهانه",
+  "youLabel": "شما",
+  "studentLabel": "دانشجو"
 }

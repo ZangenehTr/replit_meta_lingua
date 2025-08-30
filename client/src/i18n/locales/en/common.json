@@ -505,6 +505,7 @@
     "loading": "Loading...",
     "tryAgain": "Try Again"
   },
+  "minutes": "minutes",
   "student": {
     "dashboard": "Student Dashboard",
     "learningProgress": "Learning Progress",
