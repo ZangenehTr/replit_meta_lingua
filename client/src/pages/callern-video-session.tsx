@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { VideoCall } from "@/components/callern/VideoCall";
+import { VideoCall } from "@/components/callern/VideoCallFinal";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 

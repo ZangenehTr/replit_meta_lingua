@@ -4,7 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { VideoCall } from "@/components/callern/VideoCall";
+import { VideoCall } from "@/components/callern/VideoCallFinal";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { MobileLayout } from "@/components/mobile/MobileLayout";

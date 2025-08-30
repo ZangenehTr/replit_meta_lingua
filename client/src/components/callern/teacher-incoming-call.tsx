@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/hooks/use-socket';
-import { VideoCall } from './VideoCall';
+import { VideoCall } from './VideoCallFinal';
 import { ringtoneService } from '@/services/ringtone-service';
 import { getTeacherRingtonePreferences } from './teacher-ringtone-settings';
 import { useTranslation } from 'react-i18next';

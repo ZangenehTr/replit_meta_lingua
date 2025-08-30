@@ -120,7 +120,7 @@ import RoadmapDesigner from "@/pages/admin/roadmap-designer";
 import CallernSystem from "@/pages/callern";
 import CallernEnhancements from "@/pages/callern-enhancements";
 import CallernVideoSession from "@/pages/callern-video-session";
-import CallernVideoCall from "@/pages/callern/VideoCall";
+import { VideoCall as CallernVideoCall } from "@/components/callern/VideoCallFinal";
 import GamificationSystem from "@/pages/games";
 import AIPracticePage from "@/pages/ai-practice";
 
