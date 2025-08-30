@@ -141,10 +141,8 @@ export function TeacherRingtoneSettings() {
     const newVolume = value[0];
     setPreferences(prev => ({ ...prev, volume: newVolume }));
     
-    // Update volume of currently playing ringtone
-    if (isPlaying) {
-      ringtoneService.setVolume(newVolume);
-    }
+    // Always update the service volume, not just when playing
+    ringtoneService.setVolume(newVolume);
   };
 
   // Only show for teachers
