@@ -112,7 +112,7 @@ export function setupCallernRecordingRoutes(app: Express) {
   // Get call history for a user
   app.get('/api/callern/call-history', authenticateToken, async (req, res) => {
     try {
-      const userId = (req as any).userId;
+      const userId = (req as any).user?.id;
       const userRole = (req as any).user?.role || 'Student';
       
       let history = await storage.getCallernCallHistory();
