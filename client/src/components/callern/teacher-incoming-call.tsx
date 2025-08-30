@@ -28,6 +28,7 @@ export function TeacherIncomingCall() {
   const [isInCall, setIsInCall] = useState(false);
   const [activeCallConfig, setActiveCallConfig] = useState<any>(null);
   const [isSilenced, setIsSilenced] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   const { user } = useAuth();
   const { socket } = useSocket(); // Use the existing socket from context
   const { t } = useTranslation(['teacher', 'common', 'callern']);
@@ -46,7 +47,7 @@ export function TeacherIncomingCall() {
       setIsSilenced(false); // Reset silence state for new call
       console.log('Ringing state set to true');
 
-      // Get teacher's ringtone preferences
+      // Get teacher's ringtone preferences and try to play
       if (user?.id) {
         try {
           const preferences = getTeacherRingtonePreferences(user.id);
@@ -55,15 +56,21 @@ export function TeacherIncomingCall() {
           ringtoneService.setVolume(preferences.volume);
           await ringtoneService.playRingtone(preferences.selectedRingtone, true);
           
-          console.log(`Playing ringtone: ${preferences.selectedRingtone} at volume ${preferences.volume}`);
+          console.log(`🔔 Playing ringtone: ${preferences.selectedRingtone} at volume ${preferences.volume}`);
         } catch (error) {
-          console.error('Failed to play ringtone:', error);
+          console.error('🔔 Failed to play ringtone:', error);
           
-          // Fallback to classic ringtone
-          try {
-            await ringtoneService.playRingtone('classic', true);
-          } catch (fallbackError) {
-            console.error('Failed to play fallback ringtone:', fallbackError);
+          // If error is due to user interaction policy, show a notice
+          if (error.message?.includes('user interaction')) {
+            console.log('🔔 Ringtone requires user interaction - visual notification only');
+          } else {
+            // Try fallback to classic ringtone
+            try {
+              await ringtoneService.playRingtone('classic', true);
+              console.log('🔔 Fallback ringtone playing');
+            } catch (fallbackError) {
+              console.error('🔔 Failed to play fallback ringtone:', fallbackError);
+            }
           }
         }
       }
@@ -85,8 +92,19 @@ export function TeacherIncomingCall() {
     };
   }, [user, socket]);
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
     if (!incomingCall || !socket) return;
+
+    // Enable audio with user gesture if not already enabled
+    if (!audioEnabled) {
+      try {
+        await ringtoneService.enableAudioWithUserGesture();
+        setAudioEnabled(true);
+        console.log('🎵 Audio enabled after accept button click');
+      } catch (error) {
+        console.error('🎵 Failed to enable audio:', error);
+      }
+    }
 
     // Stop ringtone
     ringtoneService.stopRingtone();
@@ -115,8 +133,19 @@ export function TeacherIncomingCall() {
     setIsInCall(true);
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!incomingCall || !socket) return;
+
+    // Enable audio with user gesture if not already enabled (for future calls)
+    if (!audioEnabled) {
+      try {
+        await ringtoneService.enableAudioWithUserGesture();
+        setAudioEnabled(true);
+        console.log('🎵 Audio enabled after reject button click');
+      } catch (error) {
+        console.error('🎵 Failed to enable audio:', error);
+      }
+    }
 
     // Stop ringtone
     ringtoneService.stopRingtone();
@@ -139,17 +168,36 @@ export function TeacherIncomingCall() {
   };
 
   // Handle silence button
-  const handleSilence = () => {
+  const handleSilence = async () => {
+    console.log(`🔇 Silence button clicked, currently silenced: ${isSilenced}`);
+    
+    // Enable audio with user gesture if not already enabled
+    if (!audioEnabled) {
+      try {
+        await ringtoneService.enableAudioWithUserGesture();
+        setAudioEnabled(true);
+        console.log('🎵 Audio enabled after silence button click');
+      } catch (error) {
+        console.error('🎵 Failed to enable audio:', error);
+      }
+    }
+    
     if (isSilenced) {
       // Unsilence - resume ringtone
-      if (user?.id && incomingCall) {
-        const preferences = getTeacherRingtonePreferences(user.id);
-        ringtoneService.setVolume(preferences.volume);
-        ringtoneService.playRingtone(preferences.selectedRingtone, true);
+      if (user?.id && incomingCall && audioEnabled) {
+        try {
+          const preferences = getTeacherRingtonePreferences(user.id);
+          ringtoneService.setVolume(preferences.volume);
+          await ringtoneService.playRingtone(preferences.selectedRingtone, true);
+          console.log('🔔 Ringtone resumed after unsilencing');
+        } catch (error) {
+          console.error('🔔 Failed to resume ringtone:', error);
+        }
       }
       setIsSilenced(false);
     } else {
       // Silence the ringtone
+      console.log('🔇 Silencing ringtone...');
       ringtoneService.stopRingtone();
       setIsSilenced(true);
     }
