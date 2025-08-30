@@ -869,4 +869,4 @@ export function VideoCall({
   );
 }
 
-export default VideoCallFinal;
+export default VideoCall;
