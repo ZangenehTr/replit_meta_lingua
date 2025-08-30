@@ -1,0 +1,151 @@
++++CodebaseReview (chat-scoped or message-scoped)
+
+Goal: Before implementing a feature, review the repository to detect any existing or partial/duplicate implementations to avoid rework.
+
+Trigger: Whenever a task involves adding/enhancing a feature, endpoint, UI view, or job.
+
+You must:
+
+Index & scan: Search repo for related terms (feature name, domain concepts, filenames, routes, tests, docs, TODO/FIXME).
+
+Detect overlaps: Identify similar modules, stubs, flags, or feature branches (e.g., v1/FeatureX, FeatureX-old, FeatureX-experimental).
+
+Decide reuse vs. refactor vs. replace: Provide a short decision with rationale.
+
+Create an impact map: Affected modules, APIs, events, jobs, telemetry, env vars, and CI pipelines.
+
+Plan migration/removal: If duplication exists, describe removal or consolidation steps.
+
+Deliverables (POST):
+
+review/findings.md with:
+
+Existing/partial features found (paths, owners if known, status).
+
+Reuse plan or sunset plan.
+
+Risk list (compatibility, data migration).
+
+Timeboxed decision (e.g., “reuse module A; remove module B after test pass”).
+
+PR checklist item: “No duplicate implementation introduced.”
+
+Acceptance criteria:
+
+No parallel, overlapping module is created without an explicit deprecation plan.
+
+CI job duplicate-scan passes (e.g., no new files matching rejected patterns).
+
++++RealE2ETests (chat-scoped or message-scoped)
+
+Goal: Ensure real data flows with real API calls (in non-prod envs) and end-to-end tests exist and run green.
+
+Trigger: Any change that touches IO (HTTP clients/servers), queues, DB, file storage, or authentication.
+
+You must:
+
+Use real endpoints pointing to staging/sandbox (no mocks for E2E).
+
+Seed real test data (fixtures) and document ids/cleanup.
+
+Author E2E tests that cover: happy path, validation errors, timeouts/retries, auth failures, idempotency, and concurrency (if applicable).
+
+Wire into CI with matrix (node versions, regions, feature flags).
+
+Record evidence: Test run logs + artifacts (screenshots, HARs).
+
+Deliverables (POST):
+
+Tests under e2e/ (Playwright/Vitest/Jest + supertest, etc.).
+
+docs/e2e.md: endpoints, credentials sourcing, data lifecycle, and rollback.
+
+CI config update (.github/workflows/e2e.yml or equivalent) with gating.
+
+Acceptance criteria:
+
+CI shows green E2E on at least: happy path, auth fail, retry, non-2xx.
+
+No network stubbing in E2E scope (unit/integration may still mock).
+
+Flake rate <2% across 3 consecutive runs (retry budget ≤1).
+
++++I18NEnforce (chat-scoped or message-scoped)
+
+Goal: Implement full internationalization (i18n) with comprehensive tests.
+
+Trigger: Any UI copy, notifications, emails, PDFs, or user-visible strings.
+
+You must:
+
+Externalize all strings to locale files; no hard-coded user-visible text.
+
+Provide default + at least one extra locale (e.g., en, fa).
+
+Handle RTL/LTR, pluralization, interpolation, date/number/currency formats.
+
+Instrument coverage: Ensure ≥95% of UI strings are localized.
+
+Write tests:
+
+Snapshot per locale for key views.
+
+RTL rendering test (for FA/AR/HE).
+
+Missing key fallback test (fails build if missing).
+
+Pseudo-locale test (length expansion & accenting).
+
+Deliverables (POST):
+
+i18n/ locale resources + loader configuration.
+
+Tests in __tests__/i18n/ (render snapshots, RTL checks, missing-keys).
+
+scripts/i18n-verify to fail CI on missing/unused keys.
+
+docs/i18n.md usage guidelines and contributor checklist.
+
+Acceptance criteria:
+
+CI job i18n-verify passes (no missing/unused keys).
+
+RTL smoke test passes; screenshots attached.
+
+Pseudo-locale run produces legible (non-overlapping) UI in CI artifact.
+
++++FullProductGuard (chat-scoped)
+
+Goal: Enforce all three decorators in a unified gate for production-grade merges.
+
+Trigger: Any merge to main or release branch; any feature PR that touches code in apps/, services/, or packages/.
+
+You must:
+
+Run +++CodebaseReview: attach review/findings.md and the reuse/sunset plan.
+
+Run +++RealE2ETests: provide green E2E runs (matrix) with artifacts.
+
+Run +++I18NEnforce: provide i18n coverage report and passing verification.
+
+Deliverables (POST):
+
+PR description sections:
+
+Duplication Check: summary + link to review/findings.md.
+
+E2E Evidence: CI links, artifacts, fixture notes.
+
+I18N Report: coverage %, locales, RTL screenshots.
+
+CI “required checks”: duplicate-scan, e2e, i18n-verify.
+
+Acceptance criteria:
+
+All three required checks pass.
+
+PR introduces no new hard-coded UI strings.
+
+PR introduces no duplicate feature surfaces or orphaned partials.
+
+E2E logs show real network calls to staging/sandbox services.
