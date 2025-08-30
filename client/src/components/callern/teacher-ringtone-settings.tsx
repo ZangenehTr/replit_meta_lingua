@@ -164,28 +164,39 @@ export function TeacherRingtoneSettings() {
         {/* Ringtone Selection */}
         <div className="space-y-3">
           <Label className="text-sm font-medium">Choose Your Ringtone</Label>
-          <RadioGroup
-            value={preferences.selectedRingtone}
-            onValueChange={(value) => {
-              setPreferences(prev => ({ ...prev, selectedRingtone: value }));
-            }}
-          >
+          <div className="space-y-2">
             {ringtones.map((ringtone) => (
-              <div key={ringtone.id} className="flex items-center justify-between space-x-2 p-3 border rounded-lg hover:bg-muted/50">
+              <div 
+                key={ringtone.id} 
+                className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
+                  preferences.selectedRingtone === ringtone.id 
+                    ? 'bg-primary/10 border-primary' 
+                    : 'hover:bg-muted/50'
+                }`}
+                onClick={() => {
+                  setPreferences(prev => ({ ...prev, selectedRingtone: ringtone.id }));
+                }}
+              >
                 <div className="flex items-center space-x-3 flex-1">
-                  <RadioGroupItem 
-                    value={ringtone.id} 
-                    id={`ringtone-${ringtone.id}`}
-                    className="text-primary"
-                  />
+                  <div className="relative">
+                    <input
+                      type="radio"
+                      name="ringtone"
+                      value={ringtone.id}
+                      checked={preferences.selectedRingtone === ringtone.id}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setPreferences(prev => ({ ...prev, selectedRingtone: ringtone.id }));
+                        }
+                      }}
+                      className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+                    />
+                  </div>
                   <div className="flex-1">
-                    <Label 
-                      htmlFor={`ringtone-${ringtone.id}`} 
-                      className="font-medium cursor-pointer block"
-                    >
+                    <div className="font-medium text-sm">
                       {ringtone.name}
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
+                    </div>
+                    <p className="text-xs text-muted-foreground">
                       {ringtone.description}
                     </p>
                   </div>
@@ -194,7 +205,10 @@ export function TeacherRingtoneSettings() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => togglePreview(ringtone.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePreview(ringtone.id);
+                  }}
                   disabled={isPlaying && playingRingtone !== ringtone.id}
                 >
                   {isPlaying && playingRingtone === ringtone.id ? (
@@ -205,7 +219,7 @@ export function TeacherRingtoneSettings() {
                 </Button>
               </div>
             ))}
-          </RadioGroup>
+          </div>
         </div>
 
         {/* Volume Control */}
