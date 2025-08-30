@@ -113,5 +113,20 @@
   "analytics": "Analytics",
   "leaderboard": "Leaderboard",
   "dashboard": "Dashboard",
-  "sessions": "Sessions"
+  "sessions": "Sessions",
+  "monthlyOverview": "Monthly Overview",
+  "totalCalls": "Total Calls",
+  "totalMinutes": "Total Minutes",
+  "performanceMetrics": "Performance Metrics",
+  "studentRating": "Student Rating",
+  "leaderboardRank": "Leaderboard Rank",
+  "topPerformers": "Top Performers",
+  "you": "You",
+  "calls": "calls",
+  "noLeaderboardData": "No leaderboard data available yet",
+  "viewRecording": "View Recording",
+  "totalHours": "Total Hours",
+  "monthlyTotal": "Monthly Total",
+  "youLabel": "You",
+  "studentLabel": "Student"
 }
