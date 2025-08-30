@@ -103,16 +103,24 @@ export function TeacherRingtoneSettings() {
         setIsPlaying(true);
         setPlayingRingtone(ringtoneId);
 
-        // Auto-stop after the ringtone finishes
-        setTimeout(() => {
-          if (playingRingtone === ringtoneId) {
+        // Check periodically if the ringtone has stopped playing
+        const checkIfFinished = () => {
+          if (!ringtoneService.isPlaying()) {
             setIsPlaying(false);
             setPlayingRingtone(null);
+          } else {
+            // Continue checking
+            setTimeout(checkIfFinished, 200);
           }
-        }, 3000); // Most ringtones are ~2-3 seconds
+        };
+        
+        // Start checking after a short delay to allow audio to start
+        setTimeout(checkIfFinished, 500);
       }
     } catch (error) {
       console.error('Error playing ringtone preview:', error);
+      setIsPlaying(false);
+      setPlayingRingtone(null);
       toast({
         title: t('common:error'),
         description: 'Could not play ringtone preview',
@@ -158,14 +166,23 @@ export function TeacherRingtoneSettings() {
           <Label className="text-sm font-medium">Choose Your Ringtone</Label>
           <RadioGroup
             value={preferences.selectedRingtone}
-            onValueChange={(value) => setPreferences(prev => ({ ...prev, selectedRingtone: value }))}
+            onValueChange={(value) => {
+              setPreferences(prev => ({ ...prev, selectedRingtone: value }));
+            }}
           >
             {ringtones.map((ringtone) => (
-              <div key={ringtone.id} className="flex items-center justify-between space-x-2 p-3 border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <RadioGroupItem value={ringtone.id} id={ringtone.id} />
-                  <div>
-                    <Label htmlFor={ringtone.id} className="font-medium cursor-pointer">
+              <div key={ringtone.id} className="flex items-center justify-between space-x-2 p-3 border rounded-lg hover:bg-muted/50">
+                <div className="flex items-center space-x-3 flex-1">
+                  <RadioGroupItem 
+                    value={ringtone.id} 
+                    id={`ringtone-${ringtone.id}`}
+                    className="text-primary"
+                  />
+                  <div className="flex-1">
+                    <Label 
+                      htmlFor={`ringtone-${ringtone.id}`} 
+                      className="font-medium cursor-pointer block"
+                    >
                       {ringtone.name}
                     </Label>
                     <p className="text-sm text-muted-foreground">
@@ -217,9 +234,9 @@ export function TeacherRingtoneSettings() {
             onClick={() => togglePreview(preferences.selectedRingtone)}
             variant="outline"
             className="w-full"
-            disabled={isPlaying}
+            disabled={isPlaying && playingRingtone !== preferences.selectedRingtone}
           >
-            {isPlaying ? (
+            {isPlaying && playingRingtone === preferences.selectedRingtone ? (
               <>
                 <Square className="h-4 w-4 mr-2" />
                 Stop Test
