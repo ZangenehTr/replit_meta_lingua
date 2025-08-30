@@ -35,7 +35,7 @@ interface VideoCallFinalProps {
   onCallEnd: () => void;
 }
 
-export function VideoCallFinal({
+export function VideoCall({
   roomId,
   userId,
   role,
