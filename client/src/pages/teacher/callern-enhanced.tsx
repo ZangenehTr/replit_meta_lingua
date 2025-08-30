@@ -242,50 +242,11 @@ export default function EnhancedTeacherCallernSystem() {
     }
   }, [availability]);
 
-  // Update availability mutation
-  const updateAvailabilityMutation = useMutation({
-    mutationFn: (data: any) =>
-      apiRequest("/api/teacher/callern/availability", {
-        method: "PUT",
-        body: JSON.stringify(data),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/teacher/callern/availability"] });
-      toast({
-        title: t('teacher:availabilityUpdated'),
-        description: t('teacher:availabilityUpdatedDesc'),
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: t('teacher:updateFailed'),
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  // REMOVED: Teachers can no longer update their own availability
+  // This functionality is now controlled exclusively by administrators and supervisors
 
-  // Handle availability change
-  const handleAvailabilityChange = (slot: string, value: boolean) => {
-    const updates: any = {
-      morningSlot,
-      afternoonSlot,
-      eveningSlot,
-      nightSlot
-    };
-    updates[slot] = value;
-    
-    // Update local state
-    switch(slot) {
-      case 'morningSlot': setMorningSlot(value); break;
-      case 'afternoonSlot': setAfternoonSlot(value); break;
-      case 'eveningSlot': setEveningSlot(value); break;
-      case 'nightSlot': setNightSlot(value); break;
-    }
-    
-    // Send to server
-    updateAvailabilityMutation.mutate(updates);
-  };
+  // REMOVED: handleAvailabilityChange function is no longer needed
+  // Teachers can only view their availability settings (read-only)
 
   // Listen for incoming calls
   useEffect(() => {
@@ -589,69 +550,71 @@ export default function EnhancedTeacherCallernSystem() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <p className="text-sm text-gray-600 mb-4">
-                    {t('teacher:selectTimeSlots', 'Select your available time slots for Callern sessions')}
-                  </p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-800">
+                          {t('teacher:dutyTimesViewOnly', 'Duty Times (View Only)')}
+                        </p>
+                        <p className="text-xs text-blue-700">
+                          {t('teacher:dutyTimesSetByAdmin', 'These time slots are managed by administrators and supervisors')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="morning"
-                        checked={morningSlot}
-                        onCheckedChange={(v) => handleAvailabilityChange('morningSlot', v)}
-                      />
-                      <Label htmlFor="morning" className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center space-x-2 opacity-75">
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${morningSlot ? 'bg-orange-500 border-orange-500' : 'bg-gray-200 border-gray-300'}`}>
+                        {morningSlot && <CheckCircle className="h-3 w-3 text-white" />}
+                      </div>
+                      <div className="flex items-center gap-2">
                         <Sunrise className="h-4 w-4 text-orange-500" />
                         <div>
                           <p className="font-medium">{t('teacher:morning', 'Morning')}</p>
                           <p className="text-xs text-gray-500">6:00 - 12:00</p>
                         </div>
-                      </Label>
+                      </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="afternoon"
-                        checked={afternoonSlot}
-                        onCheckedChange={(v) => handleAvailabilityChange('afternoonSlot', v)}
-                      />
-                      <Label htmlFor="afternoon" className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center space-x-2 opacity-75">
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${afternoonSlot ? 'bg-yellow-500 border-yellow-500' : 'bg-gray-200 border-gray-300'}`}>
+                        {afternoonSlot && <CheckCircle className="h-3 w-3 text-white" />}
+                      </div>
+                      <div className="flex items-center gap-2">
                         <Sun className="h-4 w-4 text-yellow-500" />
                         <div>
                           <p className="font-medium">{t('teacher:afternoon', 'Afternoon')}</p>
                           <p className="text-xs text-gray-500">12:00 - 18:00</p>
                         </div>
-                      </Label>
+                      </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="evening"
-                        checked={eveningSlot}
-                        onCheckedChange={(v) => handleAvailabilityChange('eveningSlot', v)}
-                      />
-                      <Label htmlFor="evening" className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center space-x-2 opacity-75">
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${eveningSlot ? 'bg-purple-500 border-purple-500' : 'bg-gray-200 border-gray-300'}`}>
+                        {eveningSlot && <CheckCircle className="h-3 w-3 text-white" />}
+                      </div>
+                      <div className="flex items-center gap-2">
                         <Sunset className="h-4 w-4 text-purple-500" />
                         <div>
                           <p className="font-medium">{t('teacher:evening', 'Evening')}</p>
                           <p className="text-xs text-gray-500">18:00 - 22:00</p>
                         </div>
-                      </Label>
+                      </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="night"
-                        checked={nightSlot}
-                        onCheckedChange={(v) => handleAvailabilityChange('nightSlot', v)}
-                      />
-                      <Label htmlFor="night" className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center space-x-2 opacity-75">
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${nightSlot ? 'bg-indigo-500 border-indigo-500' : 'bg-gray-200 border-gray-300'}`}>
+                        {nightSlot && <CheckCircle className="h-3 w-3 text-white" />}
+                      </div>
+                      <div className="flex items-center gap-2">
                         <Moon className="h-4 w-4 text-indigo-500" />
                         <div>
                           <p className="font-medium">{t('teacher:night', 'Night')}</p>
                           <p className="text-xs text-gray-500">22:00 - 6:00</p>
                         </div>
-                      </Label>
+                      </div>
                     </div>
                   </div>
                 </div>
