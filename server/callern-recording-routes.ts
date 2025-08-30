@@ -21,7 +21,8 @@ const upload = multer({
     filename: (req, file, cb) => {
       const timestamp = Date.now();
       const roomId = req.body.roomId || 'unknown';
-      const filename = `recording-${roomId}-${timestamp}.webm`;
+      const extension = file.mimetype.includes('video') ? 'webm' : 'bin';
+      const filename = `recording-${roomId}-${timestamp}.${extension}`;
       cb(null, filename);
     }
   }),

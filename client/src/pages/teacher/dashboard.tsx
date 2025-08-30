@@ -261,7 +261,7 @@ export default function TeacherDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {stats?.upcomingClasses?.map((cls) => (
+                {(stats?.upcomingClasses || []).map((cls) => (
                   <motion.div 
                     key={cls.id}
                     className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200"

@@ -69,6 +69,7 @@ import {
   Volume2
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CallernHistory } from "@/components/callern/CallernHistory";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -700,142 +701,7 @@ export default function EnhancedTeacherCallernSystem() {
           </TabsContent>
 
           <TabsContent value="history" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('teacher:sessionHistory', 'Session History')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {historyLoading ? (
-                  <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
-                ) : callHistory.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{t('teacher:student', 'Student')}</TableHead>
-                          <TableHead>{t('teacher:date', 'Date')}</TableHead>
-                          <TableHead>{t('teacher:duration', 'Duration')}</TableHead>
-                          <TableHead>{t('teacher:ratings', 'Ratings')}</TableHead>
-                          <TableHead>{t('teacher:connection', 'Connection')}</TableHead>
-                          <TableHead>{t('teacher:resources', 'Resources')}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {callHistory.slice(0, 20).map((call) => (
-                          <TableRow key={call.id}>
-                            <TableCell>
-                              {showPrivateInfo && call.studentName ? (
-                                call.studentName
-                              ) : (
-                                `Student #${call.studentId}`
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {new Date(call.startedAt).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>{call.duration} min</TableCell>
-                            <TableCell>
-                              <div className="flex flex-col gap-1">
-                                {call.studentRating && (
-                                  <div className="flex items-center gap-1">
-                                    <User className="h-3 w-3" />
-                                    <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                                    <span className="text-sm">{call.studentRating}</span>
-                                  </div>
-                                )}
-                                {call.supervisorRating && (
-                                  <div className="flex items-center gap-1">
-                                    <ShieldAlert className="h-3 w-3" />
-                                    <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                                    <span className="text-sm">{call.supervisorRating}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {getConnectionIcon(call.teacherConnectionQuality)}
-                                <span className="text-xs">{t('teacher:youLabel')}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {getConnectionIcon(call.studentConnectionQuality)}
-                                <span className="text-xs">{t('teacher:studentLabel')}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                {call.recordingUrl && (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => window.open(call.recordingUrl, '_blank')}
-                                        >
-                                          <FileVideo className="h-4 w-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>{t('teacher:viewRecording', 'View Recording')}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                )}
-                                {call.transcriptUrl && (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => window.open(call.transcriptUrl, '_blank')}
-                                        >
-                                          <FileText className="h-4 w-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>{t('teacher:viewTranscript', 'View Transcript')}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                )}
-                                {call.contentBundleUrl && (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => window.open(call.contentBundleUrl, '_blank')}
-                                        >
-                                          <Package className="h-4 w-4" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>{t('teacher:viewContentBundle', 'Learning Materials')}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">
-                      {t('teacher:noCallHistory', 'No call history available')}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <CallernHistory />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">
