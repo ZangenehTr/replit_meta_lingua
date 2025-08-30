@@ -83,8 +83,8 @@ export class CallernWebSocketServer {
 
       // Authentication
       socket.on('authenticate', async (data) => {
-        const { userId, role } = data;
-        console.log('Authentication received:', { userId, role, socketId: socket.id });
+        const { userId, role, enableCallern } = data;
+        console.log('Authentication received:', { userId, role, enableCallern, socketId: socket.id });
         
         // Convert role to lowercase for comparison
         const roleLower = role.toLowerCase();
@@ -93,19 +93,21 @@ export class CallernWebSocketServer {
           this.teacherSockets.set(userId, {
             socketId: socket.id,
             teacherId: userId,
-            isAvailable: true,
+            isAvailable: enableCallern || false,
           });
           console.log('Teacher registered:', userId);
           console.log('Current teacher sockets after registration:', Array.from(this.teacherSockets.keys()));
           
-          // Update teacher availability in database
-          await this.updateTeacherAvailability(userId, true);
-          
-          // Notify admin dashboard
-          this.io.emit('teacher-status-update', {
-            teacherId: userId,
-            status: 'online',
-          });
+          // If teacher wants to enable Callern, update database
+          if (enableCallern) {
+            await this.updateTeacherAvailability(userId, true);
+            
+            // Notify admin dashboard
+            this.io.emit('teacher-status-update', {
+              teacherId: userId,
+              status: 'online',
+            });
+          }
           
           // Send confirmation back to teacher
           socket.emit('authenticated', { success: true, role: 'teacher' });
@@ -116,6 +118,57 @@ export class CallernWebSocketServer {
           
           // Send confirmation back to student
           socket.emit('authenticated', { success: true, role: 'student' });
+        }
+      });
+
+      // Handle teacher going online for Callern
+      socket.on('teacher-online', async (data: { teacherId: number }) => {
+        const { teacherId } = data;
+        
+        try {
+          const teacherSocket = this.teacherSockets.get(teacherId);
+          if (teacherSocket) {
+            teacherSocket.isAvailable = true;
+            this.teacherSockets.set(teacherId, teacherSocket);
+          }
+          
+          await this.updateTeacherAvailability(teacherId, true);
+          
+          this.io.emit('teacher-status-update', {
+            teacherId,
+            status: 'online'
+          });
+          
+          socket.emit('teacher-online-success', { teacherId, status: 'online' });
+          console.log(`Teacher ${teacherId} is now online for Callern`);
+        } catch (error) {
+          console.error('Error updating teacher online status:', error);
+          socket.emit('error', { message: 'Failed to update teacher status' });
+        }
+      });
+
+      // Handle teacher going offline for Callern
+      socket.on('teacher-offline', async (data: { teacherId: number }) => {
+        const { teacherId } = data;
+        
+        try {
+          const teacherSocket = this.teacherSockets.get(teacherId);
+          if (teacherSocket) {
+            teacherSocket.isAvailable = false;
+            this.teacherSockets.set(teacherId, teacherSocket);
+          }
+          
+          await this.updateTeacherAvailability(teacherId, false);
+          
+          this.io.emit('teacher-status-update', {
+            teacherId,
+            status: 'offline'
+          });
+          
+          socket.emit('teacher-offline-success', { teacherId, status: 'offline' });
+          console.log(`Teacher ${teacherId} is now offline for Callern`);
+        } catch (error) {
+          console.error('Error updating teacher offline status:', error);
         }
       });
 

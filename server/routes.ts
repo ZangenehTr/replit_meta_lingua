@@ -8707,8 +8707,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const availability = callernAvailability.find(a => a.teacherId === teacher.id);
         const isTeacher1 = teacher.email === 'teacher1@test.com';
         
-        // Teacher is online only if they're actually connected via WebSocket
-        const isOnline = connectedTeacherIds.includes(teacher.id);
+        // Teacher is online only if they're connected via WebSocket AND have enabled Callern availability
+        const isConnected = connectedTeacherIds.includes(teacher.id);
+        const hasCallernAvailability = availability?.isOnline === true;
+        const isOnline = isConnected && hasCallernAvailability;
         
         return {
           id: teacher.id,

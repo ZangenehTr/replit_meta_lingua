@@ -37,15 +37,14 @@ export function TeacherOnlineToggle() {
     setIsConnecting(true);
 
     if (!isOnline) {
-      // Going online - authenticate with WebSocket
-      socket.emit('authenticate', {
-        userId: user?.id,
-        role: 'teacher'
+      // Going online - enable Callern availability
+      socket.emit('teacher-online', {
+        teacherId: user?.id
       });
 
-      // Wait for authentication confirmation
-      socket.once('authenticated', (data) => {
-        console.log('Teacher authenticated for Callern:', data);
+      // Wait for confirmation
+      socket.once('teacher-online-success', (data) => {
+        console.log('Teacher online for Callern:', data);
         setIsOnline(true);
         setIsConnecting(false);
         toast({
@@ -54,9 +53,9 @@ export function TeacherOnlineToggle() {
         });
       });
 
-      // Handle authentication error
+      // Handle error
       socket.once('error', (error) => {
-        console.error('Authentication error:', error);
+        console.error('Online toggle error:', error);
         setIsConnecting(false);
         toast({
           title: t('error'),
@@ -69,11 +68,16 @@ export function TeacherOnlineToggle() {
       socket.emit('teacher-offline', {
         teacherId: user?.id
       });
-      setIsOnline(false);
-      setIsConnecting(false);
-      toast({
-        title: t('success'),
-        description: t('nowOfflineForCallern'),
+
+      // Wait for confirmation
+      socket.once('teacher-offline-success', (data) => {
+        console.log('Teacher offline for Callern:', data);
+        setIsOnline(false);
+        setIsConnecting(false);
+        toast({
+          title: t('success'),
+          description: t('nowOfflineForCallern'),
+        });
       });
     }
   };
