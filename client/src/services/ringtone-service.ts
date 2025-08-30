@@ -13,6 +13,7 @@ class RingtoneService {
   private audioContext: AudioContext | null = null;
   private currentRingtone: AudioBufferSourceNode | null = null;
   private currentGainNode: GainNode | null = null;
+  private currentVolume: number = 0.7; // Default volume
 
   private getAudioContext(): AudioContext {
     if (!this.audioContext) {
@@ -238,7 +239,7 @@ class RingtoneService {
 
     // Create gain node for volume control
     this.currentGainNode = context.createGain();
-    this.currentGainNode.gain.value = 0.5; // 50% volume
+    this.currentGainNode.gain.value = this.currentVolume; // Use current volume setting
     this.currentGainNode.connect(context.destination);
 
     // Create and start the source
@@ -279,9 +280,18 @@ class RingtoneService {
 
   // Set volume (0.0 to 1.0)
   public setVolume(volume: number): void {
+    // Store the volume for future use
+    this.currentVolume = Math.max(0, Math.min(1, volume));
+    
+    // Apply to current gain node if playing
     if (this.currentGainNode) {
-      this.currentGainNode.gain.value = Math.max(0, Math.min(1, volume));
+      this.currentGainNode.gain.value = this.currentVolume;
     }
+  }
+
+  // Get current volume
+  public getVolume(): number {
+    return this.currentVolume;
   }
 
   // Dispose of audio context
