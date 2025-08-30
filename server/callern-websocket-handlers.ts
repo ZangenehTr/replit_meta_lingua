@@ -7,6 +7,7 @@ import { teacherCoachingService } from './services/teacher-coaching-service';
 const onlineTeachers = new Map<number, { socketId: string; status: 'available' | 'busy'; lastSeen: number }>();
 const teacherSockets = new Map<string, number>();
 const studentSockets = new Map<string, number>();
+const adminSockets = new Map<string, { userId: number; role: string }>(); // Track admin/supervisor sockets
 const activeCalls = new Map<string, { studentId: number; teacherId: number; roomId: string; startTime: number }>();
 const pendingCalls = new Map<string, { studentId: number; teacherId: number; timestamp: number; timeout: NodeJS.Timeout }>();
 
@@ -20,6 +21,23 @@ const speechMetrics = new Map<string, {
   teacherVolume: number[];
   sessionStart: number;
 }>();
+
+// Helper function to send notifications to admin and supervisor roles only
+function sendAdminNotification(io: any, notification: any) {
+  // Send to all authenticated admin and supervisor sockets
+  for (const [socketId, user] of adminSockets.entries()) {
+    if (user.role === 'admin' || user.role === 'supervisor') {
+      io.to(socketId).emit('admin-notification', notification);
+    }
+  }
+  
+  // Log the notification for server monitoring
+  console.log(`📢 Admin notification sent to ${adminSockets.size} admin/supervisor(s):`, {
+    type: notification.type,
+    severity: notification.severity,
+    message: notification.message
+  });
+}
 
 export function setupCallernWebSocketHandlers(io: Server) {
   const aiMonitor = new CallernAIMonitor(io);
@@ -62,6 +80,10 @@ export function setupCallernWebSocketHandlers(io: Server) {
         studentSockets.set(socket.id, userId);
         console.log(`Student ${userId} authenticated with socket ${socket.id}`);
         socket.emit('authenticated', { success: true, role: 'student' });
+      } else if (role === 'admin' || role === 'supervisor' || role === 'Admin' || role === 'Supervisor') {
+        adminSockets.set(socket.id, { userId, role: role.toLowerCase() });
+        console.log(`${role} ${userId} authenticated with socket ${socket.id}`);
+        socket.emit('authenticated', { success: true, role: role.toLowerCase() });
       }
     });
 
@@ -91,8 +113,8 @@ export function setupCallernWebSocketHandlers(io: Server) {
           timestamp: Date.now()
         });
         
-        // Notify admins about teacher going online
-        io.emit('admin-notification', {
+        // Notify admins/supervisors about teacher going online
+        sendAdminNotification(io, {
           type: 'teacher-online',
           teacherId,
           timestamp: Date.now(),
@@ -202,7 +224,7 @@ export function setupCallernWebSocketHandlers(io: Server) {
           }
           
           // Notify admin/supervisors about missed call
-          io.emit('admin-notification', {
+          sendAdminNotification(io, {
             type: 'missed-call',
             teacherId,
             studentId,
@@ -586,9 +608,9 @@ export function setupCallernWebSocketHandlers(io: Server) {
           timestamp: Date.now()
         });
         
-        // Send admin notification about unexpected offline status
+        // Send admin/supervisor notification about unexpected offline status
         if (wasOnline) {
-          io.emit('admin-notification', {
+          sendAdminNotification(io, {
             type: 'teacher-offline',
             teacherId,
             timestamp: Date.now(),
@@ -603,6 +625,13 @@ export function setupCallernWebSocketHandlers(io: Server) {
       if (studentId) {
         studentSockets.delete(socket.id);
         console.log(`Student ${studentId} disconnected`);
+      }
+
+      // Check if it was an admin or supervisor
+      const adminUser = adminSockets.get(socket.id);
+      if (adminUser) {
+        adminSockets.delete(socket.id);
+        console.log(`${adminUser.role} ${adminUser.userId} disconnected`);
       }
     });
   });
