@@ -174,43 +174,75 @@ export function VideoCall({
         
         pcRef.current = pc;
         
-        // Initialize Socket.IO
+        // Initialize Socket.IO with proper connection management
         const socket = io({
           path: "/socket.io",
-          transports: ["websocket", "polling"]
+          transports: ["websocket", "polling"],
+          forceNew: true, // Prevent connection reuse
+          timeout: 5000
         });
         
         socket.on("connect", () => {
+          console.log(`🔗 Socket connected: ${socket.id} for user ${userId} (${role})`);
+          // Authenticate first, then join room
+          socket.emit("authenticate", { userId, role });
           socket.emit("join-room", { roomId, userId, role });
         });
         
-        // WebRTC signaling
-        socket.on("user-joined", async ({ socketId }) => {
-          if (role === "student" && pc.signalingState === "stable") {
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            socket.emit("offer", { roomId, offer, to: socketId });
+        // WebRTC signaling with proper state checking
+        socket.on("user-joined", async ({ socketId, userId: joinedUserId }) => {
+          console.log(`👤 User joined: ${joinedUserId}, socket: ${socketId}`);
+          if (role === "student" && pc.signalingState === "stable" && joinedUserId !== userId) {
+            try {
+              const offer = await pc.createOffer({
+                offerToReceiveAudio: true,
+                offerToReceiveVideo: true
+              });
+              await pc.setLocalDescription(offer);
+              console.log(`📤 Sending offer from student ${userId} to ${joinedUserId}`);
+              socket.emit("offer", { roomId, offer, to: socketId });
+            } catch (error) {
+              console.error("Failed to create offer:", error);
+            }
           }
         });
         
         socket.on("offer", async ({ offer, from }) => {
-          if (pc.signalingState === "stable") {
-            await pc.setRemoteDescription(offer);
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            socket.emit("answer", { roomId, answer, to: from });
+          console.log(`📥 Received offer from ${from}, PC state: ${pc.signalingState}`);
+          try {
+            if (pc.signalingState === "stable" || pc.signalingState === "have-remote-offer") {
+              await pc.setRemoteDescription(new RTCSessionDescription(offer));
+              const answer = await pc.createAnswer();
+              await pc.setLocalDescription(answer);
+              console.log(`📤 Sending answer to ${from}`);
+              socket.emit("answer", { roomId, answer, to: from });
+            }
+          } catch (error) {
+            console.error("Failed to handle offer:", error);
           }
         });
         
         socket.on("answer", async ({ answer }) => {
-          if (pc.signalingState === "have-local-offer") {
-            await pc.setRemoteDescription(answer);
+          console.log(`📥 Received answer, PC state: ${pc.signalingState}`);
+          try {
+            if (pc.signalingState === "have-local-offer") {
+              await pc.setRemoteDescription(new RTCSessionDescription(answer));
+              console.log("✅ Answer processed successfully");
+            }
+          } catch (error) {
+            console.error("Failed to handle answer:", error);
           }
         });
         
         socket.on("ice-candidate", async ({ candidate }) => {
-          if (pc.remoteDescription) {
-            await pc.addIceCandidate(candidate);
+          console.log(`🧊 Received ICE candidate, remote desc exists: ${!!pc.remoteDescription}`);
+          try {
+            if (pc.remoteDescription && candidate) {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate));
+              console.log("✅ ICE candidate added successfully");
+            }
+          } catch (error) {
+            console.error("Failed to add ICE candidate:", error);
           }
         });
         
