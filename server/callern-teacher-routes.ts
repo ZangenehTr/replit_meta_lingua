@@ -13,7 +13,7 @@ import {
 
 export function registerCallernTeacherRoutes(app: Express, storage: any) {
   // Check teacher authorization for Callern
-  app.get("/api/teacher/callern/authorization", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/callern/authorization", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       
@@ -43,7 +43,7 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   });
 
   // Get teacher availability settings
-  app.get("/api/teacher/callern/availability", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/callern/availability", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       
@@ -73,7 +73,7 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   });
 
   // Update teacher availability
-  app.put("/api/teacher/callern/availability", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.put("/api/teacher/callern/availability", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       const { morningSlot, afternoonSlot, eveningSlot, nightSlot } = req.body;
@@ -120,7 +120,7 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   });
 
   // Get teacher's call history with enhanced data
-  app.get("/api/teacher/callern/history", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/callern/history", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       
@@ -163,7 +163,7 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   });
 
   // Get teacher statistics
-  app.get("/api/teacher/callern/stats", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/callern/stats", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       const teacherId = req.user.id;
       const now = new Date();
@@ -294,7 +294,7 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   });
 
   // Get leaderboard
-  app.get("/api/teacher/callern/leaderboard", authenticateToken, requireRole(['Teacher']), async (req: any, res) => {
+  app.get("/api/teacher/callern/leaderboard", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {
     try {
       // Get top performers based on ratings and call volume
       const leaderboard = await db.select({

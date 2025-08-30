@@ -198,13 +198,18 @@ export default function EnhancedTeacherCallernSystem() {
   const [nightSlot, setNightSlot] = useState(false);
   
   // Fetch teacher authorization status
-  const { data: authorizationStatus, isLoading: authLoading } = useQuery({
+  const { data: authorizationStatus, isLoading: authLoading } = useQuery<{isAuthorized: boolean}>({
     queryKey: ["/api/teacher/callern/authorization"],
     enabled: user?.role === 'Teacher'
   });
 
   // Fetch teacher's availability settings
-  const { data: availability, isLoading: availabilityLoading } = useQuery({
+  const { data: availability, isLoading: availabilityLoading } = useQuery<{
+    morningSlot?: boolean;
+    afternoonSlot?: boolean;
+    eveningSlot?: boolean;
+    nightSlot?: boolean;
+  }>({
     queryKey: ["/api/teacher/callern/availability"],
     enabled: user?.role === 'Teacher' && authorizationStatus?.isAuthorized
   });
@@ -344,8 +349,8 @@ export default function EnhancedTeacherCallernSystem() {
   // Monitor connection quality
   useEffect(() => {
     const checkConnection = () => {
-      if (navigator.connection) {
-        const conn = navigator.connection as any;
+      if ((navigator as any).connection) {
+        const conn = (navigator as any).connection;
         const mbps = conn.downlink || 10;
         if (mbps >= 10) setConnectionStrength('excellent');
         else if (mbps >= 5) setConnectionStrength('good');
