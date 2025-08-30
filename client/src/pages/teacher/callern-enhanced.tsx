@@ -10,6 +10,7 @@ import { useSocket } from "@/hooks/use-socket";
 import { useTranslation } from "react-i18next";
 import { TeacherIncomingCall } from "@/components/callern/teacher-incoming-call";
 import { TeacherOnlineToggle } from "@/components/callern/teacher-online-toggle";
+import { TeacherRingtoneSettings } from "@/components/callern/teacher-ringtone-settings";
 import {
   Card,
   CardContent,
@@ -64,7 +65,8 @@ import {
   Download,
   Eye,
   EyeOff,
-  LifeBuoy
+  LifeBuoy,
+  Volume2
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
@@ -523,7 +525,7 @@ export default function EnhancedTeacherCallernSystem() {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Headphones className="h-4 w-4" />
               {t('teacher:dashboard', 'Dashboard')}
@@ -539,6 +541,10 @@ export default function EnhancedTeacherCallernSystem() {
             <TabsTrigger value="leaderboard" className="flex items-center gap-2">
               <Trophy className="h-4 w-4" />
               {t('teacher:leaderboard', 'Leaderboard')}
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Volume2 className="h-4 w-4" />
+              {t('teacher:settings', 'Settings')}
             </TabsTrigger>
           </TabsList>
 
@@ -994,6 +1000,13 @@ export default function EnhancedTeacherCallernSystem() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <div className="grid gap-6">
+              {/* Ringtone Settings */}
+              <TeacherRingtoneSettings />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

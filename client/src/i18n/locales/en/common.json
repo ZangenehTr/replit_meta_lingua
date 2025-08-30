@@ -1089,5 +1089,12 @@
   "filters": {
     "allTeachers": "All Teachers",
     "allRooms": "All Rooms"
+  },
+  "callActions": {
+    "answer": "Answer",
+    "reject": "Reject",
+    "silence": "Silence",
+    "unsilence": "Unsilence",
+    "silenced": "Silenced"
   }
 }

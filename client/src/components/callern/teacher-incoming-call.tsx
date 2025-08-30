@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Phone, PhoneOff, Video, User } from 'lucide-react';
+import { Phone, PhoneOff, Video, User, VolumeX, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/hooks/use-socket';
 import { VideoCall } from './VideoCall';
+import { ringtoneService } from '@/services/ringtone-service';
+import { getTeacherRingtonePreferences } from './teacher-ringtone-settings';
+import { useTranslation } from 'react-i18next';
 
 interface IncomingCallData {
   roomId: string;
@@ -24,8 +27,10 @@ export function TeacherIncomingCall() {
   const [isRinging, setIsRinging] = useState(false);
   const [isInCall, setIsInCall] = useState(false);
   const [activeCallConfig, setActiveCallConfig] = useState<any>(null);
+  const [isSilenced, setIsSilenced] = useState(false);
   const { user } = useAuth();
   const { socket } = useSocket(); // Use the existing socket from context
+  const { t } = useTranslation(['teacher', 'common', 'callern']);
 
   useEffect(() => {
     if (!user || (user.role !== 'Teacher' && user.role !== 'Teacher/Tutor') || !socket) return;
@@ -33,20 +38,35 @@ export function TeacherIncomingCall() {
     console.log('TeacherIncomingCall component mounted for user:', user.id, user.role);
 
     // Listen for incoming calls - matching server event name
-    const handleIncomingCall = (data: IncomingCallData) => {
+    const handleIncomingCall = async (data: IncomingCallData) => {
       console.log('🔔 INCOMING CALL RECEIVED from student:', data);
       console.log('Setting incoming call state:', data);
       setIncomingCall(data);
       setIsRinging(true);
+      setIsSilenced(false); // Reset silence state for new call
       console.log('Ringing state set to true');
 
-      // Play ringtone (you can add an audio element for this)
-      const audio = new Audio('/sounds/ringtone.mp3');
-      audio.loop = true;
-      audio.play().catch(e => console.log('Could not play ringtone:', e));
-
-      // Store audio reference to stop it later
-      (window as any).ringtoneAudio = audio;
+      // Get teacher's ringtone preferences
+      if (user?.id) {
+        try {
+          const preferences = getTeacherRingtonePreferences(user.id);
+          
+          // Set volume and play the selected ringtone
+          ringtoneService.setVolume(preferences.volume);
+          await ringtoneService.playRingtone(preferences.selectedRingtone, true);
+          
+          console.log(`Playing ringtone: ${preferences.selectedRingtone} at volume ${preferences.volume}`);
+        } catch (error) {
+          console.error('Failed to play ringtone:', error);
+          
+          // Fallback to classic ringtone
+          try {
+            await ringtoneService.playRingtone('classic', true);
+          } catch (fallbackError) {
+            console.error('Failed to play fallback ringtone:', fallbackError);
+          }
+        }
+      }
     };
 
     // Listen for the correct event name that server emits
@@ -61,10 +81,7 @@ export function TeacherIncomingCall() {
       socket.off('incoming-call', handleIncomingCall);
       socket.off('call-request', handleIncomingCall);
       // Stop ringtone if component unmounts
-      if ((window as any).ringtoneAudio) {
-        (window as any).ringtoneAudio.pause();
-        (window as any).ringtoneAudio = null;
-      }
+      ringtoneService.stopRingtone();
     };
   }, [user, socket]);
 
@@ -72,10 +89,7 @@ export function TeacherIncomingCall() {
     if (!incomingCall || !socket) return;
 
     // Stop ringtone
-    if ((window as any).ringtoneAudio) {
-      (window as any).ringtoneAudio.pause();
-      (window as any).ringtoneAudio = null;
-    }
+    ringtoneService.stopRingtone();
 
     // First, join the room
     socket.emit('join-room', incomingCall.roomId);
@@ -105,10 +119,7 @@ export function TeacherIncomingCall() {
     if (!incomingCall || !socket) return;
 
     // Stop ringtone
-    if ((window as any).ringtoneAudio) {
-      (window as any).ringtoneAudio.pause();
-      (window as any).ringtoneAudio = null;
-    }
+    ringtoneService.stopRingtone();
 
     // Notify student that call was rejected
     socket.emit('call-rejected', {
@@ -125,6 +136,23 @@ export function TeacherIncomingCall() {
     setIsInCall(false);
     setActiveCallConfig(null);
     setIncomingCall(null);
+  };
+
+  // Handle silence button
+  const handleSilence = () => {
+    if (isSilenced) {
+      // Unsilence - resume ringtone
+      if (user?.id && incomingCall) {
+        const preferences = getTeacherRingtonePreferences(user.id);
+        ringtoneService.setVolume(preferences.volume);
+        ringtoneService.playRingtone(preferences.selectedRingtone, true);
+      }
+      setIsSilenced(false);
+    } else {
+      // Silence the ringtone
+      ringtoneService.stopRingtone();
+      setIsSilenced(true);
+    }
   };
 
   // If in a call, show the VideoCall component
@@ -161,7 +189,14 @@ export function TeacherIncomingCall() {
               </div>
             </div>
 
-            <h3 className="text-lg font-semibold mb-2">Incoming Callern Call</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              {t('teacher:incomingCallFrom', 'Incoming call from')}
+              {isSilenced && (
+                <span className="ml-2 text-sm text-muted-foreground">
+                  ({t('common:callActions.silenced', 'Silenced')})
+                </span>
+              )}
+            </h3>
             
             <div className="mb-4 space-y-2">
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -175,14 +210,29 @@ export function TeacherIncomingCall() {
               </div>
             </div>
 
-            <div className="flex gap-4 justify-center">
+            <div className="flex gap-3 justify-center">
               <Button
                 onClick={handleReject}
                 variant="destructive"
                 size="lg"
                 className="rounded-full h-14 w-14"
+                title={t('common:callActions.reject', 'Reject')}
               >
                 <PhoneOff className="h-6 w-6" />
+              </Button>
+              
+              <Button
+                onClick={handleSilence}
+                variant="outline"
+                size="lg"
+                className={`rounded-full h-14 w-14 ${
+                  isSilenced 
+                    ? 'bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-600' 
+                    : 'hover:bg-gray-100'
+                }`}
+                title={isSilenced ? t('common:callActions.unsilence', 'Unsilence') : t('common:callActions.silence', 'Silence')}
+              >
+                <VolumeX className={`h-6 w-6 ${isSilenced ? 'text-orange-600' : ''}`} />
               </Button>
               
               <Button
@@ -190,6 +240,7 @@ export function TeacherIncomingCall() {
                 variant="default"
                 size="lg"
                 className="rounded-full h-14 w-14 bg-green-600 hover:bg-green-700"
+                title={t('common:callActions.answer', 'Answer')}
               >
                 <Phone className="h-6 w-6" />
               </Button>

@@ -637,5 +637,12 @@
     "day": "روز",
     "today": "امروز"
   },
-  "calculating": "در حال محاسبه..."
+  "calculating": "در حال محاسبه...",
+  "callActions": {
+    "answer": "پاسخ",
+    "reject": "رد",
+    "silence": "ساکت",
+    "unsilence": "صدا",
+    "silenced": "ساکت شده"
+  }
 }
