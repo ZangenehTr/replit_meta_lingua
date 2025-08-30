@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 import { 
   Home, 
   BookOpen, 
@@ -20,6 +21,12 @@ interface NavItem {
 export function MobileBottomNav() {
   const [location, navigate] = useLocation();
   const { t } = useTranslation();
+  const { user } = useAuth();
+
+  // Only show mobile navigation for students
+  if (user?.role?.toLowerCase() !== 'student') {
+    return null;
+  }
 
   const navItems: NavItem[] = [
     {
