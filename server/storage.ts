@@ -4039,7 +4039,20 @@ export class MemStorage implements IStorage {
   }
   
   async updateTeacherCallernAvailability(teacherId: number, updates: any): Promise<any> {
-    return undefined;
+    // Mock implementation for in-memory storage
+    return { success: true, teacherId, updates };
+  }
+
+  async incrementTeacherMissedCalls(teacherId: number): Promise<any> {
+    // Mock implementation - increment missed calls counter
+    console.log(`Incrementing missed calls for teacher ${teacherId}`);
+    return { success: true, teacherId, action: 'missed_call_incremented' };
+  }
+
+  async updateTeacherLastSeen(teacherId: number): Promise<any> {
+    // Mock implementation - update last seen timestamp
+    console.log(`Updating last seen for teacher ${teacherId}`);
+    return { success: true, teacherId, action: 'last_seen_updated' };
   }
   
   async getStudentCallernPackages(studentId: number): Promise<any[]> {

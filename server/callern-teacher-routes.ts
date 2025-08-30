@@ -83,52 +83,9 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
     }
   });
 
-  // Update teacher availability
-  app.put("/api/teacher/callern/availability", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {
-    try {
-      const teacherId = req.user.id;
-      const { morningSlot, afternoonSlot, eveningSlot, nightSlot } = req.body;
-      
-      // Check if record exists
-      const existing = await db
-        .select()
-        .from(teacherCallernAvailability)
-        .where(eq(teacherCallernAvailability.teacherId, teacherId))
-        .limit(1);
-      
-      if (existing.length === 0) {
-        // Create new record
-        await db.insert(teacherCallernAvailability).values({
-          teacherId,
-          morningSlot: morningSlot || false,
-          afternoonSlot: afternoonSlot || false,
-          eveningSlot: eveningSlot || false,
-          nightSlot: nightSlot || false,
-          isOnline: false,
-          totalCallsHandled: 0,
-          missedShifts: 0,
-          missedCalls: 0
-        });
-      } else {
-        // Update existing record
-        await db
-          .update(teacherCallernAvailability)
-          .set({
-            morningSlot,
-            afternoonSlot,
-            eveningSlot,
-            nightSlot,
-            updatedAt: new Date()
-          })
-          .where(eq(teacherCallernAvailability.teacherId, teacherId));
-      }
-      
-      res.json({ message: 'Availability updated successfully' });
-    } catch (error) {
-      console.error('Error updating availability:', error);
-      res.status(500).json({ message: 'Failed to update availability' });
-    }
-  });
+  // NOTE: Teachers can no longer update their own availability
+  // Availability is now managed exclusively by administrators and supervisors
+  // This endpoint has been removed to enforce the new access control policy
 
   // Get teacher's call history with enhanced data
   app.get("/api/teacher/callern/history", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {

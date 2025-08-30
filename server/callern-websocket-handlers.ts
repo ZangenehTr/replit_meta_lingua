@@ -3,11 +3,12 @@ import { CallernAIMonitor } from './callern-ai-monitor';
 import { storage } from './storage';
 import { teacherCoachingService } from './services/teacher-coaching-service';
 
-// Track online teachers
-const onlineTeachers = new Map<number, { socketId: string; status: 'available' | 'busy' }>();
+// Track online teachers and calls
+const onlineTeachers = new Map<number, { socketId: string; status: 'available' | 'busy'; lastSeen: number }>();
 const teacherSockets = new Map<string, number>();
 const studentSockets = new Map<string, number>();
-const activeCalls = new Map<string, { studentId: number; teacherId: number; roomId: string }>();
+const activeCalls = new Map<string, { studentId: number; teacherId: number; roomId: string; startTime: number }>();
+const pendingCalls = new Map<string, { studentId: number; teacherId: number; timestamp: number; timeout: NodeJS.Timeout }>();
 
 // Track speech data for real metrics
 const speechMetrics = new Map<string, {
@@ -70,19 +71,33 @@ export function setupCallernWebSocketHandlers(io: Server) {
       
       // Update teacher status in database
       try {
-        await storage.updateTeacherCallernAvailability(teacherId, true);
+        await storage.updateTeacherCallernAvailability(teacherId, { isOnline: true });
         
-        // Track online teacher
-        onlineTeachers.set(teacherId, { socketId: socket.id, status: 'available' });
+        // Track online teacher with timestamp
+        onlineTeachers.set(teacherId, { 
+          socketId: socket.id, 
+          status: 'available',
+          lastSeen: Date.now()
+        });
         teacherSockets.set(socket.id, teacherId);
         
-        console.log(`Teacher ${teacherId} is now online for Callern`);
+        console.log(`✅ Teacher ${teacherId} is now online for Callern`);
         
         // Notify all clients about teacher status change
         io.emit('teacher-status-update', {
           teacherId,
           status: 'online',
-          socketId: socket.id
+          socketId: socket.id,
+          timestamp: Date.now()
+        });
+        
+        // Notify admins about teacher going online
+        io.emit('admin-notification', {
+          type: 'teacher-online',
+          teacherId,
+          timestamp: Date.now(),
+          message: `Teacher ${teacherId} is now online and available`,
+          severity: 'info'
         });
         
         socket.emit('teacher-online-success', { teacherId, status: 'online' });
@@ -167,11 +182,64 @@ export function setupCallernWebSocketHandlers(io: Server) {
       });
 
       // Mark teacher as busy
-      onlineTeachers.set(teacherId, { ...teacherInfo, status: 'busy' });
+      onlineTeachers.set(teacherId, { ...teacherInfo, status: 'busy', lastSeen: Date.now() });
       
       // Store active call info
       const roomId = `callern-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      activeCalls.set(roomId, { studentId, teacherId, roomId });
+      activeCalls.set(roomId, { studentId, teacherId, roomId, startTime: Date.now() });
+      
+      // Set up missed call timeout (30 seconds)
+      const callTimeout = setTimeout(async () => {
+        const pendingCall = pendingCalls.get(roomId);
+        if (pendingCall) {
+          console.log(`⚠️ MISSED CALL: Teacher ${teacherId} did not respond to call from student ${studentId}`);
+          
+          // Update missed calls counter in database
+          try {
+            await storage.incrementTeacherMissedCalls(teacherId);
+          } catch (error) {
+            console.error('Failed to update missed calls counter:', error);
+          }
+          
+          // Notify admin/supervisors about missed call
+          io.emit('admin-notification', {
+            type: 'missed-call',
+            teacherId,
+            studentId,
+            timestamp: Date.now(),
+            message: `Teacher ${teacherId} missed call from student ${studentId}`,
+            severity: 'warning'
+          });
+          
+          // Notify student that call was missed
+          const studentSocketId = Array.from(studentSockets.entries())
+            .find(([_, id]) => id === studentId)?.[0];
+          
+          if (studentSocketId) {
+            io.to(studentSocketId).emit('call-missed', {
+              message: 'Teacher is currently unavailable. Please try again later.',
+              teacherId
+            });
+          }
+          
+          // Clean up pending call
+          pendingCalls.delete(roomId);
+          
+          // Mark teacher as available again (in case they were marked busy)
+          const teacher = onlineTeachers.get(teacherId);
+          if (teacher) {
+            onlineTeachers.set(teacherId, { ...teacher, status: 'available', lastSeen: Date.now() });
+          }
+        }
+      }, 30000); // 30 second timeout
+      
+      // Store pending call for timeout tracking
+      pendingCalls.set(roomId, {
+        studentId,
+        teacherId,
+        timestamp: Date.now(),
+        timeout: callTimeout
+      });
       
       // Initialize speech metrics for this room
       speechMetrics.set(roomId, {
@@ -196,6 +264,14 @@ export function setupCallernWebSocketHandlers(io: Server) {
         socket.emit('error', { message: 'Teacher not authenticated' });
         return;
       }
+      
+      // Clear the missed call timeout since teacher accepted
+      const pendingCall = pendingCalls.get(roomId);
+      if (pendingCall) {
+        clearTimeout(pendingCall.timeout);
+        pendingCalls.delete(roomId);
+        console.log(`✅ Teacher ${teacherId} accepted call from student ${studentId}`);
+      }
 
       // Find student socket
       let studentSocketId: string | null = null;
@@ -216,6 +292,12 @@ export function setupCallernWebSocketHandlers(io: Server) {
       
       // Start coaching session for the teacher
       teacherCoachingService.startCoachingSession(teacherId, studentId, roomId);
+
+      // Update teacher status to busy with current timestamp
+      const teacherInfo = onlineTeachers.get(teacherId);
+      if (teacherInfo) {
+        onlineTeachers.set(teacherId, { ...teacherInfo, status: 'busy', lastSeen: Date.now() });
+      }
 
       // Notify student that call was accepted
       io.to(studentSocketId).emit('call-accepted', { 
@@ -465,26 +547,62 @@ export function setupCallernWebSocketHandlers(io: Server) {
     });
 
     // Handle disconnect
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       console.log('Socket disconnected:', socket.id);
       
       // Check if it was a teacher
       const teacherId = teacherSockets.get(socket.id);
       if (teacherId) {
+        const teacherInfo = onlineTeachers.get(teacherId);
+        const wasOnline = !!teacherInfo;
+        
+        // Clear any pending call timeouts for this teacher
+        for (const [roomId, pendingCall] of pendingCalls.entries()) {
+          if (pendingCall.teacherId === teacherId) {
+            clearTimeout(pendingCall.timeout);
+            pendingCalls.delete(roomId);
+            console.log(`⚠️ Cleared pending call timeout for disconnected teacher ${teacherId}`);
+          }
+        }
+        
+        // Update database status
+        try {
+          await storage.updateTeacherCallernAvailability(teacherId, { isOnline: false });
+          await storage.updateTeacherLastSeen(teacherId);
+        } catch (error) {
+          console.error('Error updating teacher offline status:', error);
+        }
+        
+        // Clean up tracking
         onlineTeachers.delete(teacherId);
         teacherSockets.delete(socket.id);
+        
+        console.log(`⚠️ Teacher ${teacherId} went offline (disconnected)`);
         
         // Notify all clients
         io.emit('teacher-status-update', {
           teacherId,
-          status: 'offline'
+          status: 'offline',
+          timestamp: Date.now()
         });
+        
+        // Send admin notification about unexpected offline status
+        if (wasOnline) {
+          io.emit('admin-notification', {
+            type: 'teacher-offline',
+            teacherId,
+            timestamp: Date.now(),
+            message: `Teacher ${teacherId} unexpectedly went offline (connection lost)`,
+            severity: 'warning'
+          });
+        }
       }
       
       // Check if it was a student
       const studentId = studentSockets.get(socket.id);
       if (studentId) {
         studentSockets.delete(socket.id);
+        console.log(`Student ${studentId} disconnected`);
       }
     });
   });
