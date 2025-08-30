@@ -4812,6 +4812,24 @@ export class DatabaseStorage implements IStorage {
 
 
 
+  // General call history method for interface compatibility  
+  async getCallernCallHistory(): Promise<any[]> {
+    return await db.select().from(callernCallHistory).orderBy(desc(callernCallHistory.startTime));
+  }
+  
+  async createCallernCallHistory(historyData: any): Promise<any> {
+    const [result] = await db.insert(callernCallHistory).values(historyData).returning();
+    return result;
+  }
+  
+  async updateCallernCallHistory(id: number, updates: any): Promise<any> {
+    const [result] = await db.update(callernCallHistory)
+      .set(updates)
+      .where(eq(callernCallHistory.id, id))
+      .returning();
+    return result;
+  }
+
   async getStudentCallernHistory(studentId: number) {
     const history = await db.select({
       id: callernCallHistory.id,
