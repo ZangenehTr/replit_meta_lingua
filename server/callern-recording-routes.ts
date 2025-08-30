@@ -31,24 +31,30 @@ const upload = multer({
   }
 });
 
-// authenticateToken middleware
-function authenticateToken(req: any, res: any, next: any) {
+const JWT_SECRET = process.env.JWT_SECRET || 'meta-lingua-secret-key';
+
+// Use the same authentication middleware as the main app
+const authenticateToken = async (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.sendStatus(401);
+    return res.status(401).json({ message: 'Access token required' });
   }
 
-  const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-  
-  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
-    if (err) return res.sendStatus(403);
-    req.userId = user.id;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const user = await storage.getUser(decoded.userId);
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
     req.user = user;
     next();
-  });
-}
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return res.status(403).json({ message: 'Invalid token' });
+  }
+};
 
 export function setupCallernRecordingRoutes(app: Express) {
   // Upload and save recording route
