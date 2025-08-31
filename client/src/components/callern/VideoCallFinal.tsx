@@ -89,6 +89,7 @@ export function VideoCall({
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const speechActivityRef = useRef({ student: 0, teacher: 0 });
+  const speechMonitorIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Fetch teacher briefing (for teachers)
   const { data: briefing } = useQuery({
@@ -299,6 +300,12 @@ export function VideoCall({
   // AI Monitoring
   const initializeAIMonitoring = (stream: MediaStream) => {
     try {
+      // Prevent double initialization
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        console.log('AudioContext already initialized, skipping');
+        return;
+      }
+      
       audioContextRef.current = new AudioContext();
       analyserRef.current = audioContextRef.current.createAnalyser();
       const source = audioContextRef.current.createMediaStreamSource(stream);
@@ -306,7 +313,7 @@ export function VideoCall({
       analyserRef.current.fftSize = 256;
       
       // Monitor speech activity
-      setInterval(() => {
+      speechMonitorIntervalRef.current = setInterval(() => {
         if (!analyserRef.current || !socketRef.current) return;
         
         const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
@@ -485,23 +492,42 @@ export function VideoCall({
   };
   
   const cleanupCall = () => {
+    // Clear speech monitoring interval
+    if (speechMonitorIntervalRef.current) {
+      clearInterval(speechMonitorIntervalRef.current);
+      speechMonitorIntervalRef.current = null;
+    }
+    
+    // Stop media tracks
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track => track.stop());
     }
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach(track => track.stop());
     }
+    
+    // Close peer connections
     if (pcRef.current) {
       pcRef.current.close();
     }
     if (screenPcRef.current) {
       screenPcRef.current.close();
     }
+    
+    // Disconnect socket
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
+    
+    // Close AudioContext safely
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      try {
+        audioContextRef.current.close().catch((err) => {
+          console.warn('AudioContext close error (safe to ignore):', err);
+        });
+      } catch (err) {
+        console.warn('AudioContext already closed (safe to ignore):', err);
+      }
     }
   };
   
