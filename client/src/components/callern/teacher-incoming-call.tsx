@@ -93,7 +93,12 @@ export function TeacherIncomingCall() {
   }, [user, socket]);
 
   const handleAccept = async () => {
-    if (!incomingCall || !socket) return;
+    if (!incomingCall || !socket) {
+      console.log('❌ [TEACHER] Cannot accept - missing call data or socket');
+      return;
+    }
+
+    console.log('✅ [TEACHER] Accept button clicked for call from student:', incomingCall.studentId);
 
     // Enable audio with user gesture if not already enabled
     if (!audioEnabled) {
@@ -109,9 +114,15 @@ export function TeacherIncomingCall() {
     // Stop ringtone
     ringtoneService.stopRingtone();
 
-    // First, join the room
-    socket.emit('join-room', incomingCall.roomId);
-    console.log('Teacher joining room:', incomingCall.roomId);
+    console.log('🎯 [TEACHER] Accepting call and joining room:', incomingCall.roomId);
+    
+    // First, join the room with proper parameters
+    socket.emit('join-room', {
+      roomId: incomingCall.roomId,
+      userId: user?.id,
+      role: 'teacher'
+    });
+    console.log('🏠 [TEACHER] Joining room:', incomingCall.roomId, 'as user:', user?.id);
 
     // Then emit accept-call event to notify the student
     socket.emit('accept-call', {
@@ -119,6 +130,7 @@ export function TeacherIncomingCall() {
       teacherId: user?.id,
       studentId: incomingCall.studentId
     });
+    console.log('✅ [TEACHER] Emitted accept-call event');
 
     // Set up the call configuration
     setActiveCallConfig({
@@ -134,7 +146,12 @@ export function TeacherIncomingCall() {
   };
 
   const handleReject = async () => {
-    if (!incomingCall || !socket) return;
+    if (!incomingCall || !socket) {
+      console.log('❌ [TEACHER] Cannot reject - missing call data or socket');
+      return;
+    }
+
+    console.log('❌ [TEACHER] Rejecting call from student:', incomingCall.studentId);
 
     // Enable audio with user gesture if not already enabled (for future calls)
     if (!audioEnabled) {
@@ -156,6 +173,7 @@ export function TeacherIncomingCall() {
       studentId: incomingCall.studentId,
       reason: 'Teacher rejected the call'
     });
+    console.log('❌ [TEACHER] Emitted call-rejected event');
 
     setIsRinging(false);
     setIncomingCall(null);
