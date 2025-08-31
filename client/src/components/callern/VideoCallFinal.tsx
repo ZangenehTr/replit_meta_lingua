@@ -162,6 +162,7 @@ export function VideoCall({
         
         pc.onicecandidate = (event) => {
           if (event.candidate && socketRef.current) {
+            console.log("Sending ICE candidate");
             socketRef.current.emit("ice-candidate", {
               roomId,
               candidate: event.candidate
@@ -171,10 +172,13 @@ export function VideoCall({
         
         pc.onconnectionstatechange = () => {
           const state = pc.connectionState;
+          console.log("Connection state changed:", state);
           if (state === "connected") {
             setConnectionStatus("connected");
+            console.log("WebRTC connection established!");
           } else if (state === "disconnected" || state === "failed") {
             setConnectionStatus("disconnected");
+            console.log("WebRTC connection lost");
           }
         };
         
@@ -188,35 +192,63 @@ export function VideoCall({
         
         socket.on("connect", () => {
           socket.emit("join-room", { roomId, userId, role });
+          // If teacher just started session, notify student to create offer
+          if (role === "teacher") {
+            setTimeout(() => {
+              socket.emit("teacher-ready", { roomId });
+            }, 500);
+          }
         });
         
         // WebRTC signaling
-        socket.on("user-joined", async ({ socketId }) => {
-          if (role === "student" && pc.signalingState === "stable") {
+        socket.on("user-joined", async ({ socketId, peerRole }) => {
+          console.log(`User joined: ${socketId}, peer role: ${peerRole}, my role: ${role}`);
+          if (role === "student" && peerRole === "teacher" && pc.signalingState === "stable") {
+            console.log("Creating offer as student...");
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
             socket.emit("offer", { roomId, offer, to: socketId });
+            console.log("Offer sent to teacher");
+          }
+        });
+        
+        // Handle teacher ready signal (for when teacher starts session later)
+        socket.on("teacher-ready", async ({ teacherSocketId }) => {
+          if (role === "student" && pc.signalingState === "stable") {
+            console.log("Teacher is ready, creating offer...");
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            socket.emit("offer", { roomId, offer, to: teacherSocketId });
+            console.log("Offer sent to teacher after ready signal");
           }
         });
         
         socket.on("offer", async ({ offer, from }) => {
+          console.log(`Received offer from ${from}`);
           if (pc.signalingState === "stable") {
             await pc.setRemoteDescription(offer);
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             socket.emit("answer", { roomId, answer, to: from });
+            console.log("Answer sent back");
           }
         });
         
-        socket.on("answer", async ({ answer }) => {
+        socket.on("answer", async ({ answer, from }) => {
+          console.log(`Received answer from ${from}`);
           if (pc.signalingState === "have-local-offer") {
             await pc.setRemoteDescription(answer);
+            console.log("Answer set successfully");
           }
         });
         
-        socket.on("ice-candidate", async ({ candidate }) => {
+        socket.on("ice-candidate", async ({ candidate, from }) => {
+          console.log(`Received ICE candidate from ${from}`);
           if (pc.remoteDescription) {
             await pc.addIceCandidate(candidate);
+            console.log("ICE candidate added");
+          } else {
+            console.log("Skipping ICE candidate - no remote description yet");
           }
         });
         
