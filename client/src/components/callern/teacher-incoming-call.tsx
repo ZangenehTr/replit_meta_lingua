@@ -166,19 +166,35 @@ export function TeacherIncomingCall() {
 
     console.log('✅ [TEACHER] Accept button clicked for call from student:', incomingCall.studentId);
 
-    // Enable audio with user gesture if not already enabled
+    // Enable audio with user gesture if not already enabled (non-blocking)
     if (!audioEnabled) {
+      console.log('🎵 [TEACHER] Attempting to enable audio...');
       try {
-        await ringtoneService.enableAudioWithUserGesture();
+        // Add timeout to prevent hanging
+        const audioPromise = ringtoneService.enableAudioWithUserGesture();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Audio enable timeout')), 2000)
+        );
+        
+        await Promise.race([audioPromise, timeoutPromise]);
         setAudioEnabled(true);
-        console.log('🎵 Audio enabled after accept button click');
+        console.log('🎵 [TEACHER] Audio enabled successfully');
       } catch (error) {
-        console.error('🎵 Failed to enable audio:', error);
+        console.error('🎵 [TEACHER] Failed to enable audio (proceeding anyway):', error);
+        // Continue with call acceptance even if audio fails
       }
+    } else {
+      console.log('🎵 [TEACHER] Audio already enabled');
     }
 
     // Stop ringtone
-    ringtoneService.stopRingtone();
+    console.log('🔇 [TEACHER] Stopping ringtone...');
+    try {
+      ringtoneService.stopRingtone();
+      console.log('🔇 [TEACHER] Ringtone stopped');
+    } catch (error) {
+      console.error('🔇 [TEACHER] Error stopping ringtone:', error);
+    }
 
     console.log('🎯 [TEACHER] Accepting call and joining room:', incomingCall.roomId);
     
