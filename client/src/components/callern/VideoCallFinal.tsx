@@ -59,6 +59,7 @@ export function VideoCall({
   const localStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   
   // Call state - NO TIME LIMIT
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
@@ -134,12 +135,31 @@ export function VideoCall({
           localVideoRef.current.srcObject = stream;
         }
         
-        // Initialize peer connection
+        // Initialize peer connection with STUN and TURN servers
         const pc = wrapPeerConnection(new RTCPeerConnection({
           iceServers: [
             { urls: "stun:stun.l.google.com:19302" },
-            { urls: "stun:stun1.l.google.com:19302" }
-          ]
+            { urls: "stun:stun1.l.google.com:19302" },
+            // Public TURN servers for fallback
+            {
+              urls: "turn:openrelay.metered.ca:80",
+              username: "openrelayproject",
+              credential: "openrelayproject"
+            },
+            {
+              urls: "turn:openrelay.metered.ca:443",
+              username: "openrelayproject",
+              credential: "openrelayproject"
+            },
+            {
+              urls: "turn:openrelay.metered.ca:443?transport=tcp",
+              username: "openrelayproject",
+              credential: "openrelayproject"
+            }
+          ],
+          iceCandidatePoolSize: 10,
+          bundlePolicy: "max-bundle",
+          rtcpMuxPolicy: "require"
         }));
         
         stream.getTracks().forEach(track => {
@@ -168,14 +188,29 @@ export function VideoCall({
         pc.onconnectionstatechange = () => {
           const state = pc.connectionState;
           console.log('Connection state changed:', state);
+          console.log('ICE connection state:', pc.iceConnectionState);
+          console.log('ICE gathering state:', pc.iceGatheringState);
+          
           if (state === "connected") {
             setConnectionStatus("connected");
             console.log('WebRTC connection established!');
-          } else if (state === "disconnected" || state === "failed") {
+          } else if (state === "failed") {
             setConnectionStatus("disconnected");
-            console.log('WebRTC connection lost');
+            console.log('WebRTC connection failed - likely firewall/NAT issue');
+            // Optionally retry with different configuration
+          } else if (state === "disconnected") {
+            setConnectionStatus("disconnected");
+            console.log('WebRTC connection disconnected');
           } else if (state === "connecting") {
             setConnectionStatus("connecting");
+          }
+        };
+        
+        // Also monitor ICE connection state for better debugging
+        pc.oniceconnectionstatechange = () => {
+          console.log('ICE connection state:', pc.iceConnectionState);
+          if (pc.iceConnectionState === 'failed') {
+            console.log('ICE connection failed - checking candidates...');
           }
         };
         
@@ -217,6 +252,15 @@ export function VideoCall({
             await pc.setLocalDescription(answer);
             socket.emit("answer", { roomId, answer, to: from });
             console.log('Answer sent back');
+            
+            // Add any queued ICE candidates
+            if (pendingCandidatesRef.current.length > 0) {
+              console.log(`Adding ${pendingCandidatesRef.current.length} queued ICE candidates`);
+              for (const candidate of pendingCandidatesRef.current) {
+                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+              }
+              pendingCandidatesRef.current = [];
+            }
           } catch (error) {
             console.error('Error handling offer:', error);
           }
@@ -227,6 +271,15 @@ export function VideoCall({
           try {
             await pc.setRemoteDescription(new RTCSessionDescription(answer));
             console.log('Answer set successfully');
+            
+            // Add any queued ICE candidates
+            if (pendingCandidatesRef.current.length > 0) {
+              console.log(`Adding ${pendingCandidatesRef.current.length} queued ICE candidates`);
+              for (const candidate of pendingCandidatesRef.current) {
+                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+              }
+              pendingCandidatesRef.current = [];
+            }
           } catch (error) {
             console.error('Error handling answer:', error);
           }
@@ -235,9 +288,13 @@ export function VideoCall({
         socket.on("ice-candidate", async ({ candidate, from }) => {
           console.log(`Received ICE candidate from ${from}`);
           try {
-            if (candidate) {
+            if (candidate && pc.remoteDescription) {
               await pc.addIceCandidate(new RTCIceCandidate(candidate));
               console.log('ICE candidate added');
+            } else if (candidate && !pc.remoteDescription) {
+              console.log('Queueing ICE candidate - no remote description yet');
+              // Queue the candidate to add later
+              pendingCandidatesRef.current.push(candidate);
             }
           } catch (error) {
             console.error('Error adding ICE candidate:', error);
