@@ -49,7 +49,17 @@ class RingtoneService {
       
       if (context.state === 'suspended') {
         console.log('🎵 Attempting to resume AudioContext during initialization...');
-        await context.resume();
+        try {
+          // Use a short timeout to prevent hanging
+          const resumePromise = context.resume();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('AudioContext resume timeout')), 500)
+          );
+          await Promise.race([resumePromise, timeoutPromise]);
+          console.log(`🎵 AudioContext resumed, new state: ${context.state}`);
+        } catch (error) {
+          console.log('🎵 Could not resume AudioContext yet, will retry on playback');
+        }
       }
       
       // Test audio capability with a very short silent buffer
@@ -63,6 +73,7 @@ class RingtoneService {
       console.log('🎵 Audio initialized successfully');
     } catch (error) {
       console.error('🎵 Failed to initialize audio:', error);
+      this.initializationPromise = null; // Reset to allow retry
       throw error;
     }
   }
@@ -364,6 +375,14 @@ class RingtoneService {
     console.log('🎵 Enabling audio with user gesture...');
     try {
       await this.initializeAudio();
+      
+      // Force resume if still suspended
+      const context = this.getAudioContext();
+      if (context.state === 'suspended') {
+        console.log('🎵 Forcing AudioContext resume with user gesture...');
+        await context.resume();
+      }
+      
       console.log('🎵 Audio enabled successfully');
     } catch (error) {
       console.error('🎵 Failed to enable audio:', error);
