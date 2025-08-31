@@ -324,13 +324,15 @@ export default function CallernSystem() {
       console.log('Call accepted by teacher:', data);
       setWaitingForTeacher(false);
 
-      // Update the call config with the teacher's socket ID if needed
+      // Update the call config with the teacher's socket ID and mark teacher as joined
       setActiveCallConfig((prev: any) => ({
         ...prev,
-        remoteSocketId: data.teacherSocketId, // Pass teacher's socket ID to VideoCall
+        remoteSocketId: data.teacherSocketId,
+        teacherJoined: true, // Add flag to indicate teacher has joined
       }));
 
-      // Don't set isInCall here - student is already in VideoCall
+      // Ensure we're in call state
+      setIsInCall(true);
 
       toast({
         title: t('callern:callAccepted'),

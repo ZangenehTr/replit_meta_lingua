@@ -252,7 +252,13 @@ export function VideoCall({
     if (!socket) return; // wait for shared socket to be ready
     // Guard: only initialize once per room id
     if (initializedRef.current === roomId) return;
-    initializedRef.current = roomId;
+    
+    // For students, wait a moment for teacher to fully join
+    const initDelay = role === "student" ? 1000 : 0;
+    
+    const initTimer = setTimeout(() => {
+      initializedRef.current = roomId;
+    }, initDelay);
 
     let mounted = true;
 
@@ -484,6 +490,7 @@ export function VideoCall({
 
     return () => {
       mounted = false;
+      clearTimeout(initTimer); // Clear the initialization timer
       initializedRef.current = null; // allow re-init after unmount
       stopCallTimer();
       cleanupCall();

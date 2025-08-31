@@ -269,8 +269,8 @@ class RingtoneService {
     try {
       await this.initializeAudio();
     } catch (error) {
-      console.error('🎵 Audio initialization failed:', error);
-      throw new Error('Could not initialize audio. User interaction may be required.');
+      console.error('🎵 Audio initialization failed (will retry):', error);
+      // Don't throw - continue and try to play anyway
     }
 
     const context = this.getAudioContext();
