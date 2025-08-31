@@ -82,6 +82,7 @@ export function VideoCall({
   const madeOfferRef = useRef(false);
   const gotAnswerRef = useRef(false);
   const isSettingRemoteRef = useRef(false);
+  const iceCandidateQueue = useRef<RTCIceCandidateInit[]>([]);
   const remoteSocketIdRef = useRef<string | null>(null);
 
   // Keep a local pointer to the socket we attached handlers to
@@ -394,6 +395,20 @@ export function VideoCall({
           try {
             await pc.setRemoteDescription(offer);
             remoteSocketIdRef.current = from ?? remoteSocketIdRef.current;
+            
+            // Process queued ICE candidates after setting remote description
+            while (iceCandidateQueue.current.length > 0) {
+              const candidate = iceCandidateQueue.current.shift();
+              if (candidate) {
+                try {
+                  await pc.addIceCandidate(candidate);
+                  console.log("[ICE] Added queued candidate");
+                } catch (err) {
+                  console.error("[ICE] Failed to add queued candidate:", err);
+                }
+              }
+            }
+            
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             socket.emit("answer", { roomId, answer, to: from });
@@ -421,6 +436,19 @@ export function VideoCall({
             gotAnswerRef.current = true;
             if (!remoteSocketIdRef.current && from)
               remoteSocketIdRef.current = from;
+            
+            // Process queued ICE candidates after setting remote description
+            while (iceCandidateQueue.current.length > 0) {
+              const candidate = iceCandidateQueue.current.shift();
+              if (candidate) {
+                try {
+                  await pc.addIceCandidate(candidate);
+                  console.log("[ICE] Added queued candidate");
+                } catch (err) {
+                  console.error("[ICE] Failed to add queued candidate:", err);
+                }
+              }
+            }
           } catch (err) {
             console.error("[ANSWER] handle error", err);
           }
@@ -448,6 +476,11 @@ export function VideoCall({
           try {
             if (pc.remoteDescription) {
               await pc.addIceCandidate(candidate);
+              console.log("[ICE] Added candidate from", from);
+            } else {
+              // Queue ICE candidates if remote description not set yet
+              iceCandidateQueue.current.push(candidate);
+              console.log("[ICE] Queued candidate (no remote description yet)");
             }
           } catch (err) {
             console.error("[ICE] add error", err);
@@ -503,6 +536,7 @@ export function VideoCall({
       mounted = false;
       clearTimeout(initTimer); // Clear the initialization timer
       initializedRef.current = null; // allow re-init after unmount
+      iceCandidateQueue.current = []; // Clear ICE queue
       stopCallTimer();
       cleanupCall();
 
