@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import io, { Socket } from "socket.io-client";
+import { useSocket } from "@/hooks/use-socket";
 import { 
   installWebRTCErrorHandler, 
   wrapPeerConnection 
@@ -47,6 +48,7 @@ export function VideoCall({
   onCallEnd,
 }: VideoCallFinalProps) {
   const { t } = useTranslation(['callern', 'common']);
+  const { socket } = useSocket(); // Use shared socket from context
   
   // Video refs
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -241,34 +243,19 @@ export function VideoCall({
         
         pcRef.current = pc;
         
-        // Initialize Socket.IO with proper connection management
-        console.log('🔌 [SOCKET] Initializing socket connection...');
-        const socket = io({
-          path: "/socket.io",
-          transports: ["websocket", "polling"],
-          forceNew: true, // Prevent connection reuse
-          timeout: 5000,
-          reconnection: true,
-          reconnectionAttempts: 5,
-          reconnectionDelay: 1000
-        });
+        // Use existing socket from context (no duplicate connections!)
+        console.log('🔌 [SOCKET] Using shared socket connection...');
+        if (!socket) {
+          console.error('❌ [SOCKET] No socket available from context');
+          return;
+        }
         
-        socket.on("connect", () => {
-          console.log(`🔗 [SOCKET] Connected: ${socket.id} for user ${userId} (${role})`);
-          // Authenticate first, then join room
-          console.log('🔐 [AUTH] Authenticating with server...');
-          socket.emit("authenticate", { userId, role });
-          console.log('🏠 [ROOM] Joining room:', roomId);
-          socket.emit("join-room", { roomId, userId, role });
-        });
+        console.log(`🔗 [SOCKET] Using existing socket: ${socket.id} for user ${userId} (${role})`);
+        console.log('🏠 [ROOM] Joining room:', roomId);
+        socket.emit("join-room", { roomId, userId, role });
         
-        socket.on("disconnect", (reason) => {
-          console.warn('🔌 [SOCKET] Disconnected:', reason);
-        });
-        
-        socket.on("connect_error", (error) => {
-          console.error('🔌 [SOCKET ERROR]:', error);
-        });
+        // Store socket reference for cleanup
+        socketRef.current = socket;
         
         // WebRTC signaling with proper state checking
         socket.on("user-joined", async ({ socketId, userId: joinedUserId }) => {
@@ -357,8 +344,6 @@ export function VideoCall({
         socket.on("ttt-update", (ratio: any) => {
           setTttRatio(ratio);
         });
-        
-        socketRef.current = socket;
         
         // Initialize AI monitoring
         initializeAIMonitoring(stream);
@@ -624,8 +609,19 @@ export function VideoCall({
     if (screenPcRef.current) {
       screenPcRef.current.close();
     }
+    // Clean up socket listeners (don't disconnect shared socket!)
     if (socketRef.current) {
-      socketRef.current.disconnect();
+      socketRef.current.off("user-joined");
+      socketRef.current.off("offer");
+      socketRef.current.off("answer");
+      socketRef.current.off("ice-candidate");
+      socketRef.current.off("screen-share-started");
+      socketRef.current.off("screen-share-stopped");
+      socketRef.current.off("ai-suggestion");
+      socketRef.current.off("live-score-update");
+      socketRef.current.off("engagement-update");
+      socketRef.current.off("ttt-update");
+      socketRef.current = null;
     }
     if (audioContextRef.current) {
       audioContextRef.current.close();
