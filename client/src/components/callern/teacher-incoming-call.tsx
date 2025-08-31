@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Phone, PhoneOff, Video, User, VolumeX, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useSocket } from '@/hooks/use-socket';
 import { VideoCall } from './VideoCallFinal';
@@ -295,6 +295,11 @@ export function TeacherIncomingCall() {
       if (!open) handleReject();
     }}>
       <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-center text-xl font-bold">
+            {t('teacher:incomingCall', 'Incoming Call')}
+          </DialogTitle>
+        </DialogHeader>
         <Card className="border-0 shadow-none">
           <div className="p-6 text-center">
             <div className="mb-4">
