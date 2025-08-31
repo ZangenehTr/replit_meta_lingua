@@ -1,14 +1,20 @@
-import { useState, useEffect } from 'react';
-import { Phone, PhoneOff, Video, User, VolumeX, Volume2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useAuth } from '@/hooks/use-auth';
-import { useSocket } from '@/hooks/use-socket';
-import { VideoCall } from './VideoCallFinal';
-import { ringtoneService } from '@/services/ringtone-service';
-import { getTeacherRingtonePreferences } from './teacher-ringtone-settings';
-import { useTranslation } from 'react-i18next';
+// client/src/components/TeacherIncomingCall.tsx
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Phone, PhoneOff, Video, User, VolumeX } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useAuth } from "@/hooks/use-auth";
+import { useSocket } from "@/hooks/use-socket";
+import { VideoCall } from "./VideoCallFinal";
+import { ringtoneService } from "@/services/ringtone-service";
+import { getTeacherRingtonePreferences } from "./teacher-ringtone-settings";
+import { useTranslation } from "react-i18next";
 
 interface IncomingCallData {
   roomId: string;
@@ -23,243 +29,205 @@ interface IncomingCallData {
 }
 
 export function TeacherIncomingCall() {
-  const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null);
+  const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(
+    null,
+  );
   const [isRinging, setIsRinging] = useState(false);
   const [isInCall, setIsInCall] = useState(false);
   const [activeCallConfig, setActiveCallConfig] = useState<any>(null);
   const [isSilenced, setIsSilenced] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const { user } = useAuth();
-  const { socket } = useSocket(); // Use the existing socket from context
-  const { t } = useTranslation(['teacher', 'common', 'callern']);
+  const { socket } = useSocket(); // shared socket
+  const { t } = useTranslation(["teacher", "common", "callern"]);
 
+  // Keep handler refs so we can detach precisely
+  const onIncomingCallRef = useRef<(data: IncomingCallData) => void>();
+  const onCallRequestRef = useRef<(data: IncomingCallData) => void>();
+  const onAnyRef = useRef<((event: string, ...args: any[]) => void) | null>(
+    null,
+  );
+  const onConnectRef = useRef<(() => void) | null>(null);
+  const onConnTestRef = useRef<((data: any) => void) | null>(null);
+  const onSocketTestRef = useRef<((data: any) => void) | null>(null);
+
+  // Utility to detach all listeners we installed
+  const detachListeners = useCallback(() => {
+    if (!socket) return;
+    if (onIncomingCallRef.current)
+      socket.off("incoming-call", onIncomingCallRef.current);
+    if (onCallRequestRef.current)
+      socket.off("call-request", onCallRequestRef.current);
+    if (onConnectRef.current) socket.off("connect", onConnectRef.current);
+    if (onConnTestRef.current)
+      socket.off("connection-test", onConnTestRef.current);
+    if (onSocketTestRef.current)
+      socket.off("teacher-socket-test-response", onSocketTestRef.current);
+    if (onAnyRef.current) socket.offAny(onAnyRef.current);
+  }, [socket]);
+
+  // Install listeners while idle (not in active call)
   useEffect(() => {
-    if (!user || (user.role !== 'Teacher' && user.role !== 'Teacher/Tutor') || !socket) {
-      console.log('❌ [TEACHER-INCOMING] Component not mounted - missing requirements:', {
-        hasUser: !!user,
-        userRole: user?.role,
-        hasSocket: !!socket,
-        socketConnected: socket?.connected
-      });
+    console.log("🔧 [TEACHER-INCOMING] useEffect triggered:", {
+      hasUser: !!user,
+      userRole: user?.role,
+      hasSocket: !!socket,
+      socketId: socket?.id,
+      socketConnected: socket?.connected,
+      isInCall
+    });
+    
+    if (
+      !user ||
+      (user.role !== "Teacher" && user.role !== "Teacher/Tutor") ||
+      !socket
+    ) {
+      console.log("❌ [TEACHER-INCOMING] Not registering listeners - missing requirements");
       return;
     }
+    
+    // Don't skip if in call - we still need to receive new calls
+    if (isInCall) {
+      console.log("⚠️ [TEACHER-INCOMING] Already in call but still registering listeners");
+    }
 
-    console.log('✅ [TEACHER-INCOMING] Component mounted for user:', user.id, user.role, 'Socket connected:', socket.connected);
-    console.log('🔌 [TEACHER-INCOMING] Socket ID for incoming calls:', socket.id);
-
-    // Listen for incoming calls - matching server event name
     const handleIncomingCall = async (data: IncomingCallData) => {
-      console.log('🔔 [TEACHER-INCOMING] INCOMING CALL RECEIVED from student:', data);
-      console.log('🔌 [TEACHER-INCOMING] Received on socket ID:', socket.id);
-      console.log('🔔 [TEACHER-INCOMING] Setting incoming call state and starting ringtone');
-      
+      console.log("🔔 [TEACHER-INCOMING] INCOMING CALL RECEIVED:", data);
+      console.log("🔔 [TEACHER-INCOMING] Current socket ID:", socket.id);
       setIncomingCall(data);
       setIsRinging(true);
-      setIsSilenced(false); // Reset silence state for new call
-      console.log('🔔 [TEACHER-INCOMING] Ringing state set to true, UI should show');
+      setIsSilenced(false);
 
-      // Get teacher's ringtone preferences and try to play
-      if (user?.id) {
-        try {
-          console.log('🔔 [TEACHER-INCOMING] Initializing ringtone service...');
-          const preferences = getTeacherRingtonePreferences(user.id);
-          console.log('🔔 [TEACHER-INCOMING] Ringtone preferences:', preferences);
-          
-          // Initialize audio context first (important for browser autoplay policies)
-          await ringtoneService.enableAudioWithUserGesture();
-          
-          // Set volume and play the selected ringtone
-          ringtoneService.setVolume(preferences.volume);
-          await ringtoneService.playRingtone(preferences.selectedRingtone, true);
-          
-          console.log(`🔔 [TEACHER-INCOMING] Playing ringtone: ${preferences.selectedRingtone} at volume ${preferences.volume}`);
-        } catch (error) {
-          console.error('🔔 [TEACHER-INCOMING] Failed to play ringtone:', error);
-          
-          // Always try a fallback approach - use HTML Audio as backup
-          try {
-            console.log('🔔 [TEACHER-INCOMING] Trying fallback HTML audio ringtone...');
-            const audio = new Audio();
-            audio.volume = 0.7;
-            
-            // Create a simple tone using data URL
-            const audioUrl = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAaBDuR2/Pc';
-            audio.src = audioUrl;
-            
-            // Play in a loop for incoming call effect
-            audio.loop = true;
-            await audio.play();
-            
-            console.log('🔔 [TEACHER-INCOMING] Fallback audio playing');
-          } catch (fallbackError) {
-            console.error('🔔 [TEACHER-INCOMING] All ringtone attempts failed:', fallbackError);
-            console.log('🔔 [TEACHER-INCOMING] Visual notification only - no sound available');
-          }
-        }
+      try {
+        await ringtoneService.enableAudioWithUserGesture();
+        const prefs = getTeacherRingtonePreferences(user.id);
+        ringtoneService.setVolume(prefs.volume);
+        await ringtoneService.playRingtone(prefs.selectedRingtone, true);
+      } catch (err) {
+        console.error("🔔 Ringtone failed:", err);
       }
     };
 
-    // Debug socket connection
-    console.log('🔌 [TEACHER-INCOMING] Socket connection details:', {
-      connected: socket.connected,
-      id: socket.id,
-      userId: user.id,
-      role: user.role
-    });
+    const handleCallRequest = (data: IncomingCallData) => {
+      // Backward compatible alias of incoming-call
+      handleIncomingCall(data);
+    };
 
-    // Test socket communication
-    socket.emit('test-teacher-socket', { 
-      teacherId: user.id, 
-      message: 'Testing teacher socket connection' 
-    });
+    const onAny = (eventName: string, ...args: any[]) => {
+      console.log(`📡 [TEACHER-INCOMING] Socket event: ${eventName}`, args);
+    };
 
-    // Listen for the correct event name that server emits
-    socket.on('incoming-call', handleIncomingCall);
-    console.log('✅ [TEACHER-INCOMING] Registered listener for incoming-call event');
+    const onConnect = () => {
+      console.log("🔌 [TEACHER-INCOMING] Socket connected.");
+      socket.emit("test-teacher-socket", {
+        teacherId: user.id,
+        message: "Testing teacher socket connection",
+      });
+    };
+
+    const onConnTest = (data: any) => {
+      console.log("✅ [TEACHER-INCOMING] connection-test:", data);
+    };
+
+    const onSocketTest = (data: any) => {
+      console.log("✅ [TEACHER-INCOMING] teacher-socket-test-response:", data);
+    };
+
+    // Save refs for precise cleanup
+    onIncomingCallRef.current = handleIncomingCall;
+    onCallRequestRef.current = handleCallRequest;
+    onAnyRef.current = onAny;
+    onConnectRef.current = onConnect;
+    onConnTestRef.current = onConnTest;
+    onSocketTestRef.current = onSocketTest;
+
+    // Register listeners
+    console.log("📝 [TEACHER-INCOMING] Registering event listeners on socket:", socket.id);
+    socket.on("incoming-call", handleIncomingCall);
+    socket.on("call-request", handleCallRequest);
+    socket.onAny(onAny);
+    socket.on("connect", onConnect);
+    socket.on("connection-test", onConnTest);
+    socket.on("teacher-socket-test-response", onSocketTest);
     
-    // Also listen for call-request for backwards compatibility
-    socket.on('call-request', handleIncomingCall);
-    console.log('✅ [TEACHER-INCOMING] Registered listener for call-request event (backwards compat)');
+    console.log("✅ [TEACHER-INCOMING] Event listeners registered successfully");
 
-    // Add socket event debugging
-    socket.onAny((eventName, ...args) => {
-      console.log(`📡 [TEACHER-INCOMING] Socket event received: ${eventName}`, args);
-    });
-
-    // Add specific test for incoming-call events
-    socket.on('connect', () => {
-      console.log('🔌 [TEACHER-INCOMING] Socket connected, re-registering events');
-    });
-
-    // Test event to verify server communication
-    socket.on('connection-test', (data) => {
-      console.log('✅ [TEACHER-INCOMING] Connection test received from server:', data);
-    });
-
-    socket.on('teacher-socket-test-response', (data) => {
-      console.log('✅ [TEACHER-INCOMING] Socket test response received:', data);
+    // Initial probe
+    console.log("🧪 [TEACHER-INCOMING] Sending test probe to server");
+    socket.emit("test-teacher-socket", {
+      teacherId: user.id,
+      message: "Testing teacher socket connection",
     });
 
     return () => {
-      socket.off('incoming-call', handleIncomingCall);
-      socket.off('call-request', handleIncomingCall);
-      socket.off('connect');
-      socket.offAny();
-      // Stop ringtone if component unmounts
+      // Detach only our listeners
+      detachListeners();
       ringtoneService.stopRingtone();
     };
-  }, [user, socket]);
+  }, [user?.id, user?.role, socket, detachListeners]); // Remove isInCall from dependencies to prevent re-registration
 
   const handleAccept = async () => {
-    console.log('🔍 [TEACHER] handleAccept called - Checking prerequisites...');
-    console.log('🔍 [TEACHER] incomingCall:', !!incomingCall, incomingCall);
-    console.log('🔍 [TEACHER] socket:', !!socket, socket?.connected);
-    console.log('🔍 [TEACHER] user:', !!user, user?.id);
+    console.log("✅ [TEACHER-INCOMING] Accept button clicked");
+    if (!incomingCall || !socket || !user?.id) {
+      console.error("❌ [TEACHER-INCOMING] Cannot accept - missing requirements");
+      return;
+    }
+
+    // Stop ringtone FIRST
+    console.log("🔇 [TEACHER-INCOMING] Stopping ringtone");
+    ringtoneService.stopRingtone();
     
-    if (!incomingCall || !socket) {
-      console.log('❌ [TEACHER] Cannot accept - missing call data or socket', { incomingCall: !!incomingCall, socket: !!socket });
-      return;
-    }
-
-    if (!user?.id) {
-      console.log('❌ [TEACHER] Cannot accept - missing user ID', { user });
-      return;
-    }
-
-    console.log('✅ [TEACHER] Accept button clicked for call from student:', incomingCall.studentId);
-
-    // Enable audio with user gesture if not already enabled (non-blocking)
-    if (!audioEnabled) {
-      console.log('🎵 [TEACHER] Attempting to enable audio...');
-      try {
-        // Add timeout to prevent hanging
-        const audioPromise = ringtoneService.enableAudioWithUserGesture();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Audio enable timeout')), 2000)
-        );
-        
-        await Promise.race([audioPromise, timeoutPromise]);
-        setAudioEnabled(true);
-        console.log('🎵 [TEACHER] Audio enabled successfully');
-      } catch (error) {
-        console.error('🎵 [TEACHER] Failed to enable audio (proceeding anyway):', error);
-        // Continue with call acceptance even if audio fails
-      }
-    } else {
-      console.log('🎵 [TEACHER] Audio already enabled');
-    }
-
-    // Stop ringtone
-    console.log('🔇 [TEACHER] Stopping ringtone...');
+    // Enable audio (non-blocking, with timeout)
     try {
-      ringtoneService.stopRingtone();
-      console.log('🔇 [TEACHER] Ringtone stopped');
+      console.log("🎵 [TEACHER-INCOMING] Enabling audio");
+      const audioPromise = ringtoneService.enableAudioWithUserGesture();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Audio timeout')), 1000)
+      );
+      await Promise.race([audioPromise, timeoutPromise]);
+      setAudioEnabled(true);
+      console.log("🎵 [TEACHER-INCOMING] Audio enabled");
     } catch (error) {
-      console.error('🔇 [TEACHER] Error stopping ringtone:', error);
+      console.warn("🎵 [TEACHER-INCOMING] Audio enable failed (continuing):", error);
     }
 
-    console.log('🎯 [TEACHER] Accepting call and joining room:', incomingCall.roomId);
-    
-    // First, join the room with proper parameters
-    socket.emit('join-room', {
+    // Join & notify
+    socket.emit("join-room", {
       roomId: incomingCall.roomId,
-      userId: user?.id,
-      role: 'teacher'
+      userId: user.id,
+      role: "teacher",
     });
-    console.log('🏠 [TEACHER] Joining room:', incomingCall.roomId, 'as user:', user?.id);
-
-    // Then emit accept-call event to notify the student
-    socket.emit('accept-call', {
+    socket.emit("accept-call", {
       roomId: incomingCall.roomId,
-      teacherId: user?.id,
-      studentId: incomingCall.studentId
+      teacherId: user.id,
+      studentId: incomingCall.studentId,
     });
-    console.log('✅ [TEACHER] Emitted accept-call event');
 
-    // Set up the call configuration
+    // Very important: stop listening to incoming-call while the call UI is mounted
+    detachListeners();
+
+    // Swap UI to the actual call
     setActiveCallConfig({
       roomId: incomingCall.roomId,
-      userId: user?.id || 0,
-      role: 'teacher' as const,
+      userId: user.id,
+      role: "teacher" as const,
       studentId: incomingCall.studentId,
-      onCallEnd: handleEndCall
+      onCallEnd: handleEndCall,
     });
-    
-    console.log('🎯 [TEACHER] Call config set, switching to video call mode');
     setIsRinging(false);
     setIsInCall(true);
-    console.log('✅ [TEACHER] Accept function completed successfully!');
   };
 
   const handleReject = async () => {
-    if (!incomingCall || !socket) {
-      console.log('❌ [TEACHER] Cannot reject - missing call data or socket');
-      return;
-    }
+    if (!incomingCall || !socket) return;
 
-    console.log('❌ [TEACHER] Rejecting call from student:', incomingCall.studentId);
-
-    // Enable audio with user gesture if not already enabled (for future calls)
-    if (!audioEnabled) {
-      try {
-        await ringtoneService.enableAudioWithUserGesture();
-        setAudioEnabled(true);
-        console.log('🎵 Audio enabled after reject button click');
-      } catch (error) {
-        console.error('🎵 Failed to enable audio:', error);
-      }
-    }
-
-    // Stop ringtone
     ringtoneService.stopRingtone();
 
-    // Notify student that call was rejected
-    socket.emit('call-rejected', {
+    socket.emit("call-rejected", {
       roomId: incomingCall.roomId,
       studentId: incomingCall.studentId,
-      reason: 'Teacher rejected the call'
+      reason: "Teacher rejected the call",
     });
-    console.log('❌ [TEACHER] Emitted call-rejected event');
 
     setIsRinging(false);
     setIncomingCall(null);
@@ -269,39 +237,24 @@ export function TeacherIncomingCall() {
     setIsInCall(false);
     setActiveCallConfig(null);
     setIncomingCall(null);
+    // Listeners will be re-attached by the effect when isInCall becomes false
   };
 
-  // Handle silence button
   const handleSilence = async () => {
-    console.log(`🔇 Silence button clicked, currently silenced: ${isSilenced}`);
-    
-    // Enable audio with user gesture if not already enabled
-    if (!audioEnabled) {
-      try {
-        await ringtoneService.enableAudioWithUserGesture();
-        setAudioEnabled(true);
-        console.log('🎵 Audio enabled after silence button click');
-      } catch (error) {
-        console.error('🎵 Failed to enable audio:', error);
-      }
-    }
-    
     if (isSilenced) {
-      // Unsilence - resume ringtone
-      if (user?.id && incomingCall && audioEnabled) {
+      // resume
+      if (user?.id && incomingCall) {
         try {
-          const preferences = getTeacherRingtonePreferences(user.id);
-          ringtoneService.setVolume(preferences.volume);
-          await ringtoneService.playRingtone(preferences.selectedRingtone, true);
-          console.log('🔔 Ringtone resumed after unsilencing');
-        } catch (error) {
-          console.error('🔔 Failed to resume ringtone:', error);
+          await ringtoneService.enableAudioWithUserGesture();
+          const prefs = getTeacherRingtonePreferences(user.id);
+          ringtoneService.setVolume(prefs.volume);
+          await ringtoneService.playRingtone(prefs.selectedRingtone, true);
+        } catch (err) {
+          console.error("Failed to resume ringtone:", err);
         }
       }
       setIsSilenced(false);
     } else {
-      // Silence the ringtone
-      console.log('🔇 Silencing ringtone...');
       ringtoneService.stopRingtone();
       setIsSilenced(true);
     }
@@ -309,25 +262,24 @@ export function TeacherIncomingCall() {
 
   // If in a call, show the VideoCall component
   if (isInCall && activeCallConfig) {
-    return (
-      <VideoCall
-        {...activeCallConfig}
-      />
-    );
+    return <VideoCall {...activeCallConfig} />;
   }
 
-  // If not ringing, don't show anything
+  // If not ringing, render nothing
   if (!isRinging || !incomingCall) return null;
 
-  // Show the incoming call dialog
+  // Incoming call dialog
   return (
-    <Dialog open={isRinging} onOpenChange={(open) => {
-      if (!open) handleReject();
-    }}>
+    <Dialog
+      open={isRinging}
+      onOpenChange={(open) => {
+        if (!open) handleReject();
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-bold">
-            {t('teacher:incomingCall', 'Incoming Call')}
+            {t("teacher:incomingCall", "Incoming Call")}
           </DialogTitle>
         </DialogHeader>
         <Card className="border-0 shadow-none">
@@ -347,19 +299,20 @@ export function TeacherIncomingCall() {
             </div>
 
             <h3 className="text-lg font-semibold mb-2">
-              {t('teacher:incomingCallFrom', 'Incoming call from')}
+              {t("teacher:incomingCallFrom", "Incoming call from")}
               {isSilenced && (
                 <span className="ml-2 text-sm text-muted-foreground">
-                  ({t('common:callActions.silenced', 'Silenced')})
+                  ({t("common:callActions.silenced", "Silenced")})
                 </span>
               )}
             </h3>
-            
+
             <div className="mb-4 space-y-2">
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4" />
                 <span>
-                  {incomingCall.studentInfo?.firstName || 'Student'} {incomingCall.studentInfo?.lastName || ''}
+                  {incomingCall.studentInfo?.firstName || "Student"}{" "}
+                  {incomingCall.studentInfo?.lastName || ""}
                 </span>
               </div>
               <div className="text-sm text-muted-foreground">
@@ -373,31 +326,37 @@ export function TeacherIncomingCall() {
                 variant="destructive"
                 size="lg"
                 className="rounded-full h-14 w-14"
-                title={t('common:callActions.reject', 'Reject')}
+                title={t("common:callActions.reject", "Reject")}
               >
                 <PhoneOff className="h-6 w-6" />
               </Button>
-              
+
               <Button
                 onClick={handleSilence}
                 variant="outline"
                 size="lg"
                 className={`rounded-full h-14 w-14 ${
-                  isSilenced 
-                    ? 'bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-600' 
-                    : 'hover:bg-gray-100'
+                  isSilenced
+                    ? "bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-600"
+                    : "hover:bg-gray-100"
                 }`}
-                title={isSilenced ? t('common:callActions.unsilence', 'Unsilence') : t('common:callActions.silence', 'Silence')}
+                title={
+                  isSilenced
+                    ? t("common:callActions.unsilence", "Unsilence")
+                    : t("common:callActions.silence", "Silence")
+                }
               >
-                <VolumeX className={`h-6 w-6 ${isSilenced ? 'text-orange-600' : ''}`} />
+                <VolumeX
+                  className={`h-6 w-6 ${isSilenced ? "text-orange-600" : ""}`}
+                />
               </Button>
-              
+
               <Button
                 onClick={handleAccept}
                 variant="default"
                 size="lg"
                 className="rounded-full h-14 w-14 bg-green-600 hover:bg-green-700"
-                title={t('common:callActions.answer', 'Answer')}
+                title={t("common:callActions.answer", "Answer")}
               >
                 <Phone className="h-6 w-6" />
               </Button>
