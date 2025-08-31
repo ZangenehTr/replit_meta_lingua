@@ -157,6 +157,7 @@ export function VideoCall({
         
         pc.onicecandidate = (event) => {
           if (event.candidate && socketRef.current) {
+            console.log('Sending ICE candidate');
             socketRef.current.emit("ice-candidate", {
               roomId,
               candidate: event.candidate
@@ -166,10 +167,15 @@ export function VideoCall({
         
         pc.onconnectionstatechange = () => {
           const state = pc.connectionState;
+          console.log('Connection state changed:', state);
           if (state === "connected") {
             setConnectionStatus("connected");
+            console.log('WebRTC connection established!');
           } else if (state === "disconnected" || state === "failed") {
             setConnectionStatus("disconnected");
+            console.log('WebRTC connection lost');
+          } else if (state === "connecting") {
+            setConnectionStatus("connecting");
           }
         };
         
@@ -182,36 +188,59 @@ export function VideoCall({
         });
         
         socket.on("connect", () => {
+          console.log('Socket connected, joining room...');
           socket.emit("join-room", { roomId, userId, role });
         });
         
         // WebRTC signaling
-        socket.on("user-joined", async ({ socketId }) => {
-          if (role === "student" && pc.signalingState === "stable") {
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            socket.emit("offer", { roomId, offer, to: socketId });
+        socket.on("user-joined", async ({ socketId, role: peerRole }) => {
+          console.log(`User joined: ${socketId}, peer role: ${peerRole}, my role: ${role}`);
+          // Only create offer if I'm the student (initiator)
+          if (role === "student" && peerRole === "teacher") {
+            try {
+              console.log('Creating offer as student...');
+              const offer = await pc.createOffer();
+              await pc.setLocalDescription(offer);
+              socket.emit("offer", { roomId, offer, to: socketId });
+              console.log('Offer sent to teacher');
+            } catch (error) {
+              console.error('Error creating offer:', error);
+            }
           }
         });
         
         socket.on("offer", async ({ offer, from }) => {
-          if (pc.signalingState === "stable") {
-            await pc.setRemoteDescription(offer);
+          console.log(`Received offer from ${from}`);
+          try {
+            await pc.setRemoteDescription(new RTCSessionDescription(offer));
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             socket.emit("answer", { roomId, answer, to: from });
+            console.log('Answer sent back');
+          } catch (error) {
+            console.error('Error handling offer:', error);
           }
         });
         
-        socket.on("answer", async ({ answer }) => {
-          if (pc.signalingState === "have-local-offer") {
-            await pc.setRemoteDescription(answer);
+        socket.on("answer", async ({ answer, from }) => {
+          console.log(`Received answer from ${from}`);
+          try {
+            await pc.setRemoteDescription(new RTCSessionDescription(answer));
+            console.log('Answer set successfully');
+          } catch (error) {
+            console.error('Error handling answer:', error);
           }
         });
         
-        socket.on("ice-candidate", async ({ candidate }) => {
-          if (pc.remoteDescription) {
-            await pc.addIceCandidate(candidate);
+        socket.on("ice-candidate", async ({ candidate, from }) => {
+          console.log(`Received ICE candidate from ${from}`);
+          try {
+            if (candidate) {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate));
+              console.log('ICE candidate added');
+            }
+          } catch (error) {
+            console.error('Error adding ICE candidate:', error);
           }
         });
         
