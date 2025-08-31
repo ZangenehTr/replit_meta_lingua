@@ -45,10 +45,12 @@ export function TeacherIncomingCall() {
     }
 
     console.log('✅ [TEACHER-INCOMING] Component mounted for user:', user.id, user.role, 'Socket connected:', socket.connected);
+    console.log('🔌 [TEACHER-INCOMING] Socket ID for incoming calls:', socket.id);
 
     // Listen for incoming calls - matching server event name
     const handleIncomingCall = async (data: IncomingCallData) => {
       console.log('🔔 [TEACHER-INCOMING] INCOMING CALL RECEIVED from student:', data);
+      console.log('🔌 [TEACHER-INCOMING] Received on socket ID:', socket.id);
       console.log('🔔 [TEACHER-INCOMING] Setting incoming call state and starting ringtone');
       
       setIncomingCall(data);
