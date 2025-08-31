@@ -74,7 +74,7 @@ export function VideoCall({
   // AI Features - ALWAYS VISIBLE
   const [showAIOverlay, setShowAIOverlay] = useState(true);
   const [isAIListening, setIsAIListening] = useState(true);
-  const [isRecording, setIsRecording] = useState(false);
+  const [isRecording, setIsRecording] = useState(true); // AUTO-START RECORDING
   const [liveScore, setLiveScore] = useState({ student: 85, teacher: 92 });
   const [engagementLevel, setEngagementLevel] = useState(100);
   const [tttRatio, setTttRatio] = useState({ teacher: 40, student: 60 });
@@ -117,10 +117,27 @@ export function VideoCall({
     
     const initCall = async () => {
       try {
-        // Get user media
+        console.log('🚀 [INIT] Starting video call initialization for:', { userId, role, roomId });
+        
+        // Get user media with detailed logging
+        console.log('🎥 [INIT] Requesting user media...');
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: 'user'
+          },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+        
+        console.log('🎥 [INIT] User media obtained:', {
+          videoTracks: stream.getVideoTracks().length,
+          audioTracks: stream.getAudioTracks().length,
+          streamId: stream.id
         });
         
         if (!mounted) {
@@ -189,6 +206,13 @@ export function VideoCall({
             setConnectionStatus("connected");
             startCallTimer(); // Start timer when connected
             playCallStartSound();
+            
+            // Auto-start recording when connection established
+            if (!isRecording) {
+              console.log('📹 [AUTO-RECORD] Starting automatic recording...');
+              setIsRecording(true);
+              socketRef.current?.emit("toggle-recording", { roomId, recording: true });
+            }
           } else {
             console.warn('🎥 [TRACK EVENT] Missing video element or stream:', {
               hasVideoElement: !!remoteVideoRef.current,
@@ -218,34 +242,49 @@ export function VideoCall({
         pcRef.current = pc;
         
         // Initialize Socket.IO with proper connection management
+        console.log('🔌 [SOCKET] Initializing socket connection...');
         const socket = io({
           path: "/socket.io",
           transports: ["websocket", "polling"],
           forceNew: true, // Prevent connection reuse
-          timeout: 5000
+          timeout: 5000,
+          reconnection: true,
+          reconnectionAttempts: 5,
+          reconnectionDelay: 1000
         });
         
         socket.on("connect", () => {
-          console.log(`🔗 Socket connected: ${socket.id} for user ${userId} (${role})`);
+          console.log(`🔗 [SOCKET] Connected: ${socket.id} for user ${userId} (${role})`);
           // Authenticate first, then join room
+          console.log('🔐 [AUTH] Authenticating with server...');
           socket.emit("authenticate", { userId, role });
+          console.log('🏠 [ROOM] Joining room:', roomId);
           socket.emit("join-room", { roomId, userId, role });
+        });
+        
+        socket.on("disconnect", (reason) => {
+          console.warn('🔌 [SOCKET] Disconnected:', reason);
+        });
+        
+        socket.on("connect_error", (error) => {
+          console.error('🔌 [SOCKET ERROR]:', error);
         });
         
         // WebRTC signaling with proper state checking
         socket.on("user-joined", async ({ socketId, userId: joinedUserId }) => {
-          console.log(`👤 User joined: ${joinedUserId}, socket: ${socketId}`);
+          console.log(`👤 [USER-JOINED] User joined: ${joinedUserId}, socket: ${socketId}, current role: ${role}`);
           if (role === "student" && pc.signalingState === "stable" && joinedUserId !== userId) {
             try {
+              console.log('📤 [OFFER] Creating offer as student...');
               const offer = await pc.createOffer({
                 offerToReceiveAudio: true,
                 offerToReceiveVideo: true
               });
               await pc.setLocalDescription(offer);
-              console.log(`📤 Sending offer from student ${userId} to ${joinedUserId}`);
+              console.log(`📤 [OFFER] Sending offer from student ${userId} to ${joinedUserId}`);
               socket.emit("offer", { roomId, offer, to: socketId });
             } catch (error) {
-              console.error("Failed to create offer:", error);
+              console.error("❌ [OFFER ERROR] Failed to create offer:", error);
             }
           }
         });
@@ -327,8 +366,15 @@ export function VideoCall({
         // Simulate AI updates
         simulateAIUpdates();
         
+        console.log('✅ [INIT] Video call initialization completed successfully');
+        
       } catch (error) {
-        console.error("Failed to initialize call:", error);
+        console.error("❌ [INIT ERROR] Failed to initialize call:", error);
+        if (error.name === 'NotAllowedError') {
+          console.error('❌ [PERMISSIONS] Camera/microphone access denied');
+        } else if (error.name === 'NotFoundError') {
+          console.error('❌ [HARDWARE] No camera/microphone found');
+        }
         setConnectionStatus("disconnected");
       }
     };
@@ -374,11 +420,15 @@ export function VideoCall({
   // AI Monitoring
   const initializeAIMonitoring = (stream: MediaStream) => {
     try {
+      console.log('🤖 [AI] Initializing AI monitoring and recording...');
       audioContextRef.current = new AudioContext();
       analyserRef.current = audioContextRef.current.createAnalyser();
       const source = audioContextRef.current.createMediaStreamSource(stream);
       source.connect(analyserRef.current);
       analyserRef.current.fftSize = 256;
+      
+      // Announce recording start
+      console.log('📹 [RECORDING] Auto-recording started for call');
       
       // Monitor speech activity
       setInterval(() => {
@@ -518,8 +568,10 @@ export function VideoCall({
   };
   
   const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    socketRef.current?.emit("toggle-recording", { roomId, recording: !isRecording });
+    const newRecordingState = !isRecording;
+    console.log(`📹 [RECORDING] Toggling recording to: ${newRecordingState}`);
+    setIsRecording(newRecordingState);
+    socketRef.current?.emit("toggle-recording", { roomId, recording: newRecordingState });
   };
   
   // Utility functions
