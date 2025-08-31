@@ -72,6 +72,7 @@ export function VideoCall({
   const [minutesUsed, setMinutesUsed] = useState(0);
   const callStartTimeRef = useRef<number>(Date.now());
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const iceServersRef = useRef<RTCIceServer[]>([]);
   
   // AI Features - ALWAYS VISIBLE
   const [showAIOverlay, setShowAIOverlay] = useState(true);
@@ -141,12 +142,46 @@ export function VideoCall({
           localVideoRef.current.srcObject = stream;
         }
         
-        // Initialize peer connection
+        // Fetch TURN credentials from server
+        let iceServers: RTCIceServer[] = [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+          { urls: "stun:stun2.l.google.com:19302" },
+          { urls: "stun:stun3.l.google.com:19302" },
+          { urls: "stun:stun4.l.google.com:19302" }
+        ];
+        
+        try {
+          const response = await fetch('/api/callern/turn-credentials', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.iceServers && Array.isArray(data.iceServers)) {
+              iceServers = data.iceServers;
+              console.log('Using dynamic TURN servers:', iceServers.length, 'servers');
+            }
+          } else {
+            console.warn('Failed to fetch TURN credentials, using fallback STUN servers');
+          }
+        } catch (error) {
+          console.error('Error fetching TURN credentials:', error);
+          // Continue with fallback STUN servers
+        }
+        
+        // Store ICE servers for reuse in screen sharing
+        iceServersRef.current = iceServers;
+        
+        // Initialize peer connection with fetched credentials
         const pc = wrapPeerConnection(new RTCPeerConnection({
-          iceServers: [
-            { urls: "stun:stun.l.google.com:19302" },
-            { urls: "stun:stun1.l.google.com:19302" }
-          ]
+          iceServers,
+          iceCandidatePoolSize: 10,
+          iceTransportPolicy: 'all' as RTCIceTransportPolicy,
+          bundlePolicy: 'max-bundle' as RTCBundlePolicy,
+          rtcpMuxPolicy: 'require' as RTCRtcpMuxPolicy
         }));
         
         stream.getTracks().forEach(track => {
@@ -459,9 +494,16 @@ export function VideoCall({
         
         screenStreamRef.current = screenStream;
         
-        // Create screen share peer connection
+        // Create screen share peer connection with same ICE servers
         const screenPc = new RTCPeerConnection({
-          iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+          iceServers: iceServersRef.current.length > 0 ? iceServersRef.current : [
+            { urls: "stun:stun.l.google.com:19302" },
+            { urls: "stun:stun1.l.google.com:19302" }
+          ],
+          iceCandidatePoolSize: 10,
+          iceTransportPolicy: 'all' as RTCIceTransportPolicy,
+          bundlePolicy: 'max-bundle' as RTCBundlePolicy,
+          rtcpMuxPolicy: 'require' as RTCRtcpMuxPolicy
         });
         
         screenStream.getTracks().forEach(track => {
