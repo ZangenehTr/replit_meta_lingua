@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import io, { Socket } from "socket.io-client";
+import { Socket } from "socket.io-client";
 import { 
   installWebRTCErrorHandler, 
   wrapPeerConnection 
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useSocket } from "@/hooks/use-socket";
 import { 
   Phone, PhoneOff, Mic, MicOff, Video, VideoOff,
   Monitor, MonitorOff, Brain, Clock, Circle,
@@ -47,6 +48,7 @@ export function VideoCall({
   onCallEnd,
 }: VideoCallFinalProps) {
   const { t } = useTranslation(['callern', 'common']);
+  const { socket: globalSocket } = useSocket();
   
   // Video refs
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -184,13 +186,16 @@ export function VideoCall({
         
         pcRef.current = pc;
         
-        // Initialize Socket.IO
-        const socket = io({
-          path: "/socket.io",
-          transports: ["websocket", "polling"]
-        });
+        // Use the existing global socket instead of creating a new one
+        const socket = globalSocket;
+        if (!socket) {
+          console.error("Socket not available");
+          setConnectionStatus("disconnected");
+          return;
+        }
         
-        socket.on("connect", () => {
+        // Join room immediately if socket is already connected
+        if (socket.connected) {
           socket.emit("join-room", { roomId, userId, role });
           // If teacher just started session, notify student to create offer
           if (role === "teacher") {
@@ -198,10 +203,20 @@ export function VideoCall({
               socket.emit("teacher-ready", { roomId });
             }, 500);
           }
-        });
+        } else {
+          // Wait for socket to connect
+          socket.once("connect", () => {
+            socket.emit("join-room", { roomId, userId, role });
+            if (role === "teacher") {
+              setTimeout(() => {
+                socket.emit("teacher-ready", { roomId });
+              }, 500);
+            }
+          });
+        }
         
-        // WebRTC signaling
-        socket.on("user-joined", async ({ socketId, peerRole }) => {
+        // WebRTC signaling handlers
+        const handleUserJoined = async ({ socketId, peerRole }: any) => {
           console.log(`User joined: ${socketId}, peer role: ${peerRole}, my role: ${role}`);
           if (role === "student" && peerRole === "teacher" && pc.signalingState === "stable") {
             console.log("Creating offer as student...");
@@ -210,10 +225,10 @@ export function VideoCall({
             socket.emit("offer", { roomId, offer, to: socketId });
             console.log("Offer sent to teacher");
           }
-        });
+        };
         
         // Handle teacher ready signal (for when teacher starts session later)
-        socket.on("teacher-ready", async ({ teacherSocketId }) => {
+        const handleTeacherReady = async ({ teacherSocketId }: any) => {
           if (role === "student" && pc.signalingState === "stable") {
             console.log("Teacher is ready, creating offer...");
             const offer = await pc.createOffer();
@@ -221,9 +236,9 @@ export function VideoCall({
             socket.emit("offer", { roomId, offer, to: teacherSocketId });
             console.log("Offer sent to teacher after ready signal");
           }
-        });
+        };
         
-        socket.on("offer", async ({ offer, from }) => {
+        const handleOffer = async ({ offer, from }: any) => {
           console.log(`Received offer from ${from}`);
           if (pc.signalingState === "stable") {
             await pc.setRemoteDescription(offer);
@@ -232,17 +247,17 @@ export function VideoCall({
             socket.emit("answer", { roomId, answer, to: from });
             console.log("Answer sent back");
           }
-        });
+        };
         
-        socket.on("answer", async ({ answer, from }) => {
+        const handleAnswer = async ({ answer, from }: any) => {
           console.log(`Received answer from ${from}`);
           if (pc.signalingState === "have-local-offer") {
             await pc.setRemoteDescription(answer);
             console.log("Answer set successfully");
           }
-        });
+        };
         
-        socket.on("ice-candidate", async ({ candidate, from }) => {
+        const handleIceCandidate = async ({ candidate, from }: any) => {
           console.log(`Received ICE candidate from ${from}`);
           if (pc.remoteDescription) {
             await pc.addIceCandidate(candidate);
@@ -250,37 +265,52 @@ export function VideoCall({
           } else {
             console.log("Skipping ICE candidate - no remote description yet");
           }
-        });
+        };
+        
+        // Attach all event handlers
+        socket.on("user-joined", handleUserJoined);
+        socket.on("teacher-ready", handleTeacherReady);
+        socket.on("offer", handleOffer);
+        socket.on("answer", handleAnswer);
+        socket.on("ice-candidate", handleIceCandidate);
         
         // Screen sharing events
-        socket.on("screen-share-started", ({ userId: sharingUserId }) => {
+        const handleScreenShareStarted = ({ userId: sharingUserId }: any) => {
           if (sharingUserId !== userId) {
             setRemoteScreenSharing(true);
           }
-        });
+        };
         
-        socket.on("screen-share-stopped", ({ userId: stoppingUserId }) => {
+        const handleScreenShareStopped = ({ userId: stoppingUserId }: any) => {
           if (stoppingUserId !== userId) {
             setRemoteScreenSharing(false);
           }
-        });
+        };
+        
+        socket.on("screen-share-started", handleScreenShareStarted);
+        socket.on("screen-share-stopped", handleScreenShareStopped);
         
         // AI events - simulate real data
-        socket.on("ai-suggestion", (suggestions: string[]) => {
+        const handleAiSuggestion = (suggestions: string[]) => {
           setAiSuggestions(suggestions);
-        });
+        };
         
-        socket.on("live-score-update", (score: any) => {
+        const handleLiveScoreUpdate = (score: any) => {
           setLiveScore(score);
-        });
+        };
         
-        socket.on("engagement-update", (level: number) => {
+        const handleEngagementUpdate = (level: number) => {
           setEngagementLevel(level);
-        });
+        };
         
-        socket.on("ttt-update", (ratio: any) => {
+        const handleTttUpdate = (ratio: any) => {
           setTttRatio(ratio);
-        });
+        };
+        
+        socket.on("ai-suggestion", handleAiSuggestion);
+        socket.on("live-score-update", handleLiveScoreUpdate);
+        socket.on("engagement-update", handleEngagementUpdate);
+        socket.on("ttt-update", handleTttUpdate);
         
         socketRef.current = socket;
         
@@ -301,9 +331,25 @@ export function VideoCall({
     return () => {
       mounted = false;
       stopCallTimer();
+      
+      // Clean up socket event handlers
+      if (globalSocket) {
+        globalSocket.off("user-joined");
+        globalSocket.off("teacher-ready");
+        globalSocket.off("offer");
+        globalSocket.off("answer");
+        globalSocket.off("ice-candidate");
+        globalSocket.off("screen-share-started");
+        globalSocket.off("screen-share-stopped");
+        globalSocket.off("ai-suggestion");
+        globalSocket.off("live-score-update");
+        globalSocket.off("engagement-update");
+        globalSocket.off("ttt-update");
+      }
+      
       cleanupCall();
     };
-  }, [roomId, userId, role, hasStartedSession]);
+  }, [roomId, userId, role, hasStartedSession, globalSocket]);
   
   // Call timer - NO 2 MINUTE LIMIT, runs until package exhausted
   const startCallTimer = () => {
@@ -535,11 +581,12 @@ export function VideoCall({
     if (screenPcRef.current) {
       screenPcRef.current.close();
     }
+    // Don't disconnect the global socket, just leave the room
     if (socketRef.current) {
-      socketRef.current.disconnect();
+      socketRef.current.emit("leave-room", { roomId });
     }
     if (audioContextRef.current) {
-      audioContextRef.current.close();
+      audioContextRef.current.close().catch(() => {});
     }
   };
   
