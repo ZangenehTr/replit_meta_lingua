@@ -17,10 +17,10 @@ class SocketManager {
   connect(userId: number, role: string): Socket {
     // Don't recreate if we already have a socket for this user
     if (this.socket && this.currentUserId === userId) {
-      console.log('🔌 [SOCKET-MANAGER] Using existing socket:', this.socket.id, 'for user:', userId);
+      console.log('Using existing socket for user:', userId);
       // If socket exists but is disconnected, reconnect it
       if (!this.socket.connected) {
-        console.log('🔌 [SOCKET-MANAGER] Reconnecting existing socket...');
+        console.log('Reconnecting existing socket...');
         this.socket.connect();
       }
       return this.socket;
@@ -34,7 +34,7 @@ class SocketManager {
     }
 
     // Create new socket
-    console.log('🔌 [SOCKET-MANAGER] Creating NEW socket connection for user:', userId, 'role:', role);
+    console.log('Creating new socket connection for user:', userId);
     this.socket = io({
       path: '/socket.io/',
       transports: ['websocket', 'polling'],
@@ -50,7 +50,7 @@ class SocketManager {
 
     // Set up authentication on connect
     this.socket.on('connect', () => {
-      console.log('🔌 [SOCKET-MANAGER] Socket connected:', this.socket!.id, 'for user:', userId, 'role:', role);
+      console.log('Socket connected:', this.socket!.id);
       this.socket!.emit('authenticate', {
         userId,
         role
@@ -62,7 +62,7 @@ class SocketManager {
     });
 
     this.socket.on('reconnect', () => {
-      console.log('🔌 [SOCKET-MANAGER] Socket reconnected:', this.socket!.id, 'for user:', userId, 'role:', role);
+      console.log('Socket reconnected');
       this.socket!.emit('authenticate', {
         userId,
         role
