@@ -59,7 +59,6 @@ export function VideoCall({
   const localStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const socketRef = useRef<Socket | null>(null);
-  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
   
   // Call state - NO TIME LIMIT
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
@@ -85,13 +84,11 @@ export function VideoCall({
     "Review vocabulary from last session"
   ]);
   const [showTeacherBriefing, setShowTeacherBriefing] = useState(role === "teacher");
-  const [isCallReady, setIsCallReady] = useState(role === "student"); // Students are ready immediately, teachers after briefing
   
   // Speech detection
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const speechActivityRef = useRef({ student: 0, teacher: 0 });
-  const speechMonitorIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Fetch teacher briefing (for teachers)
   const { data: briefing } = useQuery({
@@ -116,15 +113,9 @@ export function VideoCall({
 
   // Initialize call with NO TIME LIMIT
   useEffect(() => {
-    if (!isCallReady) {
-      console.log('Call not ready yet, waiting...');
-      return;
-    }
-    
     let mounted = true;
     
     const initCall = async () => {
-      console.log(`Initializing call for ${role}...`);
       try {
         // Get user media
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -142,31 +133,12 @@ export function VideoCall({
           localVideoRef.current.srcObject = stream;
         }
         
-        // Initialize peer connection with STUN and TURN servers
+        // Initialize peer connection
         const pc = wrapPeerConnection(new RTCPeerConnection({
           iceServers: [
             { urls: "stun:stun.l.google.com:19302" },
-            { urls: "stun:stun1.l.google.com:19302" },
-            // Public TURN servers for fallback
-            {
-              urls: "turn:openrelay.metered.ca:80",
-              username: "openrelayproject",
-              credential: "openrelayproject"
-            },
-            {
-              urls: "turn:openrelay.metered.ca:443",
-              username: "openrelayproject",
-              credential: "openrelayproject"
-            },
-            {
-              urls: "turn:openrelay.metered.ca:443?transport=tcp",
-              username: "openrelayproject",
-              credential: "openrelayproject"
-            }
-          ],
-          iceCandidatePoolSize: 10,
-          bundlePolicy: "max-bundle",
-          rtcpMuxPolicy: "require"
+            { urls: "stun:stun1.l.google.com:19302" }
+          ]
         }));
         
         stream.getTracks().forEach(track => {
@@ -184,7 +156,6 @@ export function VideoCall({
         
         pc.onicecandidate = (event) => {
           if (event.candidate && socketRef.current) {
-            console.log('Sending ICE candidate');
             socketRef.current.emit("ice-candidate", {
               roomId,
               candidate: event.candidate
@@ -194,30 +165,10 @@ export function VideoCall({
         
         pc.onconnectionstatechange = () => {
           const state = pc.connectionState;
-          console.log('Connection state changed:', state);
-          console.log('ICE connection state:', pc.iceConnectionState);
-          console.log('ICE gathering state:', pc.iceGatheringState);
-          
           if (state === "connected") {
             setConnectionStatus("connected");
-            console.log('WebRTC connection established!');
-          } else if (state === "failed") {
+          } else if (state === "disconnected" || state === "failed") {
             setConnectionStatus("disconnected");
-            console.log('WebRTC connection failed - likely firewall/NAT issue');
-            // Optionally retry with different configuration
-          } else if (state === "disconnected") {
-            setConnectionStatus("disconnected");
-            console.log('WebRTC connection disconnected');
-          } else if (state === "connecting") {
-            setConnectionStatus("connecting");
-          }
-        };
-        
-        // Also monitor ICE connection state for better debugging
-        pc.oniceconnectionstatechange = () => {
-          console.log('ICE connection state:', pc.iceConnectionState);
-          if (pc.iceConnectionState === 'failed') {
-            console.log('ICE connection failed - checking candidates...');
           }
         };
         
@@ -230,81 +181,36 @@ export function VideoCall({
         });
         
         socket.on("connect", () => {
-          console.log('Socket connected, joining room...');
           socket.emit("join-room", { roomId, userId, role });
         });
         
         // WebRTC signaling
-        socket.on("user-joined", async ({ socketId, role: peerRole }) => {
-          console.log(`User joined: ${socketId}, peer role: ${peerRole}, my role: ${role}`);
-          // Only create offer if I'm the student (initiator)
-          if (role === "student" && peerRole === "teacher") {
-            try {
-              console.log('Creating offer as student...');
-              const offer = await pc.createOffer();
-              await pc.setLocalDescription(offer);
-              socket.emit("offer", { roomId, offer, to: socketId });
-              console.log('Offer sent to teacher');
-            } catch (error) {
-              console.error('Error creating offer:', error);
-            }
+        socket.on("user-joined", async ({ socketId }) => {
+          if (role === "student" && pc.signalingState === "stable") {
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            socket.emit("offer", { roomId, offer, to: socketId });
           }
         });
         
         socket.on("offer", async ({ offer, from }) => {
-          console.log(`Received offer from ${from}`);
-          try {
-            await pc.setRemoteDescription(new RTCSessionDescription(offer));
+          if (pc.signalingState === "stable") {
+            await pc.setRemoteDescription(offer);
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             socket.emit("answer", { roomId, answer, to: from });
-            console.log('Answer sent back');
-            
-            // Add any queued ICE candidates
-            if (pendingCandidatesRef.current.length > 0) {
-              console.log(`Adding ${pendingCandidatesRef.current.length} queued ICE candidates`);
-              for (const candidate of pendingCandidatesRef.current) {
-                await pc.addIceCandidate(new RTCIceCandidate(candidate));
-              }
-              pendingCandidatesRef.current = [];
-            }
-          } catch (error) {
-            console.error('Error handling offer:', error);
           }
         });
         
-        socket.on("answer", async ({ answer, from }) => {
-          console.log(`Received answer from ${from}`);
-          try {
-            await pc.setRemoteDescription(new RTCSessionDescription(answer));
-            console.log('Answer set successfully');
-            
-            // Add any queued ICE candidates
-            if (pendingCandidatesRef.current.length > 0) {
-              console.log(`Adding ${pendingCandidatesRef.current.length} queued ICE candidates`);
-              for (const candidate of pendingCandidatesRef.current) {
-                await pc.addIceCandidate(new RTCIceCandidate(candidate));
-              }
-              pendingCandidatesRef.current = [];
-            }
-          } catch (error) {
-            console.error('Error handling answer:', error);
+        socket.on("answer", async ({ answer }) => {
+          if (pc.signalingState === "have-local-offer") {
+            await pc.setRemoteDescription(answer);
           }
         });
         
-        socket.on("ice-candidate", async ({ candidate, from }) => {
-          console.log(`Received ICE candidate from ${from}`);
-          try {
-            if (candidate && pc.remoteDescription) {
-              await pc.addIceCandidate(new RTCIceCandidate(candidate));
-              console.log('ICE candidate added');
-            } else if (candidate && !pc.remoteDescription) {
-              console.log('Queueing ICE candidate - no remote description yet');
-              // Queue the candidate to add later
-              pendingCandidatesRef.current.push(candidate);
-            }
-          } catch (error) {
-            console.error('Error adding ICE candidate:', error);
+        socket.on("ice-candidate", async ({ candidate }) => {
+          if (pc.remoteDescription) {
+            await pc.addIceCandidate(candidate);
           }
         });
         
@@ -359,7 +265,7 @@ export function VideoCall({
       stopCallTimer();
       cleanupCall();
     };
-  }, [roomId, userId, role, isCallReady]); // Added isCallReady dependency
+  }, [roomId, userId, role]);
   
   // Call timer - NO 2 MINUTE LIMIT, runs until package exhausted
   const startCallTimer = () => {
@@ -393,12 +299,6 @@ export function VideoCall({
   // AI Monitoring
   const initializeAIMonitoring = (stream: MediaStream) => {
     try {
-      // Prevent double initialization
-      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-        console.log('AudioContext already initialized, skipping');
-        return;
-      }
-      
       audioContextRef.current = new AudioContext();
       analyserRef.current = audioContextRef.current.createAnalyser();
       const source = audioContextRef.current.createMediaStreamSource(stream);
@@ -406,7 +306,7 @@ export function VideoCall({
       analyserRef.current.fftSize = 256;
       
       // Monitor speech activity
-      speechMonitorIntervalRef.current = setInterval(() => {
+      setInterval(() => {
         if (!analyserRef.current || !socketRef.current) return;
         
         const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
@@ -585,42 +485,23 @@ export function VideoCall({
   };
   
   const cleanupCall = () => {
-    // Clear speech monitoring interval
-    if (speechMonitorIntervalRef.current) {
-      clearInterval(speechMonitorIntervalRef.current);
-      speechMonitorIntervalRef.current = null;
-    }
-    
-    // Stop media tracks
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track => track.stop());
     }
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach(track => track.stop());
     }
-    
-    // Close peer connections
     if (pcRef.current) {
       pcRef.current.close();
     }
     if (screenPcRef.current) {
       screenPcRef.current.close();
     }
-    
-    // Disconnect socket
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
-    
-    // Close AudioContext safely
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      try {
-        audioContextRef.current.close().catch((err) => {
-          console.warn('AudioContext close error (safe to ignore):', err);
-        });
-      } catch (err) {
-        console.warn('AudioContext already closed (safe to ignore):', err);
-      }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
     }
   };
   
@@ -975,11 +856,7 @@ export function VideoCall({
               </div>
               
               <Button 
-                onClick={() => {
-                  setShowTeacherBriefing(false);
-                  setIsCallReady(true); // Now ready to initialize WebRTC
-                  console.log('Teacher ready, starting WebRTC initialization...');
-                }}
+                onClick={() => setShowTeacherBriefing(false)}
                 className="w-full mt-6"
               >
                 Start Session
