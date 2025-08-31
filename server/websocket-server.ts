@@ -207,10 +207,22 @@ export class CallernWebSocketServer {
         socket.to(roomId).emit('user-joined', {
           userId,
           role,
-          socketId: socket.id
+          socketId: socket.id,
+          peerRole: role  // Include the role of the peer who just joined
         });
         
         console.log(`User ${userId} (${role}) joined room ${roomId}`);
+      });
+      
+      // Handle teacher ready signal (for when teacher starts session after briefing)
+      socket.on('teacher-ready', (data) => {
+        const { roomId } = data;
+        console.log(`Teacher ready in room ${roomId}, notifying students`);
+        
+        // Notify all students in the room that teacher is ready
+        socket.to(roomId).emit('teacher-ready', {
+          teacherSocketId: socket.id
+        });
       });
       
       // Unified WebRTC signaling event (SimplePeer compatible)
