@@ -1,12 +1,12 @@
 # Test info
 
-- Name: +++RealTest: Video Connection Flow >> should establish WebRTC connection between teacher and student
-- Location: /home/runner/workspace/tests/e2e/video-connection.spec.ts:18:3
+- Name: +++RealTest: Video Connection Flow >> should maintain stable connection during extended call
+- Location: /home/runner/workspace/tests/e2e/video-connection.spec.ts:117:3
 
 # Error details
 
 ```
-Error: browserType.launch: Executable doesn't exist at /home/runner/workspace/.cache/ms-playwright/chromium-1169/chrome-linux/chrome
+Error: browserType.launch: Executable doesn't exist at /home/runner/workspace/.cache/ms-playwright/firefox-1482/firefox/firefox
 ╔═════════════════════════════════════════════════════════════════════════╗
 ║ Looks like Playwright Test or Playwright was just installed or updated. ║
 ║ Please run the following command to download new browsers:              ║
@@ -20,25 +20,8 @@ Error: browserType.launch: Executable doesn't exist at /home/runner/workspace/.c
 # Test source
 
 ```ts
-   1 | import { test, expect, Page } from '@playwright/test';
-   2 |
-   3 | // Real E2E test for video connection establishment
-   4 | test.describe('+++RealTest: Video Connection Flow', () => {
-   5 |   let teacherPage: Page;
-   6 |   let studentPage: Page;
-   7 |
-   8 |   test.beforeEach(async ({ browser }) => {
-   9 |     // Create teacher and student pages
-   10 |     teacherPage = await browser.newPage();
-   11 |     studentPage = await browser.newPage();
-   12 |
-   13 |     // Grant media permissions
-   14 |     await teacherPage.context().grantPermissions(['camera', 'microphone']);
-   15 |     await studentPage.context().grantPermissions(['camera', 'microphone']);
-   16 |   });
    17 |
->  18 |   test('should establish WebRTC connection between teacher and student', async () => {
-      |   ^ Error: browserType.launch: Executable doesn't exist at /home/runner/workspace/.cache/ms-playwright/chromium-1169/chrome-linux/chrome
+   18 |   test('should establish WebRTC connection between teacher and student', async () => {
    19 |     // Login as teacher
    20 |     await teacherPage.goto('/auth');
    21 |     await teacherPage.fill('input[type="email"]', 'teacher1@test.com');
@@ -137,6 +120,40 @@ Error: browserType.launch: Executable doesn't exist at /home/runner/workspace/.c
   114 |     await expect(teacherPage.locator('[data-testid="retry-connection-btn"]')).toBeVisible();
   115 |   });
   116 |
-  117 |   test('should maintain stable connection during extended call', async () => {
+> 117 |   test('should maintain stable connection during extended call', async () => {
+      |   ^ Error: browserType.launch: Executable doesn't exist at /home/runner/workspace/.cache/ms-playwright/firefox-1482/firefox/firefox
   118 |     // Login both users and establish connection (abbreviated)
+  119 |     await teacherPage.goto('/callern/video/stability-test');
+  120 |     await studentPage.goto('/callern/video/stability-test');
+  121 |
+  122 |     // Wait for connection establishment
+  123 |     await Promise.all([
+  124 |       teacherPage.waitForSelector('[data-testid="connection-status"]:has-text("connected")'),
+  125 |       studentPage.waitForSelector('[data-testid="connection-status"]:has-text("connected")')
+  126 |     ]);
+  127 |
+  128 |     // Monitor connection for 30 seconds
+  129 |     for (let i = 0; i < 6; i++) {
+  130 |       await teacherPage.waitForTimeout(5000);
+  131 |       
+  132 |       const teacherStatus = await teacherPage.locator('[data-testid="connection-status"]').textContent();
+  133 |       const studentStatus = await studentPage.locator('[data-testid="connection-status"]').textContent();
+  134 |       
+  135 |       expect(teacherStatus).toBe('connected');
+  136 |       expect(studentStatus).toBe('connected');
+  137 |       
+  138 |       // Check if video streams are still active
+  139 |       const teacherVideoActive = await teacherPage.locator('[data-testid="local-video"]').isVisible();
+  140 |       const studentVideoActive = await studentPage.locator('[data-testid="local-video"]').isVisible();
+  141 |       
+  142 |       expect(teacherVideoActive).toBe(true);
+  143 |       expect(studentVideoActive).toBe(true);
+  144 |     }
+  145 |   });
+  146 |
+  147 |   test.afterEach(async () => {
+  148 |     await teacherPage.close();
+  149 |     await studentPage.close();
+  150 |   });
+  151 | });
 ```
