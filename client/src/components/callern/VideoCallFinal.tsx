@@ -85,6 +85,7 @@ export function VideoCall({
     "Review vocabulary from last session"
   ]);
   const [showTeacherBriefing, setShowTeacherBriefing] = useState(role === "teacher");
+  const [isCallReady, setIsCallReady] = useState(role === "student"); // Students are ready immediately, teachers after briefing
   
   // Speech detection
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -115,9 +116,15 @@ export function VideoCall({
 
   // Initialize call with NO TIME LIMIT
   useEffect(() => {
+    if (!isCallReady) {
+      console.log('Call not ready yet, waiting...');
+      return;
+    }
+    
     let mounted = true;
     
     const initCall = async () => {
+      console.log(`Initializing call for ${role}...`);
       try {
         // Get user media
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -352,7 +359,7 @@ export function VideoCall({
       stopCallTimer();
       cleanupCall();
     };
-  }, [roomId, userId, role]);
+  }, [roomId, userId, role, isCallReady]); // Added isCallReady dependency
   
   // Call timer - NO 2 MINUTE LIMIT, runs until package exhausted
   const startCallTimer = () => {
@@ -968,7 +975,11 @@ export function VideoCall({
               </div>
               
               <Button 
-                onClick={() => setShowTeacherBriefing(false)}
+                onClick={() => {
+                  setShowTeacherBriefing(false);
+                  setIsCallReady(true); // Now ready to initialize WebRTC
+                  console.log('Teacher ready, starting WebRTC initialization...');
+                }}
                 className="w-full mt-6"
               >
                 Start Session
