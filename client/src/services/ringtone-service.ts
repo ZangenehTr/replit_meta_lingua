@@ -14,68 +14,12 @@ class RingtoneService {
   private currentRingtone: AudioBufferSourceNode | null = null;
   private currentGainNode: GainNode | null = null;
   private currentVolume: number = 0.7; // Default volume
-  private isInitialized: boolean = false;
-  private initializationPromise: Promise<void> | null = null;
 
   private getAudioContext(): AudioContext {
     if (!this.audioContext) {
-      console.log('🎵 Creating new AudioContext');
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      console.log(`🎵 AudioContext created with state: ${this.audioContext.state}`);
-      
-      // Listen for state changes
-      this.audioContext.onstatechange = () => {
-        console.log(`🎵 AudioContext state changed to: ${this.audioContext?.state}`);
-      };
     }
     return this.audioContext;
-  }
-
-  // Initialize audio context with user interaction
-  public async initializeAudio(): Promise<void> {
-    if (this.isInitialized) return;
-    
-    if (this.initializationPromise) {
-      return this.initializationPromise;
-    }
-    
-    this.initializationPromise = this.doInitialization();
-    return this.initializationPromise;
-  }
-
-  private async doInitialization(): Promise<void> {
-    try {
-      const context = this.getAudioContext();
-      
-      if (context.state === 'suspended') {
-        console.log('🎵 Attempting to resume AudioContext during initialization...');
-        try {
-          // Use a short timeout to prevent hanging
-          const resumePromise = context.resume();
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('AudioContext resume timeout')), 500)
-          );
-          await Promise.race([resumePromise, timeoutPromise]);
-          console.log(`🎵 AudioContext resumed, new state: ${context.state}`);
-        } catch (error) {
-          console.log('🎵 Could not resume AudioContext yet, will retry on playback');
-        }
-      }
-      
-      // Test audio capability with a very short silent buffer
-      const testBuffer = context.createBuffer(1, 1, context.sampleRate);
-      const testSource = context.createBufferSource();
-      testSource.buffer = testBuffer;
-      testSource.connect(context.destination);
-      testSource.start(0);
-      
-      this.isInitialized = true;
-      console.log('🎵 Audio initialized successfully');
-    } catch (error) {
-      console.error('🎵 Failed to initialize audio:', error);
-      this.initializationPromise = null; // Reset to allow retry
-      throw error;
-    }
   }
 
   // Generate a single tone at given frequency and duration
@@ -262,34 +206,13 @@ class RingtoneService {
 
   // Play selected ringtone
   public async playRingtone(ringtoneId: string, loop: boolean = true): Promise<void> {
-    console.log(`🎵 Attempting to play ringtone: ${ringtoneId}, loop: ${loop}`);
     this.stopRingtone(); // Stop any currently playing ringtone
 
-    // Try to initialize audio if not already done
-    try {
-      await this.initializeAudio();
-    } catch (error) {
-      console.error('🎵 Audio initialization failed (will retry):', error);
-      // Don't throw - continue and try to play anyway
-    }
-
     const context = this.getAudioContext();
-    console.log(`🎵 AudioContext state: ${context.state}`);
     
-    // Final check - if still suspended, throw error
+    // Resume context if suspended (required by browser policies)
     if (context.state === 'suspended') {
-      console.log('🎵 Attempting final resume...');
-      try {
-        await context.resume();
-        console.log(`🎵 AudioContext resumed, new state: ${context.state}`);
-      } catch (error) {
-        console.error('🎵 Failed to resume AudioContext:', error);
-        throw new Error('Could not resume audio context. User interaction may be required.');
-      }
-    }
-    
-    if (context.state !== 'running') {
-      throw new Error('AudioContext is not in running state. User interaction required.');
+      await context.resume();
     }
 
     let buffer: AudioBuffer;
@@ -324,14 +247,10 @@ class RingtoneService {
     this.currentRingtone.buffer = buffer;
     this.currentRingtone.loop = loop;
     this.currentRingtone.connect(this.currentGainNode);
-    
-    console.log(`🎵 Starting ringtone playback: ${ringtoneId}`);
     this.currentRingtone.start(0);
-    console.log(`🎵 Ringtone started successfully`);
 
     // Handle ended event
     this.currentRingtone.onended = () => {
-      console.log(`🎵 Ringtone ended: ${ringtoneId}`);
       this.currentRingtone = null;
       this.currentGainNode = null;
     };
@@ -339,55 +258,24 @@ class RingtoneService {
 
   // Stop currently playing ringtone
   public stopRingtone(): void {
-    console.log('🔇 Stopping ringtone...');
     if (this.currentRingtone) {
       try {
-        console.log('🔇 Stopping audio buffer source');
         this.currentRingtone.stop();
-        this.currentRingtone.onended = null; // Remove event listener
-        console.log('🔇 Audio buffer source stopped');
       } catch (e) {
-        console.log('🔇 Buffer source already stopped or invalid:', e);
+        // Ignore if already stopped
       }
       this.currentRingtone = null;
     }
     
     if (this.currentGainNode) {
-      try {
-        console.log('🔇 Disconnecting gain node');
-        this.currentGainNode.disconnect();
-        console.log('🔇 Gain node disconnected');
-      } catch (e) {
-        console.log('🔇 Gain node already disconnected:', e);
-      }
+      this.currentGainNode.disconnect();
       this.currentGainNode = null;
     }
-    console.log('🔇 Ringtone stopped completely');
   }
 
   // Check if ringtone is currently playing
   public isPlaying(): boolean {
     return this.currentRingtone !== null;
-  }
-
-  // Enable audio with user interaction (call this on first user click/tap)
-  public async enableAudioWithUserGesture(): Promise<void> {
-    console.log('🎵 Enabling audio with user gesture...');
-    try {
-      await this.initializeAudio();
-      
-      // Force resume if still suspended
-      const context = this.getAudioContext();
-      if (context.state === 'suspended') {
-        console.log('🎵 Forcing AudioContext resume with user gesture...');
-        await context.resume();
-      }
-      
-      console.log('🎵 Audio enabled successfully');
-    } catch (error) {
-      console.error('🎵 Failed to enable audio:', error);
-      throw error;
-    }
   }
 
   // Set volume (0.0 to 1.0)
@@ -409,17 +297,10 @@ class RingtoneService {
   // Dispose of audio context
   public dispose(): void {
     this.stopRingtone();
-    if (this.audioContext && this.audioContext.state !== 'closed') {
-      try {
-        console.log('🎵 Closing AudioContext');
-        this.audioContext.close();
-      } catch (error) {
-        console.log('🎵 AudioContext already closed:', error);
-      }
+    if (this.audioContext) {
+      this.audioContext.close();
+      this.audioContext = null;
     }
-    this.audioContext = null;
-    this.isInitialized = false;
-    this.initializationPromise = null;
   }
 }
 

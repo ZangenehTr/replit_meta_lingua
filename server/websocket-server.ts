@@ -90,26 +90,13 @@ export class CallernWebSocketServer {
         const roleLower = role.toLowerCase();
         
         if (roleLower === 'teacher') {
-          // Check if teacher already has a socket registered and remove the old one
-          const existingTeacher = this.teacherSockets.get(userId);
-          if (existingTeacher && existingTeacher.socketId !== socket.id) {
-            console.log(`🔄 [SERVER] Teacher ${userId} reconnecting - removing old socket ${existingTeacher.socketId}, adding new socket ${socket.id}`);
-          }
-          
           this.teacherSockets.set(userId, {
             socketId: socket.id,
             teacherId: userId,
             isAvailable: enableCallern || false,
           });
-          console.log(`🧑‍🏫 [SERVER] Teacher registered: ${userId} with socket ${socket.id}`);
-          console.log('🧑‍🏫 [SERVER] Current teacher sockets after registration:', Array.from(this.teacherSockets.keys()));
-          
-          // Test immediate emit to verify connection
-          socket.emit('connection-test', { 
-            message: 'Teacher socket registered successfully', 
-            teacherId: userId,
-            timestamp: new Date().toISOString()
-          });
+          console.log('Teacher registered:', userId);
+          console.log('Current teacher sockets after registration:', Array.from(this.teacherSockets.keys()));
           
           // If teacher wants to enable Callern, update database
           if (enableCallern) {
@@ -126,23 +113,12 @@ export class CallernWebSocketServer {
           socket.emit('authenticated', { success: true, role: 'teacher' });
         } else if (roleLower === 'student') {
           this.studentSockets.set(userId, socket.id);
-          console.log(`🧑‍🎓 [SERVER] Student registered: ${userId} with socket: ${socket.id}`);
-          console.log('🧑‍🎓 [SERVER] Current student sockets:', Array.from(this.studentSockets.entries()));
+          console.log('Student registered:', userId, 'with socket:', socket.id);
+          console.log('Current student sockets:', Array.from(this.studentSockets.entries()));
           
           // Send confirmation back to student
           socket.emit('authenticated', { success: true, role: 'student' });
         }
-      });
-
-      // Debug handler for teacher socket testing
-      socket.on('test-teacher-socket', (data) => {
-        console.log('🧪 [SERVER] Received test-teacher-socket:', data);
-        socket.emit('teacher-socket-test-response', {
-          message: 'Server received your test successfully',
-          originalData: data,
-          socketId: socket.id,
-          timestamp: new Date().toISOString()
-        });
       });
 
       // Handle teacher going online for Callern
@@ -467,46 +443,16 @@ export class CallernWebSocketServer {
           // Notify teacher
           const teacher = this.teacherSockets.get(assignedTeacherId);
           if (teacher) {
-            console.log(`🔔 [SERVER] About to emit incoming-call to teacher ${assignedTeacherId}`);
-            console.log(`🔔 [SERVER] Teacher socket details:`, {
-              socketId: teacher.socketId,
-              isAvailable: teacher.isAvailable,
-              currentCall: teacher.currentCall
-            });
-            
-            // Check if socket exists in Socket.IO
-            const socketExists = this.io.sockets.sockets.has(teacher.socketId);
-            console.log(`🔔 [SERVER] Socket exists in Socket.IO: ${socketExists}`);
-            
-            if (!socketExists) {
-              console.error(`🔔 [SERVER] ERROR: Teacher socket ${teacher.socketId} not found in Socket.IO`);
-              this.teacherSockets.delete(assignedTeacherId);
-              socket.emit('error', { message: 'Teacher connection lost' });
-              return;
-            }
-
-            const studentInfo = await this.getStudentInfo(studentId);
-            const callData = {
+            // Emit incoming-call event to match what teacher's frontend expects
+            this.io.to(teacher.socketId).emit('incoming-call', {
               roomId,
               studentId,
               packageId,
               language,
-              studentInfo,
-            };
+              studentInfo: await this.getStudentInfo(studentId),
+            });
             
-            console.log(`🔔 [SERVER] Emitting incoming-call with data:`, callData);
-            
-            // Emit incoming-call event to match what teacher's frontend expects
-            this.io.to(teacher.socketId).emit('incoming-call', callData);
-            
-            // Also try direct emit to socket object as backup
-            const teacherSocketObj = this.io.sockets.sockets.get(teacher.socketId);
-            if (teacherSocketObj) {
-              console.log(`🔔 [SERVER] Also emitting directly to socket object`);
-              teacherSocketObj.emit('incoming-call', callData);
-            }
-            
-            console.log(`🔔 [SERVER] Emitted incoming-call to teacher ${assignedTeacherId} on socket ${teacher.socketId}`);
+            console.log(`Emitted incoming-call to teacher ${assignedTeacherId} on socket ${teacher.socketId}`);
 
             // Set teacher as busy
             teacher.currentCall = roomId;

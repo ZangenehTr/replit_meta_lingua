@@ -251,10 +251,32 @@ export default function EnhancedTeacherCallernSystem() {
   // REMOVED: handleAvailabilityChange function is no longer needed
   // Teachers can only view their availability settings (read-only)
 
-  // REMOVED duplicate incoming call handlers - TeacherIncomingCall component handles this
-  // Listen only for call status updates
+  // Listen for incoming calls
   useEffect(() => {
     if (!socket) return;
+
+    const handleIncomingCall = (data: any) => {
+      console.log('Teacher: Incoming call from student:', data);
+      setCurrentStudent({
+        id: data.studentId,
+        firstName: data.studentFirstName,
+        lastName: data.studentLastName,
+        level: data.level || 'B1',
+        packageName: data.packageName || 'Standard',
+        remainingMinutes: data.remainingMinutes || 0,
+        totalSessions: data.totalSessions || 0
+      });
+    };
+
+    const handleCallAccepted = (data: any) => {
+      console.log('Call accepted, starting video call:', data);
+      setIsInCall(true);
+      setActiveCallConfig({
+        roomId: data.roomId,
+        studentId: data.studentId,
+        remoteSocketId: data.studentSocketId
+      });
+    };
 
     const handleCallEnded = () => {
       console.log('Call ended');
@@ -275,10 +297,14 @@ export default function EnhancedTeacherCallernSystem() {
       }
     };
 
+    socket.on('student-call-request', handleIncomingCall);
+    socket.on('call-accepted', handleCallAccepted);
     socket.on('call-ended', handleCallEnded);
     socket.on('student-connection-update', handleStudentConnectionUpdate);
 
     return () => {
+      socket.off('student-call-request', handleIncomingCall);
+      socket.off('call-accepted', handleCallAccepted);
       socket.off('call-ended', handleCallEnded);
       socket.off('student-connection-update', handleStudentConnectionUpdate);
     };
