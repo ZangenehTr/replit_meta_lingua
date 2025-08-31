@@ -341,15 +341,26 @@ export function VideoCall({
         const onUserJoined = async ({
           socketId,
           userId: joinedUserId,
+          role: joinedRole,
         }: {
           socketId: string;
           userId: number;
+          role?: string;
         }) => {
+          // Only student creates offer when teacher joins
           if (role !== "student") return;
           if (joinedUserId === userId) return;
+          
           const pc = pcRef.current;
           if (!pc) return;
           if (pc.signalingState !== "stable") return;
+          
+          // Reset offer flag if this is a teacher joining (we need to make a fresh offer)
+          if (joinedRole === "teacher" && madeOfferRef.current) {
+            madeOfferRef.current = false;
+            gotAnswerRef.current = false;
+          }
+          
           if (madeOfferRef.current) return;
 
           try {
