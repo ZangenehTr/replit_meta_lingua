@@ -149,8 +149,18 @@ export function TeacherIncomingCall() {
   }, [user, socket]);
 
   const handleAccept = async () => {
+    console.log('🔍 [TEACHER] handleAccept called - Checking prerequisites...');
+    console.log('🔍 [TEACHER] incomingCall:', !!incomingCall, incomingCall);
+    console.log('🔍 [TEACHER] socket:', !!socket, socket?.connected);
+    console.log('🔍 [TEACHER] user:', !!user, user?.id);
+    
     if (!incomingCall || !socket) {
-      console.log('❌ [TEACHER] Cannot accept - missing call data or socket');
+      console.log('❌ [TEACHER] Cannot accept - missing call data or socket', { incomingCall: !!incomingCall, socket: !!socket });
+      return;
+    }
+
+    if (!user?.id) {
+      console.log('❌ [TEACHER] Cannot accept - missing user ID', { user });
       return;
     }
 
@@ -197,8 +207,10 @@ export function TeacherIncomingCall() {
       onCallEnd: handleEndCall
     });
     
+    console.log('🎯 [TEACHER] Call config set, switching to video call mode');
     setIsRinging(false);
     setIsInCall(true);
+    console.log('✅ [TEACHER] Accept function completed successfully!');
   };
 
   const handleReject = async () => {
