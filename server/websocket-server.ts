@@ -90,6 +90,12 @@ export class CallernWebSocketServer {
         const roleLower = role.toLowerCase();
         
         if (roleLower === 'teacher') {
+          // Check if teacher already has a socket registered and remove the old one
+          const existingTeacher = this.teacherSockets.get(userId);
+          if (existingTeacher && existingTeacher.socketId !== socket.id) {
+            console.log(`🔄 [SERVER] Teacher ${userId} reconnecting - removing old socket ${existingTeacher.socketId}, adding new socket ${socket.id}`);
+          }
+          
           this.teacherSockets.set(userId, {
             socketId: socket.id,
             teacherId: userId,
