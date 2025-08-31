@@ -34,43 +34,64 @@ export function TeacherIncomingCall() {
   const { t } = useTranslation(['teacher', 'common', 'callern']);
 
   useEffect(() => {
-    if (!user || (user.role !== 'Teacher' && user.role !== 'Teacher/Tutor') || !socket) return;
+    if (!user || (user.role !== 'Teacher' && user.role !== 'Teacher/Tutor') || !socket) {
+      console.log('❌ [TEACHER-INCOMING] Component not mounted - missing requirements:', {
+        hasUser: !!user,
+        userRole: user?.role,
+        hasSocket: !!socket,
+        socketConnected: socket?.connected
+      });
+      return;
+    }
 
-    console.log('TeacherIncomingCall component mounted for user:', user.id, user.role);
+    console.log('✅ [TEACHER-INCOMING] Component mounted for user:', user.id, user.role, 'Socket connected:', socket.connected);
 
     // Listen for incoming calls - matching server event name
     const handleIncomingCall = async (data: IncomingCallData) => {
-      console.log('🔔 INCOMING CALL RECEIVED from student:', data);
-      console.log('Setting incoming call state:', data);
+      console.log('🔔 [TEACHER-INCOMING] INCOMING CALL RECEIVED from student:', data);
+      console.log('🔔 [TEACHER-INCOMING] Setting incoming call state and starting ringtone');
+      
       setIncomingCall(data);
       setIsRinging(true);
       setIsSilenced(false); // Reset silence state for new call
-      console.log('Ringing state set to true');
+      console.log('🔔 [TEACHER-INCOMING] Ringing state set to true, UI should show');
 
       // Get teacher's ringtone preferences and try to play
       if (user?.id) {
         try {
+          console.log('🔔 [TEACHER-INCOMING] Initializing ringtone service...');
           const preferences = getTeacherRingtonePreferences(user.id);
+          console.log('🔔 [TEACHER-INCOMING] Ringtone preferences:', preferences);
+          
+          // Initialize audio context first (important for browser autoplay policies)
+          await ringtoneService.enableAudioWithUserGesture();
           
           // Set volume and play the selected ringtone
           ringtoneService.setVolume(preferences.volume);
           await ringtoneService.playRingtone(preferences.selectedRingtone, true);
           
-          console.log(`🔔 Playing ringtone: ${preferences.selectedRingtone} at volume ${preferences.volume}`);
+          console.log(`🔔 [TEACHER-INCOMING] Playing ringtone: ${preferences.selectedRingtone} at volume ${preferences.volume}`);
         } catch (error) {
-          console.error('🔔 Failed to play ringtone:', error);
+          console.error('🔔 [TEACHER-INCOMING] Failed to play ringtone:', error);
           
-          // If error is due to user interaction policy, show a notice
-          if (error.message?.includes('user interaction')) {
-            console.log('🔔 Ringtone requires user interaction - visual notification only');
-          } else {
-            // Try fallback to classic ringtone
-            try {
-              await ringtoneService.playRingtone('classic', true);
-              console.log('🔔 Fallback ringtone playing');
-            } catch (fallbackError) {
-              console.error('🔔 Failed to play fallback ringtone:', fallbackError);
-            }
+          // Always try a fallback approach - use HTML Audio as backup
+          try {
+            console.log('🔔 [TEACHER-INCOMING] Trying fallback HTML audio ringtone...');
+            const audio = new Audio();
+            audio.volume = 0.7;
+            
+            // Create a simple tone using data URL
+            const audioUrl = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAaBDuR2/Pc';
+            audio.src = audioUrl;
+            
+            // Play in a loop for incoming call effect
+            audio.loop = true;
+            await audio.play();
+            
+            console.log('🔔 [TEACHER-INCOMING] Fallback audio playing');
+          } catch (fallbackError) {
+            console.error('🔔 [TEACHER-INCOMING] All ringtone attempts failed:', fallbackError);
+            console.log('🔔 [TEACHER-INCOMING] Visual notification only - no sound available');
           }
         }
       }
