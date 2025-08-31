@@ -73,6 +73,7 @@ export function VideoCall({
   const callStartTimeRef = useRef<number>(Date.now());
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const iceServersRef = useRef<RTCIceServer[]>([]);
+  const iceCandidateQueue = useRef<RTCIceCandidate[]>([]);
   
   // AI Features - ALWAYS VISIBLE
   const [showAIOverlay, setShowAIOverlay] = useState(true);
@@ -277,6 +278,21 @@ export function VideoCall({
           console.log(`Received offer from ${from}`);
           if (pc.signalingState === "stable") {
             await pc.setRemoteDescription(offer);
+            
+            // Process any queued ICE candidates after setting remote description
+            if (iceCandidateQueue.current.length > 0) {
+              console.log(`Processing ${iceCandidateQueue.current.length} queued ICE candidates after offer`);
+              for (const candidate of iceCandidateQueue.current) {
+                try {
+                  await pc.addIceCandidate(candidate);
+                  console.log("Queued ICE candidate added after offer");
+                } catch (error) {
+                  console.error("Error adding queued ICE candidate after offer:", error);
+                }
+              }
+              iceCandidateQueue.current = [];
+            }
+            
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             socket.emit("answer", { roomId, answer, to: from });
@@ -289,16 +305,35 @@ export function VideoCall({
           if (pc.signalingState === "have-local-offer") {
             await pc.setRemoteDescription(answer);
             console.log("Answer set successfully");
+            
+            // Process any queued ICE candidates
+            if (iceCandidateQueue.current.length > 0) {
+              console.log(`Processing ${iceCandidateQueue.current.length} queued ICE candidates`);
+              for (const candidate of iceCandidateQueue.current) {
+                try {
+                  await pc.addIceCandidate(candidate);
+                  console.log("Queued ICE candidate added");
+                } catch (error) {
+                  console.error("Error adding queued ICE candidate:", error);
+                }
+              }
+              iceCandidateQueue.current = [];
+            }
           }
         };
         
         const handleIceCandidate = async ({ candidate, from }: any) => {
           console.log(`Received ICE candidate from ${from}`);
           if (pc.remoteDescription) {
-            await pc.addIceCandidate(candidate);
-            console.log("ICE candidate added");
+            try {
+              await pc.addIceCandidate(candidate);
+              console.log("ICE candidate added");
+            } catch (error) {
+              console.error("Error adding ICE candidate:", error);
+            }
           } else {
-            console.log("Skipping ICE candidate - no remote description yet");
+            console.log("Queueing ICE candidate - no remote description yet");
+            iceCandidateQueue.current.push(candidate);
           }
         };
         
@@ -366,6 +401,9 @@ export function VideoCall({
     return () => {
       mounted = false;
       stopCallTimer();
+      
+      // Clear ICE candidate queue
+      iceCandidateQueue.current = [];
       
       // Clean up socket event handlers
       if (globalSocket) {
