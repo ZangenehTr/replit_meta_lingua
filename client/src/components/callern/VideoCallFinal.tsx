@@ -130,7 +130,17 @@ export function VideoCall({
         
         localStreamRef.current = stream;
         if (localVideoRef.current) {
+          console.log('🎥 [LOCAL] Setting local video stream');
           localVideoRef.current.srcObject = stream;
+          
+          // Add event listeners for local video debugging
+          localVideoRef.current.onloadedmetadata = () => {
+            console.log('🎥 [LOCAL] Local video metadata loaded');
+          };
+          
+          localVideoRef.current.onplay = () => {
+            console.log('🎥 [LOCAL] Local video started playing');
+          };
         }
         
         // Initialize peer connection
@@ -142,15 +152,48 @@ export function VideoCall({
         }));
         
         stream.getTracks().forEach(track => {
+          console.log('🎥 [TRACK] Adding local track to peer connection:', {
+            kind: track.kind,
+            trackId: track.id,
+            enabled: track.enabled,
+            readyState: track.readyState
+          });
           pc.addTrack(track, stream);
         });
         
         pc.ontrack = (event) => {
+          console.log('🎥 [TRACK EVENT] Received remote track:', {
+            kind: event.track.kind,
+            streamCount: event.streams.length,
+            hasVideoElement: !!remoteVideoRef.current,
+            trackState: event.track.readyState
+          });
+          
           if (remoteVideoRef.current && event.streams[0]) {
+            console.log('🎥 [TRACK EVENT] Setting remote video stream');
             remoteVideoRef.current.srcObject = event.streams[0];
+            
+            // Add event listeners to track video element events
+            remoteVideoRef.current.onloadedmetadata = () => {
+              console.log('🎥 [VIDEO] Remote video metadata loaded');
+            };
+            
+            remoteVideoRef.current.onplay = () => {
+              console.log('🎥 [VIDEO] Remote video started playing');
+            };
+            
+            remoteVideoRef.current.onerror = (error) => {
+              console.error('🎥 [VIDEO ERROR] Remote video error:', error);
+            };
+            
             setConnectionStatus("connected");
             startCallTimer(); // Start timer when connected
             playCallStartSound();
+          } else {
+            console.warn('🎥 [TRACK EVENT] Missing video element or stream:', {
+              hasVideoElement: !!remoteVideoRef.current,
+              hasStream: !!event.streams[0]
+            });
           }
         };
         
