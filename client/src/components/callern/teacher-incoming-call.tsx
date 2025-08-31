@@ -97,17 +97,52 @@ export function TeacherIncomingCall() {
       }
     };
 
+    // Debug socket connection
+    console.log('🔌 [TEACHER-INCOMING] Socket connection details:', {
+      connected: socket.connected,
+      id: socket.id,
+      userId: user.id,
+      role: user.role
+    });
+
+    // Test socket communication
+    socket.emit('test-teacher-socket', { 
+      teacherId: user.id, 
+      message: 'Testing teacher socket connection' 
+    });
+
     // Listen for the correct event name that server emits
     socket.on('incoming-call', handleIncomingCall);
-    console.log('✅ Registered listener for incoming-call event');
+    console.log('✅ [TEACHER-INCOMING] Registered listener for incoming-call event');
     
     // Also listen for call-request for backwards compatibility
     socket.on('call-request', handleIncomingCall);
-    console.log('✅ Registered listener for call-request event (backwards compat)');
+    console.log('✅ [TEACHER-INCOMING] Registered listener for call-request event (backwards compat)');
+
+    // Add socket event debugging
+    socket.onAny((eventName, ...args) => {
+      console.log(`📡 [TEACHER-INCOMING] Socket event received: ${eventName}`, args);
+    });
+
+    // Add specific test for incoming-call events
+    socket.on('connect', () => {
+      console.log('🔌 [TEACHER-INCOMING] Socket connected, re-registering events');
+    });
+
+    // Test event to verify server communication
+    socket.on('connection-test', (data) => {
+      console.log('✅ [TEACHER-INCOMING] Connection test received from server:', data);
+    });
+
+    socket.on('teacher-socket-test-response', (data) => {
+      console.log('✅ [TEACHER-INCOMING] Socket test response received:', data);
+    });
 
     return () => {
       socket.off('incoming-call', handleIncomingCall);
       socket.off('call-request', handleIncomingCall);
+      socket.off('connect');
+      socket.offAny();
       // Stop ringtone if component unmounts
       ringtoneService.stopRingtone();
     };
