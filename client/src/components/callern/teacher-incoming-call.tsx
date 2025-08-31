@@ -99,12 +99,24 @@ export function TeacherIncomingCall() {
       setIsSilenced(false);
 
       try {
-        await ringtoneService.enableAudioWithUserGesture();
+        // Try to initialize audio but don't wait too long
+        const audioInitPromise = ringtoneService.enableAudioWithUserGesture();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Audio init timeout')), 200)
+        );
+        
+        try {
+          await Promise.race([audioInitPromise, timeoutPromise]);
+        } catch (initError) {
+          console.log("🔔 Audio init skipped (will retry on user interaction):", initError);
+        }
+        
+        // Try to play ringtone regardless
         const prefs = getTeacherRingtonePreferences(user.id);
         ringtoneService.setVolume(prefs.volume);
         await ringtoneService.playRingtone(prefs.selectedRingtone, true);
       } catch (err) {
-        console.error("🔔 Ringtone failed:", err);
+        console.error("🔔 Ringtone failed (audio may require user interaction):", err);
       }
     };
 
@@ -219,8 +231,14 @@ export function TeacherIncomingCall() {
   };
 
   const handleReject = async () => {
-    if (!incomingCall || !socket) return;
+    console.log("❌ [TEACHER-INCOMING] Reject button clicked");
+    if (!incomingCall || !socket) {
+      console.error("❌ [TEACHER-INCOMING] Cannot reject - missing requirements");
+      return;
+    }
 
+    // Stop ringtone IMMEDIATELY
+    console.log("🔇 [TEACHER-INCOMING] Stopping ringtone");
     ringtoneService.stopRingtone();
 
     socket.emit("call-rejected", {
