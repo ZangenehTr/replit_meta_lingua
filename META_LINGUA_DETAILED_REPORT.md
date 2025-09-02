@@ -31,7 +31,19 @@ Meta Lingua aims to democratize language education globally by providing a robus
 ### 2. Callern Service (Unique Differentiator)
 - **24/7 On-Demand Video Tutoring**: Students purchase hour packages and connect instantly with available teachers
 - **Any Language, Anytime**: Global marketplace for language tutors
-- **WebRTC-Based Video Calling**: Peer-to-peer connections with screen sharing and recording
+- **WebRTC-Based Video Calling**: 
+  - Peer-to-peer connections with fallback to TURN servers
+  - Dynamic TURN server credential management
+  - Screen sharing capabilities
+  - Call recording with RecordRTC
+  - ICE candidate queueing for reliable connections
+  - Works behind NAT/firewalls
+- **AI-Powered Call Features**:
+  - Real-time vocabulary suggestions
+  - Live grammar correction
+  - Pronunciation feedback
+  - Automatic transcription
+  - Personal glossary building
 - **Smart Matching**: Algorithm matches students with appropriate teachers based on:
   - Language preferences
   - Specialization needs (Business, Academic, Conversation)
@@ -155,7 +167,13 @@ Features:
 
 ## Current Development Status
 
-### Recently Completed (January 2025):
+### Recently Completed (September 2025):
+- ✅ WebRTC video calling with TURN server support (fixed NAT/firewall traversal)
+- ✅ Dynamic TURN server credential fetching for reliable connections
+- ✅ ICE candidate queueing system for proper WebRTC handshaking
+- ✅ Screen sharing functionality in video calls
+- ✅ Call recording capabilities with RecordRTC
+- ✅ AI Supervisor integration in video calls (vocabulary suggestions, grammar correction)
 - ✅ Real activity tracking system (replaced all mock data)
 - ✅ Comprehensive learning roadmap system with milestones
 - ✅ Activity tracker for recording actual study time
@@ -165,16 +183,25 @@ Features:
 - ✅ OTP login system via SMS for all roles
 - ✅ Unified dashboard system (all roles use /dashboard)
 - ✅ Persian/Arabic/English translations with RTL support
+- ✅ Deployment scripts and guides for self-hosting
+- ✅ Database migration system with Drizzle ORM
+- ✅ PM2 process management configuration
+- ✅ Nginx reverse proxy configuration
 
 ### Active Features:
+- WebRTC video calling with reliable TURN/STUN servers
+- Real-time AI assistance during calls
+- Screen sharing and call recording
 - Real-time activity recording
 - Weekly progress tracking
 - Learning roadmap management
 - Student enrollment and progress monitoring
-- WebRTC video calling system
-- Wallet-based payments
-- SMS notifications
-- Course catalog with filtering
+- Wallet-based payments (IRR currency)
+- SMS notifications via Kavenegar
+- Course catalog with advanced filtering
+- Multi-language support with RTL/LTR handling
+- Role-based access control for 7 user types
+- Socket.io for real-time communication
 
 ### Test Environment:
 Seven test accounts available:
@@ -192,16 +219,24 @@ Seven test accounts available:
 - Hosted on Replit for development
 - PostgreSQL via Neon (development only)
 - Environment variables via Replit Secrets
+- Branch: replit-agent (latest stable version with WebRTC fixes)
 
 ### Production Deployment:
 - **Zero External Dependencies**: All services can be self-hosted
 - **Docker Support**: Containerized deployment option
+- **Deployment Tools Provided**:
+  - deploy.sh - Automated deployment script
+  - quick-deploy.sh - Interactive deployment guide
+  - nginx-example.conf - Production-ready Nginx configuration
+  - ecosystem.config.js - PM2 process management
+  - DEPLOYMENT_SIMPLE.md - Step-by-step instructions
 - **Requirements**:
   - PostgreSQL 14+
   - Node.js 18+
   - Nginx for reverse proxy
-  - 4GB RAM minimum
+  - 4GB RAM minimum (8GB recommended)
   - 20GB storage for media
+- **Database Setup**: migrations/0000_nostalgic_blue_blade.sql contains complete schema
 - **Iranian Hosting Optimized**: Works within Iranian internet restrictions
 - **Offline Capable**: Can operate on local network without internet
 
@@ -252,6 +287,8 @@ Meta Lingua targets:
 - Performance tuning needed for 1000+ concurrent users
 - Additional payment gateway integrations planned
 - Advanced analytics dashboard in development
+- Ollama service connectivity issues (timeout errors in logs)
+- Whisper service not configured (for voice transcription)
 
 ## Future Roadmap
 - Native mobile apps (React Native)
@@ -290,4 +327,4 @@ Deployment: Docker + Nginx
 
 ---
 
-*This report represents Meta Lingua as of January 2025. The platform is under active development with new features being added regularly. The focus remains on creating a completely self-sufficient language learning and management platform that can operate anywhere in the world without external dependencies.*
+*This report represents Meta Lingua as of September 2025. The platform is production-ready with fully functional WebRTC video calling, comprehensive deployment tools, and all core features operational. Recent focus has been on fixing NAT traversal issues for video calls and creating comprehensive deployment scripts for self-hosting. The platform continues to evolve with new features being added regularly, maintaining focus on creating a completely self-sufficient language learning and management platform that can operate anywhere in the world without external dependencies.*
