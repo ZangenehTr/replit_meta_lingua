@@ -23,7 +23,6 @@ import {
   excludeTestUsers,
   calculatePercentage, 
   calculateAttendanceRate,
-  calculateTeacherRating,
   calculateGrowthRate,
   roundCurrency,
   safeNumber,
@@ -209,10 +208,10 @@ async function getLastActivityTime(userId: number): Promise<string> {
     
     if (sessions && sessions.length > 0) {
       const lastSession = sessions.sort((a, b) => 
-        new Date(b.date || b.createdAt).getTime() - new Date(a.date || a.createdAt).getTime()
+        new Date(b.scheduledAt || b.createdAt).getTime() - new Date(a.scheduledAt || a.createdAt).getTime()
       )[0];
-      if (lastSession?.date) {
-        lastActivity = new Date(lastSession.date);
+      if (lastSession?.scheduledAt) {
+        lastActivity = new Date(lastSession.scheduledAt);
       }
     }
     
@@ -724,22 +723,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const systemData = {
         branding: await storage.getBranding(),
-        roles: [
-          { id: 1, name: "Admin", description: "Full system access", permissions: ["*"], userCount: 6, color: "red" },
-          { id: 2, name: "Supervisor", description: "Institute management and supervision", permissions: ["manage_courses", "manage_users", "supervise"], userCount: 0, color: "blue" },
-          { id: 3, name: "Teacher/Tutor", description: "Course instruction and student management", permissions: ["teach", "grade", "communicate"], userCount: 6, color: "green" },
-          { id: 4, name: "Student", description: "Learning and course participation", permissions: ["learn", "submit", "communicate"], userCount: 26, color: "purple" },
-          { id: 5, name: "Call Center Agent", description: "Lead management and customer support", permissions: ["leads", "calls", "support"], userCount: 0, color: "yellow" },
-          { id: 6, name: "Accountant", description: "Financial management and reporting", permissions: ["financial", "reports", "payouts"], userCount: 0, color: "orange" },
-          { id: 7, name: "Mentor", description: "Student mentoring and guidance", permissions: ["mentees", "progress", "communication"], userCount: 0, color: "teal" }
-        ],
-        integrations: [
-          { name: "Anthropic API", description: "AI-powered learning assistance", status: "connected", type: "ai" },
-          { name: "Shetab Payment Gateway", description: "Iranian payment processing", status: "connected", type: "payment" },
-          { name: "Kavenegar SMS", description: "SMS notifications and OTP", status: "pending", type: "communication" },
-          { name: "Email Service", description: "Automated email notifications", status: "connected", type: "communication" },
-          { name: "WebRTC Service", description: "Live video classrooms", status: "configured", type: "video" }
-        ],
+        roles: await storage.getSystemRoles(),
+        integrations: await storage.getSystemIntegrations(),
         systemHealth: {
           uptime: "99.9%",
           responseTime: "120ms",
@@ -2353,26 +2338,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Available AI Models API (replacing hardcoded AVAILABLE_MODELS array)
+  // Available AI Models API - Real Ollama API Integration
   app.get("/api/admin/ollama/available-models", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
-      const availableModels = [
-        { name: "llama3.2:1b", description: "Lightweight model for basic tasks", size: "1.3GB" },
-        { name: "llama3.2:3b", description: "Balanced performance and efficiency", size: "2.0GB" },
-        { name: "llama3:8b", description: "High-quality general purpose model", size: "4.7GB" },
-        { name: "llama3:70b", description: "Large model for complex tasks", size: "40GB" },
-        { name: "codellama:7b", description: "Specialized for code generation", size: "3.8GB" },
-        { name: "codellama:13b", description: "Advanced code assistance", size: "7.3GB" },
-        { name: "mistral:7b", description: "Efficient instruction following", size: "4.1GB" },
-        { name: "mixtral:8x7b", description: "Mixture of experts model", size: "26GB" },
-        { name: "persian-llm:3b", description: "Persian language specialized", size: "2.1GB" },
-        { name: "persian-llm:7b", description: "Advanced Persian model", size: "4.2GB" },
-        { name: "gemma:2b", description: "Google's efficient model", size: "1.4GB" },
-        { name: "gemma:7b", description: "Google's performance model", size: "5.0GB" },
-      ];
-      res.json(availableModels);
+      // Get real models from Ollama service
+      const realModels = await ollamaService.getAvailableModels();
+      res.json(realModels);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch available models" });
+      console.error('Error fetching real Ollama models:', error);
+      // Fallback to database stored models if Ollama unavailable
+      try {
+        const dbModels = await storage.getAiModels();
+        res.json(dbModels);
+      } catch (dbError) {
+        console.error('Error fetching models from database:', dbError);
+        res.status(500).json({ message: "Failed to fetch available models" });
+      }
     }
   });
 
@@ -2682,95 +2663,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Games Management API
   app.get("/api/games", async (req: any, res) => {
     try {
-      const games = [
-        {
-          id: 1,
-          title: "Vocabulary Challenge",
-          description: "Test your vocabulary skills",
-          category: "vocabulary",
-          difficulty: "beginner",
-          image: "/assets/games/vocab-challenge.png",
-          isActive: true,
-          playCount: 1250,
-          averageScore: 78,
-          duration: 300
-        },
-        {
-          id: 2,
-          title: "Grammar Quest",
-          description: "Master Persian grammar rules",
-          category: "grammar",
-          difficulty: "intermediate",
-          image: "/assets/games/grammar-quest.png",
-          isActive: true,
-          playCount: 890,
-          averageScore: 82,
-          duration: 450
-        },
-        {
-          id: 3,
-          title: "Conversation Practice",
-          description: "Practice real-world conversations",
-          category: "speaking",
-          difficulty: "advanced",
-          image: "/assets/games/conversation-practice.png",
-          isActive: true,
-          playCount: 567,
-          averageScore: 75,
-          duration: 600
-        }
-      ];
+      // Get real games from database with actual play statistics
+      const realGames = await storage.getGames();
       
-      res.json(games);
+      // Calculate real statistics for each game
+      const gamesWithStats = await Promise.all(realGames.map(async (game) => {
+        const playStats = await storage.getGamePlayStatistics(game.id);
+        return {
+          ...game,
+          playCount: playStats.totalPlays || 0,
+          averageScore: playStats.averageScore || 0,
+          lastPlayedDate: playStats.lastPlayed
+        };
+      }));
+      
+      res.json(gamesWithStats.length > 0 ? gamesWithStats : []);
     } catch (error) {
-      console.error('Error fetching games:', error);
+      console.error('Error fetching real games data:', error);
       res.status(500).json({ message: "Failed to fetch games" });
     }
   });
 
-  // Gamification Daily Challenges API (replacing hardcoded challenges)
+  // Gamification Daily Challenges API - Real User-Based Generation
   app.get("/api/gamification/daily-challenges", authenticateToken, async (req: any, res) => {
     try {
-      const users = await storage.getAllUsers();
-      const userCount = users.length;
+      const userId = req.user.id;
       
-      // Generate daily challenges based on user activity
-      const dailyChallenges = [
-        {
-          id: 1,
-          title: 'Complete 3 Vocabulary Exercises',
-          description: 'Practice new words in Persian',
-          progress: Math.min(3, Math.floor(userCount * 0.05)), // Based on user activity
-          total: 3,
-          xpReward: 50,
-          completed: Math.floor(userCount * 0.05) >= 3,
-          category: 'vocabulary'
-        },
-        {
-          id: 2,
-          title: 'Practice Speaking for 10 Minutes',
-          description: 'Record your voice practice session',
-          progress: Math.min(10, Math.floor(userCount * 0.12)), // Minutes based on users
-          total: 10,
-          xpReward: 75,
-          completed: Math.floor(userCount * 0.12) >= 10,
-          category: 'speaking'
-        },
-        {
-          id: 3,
-          title: 'Review Grammar Patterns',
-          description: 'Complete grammar assessment',
-          progress: Math.min(1, Math.floor(userCount * 0.02)),
-          total: 1,
-          xpReward: 40,
-          completed: Math.floor(userCount * 0.02) >= 1,
-          category: 'grammar'
-        }
-      ];
+      // Get real user progress and generate personalized challenges
+      const userProgress = await storage.getUserProgress(userId);
+      const userProfile = await storage.getUserProfile(userId);
+      const todaysChallenges = await storage.getTodaysChallenges(userId);
       
-      res.json(dailyChallenges);
+      // If challenges already exist for today, return them
+      if (todaysChallenges && todaysChallenges.length > 0) {
+        res.json(todaysChallenges);
+        return;
+      }
+      
+      // Generate new personalized challenges based on user's weaknesses
+      const personalizedChallenges = await storage.generatePersonalizedChallenges(
+        userId, 
+        userProgress, 
+        userProfile
+      );
+      
+      res.json(personalizedChallenges);
     } catch (error) {
-      console.error('Error fetching daily challenges:', error);
+      console.error('Error fetching personalized daily challenges:', error);
       res.status(500).json({ message: "Failed to fetch daily challenges" });
     }
   });

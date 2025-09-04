@@ -990,77 +990,34 @@ export const insertAchievementSchema = createInsertSchema(achievements);
 export const insertUserAchievementSchema = createInsertSchema(userAchievements);
 export const insertUserStatsSchema = createInsertSchema(userStats);
 
-export const insertDailyGoalSchema = createInsertSchema(dailyGoals).omit({
-  id: true,
-  createdAt: true
-});
+export const insertDailyGoalSchema = createInsertSchema(dailyGoals);
 
-export const insertLevelAssessmentQuestionSchema = createInsertSchema(levelAssessmentQuestions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertLevelAssessmentQuestionSchema = createInsertSchema(levelAssessmentQuestions);
 
-export const insertLevelAssessmentResultSchema = createInsertSchema(levelAssessmentResults).omit({
-  id: true,
-  completedAt: true
-});
+export const insertLevelAssessmentResultSchema = createInsertSchema(levelAssessmentResults);
 
 // Lead schema moved to after table definition to avoid forward reference
 
 // CRM Insert Schemas
-export const insertInstituteSchema = createInsertSchema(institutes).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertInstituteSchema = createInsertSchema(institutes);
 
-export const insertDepartmentSchema = createInsertSchema(departments).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertDepartmentSchema = createInsertSchema(departments);
 
-export const insertStudentGroupSchema = createInsertSchema(studentGroups).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertStudentGroupSchema = createInsertSchema(studentGroups);
 
-export const insertStudentGroupMemberSchema = createInsertSchema(studentGroupMembers).omit({
-  id: true,
-  enrolledAt: true
-});
+export const insertStudentGroupMemberSchema = createInsertSchema(studentGroupMembers);
 
-export const insertTeacherAssignmentSchema = createInsertSchema(teacherAssignments).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertTeacherAssignmentSchema = createInsertSchema(teacherAssignments);
 
-export const insertAttendanceRecordSchema = createInsertSchema(attendanceRecords).omit({
-  id: true,
-  createdAt: true
-});
+export const insertAttendanceRecordSchema = createInsertSchema(attendanceRecords);
 
-export const insertStudentNoteSchema = createInsertSchema(studentNotes).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertStudentNoteSchema = createInsertSchema(studentNotes);
 
-export const insertParentGuardianSchema = createInsertSchema(parentGuardians).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertParentGuardianSchema = createInsertSchema(parentGuardians);
 
 // Communication log schema moved to end of file
 
-export const insertStudentReportSchema = createInsertSchema(studentReports).omit({
-  id: true,
-  createdAt: true
-});
+export const insertStudentReportSchema = createInsertSchema(studentReports);
 
 // Referral Settings - User-defined commission split preferences
 export const referralSettings = pgTable("referral_settings", {
@@ -1311,54 +1268,22 @@ export const aiDatasetItems = pgTable("ai_dataset_items", {
 });
 
 // Referral system insert schemas
-export const insertReferralSettingsSchema = createInsertSchema(referralSettings).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertReferralSettingsSchema = createInsertSchema(referralSettings);
 
-export const insertCourseReferralSchema = createInsertSchema(courseReferrals).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertCourseReferralSchema = createInsertSchema(courseReferrals);
 
-export const insertReferralCommissionSchema = createInsertSchema(referralCommissions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertReferralCommissionSchema = createInsertSchema(referralCommissions);
 
-export const insertAiTrainingDataSchema = createInsertSchema(aiTrainingData).omit({
-  id: true,
-  trainedAt: true,
-  createdAt: true
-});
+export const insertAiTrainingDataSchema = createInsertSchema(aiTrainingData);
 
 // AI Model Management schemas
-export const insertAiModelSchema = createInsertSchema(aiModels).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertAiModelSchema = createInsertSchema(aiModels);
 
-export const insertAiTrainingJobSchema = createInsertSchema(aiTrainingJobs).omit({
-  id: true,
-  jobId: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertAiTrainingJobSchema = createInsertSchema(aiTrainingJobs);
 
-export const insertAiTrainingDatasetSchema = createInsertSchema(aiTrainingDatasets).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertAiTrainingDatasetSchema = createInsertSchema(aiTrainingDatasets);
 
-export const insertAiDatasetItemSchema = createInsertSchema(aiDatasetItems).omit({
-  id: true,
-  createdAt: true
-});
+export const insertAiDatasetItemSchema = createInsertSchema(aiDatasetItems);
 
 // AI Training types
 export type InsertAiModel = z.infer<typeof insertAiModelSchema>;
@@ -1371,25 +1296,13 @@ export type AiTrainingDataset = typeof aiTrainingDatasets.$inferSelect;
 export type AiDatasetItem = typeof aiDatasetItems.$inferSelect;
 
 // Skill tracking insert schemas
-export const insertSkillAssessmentSchema = createInsertSchema(skillAssessments).omit({
-  id: true,
-  assessedAt: true
-});
+export const insertSkillAssessmentSchema = createInsertSchema(skillAssessments);
 
-export const insertLearningActivitySchema = createInsertSchema(learningActivities).omit({
-  id: true,
-  createdAt: true
-});
+export const insertLearningActivitySchema = createInsertSchema(learningActivities);
 
-export const insertProgressSnapshotSchema = createInsertSchema(progressSnapshots).omit({
-  id: true,
-  createdAt: true
-});
+export const insertProgressSnapshotSchema = createInsertSchema(progressSnapshots);
 
-export const insertAiKnowledgeBaseSchema = createInsertSchema(aiKnowledgeBase).omit({
-  id: true,
-  createdAt: true
-});
+export const insertAiKnowledgeBaseSchema = createInsertSchema(aiKnowledgeBase);
 
 // All insert schemas moved to end of file after table definitions
 
@@ -1419,11 +1332,7 @@ export const leads = pgTable("leads", {
 });
 
 // Insert schema for leads
-export const insertLeadSchema = createInsertSchema(leads).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertLeadSchema = createInsertSchema(leads);
 
 // COMMUNICATION LOGS (Call Center)
 export const communicationLogs = pgTable("communication_logs", {
@@ -1444,10 +1353,7 @@ export const communicationLogs = pgTable("communication_logs", {
 });
 
 // Insert schema for communication logs
-export const insertCommunicationLogSchema = createInsertSchema(communicationLogs).omit({
-  id: true,
-  createdAt: true
-});
+export const insertCommunicationLogSchema = createInsertSchema(communicationLogs);
 
 // FINANCIAL SYSTEM (Accountant)
 export const invoices = pgTable("invoices", {
@@ -1471,11 +1377,7 @@ export const invoices = pgTable("invoices", {
 });
 
 // Insert schema for invoices
-export const insertInvoiceSchema = createInsertSchema(invoices).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertInvoiceSchema = createInsertSchema(invoices);
 
 // PAYMENT TRANSACTIONS (Iranian Shetab Integration)
 export const paymentTransactions = pgTable("payment_transactions", {
@@ -1497,10 +1399,7 @@ export const paymentTransactions = pgTable("payment_transactions", {
 });
 
 // Insert schema for payment transactions
-export const insertPaymentTransactionSchema = createInsertSchema(paymentTransactions).omit({
-  id: true,
-  createdAt: true
-});
+export const insertPaymentTransactionSchema = createInsertSchema(paymentTransactions);
 
 // ===== COMPREHENSIVE TESTING SUBSYSTEM =====
 
@@ -1955,26 +1854,13 @@ export const gameAnswerLogs = pgTable("game_answer_logs", {
 });
 
 // Insert schemas for game system
-export const insertGameQuestionSchema = createInsertSchema(gameQuestions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertGameQuestionSchema = createInsertSchema(gameQuestions);
 
-export const insertGameDailyChallengeSchema = createInsertSchema(gameDailyChallenges).omit({
-  id: true,
-  createdAt: true
-});
+export const insertGameDailyChallengeSchema = createInsertSchema(gameDailyChallenges);
 
-export const insertUserDailyChallengeProgressSchema = createInsertSchema(userDailyChallengeProgress).omit({
-  id: true,
-  createdAt: true
-});
+export const insertUserDailyChallengeProgressSchema = createInsertSchema(userDailyChallengeProgress);
 
-export const insertGameAnswerLogSchema = createInsertSchema(gameAnswerLogs).omit({
-  id: true,
-  createdAt: true
-});
+export const insertGameAnswerLogSchema = createInsertSchema(gameAnswerLogs);
 
 // Game system types
 export type GameQuestion = typeof gameQuestions.$inferSelect;
@@ -2340,11 +2226,7 @@ export const teacherEvaluations = pgTable("teacher_evaluations", {
 });
 
 // Insert schema for teacher evaluations
-export const insertTeacherEvaluationSchema = createInsertSchema(teacherEvaluations).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertTeacherEvaluationSchema = createInsertSchema(teacherEvaluations);
 
 // CLASS OBSERVATIONS (Supervisor)
 export const classObservations = pgTable("class_observations", {
@@ -2370,10 +2252,7 @@ export const classObservations = pgTable("class_observations", {
 });
 
 // Insert schema for class observations
-export const insertClassObservationSchema = createInsertSchema(classObservations).omit({
-  id: true,
-  createdAt: true
-});
+export const insertClassObservationSchema = createInsertSchema(classObservations);
 
 // SYSTEM METRICS (Admin)
 export const systemMetrics = pgTable("system_metrics", {
@@ -2386,10 +2265,7 @@ export const systemMetrics = pgTable("system_metrics", {
 });
 
 // Insert schema for system metrics
-export const insertSystemMetricSchema = createInsertSchema(systemMetrics).omit({
-  id: true,
-  recordedAt: true
-});
+export const insertSystemMetricSchema = createInsertSchema(systemMetrics);
 
 // MENTOR ASSIGNMENTS (Mentor Dashboard)
 export const mentorAssignments = pgTable("mentor_assignments", {
@@ -2423,23 +2299,12 @@ export const mentoringSessions = pgTable("mentoring_sessions", {
 });
 
 // Insert schemas for mentor assignments and mentoring sessions
-export const insertMentorAssignmentSchema = createInsertSchema(mentorAssignments).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertMentorAssignmentSchema = createInsertSchema(mentorAssignments);
 
-export const insertMentoringSessionSchema = createInsertSchema(mentoringSessions).omit({
-  id: true,
-  createdAt: true
-});
+export const insertMentoringSessionSchema = createInsertSchema(mentoringSessions);
 
 // Insert schema for rooms
-export const insertRoomSchema = createInsertSchema(rooms).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertRoomSchema = createInsertSchema(rooms);
 
 // Types
 export type User = typeof users.$inferSelect;
