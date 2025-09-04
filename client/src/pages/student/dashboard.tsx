@@ -3,6 +3,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useProfileCompletion } from "@/hooks/use-profile-completion";
+import { FirstTimeProfileModal } from "@/components/profile/FirstTimeProfileModal";
 import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -71,6 +73,15 @@ export default function StudentDashboard() {
   const isRTL = i18n.language === 'fa';
   const [greeting, setGreeting] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  
+  // Profile completion check for first-time users
+  const { 
+    isComplete, 
+    isFirstLogin, 
+    hasEverCompletedProfile,
+    completionPercentage 
+  } = useProfileCompletion();
 
   // Update time every minute
   useEffect(() => {
@@ -85,6 +96,29 @@ export default function StudentDashboard() {
     else if (hour < 18) setGreeting(t('student:goodAfternoon', 'عصر بخیر'));
     else setGreeting(t('student:goodEvening', 'شب بخیر'));
   }, [t]);
+
+  // Check for first-time users and show profile completion modal
+  useEffect(() => {
+    if (user && user.role === 'Student' && isFirstLogin && !hasEverCompletedProfile) {
+      // Show modal after a short delay to allow dashboard to load
+      const timer = setTimeout(() => {
+        setShowProfileModal(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [user, isFirstLogin, hasEverCompletedProfile]);
+
+  const handleCompleteProfile = () => {
+    setShowProfileModal(false);
+    // Navigate to profile settings
+    window.location.href = '/user-profile';
+  };
+
+  const handleSkipProfile = () => {
+    setShowProfileModal(false);
+    // Mark in localStorage that user has seen the modal (for this session)
+    localStorage.setItem('profile_modal_shown', 'true');
+  };
 
   // Fetch comprehensive student stats with real data
   const { data: stats } = useQuery<StudentStats>({
@@ -576,6 +610,13 @@ export default function StudentDashboard() {
 
       {/* Enhanced Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* First-time Profile Completion Modal */}
+      <FirstTimeProfileModal
+        isOpen={showProfileModal}
+        onComplete={handleCompleteProfile}
+        onSkip={handleSkipProfile}
+      />
     </div>
   );
 }

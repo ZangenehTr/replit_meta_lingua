@@ -257,5 +257,23 @@
   "groupCreated": "Group created",
   "inviteClassmates": "Invite your classmates",
   "supportContacted": "Support contacted",
-  "supportWillRespond": "Support will respond soon"
+  "supportWillRespond": "Support will respond soon",
+
+  "profile": {
+    "aiRoadmapTitle": "AI-Powered Roadmap",
+    "aiRoadmapDesc": "Personalized learning path based on your goals and level",
+    "customContentTitle": "Custom Content", 
+    "customContentDesc": "Tailored materials matching your learning style and interests",
+    "smartRecommendationsTitle": "Smart Recommendations",
+    "smartRecommendationsDesc": "AI suggests the best courses and activities for you",
+    "completeProfileTitle": "Complete Your Learning Profile",
+    "completeProfileDesc": "Help our AI create the perfect learning roadmap for you by sharing your goals, preferences, and background.",
+    "poweredByAI": "Powered by AI",
+    "benefitsTitle": "What you'll get:",
+    "privacyTitle": "Your Privacy Matters",
+    "privacyDesc": "Your information is used only to personalize your learning experience and is kept secure.",
+    "fillingSectionsHelp": "Filling out the following sections will help the AI:",
+    "completeProfileNow": "Complete Profile Now",
+    "skipForNow": "Skip for now"
+  }
 }

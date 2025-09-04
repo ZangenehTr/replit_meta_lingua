@@ -266,5 +266,23 @@
   "groupCreated": "گروه ایجاد شد",
   "inviteClassmates": "همکلاسی‌های خود را دعوت کنید",
   "supportContacted": "با پشتیبانی تماس گرفته شد",
-  "supportWillRespond": "پشتیبانی به زودی پاسخ خواهد داد"
+  "supportWillRespond": "پشتیبانی به زودی پاسخ خواهد داد",
+
+  "profile": {
+    "aiRoadmapTitle": "نقشه راه هوشمند",
+    "aiRoadmapDesc": "مسیر یادگیری شخصی‌سازی شده بر اساس اهداف و سطح شما",
+    "customContentTitle": "محتوای سفارشی",
+    "customContentDesc": "مطالب تنظیم شده متناسب با سبک یادگیری و علایق شما",
+    "smartRecommendationsTitle": "پیشنهادات هوشمند",
+    "smartRecommendationsDesc": "هوش مصنوعی بهترین دوره‌ها و فعالیت‌ها را به شما پیشنهاد می‌دهد",
+    "completeProfileTitle": "تکمیل پروفایل یادگیری",
+    "completeProfileDesc": "با اشتراک اهداف، ترجیحات و پیشینه خود، به هوش مصنوعی ما کمک کنید تا مسیر یادگیری کاملی برای شما بسازد.",
+    "poweredByAI": "قدرت گرفته از هوش مصنوعی",
+    "benefitsTitle": "چه چیزی دریافت خواهید کرد:",
+    "privacyTitle": "حفظ حریم خصوصی شما مهم است",
+    "privacyDesc": "اطلاعات شما فقط برای شخصی‌سازی تجربه یادگیری استفاده می‌شود و امن نگهداری می‌شود.",
+    "fillingSectionsHelp": "تکمیل بخش‌های زیر به هوش مصنوعی کمک خواهد کرد:",
+    "completeProfileNow": "تکمیل پروفایل",
+    "skipForNow": "فعلاً رد کن"
+  }
 }
