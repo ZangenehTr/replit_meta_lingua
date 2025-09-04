@@ -3434,6 +3434,270 @@ export type InsertCallernScoresTeacher = z.infer<typeof insertCallernScoresTeach
 export type CallernScoringEvent = typeof callernScoringEvents.$inferSelect;
 export type InsertCallernScoringEvent = z.infer<typeof insertCallernScoringEventSchema>;
 
-// Course Roadmap Progress types
+// ========================
+// CALLERN ROADMAP TEMPLATE SYSTEM (New Implementation)
+// ========================
+
+// Roadmap Templates - Reusable learning path definitions
+export const roadmapTemplate = pgTable("roadmap_template", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  targetLanguage: varchar("target_language", { length: 10 }).notNull(), // en, fa, ar, etc.
+  targetLevel: varchar("target_level", { length: 20 }).notNull(), // A1, A2, B1, B2, C1, C2
+  audience: varchar("audience", { length: 100 }), // adults, teens, business, ielts, etc.
+  objectivesJson: jsonb("objectives_json"), // Learning objectives structure
+  extraContextJson: jsonb("extra_context_json"), // Additional metadata
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Roadmap Units - Major sections within a template
+export const roadmapUnit = pgTable("roadmap_unit", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull().references(() => roadmapTemplate.id, { onDelete: 'cascade' }),
+  orderIdx: integer("order_idx").notNull(), // Unit order within template
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  estimatedHours: integer("estimated_hours").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Roadmap Lessons - Individual lessons within units
+export const roadmapLesson = pgTable("roadmap_lesson", {
+  id: serial("id").primaryKey(),
+  unitId: integer("unit_id").notNull().references(() => roadmapUnit.id, { onDelete: 'cascade' }),
+  orderIdx: integer("order_idx").notNull(), // Lesson order within unit
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  objectives: text("objectives"), // Specific lesson objectives
+  estimatedMinutes: integer("estimated_minutes").default(30),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Roadmap Activities - Specific activities within lessons
+export const roadmapActivity = pgTable("roadmap_activity", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lesson_id").notNull().references(() => roadmapLesson.id, { onDelete: 'cascade' }),
+  orderIdx: integer("order_idx").notNull(), // Activity order within lesson
+  type: varchar("type", { length: 50 }).notNull(), // quiz, matching, fill_in_blank, poll, vocab_game, dialogue_roleplay
+  subtype: varchar("subtype", { length: 50 }), // Specific subtype for activity
+  deliveryModesJson: jsonb("delivery_modes_json"), // Which delivery modes support this activity
+  estimatedMin: integer("estimated_min").default(5),
+  masteryJson: jsonb("mastery_json"), // Mastery criteria and rubrics
+  metaJson: jsonb("meta_json"), // Activity-specific metadata
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// ========================
+// ROADMAP INSTANCES & PROGRESS
+// ========================
+
+// Roadmap Instances - Instantiated roadmaps for courses/students
+export const roadmapInstance = pgTable("roadmap_instance", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull().references(() => roadmapTemplate.id, { onDelete: 'cascade' }),
+  courseId: integer("course_id").references(() => courses.id, { onDelete: 'cascade' }), // Can be null for individual student roadmaps
+  studentId: integer("student_id").references(() => users.id, { onDelete: 'cascade' }), // Can be null for course-wide roadmaps
+  startDate: date("start_date").notNull(),
+  hoursPerWeek: integer("hours_per_week").default(4),
+  status: varchar("status", { length: 20 }).default('active'), // active, paused, completed, cancelled
+  currentProgress: integer("current_progress").default(0), // 0-100 overall completion percentage
+  adaptivePacing: boolean("adaptive_pacing").default(true), // Enable/disable adaptive micro-sessions
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Activity Instances - Individual activity instances with progress
+export const activityInstance = pgTable("activity_instance", {
+  id: serial("id").primaryKey(),
+  roadmapInstanceId: integer("roadmap_instance_id").notNull().references(() => roadmapInstance.id, { onDelete: 'cascade' }),
+  activityId: integer("activity_id").notNull().references(() => roadmapActivity.id, { onDelete: 'cascade' }),
+  dueAt: timestamp("due_at"), // Scheduled due date
+  status: varchar("status", { length: 20 }).default('not_started'), // not_started, in_progress, completed, skipped
+  evidenceId: integer("evidence_id"), // Link to evidence/submission
+  scoreJson: jsonb("score_json"), // Scoring results
+  rubricJson: jsonb("rubric_json"), // Applied rubric
+  aiGeneratedContent: jsonb("ai_generated_content"), // AI-generated activity content
+  adaptiveLevel: varchar("adaptive_level", { length: 20 }).default('controlled'), // controlled, semi_controlled, free
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// ========================
+// CALLERN SESSION SYSTEM
+// ========================
+
+// CallerN Call Sessions - Actual video call sessions
+export const callSession = pgTable("call_session", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => users.id),
+  teacherId: integer("teacher_id").notNull().references(() => users.id),
+  roadmapInstanceId: integer("roadmap_instance_id").references(() => roadmapInstance.id),
+  activityInstanceId: integer("activity_instance_id").references(() => activityInstance.id),
+  startedAt: timestamp("started_at").defaultNow(),
+  endedAt: timestamp("ended_at"),
+  durationSec: integer("duration_sec"),
+  recordingPath: text("recording_path"), // Actual file path to recording
+  transcriptPath: text("transcript_path"), // Actual file path to transcript
+  sessionType: varchar("session_type", { length: 30 }).default('callern'), // callern, regular, assessment
+  qualityMetrics: jsonb("quality_metrics"), // Audio/video quality data
+  status: varchar("status", { length: 20 }).default('active'), // active, completed, cancelled, failed
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Post-Session Reports - Teacher confirmations and AI summaries
+export const callPostReport = pgTable("call_post_report", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().references(() => callSession.id, { onDelete: 'cascade' }),
+  teacherSummaryJson: jsonb("teacher_summary_json"), // Teacher's summary of session
+  aiSummaryJson: jsonb("ai_summary_json"), // AI-generated summary
+  taughtItemsJson: jsonb("taught_items_json"), // What was actually taught/practiced
+  srsSeedJson: jsonb("srs_seed_json"), // SRS cards to generate
+  teacherConfirmed: boolean("teacher_confirmed").default(false),
+  teacherEditsJson: jsonb("teacher_edits_json"), // Teacher modifications to AI suggestions
+  nextSessionPrep: jsonb("next_session_prep"), // Generated prep for next session
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Session Ratings - Student and teacher ratings
+export const sessionRatings = pgTable("session_ratings", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().references(() => callSession.id, { onDelete: 'cascade' }),
+  raterRole: varchar("rater_role", { length: 10 }).notNull(), // student, teacher
+  raterId: integer("rater_id").notNull().references(() => users.id),
+  score: integer("score").notNull(), // 1-5 rating
+  comment: text("comment"),
+  aspectRatings: jsonb("aspect_ratings"), // Detailed aspect-specific ratings
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// ========================
+// SRS (SPACED REPETITION SYSTEM)
+// ========================
+
+// SRS Cards - Spaced repetition flashcards
+export const srsCard = pgTable("srs_card", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  sourceSessionId: integer("source_session_id").references(() => callSession.id), // Session where card was created
+  term: varchar("term", { length: 200 }).notNull(),
+  definition: text("definition").notNull(),
+  example: text("example"),
+  languageCode: varchar("language_code", { length: 10 }).notNull(), // en, fa, ar, etc.
+  dueAt: timestamp("due_at").notNull(),
+  ease: decimal("ease", { precision: 4, scale: 2 }).default("2.5"), // Ease factor for spacing
+  interval: integer("interval").default(1), // Days until next review
+  reps: integer("reps").default(0), // Number of successful reviews
+  lastReviewedAt: timestamp("last_reviewed_at"),
+  difficulty: varchar("difficulty", { length: 20 }).default('normal'), // easy, normal, hard
+  cardType: varchar("card_type", { length: 30 }).default('vocabulary'), // vocabulary, grammar, pronunciation
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// ========================
+// INSERT SCHEMAS AND TYPES
+// ========================
+
+// Roadmap Template System Insert Schemas
+export const insertRoadmapTemplateSchema = createInsertSchema(roadmapTemplate).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertRoadmapUnitSchema = createInsertSchema(roadmapUnit).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertRoadmapLessonSchema = createInsertSchema(roadmapLesson).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertRoadmapActivitySchema = createInsertSchema(roadmapActivity).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertRoadmapInstanceSchema = createInsertSchema(roadmapInstance).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertActivityInstanceSchema = createInsertSchema(activityInstance).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// CallerN Session System Insert Schemas
+export const insertCallSessionSchema = createInsertSchema(callSession).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertCallPostReportSchema = createInsertSchema(callPostReport).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertSessionRatingsSchema = createInsertSchema(sessionRatings).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertSrsCardSchema = createInsertSchema(srsCard).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// ========================
+// TYPE EXPORTS
+// ========================
+
+// Roadmap Template System Types
+export type RoadmapTemplate = typeof roadmapTemplate.$inferSelect;
+export type InsertRoadmapTemplate = z.infer<typeof insertRoadmapTemplateSchema>;
+export type RoadmapUnit = typeof roadmapUnit.$inferSelect;
+export type InsertRoadmapUnit = z.infer<typeof insertRoadmapUnitSchema>;
+export type RoadmapLesson = typeof roadmapLesson.$inferSelect;
+export type InsertRoadmapLesson = z.infer<typeof insertRoadmapLessonSchema>;
+export type RoadmapActivity = typeof roadmapActivity.$inferSelect;
+export type InsertRoadmapActivity = z.infer<typeof insertRoadmapActivitySchema>;
+export type RoadmapInstance = typeof roadmapInstance.$inferSelect;
+export type InsertRoadmapInstance = z.infer<typeof insertRoadmapInstanceSchema>;
+export type ActivityInstance = typeof activityInstance.$inferSelect;
+export type InsertActivityInstance = z.infer<typeof insertActivityInstanceSchema>;
+
+// CallerN Session System Types
+export type CallSession = typeof callSession.$inferSelect;
+export type InsertCallSession = z.infer<typeof insertCallSessionSchema>;
+export type CallPostReport = typeof callPostReport.$inferSelect;
+export type InsertCallPostReport = z.infer<typeof insertCallPostReportSchema>;
+export type SessionRatings = typeof sessionRatings.$inferSelect;
+export type InsertSessionRatings = z.infer<typeof insertSessionRatingsSchema>;
+export type SrsCard = typeof srsCard.$inferSelect;
+export type InsertSrsCard = z.infer<typeof insertSrsCardSchema>;
+
+// Course Roadmap Progress types (existing)
 export type CourseRoadmapProgress = typeof courseRoadmapProgress.$inferSelect;
 export type InsertCourseRoadmapProgress = typeof courseRoadmapProgress.$inferInsert;

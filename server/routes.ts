@@ -19751,6 +19751,17 @@ Meta Lingua Academy`;
   app.use('/api', courseRoadmapRoutes);
   console.log('✅ Course-Roadmap integration routes registered (Progress tracking, AI homework, Mentorship)');
 
+  // Import and register new CallerN Roadmap Template & Instance routes
+  const { roadmapTemplateRoutes } = await import('./routes/roadmap-template-routes');
+  const { roadmapInstanceRoutes } = await import('./routes/roadmap-instance-routes');
+  const { callernFlowRoutes } = await import('./routes/callern-flow-routes');
+  
+  app.use('/api', roadmapTemplateRoutes);
+  app.use('/api', roadmapInstanceRoutes);
+  app.use('/api', callernFlowRoutes);
+  
+  console.log('✅ CallerN Roadmap Template & Flow routes registered successfully');
+
   // Setup Phase 2 AI routes (Persian NLP, Real-time Processing, Knowledge RAG)
   const { registerPhase2AIRoutes } = await import('./ai-phase2-routes');
   registerPhase2AIRoutes(app);

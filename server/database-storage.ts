@@ -12368,4 +12368,439 @@ export class DatabaseStorage implements IStorage {
 
     return roadmaps;
   }
+
+  // ===========================
+  // ROADMAP TEMPLATE METHODS
+  // ===========================
+
+  async createRoadmapTemplate(data: any): Promise<any> {
+    try {
+      const [template] = await db.insert(roadmapTemplate).values(data).returning();
+      return template;
+    } catch (error) {
+      console.error('Error creating roadmap template:', error);
+      throw error;
+    }
+  }
+
+  async getRoadmapTemplate(id: number): Promise<any> {
+    try {
+      const [template] = await db.select().from(roadmapTemplate).where(eq(roadmapTemplate.id, id));
+      return template;
+    } catch (error) {
+      console.error('Error fetching roadmap template:', error);
+      throw error;
+    }
+  }
+
+  async getRoadmapTemplateWithContent(id: number): Promise<any> {
+    try {
+      // Get template with units, lessons, and activities
+      const template = await db.select().from(roadmapTemplate).where(eq(roadmapTemplate.id, id));
+      if (!template.length) return null;
+
+      const units = await db.select().from(roadmapUnit)
+        .where(eq(roadmapUnit.templateId, id))
+        .orderBy(roadmapUnit.orderIdx);
+
+      for (const unit of units) {
+        const lessons = await db.select().from(roadmapLesson)
+          .where(eq(roadmapLesson.unitId, unit.id))
+          .orderBy(roadmapLesson.orderIdx);
+
+        for (const lesson of lessons) {
+          const activities = await db.select().from(roadmapActivity)
+            .where(eq(roadmapActivity.lessonId, lesson.id))
+            .orderBy(roadmapActivity.orderIdx);
+          lesson.activities = activities;
+        }
+        unit.lessons = lessons;
+      }
+
+      return {
+        ...template[0],
+        units
+      };
+    } catch (error) {
+      console.error('Error fetching roadmap template with content:', error);
+      throw error;
+    }
+  }
+
+  async getRoadmapTemplates(filters: any = {}): Promise<any[]> {
+    try {
+      let query = db.select().from(roadmapTemplate).where(eq(roadmapTemplate.isActive, true));
+
+      if (filters.targetLanguage) {
+        query = query.where(eq(roadmapTemplate.targetLanguage, filters.targetLanguage));
+      }
+      if (filters.targetLevel) {
+        query = query.where(eq(roadmapTemplate.targetLevel, filters.targetLevel));
+      }
+      if (filters.audience) {
+        query = query.where(eq(roadmapTemplate.audience, filters.audience));
+      }
+
+      return await query.orderBy(roadmapTemplate.createdAt);
+    } catch (error) {
+      console.error('Error fetching roadmap templates:', error);
+      throw error;
+    }
+  }
+
+  async updateRoadmapTemplate(id: number, data: any): Promise<any> {
+    try {
+      const [template] = await db.update(roadmapTemplate)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(roadmapTemplate.id, id))
+        .returning();
+      return template;
+    } catch (error) {
+      console.error('Error updating roadmap template:', error);
+      throw error;
+    }
+  }
+
+  async deleteRoadmapTemplate(id: number): Promise<void> {
+    try {
+      await db.delete(roadmapTemplate).where(eq(roadmapTemplate.id, id));
+    } catch (error) {
+      console.error('Error deleting roadmap template:', error);
+      throw error;
+    }
+  }
+
+  async createRoadmapUnit(data: any): Promise<any> {
+    try {
+      const [unit] = await db.insert(roadmapUnit).values(data).returning();
+      return unit;
+    } catch (error) {
+      console.error('Error creating roadmap unit:', error);
+      throw error;
+    }
+  }
+
+  async getRoadmapUnit(id: number): Promise<any> {
+    try {
+      const [unit] = await db.select().from(roadmapUnit).where(eq(roadmapUnit.id, id));
+      return unit;
+    } catch (error) {
+      console.error('Error fetching roadmap unit:', error);
+      throw error;
+    }
+  }
+
+  async createRoadmapLesson(data: any): Promise<any> {
+    try {
+      const [lesson] = await db.insert(roadmapLesson).values(data).returning();
+      return lesson;
+    } catch (error) {
+      console.error('Error creating roadmap lesson:', error);
+      throw error;
+    }
+  }
+
+  async getRoadmapLesson(id: number): Promise<any> {
+    try {
+      const [lesson] = await db.select().from(roadmapLesson).where(eq(roadmapLesson.id, id));
+      return lesson;
+    } catch (error) {
+      console.error('Error fetching roadmap lesson:', error);
+      throw error;
+    }
+  }
+
+  async createRoadmapActivity(data: any): Promise<any> {
+    try {
+      const [activity] = await db.insert(roadmapActivity).values(data).returning();
+      return activity;
+    } catch (error) {
+      console.error('Error creating roadmap activity:', error);
+      throw error;
+    }
+  }
+
+  // ===========================
+  // ROADMAP INSTANCE METHODS
+  // ===========================
+
+  async createRoadmapInstance(data: any): Promise<any> {
+    try {
+      const [instance] = await db.insert(roadmapInstance).values(data).returning();
+      return instance;
+    } catch (error) {
+      console.error('Error creating roadmap instance:', error);
+      throw error;
+    }
+  }
+
+  async getRoadmapInstance(id: number): Promise<any> {
+    try {
+      const [instance] = await db.select().from(roadmapInstance).where(eq(roadmapInstance.id, id));
+      return instance;
+    } catch (error) {
+      console.error('Error fetching roadmap instance:', error);
+      throw error;
+    }
+  }
+
+  async getRoadmapInstanceWithProgress(id: number): Promise<any> {
+    try {
+      // Get instance with template data
+      const instance = await db.select({
+        instance: roadmapInstance,
+        template: roadmapTemplate
+      })
+      .from(roadmapInstance)
+      .leftJoin(roadmapTemplate, eq(roadmapInstance.templateId, roadmapTemplate.id))
+      .where(eq(roadmapInstance.id, id));
+
+      if (!instance.length) return null;
+
+      // Get activity instances with their activities
+      const activityInstances = await db.select({
+        activityInstance: activityInstance,
+        activity: roadmapActivity,
+        lesson: roadmapLesson,
+        unit: roadmapUnit
+      })
+      .from(activityInstance)
+      .leftJoin(roadmapActivity, eq(activityInstance.activityId, roadmapActivity.id))
+      .leftJoin(roadmapLesson, eq(roadmapActivity.lessonId, roadmapLesson.id))
+      .leftJoin(roadmapUnit, eq(roadmapLesson.unitId, roadmapUnit.id))
+      .where(eq(activityInstance.roadmapInstanceId, id))
+      .orderBy(roadmapUnit.orderIdx, roadmapLesson.orderIdx, roadmapActivity.orderIdx);
+
+      return {
+        ...instance[0].instance,
+        template: instance[0].template,
+        activityInstances
+      };
+    } catch (error) {
+      console.error('Error fetching roadmap instance with progress:', error);
+      throw error;
+    }
+  }
+
+  async getRoadmapInstances(filters: any = {}): Promise<any[]> {
+    try {
+      let query = db.select({
+        instance: roadmapInstance,
+        template: roadmapTemplate,
+        student: users
+      })
+      .from(roadmapInstance)
+      .leftJoin(roadmapTemplate, eq(roadmapInstance.templateId, roadmapTemplate.id))
+      .leftJoin(users, eq(roadmapInstance.studentId, users.id));
+
+      if (filters.courseId) {
+        query = query.where(eq(roadmapInstance.courseId, filters.courseId));
+      }
+      if (filters.studentId) {
+        query = query.where(eq(roadmapInstance.studentId, filters.studentId));
+      }
+      if (filters.templateId) {
+        query = query.where(eq(roadmapInstance.templateId, filters.templateId));
+      }
+      if (filters.status) {
+        query = query.where(eq(roadmapInstance.status, filters.status));
+      }
+
+      return await query.orderBy(roadmapInstance.createdAt);
+    } catch (error) {
+      console.error('Error fetching roadmap instances:', error);
+      throw error;
+    }
+  }
+
+  async initializeActivityInstances(instanceId: number): Promise<void> {
+    try {
+      // Get the roadmap instance
+      const instance = await this.getRoadmapInstance(instanceId);
+      if (!instance) return;
+
+      // Get all activities in the template
+      const activities = await db.select({
+        activity: roadmapActivity,
+        lesson: roadmapLesson,
+        unit: roadmapUnit
+      })
+      .from(roadmapActivity)
+      .leftJoin(roadmapLesson, eq(roadmapActivity.lessonId, roadmapLesson.id))
+      .leftJoin(roadmapUnit, eq(roadmapLesson.unitId, roadmapUnit.id))
+      .where(eq(roadmapUnit.templateId, instance.templateId))
+      .orderBy(roadmapUnit.orderIdx, roadmapLesson.orderIdx, roadmapActivity.orderIdx);
+
+      // Create activity instances
+      for (const item of activities) {
+        await db.insert(activityInstance).values({
+          roadmapInstanceId: instanceId,
+          activityId: item.activity.id,
+          status: 'not_started'
+        });
+      }
+    } catch (error) {
+      console.error('Error initializing activity instances:', error);
+      throw error;
+    }
+  }
+
+  // ===========================
+  // CALLERN SESSION METHODS
+  // ===========================
+
+  async createCallSession(data: any): Promise<any> {
+    try {
+      const [session] = await db.insert(callSession).values(data).returning();
+      return session;
+    } catch (error) {
+      console.error('Error creating call session:', error);
+      throw error;
+    }
+  }
+
+  async updateCallSession(id: number, data: any): Promise<any> {
+    try {
+      const [session] = await db.update(callSession)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(callSession.id, id))
+        .returning();
+      return session;
+    } catch (error) {
+      console.error('Error updating call session:', error);
+      throw error;
+    }
+  }
+
+  async getCallSession(id: number): Promise<any> {
+    try {
+      const [session] = await db.select().from(callSession).where(eq(callSession.id, id));
+      return session;
+    } catch (error) {
+      console.error('Error fetching call session:', error);
+      throw error;
+    }
+  }
+
+  async createCallPostReport(data: any): Promise<any> {
+    try {
+      const [report] = await db.insert(callPostReport).values(data).returning();
+      return report;
+    } catch (error) {
+      console.error('Error creating call post report:', error);
+      throw error;
+    }
+  }
+
+  async updateCallPostReport(sessionId: number, data: any): Promise<any> {
+    try {
+      const [report] = await db.update(callPostReport)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(callPostReport.sessionId, sessionId))
+        .returning();
+      return report;
+    } catch (error) {
+      console.error('Error updating call post report:', error);
+      throw error;
+    }
+  }
+
+  async getCallPostReport(sessionId: number): Promise<any> {
+    try {
+      const [report] = await db.select().from(callPostReport)
+        .where(eq(callPostReport.sessionId, sessionId));
+      return report;
+    } catch (error) {
+      console.error('Error fetching call post report:', error);
+      throw error;
+    }
+  }
+
+  async createSessionRating(data: any): Promise<any> {
+    try {
+      const [rating] = await db.insert(sessionRatings).values(data).returning();
+      return rating;
+    } catch (error) {
+      console.error('Error creating session rating:', error);
+      throw error;
+    }
+  }
+
+  async getSessionRating(sessionId: number, raterId: number, role: string): Promise<any> {
+    try {
+      const [rating] = await db.select().from(sessionRatings)
+        .where(and(
+          eq(sessionRatings.sessionId, sessionId),
+          eq(sessionRatings.raterId, raterId),
+          eq(sessionRatings.raterRole, role)
+        ));
+      return rating;
+    } catch (error) {
+      console.error('Error fetching session rating:', error);
+      throw error;
+    }
+  }
+
+  // ===========================
+  // PLACEHOLDER METHODS FOR AI GENERATION
+  // ===========================
+
+  async generatePreSessionContent(params: any): Promise<any> {
+    // TODO: Implement with Ollama AI service
+    return {
+      grammarExplanation: "Sample grammar explanation for " + (params.targetLanguage || 'English'),
+      vocabulary: [
+        { term: "example", definition_en: "An instance that clarifies", example_en: "For example, this is a sample." }
+      ],
+      sessionFocus: "Speaking practice and vocabulary building",
+      objectives: ["Improve pronunciation", "Learn new vocabulary", "Practice grammar structures"]
+    };
+  }
+
+  async prepareSrsSeeds(studentId: number, vocabulary: any[]): Promise<any[]> {
+    // TODO: Implement SRS card creation
+    return vocabulary.map(v => ({ ...v, languageCode: 'en' }));
+  }
+
+  async storePreSessionData(studentId: number, teacherId: number, data: any): Promise<void> {
+    // TODO: Store for teacher briefing
+    console.log('Storing pre-session data for teacher briefing');
+  }
+
+  // Add more placeholder methods for missing functions...
+  async getActiveRoadmapInstanceForStudent(studentId: number): Promise<any> {
+    return null; // TODO: Implement
+  }
+
+  async getRoadmapInstanceByCourse(courseId: number, studentId: number): Promise<any> {
+    return null; // TODO: Implement
+  }
+
+  async getRoadmapPosition(instanceId: number): Promise<any> {
+    return null; // TODO: Implement
+  }
+
+  async getUpcomingActivities(instanceId: number, count: number): Promise<any[]> {
+    return []; // TODO: Implement
+  }
+
+  async getRecentSessions(studentId: number, count: number): Promise<any[]> {
+    return []; // TODO: Implement
+  }
+
+  async updateTeacherStatus(teacherId: number, status: string, sessionId?: number): Promise<void> {
+    // TODO: Implement teacher status updates
+  }
+
+  async getWebRTCConfig(): Promise<any> {
+    return { turnServers: [], stunServers: [] }; // TODO: Implement
+  }
+
+  async generateSessionSummary(params: any): Promise<any> {
+    return { summary: "Session completed successfully" }; // TODO: Implement with AI
+  }
+
+  async generateNextMicroSession(params: any): Promise<any> {
+    return { activities: [], focusAreas: [] }; // TODO: Implement with AI
+  }
 }

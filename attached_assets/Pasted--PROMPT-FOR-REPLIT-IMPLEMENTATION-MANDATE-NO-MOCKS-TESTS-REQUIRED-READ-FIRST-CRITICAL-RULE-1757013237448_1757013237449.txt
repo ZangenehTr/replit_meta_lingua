@@ -1,0 +1,358 @@
+📦 PROMPT FOR REPLIT — IMPLEMENTATION MANDATE (NO MOCKS, TESTS REQUIRED)
+
+READ FIRST — CRITICAL RULES
+(1) REVIEW THE ENTIRE CODEBASE BEFORE EACH NEW FEATURE. If no trace exists, you are authorized to implement it end-to-end.
+(2) DO NOT USE MOCKS OR FAKE DATA anywhere (UI, API, DB, tests). Use real API calls, real database writes/reads, and wire every feature through to a working UI.
+(3) WRITE AND RUN TESTS (unit + integration + E2E) for every feature you add/modify. CI must pass.
+(4) MOBILE-FIRST “HEAD-UP” DESIGN: no side panels. Use transparent glassy overlays (HUD) that are helpful but non-distracting.
+
+A) Scope & Non-Goals
+
+In scope now: CallerN adaptive micro-sessions and roadmap integration; mobile HUD overlays for student & teacher; pre-/in-/post-session flows; AI material generation (text) + optional TTS/ASR hooks; two production sample courses and their roadmaps.
+
+Out of scope now: adaptive behavior for online/in-person group or 1-on-1 (non-CallerN)—keep their roadmaps static (future work).
+
+REMINDER: REVIEW THE WHOLE CODEBASE. If any scope element is missing, implement it fully (no mocks). Add tests.
+
+B) Data Model (DB / Drizzle) — Add or Extend
+
+Create migrations. Use existing naming conventions.
+
+Roadmap templates & instances
+
+roadmap_template { id, title, target_language, target_level, audience, objectives_json, extra_context_json, created_by, created_at }
+
+roadmap_unit { id, template_id, order_idx, title, description }
+
+roadmap_lesson { id, unit_id, order_idx, title, description }
+
+roadmap_activity { id, lesson_id, order_idx, type, subtype, delivery_modes_json, estimated_min, mastery_json, meta_json }
+
+Instantiation & linkage
+
+roadmap_instance { id, template_id, course_id NULL, student_id NULL, start_date, hours_per_week, status }
+
+activity_instance { id, roadmap_instance_id, activity_id, due_at, status, evidence_id NULL, score_json NULL, rubric_json NULL }
+
+CallerN session artifacts
+
+call_session { id, student_id, teacher_id, started_at, ended_at, duration_sec, recording_path, transcript_path, roadmap_instance_id, activity_instance_id NULL }
+
+call_post_report { id, session_id, teacher_summary_json, ai_summary_json, taught_items_json, srs_seed_json, teacher_confirmed BOOL, teacher_edits_json }
+
+ratings { id, session_id, rater_role ENUM('student','teacher'), score INT CHECK 1..5, comment TEXT }
+
+SRS
+
+srs_card { id, student_id, source_session_id, term, definition, example, language_code, due_at, ease, interval, reps, last_reviewed_at }
+
+MANDATE: Add migrations + rollback. No mocks. Write tests. If any of these tables or equivalents already exist, extend rather than duplicate.
+
+C) API Endpoints (Express/TypeScript)
+
+Implement REST endpoints with auth (JWT) and RBAC. Return real data from DB.
+
+Roadmaps (Templates)
+
+POST /api/roadmaps/templates — create template with meta (title, target_language, objectives, etc.)
+
+GET /api/roadmaps/templates/:id — full nested (units/lessons/activities)
+
+POST /api/roadmaps/templates/:id/units / .../lessons / .../activities
+
+Instances & Course Link
+
+POST /api/roadmaps/instances { template_id, course_id? student_id? start_date, hours_per_week }
+
+GET /api/roadmaps/instances/:id — full nested with mastery, readiness (compute server-side)
+
+PATCH /api/roadmaps/instances/:id/pace — re-flow dates (bulk shift)
+
+CallerN Flow
+
+POST /api/callern/prep { student_id, teacher_id, course_id } → returns 3-minute pre-session review package (see Section E)
+
+POST /api/callern/start { student_id, teacher_id } → opens session, returns session_id
+
+POST /api/callern/end { session_id } → closes session, persists recording/transcript refs (real), triggers next micro-session generation (Section H), returns next activity preview
+
+GET /api/callern/teacher-brief { student_id } → returns teacher HUD brief (Section F)
+
+POST /api/callern/post-report { session_id, taught_items, teacher_edits? } → stores teacher-confirmed content
+
+POST /api/callern/rate { session_id, role, score, comment? }
+
+Activities & Evidence
+
+POST /api/activities/:activity_instance_id/evidence (attach recording/writing)
+
+POST /api/activities/:activity_instance_id/score (rubric + AI pre-score + teacher override)
+
+MANDATE: Wire to DB. No mocks. Write tests. If endpoints exist, extend them.
+
+D) Mobile HUD UI (React/Tailwind/shadcn)
+
+No side deck. Implement glass-overlay components:
+
+<HUDStudentOverlay /> (word/phrase hints, activity cards, subtle 5–7s fade if unused)
+
+<HUDTeacherOverlay /> (Approve/Decline buttons for AI-suggested micro-activities; 1-tap)
+
+<PreSessionReviewModal /> (3-minute countdown; then transforms the call button to “Let’s Go!”)
+
+<TeacherBriefPanel /> (compact, full-screen mobile sheet)
+
+MANDATE: Connect to real API endpoints. No mocks. Write tests (Jest + RTL/Cypress).
+
+E) Pre-Session 3-Minute Review (CallerN)
+
+Rule: If target_language != 'fa' → grammar explained in Farsi. Vocabulary shows English definitions and one example sentence. Also seed SRS cards.
+
+API Output Shape (/api/callern/prep)
+
+{
+  "countdown_sec": 180,
+  "grammar_explained_fa": "توضیح نکته گرامری ...",
+  "vocab": [
+    {"term":"boarding pass","definition_en":"...","example_en":"..."},
+    {"term":"queue","definition_en":"...","example_en":"..."}
+  ],
+  "srs_seed":[
+    {"term":"boarding pass","definition_en":"...","example_en":"...","language_code":"en"}
+  ],
+  "next_button_label_after_countdown":"Let's Go!"
+}
+
+
+UI: When student taps “Call” → show review modal with countdown=180s → after zero, the main button label changes to “Let’s Go!” and the call initiates.
+
+MANDATE: Implement real generation via AI service (Ollama) + real persistence of SRS seeds. No mocks. Tests required.
+
+F) Teacher HUD Pre-Brief (shown while student is reviewing)
+
+GET /api/callern/teacher-brief?student_id=... returns:
+
+{
+  "history_brief":"last 5 sessions ...",
+  "goal":"e.g., B1 by May 20",
+  "deadline":"2025-05-20",
+  "minutes_completed": 540,
+  "hours_completed": 9,
+  "last_session_learned":{
+    "grammar":["present perfect for experiences"],
+    "vocab":["boarding pass","security check"],
+    "pronunciation":["/θ/ vs /s/"]
+  },
+  "roadmap_position": {"template_title":"Business English A2→B1","unit":"U3","lesson":"L2","activity":"A1"},
+  "micro_sessions_per_week": 4
+}
+
+
+Teacher UI: glass sheet with 2 actions: Start Now or Edit Objectives (opens quick inline edit calling real API).
+
+MANDATE: Pull actual data; no mocks; tests.
+
+G) In-Session HUD — AI-Suggested Activities (Teacher approves → Student sees)
+
+Activity schema (ALL real-time suggestions must conform; generate via Ollama; store):
+
+{
+  "activity_id":"auto-uuid",
+  "type":"quiz|matching|fill_in_blank|poll|vocab_game|dialogue_roleplay",
+  "payload":{
+    "prompt":"...",
+    "options":["..."], "answer":"...",    // for quiz
+    "pairs":[["term","definition"]],      // for matching
+    "text_with_gaps":"I have ___ a boarding pass.", "answers":["got"], // fill_in_blank
+    "topic":"...", "choices":["..."],     // poll
+    "words":["..."], "rules":"...",       // vocab_game
+    "script":[{"ai":"...","student":"..."}] // roleplay
+  },
+  "duration_min": 2,
+  "pedagogy":{"i_plus_1":true,"scaffolding_stage":"controlled"},
+  "suggested_for":"student_id",
+  "explain_fa":"مختصر دلیل آموزشی پیشنهاد"
+}
+
+
+Flow: AI suggests → Teacher Approve/Decline (1-tap) → Student sees a glass card full-screen overlay; upon completion, results/evidence persist.
+
+MANDATE: Real events via Socket.io (e.g., activity:suggested, activity:approved), no mocks. Tests.
+
+H) Post-Session (Ratings + Taught Items + Next Micro-Session Generation)
+
+Ratings
+
+Student rates teacher; teacher rates student.
+
+POST /api/callern/rate persists to ratings.
+
+Teacher confirmation of taught items
+
+After call, show AI-drafted set: grammar points, structures, vocabulary, pronunciation tips, idioms/proverbs, other tips.
+
+Teacher confirms/edits then submits to call_post_report (teacher_confirmed = true).
+
+This content seeds SRS and informs the next micro-session.
+
+Next session material — INSTANT
+
+On POST /api/callern/end, backend triggers material generation (Ollama):
+
+a short reading/dialogue,
+
+1–2 micro-activities (from schema above),
+
+updated SRS seeds.
+
+Save as new activity_instance in the same roadmap instance, ready for the next call.
+
+MANDATE: No mocks. Persist artifacts. Write tests. Ensure the end-to-end from session end → next session ready works reliably.
+
+I) AI Generation Rules (Pedagogy)
+
+Scaffolding: controlled → semi-controlled → free.
+
+Krashen i+1: slightly above current level using readiness metrics (quiz %, rubric, errors/min).
+
+Fluency > accuracy: prefer recasts and fluency tasks when student stalls; accuracy pushed to homework.
+
+Language rules for pre-review:
+
+If target_language != 'fa': grammar explanation in Farsi; vocabulary English definition + 1 example; create SRS cards.
+
+MANDATE: Bake rules into generation service with unit tests.
+
+J) Two Production Sample Courses & Roadmaps (Adults; 12 titles each)
+
+Create templates + initial content (units/lessons/activities). Use real DB entries via API (no mocks).
+
+1) Business English (A2) — 12 Units
+
+Small Talk at Work (A2) — greetings, introductions, polite questions
+
+Scheduling & Meetings — days/time phrases, making arrangements
+
+Email Basics — subject lines, requests, short updates
+
+Phone Skills — clarifying, repeating, confirming details
+
+Describing Products/Services — adjectives, comparisons
+
+Workplace Problems — explaining issues, proposing solutions
+
+Presenting Simple Data — charts vocabulary, trends
+
+Customer Service — apologies, empathy phrases
+
+Negotiation Lite — offers, counter-offers, softeners
+
+Writing Minutes — action items, next steps
+
+Cross-Cultural Tips — do/don’t, politeness strategies
+
+Review & Role-play Marathon — integrated tasks
+
+Per unit, add at least 1 lesson and 2 activities (one dialogue_roleplay, one quiz/matching) with CEFR A2+ targets and initial mastery rules. Delivery modes include CallerN and video (others remain static for now).
+
+2) How to Get IELTS Speaking 9 (B2) — 12 Units
+
+Band Descriptors Deep Dive (fluency/coherence, lexical resource…)
+
+Part 1: Rapid Response Drills (Q bursts, filler control)
+
+Part 2: 2-Minute Monologue Structure (signposting)
+
+Part 3: Argument Development (pros/cons, concession)
+
+High-Impact Vocabulary (collocations, idioms—register control)
+
+Cohesion Devices (linkers, referencing)
+
+Pronunciation & Prosody (stress, intonation, chunking)
+
+Topic Families I (education, work)
+
+Topic Families II (technology, environment)
+
+Repair Strategies (paraphrase, clarification)
+
+Mock Tests & Feedback Loops
+
+Exam Day Playbook & Confidence
+
+Per unit, add at least 1 lesson and 2 activities (one timed monologue as dialogue_roleplay with timer rules; one quiz/matching). CEFR B2 targets; mastery rules tied to rubric bands.
+
+MANDATE: Use real API calls to create these templates, units, lessons, and activities, and instantiate at least one roadmap instance for a demo student/course each. Write tests that verify counts (12 units), content presence, and that CallerN flows can attach next micro-session to these instances.
+
+K) Real-Time Processing & Integrations
+
+Ollama for text generation (pass course title/objectives/extra context + last session analytics).
+
+Whisper.cpp for transcripts (if already integrated); store real file paths, not placeholders.
+
+Optional TTS for listening scripts; if absent, keep text only but ensure pipeline stubs call real services if configured.
+
+MANDATE: Feature-flag external engines but never mock; if disabled, the feature must degrade gracefully with real code paths.
+
+L) Tests & QA (must pass)
+
+Unit tests: generation rules (scaffolding/i+1), endpoint validators, DB migrations.
+
+Integration tests: /callern/prep end-to-end (creates SRS seeds), /callern/end (persists report + creates next micro-session).
+
+E2E (Cypress/Playwright):
+
+Student selects teacher → pre-review 3:00 → “Let’s Go!” → call stub (WebRTC harness) → end → next session visible.
+
+Teacher sees brief during pre-review; approves one AI activity → student receives overlay and completes it.
+
+Ratings + taught items confirmation store correctly; SRS deck updated.
+
+No mocks. Use test DB with real migrations and real API. CI must run them.
+
+M) UX Acceptance Criteria
+
+All overlays are glassy, minimal, mobile-first, with subtle 5–7s fades.
+
+One-tap approval for teacher on suggested activities.
+
+Call button behavior: Call → (3-min review modal) → Let’s Go! → call.
+
+Student word-search hesitation triggers contextual word hints on HUD.
+
+N) Non-CallerN Classes (today)
+
+Keep roadmaps static for online/in-person, group/1-on-1 (no adaptive micro-session logic yet).
+
+UI must still render roadmap progress and activities, but do not run adaptive generation.
+
+O) Performance, Security, Privacy
+
+Use existing JWT/RBAC.
+
+Store recordings/transcripts in real paths; protect with role checks.
+
+Optimize API+DB for mobile latency (target <200ms typical responses).
+
+Log all generation decisions (no PII), include student id, activity id, rules applied.
+
+P) Final Checklist (blocker if unmet)
+
+ Course⇄Roadmap linkage in UI/API complete for CallerN use-cases.
+
+ Pre-session review fully functional with real data and SRS seeding.
+
+ Teacher brief HUD displays live factual data.
+
+ AI-suggested activities live-approve → student sees overlay; results persist.
+
+ Post-session ratings + taught items confirmation flow complete.
+
+ Next micro-session auto-generated on session end and attached to roadmap instance.
+
+ Two production sample courses + 12-unit roadmaps created via API (not mocks).
+
+ Tests (unit/integration/E2E) implemented and passing in CI.
+
+ONE MORE TIME: Review the whole codebase before building each feature. If the feature does not exist, implement it fully. Do not use mocks or fake data. Write and run tests to guarantee correct, end-to-end functionality.
