@@ -185,6 +185,13 @@ const audioUpload = multer({
 
 const JWT_SECRET = process.env.JWT_SECRET || "meta-lingua-secret-key";
 
+// Deployment error checker
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('❌ DEPLOYMENT ERROR: JWT_SECRET environment variable is required in production');
+  console.error('Add JWT_SECRET=your-secret-key to your .env file');
+  process.exit(1);
+}
+
 // Helper functions to calculate real data from database
 async function calculateStudentAttendance(studentId: number): Promise<number> {
   try {
