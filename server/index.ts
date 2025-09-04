@@ -13,7 +13,7 @@ if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf8');
   envContent.split('\n').forEach(line => {
     const trimmedLine = line.trim();
-    if (trimmedLine && !trimmedLine.startsWith('#')) {
+    if (trimmedLine && !trimmedLine.startsWith('#') && trimmedLine.includes('=')) {
       const [key, ...valueParts] = trimmedLine.split('=');
       const value = valueParts.join('=');
       if (key && value) {
@@ -22,6 +22,15 @@ if (fs.existsSync(envPath)) {
     }
   });
   console.log('Environment variables loaded from .env file');
+  
+  // Verify critical variables in production
+  if (process.env.NODE_ENV === 'production') {
+    if (!process.env.JWT_SECRET) {
+      console.error('❌ CRITICAL: JWT_SECRET not found in environment');
+      process.exit(1);
+    }
+    console.log('✅ Production environment variables validated');
+  }
 }
 
 const app = express();
