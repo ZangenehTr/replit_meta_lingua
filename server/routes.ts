@@ -19762,6 +19762,11 @@ Meta Lingua Academy`;
   
   console.log('✅ CallerN Roadmap Template & Flow routes registered successfully');
 
+  // Import and register Sample Courses routes
+  const { sampleCoursesRoutes } = await import('./routes/sample-courses-routes');
+  app.use('/api', sampleCoursesRoutes);
+  console.log('✅ Sample Courses routes registered successfully');
+
   // Setup Phase 2 AI routes (Persian NLP, Real-time Processing, Knowledge RAG)
   const { registerPhase2AIRoutes } = await import('./ai-phase2-routes');
   registerPhase2AIRoutes(app);

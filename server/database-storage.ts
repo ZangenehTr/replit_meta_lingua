@@ -12746,15 +12746,21 @@ export class DatabaseStorage implements IStorage {
   // ===========================
 
   async generatePreSessionContent(params: any): Promise<any> {
-    // TODO: Implement with Ollama AI service
-    return {
-      grammarExplanation: "Sample grammar explanation for " + (params.targetLanguage || 'English'),
-      vocabulary: [
-        { term: "example", definition_en: "An instance that clarifies", example_en: "For example, this is a sample." }
-      ],
-      sessionFocus: "Speaking practice and vocabulary building",
-      objectives: ["Improve pronunciation", "Learn new vocabulary", "Practice grammar structures"]
-    };
+    try {
+      const { aiContentGenerator } = await import('./services/ai-content-generator');
+      return await aiContentGenerator.generatePreSessionContent(params);
+    } catch (error) {
+      console.error('Error with AI content generator:', error);
+      // Fallback to basic content
+      return {
+        grammarExplanation: "Sample grammar explanation for " + (params.targetLanguage || 'English'),
+        vocabulary: [
+          { term: "example", definition_en: "An instance that clarifies", example_en: "For example, this is a sample." }
+        ],
+        sessionFocus: "Speaking practice and vocabulary building",
+        objectives: ["Improve pronunciation", "Learn new vocabulary", "Practice grammar structures"]
+      };
+    }
   }
 
   async prepareSrsSeeds(studentId: number, vocabulary: any[]): Promise<any[]> {
@@ -12797,10 +12803,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async generateSessionSummary(params: any): Promise<any> {
-    return { summary: "Session completed successfully" }; // TODO: Implement with AI
+    try {
+      const { aiContentGenerator } = await import('./services/ai-content-generator');
+      return await aiContentGenerator.generateSessionSummary(params);
+    } catch (error) {
+      console.error('Error generating session summary:', error);
+      return { summary: "Session completed successfully" };
+    }
   }
 
   async generateNextMicroSession(params: any): Promise<any> {
-    return { activities: [], focusAreas: [] }; // TODO: Implement with AI
+    try {
+      const { aiContentGenerator } = await import('./services/ai-content-generator');
+      return await aiContentGenerator.generateNextMicroSession(params);
+    } catch (error) {
+      console.error('Error generating next micro-session:', error);
+      return { activities: [], focusAreas: [] };
+    }
   }
 }

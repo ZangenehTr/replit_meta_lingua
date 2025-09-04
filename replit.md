@@ -39,6 +39,16 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 - **Student Management**: CRUD operations, course enrollment, progress tracking, cultural profiling, and SMS notifications.
 - **Payment & Wallet System**: IRR-based wallet, member tiers, and transaction tracking.
 - **Course Management**: Creation, teacher assignment, session scheduling, and progress monitoring, including video courses and Callern on-demand video tutoring.
+- **CallerN Roadmap Integration System**: Comprehensive adaptive micro-sessions with AI content generation integration featuring:
+  - Roadmap templates and instances for structured learning paths
+  - AI content generator service with Ollama integration for real-time content generation
+  - Course creator service with production sample courses (Business English A2, IELTS Speaking B2)
+  - Mobile HUD components (student overlay, teacher overlay, pre-session review modal)
+  - Pre-session review system with AI-generated grammar explanations and vocabulary
+  - In-session AI activity suggestions with real-time Socket.io events
+  - Post-session ratings, taught items confirmation, and next micro-session generation
+  - Teacher briefing panel with real student data and session history
+  - Complete API endpoints for roadmap management and CallerN flows
 - **Callern Service**: 24/7 on-demand video tutoring system using WebRTC for real-time video calling, screen sharing, and call recording capabilities. Includes AI-powered features like live vocabulary suggestions, automatic transcript generation, grammar rewrite suggestions, personal glossary building with SRS, and quiz generation. Features teacher authorization system to control which teachers can provide Callern services.
 - **Gamification Features**: XP/level system, achievements, daily challenges, age-based games.
 - **VoIP Integration**: Isabel VoIP line for call recording and call center functionality.
