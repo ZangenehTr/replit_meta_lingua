@@ -1,0 +1,45 @@
+root@metalingua:/opt/metalingua# pm2 logs metalingua --lines 20
+[TAILING] Tailing last 20 lines for [metalingua] process (change the value with --lines option)
+/var/log/pm2/metalingua-out-0.log last 20 lines:
+0|metaling | 2025-09-04T12:58:47: Login attempt: { email: 'admin@metalingua.com', hasPassword: true, hasOtp: false }
+0|metaling | 2025-09-04T12:58:47: 12:58:47 PM [express] POST /api/auth/login 500 in 25ms :: {"message":"Internal server error","error":…
+0|metaling | 2025-09-04T12:58:48: Login attempt: { email: 'admin@metalingua.com', hasPassword: true, hasOtp: false }
+0|metaling | 2025-09-04T12:58:48: 12:58:48 PM [express] POST /api/auth/login 500 in 26ms :: {"message":"Internal server error","error":…
+0|metaling | 2025-09-04T12:58:49: 12:58:49 PM [express] GET /api/branding 500 in 27ms :: {"message":"Failed to fetch branding"}
+0|metaling | 2025-09-04T12:58:50: 12:58:50 PM [express] GET /api/branding 500 in 26ms :: {"message":"Failed to fetch branding"}
+0|metaling | 2025-09-04T12:58:51: 12:58:51 PM [express] GET /api/branding 500 in 26ms :: {"message":"Failed to fetch branding"}
+0|metaling | 2025-09-04T12:58:54: 12:58:54 PM [express] GET /api/branding 500 in 32ms :: {"message":"Failed to fetch branding"}
+0|metaling | 2025-09-04T12:58:56: Login attempt: { email: 'admin@metalingua.com', hasPassword: true, hasOtp: false }
+0|metaling | 2025-09-04T12:58:56: 12:58:56 PM [express] POST /api/auth/login 500 in 27ms :: {"message":"Internal server error","error":…
+0|metaling | 2025-09-04T12:58:58: Login attempt: { email: 'admin@metalingua.com', hasPassword: true, hasOtp: false }
+0|metaling | 2025-09-04T12:58:58: 12:58:58 PM [express] POST /api/auth/login 500 in 26ms :: {"message":"Internal server error","error":…
+0|metaling | 2025-09-04T12:59:03: 12:59:03 PM [express] GET /api/branding 500 in 32ms :: {"message":"Failed to fetch branding"}
+0|metaling | 2025-09-04T12:59:04: 12:59:04 PM [express] GET /api/branding 500 in 26ms :: {"message":"Failed to fetch branding"}
+0|metaling | 2025-09-04T12:59:05: 12:59:05 PM [express] GET /api/branding 500 in 26ms :: {"message":"Failed to fetch branding"}
+0|metaling | 2025-09-04T12:59:08: 12:59:08 PM [express] GET /api/branding 500 in 25ms :: {"message":"Failed to fetch branding"}
+0|metaling | 2025-09-04T13:00:30: Login attempt: { email: 'admin@metalingua.com', hasPassword: true, hasOtp: false }
+0|metaling | 2025-09-04T13:00:30: 1:00:30 PM [express] POST /api/auth/login 500 in 30ms :: {"message":"Internal server error","error":…
+0|metaling | 2025-09-04T13:00:32: Login attempt: { email: 'admin@metalingua.com', hasPassword: true, hasOtp: false }
+0|metaling | 2025-09-04T13:00:32: 1:00:32 PM [express] POST /api/auth/login 500 in 26ms :: {"message":"Internal server error","error":…
+
+/var/log/pm2/metalingua-error-0.log last 20 lines:
+0|metaling | 2025-09-04T12:59:08:     at async DatabaseStorage.getBranding (file:///opt/metalingua/dist/index.js:4438:28)
+0|metaling | 2025-09-04T12:59:08:     at async file:///opt/metalingua/dist/index.js:40983:24 {
+0|metaling | 2025-09-04T12:59:08:   code: 'DEPTH_ZERO_SELF_SIGNED_CERT'
+0|metaling | 2025-09-04T12:59:08: }
+0|metaling | 2025-09-04T13:00:30: Login error: Error: self-signed certificate
+0|metaling | 2025-09-04T13:00:30:     at /opt/metalingua/node_modules/pg-pool/index.js:45:11
+0|metaling | 2025-09-04T13:00:30:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|metaling | 2025-09-04T13:00:30:     at async file:///opt/metalingua/node_modules/drizzle-orm/node-postgres/session.js:83:22
+0|metaling | 2025-09-04T13:00:30:     at async DatabaseStorage.getUserByEmail (file:///opt/metalingua/dist/index.js:3447:24)
+0|metaling | 2025-09-04T13:00:30:     at async file:///opt/metalingua/dist/index.js:34718:20 {
+0|metaling | 2025-09-04T13:00:30:   code: 'DEPTH_ZERO_SELF_SIGNED_CERT'
+0|metaling | 2025-09-04T13:00:30: }
+0|metaling | 2025-09-04T13:00:32: Login error: Error: self-signed certificate
+0|metaling | 2025-09-04T13:00:32:     at /opt/metalingua/node_modules/pg-pool/index.js:45:11
+0|metaling | 2025-09-04T13:00:32:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|metaling | 2025-09-04T13:00:32:     at async file:///opt/metalingua/node_modules/drizzle-orm/node-postgres/session.js:83:22
+0|metaling | 2025-09-04T13:00:32:     at async DatabaseStorage.getUserByEmail (file:///opt/metalingua/dist/index.js:3447:24)
+0|metaling | 2025-09-04T13:00:32:     at async file:///opt/metalingua/dist/index.js:34718:20 {
+0|metaling | 2025-09-04T13:00:32:   code: 'DEPTH_ZERO_SELF_SIGNED_CERT'
+0|metaling | 2025-09-04T13:00:32: }
