@@ -25,6 +25,7 @@ export const pool = new Pool({
   max: 5,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
+  ssl: false, // Disable SSL for local self-hosted database
 });
 
 export const db = drizzle(pool, { schema });
