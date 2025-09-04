@@ -18,7 +18,7 @@ import { User, Settings, Globe, BookOpen, Trophy, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { BackButton } from "@/components/ui/back-button";
-import { useLanguage } from "@/hooks/use-language";
+import { useTranslation } from "react-i18next";
 
 const profileSchema = z.object({
   culturalBackground: z.string().optional(),
@@ -137,7 +137,8 @@ export default function UserProfile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("basic");
-  const { currentLanguage, isRTL } = useLanguage();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'fa' || i18n.language === 'ar';
 
   // Fetch current user data
   const { data: user, isLoading: userLoading } = useQuery({
@@ -265,14 +266,10 @@ export default function UserProfile() {
           </Avatar>
           <div>
             <h1 className="text-3xl font-bold">
-              {currentLanguage === 'fa' ? 'تنظیمات پروفایل' :
-               currentLanguage === 'ar' ? 'إعدادات الملف الشخصي' :
-               'Profile Settings'}
+              {t('profileSettings')}
             </h1>
             <p className="text-muted-foreground">
-              {currentLanguage === 'fa' ? 'مدیریت حساب کاربری و تنظیمات یادگیری' :
-               currentLanguage === 'ar' ? 'إدارة الحساب وتفضيلات التعلم' :
-               'Manage your account and learning preferences'}
+              {t('manageAccount')}
             </p>
             <Badge variant="secondary" className="mt-2">
               {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'}
@@ -285,28 +282,28 @@ export default function UserProfile() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="basic" className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            Basic Info
+            {t('basicInfo')}
           </TabsTrigger>
           <TabsTrigger value="learning" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
-            Learning
+            {t('learning')}
           </TabsTrigger>
           <TabsTrigger value="preferences" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Preferences
+            {t('preferences')}
           </TabsTrigger>
           <TabsTrigger value="cultural" className="flex items-center gap-2">
             <Globe className="h-4 w-4" />
-            Cultural
+            {t('cultural')}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic">
           <Card>
             <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
+              <CardTitle>{t('basicInfo')}</CardTitle>
               <CardDescription>
-                Update your personal details and contact information
+                {t('student:updatePersonalDetails', 'Update your personal details and contact information')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -318,7 +315,7 @@ export default function UserProfile() {
                       name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>First Name</FormLabel>
+                          <FormLabel>{t('firstName')}</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -331,7 +328,7 @@ export default function UserProfile() {
                       name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Last Name</FormLabel>
+                          <FormLabel>{t('lastName')}</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -346,12 +343,12 @@ export default function UserProfile() {
                     name="phoneNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
+                        <FormLabel>{t('phoneNumber')}</FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="+1234567890" />
                         </FormControl>
                         <FormDescription>
-                          Optional - for SMS notifications and support
+                          {t('optionalForSMS')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -363,7 +360,7 @@ export default function UserProfile() {
                     disabled={updateUserMutation.isPending}
                     className="w-full sm:w-auto"
                   >
-                    {updateUserMutation.isPending ? "Updating..." : "Update Basic Info"}
+                    {updateUserMutation.isPending ? t('updating') : t('updateBasicInfo')}
                   </Button>
                 </form>
               </Form>
@@ -374,9 +371,9 @@ export default function UserProfile() {
         <TabsContent value="learning">
           <Card>
             <CardHeader>
-              <CardTitle>Learning Profile</CardTitle>
+              <CardTitle>{t('learningProfile')}</CardTitle>
               <CardDescription>
-                Tell us about your language learning goals and preferences
+                {t('tellUsAbout')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -388,11 +385,11 @@ export default function UserProfile() {
                       name="nativeLanguage"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Native Language</FormLabel>
+                          <FormLabel>{t('nativeLanguage')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select your native language" />
+                                <SelectValue placeholder={t('student:selectNativeLanguage', 'Select your native language')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -413,11 +410,11 @@ export default function UserProfile() {
                       name="proficiencyLevel"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Current Proficiency Level</FormLabel>
+                          <FormLabel>{t('currentProficiency')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select your level" />
+                                <SelectValue placeholder={t('student:selectYourLevel', 'Select your level')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -439,11 +436,11 @@ export default function UserProfile() {
                     name="learningStyle"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Preferred Learning Style</FormLabel>
+                        <FormLabel>{t('preferredLearningStyle')}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="How do you learn best?" />
+                              <SelectValue placeholder={t('student:howLearnBest', 'How do you learn best?')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -465,11 +462,11 @@ export default function UserProfile() {
                       name="preferredStudyTime"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Preferred Study Time</FormLabel>
+                          <FormLabel>{t('preferredStudyTime')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="When do you study best?" />
+                                <SelectValue placeholder={t('student:whenStudyBest', 'When do you study best?')} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -490,7 +487,7 @@ export default function UserProfile() {
                       name="weeklyStudyHours"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Weekly Study Hours</FormLabel>
+                          <FormLabel>{t('weeklyStudyHours')}</FormLabel>
                           <FormControl>
                             <Input 
                               type="number" 
@@ -501,7 +498,7 @@ export default function UserProfile() {
                             />
                           </FormControl>
                           <FormDescription>
-                            How many hours per week can you dedicate to learning?
+                            {t('student:hoursPerWeek', 'How many hours per week can you dedicate to learning?')}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -514,11 +511,11 @@ export default function UserProfile() {
                     name="bio"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>About Me</FormLabel>
+                        <FormLabel>{t('aboutMe')}</FormLabel>
                         <FormControl>
                           <Textarea 
                             {...field} 
-                            placeholder="Tell us about yourself, your learning journey, and what motivates you..."
+                            placeholder={t('student:tellUsAboutYourself', 'Tell us about yourself, your learning journey, and what motivates you...')}
                             className="min-h-[100px]"
                           />
                         </FormControl>
@@ -532,7 +529,7 @@ export default function UserProfile() {
                     disabled={updateProfileMutation.isPending}
                     className="w-full sm:w-auto"
                   >
-                    {updateProfileMutation.isPending ? "Updating..." : "Update Learning Profile"}
+                    {updateProfileMutation.isPending ? t('updating') : t('updateLearningProfile')}
                   </Button>
                 </form>
               </Form>
@@ -544,37 +541,37 @@ export default function UserProfile() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>System Preferences</CardTitle>
+                <CardTitle>{t('student:systemPreferences', 'System Preferences')}</CardTitle>
                 <CardDescription>
-                  Configure your app preferences and notifications
+                  {t('student:configureAppPreferences', 'Configure your app preferences and notifications')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Theme</Label>
+                    <Label>{t('student:theme', 'Theme')}</Label>
                     <Select defaultValue={user?.preferences?.theme || "light"}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="light">Light</SelectItem>
-                        <SelectItem value="dark">Dark</SelectItem>
-                        <SelectItem value="system">System</SelectItem>
+                        <SelectItem value="light">{t('student:light', 'Light')}</SelectItem>
+                        <SelectItem value="dark">{t('student:dark', 'Dark')}</SelectItem>
+                        <SelectItem value="system">{t('student:system', 'System')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Interface Language</Label>
+                    <Label>{t('student:interfaceLanguage', 'Interface Language')}</Label>
                     <Select defaultValue={user?.preferences?.language || "en"}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="fa">Persian/Farsi</SelectItem>
-                        <SelectItem value="ar">Arabic</SelectItem>
+                        <SelectItem value="en">{t('student:english', 'English')}</SelectItem>
+                        <SelectItem value="fa">{t('student:persianFarsi', 'Persian/Farsi')}</SelectItem>
+                        <SelectItem value="ar">{t('student:arabic', 'Arabic')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -585,7 +582,7 @@ export default function UserProfile() {
                       defaultChecked={user?.preferences?.notifications !== false}
                     />
                     <Label htmlFor="notifications">
-                      Enable push notifications
+                      {t('student:enableNotifications', 'Enable push notifications')}
                     </Label>
                   </div>
                 </div>
