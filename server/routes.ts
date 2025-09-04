@@ -34,6 +34,7 @@ import {
 } from "./business-logic-utils";
 import { ollamaService } from "./ollama-service";
 import { ollamaInstaller } from "./ollama-installer";
+import { setupAiTrainingRoutes } from "./ai-training-routes";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
@@ -19763,6 +19764,9 @@ Meta Lingua Academy`;
   setupCallernPackageRoutes(app, requireRole);
   setupCallernRecordingRoutes(app);
   registerCallernTeacherRoutes(app, storage);
+  
+  // Setup AI Training Management routes
+  setupAiTrainingRoutes(app);
   
   // Setup TTT monitoring routes
   app.use(tttRoutes);

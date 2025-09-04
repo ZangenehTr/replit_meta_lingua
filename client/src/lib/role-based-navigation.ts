@@ -94,6 +94,9 @@ export const getInstituteManagementNavigation = (t: any): NavigationItem[] => {
   // AI Services Management
   { path: "/admin/ai-services", icon: "Bot", label: t('common:navigation.aiServices'), roles: ["Admin"] },
   
+  // AI Training Management
+  { path: "/admin/ai-training", icon: "Bot", label: t('common:navigation.aiTraining') || 'AI Model Training', roles: ["Admin"] },
+  
   // Communication & Collaboration Tools
   { path: "/admin/communications", icon: "MessageCircle", label: t('common:navigation.communicationCenter'), roles: ["Admin", "Supervisor"] },
   

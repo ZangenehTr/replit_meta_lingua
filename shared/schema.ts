@@ -1213,6 +1213,103 @@ export const aiKnowledgeBase = pgTable("ai_knowledge_base", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// AI Model Management
+export const aiModels = pgTable("ai_models", {
+  id: serial("id").primaryKey(),
+  modelName: varchar("model_name", { length: 100 }).notNull().unique(),
+  baseModel: varchar("base_model", { length: 100 }).notNull(), // llama3.2, mistral, etc.
+  version: varchar("version", { length: 50 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(false),
+  isDefault: boolean("is_default").default(false),
+  modelPath: text("model_path"), // Path to model file
+  configurationParams: jsonb("configuration_params").$type<{
+    temperature?: number,
+    max_tokens?: number,
+    top_p?: number,
+    top_k?: number,
+    context_length?: number,
+    learning_rate?: number,
+    batch_size?: number,
+    epochs?: number
+  }>(),
+  performanceMetrics: jsonb("performance_metrics").$type<{
+    accuracy?: number,
+    loss?: number,
+    perplexity?: number,
+    bleu_score?: number,
+    training_time?: number,
+    validation_score?: number
+  }>(),
+  trainingDataCount: integer("training_data_count").default(0),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// AI Training Jobs
+export const aiTrainingJobs = pgTable("ai_training_jobs", {
+  id: serial("id").primaryKey(),
+  jobId: varchar("job_id", { length: 100 }).notNull().unique(),
+  modelName: varchar("model_name", { length: 100 }).notNull(),
+  baseModelId: integer("base_model_id").references(() => aiModels.id),
+  datasetIds: text("dataset_ids").array().default([]), // Array of training data IDs
+  status: varchar("status", { length: 50 }).default("pending").notNull(), // pending, running, completed, failed, cancelled
+  progress: integer("progress").default(0), // 0-100
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  errorMessage: text("error_message"),
+  trainingConfig: jsonb("training_config").$type<{
+    epochs: number,
+    learning_rate: number,
+    batch_size: number,
+    validation_split: number,
+    early_stopping: boolean,
+    save_checkpoints: boolean
+  }>(),
+  trainingLogs: text("training_logs"),
+  resultModelId: integer("result_model_id").references(() => aiModels.id),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// AI Training Datasets
+export const aiTrainingDatasets = pgTable("ai_training_datasets", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  dataType: varchar("data_type", { length: 50 }).notNull(), // conversation, vocabulary, grammar, pronunciation
+  language: varchar("language", { length: 10 }).notNull(),
+  sourceType: varchar("source_type", { length: 50 }).notNull(), // callern_calls, user_activity, manual_upload
+  dataCount: integer("data_count").default(0),
+  totalSize: integer("total_size").default(0), // in bytes
+  isActive: boolean("is_active").default(true),
+  qualityScore: decimal("quality_score", { precision: 5, scale: 2 }),
+  metadata: jsonb("metadata").$type<{
+    filters?: any,
+    preprocessing_steps?: string[],
+    validation_rules?: any,
+    export_format?: string
+  }>(),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// AI Dataset Items (linking datasets to training data)
+export const aiDatasetItems = pgTable("ai_dataset_items", {
+  id: serial("id").primaryKey(),
+  datasetId: integer("dataset_id").references(() => aiTrainingDatasets.id).notNull(),
+  trainingDataId: integer("training_data_id").references(() => aiTrainingData.id).notNull(),
+  itemType: varchar("item_type", { length: 50 }).notNull(), // text, audio, conversation, qa_pair
+  qualityScore: decimal("quality_score", { precision: 5, scale: 2 }),
+  isValidated: boolean("is_validated").default(false),
+  validatedBy: integer("validated_by").references(() => users.id),
+  validatedAt: timestamp("validated_at"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
 // Referral system insert schemas
 export const insertReferralSettingsSchema = createInsertSchema(referralSettings).omit({
   id: true,
@@ -1237,6 +1334,41 @@ export const insertAiTrainingDataSchema = createInsertSchema(aiTrainingData).omi
   trainedAt: true,
   createdAt: true
 });
+
+// AI Model Management schemas
+export const insertAiModelSchema = createInsertSchema(aiModels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertAiTrainingJobSchema = createInsertSchema(aiTrainingJobs).omit({
+  id: true,
+  jobId: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertAiTrainingDatasetSchema = createInsertSchema(aiTrainingDatasets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertAiDatasetItemSchema = createInsertSchema(aiDatasetItems).omit({
+  id: true,
+  createdAt: true
+});
+
+// AI Training types
+export type InsertAiModel = z.infer<typeof insertAiModelSchema>;
+export type InsertAiTrainingJob = z.infer<typeof insertAiTrainingJobSchema>;
+export type InsertAiTrainingDataset = z.infer<typeof insertAiTrainingDatasetSchema>;
+export type InsertAiDatasetItem = z.infer<typeof insertAiDatasetItemSchema>;
+export type AiModel = typeof aiModels.$inferSelect;
+export type AiTrainingJob = typeof aiTrainingJobs.$inferSelect;
+export type AiTrainingDataset = typeof aiTrainingDatasets.$inferSelect;
+export type AiDatasetItem = typeof aiDatasetItems.$inferSelect;
 
 // Skill tracking insert schemas
 export const insertSkillAssessmentSchema = createInsertSchema(skillAssessments).omit({
