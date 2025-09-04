@@ -49,7 +49,8 @@ const courseSchema = z.object({
   isFeatured: z.boolean().default(false),
   // Callern-specific fields
   accessPeriodMonths: z.coerce.number().optional(), // For Callern courses: access period in months
-  callernAvailable24h: z.boolean().optional() // For Callern courses: 24/7 availability
+  callernAvailable24h: z.boolean().optional(), // For Callern courses: 24/7 availability
+  callernRoadmapId: z.coerce.number().optional() // For Callern courses: assigned roadmap
 }).refine((data) => {
   // For Callern courses, require access period
   if (data.deliveryMode === 'callern') {
@@ -65,6 +66,12 @@ const courseSchema = z.object({
 function CreateCourseDialog({ queryClient }: { queryClient: any }) {
   const { t } = useTranslation(['admin', 'common']);
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Fetch available roadmaps for Callern courses
+  const { data: availableRoadmaps = [] } = useQuery({
+    queryKey: ['/api/admin/available-roadmaps'],
+    enabled: isOpen // Only fetch when dialog is open
+  });
   const form = useForm<z.infer<typeof courseSchema>>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
@@ -85,7 +92,8 @@ function CreateCourseDialog({ queryClient }: { queryClient: any }) {
       isActive: true,
       isFeatured: false,
       accessPeriodMonths: 2,
-      callernAvailable24h: true
+      callernAvailable24h: true,
+      callernRoadmapId: undefined
     }
   });
 

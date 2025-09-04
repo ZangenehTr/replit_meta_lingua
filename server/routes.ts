@@ -13,6 +13,7 @@ import { setupCallernPackageRoutes } from "./callern-package-routes";
 import { setupCallernRecordingRoutes } from "./callern-recording-routes";
 import { registerCallernTeacherRoutes } from "./callern-teacher-routes";
 import callernRoadmapRoutes from "./routes/callern-roadmap-routes";
+import courseRoadmapRoutes from "./routes/course-roadmap-routes";
 import tttRoutes from "./ttt-routes";
 import aiWebhookRoutes from "./ai-webhook-routes";
 import { 
@@ -19745,6 +19746,10 @@ Meta Lingua Academy`;
   // Setup AI Webhook routes for CRM integration
   app.use('/api', aiWebhookRoutes);
   console.log('✅ AI Webhook routes registered (Call processing, Transcription, Lead scoring)');
+
+  // Setup Course-Roadmap Integration routes
+  app.use('/api', courseRoadmapRoutes);
+  console.log('✅ Course-Roadmap integration routes registered (Progress tracking, AI homework, Mentorship)');
 
   // Setup Phase 2 AI routes (Persian NLP, Real-time Processing, Knowledge RAG)
   const { registerPhase2AIRoutes } = await import('./ai-phase2-routes');

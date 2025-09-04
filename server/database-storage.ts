@@ -20,7 +20,7 @@ import {
   communicationLogs, mentorAssignments, mentoringSessions, sessionPackages,
   callernPackages, studentCallernPackages, teacherCallernAvailability,
   callernCallHistory, callernSyllabusTopics, studentCallernProgress, rooms,
-  callernRoadmaps, callernRoadmapSteps, studentRoadmapProgress,
+  callernRoadmaps, callernRoadmapSteps, studentRoadmapProgress, courseRoadmapProgress,
   callernPresence, callernSpeechSegments, callernScoresStudent, callernScoresTeacher, callernScoringEvents,
   type User, type InsertUser, type UserProfile, type InsertUserProfile,
   type UserSession, type InsertUserSession, type RolePermission, type InsertRolePermission,
@@ -43,6 +43,7 @@ import {
   type CallernPresence, type InsertCallernPresence, type CallernSpeechSegment, type InsertCallernSpeechSegment,
   type CallernScoresStudent, type InsertCallernScoresStudent, type CallernScoresTeacher, type InsertCallernScoresTeacher,
   type CallernScoringEvent, type InsertCallernScoringEvent,
+  type CourseRoadmapProgress, type InsertCourseRoadmapProgress,
   type Room, type InsertRoom,
   // Testing subsystem types
   tests, testQuestions, testAttempts, testAnswers,
@@ -12130,5 +12131,241 @@ export class DatabaseStorage implements IStorage {
       details: JSON.stringify(activity.details),
       createdAt: activity.timestamp
     });
+  }
+
+  // =================== COURSE-ROADMAP INTEGRATION METHODS ===================
+  
+  // Get courses with their assigned roadmaps
+  async getCoursesWithRoadmaps(): Promise<Array<Course & { roadmap?: any }>> {
+    const coursesData = await db
+      .select({
+        // Course fields
+        id: courses.id,
+        courseCode: courses.courseCode,
+        title: courses.title,
+        description: courses.description,
+        language: courses.language,
+        level: courses.level,
+        thumbnail: courses.thumbnail,
+        instructorId: courses.instructorId,
+        price: courses.price,
+        totalSessions: courses.totalSessions,
+        sessionDuration: courses.sessionDuration,
+        deliveryMode: courses.deliveryMode,
+        classFormat: courses.classFormat,
+        maxStudents: courses.maxStudents,
+        rating: courses.rating,
+        firstSessionDate: courses.firstSessionDate,
+        lastSessionDate: courses.lastSessionDate,
+        weekdays: courses.weekdays,
+        startTime: courses.startTime,
+        endTime: courses.endTime,
+        timeZone: courses.timeZone,
+        calendarType: courses.calendarType,
+        targetLanguage: courses.targetLanguage,
+        targetLevel: courses.targetLevel,
+        autoRecord: courses.autoRecord,
+        recordingAvailable: courses.recordingAvailable,
+        accessPeriodMonths: courses.accessPeriodMonths,
+        callernAvailable24h: courses.callernAvailable24h,
+        callernRoadmapId: courses.callernRoadmapId,
+        category: courses.category,
+        tags: courses.tags,
+        prerequisites: courses.prerequisites,
+        learningObjectives: courses.learningObjectives,
+        difficulty: courses.difficulty,
+        certificateTemplate: courses.certificateTemplate,
+        isActive: courses.isActive,
+        isFeatured: courses.isFeatured,
+        createdAt: courses.createdAt,
+        updatedAt: courses.updatedAt,
+        // Roadmap fields
+        roadmapId: callernRoadmaps.id,
+        roadmapName: callernRoadmaps.roadmapName,
+        roadmapDescription: callernRoadmaps.description,
+        roadmapTotalSteps: callernRoadmaps.totalSteps,
+        roadmapEstimatedHours: callernRoadmaps.estimatedHours,
+      })
+      .from(courses)
+      .leftJoin(callernRoadmaps, eq(courses.callernRoadmapId, callernRoadmaps.id))
+      .orderBy(desc(courses.createdAt));
+
+    return coursesData.map(course => ({
+      id: course.id,
+      courseCode: course.courseCode,
+      title: course.title,
+      description: course.description,
+      language: course.language,
+      level: course.level,
+      thumbnail: course.thumbnail,
+      instructorId: course.instructorId,
+      price: course.price,
+      totalSessions: course.totalSessions,
+      sessionDuration: course.sessionDuration,
+      deliveryMode: course.deliveryMode,
+      classFormat: course.classFormat,
+      maxStudents: course.maxStudents,
+      rating: course.rating,
+      firstSessionDate: course.firstSessionDate,
+      lastSessionDate: course.lastSessionDate,
+      weekdays: course.weekdays,
+      startTime: course.startTime,
+      endTime: course.endTime,
+      timeZone: course.timeZone,
+      calendarType: course.calendarType,
+      targetLanguage: course.targetLanguage,
+      targetLevel: course.targetLevel,
+      autoRecord: course.autoRecord,
+      recordingAvailable: course.recordingAvailable,
+      accessPeriodMonths: course.accessPeriodMonths,
+      callernAvailable24h: course.callernAvailable24h,
+      callernRoadmapId: course.callernRoadmapId,
+      category: course.category,
+      tags: course.tags,
+      prerequisites: course.prerequisites,
+      learningObjectives: course.learningObjectives,
+      difficulty: course.difficulty,
+      certificateTemplate: course.certificateTemplate,
+      isActive: course.isActive,
+      isFeatured: course.isFeatured,
+      createdAt: course.createdAt,
+      updatedAt: course.updatedAt,
+      roadmap: course.roadmapId ? {
+        id: course.roadmapId,
+        name: course.roadmapName,
+        description: course.roadmapDescription,
+        totalSteps: course.roadmapTotalSteps,
+        estimatedHours: course.roadmapEstimatedHours,
+      } : null
+    }));
+  }
+
+  // Assign roadmap to a course
+  async assignRoadmapToCourse(courseId: number, roadmapId: number): Promise<Course> {
+    const [updatedCourse] = await db
+      .update(courses)
+      .set({ callernRoadmapId: roadmapId, updatedAt: new Date() })
+      .where(eq(courses.id, courseId))
+      .returning();
+    return updatedCourse;
+  }
+
+  // Remove roadmap from course  
+  async removeRoadmapFromCourse(courseId: number): Promise<Course> {
+    const [updatedCourse] = await db
+      .update(courses)
+      .set({ callernRoadmapId: null, updatedAt: new Date() })
+      .where(eq(courses.id, courseId))
+      .returning();
+    return updatedCourse;
+  }
+
+  // Get student progress for a specific course roadmap
+  async getCourseRoadmapProgress(courseId: number, studentId: number): Promise<CourseRoadmapProgress[]> {
+    return await db
+      .select()
+      .from(courseRoadmapProgress)
+      .where(and(
+        eq(courseRoadmapProgress.courseId, courseId),
+        eq(courseRoadmapProgress.studentId, studentId)
+      ))
+      .orderBy(courseRoadmapProgress.stepId);
+  }
+
+  // Create or update course roadmap progress
+  async updateCourseRoadmapProgress(data: InsertCourseRoadmapProgress): Promise<CourseRoadmapProgress> {
+    // Check if progress already exists
+    const existing = await db
+      .select()
+      .from(courseRoadmapProgress)
+      .where(and(
+        eq(courseRoadmapProgress.courseId, data.courseId),
+        eq(courseRoadmapProgress.studentId, data.studentId),
+        eq(courseRoadmapProgress.stepId, data.stepId)
+      ))
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update existing progress
+      const [updated] = await db
+        .update(courseRoadmapProgress)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(courseRoadmapProgress.id, existing[0].id))
+        .returning();
+      return updated;
+    } else {
+      // Create new progress entry
+      const [created] = await db
+        .insert(courseRoadmapProgress)
+        .values(data)
+        .returning();
+      return created;
+    }
+  }
+
+  // Get course roadmap progress summary for progress charts
+  async getCourseProgressSummary(courseId: number, studentId: number): Promise<{
+    totalSteps: number;
+    completedSteps: number;
+    inProgressSteps: number;
+    overallProgress: number;
+    aiAverageScore: number;
+    lastUpdated: Date | null;
+  }> {
+    const progressData = await db
+      .select({
+        status: courseRoadmapProgress.status,
+        aiEvaluationScore: courseRoadmapProgress.aiEvaluationScore,
+        updatedAt: courseRoadmapProgress.updatedAt
+      })
+      .from(courseRoadmapProgress)
+      .where(and(
+        eq(courseRoadmapProgress.courseId, courseId),
+        eq(courseRoadmapProgress.studentId, studentId)
+      ));
+
+    const totalSteps = progressData.length;
+    const completedSteps = progressData.filter(p => p.status === 'completed').length;
+    const inProgressSteps = progressData.filter(p => p.status === 'in_progress').length;
+    const overallProgress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+    
+    // Calculate average AI score for completed steps
+    const scoredSteps = progressData.filter(p => p.aiEvaluationScore !== null);
+    const aiAverageScore = scoredSteps.length > 0 
+      ? scoredSteps.reduce((sum, p) => sum + Number(p.aiEvaluationScore), 0) / scoredSteps.length 
+      : 0;
+
+    const lastUpdated = progressData.length > 0 
+      ? progressData.reduce((latest, p) => 
+          p.updatedAt > latest ? p.updatedAt : latest, 
+          progressData[0].updatedAt
+        ) 
+      : null;
+
+    return {
+      totalSteps,
+      completedSteps, 
+      inProgressSteps,
+      overallProgress,
+      aiAverageScore: Math.round(aiAverageScore * 100) / 100, // Round to 2 decimal places
+      lastUpdated
+    };
+  }
+
+  // Get available roadmaps for course assignment
+  async getAvailableRoadmapsForCourse(): Promise<Array<{ id: number, name: string, description: string, totalSteps: number, estimatedHours: number }>> {
+    const roadmaps = await db
+      .select({
+        id: callernRoadmaps.id,
+        name: callernRoadmaps.roadmapName,
+        description: callernRoadmaps.description,
+        totalSteps: callernRoadmaps.totalSteps,
+        estimatedHours: callernRoadmaps.estimatedHours
+      })
+      .from(callernRoadmaps)
+      .where(eq(callernRoadmaps.isActive, true))
+      .orderBy(callernRoadmaps.roadmapName);
+
+    return roadmaps;
   }
 }

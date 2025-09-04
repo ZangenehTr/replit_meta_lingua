@@ -134,6 +134,7 @@ export const courses = pgTable("courses", {
   // Callern-specific fields for 24/7 access courses
   accessPeriodMonths: integer("access_period_months"), // For Callern courses: access period in months
   callernAvailable24h: boolean("callern_available_24h").default(true), // For Callern courses: 24/7 availability
+  callernRoadmapId: integer("callern_roadmap_id").references(() => callernRoadmaps.id), // Link to Callern roadmap for progress tracking
   
   category: text("category").notNull(),
   tags: text("tags").array(),
@@ -412,6 +413,44 @@ export const studentRoadmapProgress = pgTable("student_roadmap_progress", {
   teacherNotes: text("teacher_notes"),
   studentFeedback: text("student_feedback"),
   performanceRating: integer("performance_rating"), // 1-5 rating
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Course Roadmap Progress - Track student progress through course roadmaps 
+export const courseRoadmapProgress = pgTable("course_roadmap_progress", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  studentId: integer("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  roadmapId: integer("roadmap_id").notNull().references(() => callernRoadmaps.id, { onDelete: 'cascade' }),
+  stepId: integer("step_id").notNull().references(() => callernRoadmapSteps.id, { onDelete: 'cascade' }),
+  
+  // Progress tracking
+  status: varchar("status", { length: 20 }).notNull().default('not_started'), // not_started, in_progress, completed, skipped
+  progressPercentage: integer("progress_percentage").default(0), // 0-100
+  
+  // Session data
+  sessionId: integer("session_id").references(() => sessions.id),
+  teacherId: integer("teacher_id").references(() => users.id),
+  mentorId: integer("mentor_id").references(() => users.id),
+  
+  // Timestamps
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  lastAccessedAt: timestamp("last_accessed_at").defaultNow(),
+  
+  // Feedback and evaluation
+  teacherNotes: text("teacher_notes"),
+  studentSelfAssessment: text("student_self_assessment"),
+  aiEvaluationScore: decimal("ai_evaluation_score", { precision: 5, scale: 2 }), // AI-generated score 0-100
+  aiRecommendations: jsonb("ai_recommendations"), // AI recommendations for improvement
+  
+  // Homework integration
+  homeworkAssigned: boolean("homework_assigned").default(false),
+  homeworkCompleted: boolean("homework_completed").default(false),
+  homeworkScore: decimal("homework_score", { precision: 5, scale: 2 }),
+  aiHomeworkFeedback: jsonb("ai_homework_feedback"), // AI-generated homework corrections and feedback
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -3394,3 +3433,7 @@ export type CallernScoresTeacher = typeof callernScoresTeacher.$inferSelect;
 export type InsertCallernScoresTeacher = z.infer<typeof insertCallernScoresTeacherSchema>;
 export type CallernScoringEvent = typeof callernScoringEvents.$inferSelect;
 export type InsertCallernScoringEvent = z.infer<typeof insertCallernScoringEventSchema>;
+
+// Course Roadmap Progress types
+export type CourseRoadmapProgress = typeof courseRoadmapProgress.$inferSelect;
+export type InsertCourseRoadmapProgress = typeof courseRoadmapProgress.$inferInsert;
