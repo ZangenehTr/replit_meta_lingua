@@ -38,14 +38,21 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
       
       console.log(`Authorization check result:`, authorization);
       
-      // Temporary bypass for debugging - TODO: Fix authorization query
-      console.log('TEMPORARY BYPASS: Authorizing teacher for testing purposes');
-      
+      // Check if teacher is actually authorized
+      if (authorization.length === 0) {
+        return res.json({ 
+          isAuthorized: false,
+          message: 'Teacher not authorized for CallerN access'
+        });
+      }
+
+      // Return actual authorization data
+      const authData = authorization[0];
       return res.json({ 
         isAuthorized: true,
-        authorizedAt: new Date().toISOString(),
-        authorizedBy: 33, // Admin ID
-        note: 'Temporary authorization for testing'
+        authorizedAt: authData.authorizedAt,
+        authorizedBy: authData.authorizedBy,
+        notes: authData.notes
       });
     } catch (error) {
       console.error('Error checking teacher authorization:', error);
