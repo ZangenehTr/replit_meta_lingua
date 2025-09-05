@@ -73,6 +73,7 @@ import HomeworkPage from "@/pages/student/homework";
 import StudentAIConversation from "@/pages/student/AIConversation";
 import MessagesPage from "@/pages/student/messages";
 import PaymentPage from "@/pages/student/payment";
+import PronunciationPracticePage from "@/pages/pronunciation-practice";
 import StudentTestTaking from "@/pages/student/test-taking";
 import StudentVideoCourses from "@/pages/student/video-courses";
 import VideoCoursDetail from "@/pages/student/video-course-detail";
@@ -184,6 +185,11 @@ function Router() {
       <Route path="/profile">
         <ProtectedRoute>
           <UserProfile />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/pronunciation-practice">
+        <ProtectedRoute>
+          <PronunciationPracticePage />
         </ProtectedRoute>
       </Route>
       <Route path="/crm">

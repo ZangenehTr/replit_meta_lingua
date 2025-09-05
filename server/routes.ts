@@ -32,6 +32,7 @@ import {
   isActiveObservation,
   validateActiveTeacher
 } from "./business-logic-utils";
+import { ttsService, type TTSRequest } from "./tts-service";
 import { ollamaService } from "./ollama-service";
 import { ollamaInstaller } from "./ollama-installer";
 import { setupAiTrainingRoutes } from "./ai-training-routes";
@@ -20246,6 +20247,155 @@ Meta Lingua Academy`;
     } catch (error) {
       console.error('Error fetching homework stats:', error);
       res.status(500).json({ message: "Failed to fetch homework stats" });
+    }
+  });
+
+  // TTS (Text-to-Speech) API Routes for pronunciation practice
+  
+  // Generate speech from text
+  app.post("/api/tts/generate", authenticateToken, async (req: any, res) => {
+    try {
+      const { text, language, speed = 1.0, voice } = req.body;
+      
+      if (!text) {
+        return res.status(400).json({ error: "Text is required" });
+      }
+      
+      if (!language) {
+        return res.status(400).json({ error: "Language is required" });
+      }
+
+      const ttsRequest: TTSRequest = {
+        text: text.trim(),
+        language: language.toLowerCase(),
+        speed,
+        voice
+      };
+
+      const result = await ttsService.generateSpeech(ttsRequest);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          audioUrl: result.audioUrl,
+          duration: result.duration,
+          message: "Speech generated successfully"
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error) {
+      console.error('TTS generation error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to generate speech" 
+      });
+    }
+  });
+
+  // Generate pronunciation practice audio
+  app.post("/api/tts/pronunciation", authenticateToken, async (req: any, res) => {
+    try {
+      const { text, language, level = 'normal' } = req.body;
+      
+      if (!text || !language) {
+        return res.status(400).json({ error: "Text and language are required" });
+      }
+
+      const result = await ttsService.generatePronunciationAudio(text, language, level);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          audioUrl: result.audioUrl,
+          duration: result.duration,
+          level,
+          message: `Pronunciation audio generated at ${level} speed`
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error) {
+      console.error('Pronunciation TTS error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to generate pronunciation audio" 
+      });
+    }
+  });
+
+  // Get supported languages
+  app.get("/api/tts/languages", authenticateToken, async (req: any, res) => {
+    try {
+      const languages = ttsService.getSupportedLanguages();
+      const languageList = languages.map(code => ({
+        code,
+        name: ttsService.getLanguageName(code),
+        englishName: code === 'fa' ? 'Persian' : code === 'ar' ? 'Arabic' : 'English'
+      }));
+
+      res.json({
+        success: true,
+        languages: languageList,
+        total: languages.length
+      });
+    } catch (error) {
+      console.error('TTS languages error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to get supported languages" 
+      });
+    }
+  });
+
+  // Vocabulary pronunciation - for language learning
+  app.post("/api/tts/vocabulary", authenticateToken, async (req: any, res) => {
+    try {
+      const { words, language, level = 'normal' } = req.body;
+      
+      if (!words || !Array.isArray(words) || words.length === 0) {
+        return res.status(400).json({ error: "Words array is required" });
+      }
+      
+      if (!language) {
+        return res.status(400).json({ error: "Language is required" });
+      }
+
+      const pronunciations = [];
+      
+      for (const word of words) {
+        const result = await ttsService.generatePronunciationAudio(word, language, level);
+        pronunciations.push({
+          word,
+          success: result.success,
+          audioUrl: result.success ? result.audioUrl : null,
+          duration: result.duration,
+          error: result.error
+        });
+      }
+
+      const successCount = pronunciations.filter(p => p.success).length;
+      
+      res.json({
+        success: true,
+        pronunciations,
+        total: words.length,
+        successful: successCount,
+        failed: words.length - successCount,
+        message: `Generated pronunciation for ${successCount} out of ${words.length} words`
+      });
+    } catch (error) {
+      console.error('Vocabulary TTS error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to generate vocabulary pronunciations" 
+      });
     }
   });
 
