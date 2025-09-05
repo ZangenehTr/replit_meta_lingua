@@ -81,7 +81,7 @@ export default function LeadManagement() {
     mutationFn: async (leadData: any) => {
       return apiRequest("/api/leads", {
         method: "POST",
-        body: leadData
+        body: JSON.stringify(leadData)
       });
     },
     onSuccess: () => {
@@ -120,12 +120,12 @@ export default function LeadManagement() {
     mutationFn: async ({ phoneNumber, contactName }: { phoneNumber: string; contactName: string }) => {
       return apiRequest("/api/voip/initiate-call", {
         method: "POST",
-        body: {
+        body: JSON.stringify({
           phoneNumber,
           contactName,
           recordCall: true,
           source: 'lead_management'
-        }
+        })
       });
     },
     onSuccess: (data) => {
@@ -184,8 +184,8 @@ export default function LeadManagement() {
     
     const now = new Date();
     const followUpsDue = leads.filter(lead => {
-      if (!lead.nextFollowUp) return false;
-      const followUpDate = new Date(lead.nextFollowUp);
+      if (!lead.nextFollowUpDate) return false;
+      const followUpDate = new Date(lead.nextFollowUpDate);
       return followUpDate <= now;
     }).length;
 
@@ -493,7 +493,7 @@ export default function LeadManagement() {
                       <td className="p-4">{lead.source}</td>
                       <td className="p-4">
                         <div>
-                          <p>{lead.targetLanguage}</p>
+                          <p>{lead.interestedLanguage || 'تعیین نشده'}</p>
                           <p className="text-sm text-gray-500">{lead.level}</p>
                         </div>
                       </td>
@@ -512,8 +512,8 @@ export default function LeadManagement() {
                       </td>
                       <td className="p-4">
                         <p className="text-sm">
-                          {lead.nextFollowUp 
-                            ? new Date(lead.nextFollowUp).toLocaleDateString('fa-IR') 
+                          {lead.nextFollowUpDate 
+                            ? new Date(lead.nextFollowUpDate).toLocaleDateString('fa-IR') 
                             : 'تعیین نشده'
                           }
                         </p>
