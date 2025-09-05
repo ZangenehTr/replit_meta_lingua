@@ -20399,6 +20399,111 @@ Meta Lingua Academy`;
     }
   });
 
+  // ============================================================================
+  // AI Training Dashboard API Routes (Fix blank page issue)
+  // ============================================================================
+
+  // Get AI training statistics
+  app.get("/api/ai-training-data/stats", authenticateToken, async (req: any, res) => {
+    try {
+      const stats = await storage.getAiTrainingStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Failed to get AI training stats:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch training statistics",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Get all AI models
+  app.get("/api/ai-models", authenticateToken, async (req: any, res) => {
+    try {
+      const models = await storage.getAiModels();
+      res.json(models);
+    } catch (error) {
+      console.error('Failed to get AI models:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch AI models",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Create new AI model
+  app.post("/api/ai-models", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const modelData = req.body;
+      const model = await storage.createAiModel(modelData);
+      res.json(model);
+    } catch (error) {
+      console.error('Failed to create AI model:', error);
+      res.status(500).json({ 
+        message: "Failed to create AI model",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Activate AI model
+  app.post("/api/ai-models/:id/activate", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.activateAiModel(parseInt(id));
+      res.json({ success: true, message: "Model activated successfully" });
+    } catch (error) {
+      console.error('Failed to activate AI model:', error);
+      res.status(500).json({ 
+        message: "Failed to activate AI model",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Get AI training jobs
+  app.get("/api/ai-training-jobs", authenticateToken, async (req: any, res) => {
+    try {
+      const jobs = await storage.getAiTrainingJobs();
+      res.json(jobs);
+    } catch (error) {
+      console.error('Failed to get AI training jobs:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch training jobs",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Cancel AI training job
+  app.post("/api/ai-training-jobs/:id/cancel", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      await storage.cancelAiTrainingJob(parseInt(id));
+      res.json({ success: true, message: "Training job cancelled" });
+    } catch (error) {
+      console.error('Failed to cancel AI training job:', error);
+      res.status(500).json({ 
+        message: "Failed to cancel training job",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Get AI datasets
+  app.get("/api/ai-datasets", authenticateToken, async (req: any, res) => {
+    try {
+      const datasets = await storage.getAiDatasets();
+      res.json(datasets);
+    } catch (error) {
+      console.error('Failed to get AI datasets:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch datasets",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize Callern WebSocket server

@@ -4427,6 +4427,82 @@ export class MemStorage implements IStorage {
       createdAt: new Date()
     };
   }
+
+  // AI Training Dashboard Methods (Mock implementations)
+  async getAiTrainingStats() {
+    return {
+      totalTrainingData: 150000,
+      totalModels: 3,
+      totalDatasets: 5,
+      activeJobs: 1
+    };
+  }
+
+  async getAiModels() {
+    return [
+      {
+        id: 1,
+        modelName: "Llama 3.2B Production",
+        baseModel: "llama3.2b", 
+        version: "1.0.0",
+        description: "Main production model for conversation assistance",
+        isActive: true,
+        isDefault: true,
+        performanceMetrics: {
+          accuracy: 0.92,
+          loss: 0.15,
+          training_time: 3600
+        },
+        createdAt: new Date().toISOString()
+      }
+    ];
+  }
+
+  async createAiModel(modelData: any) {
+    return { id: Date.now(), ...modelData, createdAt: new Date().toISOString() };
+  }
+
+  async activateAiModel(modelId: number) {
+    return true;
+  }
+
+  async getAiTrainingJobs() {
+    return [
+      {
+        id: 1,
+        jobId: `job_${Date.now()}`,
+        modelName: "Llama 3.2B Production",
+        status: "running",
+        progress: 75,
+        startedAt: new Date(Date.now() - 3600000).toISOString(),
+        completedAt: null,
+        errorMessage: null,
+        createdAt: new Date(Date.now() - 3600000).toISOString()
+      }
+    ];
+  }
+
+  async cancelAiTrainingJob(jobId: number) {
+    return true;
+  }
+
+  async getAiDatasets() {
+    return [
+      {
+        id: 1,
+        name: "English Conversation Dataset",
+        description: "Real conversation data from Callern sessions",
+        dataType: "conversation",
+        language: "English",
+        sourceType: "callern_sessions",
+        dataCount: 15000,
+        totalSize: 524288000,
+        isActive: true,
+        qualityScore: 4.5,
+        createdAt: new Date().toISOString()
+      }
+    ];
+  }
 }
 
 import { DatabaseStorage } from "./database-storage";
