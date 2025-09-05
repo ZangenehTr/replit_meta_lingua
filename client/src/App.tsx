@@ -336,6 +336,11 @@ function Router() {
           <CallCenterDashboard />
         </ProtectedRoute>
       </Route>
+      <Route path="/lead-management">
+        <ProtectedRoute>
+          <LeadManagement />
+        </ProtectedRoute>
+      </Route>
       <Route path="/callcenter/leads">
         <ProtectedRoute>
           <LeadManagement />

@@ -81,10 +81,13 @@ export default function LeadManagement() {
     mutationFn: async (leadData: any) => {
       return apiRequest("/api/leads", {
         method: "POST",
-        body: JSON.stringify(leadData)
+        body: JSON.stringify(leadData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
       setShowNewLeadForm(false);
       setNewLeadData({
