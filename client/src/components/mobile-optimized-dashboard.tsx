@@ -91,8 +91,8 @@ export function MobileOptimizedDashboard() {
           </h1>
           <p className="text-muted-foreground">
             {user?.preferences?.language === 'fa' 
-              ? 'به پلتفرم یادگیری زبان متالینگوا خوش آمدید'
-              : 'Continue your language learning journey'}
+              ? 'به فکر آیندت باش...'
+              : 'Mindful of the future'}
           </p>
         </CardContent>
       </Card>

@@ -483,7 +483,7 @@ export const translations: Record<Language, Translations> = {
     lastName: "Last Name",
     phoneNumber: "Phone Number",
     optionalForSMS: "Optional - for SMS notifications and support",
-    readyToContinue: "Ready to continue your language learning journey",
+    readyToContinue: "Mindful of the future",
     lessonsDay: "Lessons",
     streak: "Day Streak",
     discoverLanguageLevel: "Discover Your Language Level",

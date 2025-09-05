@@ -72,7 +72,7 @@ describe('i18n Translation Tests', () => {
       expect(i18n.t('auth:password')).toBe('Password');
       expect(i18n.t('auth:firstName')).toBe('First Name');
       expect(i18n.t('auth:lastName')).toBe('Last Name');
-      expect(i18n.t('auth:welcomeMessage')).toBe('Welcome to your language learning journey');
+      expect(i18n.t('auth:welcomeMessage')).toBe('Mindful of the future');
     });
 
     it('should have correct admin section translations', () => {
@@ -132,7 +132,7 @@ describe('i18n Translation Tests', () => {
       expect(i18n.t('auth:password')).toBe('رمز عبور');
       expect(i18n.t('auth:firstName')).toBe('نام');
       expect(i18n.t('auth:lastName')).toBe('نام خانوادگی');
-      expect(i18n.t('auth:welcomeMessage')).toBe('به سفر یادگیری زبان خود خوش آمدید');
+      expect(i18n.t('auth:welcomeMessage')).toBe('به فکر آیندت باش...');
     });
 
     it('should have correct admin section translations in Farsi', () => {
