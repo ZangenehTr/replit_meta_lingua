@@ -1,0 +1,34 @@
+Essential files needed for deployment:
+
+CORE APPLICATION FILES:
+- package.json (dependencies)
+- package-lock.json (lock file)
+- tsconfig.json (TypeScript config)
+- vite.config.ts (build config)
+- tailwind.config.ts (CSS config)
+- drizzle.config.ts (database config)
+- components.json (UI components config)
+
+SOURCE CODE:
+- client/ (entire frontend directory)
+- server/ (entire backend directory)  
+- shared/ (shared types and schemas)
+
+CONFIGURATION:
+- nginx-example.conf (web server config)
+- docker-compose.yml (containerization)
+- Dockerfile (containerization)
+- quick-deploy.sh (deployment script)
+
+DOCUMENTATION:
+- DEPLOYMENT_SIMPLE.md
+- SELF_HOSTING_STATUS.md
+- TEST_CREDENTIALS.md
+
+SKIP THESE (not needed for deployment):
+- node_modules/ (will be regenerated)
+- dist/ (will be rebuilt)
+- .git/ (version control)
+- *.log files
+- test files and reports
+- attached_assets/
