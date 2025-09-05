@@ -1,0 +1,40 @@
+0|metalingua  | 2025-09-05T22:40:07: }
+0|metalingua  | 2025-09-05T22:40:10: Installing Ollama using official script...
+0|metalingua  | 2025-09-05T22:40:11: Ollama installation failed: Error: Command failed: curl -fsSL https://ollama.ai/install.sh | sh
+0|metalingua  | 2025-09-05T22:40:11: >>> Cleaning up old version at /usr/local/lib/ollama
+0|metalingua  | 2025-09-05T22:40:11: >>> Installing ollama to /usr/local
+0|metalingua  | 2025-09-05T22:40:11: >>> Downloading Linux amd64 bundle
+0|metalingua  | 2025-09-05T22:40:11: #=#=#                                                          curl: (22) The requested URL returned error: 403
+0|metalingua  | 2025-09-05T22:40:11:
+0|metalingua  | 2025-09-05T22:40:11:
+0|metalingua  | 2025-09-05T22:40:11: gzip: stdin: unexpected end of file
+0|metalingua  | 2025-09-05T22:40:11: tar: Child returned status 1
+0|metalingua  | 2025-09-05T22:40:11: tar: Error is not recoverable: exiting now
+0|metalingua  | 2025-09-05T22:40:11:
+0|metalingua  | 2025-09-05T22:40:11:     at genericNodeError (node:internal/errors:984:15)
+0|metalingua  | 2025-09-05T22:40:11:     at wrappedFn (node:internal/errors:538:14)
+0|metalingua  | 2025-09-05T22:40:11:     at ChildProcess.exithandler (node:child_process:422:12)
+0|metalingua  | 2025-09-05T22:40:11:     at ChildProcess.emit (node:events:524:28)
+0|metalingua  | 2025-09-05T22:40:11:     at maybeClose (node:internal/child_process:1104:16)
+0|metalingua  | 2025-09-05T22:40:11:     at ChildProcess._handle.onexit (node:internal/child_process:304:5) {
+0|metalingua  | 2025-09-05T22:40:11:   code: 2,
+0|metalingua  | 2025-09-05T22:40:11:   killed: false,
+0|metalingua  | 2025-09-05T22:40:11:   signal: null,
+0|metalingua  | 2025-09-05T22:40:11:   cmd: 'curl -fsSL https://ollama.ai/install.sh | sh',
+0|metalingua  | 2025-09-05T22:40:11:   stdout: '',
+0|metalingua  | 2025-09-05T22:40:11:   stderr: '>>> Cleaning up old version at /usr/local/lib/ollama\n' +
+0|metalingua  | 2025-09-05T22:40:11:     '>>> Installing ollama to /usr/local\n' +
+0|metalingua  | 2025-09-05T22:40:11:     '>>> Downloading Linux amd64 bundle\n' +
+0|metalingua  | 2025-09-05T22:40:11:     '#=#=#                                                                         \r##O#-#                                                                        \r##O=#  #                                                                      \rcurl: (22) The requested URL returned error: 403\n' +
+0|metalingua  | 2025-09-05T22:40:11:     '\n' +
+0|metalingua  | 2025-09-05T22:40:11:     '\n' +
+0|metalingua  | 2025-09-05T22:40:11:     'gzip: stdin: unexpected end of file\n' +
+0|metalingua  | 2025-09-05T22:40:11:     'tar: Child returned status 1\n' +
+0|metalingua  | 2025-09-05T22:40:11:     'tar: Error is not recoverable: exiting now\n'
+0|metalingua  | 2025-09-05T22:40:11: }
+0|metalingua  | 2025-09-05T22:40:11: 10:40:11 PM [express] POST /api/admin/ollama/install 200 in 1460ms :: {"success":false,"message":"Fai…
+0|metalingua  | 2025-09-05T22:40:11: 10:40:11 PM [express] GET /api/admin/ollama/status 304 in 2ms :: {"status":"running","models":["llama…
+0|metalingua  | 2025-09-05T22:40:14: 10:40:14 PM [express] GET /api/ai-training-data/stats 304 in 5ms
+0|metalingua  | 2025-09-05T22:40:14: 10:40:14 PM [express] GET /api/ai-models 304 in 5ms
+0|metalingua  | 2025-09-05T22:40:14: 10:40:14 PM [express] GET /api/ai-training-jobs 304 in 6ms
+0|metalingua  | 2025-09-05T22:40:14: 10:40:14 PM [express] GET /api/ai-datasets 304 in 6ms
