@@ -362,6 +362,18 @@ export default function Auth() {
                   </div>
                 )}
                 
+                {!useOtp && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => setLocation("/forgot-password")}
+                      className="text-white/70 hover:text-white text-sm underline"
+                    >
+                      {t('auth:forgotPassword')}
+                    </button>
+                  </div>
+                )}
+                
                 <div className="flex gap-2">
                   {!useOtp ? (
                     <Button
