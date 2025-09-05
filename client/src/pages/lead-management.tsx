@@ -79,15 +79,19 @@ export default function LeadManagement() {
   // Create lead mutation
   const createLeadMutation = useMutation({
     mutationFn: async (leadData: any) => {
-      return apiRequest("/api/leads", {
+      console.log("🚀 Making API request with data:", leadData);
+      const response = await apiRequest("/api/leads", {
         method: "POST",
         body: JSON.stringify(leadData),
         headers: {
           'Content-Type': 'application/json'
         }
       });
+      console.log("✅ API response received:", response);
+      return response;
     },
     onSuccess: (data) => {
+      console.log("🎉 Lead creation successful:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
       setShowNewLeadForm(false);
       setNewLeadData({
@@ -110,6 +114,7 @@ export default function LeadManagement() {
       });
     },
     onError: (error: any) => {
+      console.error("❌ Lead creation error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to create lead",
@@ -165,7 +170,14 @@ export default function LeadManagement() {
 
   // Handle create lead
   const handleCreateLead = () => {
+    console.log("🔥 handleCreateLead clicked! Form data:", newLeadData);
+    
     if (!newLeadData.firstName || !newLeadData.lastName || !newLeadData.phoneNumber) {
+      console.log("❌ Validation failed - missing fields:", {
+        firstName: newLeadData.firstName,
+        lastName: newLeadData.lastName,
+        phoneNumber: newLeadData.phoneNumber
+      });
       toast({
         title: "Missing Required Fields",
         description: "Please fill in first name, last name, and phone number.",
@@ -174,6 +186,7 @@ export default function LeadManagement() {
       return;
     }
 
+    console.log("✅ Validation passed, calling mutation...");
     createLeadMutation.mutate(newLeadData);
   };
 
