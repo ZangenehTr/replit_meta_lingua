@@ -131,8 +131,10 @@ export function AdminTeacherManagement() {
           method: "DELETE"
         });
         toast({
-          title: "Callern Access Revoked",
-          description: `${teacher.firstName} ${teacher.lastName} can no longer provide Callern services.`,
+          title: t('admin:teacherManagement.callernAccessRevoked'),
+          description: t('admin:teacherManagement.callernAccessRevokedDescription', { 
+            name: `${teacher.firstName} ${teacher.lastName}` 
+          }),
         });
       } else {
         // Grant authorization
@@ -143,8 +145,10 @@ export function AdminTeacherManagement() {
           })
         });
         toast({
-          title: "Callern Access Granted",
-          description: `${teacher.firstName} ${teacher.lastName} can now provide Callern services.`,
+          title: t('admin:teacherManagement.callernAccessGranted'),
+          description: t('admin:teacherManagement.callernAccessGrantedDescription', { 
+            name: `${teacher.firstName} ${teacher.lastName}` 
+          }),
         });
       }
       
@@ -153,8 +157,8 @@ export function AdminTeacherManagement() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/callern-teachers'] });
     } catch (error) {
       toast({
-        title: "Operation Failed",
-        description: "Failed to update Callern authorization.",
+        title: t('common:error'),
+        description: t('admin:teacherManagement.callernUpdateFailed'),
         variant: "destructive"
       });
     }

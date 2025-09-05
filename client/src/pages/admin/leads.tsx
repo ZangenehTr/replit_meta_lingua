@@ -211,138 +211,138 @@ export default function AdminLeadsPage() {
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Lead</DialogTitle>
+              <DialogTitle>{t('admin:leads.createLead')}</DialogTitle>
               <DialogDescription>
-                Add a new prospect to the system for follow-up and conversion.
+                {t('admin:leads.createLeadDescription')}
               </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">First Name *</Label>
+                <Label htmlFor="firstName">{t('admin:leads.firstName')} *</Label>
                 <Input
                   id="firstName"
                   value={newLeadData.firstName}
                   onChange={(e) => setNewLeadData({...newLeadData, firstName: e.target.value})}
-                  placeholder="Enter first name"
+                  placeholder={t('admin:leads.firstNamePlaceholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name *</Label>
+                <Label htmlFor="lastName">{t('admin:leads.lastName')} *</Label>
                 <Input
                   id="lastName"
                   value={newLeadData.lastName}
                   onChange={(e) => setNewLeadData({...newLeadData, lastName: e.target.value})}
-                  placeholder="Enter last name"
+                  placeholder={t('admin:leads.lastNamePlaceholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="phoneNumber">Phone Number *</Label>
+                <Label htmlFor="phoneNumber">{t('admin:leads.phoneNumber')} *</Label>
                 <Input
                   id="phoneNumber"
                   value={newLeadData.phoneNumber}
                   onChange={(e) => setNewLeadData({...newLeadData, phoneNumber: e.target.value})}
-                  placeholder="+98 912 345 6789"
+                  placeholder={t('admin:leads.phoneNumberPlaceholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('admin:leads.email')}</Label>
                 <Input
                   id="email"
                   type="email"
                   value={newLeadData.email}
                   onChange={(e) => setNewLeadData({...newLeadData, email: e.target.value})}
-                  placeholder="email@example.com"
+                  placeholder={t('admin:leads.emailPlaceholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="source">Lead Source</Label>
+                <Label htmlFor="source">{t('admin:leads.source')}</Label>
                 <Select value={newLeadData.source} onValueChange={(value) => setNewLeadData({...newLeadData, source: value})}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select source" />
+                    <SelectValue placeholder={t('admin:leads.selectSource')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="website">Website</SelectItem>
-                    <SelectItem value="social_media">Social Media</SelectItem>
-                    <SelectItem value="referral">Referral</SelectItem>
-                    <SelectItem value="advertisement">Advertisement</SelectItem>
-                    <SelectItem value="walk_in">Walk-in</SelectItem>
+                    <SelectItem value="website">{t('admin:leads.sourceWebsite')}</SelectItem>
+                    <SelectItem value="social_media">{t('admin:leads.sourceSocialMedia')}</SelectItem>
+                    <SelectItem value="referral">{t('admin:leads.sourceReferral')}</SelectItem>
+                    <SelectItem value="advertisement">{t('admin:leads.sourceAdvertisement')}</SelectItem>
+                    <SelectItem value="walk_in">{t('admin:leads.sourceWalkIn')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="priority">Priority</Label>
+                <Label htmlFor="priority">{t('admin:leads.priority')}</Label>
                 <Select value={newLeadData.priority} onValueChange={(value) => setNewLeadData({...newLeadData, priority: value})}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
+                    <SelectValue placeholder={t('admin:leads.selectPriority')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="low">{t('admin:leads.priorityLow')}</SelectItem>
+                    <SelectItem value="medium">{t('admin:leads.priorityMedium')}</SelectItem>
+                    <SelectItem value="high">{t('admin:leads.priorityHigh')}</SelectItem>
+                    <SelectItem value="urgent">{t('admin:leads.priorityUrgent')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="interestedLanguage">Interested Language</Label>
+                <Label htmlFor="interestedLanguage">{t('admin:leads.interestedLanguage')}</Label>
                 <Select value={newLeadData.interestedLanguage} onValueChange={(value) => setNewLeadData({...newLeadData, interestedLanguage: value})}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder={t('admin:leads.selectLanguage')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="persian">Persian</SelectItem>
-                    <SelectItem value="english">English</SelectItem>
-                    <SelectItem value="arabic">Arabic</SelectItem>
-                    <SelectItem value="french">French</SelectItem>
-                    <SelectItem value="german">German</SelectItem>
+                    <SelectItem value="persian">{t('admin:leads.languagePersian')}</SelectItem>
+                    <SelectItem value="english">{t('admin:leads.languageEnglish')}</SelectItem>
+                    <SelectItem value="arabic">{t('admin:leads.languageArabic')}</SelectItem>
+                    <SelectItem value="french">{t('admin:leads.languageFrench')}</SelectItem>
+                    <SelectItem value="german">{t('admin:leads.languageGerman')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="preferredFormat">Preferred Format</Label>
+                <Label htmlFor="preferredFormat">{t('admin:leads.preferredFormat')}</Label>
                 <Select value={newLeadData.preferredFormat} onValueChange={(value) => setNewLeadData({...newLeadData, preferredFormat: value})}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select format" />
+                    <SelectValue placeholder={t('admin:leads.selectFormat')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="group">Group</SelectItem>
-                    <SelectItem value="individual">Individual</SelectItem>
-                    <SelectItem value="online">Online</SelectItem>
-                    <SelectItem value="in_person">In-Person</SelectItem>
+                    <SelectItem value="group">{t('admin:leads.formatGroup')}</SelectItem>
+                    <SelectItem value="individual">{t('admin:leads.formatIndividual')}</SelectItem>
+                    <SelectItem value="online">{t('admin:leads.formatOnline')}</SelectItem>
+                    <SelectItem value="in_person">{t('admin:leads.formatInPerson')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="budget">Budget (IRR)</Label>
+                <Label htmlFor="budget">{t('admin:leads.budget')}</Label>
                 <Input
                   id="budget"
                   type="number"
                   value={newLeadData.budget}
                   onChange={(e) => setNewLeadData({...newLeadData, budget: e.target.value})}
-                  placeholder="2000000"
+                  placeholder={t('admin:leads.budgetPlaceholder')}
                 />
               </div>
               <div className="col-span-2">
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes">{t('admin:leads.notes')}</Label>
                 <Textarea
                   id="notes"
                   value={newLeadData.notes}
                   onChange={(e) => setNewLeadData({...newLeadData, notes: e.target.value})}
-                  placeholder="Additional notes about the lead..."
+                  placeholder={t('admin:leads.notesPlaceholder')}
                   rows={3}
                 />
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowNewLeadForm(false)}>
-                Cancel
+                {t('common:cancel')}
               </Button>
               <Button 
                 onClick={handleCreateLead}
                 disabled={createLeadMutation.isPending}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {createLeadMutation.isPending ? "Creating..." : "Create Lead"}
+                {createLeadMutation.isPending ? t('admin:leads.creating') : t('admin:leads.createLead')}
               </Button>
             </div>
           </DialogContent>
