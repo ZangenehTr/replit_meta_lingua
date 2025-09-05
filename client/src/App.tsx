@@ -15,6 +15,8 @@ import { RTLLayout } from "@/components/rtl-layout";
 import NotFound from "@/pages/not-found";
 import Auth from "@/pages/auth";
 import SimpleAuth from "@/pages/simple-auth";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import UnifiedDashboard from "@/pages/unified-dashboard";
 import DemoDashboard from "@/pages/demo-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -158,6 +160,8 @@ function Router() {
     <Switch>
       <Route path="/auth" component={Auth} />
       <Route path="/simple-auth" component={SimpleAuth} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/demo" component={DemoDashboard} />
       <Route path="/manager">
         <ProtectedRoute>

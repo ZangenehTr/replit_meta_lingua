@@ -1833,6 +1833,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Forgot Password endpoint
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if user exists or not for security
+        return res.json({ 
+          message: "If the email exists in our system, password reset instructions have been sent to your email and phone." 
+        });
+      }
+
+      // Generate secure reset token using crypto
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      
+      // Store reset token with 1-hour expiration
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+      await storage.createPasswordResetToken({
+        userId: user.id,
+        token: resetToken,
+        expiresAt: expiresAt,
+        used: false
+      });
+
+      // Create reset link
+      const resetLink = `${req.protocol}://${req.get('host')}/reset-password?token=${resetToken}`;
+
+      // Send reset instructions via SMS
+      try {
+        const settings = await storage.getAdminSettings();
+        if (user.phoneNumber) {
+          const smsTemplate = settings?.passwordResetSmsTemplate || 
+            `Password Reset for Meta Lingua:\n\n` +
+            `Click this link to reset your password: ${resetLink}\n\n` +
+            `This link will expire in 1 hour.\n` +
+            `If you did not request this, please ignore this message.`;
+          
+          if (settings?.kavenegarEnabled && settings?.kavenegarApiKey) {
+            const { kavenegarService } = await import('./kavenegar-service');
+            await kavenegarService.sendSimpleSMS(user.phoneNumber, smsTemplate);
+            console.log(`Password reset SMS sent to ${user.phoneNumber} for ${email}`);
+          } else {
+            console.log('SMS not configured - Reset link would be:', resetLink);
+          }
+        }
+      } catch (smsError) {
+        console.error('Error sending password reset SMS:', smsError);
+        // Continue anyway - user can still reset if they have the link
+      }
+
+      res.json({ 
+        message: "Password reset instructions have been sent to your registered email and phone number",
+        resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined // Only in dev
+      });
+    } catch (error) {
+      console.error('Error processing forgot password request:', error);
+      res.status(500).json({ message: "Failed to process password reset request" });
+    }
+  });
+
+  // Reset Password endpoint
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      }
+
+      // Find and validate reset token
+      const resetTokenRecord = await storage.getPasswordResetToken(token);
+      if (!resetTokenRecord) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      if (resetTokenRecord.used) {
+        return res.status(400).json({ message: "This reset link has already been used" });
+      }
+
+      if (new Date() > resetTokenRecord.expiresAt) {
+        return res.status(400).json({ message: "Reset token has expired" });
+      }
+
+      // Get the user
+      const user = await storage.getUser(resetTokenRecord.userId);
+      if (!user) {
+        return res.status(400).json({ message: "User not found" });
+      }
+
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      // Update user password
+      await storage.updateUserPassword(user.id, hashedPassword);
+
+      // Mark token as used
+      await storage.markPasswordResetTokenAsUsed(token);
+
+      // Log the password change
+      console.log(`Password reset completed for user ${user.email}`);
+
+      res.json({ 
+        message: "Password has been reset successfully. You can now log in with your new password." 
+      });
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
   // User management endpoints
   app.get("/api/users/me", authenticateToken, async (req: any, res) => {
     const user = req.user;

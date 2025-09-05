@@ -92,6 +92,16 @@ export const userSessions = pgTable("user_sessions", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// Password Reset Tokens
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
 // Courses table
 export const courses = pgTable("courses", {
   id: serial("id").primaryKey(),
@@ -2812,6 +2822,11 @@ export const insertQuizResultSchema = createInsertSchema(quizResults).omit({
   attemptedAt: true
 });
 
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
+  id: true,
+  createdAt: true
+});
+
 export const insertEmailLogSchema = createInsertSchema(emailLogs).omit({
   id: true,
   createdAt: true
@@ -2862,6 +2877,8 @@ export type EmailLog = typeof emailLogs.$inferSelect;
 export type InsertEmailLog = z.infer<typeof insertEmailLogSchema>;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
 export type StudentPreferences = typeof studentPreferences.$inferSelect;
 export type InsertStudentPreferences = z.infer<typeof insertStudentPreferencesSchema>;
 export type CallernSyllabusTopics = typeof callernSyllabusTopics.$inferSelect;

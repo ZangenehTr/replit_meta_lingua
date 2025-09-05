@@ -55,8 +55,12 @@ export default function Auth() {
   const registerSchema = z.object({
     email: z.string().email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(6, "Password confirmation is required"),
     firstName: z.string().min(2, "First name must be at least 2 characters"),
     lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
   });
   
   type LoginFormData = z.infer<typeof loginSchema>;
@@ -77,6 +81,7 @@ export default function Auth() {
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
       firstName: "",
       lastName: "",
     },
@@ -473,8 +478,23 @@ export default function Auth() {
                     {...registerForm.register("password")}
                   />
                   {registerForm.formState.errors.password && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-red-300">
                       {registerForm.formState.errors.password.message}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">{t('auth:confirmPassword', 'Confirm Password')}</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    placeholder={t('auth:confirmPasswordPlaceholder', 'Re-enter your password')}
+                    {...registerForm.register("confirmPassword")}
+                  />
+                  {registerForm.formState.errors.confirmPassword && (
+                    <p className="text-sm text-red-300">
+                      {registerForm.formState.errors.confirmPassword.message}
                     </p>
                   )}
                 </div>

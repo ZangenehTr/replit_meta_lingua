@@ -5,6 +5,7 @@ import {
   userStats, dailyGoals, skillAssessments, learningActivities, progressSnapshots,
   moodEntries, moodRecommendations, learningAdaptations, attendanceRecords, rooms,
   studentQuestionnaires, questionnaireResponses, userProfiles, rolePermissions, userSessions,
+  passwordResetTokens,
   sessionPackages, walletTransactions, coursePayments, mentorAssignments, mentoringSessions,
   classes, holidays,
   // Testing subsystem tables
@@ -43,6 +44,7 @@ import {
   type ProgressSnapshot, type InsertProgressSnapshot,
   type UserProfile, type InsertUserProfile, type UserSession, type InsertUserSession,
   type RolePermission, type InsertRolePermission,
+  type PasswordResetToken, type InsertPasswordResetToken,
   type MentorAssignment, type InsertMentorAssignment,
   type MentoringSession, type InsertMentoringSession,
   type MoodEntry, type InsertMoodEntry,
@@ -109,6 +111,12 @@ export interface IStorage {
   updateUserSessionActivity(sessionId: number): Promise<void>;
   updateUserSessionTokens(sessionId: number, accessToken: string, refreshToken: string): Promise<void>;
   invalidateUserSession(token: string): Promise<void>;
+
+  // Password reset
+  createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markPasswordResetTokenAsUsed(token: string): Promise<void>;
+  updateUserPassword(userId: number, hashedPassword: string): Promise<void>;
 
   // Role permissions
   checkUserPermission(role: string, resource: string, action: string): Promise<boolean>;
@@ -985,6 +993,7 @@ export class MemStorage implements IStorage {
   private branding: InstituteBranding | undefined;
   private achievements: Map<number, Achievement>;
   private userAchievements: Map<number, UserAchievement>;
+  private passwordResetTokens: Map<string, PasswordResetToken>;
   private userStats: Map<number, UserStats>;
   private dailyGoals: Map<number, DailyGoal>;
   private adminSettings: any;
@@ -1009,6 +1018,7 @@ export class MemStorage implements IStorage {
     this.achievements = new Map();
     this.userAchievements = new Map();
     this.userStats = new Map();
+    this.passwordResetTokens = new Map();
     this.dailyGoals = new Map();
     this.adminSettings = null;
     this.chatConversations = new Map();
@@ -1782,6 +1792,50 @@ export class MemStorage implements IStorage {
 
   async invalidateUserSession(token: string): Promise<void> {
     // Mock implementation for MemStorage
+  }
+
+  // Password Reset Methods
+  async createPasswordResetToken(tokenData: InsertPasswordResetToken): Promise<PasswordResetToken> {
+    const id = this.currentId++;
+    const passwordResetToken: PasswordResetToken = {
+      id,
+      userId: tokenData.userId,
+      token: tokenData.token,
+      expiresAt: tokenData.expiresAt,
+      used: tokenData.used || false,
+      createdAt: new Date()
+    };
+    
+    // Store the token (we'll use a Map for in-memory storage)
+    if (!this.passwordResetTokens) {
+      this.passwordResetTokens = new Map();
+    }
+    this.passwordResetTokens.set(tokenData.token, passwordResetToken);
+    
+    return passwordResetToken;
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    if (!this.passwordResetTokens) {
+      return undefined;
+    }
+    return this.passwordResetTokens.get(token);
+  }
+
+  async markPasswordResetTokenAsUsed(token: string): Promise<void> {
+    if (this.passwordResetTokens?.has(token)) {
+      const tokenRecord = this.passwordResetTokens.get(token)!;
+      tokenRecord.used = true;
+      this.passwordResetTokens.set(token, tokenRecord);
+    }
+  }
+
+  async updateUserPassword(userId: number, hashedPassword: string): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.password = hashedPassword;
+      this.users.set(userId, user);
+    }
   }
 
   // Role Permission Methods
