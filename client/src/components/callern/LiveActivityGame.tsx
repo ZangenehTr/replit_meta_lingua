@@ -41,32 +41,37 @@ export function LiveActivityGame({ roomId, role, isVisible, onClose }: LiveActiv
   useEffect(() => {
     if (!socket) return;
 
-    // Teacher receives live activity suggestions
-    socket.on('live-activity-suggestion', (activity: GameActivity) => {
+    // Create named handlers to prevent conflicts
+    const handleLiveActivitySuggestion = (activity: GameActivity) => {
       if (role === 'teacher') {
         setCurrentActivity({ ...activity, timeLimit: 60 });
         console.log('🎯 New live activity generated:', activity.type);
       }
-    });
+    };
 
-    // Both receive started activities
-    socket.on('activity-started', (activity: GameActivity) => {
+    const handleActivityStarted = (activity: GameActivity) => {
       setCurrentActivity(activity);
       setTimeLeft(activity.timeLimit || 60);
       setIsSubmitted(false);
       setUserAnswer(null);
       setResults(null);
-    });
+    };
 
-    socket.on('activity-results', (activityResults: any) => {
+    const handleActivityResults = (activityResults: any) => {
       setResults(activityResults);
       setIsSubmitted(true);
-    });
+    };
+
+    // Register listeners
+    socket.on('live-activity-suggestion', handleLiveActivitySuggestion);
+    socket.on('activity-started', handleActivityStarted);
+    socket.on('activity-results', handleActivityResults);
 
     return () => {
-      socket.off('live-activity-suggestion');
-      socket.off('activity-started');  
-      socket.off('activity-results');
+      // Clean up with specific handlers
+      socket.off('live-activity-suggestion', handleLiveActivitySuggestion);
+      socket.off('activity-started', handleActivityStarted);  
+      socket.off('activity-results', handleActivityResults);
     };
   }, [socket, role]);
 

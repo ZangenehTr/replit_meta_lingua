@@ -136,6 +136,8 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
     });
 
     return () => {
+      // Clean up all listeners to prevent memory leaks
+      console.log('🧹 Cleaning up AI socket listeners');
       socket.off('word-suggestions');
       socket.off('teacher-tips');
       socket.off('live-score-update');
@@ -143,6 +145,9 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
       socket.off('ai-warning');
       socket.off('grammar-correction');
       socket.off('pronunciation-guide');
+      socket.off('teaching-activities');
+      socket.off('discussion-questions');
+      socket.off('grammar-suggestions');
     };
   }, [socket, isVisible]);
 

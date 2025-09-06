@@ -92,24 +92,29 @@ export function VideoCall({
   const [hasStartedSession, setHasStartedSession] = useState(role === "student"); // Students start immediately
   const [showLiveActivity, setShowLiveActivity] = useState(false);
 
-  // Listen for live activity triggers
+  // Listen for live activity triggers (using socketRef to avoid conflicts)
   useEffect(() => {
-    if (!socket) return;
+    const currentSocket = socketRef.current;
+    if (!currentSocket) return;
 
-    socket.on('live-activity-suggestion', (activity: any) => {
+    const handleLiveActivitySuggestion = (activity: any) => {
       console.log('🎮 Live activity generated:', activity.type);
       setShowLiveActivity(true);
-    });
+    };
 
-    socket.on('activity-started', () => {
+    const handleActivityStarted = () => {
+      console.log('🎯 Activity started in room');
       setShowLiveActivity(true);
-    });
+    };
+
+    currentSocket.on('live-activity-suggestion', handleLiveActivitySuggestion);
+    currentSocket.on('activity-started', handleActivityStarted);
 
     return () => {
-      socket.off('live-activity-suggestion');
-      socket.off('activity-started');
+      currentSocket.off('live-activity-suggestion', handleLiveActivitySuggestion);
+      currentSocket.off('activity-started', handleActivityStarted);
     };
-  }, [socket]);
+  }, [socketRef.current]);
   
   // Speech detection
   const audioContextRef = useRef<AudioContext | null>(null);
