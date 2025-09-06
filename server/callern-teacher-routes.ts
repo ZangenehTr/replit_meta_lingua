@@ -15,7 +15,7 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   // Check teacher authorization for Callern
   app.get("/api/teacher/callern/authorization", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {
     try {
-      const teacherId = req.user.id;
+      const teacherId = req.user.userId;
       console.log(`Checking authorization for teacher ${teacherId}`);
       
       // Debug: Check what's in the authorization table for this teacher
@@ -63,7 +63,7 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   // Get teacher availability settings
   app.get("/api/teacher/callern/availability", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {
     try {
-      const teacherId = req.user.id;
+      const teacherId = req.user.userId;
       
       const availability = await db
         .select()
@@ -97,7 +97,7 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   // Get teacher's call history with enhanced data
   app.get("/api/teacher/callern/history", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {
     try {
-      const teacherId = req.user.id;
+      const teacherId = req.user.userId;
       
       const history = await db
         .select({
@@ -140,7 +140,7 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   // Get teacher statistics
   app.get("/api/teacher/callern/stats", authenticateToken, requireRole(['Teacher', 'Teacher/Tutor']), async (req: any, res) => {
     try {
-      const teacherId = req.user.id;
+      const teacherId = req.user.userId;
       const now = new Date();
       
       // Get dates for different periods
@@ -308,7 +308,7 @@ export function registerCallernTeacherRoutes(app: Express, storage: any) {
   app.post("/api/admin/callern/authorize-teacher", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       const { teacherId, hourlyRate, notes } = req.body;
-      const authorizedBy = req.user.id;
+      const authorizedBy = req.user.userId;
       
       // Check if already authorized
       const existing = await db
