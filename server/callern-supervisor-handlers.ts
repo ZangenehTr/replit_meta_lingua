@@ -162,7 +162,10 @@ export class CallernSupervisorHandlers {
         // Generate suggestions based on context
         const prompt = `Generate 5 helpful vocabulary words for an English language learner. Context: ${data.context || 'general conversation'}. Format as JSON array with {word, translation, usage}.`;
         
-        const response = await this.ollama.generateResponse(prompt, 'assistant');
+        const response = await this.ollama.generateCompletion(prompt, undefined, {
+          temperature: 0.7,
+          model: 'llama3.2:3b'
+        });
         
         // Parse response and emit suggestions
         try {
