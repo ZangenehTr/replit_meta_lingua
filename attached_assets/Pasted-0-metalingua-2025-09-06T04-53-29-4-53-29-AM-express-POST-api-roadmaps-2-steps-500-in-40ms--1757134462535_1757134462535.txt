@@ -1,0 +1,26 @@
+0|metalingua  | 2025-09-06T04:53:29: 4:53:29 AM [express] POST /api/roadmaps/2/steps 500 in 40ms :: {"message":"Failed to create roadmap …
+0|metalingua  | 2025-09-06T04:53:31: Error creating roadmap step: error: invalid input syntax for type json
+0|metalingua  | 2025-09-06T04:53:31:     at /opt/metalingua/node_modules/pg-pool/index.js:45:11
+0|metalingua  | 2025-09-06T04:53:31:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|metalingua  | 2025-09-06T04:53:31:     at async file:///opt/metalingua/node_modules/drizzle-orm/node-postgres/session.js:83:22
+0|metalingua  | 2025-09-06T04:53:31:     at async DatabaseStorage.createRoadmapStep (file:///opt/metalingua/dist/index.js:3819:24)
+0|metalingua  | 2025-09-06T04:53:31:     at async file:///opt/metalingua/dist/index.js:44087:20 {
+0|metalingua  | 2025-09-06T04:53:31:   length: 196,
+0|metalingua  | 2025-09-06T04:53:31:   severity: 'ERROR',
+0|metalingua  | 2025-09-06T04:53:31:   code: '22P02',
+0|metalingua  | 2025-09-06T04:53:31:   detail: 'Token "Learner" is invalid.',
+0|metalingua  | 2025-09-06T04:53:31:   hint: undefined,
+0|metalingua  | 2025-09-06T04:53:31:   position: undefined,
+0|metalingua  | 2025-09-06T04:53:31:   internalPosition: undefined,
+0|metalingua  | 2025-09-06T04:53:31:   internalQuery: undefined,
+0|metalingua  | 2025-09-06T04:53:31:   where: "JSON data, line 1: Learner...\nunnamed portal parameter $9 = '...'",
+0|metalingua  | 2025-09-06T04:53:31:   schema: undefined,
+0|metalingua  | 2025-09-06T04:53:31:   table: undefined,
+0|metalingua  | 2025-09-06T04:53:31:   column: undefined,
+0|metalingua  | 2025-09-06T04:53:31:   dataType: undefined,
+0|metalingua  | 2025-09-06T04:53:31:   constraint: undefined,
+0|metalingua  | 2025-09-06T04:53:31:   file: 'jsonfuncs.c',
+0|metalingua  | 2025-09-06T04:53:31:   line: '627',
+0|metalingua  | 2025-09-06T04:53:31:   routine: 'json_ereport_error'
+0|metalingua  | 2025-09-06T04:53:31: }
+0|metalingua  | 2025-09-06T04:53:31: 4:53:31 AM [express] POST /api/roadmaps/2/steps 500 in 39ms :: {"message":"Failed to create roadmap …
