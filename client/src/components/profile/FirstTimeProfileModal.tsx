@@ -59,7 +59,7 @@ export function FirstTimeProfileModal({
       {isOpen && (
         <Dialog open={isOpen} onOpenChange={() => {}}>
           <DialogContent 
-            className={`max-w-md mx-auto ${isRTL ? 'rtl' : 'ltr'}`}
+            className={`max-w-sm sm:max-w-md mx-auto max-h-[85vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}
             hideCloseButton
           >
             <motion.div

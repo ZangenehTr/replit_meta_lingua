@@ -156,6 +156,23 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <AppLayout>{children}</AppLayout>;
 }
 
+// Profile redirect component based on user role
+function ProfileRedirect() {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return <Redirect to="/auth" />;
+  }
+  
+  // Redirect students to student profile
+  if (user.role === 'Student') {
+    return <Redirect to="/student/profile" />;
+  }
+  
+  // For other roles, use the general profile
+  return <UserProfile />;
+}
+
 function Router() {
   return (
     <Switch>
@@ -184,7 +201,7 @@ function Router() {
       </Route>
       <Route path="/profile">
         <ProtectedRoute>
-          <UserProfile />
+          <ProfileRedirect />
         </ProtectedRoute>
       </Route>
       <Route path="/pronunciation-practice">
