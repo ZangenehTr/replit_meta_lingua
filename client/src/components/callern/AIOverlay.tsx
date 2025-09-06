@@ -334,6 +334,20 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
                   >
                     Check grammar
                   </button>
+                  <button
+                    onClick={() => {
+                      // Simulate conversation to trigger live activity
+                      socket?.emit('conversation-transcript', {
+                        roomId,
+                        speaker: 'student',
+                        text: 'I love traveling to different countries',
+                        timestamp: Date.now()
+                      });
+                    }}
+                    className="w-full bg-purple-500/60 hover:bg-purple-500/80 text-white text-xs py-1.5 px-3 rounded-md transition-colors"
+                  >
+                    🎮 Trigger Activity
+                  </button>
                 </div>
               </>
             ) : (
@@ -361,6 +375,20 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
                       className="w-full bg-purple-500/60 hover:bg-purple-500/80 text-white text-xs py-1.5 px-3 rounded-md transition-colors"
                     >
                       ✏️ Correction Tips
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Simulate conversation to generate live activities
+                        socket?.emit('conversation-transcript', {
+                          roomId,
+                          speaker: 'teacher',
+                          text: 'Let\'s talk about the weather today',
+                          timestamp: Date.now()
+                        });
+                      }}
+                      className="w-full bg-orange-500/60 hover:bg-orange-500/80 text-white text-xs py-1.5 px-3 rounded-md transition-colors"
+                    >
+                      🎯 Generate Live Activity
                     </button>
                   </div>
                 </div>

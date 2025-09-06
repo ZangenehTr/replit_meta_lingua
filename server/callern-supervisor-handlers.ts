@@ -257,6 +257,132 @@ export class CallernSupervisorHandlers {
       socket.emit('teacher-tips', tips);
     });
 
+    // Real-time attention monitoring from computer vision
+    socket.on('attention-update', async (data: {
+      roomId: string;
+      attention: number;
+      eyeContact: number;
+      faceDetection: number;
+    }) => {
+      console.log(`👁️ Attention update: ${data.attention}% (eye: ${data.eyeContact}, face: ${data.faceDetection})`);
+      
+      // Broadcast attention metrics to room
+      this.io.to(data.roomId).emit('live-attention-metrics', {
+        attention: data.attention,
+        eyeContact: data.eyeContact,
+        timestamp: Date.now()
+      });
+      
+      // Generate AI suggestions based on attention level
+      if (data.attention < 30) {
+        const suggestions = [
+          'Student seems distracted - try a quick engagement activity',
+          'Ask a direct question to re-engage attention', 
+          'Consider switching to a more interactive format'
+        ];
+        socket.emit('teacher-tips', [{
+          tip: suggestions[Math.floor(Math.random() * suggestions.length)],
+          priority: 'high' as const
+        }]);
+      }
+    });
+
+    // Live conversation analysis for dynamic activity generation
+    socket.on('conversation-transcript', async (data: {
+      roomId: string;
+      speaker: 'teacher' | 'student';
+      text: string;
+      timestamp: number;
+    }) => {
+      console.log(`🎙️ Conversation: ${data.speaker}: "${data.text}"`);
+      
+      // Analyze conversation for context-based activity generation
+      const text = data.text.toLowerCase();
+      let activityType = '';
+      let activityContent = {};
+      
+      // Smart activity generation based on conversation content
+      if (text.includes('weather') || text.includes('rain') || text.includes('sunny')) {
+        activityType = 'vocabulary-game';
+        activityContent = {
+          type: 'matching',
+          title: 'Weather Vocabulary Match',
+          items: [
+            { word: 'sunny', match: '☀️ bright and clear' },
+            { word: 'rainy', match: '🌧️ water falling' },
+            { word: 'cloudy', match: '☁️ gray sky' },
+            { word: 'windy', match: '💨 air moving fast' }
+          ]
+        };
+      } else if (text.includes('food') || text.includes('eat') || text.includes('restaurant')) {
+        activityType = 'gap-fill';
+        activityContent = {
+          title: 'Restaurant Conversation',
+          sentence: 'I would like to ____ a table for two people at 7 PM.',
+          options: ['book', 'reserve', 'get', 'buy'],
+          correct: 'book'
+        };
+      } else if (text.includes('work') || text.includes('job') || text.includes('career')) {
+        activityType = 'poll';
+        activityContent = {
+          question: 'What\'s most important in a job?',
+          options: ['Good salary', 'Work-life balance', 'Career growth', 'Interesting work'],
+          anonymous: true
+        };
+      } else if (text.includes('travel') || text.includes('country') || text.includes('visit')) {
+        activityType = 'word-selection';
+        activityContent = {
+          title: 'Choose the Travel Word',
+          sentence: 'I want to [CHOOSE] different countries and learn about their cultures.',
+          options: ['see', 'visit', 'watch', 'look'],
+          correct: 'visit'
+        };
+      }
+      
+      // Send dynamic activity to teacher if one was generated
+      if (activityType) {
+        socket.emit('live-activity-suggestion', {
+          type: activityType,
+          content: activityContent,
+          context: `Generated from: "${data.text}"`
+        });
+        console.log(`🎯 Generated ${activityType} activity based on conversation about: ${text}`);
+      }
+    });
+
+    // Handle activity management
+    socket.on('start-activity', async (data: { roomId: string; activity: any }) => {
+      console.log('🚀 Starting activity for room:', data.roomId);
+      // Broadcast activity to all users in the room
+      this.io.to(data.roomId).emit('activity-started', data.activity);
+    });
+
+    socket.on('submit-activity-answer', async (data: { roomId: string; activityType: string; answer: any }) => {
+      console.log('📝 Answer submitted:', data.answer);
+      
+      // Simple answer checking (would be more sophisticated in real implementation)
+      let isCorrect = false;
+      let explanation = '';
+      
+      // Mock answer checking based on activity type
+      if (data.activityType === 'gap-fill') {
+        isCorrect = data.answer === 'book' || data.answer === 'reserve';
+        explanation = isCorrect ? 'Correct! "Book" means to reserve a table.' : 'Try "book" - it means to reserve.';
+      } else if (data.activityType === 'word-selection') {
+        isCorrect = data.answer === 'visit';
+        explanation = isCorrect ? 'Perfect! "Visit" means to go to see a place.' : 'The best word is "visit" for going to countries.';
+      } else {
+        isCorrect = Math.random() > 0.3; // 70% chance of being correct for polls/matching
+        explanation = isCorrect ? 'Great answer!' : 'Good try! Keep practicing.';
+      }
+      
+      // Send results back to user
+      socket.emit('activity-results', {
+        correct: isCorrect,
+        explanation: explanation
+      });
+    });
+
     socket.on('request-grammar-help', async (data: { roomId: string }) => {
       console.log('📝 Student requesting grammar help');
       
