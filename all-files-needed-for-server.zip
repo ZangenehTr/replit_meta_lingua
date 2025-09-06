@@ -1,0 +1,52 @@
+# Meta Lingua Server Files Package
+
+## Files you need to run on your server:
+
+### 1. Database Fixes
+- `complete-database-backup-2025-09-05.sql` - Complete database with all users
+- `fix-login-issues.sql` - Fix password authentication
+- `fix-roadmap-creation-schema.sql` - Fix roadmap creation
+
+### 2. AI Installation
+- `install-ollama-iran.sh` - Install Ollama for Iranian servers
+- `install-ollama-manual.md` - Manual installation guide
+
+### 3. Quick Fixes
+- `quick-fix-login.sh` - Quick login fix script
+- `run-database-backup.sh` - Automated database restore
+
+## Installation Order:
+
+1. **Run Database Backup:**
+```bash
+./run-database-backup.sh
+```
+
+2. **Fix Login Issues:**
+```bash
+./quick-fix-login.sh
+```
+
+3. **Fix Roadmap Creation:**
+```bash
+psql -U postgres -d metalingua -f fix-roadmap-creation-schema.sql
+```
+
+4. **Install Ollama (optional):**
+```bash
+./install-ollama-iran.sh
+```
+
+5. **Update your .env file:**
+```env
+OLLAMA_HOST=http://localhost:11434
+WHISPER_API_URL=http://localhost:8000
+TTS_API_URL=http://localhost:5002
+```
+
+## Test Users:
+- Admin: admin@test.com / password
+- Students: sara.ahmadi@gmail.com, mohammad.rezaei@gmail.com / password (30M IRR each)
+- Teachers: dr.smith@institute.com, ali.hosseini@institute.com / password (Callern authorized)
+
+All issues should be resolved after running these files!
