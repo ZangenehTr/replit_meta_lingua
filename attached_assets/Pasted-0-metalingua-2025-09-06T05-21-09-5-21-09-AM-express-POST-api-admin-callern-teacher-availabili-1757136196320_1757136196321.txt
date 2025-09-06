@@ -1,0 +1,99 @@
+0|metalingua  | 2025-09-06T05:21:09: 5:21:09 AM [express] POST /api/admin/callern/teacher-availability 500 in 74ms :: {"message":"Failed …
+0|metalingua  | 2025-09-06T05:21:12: Error checking teacher schedule conflicts: error: column "night_slot" does not exist
+0|metalingua  | 2025-09-06T05:21:12:     at /opt/metalingua/node_modules/pg-pool/index.js:45:11
+0|metalingua  | 2025-09-06T05:21:12:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|metalingua  | 2025-09-06T05:21:12:     at async file:///opt/metalingua/node_modules/drizzle-orm/node-postgres/session.js:83:22
+0|metalingua  | 2025-09-06T05:21:12:     at async DatabaseStorage.checkTeacherScheduleConflicts (file:///opt/metalingua/dist/index.js:4089:47)
+0|metalingua  | 2025-09-06T05:21:12:     at async file:///opt/metalingua/dist/index.js:46322:40 {
+0|metalingua  | 2025-09-06T05:21:12:   length: 111,
+0|metalingua  | 2025-09-06T05:21:12:   severity: 'ERROR',
+0|metalingua  | 2025-09-06T05:21:12:   code: '42703',
+0|metalingua  | 2025-09-06T05:21:12:   detail: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   hint: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   position: '124',
+0|metalingua  | 2025-09-06T05:21:12:   internalPosition: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   internalQuery: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   where: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   schema: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   table: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   column: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   dataType: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   constraint: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   file: 'parse_relation.c',
+0|metalingua  | 2025-09-06T05:21:12:   line: '3647',
+0|metalingua  | 2025-09-06T05:21:12:   routine: 'errorMissingColumn'
+0|metalingua  | 2025-09-06T05:21:12: }
+0|metalingua  | 2025-09-06T05:21:12: Error adding teacher to Callern: error: column "night_slot" of relation "teacher_callern_availability" does not exist
+0|metalingua  | 2025-09-06T05:21:12:     at /opt/metalingua/node_modules/pg-pool/index.js:45:11
+0|metalingua  | 2025-09-06T05:21:12:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|metalingua  | 2025-09-06T05:21:12:     at async file:///opt/metalingua/node_modules/drizzle-orm/node-postgres/session.js:83:22
+0|metalingua  | 2025-09-06T05:21:12:     at async DatabaseStorage.setTeacherCallernAvailability (file:///opt/metalingua/dist/index.js:3704:32)
+0|metalingua  | 2025-09-06T05:21:12:     at async file:///opt/metalingua/dist/index.js:46334:28 {
+0|metalingua  | 2025-09-06T05:21:12:   length: 152,
+0|metalingua  | 2025-09-06T05:21:12:   severity: 'ERROR',
+0|metalingua  | 2025-09-06T05:21:12:   code: '42703',
+0|metalingua  | 2025-09-06T05:21:12:   detail: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   hint: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   position: '161',
+0|metalingua  | 2025-09-06T05:21:12:   internalPosition: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   internalQuery: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   where: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   schema: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   table: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   column: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   dataType: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   constraint: undefined,
+0|metalingua  | 2025-09-06T05:21:12:   file: 'parse_target.c',
+0|metalingua  | 2025-09-06T05:21:12:   line: '1075',
+0|metalingua  | 2025-09-06T05:21:12:   routine: 'checkInsertTargets'
+0|metalingua  | 2025-09-06T05:21:12: }
+0|metalingua  | 2025-09-06T05:21:12: 5:21:12 AM [express] POST /api/admin/callern/teacher-availability 500 in 80ms :: {"message":"Failed …
+0|metalingua  | 2025-09-06T05:21:13: Error checking teacher schedule conflicts: error: column "night_slot" does not exist
+0|metalingua  | 2025-09-06T05:21:13:     at /opt/metalingua/node_modules/pg-pool/index.js:45:11
+0|metalingua  | 2025-09-06T05:21:13:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|metalingua  | 2025-09-06T05:21:13:     at async file:///opt/metalingua/node_modules/drizzle-orm/node-postgres/session.js:83:22
+0|metalingua  | 2025-09-06T05:21:13:     at async DatabaseStorage.checkTeacherScheduleConflicts (file:///opt/metalingua/dist/index.js:4089:47)
+0|metalingua  | 2025-09-06T05:21:13:     at async file:///opt/metalingua/dist/index.js:46322:40 {
+0|metalingua  | 2025-09-06T05:21:13:   length: 111,
+0|metalingua  | 2025-09-06T05:21:13:   severity: 'ERROR',
+0|metalingua  | 2025-09-06T05:21:13:   code: '42703',
+0|metalingua  | 2025-09-06T05:21:13:   detail: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   hint: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   position: '124',
+0|metalingua  | 2025-09-06T05:21:13:   internalPosition: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   internalQuery: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   where: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   schema: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   table: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   column: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   dataType: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   constraint: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   file: 'parse_relation.c',
+0|metalingua  | 2025-09-06T05:21:13:   line: '3647',
+0|metalingua  | 2025-09-06T05:21:13:   routine: 'errorMissingColumn'
+0|metalingua  | 2025-09-06T05:21:13: }
+0|metalingua  | 2025-09-06T05:21:13: Error adding teacher to Callern: error: column "night_slot" of relation "teacher_callern_availability" does not exist
+0|metalingua  | 2025-09-06T05:21:13:     at /opt/metalingua/node_modules/pg-pool/index.js:45:11
+0|metalingua  | 2025-09-06T05:21:13:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|metalingua  | 2025-09-06T05:21:13:     at async file:///opt/metalingua/node_modules/drizzle-orm/node-postgres/session.js:83:22
+0|metalingua  | 2025-09-06T05:21:13:     at async DatabaseStorage.setTeacherCallernAvailability (file:///opt/metalingua/dist/index.js:3704:32)
+0|metalingua  | 2025-09-06T05:21:13:     at async file:///opt/metalingua/dist/index.js:46334:28 {
+0|metalingua  | 2025-09-06T05:21:13:   length: 152,
+0|metalingua  | 2025-09-06T05:21:13:   severity: 'ERROR',
+0|metalingua  | 2025-09-06T05:21:13:   code: '42703',
+0|metalingua  | 2025-09-06T05:21:13:   detail: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   hint: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   position: '161',
+0|metalingua  | 2025-09-06T05:21:13:   internalPosition: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   internalQuery: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   where: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   schema: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   table: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   column: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   dataType: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   constraint: undefined,
+0|metalingua  | 2025-09-06T05:21:13:   file: 'parse_target.c',
+0|metalingua  | 2025-09-06T05:21:13:   line: '1075',
+0|metalingua  | 2025-09-06T05:21:13:   routine: 'checkInsertTargets'
+0|metalingua  | 2025-09-06T05:21:13: }
+0|metalingua  | 2025-09-06T05:21:13: 5:21:13 AM [express] POST /api/admin/callern/teacher-availability 500 in 73ms :: {"message":"Failed …
