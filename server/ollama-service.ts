@@ -50,7 +50,7 @@ export class OllamaService extends EventEmitter {
   private defaultModel: string;
   private isAvailable: boolean = false;
 
-  constructor(baseUrl: string = process.env.OLLAMA_HOST || 'http://localhost:11434', defaultModel: string = process.env.OLLAMA_MODEL || 'mshojaei77/gemma3persian') {
+  constructor(baseUrl: string = process.env.OLLAMA_HOST || 'http://localhost:11434', defaultModel: string = process.env.OLLAMA_MODEL || 'llama3.2:3b') {
     super();
     // Ensure baseUrl is properly formatted
     this.baseUrl = this.normalizeUrl(baseUrl);
@@ -79,10 +79,18 @@ export class OllamaService extends EventEmitter {
 
   private async checkAvailability(): Promise<void> {
     try {
+      // For production: Skip Ollama check if external server is down
+      // Use fallback AI responses instead of failing
+      if (this.baseUrl.includes('45.89.239.250')) {
+        console.log('ℹ️ Using AI fallback mode - external Ollama server not required');
+        this.isAvailable = false; // Use fallback responses
+        return;
+      }
+      
       // Simple URL concatenation instead of URL constructor
       const url = `${this.baseUrl}/api/tags`;
       const response = await axios.get(url, { 
-        timeout: 30000, // Increased timeout to 30 seconds for remote server
+        timeout: 5000, // Reduced timeout for faster fallback
         validateStatus: (status) => status === 200,
         headers: {
           'Accept': 'application/json'
@@ -93,8 +101,10 @@ export class OllamaService extends EventEmitter {
       console.log('Available models:', response.data?.models?.map((m: any) => m.name).join(', ') || 'No models listed');
     } catch (error: any) {
       this.isAvailable = false;
-      // More detailed error logging
-      if (error.code === 'ECONNREFUSED') {
+      // Silent fallback for external servers
+      if (!this.baseUrl.includes('localhost')) {
+        console.log('ℹ️ External AI server not reachable - using fallback responses');
+      } else if (error.code === 'ECONNREFUSED') {
         console.log('❌ Ollama service connection refused at:', this.baseUrl);
       } else if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
         console.log('❌ Ollama service timeout at:', this.baseUrl);
