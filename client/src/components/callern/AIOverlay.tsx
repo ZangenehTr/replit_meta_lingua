@@ -275,8 +275,8 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
         ))}
       </AnimatePresence>
 
-      {/* Student Word Helper */}
-      {role === 'student' && activeFeatures.wordHelper && (
+      {/* Smart AI Assistant - Role-Based */}
+      {activeFeatures.wordHelper && (
         <motion.div
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -288,33 +288,97 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
                 <Brain className="w-5 h-5 text-purple-400" />
                 <h3 className="text-sm font-semibold text-white">AI Assistant</h3>
               </div>
-              <button
-                onClick={requestWordHelp}
-                className="text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-2 py-1 rounded-lg transition-colors"
-              >
-                Help me
-              </button>
+              <div className="text-xs text-green-400">🟢 Active</div>
             </div>
             
-            {wordSuggestions.length > 0 ? (
-              <div className="space-y-2">
-                {wordSuggestions.map((suggestion, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-white/5 rounded-lg p-2 cursor-pointer hover:bg-white/10 transition-colors"
-                    onClick={() => checkPronunciation(suggestion.word)}
+            {role === 'student' ? (
+              <>
+                {/* Auto Word Suggestions for Students */}
+                <div className="mb-3">
+                  <p className="text-xs text-green-400 mb-2 flex items-center gap-1">
+                    <Zap className="w-3 h-3" /> Live Vocabulary
+                  </p>
+                  {wordSuggestions.length > 0 ? (
+                    <div className="space-y-1">
+                      {wordSuggestions.slice(0, 3).map((suggestion, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ x: -20, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-lg p-2 cursor-pointer hover:from-purple-500/30 hover:to-blue-500/30 transition-all"
+                          onClick={() => checkPronunciation(suggestion.word)}
+                        >
+                          <p className="text-white font-medium text-sm">{suggestion.word}</p>
+                          <p className="text-xs text-purple-200">{suggestion.translation}</p>
+                          <p className="text-xs text-blue-200 italic mt-1">"{suggestion.usage}"</p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-white/50 italic">Listening for conversation...</p>
+                  )}
+                </div>
+                
+                {/* Quick Help Actions */}
+                <div className="space-y-1">
+                  <button
+                    onClick={() => socket?.emit('request-word-help', { roomId, context: 'I need help expressing myself' })}
+                    className="w-full bg-green-500/60 hover:bg-green-500/80 text-white text-xs py-1.5 px-3 rounded-md transition-colors"
                   >
-                    <p className="text-white font-medium">{suggestion.word}</p>
-                    <p className="text-xs text-white/60">{suggestion.translation}</p>
-                    <p className="text-xs text-purple-300 mt-1">{suggestion.usage}</p>
-                  </motion.div>
-                ))}
-              </div>
+                    Need better words
+                  </button>
+                  <button
+                    onClick={() => socket?.emit('request-grammar-help', { roomId })}
+                    className="w-full bg-blue-500/60 hover:bg-blue-500/80 text-white text-xs py-1.5 px-3 rounded-md transition-colors"
+                  >
+                    Check grammar
+                  </button>
+                </div>
+              </>
             ) : (
-              <p className="text-xs text-white/40 italic">Click "Help me" when you need word suggestions</p>
+              <>
+                {/* Teacher AI Tools */}
+                <div className="mb-3">
+                  <p className="text-xs text-blue-400 mb-2 flex items-center gap-1">
+                    <BookOpen className="w-3 h-3" /> Teaching Tools
+                  </p>
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => socket?.emit('suggest-teaching-activity', { roomId, studentLevel: 'B1' })}
+                      className="w-full bg-blue-500/60 hover:bg-blue-500/80 text-white text-xs py-1.5 px-3 rounded-md transition-colors"
+                    >
+                      🎯 Suggest Activity
+                    </button>
+                    <button
+                      onClick={() => socket?.emit('generate-discussion-questions', { roomId, topic: 'current conversation' })}
+                      className="w-full bg-green-500/60 hover:bg-green-500/80 text-white text-xs py-1.5 px-3 rounded-md transition-colors"
+                    >
+                      ❓ Generate Questions
+                    </button>
+                    <button
+                      onClick={() => socket?.emit('provide-correction-tips', { roomId })}
+                      className="w-full bg-purple-500/60 hover:bg-purple-500/80 text-white text-xs py-1.5 px-3 rounded-md transition-colors"
+                    >
+                      ✏️ Correction Tips
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Live Teacher Tips */}
+                {teacherTips.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-yellow-400 flex items-center gap-1">
+                      <Target className="w-3 h-3" /> AI Coaching
+                    </p>
+                    {teacherTips.slice(0, 2).map((tip, i) => (
+                      <div key={i} className="bg-yellow-500/20 rounded-md p-2 text-xs text-yellow-100">
+                        💡 {tip.tip}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </motion.div>

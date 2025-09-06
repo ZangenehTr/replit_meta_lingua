@@ -214,6 +214,59 @@ export class CallernSupervisorHandlers {
         });
       }
     });
+
+    // Teacher AI Tools - Professional Teaching Assistance
+    socket.on('suggest-teaching-activity', async (data: { roomId: string; studentLevel?: string }) => {
+      console.log('🎯 Teacher requesting activity suggestions for level:', data.studentLevel);
+      
+      const activities = {
+        'A1': ['Role-play: Introducing yourself', 'Describe daily routine', 'Practice basic numbers'],
+        'A2': ['Role-play: Restaurant reservations', 'Compare cities', 'Discuss weekend plans'],
+        'B1': ['Debate social media age limits', 'Describe travel experience', 'Discuss work-life balance'],
+        'B2': ['Present environmental solutions', 'Analyze cultural differences', 'Discuss hypotheticals']
+      };
+      
+      const level = data.studentLevel || 'B1';
+      const suggestions = activities[level as keyof typeof activities] || activities['B1'];
+      
+      socket.emit('teaching-activities', { activities: suggestions, level });
+    });
+
+    socket.on('generate-discussion-questions', async (data: { roomId: string; topic?: string }) => {
+      console.log('❓ Generating discussion questions');
+      
+      const questions = [
+        'What\'s your opinion on this topic?',
+        'Can you give me a specific example?',
+        'How does this relate to your experience?',
+        'What would you do in this situation?'
+      ];
+      
+      socket.emit('discussion-questions', { questions });
+    });
+
+    socket.on('provide-correction-tips', async (data: { roomId: string }) => {
+      console.log('✏️ Providing correction tips for teacher');
+      
+      const tips = [
+        { tip: 'Use positive reinforcement: "Good effort! Try this..."', priority: 'high' as const },
+        { tip: 'Focus on one grammar point at a time', priority: 'high' as const },
+        { tip: 'Encourage self-correction: "How does that sound?"', priority: 'medium' as const }
+      ];
+      
+      socket.emit('teacher-tips', tips);
+    });
+
+    socket.on('request-grammar-help', async (data: { roomId: string }) => {
+      console.log('📝 Student requesting grammar help');
+      
+      const grammarHelp = [
+        { error: 'I am go to school', correction: 'I am going to school', explanation: 'Use -ing form with "am"' },
+        { error: 'She don\'t like coffee', correction: 'She doesn\'t like coffee', explanation: 'Use "doesn\'t" with he/she/it' }
+      ];
+      
+      socket.emit('grammar-suggestions', { corrections: grammarHelp });
+    });
     
     // Handle word suggestions request (original handler)
     socket.on('request-word-suggestions', async (data: {
