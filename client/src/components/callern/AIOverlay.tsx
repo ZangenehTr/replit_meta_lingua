@@ -76,8 +76,29 @@ export function AIOverlay({ roomId, role, isVisible, onClose }: AIOverlayProps) 
   useEffect(() => {
     if (!socket || !isVisible) return;
 
+    // Initialize AI features immediately when overlay becomes visible
+    console.log('🤖 AI Assistant initializing for room:', roomId);
+    
+    // Request initial word suggestions to show AI is active
+    socket.emit('request-word-help', { 
+      roomId,
+      context: 'conversation starting',
+      targetLanguage: 'English' 
+    });
+
+    // Show immediate AI status
+    setActiveFeatures({
+      wordHelper: true,
+      liveScoring: true,
+      tttMonitor: true,
+      moodAnalysis: true,
+      grammarCheck: true,
+      pronunciation: true
+    });
+
     // Listen for AI events
     socket.on('word-suggestions', (suggestions: WordSuggestion[]) => {
+      console.log('🔤 Received word suggestions:', suggestions);
       setWordSuggestions(suggestions);
     });
 

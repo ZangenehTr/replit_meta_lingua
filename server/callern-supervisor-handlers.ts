@@ -162,28 +162,39 @@ export class CallernSupervisorHandlers {
         // Generate suggestions based on context
         const prompt = `Generate 5 helpful vocabulary words for an English language learner. Context: ${data.context || 'general conversation'}. Format as JSON array with {word, translation, usage}.`;
         
-        const response = await this.ollama.generateCompletion(prompt, undefined, {
-          temperature: 0.7,
-          model: 'llama3.2:3b'
-        });
+        // Since Ollama is in fallback mode, use OpenAI instead
+        console.log('🤖 Using OpenAI for word suggestions');
         
-        // Parse response and emit suggestions
+        // Use OpenAI directly for better reliability
+        const OpenAI = require('openai');
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        
         try {
-          const suggestions = JSON.parse(response);
-          socket.emit('word-suggestions', {
-            suggestions: suggestions.slice(0, 5)
+          const response = await openai.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [{
+              role: 'user',
+              content: `Generate 5 helpful English vocabulary words for language learning. Context: ${data.context || 'general conversation'}. Return as JSON array with {word, translation, usage}.`
+            }],
+            response_format: { type: "json_object" },
+            max_tokens: 500
           });
-        } catch {
-          // Fallback suggestions if parsing fails
-          socket.emit('word-suggestions', {
-            suggestions: [
-              { word: 'conversation', translation: 'گفتگو', usage: 'Let\'s have a conversation' },
-              { word: 'practice', translation: 'تمرین', usage: 'I need to practice more' },
-              { word: 'understand', translation: 'فهمیدن', usage: 'Do you understand?' },
-              { word: 'explain', translation: 'توضیح دادن', usage: 'Can you explain that?' },
-              { word: 'improve', translation: 'بهبود', usage: 'I want to improve my English' }
-            ]
-          });
+
+          const result = JSON.parse(response.choices[0].message.content);
+          socket.emit('word-suggestions', result.words || result.suggestions || []);
+          
+        } catch (openaiError) {
+          console.error('OpenAI word suggestions error:', openaiError);
+          // Enhanced fallback with more variety
+          const fallbackSuggestions = [
+            { word: 'excellent', translation: 'عالی', usage: 'Your English is excellent!' },
+            { word: 'challenge', translation: 'چالش', usage: 'This is a good challenge for me' },
+            { word: 'opportunity', translation: 'فرصت', usage: 'This is a great opportunity' },
+            { word: 'comfortable', translation: 'راحت', usage: 'I feel comfortable speaking English' },
+            { word: 'confident', translation: 'با اعتماد', usage: 'I am getting more confident' }
+          ];
+          
+          socket.emit('word-suggestions', fallbackSuggestions);
         }
       } catch (error) {
         console.error('Error generating word help:', error);
