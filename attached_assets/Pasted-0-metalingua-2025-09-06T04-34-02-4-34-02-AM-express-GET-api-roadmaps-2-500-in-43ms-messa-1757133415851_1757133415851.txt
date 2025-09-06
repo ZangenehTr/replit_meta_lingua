@@ -1,0 +1,28 @@
+0|metalingua  | 2025-09-06T04:34:02: 4:34:02 AM [express] GET /api/roadmaps/2 500 in 43ms :: {"message":"Failed to fetch roadmap details"}
+0|metalingua  | 2025-09-06T04:34:05: Error fetching roadmap details: error: column "teacher_ai_tips" does not exist
+0|metalingua  | 2025-09-06T04:34:05:     at /opt/metalingua/node_modules/pg-pool/index.js:45:11
+0|metalingua  | 2025-09-06T04:34:05:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|metalingua  | 2025-09-06T04:34:05:     at async file:///opt/metalingua/node_modules/drizzle-orm/node-postgres/session.js:83:22
+0|metalingua  | 2025-09-06T04:34:05:     at async DatabaseStorage.getRoadmapSteps (file:///opt/metalingua/dist/index.js:3833:16)
+0|metalingua  | 2025-09-06T04:34:05:     at async file:///opt/metalingua/dist/index.js:44028:21 {
+0|metalingua  | 2025-09-06T04:34:05:   length: 115,
+0|metalingua  | 2025-09-06T04:34:05:   severity: 'ERROR',
+0|metalingua  | 2025-09-06T04:34:05:   code: '42703',
+0|metalingua  | 2025-09-06T04:34:05:   detail: undefined,
+0|metalingua  | 2025-09-06T04:34:05:   hint: undefined,
+0|metalingua  | 2025-09-06T04:34:05:   position: '81',
+0|metalingua  | 2025-09-06T04:34:05:   internalPosition: undefined,
+0|metalingua  | 2025-09-06T04:34:05:   internalQuery: undefined,
+0|metalingua  | 2025-09-06T04:34:05:   where: undefined,
+0|metalingua  | 2025-09-06T04:34:05:   schema: undefined,
+0|metalingua  | 2025-09-06T04:34:05:   table: undefined,
+0|metalingua  | 2025-09-06T04:34:05:   column: undefined,
+0|metalingua  | 2025-09-06T04:34:05:   dataType: undefined,
+0|metalingua  | 2025-09-06T04:34:05:   constraint: undefined,
+0|metalingua  | 2025-09-06T04:34:05:   file: 'parse_relation.c',
+0|metalingua  | 2025-09-06T04:34:05:   line: '3647',
+0|metalingua  | 2025-09-06T04:34:05:   routine: 'errorMissingColumn'
+0|metalingua  | 2025-09-06T04:34:05: }
+0|metalingua  | 2025-09-06T04:34:05: 4:34:05 AM [express] GET /api/roadmaps/2 500 in 43ms :: {"message":"Failed to fetch roadmap details"}
+
+0
