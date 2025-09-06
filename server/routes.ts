@@ -15670,47 +15670,36 @@ Return JSON format:
     try {
       const { language } = req.query;
       
-      // Get all teachers
-      const teachers = await storage.getTeachers();
+      // Get authorized Callern teachers from database
+      const authorizedTeachers = await storage.getAuthorizedCallernTeachers();
       
-      // Get the two test teachers we created with Callern availability
-      // Filter to get teachers who were set up with Callern (teacher1 and teacher2)
-      const callernTeachers = teachers.filter((teacher: any) => 
-        teacher.email === 'teacher1@test.com' || teacher.email === 'teacher2@test.com'
-      );
+      console.log('Found authorized Callern teachers:', authorizedTeachers.length);
       
       // Filter by language if specified
-      let filteredTeachers = callernTeachers;
+      let callernTeachers = authorizedTeachers;
+      
       if (language && language !== 'all') {
-        filteredTeachers = callernTeachers.filter((teacher: any) => {
+        callernTeachers = callernTeachers.filter((teacher: any) => {
           const languages = teacher.languages || ['English'];
           const specializations = teacher.specializations || [];
           return languages.includes(language) || specializations.includes(language);
         });
       }
       
-      // Get teacher availability status from database
-      const teacherAvailability = await Promise.all(
-        filteredTeachers.map((teacher: any) => 
-          storage.getTeacherCallernAvailability(teacher.id)
-        )
-      );
+      console.log('Filtered teachers by language:', callernTeachers.length);
       
-      // Format teacher data for student view with hourly rates
-      const formattedTeachers = filteredTeachers.map((teacher: any, index: number) => {
-        const availability = teacherAvailability[index];
-        return {
-          id: teacher.id,
-          firstName: teacher.firstName || 'Teacher',
-          lastName: teacher.lastName || '',
-          languages: teacher.languages || ['English'],
-          specializations: teacher.specializations || [],
-          rating: teacher.rating || 4.5,
-          hourlyRate: teacher.email === 'teacher1@test.com' ? 500000 : 450000, // Teacher1: 500k, Teacher2: 450k
-          isOnline: availability?.isOnline || false, // Real online status from database
-          profileImageUrl: null
-        };
-      });
+      // Teachers are already formatted by getAuthorizedCallernTeachers
+      const formattedTeachers = callernTeachers.map((teacher: any) => ({
+        id: teacher.id,
+        firstName: teacher.firstName || teacher.first_name || 'Teacher',
+        lastName: teacher.lastName || teacher.last_name || '',
+        languages: teacher.languages || ['English', 'Persian'],
+        specializations: teacher.specializations || ['General Conversation'],
+        rating: teacher.rating || 4.5,
+        hourlyRate: teacher.hourlyRate || 600000, // 600k IRR default
+        isOnline: teacher.isOnline || false,
+        profileImageUrl: teacher.avatar || null
+      }));
       
       res.json(formattedTeachers);
     } catch (error) {

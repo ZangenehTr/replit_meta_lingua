@@ -18,7 +18,7 @@ import {
   walletTransactions, coursePayments, aiTrainingData, aiKnowledgeBase,
   skillAssessments, learningActivities, progressSnapshots, leads,
   communicationLogs, mentorAssignments, mentoringSessions, sessionPackages,
-  callernPackages, studentCallernPackages, teacherCallernAvailability,
+  callernPackages, studentCallernPackages, teacherCallernAvailability, teacherCallernAuthorization,
   callernCallHistory, callernSyllabusTopics, studentCallernProgress, rooms,
   callernRoadmaps, callernRoadmapSteps, studentRoadmapProgress, courseRoadmapProgress,
   callernPresence, callernSpeechSegments, callernScoresStudent, callernScoresTeacher, callernScoringEvents,
@@ -571,6 +571,39 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.role, 'Teacher/Tutor'));
     
     return teachers;
+  }
+
+  async getAuthorizedCallernTeachers(): Promise<any[]> {
+    const result = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        avatar: users.avatar,
+        role: users.role,
+        // Authorization info
+        isAuthorized: teacherCallernAuthorization.isAuthorized,
+        authorizedAt: teacherCallernAuthorization.authorizedAt,
+        // Availability info
+        isOnline: teacherCallernAvailability.isOnline,
+        morningSlot: teacherCallernAvailability.morningSlot,
+        afternoonSlot: teacherCallernAvailability.afternoonSlot,
+        eveningSlot: teacherCallernAvailability.eveningSlot,
+        nightSlot: teacherCallernAvailability.nightSlot
+      })
+      .from(users)
+      .innerJoin(teacherCallernAuthorization, eq(users.id, teacherCallernAuthorization.teacherId))
+      .leftJoin(teacherCallernAvailability, eq(users.id, teacherCallernAvailability.teacherId))
+      .where(
+        and(
+          eq(users.role, 'Teacher'),
+          eq(users.isActive, true),
+          eq(teacherCallernAuthorization.isAuthorized, true)
+        )
+      );
+    
+    return result;
   }
 
   async getStudentCallernPackages(studentId: number): Promise<StudentCallernPackage[]> {
