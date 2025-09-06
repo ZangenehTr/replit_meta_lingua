@@ -8760,52 +8760,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get online teachers
   app.get("/api/callern/online-teachers", async (req, res) => {
     try {
-      // Get actual teachers from database
-      const allTeachers = await storage.getTeachers();
-      const callernAvailability = await storage.getTeacherCallernAvailability();
+      // Get authorized Callern teachers from database
+      const authorizedTeachers = await storage.getAuthorizedCallernTeachers();
       
       // Get currently connected teachers from WebSocket server
       const connectedTeacherIds = app.locals.websocketServer?.getConnectedTeachers?.() || [];
       
-      // Filter for our test teachers (teacher1 and teacher2)
-      const testTeachers = allTeachers.filter(t => 
-        t.email === 'teacher1@test.com' || t.email === 'teacher2@test.com'
-      );
+      console.log(`Found ${authorizedTeachers.length} authorized Callern teachers`);
+      console.log(`Connected teacher IDs:`, connectedTeacherIds);
       
       // Format teachers for Callern display
-      const teachers = testTeachers.map((teacher, index) => {
-        const availability = callernAvailability.find(a => a.teacherId === teacher.id);
-        const isTeacher1 = teacher.email === 'teacher1@test.com';
-        
+      const teachers = authorizedTeachers.map((teacher) => {
         // Teacher is online only if they're connected via WebSocket AND have enabled Callern availability
         const isConnected = connectedTeacherIds.includes(teacher.id);
-        const hasCallernAvailability = availability?.isOnline === true;
+        const hasCallernAvailability = teacher.isOnline === true;
         const isOnline = isConnected && hasCallernAvailability;
         
         return {
           id: teacher.id,
-          firstName: teacher.firstName,
-          lastName: teacher.lastName,
-          name: `${teacher.firstName} ${teacher.lastName}`,
+          firstName: teacher.firstName || teacher.first_name,
+          lastName: teacher.lastName || teacher.last_name,
+          name: `${teacher.firstName || teacher.first_name} ${teacher.lastName || teacher.last_name}`,
           email: teacher.email,
-          avatar: `https://ui-avatars.com/api/?name=${teacher.firstName}+${teacher.lastName}&background=random`,
+          avatar: teacher.avatar || `https://ui-avatars.com/api/?name=${teacher.firstName || teacher.first_name}+${teacher.lastName || teacher.last_name}&background=random`,
           specializations: ["English Grammar", "Conversation", "Business English"],
           languages: ["English", "Persian"],
           rating: 4.8,
-          reviewCount: isTeacher1 ? 156 : 89,
-          totalMinutes: isTeacher1 ? 8900 : 4500,
+          reviewCount: 156,
+          totalMinutes: 8900,
           isOnline: isOnline, // Use real online status from database
           status: isOnline ? 'online' : 'offline', // Status based on actual online state
           responseTime: isOnline ? "Usually responds within 2 minutes" : "Currently offline",
-          hourlyRate: availability?.hourlyRate || 120000, // Default 120,000 IRR per hour
-          successRate: isTeacher1 ? 96 : 92,
-          description: isTeacher1 ? 
-            "Expert English teacher with 10 years of experience" :
-            "Experienced English instructor specializing in business communication",
-          isCallernAuthorized: !!availability
+          hourlyRate: teacher.hourlyRate ? parseFloat(teacher.hourlyRate) : 500000, // Default 500,000 IRR per hour
+          successRate: 96,
+          description: "Authorized English teacher with extensive experience",
+          isCallernAuthorized: teacher.isAuthorized === true
         };
       });
 
+      console.log(`Returning ${teachers.length} teachers, ${teachers.filter(t => t.isOnline).length} online`);
       res.json(teachers);
     } catch (error) {
       console.error('Error fetching online teachers:', error);
