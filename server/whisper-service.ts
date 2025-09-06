@@ -9,6 +9,7 @@ import FormData from 'form-data';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
+import OpenAI from 'openai';
 
 export interface WhisperConfig {
   baseUrl: string;
@@ -32,6 +33,7 @@ export interface TranscriptionResult {
 export class WhisperService extends EventEmitter {
   private config: WhisperConfig;
   private isAvailable: boolean = false;
+  private openai?: OpenAI;
 
   constructor(config?: Partial<WhisperConfig>) {
     super();
@@ -41,6 +43,13 @@ export class WhisperService extends EventEmitter {
       language: config?.language || 'fa', // Persian/Farsi
       task: config?.task || 'transcribe'
     };
+    
+    // Initialize OpenAI as fallback if API key is available
+    if (process.env.OPENAI_API_KEY) {
+      this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      console.log('✓ OpenAI Whisper fallback initialized');
+    }
+    
     this.checkAvailability();
   }
 
@@ -122,41 +131,69 @@ export class WhisperService extends EventEmitter {
   }
 
   /**
-   * Transcribe audio buffer to text
+   * Transcribe audio buffer to text with OpenAI fallback
    */
   async transcribeBuffer(buffer: Buffer, fileName: string = 'audio.webm', options?: {
     language?: string;
     task?: 'transcribe' | 'translate';
   }): Promise<TranscriptionResult> {
-    if (!this.isAvailable) {
-      await this.checkAvailability();
-      if (!this.isAvailable) {
-        return this.generateFallbackTranscription();
+    // Try self-hosted Whisper first
+    if (this.isAvailable) {
+      try {
+        const formData = new FormData();
+        formData.append('file', buffer, fileName);
+        formData.append('model', this.config.model);
+        formData.append('language', options?.language || this.config.language || 'fa');
+        formData.append('task', options?.task || this.config.task || 'transcribe');
+        formData.append('response_format', 'verbose_json');
+
+        const response = await axios.post(
+          `${this.config.baseUrl}/v1/audio/transcriptions`,
+          formData,
+          {
+            headers: formData.getHeaders(),
+            timeout: 120000,
+          }
+        );
+
+        return this.parseTranscriptionResponse(response.data);
+      } catch (error) {
+        console.log('Self-hosted Whisper failed, trying OpenAI fallback:', error.message);
       }
     }
 
-    try {
-      const formData = new FormData();
-      formData.append('file', buffer, fileName);
-      formData.append('model', this.config.model);
-      formData.append('language', options?.language || this.config.language || 'fa');
-      formData.append('task', options?.task || this.config.task || 'transcribe');
-      formData.append('response_format', 'verbose_json');
+    // Fallback to OpenAI Whisper if available
+    if (this.openai) {
+      try {
+        console.log('Using OpenAI Whisper as fallback');
+        
+        // Create a temporary file for OpenAI API (it requires a file, not buffer)
+        const tempFile = path.join('/tmp', `whisper_${Date.now()}_${fileName}`);
+        fs.writeFileSync(tempFile, buffer);
 
-      const response = await axios.post(
-        `${this.config.baseUrl}/v1/audio/transcriptions`,
-        formData,
-        {
-          headers: formData.getHeaders(),
-          timeout: 120000,
-        }
-      );
+        const transcription = await this.openai.audio.transcriptions.create({
+          file: fs.createReadStream(tempFile) as any,
+          model: 'whisper-1',
+          language: options?.language || (this.config.language === 'fa' ? 'fa' : 'en'),
+        });
 
-      return this.parseTranscriptionResponse(response.data);
-    } catch (error) {
-      console.error('Whisper buffer transcription error:', error);
-      return this.generateFallbackTranscription();
+        // Clean up temp file
+        fs.unlinkSync(tempFile);
+
+        return {
+          text: transcription.text,
+          language: options?.language || this.config.language || 'fa',
+          duration: 0,
+          confidence: 0.95 // OpenAI generally has high confidence
+        };
+      } catch (error) {
+        console.error('OpenAI Whisper fallback error:', error);
+      }
     }
+
+    // Final fallback
+    console.log('All Whisper services unavailable, using fallback transcription');
+    return this.generateFallbackTranscription();
   }
 
   /**

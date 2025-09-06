@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import gtts from 'node-gtts';
+import OpenAI from 'openai';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -36,12 +37,19 @@ export interface TTSResponse {
 
 export class MetaLinguaTTSService {
   private outputDir: string;
+  private openai?: OpenAI;
 
   constructor() {
     // Create output directory for audio files
     this.outputDir = path.join(__dirname, '../uploads/tts');
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
+    }
+
+    // Initialize OpenAI TTS as premium fallback
+    if (process.env.OPENAI_API_KEY) {
+      this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      console.log('✓ OpenAI TTS fallback initialized');
     }
   }
 
