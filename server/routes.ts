@@ -15738,19 +15738,21 @@ Return JSON format:
 
       // Get user's wallet balance
       const walletData = await storage.getUserWalletData(req.user.id);
+      const packagePrice = parseFloat(selectedPackage.price);
       
-      if (!walletData || walletData.walletBalance < parseInt(selectedPackage.price)) {
+      if (!walletData || walletData.walletBalance < packagePrice) {
+        console.log(`Wallet check - Balance: ${walletData?.walletBalance}, Package price: ${packagePrice}, Required: ${packagePrice}`);
         return res.status(400).json({ message: "Insufficient wallet balance" });
       }
 
       // Deduct from wallet
-      await storage.updateWalletBalance(req.user.id, -parseInt(selectedPackage.price));
+      await storage.updateWalletBalance(req.user.id, -packagePrice);
       
       // Create wallet transaction
       await storage.createWalletTransaction({
         userId: req.user.id,
         type: 'purchase',
-        amount: -parseInt(selectedPackage.price),
+        amount: -packagePrice,
         description: `Purchased Callern package: ${selectedPackage.packageName}`,
         status: 'completed',
         merchantTransactionId: `CALLERN_${Date.now()}_${req.user.id}`
@@ -15760,12 +15762,12 @@ Return JSON format:
       const purchasedPackage = await storage.purchaseCallernPackage({
         studentId: req.user.id,
         packageId: packageId,
-        price: parseInt(selectedPackage.price)
+        price: packagePrice
       });
       
       if (!purchasedPackage) {
         // Rollback wallet deduction if purchase fails
-        await storage.updateWalletBalance(req.user.id, parseInt(selectedPackage.price));
+        await storage.updateWalletBalance(req.user.id, packagePrice);
         return res.status(400).json({ message: "Failed to purchase package" });
       }
 

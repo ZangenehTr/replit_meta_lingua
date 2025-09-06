@@ -574,10 +574,51 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStudentCallernPackages(studentId: number): Promise<StudentCallernPackage[]> {
-    return await db
-      .select()
+    const result = await db
+      .select({
+        id: studentCallernPackages.id,
+        studentId: studentCallernPackages.studentId,
+        packageId: studentCallernPackages.packageId,
+        totalHours: studentCallernPackages.totalHours,
+        usedMinutes: studentCallernPackages.usedMinutes,
+        remainingMinutes: studentCallernPackages.remainingMinutes,
+        price: studentCallernPackages.price,
+        status: studentCallernPackages.status,
+        purchasedAt: studentCallernPackages.purchasedAt,
+        expiresAt: studentCallernPackages.expiresAt,
+        createdAt: studentCallernPackages.createdAt,
+        updatedAt: studentCallernPackages.updatedAt,
+        // Package details
+        packageName: callernPackages.packageName,
+        packageDescription: callernPackages.description,
+        packageIsActive: callernPackages.isActive
+      })
       .from(studentCallernPackages)
+      .innerJoin(callernPackages, eq(studentCallernPackages.packageId, callernPackages.id))
       .where(eq(studentCallernPackages.studentId, studentId));
+
+    return result.map(row => ({
+      id: row.id,
+      studentId: row.studentId,
+      packageId: row.packageId,
+      totalHours: row.totalHours,
+      usedMinutes: row.usedMinutes,
+      remainingMinutes: row.remainingMinutes,
+      price: row.price,
+      status: row.status,
+      purchasedAt: row.purchasedAt,
+      expiresAt: row.expiresAt,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      package: {
+        id: row.packageId,
+        packageName: row.packageName,
+        description: row.packageDescription,
+        isActive: row.packageIsActive,
+        totalHours: row.totalHours,
+        price: row.price
+      }
+    })) as StudentCallernPackage[];
   }
 
   async createStudentCallernPackage(packageData: any): Promise<StudentCallernPackage> {
