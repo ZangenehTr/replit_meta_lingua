@@ -141,6 +141,18 @@ export function VideoCall({
         localStreamRef.current = stream;
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
+          
+          // Force video to play and add debugging
+          console.log('🎥 Local video stream assigned:', stream);
+          console.log('🎥 Video tracks:', stream.getVideoTracks().length);
+          console.log('🎥 Audio tracks:', stream.getAudioTracks().length);
+          
+          // Ensure video plays 
+          localVideoRef.current.play().then(() => {
+            console.log('✅ Local video playing successfully');
+          }).catch((err) => {
+            console.error('❌ Local video play failed:', err);
+          });
         }
         
         // Fetch TURN credentials from server
@@ -192,6 +204,15 @@ export function VideoCall({
         pc.ontrack = (event) => {
           if (remoteVideoRef.current && event.streams[0]) {
             remoteVideoRef.current.srcObject = event.streams[0];
+            console.log('🎥 Remote video stream received:', event.streams[0]);
+            
+            // Force remote video to play
+            remoteVideoRef.current.play().then(() => {
+              console.log('✅ Remote video playing successfully');
+            }).catch((err) => {
+              console.error('❌ Remote video play failed:', err);
+            });
+            
             setConnectionStatus("connected");
             startCallTimer(); // Start timer when connected
             playCallStartSound();

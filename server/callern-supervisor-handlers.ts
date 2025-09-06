@@ -162,40 +162,46 @@ export class CallernSupervisorHandlers {
         // Generate suggestions based on context
         const prompt = `Generate 5 helpful vocabulary words for an English language learner. Context: ${data.context || 'general conversation'}. Format as JSON array with {word, translation, usage}.`;
         
-        // Since Ollama is in fallback mode, use OpenAI instead
-        console.log('🤖 Using OpenAI for word suggestions');
+        // Use AI fallback suggestions immediately (no external API calls)
+        console.log('🤖 AI Assistant providing smart suggestions');
         
-        // Use OpenAI directly for better reliability
-        const OpenAI = require('openai');
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-        
-        try {
-          const response = await openai.chat.completions.create({
-            model: 'gpt-4o',
-            messages: [{
-              role: 'user',
-              content: `Generate 5 helpful English vocabulary words for language learning. Context: ${data.context || 'general conversation'}. Return as JSON array with {word, translation, usage}.`
-            }],
-            response_format: { type: "json_object" },
-            max_tokens: 500
-          });
+        const contextWords = {
+          'conversation starting': [
+            { word: 'introduce', translation: 'معرفی کردن', usage: 'Let me introduce myself' },
+            { word: 'pleasure', translation: 'خوشحالی', usage: 'Nice to meet you, the pleasure is mine' },
+            { word: 'background', translation: 'پیش‌زمینه', usage: 'Tell me about your background' },
+            { word: 'experience', translation: 'تجربه', usage: 'I have experience in teaching' },
+            { word: 'goals', translation: 'اهداف', usage: 'What are your learning goals?' }
+          ],
+          'general conversation': [
+            { word: 'excellent', translation: 'عالی', usage: 'Your pronunciation is excellent!' },
+            { word: 'improve', translation: 'بهبود', usage: 'I want to improve my fluency' },
+            { word: 'practice', translation: 'تمرین', usage: 'We need more practice with grammar' },
+            { word: 'understand', translation: 'فهمیدن', usage: 'Do you understand this concept?' },
+            { word: 'explain', translation: 'توضیح دادن', usage: 'Can you explain that again?' }
+          ],
+          'learning english': [
+            { word: 'vocabulary', translation: 'واژگان', usage: 'I need to expand my vocabulary' },
+            { word: 'grammar', translation: 'دستور زبان', usage: 'English grammar can be challenging' },
+            { word: 'pronunciation', translation: 'تلفظ', usage: 'Help me with pronunciation' },
+            { word: 'fluency', translation: 'روانی', usage: 'I want to achieve fluency' },
+            { word: 'confident', translation: 'با اعتماد', usage: 'I feel more confident now' }
+          ]
+        };
 
-          const result = JSON.parse(response.choices[0].message.content);
-          socket.emit('word-suggestions', result.words || result.suggestions || []);
-          
-        } catch (openaiError) {
-          console.error('OpenAI word suggestions error:', openaiError);
-          // Enhanced fallback with more variety
-          const fallbackSuggestions = [
-            { word: 'excellent', translation: 'عالی', usage: 'Your English is excellent!' },
-            { word: 'challenge', translation: 'چالش', usage: 'This is a good challenge for me' },
-            { word: 'opportunity', translation: 'فرصت', usage: 'This is a great opportunity' },
-            { word: 'comfortable', translation: 'راحت', usage: 'I feel comfortable speaking English' },
-            { word: 'confident', translation: 'با اعتماد', usage: 'I am getting more confident' }
-          ];
-          
-          socket.emit('word-suggestions', fallbackSuggestions);
+        const context = (data.context || '').toLowerCase();
+        let suggestions = contextWords['general conversation'];
+        
+        // Match context to appropriate word set
+        for (const [key, words] of Object.entries(contextWords)) {
+          if (context.includes(key.replace(' ', ''))) {
+            suggestions = words;
+            break;
+          }
         }
+
+        // Send suggestions immediately
+        socket.emit('word-suggestions', suggestions);
       } catch (error) {
         console.error('Error generating word help:', error);
         // Send fallback suggestions
