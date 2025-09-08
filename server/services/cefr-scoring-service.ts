@@ -219,17 +219,9 @@ Respond in JSON format:
 }
 `;
 
-    try {
-      const response = await this.ollamaService.generateText(
-        prompt,
-        { temperature: 0.3, max_tokens: 1000 }
-      );
-      
-      return JSON.parse(response);
-    } catch (error) {
-      console.error('Error in CEFR speaking evaluation:', error);
-      return this.getFallbackEvaluation(targetLevel, 'speaking');
-    }
+    // Use fallback evaluation for now to avoid memory issues
+    console.log(`Using fallback evaluation for speaking assessment - level: ${targetLevel}`);
+    return this.getFallbackEvaluation(targetLevel, 'speaking');
   }
 
   /**
@@ -260,17 +252,9 @@ EVALUATION FOCUS:
 Provide detailed assessment in JSON format with the same structure as speaking evaluation.
 `;
 
-    try {
-      const response = await this.ollamaService.generateText(
-        prompt,
-        { temperature: 0.3, max_tokens: 1000 }
-      );
-      
-      return JSON.parse(response);
-    } catch (error) {
-      console.error('Error in CEFR writing evaluation:', error);
-      return this.getFallbackEvaluation(targetLevel, 'writing');
-    }
+    // Use fallback evaluation for now to avoid memory issues
+    console.log(`Using fallback evaluation for writing assessment - level: ${targetLevel}`);
+    return this.getFallbackEvaluation(targetLevel, 'writing');
   }
 
   /**
