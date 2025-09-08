@@ -3718,3 +3718,6 @@ export type InsertSrsCard = z.infer<typeof insertSrsCardSchema>;
 // Course Roadmap Progress types (existing)
 export type CourseRoadmapProgress = typeof courseRoadmapProgress.$inferSelect;
 export type InsertCourseRoadmapProgress = typeof courseRoadmapProgress.$inferInsert;
+
+// Export placement test schemas
+export * from './placement-test-schema';
