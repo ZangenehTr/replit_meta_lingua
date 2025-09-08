@@ -194,7 +194,7 @@ Now listen again and answer the questions you'll hear next.
       console.log(`\n📻 Listening Material ${index + 1}: "${material.title}"`);
       console.log(`   Level: ${material.level}`);
       console.log(`   Duration: ${material.duration} seconds`);
-      console.log(`   Topics: ${material.topics.join(', ')}`);
+      console.log(`   Topics: ${material.topics ? material.topics.join(', ') : 'General'}`);
       
       console.log(`\n   🔊 Generated Audio Files:`);
       Object.entries(material.audioFiles).forEach(([type, url]) => {
