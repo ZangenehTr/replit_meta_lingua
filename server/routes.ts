@@ -20508,6 +20508,10 @@ Meta Lingua Academy`;
     }
   });
 
+  // Register placement test routes
+  const placementTestRoutes = await import('./routes/placement-test-routes');
+  app.use('/api/placement-test', placementTestRoutes.createPlacementTestRoutes(storage, ollamaService));
+
   const httpServer = createServer(app);
   
   // Initialize Callern WebSocket server
