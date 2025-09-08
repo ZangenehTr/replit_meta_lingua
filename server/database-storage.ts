@@ -12895,4 +12895,140 @@ export class DatabaseStorage implements IStorage {
       return { activities: [], focusAreas: [] };
     }
   }
+
+  // Placement Test management
+  private placementTestSessions: Map<number, any> = new Map();
+  private placementTestQuestions: Map<number, any> = new Map();
+  private placementTestResponses: Map<number, any> = new Map();
+  private userRoadmapEnrollments: Map<number, any> = new Map();
+
+  async createPlacementTestSession(data: any): Promise<any> {
+    const sessionData = {
+      id: Math.floor(Math.random() * 10000) + 1,
+      userId: data.userId,
+      targetLanguage: data.targetLanguage,
+      learningGoal: data.learningGoal || 'general',
+      status: data.status || 'in_progress',
+      currentSkill: data.currentSkill || 'speaking',
+      currentQuestionIndex: data.currentQuestionIndex || 0,
+      startedAt: new Date(),
+      completedAt: null,
+      overallCEFRLevel: null,
+      speakingLevel: null,
+      listeningLevel: null,
+      readingLevel: null,
+      writingLevel: null,
+      overallScore: null,
+      speakingScore: null,
+      listeningScore: null,
+      readingScore: null,
+      writingScore: null
+    };
+    
+    this.placementTestSessions.set(sessionData.id, sessionData);
+    return sessionData;
+  }
+
+  async getPlacementTestSession(id: number): Promise<any | undefined> {
+    return this.placementTestSessions.get(id);
+  }
+
+  async updatePlacementTestSession(id: number, updates: any): Promise<any | undefined> {
+    const session = this.placementTestSessions.get(id);
+    if (!session) return undefined;
+    
+    const updatedSession = { ...session, ...updates };
+    this.placementTestSessions.set(id, updatedSession);
+    return updatedSession;
+  }
+
+  async getUserPlacementTestSessions(userId: number): Promise<any[]> {
+    return Array.from(this.placementTestSessions.values())
+      .filter(session => session.userId === userId)
+      .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
+  }
+
+  async getPlacementTestSessionsPaginated(page: number, limit: number): Promise<{ sessions: any[], total: number }> {
+    const allSessions = Array.from(this.placementTestSessions.values());
+    const startIndex = (page - 1) * limit;
+    const sessions = allSessions.slice(startIndex, startIndex + limit);
+    return { sessions, total: allSessions.length };
+  }
+
+  async getPlacementTestSessionsCount(): Promise<number> {
+    return this.placementTestSessions.size;
+  }
+
+  async createPlacementTestQuestion(data: any): Promise<any> {
+    const questionData = {
+      id: Math.floor(Math.random() * 10000) + 1,
+      skill: data.skill,
+      level: data.level,
+      type: data.type,
+      title: data.title,
+      prompt: data.prompt,
+      content: data.content,
+      responseType: data.responseType,
+      expectedDurationSeconds: data.expectedDurationSeconds || 120,
+      estimatedMinutes: data.estimatedMinutes || 2,
+      createdAt: new Date()
+    };
+    
+    this.placementTestQuestions.set(questionData.id, questionData);
+    return questionData;
+  }
+
+  async getPlacementTestQuestions(filters?: any): Promise<any[]> {
+    let questions = Array.from(this.placementTestQuestions.values());
+    
+    if (filters) {
+      if (filters.skill) {
+        questions = questions.filter(q => q.skill === filters.skill);
+      }
+      if (filters.level) {
+        questions = questions.filter(q => q.level === filters.level);
+      }
+    }
+    
+    return questions;
+  }
+
+  async createPlacementTestResponse(data: any): Promise<any> {
+    const responseData = {
+      id: Math.floor(Math.random() * 10000) + 1,
+      sessionId: data.sessionId,
+      questionId: data.questionId,
+      userResponse: data.userResponse,
+      timeSpent: data.timeSpent || 0,
+      score: data.score || 0,
+      level: data.level || 'B1',
+      feedback: data.feedback || '',
+      confidence: data.confidence || 0.5,
+      createdAt: new Date()
+    };
+    
+    this.placementTestResponses.set(responseData.id, responseData);
+    return responseData;
+  }
+
+  async getPlacementTestResponses(sessionId: number): Promise<any[]> {
+    return Array.from(this.placementTestResponses.values())
+      .filter(response => response.sessionId === sessionId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }
+
+  async createUserRoadmapEnrollment(data: any): Promise<any> {
+    const enrollmentData = {
+      id: Math.floor(Math.random() * 10000) + 1,
+      userId: data.userId,
+      roadmapId: data.roadmapId,
+      placementTestSessionId: data.placementTestSessionId,
+      enrolledAt: new Date(),
+      status: 'active',
+      progress: 0
+    };
+    
+    this.userRoadmapEnrollments.set(enrollmentData.id, enrollmentData);
+    return enrollmentData;
+  }
 }
