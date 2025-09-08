@@ -8,7 +8,7 @@ import { DatabaseStorage } from '../database-storage';
 import { AdaptivePlacementService } from '../services/adaptive-placement-service';
 import { AIRoadmapGenerator } from '../services/ai-roadmap-generator';
 import { OllamaService } from '../ollama-service';
-import { authenticateToken, requireRole } from '../middleware/auth';
+// Authentication middleware will be imported from the main routes file
 import { z } from 'zod';
 
 const router = express.Router();

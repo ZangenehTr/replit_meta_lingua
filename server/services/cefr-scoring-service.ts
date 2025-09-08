@@ -376,8 +376,8 @@ Provide detailed assessment in JSON format with the same structure as speaking e
     confidence: number;
     skillBreakdown: Record<Skill, CEFRLevel>;
   } {
-    const levels = Object.values(evaluations).map(eval => eval.level);
-    const confidences = Object.values(evaluations).map(eval => eval.confidence);
+    const levels = Object.values(evaluations).map(evaluation => evaluation.level);
+    const confidences = Object.values(evaluations).map(evaluation => evaluation.confidence);
     
     // Weight speaking more heavily as it's the primary adaptive skill
     const speakingWeight = 0.4;

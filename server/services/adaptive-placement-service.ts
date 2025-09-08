@@ -223,15 +223,15 @@ export class AdaptivePlacementService {
     
     // Extract strengths and recommendations
     const allRecommendations = Object.values(skillEvaluations)
-      .flatMap(eval => eval.recommendations);
+      .flatMap(evaluation => evaluation.recommendations);
     
     const strengths = Object.entries(skillEvaluations)
-      .filter(([_, eval]) => eval.confidence > 0.7)
-      .map(([skill, eval]) => `Strong ${skill} ability at ${eval.level} level`);
+      .filter(([_, evaluation]) => evaluation.confidence > 0.7)
+      .map(([skill, evaluation]) => `Strong ${skill} ability at ${evaluation.level} level`);
 
     const weaknesses = Object.entries(skillEvaluations)
-      .filter(([_, eval]) => eval.confidence < 0.6)
-      .map(([skill, eval]) => `${skill} needs improvement`);
+      .filter(([_, evaluation]) => evaluation.confidence < 0.6)
+      .map(([skill, evaluation]) => `${skill} needs improvement`);
 
     // Update session with final results
     const updatedSession = await this.storage.updatePlacementTestSession(sessionId, {
@@ -501,7 +501,7 @@ export class AdaptivePlacementService {
    * Calculate overall score from skill evaluations
    */
   private calculateOverallScore(skillEvaluations: Record<Skill, CEFREvaluationResult>): number {
-    const scores = Object.values(skillEvaluations).map(eval => eval.score);
+    const scores = Object.values(skillEvaluations).map(evaluation => evaluation.score);
     return scores.reduce((sum, score) => sum + score, 0) / scores.length;
   }
 }
