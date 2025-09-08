@@ -149,11 +149,22 @@ export class AdaptivePlacementService {
     evaluation: CEFREvaluationResult;
     nextQuestion: PlacementTestQuestion | null;
   }> {
+    console.log(`[DEBUG] Submitting response for session ${sessionId}, question ${questionId}`);
+    
     const session = await this.storage.getPlacementTestSession(sessionId);
     const question = await this.storage.getPlacementTestQuestion(questionId);
     
-    if (!session || !question) {
-      throw new Error('Session or question not found');
+    console.log(`[DEBUG] Session found: ${!!session}`);
+    console.log(`[DEBUG] Question found: ${!!question}`);
+    
+    if (!session) {
+      console.log(`[DEBUG] Session ${sessionId} not found in storage`);
+      throw new Error('Session not found');
+    }
+    
+    if (!question) {
+      console.log(`[DEBUG] Question ${questionId} not found in storage`);
+      throw new Error('Question not found');
     }
 
     // Create response record
@@ -390,10 +401,24 @@ export class AdaptivePlacementService {
    * Get question for specific skill and level
    */
   private async getQuestionForLevel(skill: Skill, level: CEFRLevel): Promise<PlacementTestQuestion | null> {
-    // This would query the database for appropriate questions
-    // For now, returning a mock question structure
+    // Create and store question in database
+    const questionData = {
+      skill,
+      level,
+      type: `${skill}_assessment`,
+      title: `${skill.charAt(0).toUpperCase() + skill.slice(1)} Assessment - ${level} Level`,
+      prompt: `Please complete this ${skill} task at ${level} level.`,
+      content: { /* Question-specific content */ },
+      responseType: skill === 'speaking' ? 'audio' : 'text',
+      expectedDurationSeconds: 120,
+      estimatedMinutes: 2
+    };
+
+    // Store the question in the database
+    const createdQuestion = await this.storage.createPlacementTestQuestion(questionData);
+    
     return {
-      id: Math.floor(Math.random() * 1000),
+      id: createdQuestion.id,
       skill,
       cefrLevel: level,
       questionType: `${skill}_assessment`,

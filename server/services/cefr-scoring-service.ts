@@ -220,7 +220,7 @@ Respond in JSON format:
 `;
 
     try {
-      const response = await this.ollamaService.generateResponse(
+      const response = await this.ollamaService.generateText(
         prompt,
         { temperature: 0.3, max_tokens: 1000 }
       );
@@ -261,7 +261,7 @@ Provide detailed assessment in JSON format with the same structure as speaking e
 `;
 
     try {
-      const response = await this.ollamaService.generateResponse(
+      const response = await this.ollamaService.generateText(
         prompt,
         { temperature: 0.3, max_tokens: 1000 }
       );
