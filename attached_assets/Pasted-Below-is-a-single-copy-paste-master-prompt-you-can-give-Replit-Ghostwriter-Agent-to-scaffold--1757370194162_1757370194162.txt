@@ -1,0 +1,168 @@
+Below is a **single, copy-paste master prompt** you can give Replit (Ghostwriter/Agent) to scaffold and run your full **Whisper + Coqui** pipeline with accent logic, vocab files, and audio QA—end-to-end.
+
+---
+
+# Build an Accent-Aware TTS/ASR Pipeline (Coqui XTTS-v2 + Whisper)
+
+**Objective:**
+Create a Python project that generates **listening practice audio files** and **vocabulary audio files** for English learners, using **Coqui TTS (XTTS-v2)** for synthesis and **Whisper** for transcription/word-timing. Enforce **exam-specific accent rules** (General, TOEFL, IELTS, PTE, Business), natural conversational behavior, and automatic audio QA (silence ratio, loudness, max-pause). Produce reproducible CLI commands.
+
+---
+
+## Functional Requirements
+
+1. **Inputs (CLI flags + YAML):**
+
+   * `--goal` ∈ {`general`, `toefl`, `ielts`, `pte`, `business`}
+   * `--level` ∈ {`A1`,`A2`,`B1`,`B2`,`C1`,`C2`}
+   * `--l1` ∈ {`fa`,`ar`,`other`}  (learner’s first language)
+   * `--topic` (short string)
+   * `--duration_sec` (e.g., 90–150)
+   * `--vocab_count` (e.g., 8–15)
+   * `--seed` (int, optional)
+   * A YAML file `voices.yaml` mapping accents → reference WAVs (10–30s clean clips).
+     Example keys: `US`, `UK`, `AU`, `CA`, `IN`, `AR_L2`, `ZH_L2`.
+
+2. **Accent Policy (MUST APPLY):**
+
+   * **Listening files only:**
+
+     * **general** → American (US) everywhere.
+     * **toefl** → American (US) everywhere.
+     * **ielts** → Mostly **British (UK)**; sometimes **UK+US** in same dialogue; occasionally **Australian (AU)**.
+     * **pte** → Mix of **UK, AU, US/CA**, with **occasional IN**.
+     * **business** → Variety: **US, UK, IN, AR\_L2, ZH\_L2** (global meeting realism).
+   * **Vocabulary files:**
+
+     * **toefl** → **US** accent.
+     * **ielts, pte** → **UK** accent.
+     * **general, business** → **US** accent.
+
+3. **Content Types:**
+
+   * Listening practice: randomize between (a) **2-speaker conversation** (male deep/warm + female clear), (b) **monologue/narration**, (c) **3-speaker** for B2–C2.
+   * Topics: daily life, business, academic, travel, storytelling (safe only).
+   * **Prohibit** adult/inappropriate vocabulary/topics.
+
+4. **Naturalism Rules (Listening):**
+
+   * Real conversational cues: hesitations, backchannels (“mm-hmm”, “right”), light overlaps (100–300 ms), interruptions, emotional variation, **no music**.
+   * **Pacing:** A1–B1 \~0.9× baseline; B2–C2 1.0×–1.1×.
+   * **Pause limits:** single pause ≤ **1.2 s** (≤ **1.8 s** for occasional narrative emphasis).
+   * **Silence budget:** total ≤ **20%** of file duration.
+
+5. **Vocabulary File Sequence (per word):**
+
+   1. Word (clear) →
+   2. short pause →
+   3. display word (and show illustration if concrete) →
+   4. part of speech →
+   5. if noun: say **countable/uncountable** →
+   6. short pause →
+   7. If level A1–B1 & `l1=fa`: Farsi translation; if A1–B1 & `l1=ar`: Arabic pronunciation; if B2–C2: **no translation** →
+   8. sentence from listening file →
+   9. one extra learner-friendly example (Cambridge/Longman style wording).
+
+   * **Accent for vocab** follows policy in (2).
+
+6. **ASR + Vocab Selection:**
+
+   * Transcribe the generated listening file with **Whisper** (or **faster-whisper**) to obtain timestamps and text.
+   * Select `--vocab_count` **difficult/useful words** (prefer by CEFR mapping if a local CSV is available, else by low frequency + POS filter NN/VB/JJ, excluding proper nouns and sensitive terms).
+   * Build vocab audio segments in the exact order above.
+
+7. **Audio QA & Mastering (MUST PASS):**
+
+   * After mixing: normalize to **–18 LUFS** target, **true peak ≤ –1 dBTP** (`ffmpeg loudnorm`).
+   * Fail the build if: silence ratio > 0.20, any non-narrative pause > 1.2 s, duration deviates > ±10% from `--duration_sec`.
+   * Export a JSON report: durations, accents used per segment, silence ratio, max-pause, LUFS, words chosen, example sentences, seed.
+
+8. **Output Layout:**
+
+   ```
+   /out/
+     listening_[GOAL]_[topic]_[mmss].mp3
+     vocab_[GOAL]_[topic]_[mmss].mp3
+     report_[GOAL]_[topic].json
+     transcript_[GOAL]_[topic].srt
+   ```
+
+   Use 48 kHz, mono, 128 kbps MP3 (or AAC/M4A), filenames URL-safe.
+
+---
+
+## Implementation Constraints
+
+* **Python 3.11**; create `requirements.txt` including:
+
+  ```
+  TTS==0.22.0
+  faster-whisper
+  pydub
+  librosa
+  soundfile
+  numba
+  numpy
+  scipy
+  python-dotenv
+  PyYAML
+  ```
+
+* Ensure **FFmpeg** is available; add install steps to `README.md`.
+
+* Use **Coqui XTTS-v2** (`tts_models/multilingual/multi-dataset/xtts_v2`) and allow CPU fallback.
+
+* Store accent mapping in `voices.yaml`. Provide a sample with placeholder paths.
+
+* Provide a single CLI entrypoint `main.py` that:
+
+  1. Parses flags + YAML,
+  2. Generates script text from rules,
+  3. Renders each speaker turn to WAV via Coqui (reference voice per accent),
+  4. Mixes turns with controlled overlaps + very light room-tone (–50 to –55 dBFS),
+  5. Runs loudness normalization,
+  6. Calls Whisper for transcript + timestamps,
+  7. Picks vocab and renders vocab MP3 with correct accent,
+  8. Runs QA checks and writes JSON/SRT/MP3 outputs,
+  9. Exits non-zero on QA failure.
+
+* Provide a `make run` target with a **working demo** command, e.g.:
+
+  ```bash
+  python main.py \
+    --goal ielts --level B2 --l1 fa \
+    --topic "airport check-in" --duration_sec 120 \
+    --vocab_count 10 --seed 42 \
+    --voices voices.yaml
+  ```
+
+* Include **docstrings** and **README** with:
+
+  * Setup steps (FFmpeg, model download),
+  * How to prepare `voices.yaml`,
+  * Accent policy summary,
+  * QA thresholds,
+  * Example outputs and troubleshooting.
+
+---
+
+## Acceptance Criteria (what to deliver)
+
+* ✅ Running the demo command produces all four outputs in `/out/`.
+* ✅ Listening file meets accent policy for `--goal`.
+* ✅ Vocab file accent matches policy; sequence strictly followed.
+* ✅ LUFS between –20 and –18; true peak ≤ –1 dBTP.
+* ✅ Silence ratio ≤ 0.20; no non-narrative pause > 1.2 s.
+* ✅ JSON report contains: accents per segment, silence stats, LUFS/peak, vocab list with POS & (C/U), example sentences, timing map, and pass/fail flags.
+* ✅ Code is modular: `synthesis.py`, `mixing.py`, `qa.py`, `asr_vocab.py`, `policy.py`, `utils.py`, `main.py`.
+
+---
+
+## Safety & Content Rules (enforce programmatically)
+
+* Exclude adult/inappropriate topics and vocabulary from both listening and vocab pipelines.
+* Blocklist for unsafe terms; sanitize inputs; never fetch or generate adult content.
+
+---
+
+**Build this project now** with the structure, code, and samples described above.
