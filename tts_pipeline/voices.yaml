@@ -1,0 +1,75 @@
+# Voice reference files for accent cloning
+# Each entry maps an accent code to a high-quality reference audio file (10-30s)
+
+voices:
+  US:
+    file: "voices/us_male.wav"
+    description: "American English - Male"
+    gender: "male"
+    
+  US_FEMALE:
+    file: "voices/us_female.wav" 
+    description: "American English - Female"
+    gender: "female"
+    
+  UK:
+    file: "voices/uk_male.wav"
+    description: "British English - Male" 
+    gender: "male"
+    
+  UK_FEMALE:
+    file: "voices/uk_female.wav"
+    description: "British English - Female"
+    gender: "female"
+    
+  AU:
+    file: "voices/au_male.wav"
+    description: "Australian English - Male"
+    gender: "male"
+    
+  AU_FEMALE:
+    file: "voices/au_female.wav"
+    description: "Australian English - Female" 
+    gender: "female"
+    
+  CA:
+    file: "voices/ca_male.wav"
+    description: "Canadian English - Male"
+    gender: "male"
+    
+  IN:
+    file: "voices/in_male.wav"
+    description: "Indian English - Male"
+    gender: "male"
+    
+  AR_L2:
+    file: "voices/arabic_l2.wav"
+    description: "Arabic L2 English - Male"
+    gender: "male"
+    
+  ZH_L2:
+    file: "voices/chinese_l2.wav"
+    description: "Chinese L2 English - Female" 
+    gender: "female"
+
+# Accent policy mapping
+accent_policy:
+  general:
+    listening: ["US", "US_FEMALE"]
+    vocabulary: ["US", "US_FEMALE"]
+    
+  toefl:
+    listening: ["US", "US_FEMALE"] 
+    vocabulary: ["US", "US_FEMALE"]
+    
+  ielts:
+    listening: ["UK", "UK_FEMALE", "US", "AU"]  # Mostly UK, some variety
+    vocabulary: ["UK", "UK_FEMALE"]
+    
+  pte:
+    listening: ["UK", "AU", "US", "CA", "IN"]
+    vocabulary: ["UK", "UK_FEMALE"]
+    
+  business:
+    listening: ["US", "UK", "IN", "AR_L2", "ZH_L2", "US_FEMALE", "UK_FEMALE"]
+    vocabulary: ["US", "US_FEMALE"]

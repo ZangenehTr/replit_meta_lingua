@@ -1,0 +1,12 @@
+TTS==0.22.0
+faster-whisper
+pydub
+librosa
+soundfile
+numba
+numpy
+scipy
+python-dotenv
+PyYAML
+torch
+torchaudio
