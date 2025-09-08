@@ -387,7 +387,13 @@ export class MetaLinguaTTSService {
   private createNaturalListeningContent(topic: string, examConfig: TTSExamType): string {
     const isAdvanced = ['B2', 'C1', 'C2'].includes(examConfig.learnerLevel);
     
-    // Create conversational, natural content
+    // Generate actual IELTS-style conversations based on topic
+    if (topic.toLowerCase().includes('ielts') || topic.toLowerCase().includes('booking') || 
+        topic.toLowerCase().includes('art class') || topic.toLowerCase().includes('conversation')) {
+      return this.createIeltsSection1Dialogue(examConfig, isAdvanced);
+    }
+    
+    // Create conversational, natural content for other topics
     const templates = {
       'shopping': isAdvanced 
         ? "Hey Sarah, I went to that new grocery store downtown yesterday. The produce section was amazing - they had these organic vegetables that looked so fresh. The only downside was how crowded it got around lunch time. I had to wait in a long queue at the cashier, but at least they were offering a twenty percent discount on everything."
@@ -414,6 +420,74 @@ export class MetaLinguaTTSService {
     return isAdvanced 
       ? `Let me tell you something interesting about ${topic}. It's fascinating how different people approach this topic. Some find it challenging, while others think it's quite straightforward. What's your experience with ${topic}?`
       : `Today we will talk about ${topic}. This topic is important. Many people like to learn about ${topic}. It is interesting and useful.`;
+  }
+
+  /**
+   * Create authentic IELTS Section 1 dialogue with actual conversation
+   */
+  private createIeltsSection1Dialogue(examConfig: TTSExamType, isAdvanced: boolean): string {
+    // Create actual dialogue with realistic conversation flow
+    const dialogue = `Good morning, City Sports Centre, this is Emma speaking. How can I help you today?
+
+Hi Emma, I'm calling about your swimming lessons. I saw your advertisement and I'd like to book some classes.
+
+Certainly! Are you looking for adult beginner classes or do you have some swimming experience?
+
+I'm a complete beginner actually. I'm twenty-eight years old and I've never learned to swim properly.
+
+Perfect! We have adult beginner classes on Tuesday evenings and Saturday mornings. Which would work better for you?
+
+Saturday mornings would be ideal. I work during the week. What time do they start?
+
+The Saturday class starts at ten o'clock and finishes at eleven thirty. That's an hour and a half session.
+
+That sounds perfect. How much does it cost?
+
+It's eighteen pounds per lesson, or you can book a course of six lessons for ninety pounds. That saves you eighteen pounds.
+
+I'd like the six-lesson course please. When can I start?
+
+The next course begins this Saturday, September twenty-third. Shall I book you in?
+
+Yes please. What details do you need?
+
+I'll need your full name first.
+
+It's Michael Brown. That's M-I-C-H-A-E-L, and Brown is B-R-O-W-N.
+
+Thank you Michael. And your address please?
+
+It's fifteen Park Avenue, that's P-A-R-K Avenue, Newtown, postcode N-T-four, two-B-H.
+
+Great. And can I have your phone number?
+
+Yes, it's oh-one-nine-four-seven, three-six-eight, nine-seven-five.
+
+Perfect. Do you have an email address?
+
+It's m-dot-brown-at-email-dot-co-dot-uk. That's the letter M, dot, brown, at email dot co dot uk.
+
+Excellent. Is there anything else you'd like to know about the classes?
+
+Yes, do I need to bring anything special?
+
+Just bring swimming shorts, a towel, and goggles if you have them. We provide all the training equipment.
+
+What about parking? Is there a car park?
+
+Yes, we have free parking for students. Just show your booking confirmation at reception.
+
+Brilliant. So I'm confirmed for this Saturday at ten AM?
+
+That's correct, Michael. Please arrive at nine forty-five for registration. We'll see you this Saturday, September twenty-third.
+
+Wonderful. Thank you so much for your help, Emma.
+
+You're very welcome, Michael. Have a lovely day and see you Saturday!
+
+Thank you, goodbye!`;
+
+    return dialogue;
   }
 
   /**

@@ -1,0 +1,61 @@
+Woman: Good morning, Eastside Sports Centre. This is Jennifer speaking. How can I help you today?
+
+Man: Hello Jennifer. I'm calling about your swimming classes for adults. I saw your advertisement in the newspaper.
+
+Woman: Certainly! Are you a complete beginner or do you have some swimming experience?
+
+Man: I'm a beginner. I'm thirty-five years old and I never learned to swim properly as a child.
+
+Woman: Perfect! We have beginner adult classes on Tuesday evenings and Saturday mornings. Which would suit you better?
+
+Man: Saturday mornings would be ideal. I work during the week. What time do they start?
+
+Woman: The Saturday class runs from ten o'clock until eleven thirty. That's ninety minutes per session.
+
+Man: That sounds perfect. How much does it cost?
+
+Woman: It's twenty pounds per lesson, or you can book a package of six lessons for one hundred pounds. That saves you twenty pounds.
+
+Man: I'd like the six-lesson package please. When does the next course begin?
+
+Woman: The next course starts this Saturday, November the eighteenth. Would you like me to register you?
+
+Man: Yes please. What information do you need from me?
+
+Woman: I'll need your full name first please.
+
+Man: It's Robert Davis. That's R-O-B-E-R-T, and Davis is spelled D-A-V-I-S.
+
+Woman: Thank you Robert. And can I have your full address?
+
+Man: Yes, it's twenty-seven Oak Street, that's O-A-K Street, in Hillside, postcode H-S-five, six-N-M.
+
+Woman: Great. And your telephone number?
+
+Man: It's zero-one-eight-five-four, seven-nine-two, three-four-six.
+
+Woman: Perfect. Do you have an email address?
+
+Man: Yes, it's robert-davis-at-hotmail-dot-com. That's robert, hyphen, davis, at hotmail dot com.
+
+Woman: Excellent. Is there anything else you'd like to know about the classes?
+
+Man: Yes, do I need to bring any equipment with me?
+
+Woman: No, we provide all the equipment including kickboards and floats. Just bring swimming trunks, a towel, and goggles if you have them.
+
+Man: What about parking? Is there parking available?
+
+Woman: Yes, we have free parking for all students. The car park is right next to the swimming pool entrance.
+
+Man: That's wonderful. So I'm confirmed for Saturday November eighteenth at ten AM?
+
+Woman: That's absolutely correct, Robert. Please arrive fifteen minutes early for your first lesson. We'll see you at nine forty-five.
+
+Man: Perfect. Thank you so much for your help, Jennifer.
+
+Woman: You're very welcome, Robert. We look forward to seeing you on Saturday. Have a great day!
+
+Man: Thank you. You too. Goodbye!
+
+Woman: Goodbye!
