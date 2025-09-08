@@ -1,0 +1,648 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Section 1 - Swimming Lesson Booking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .header {
+            background: #0079F2;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .conversation {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .segment {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 4px solid #0079F2;
+            background: #f9f9f9;
+        }
+        .receptionist {
+            border-left-color: #0079F2;
+        }
+        .customer {
+            border-left-color: #28a745;
+        }
+        .speaker-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+        .receptionist .speaker-label {
+            color: #0079F2;
+        }
+        .customer .speaker-label {
+            color: #28a745;
+        }
+        .text {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        .audio-player {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .controls {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+        .play-all {
+            background: #0079F2;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .play-all:hover {
+            background: #0056b3;
+        }
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎧 IELTS Listening Test - Section 1</h1>
+        <p>Swimming Lesson Booking Conversation</p>
+    </div>
+    
+    <div class="instructions">
+        <strong>📋 Instructions:</strong> Listen to the telephone conversation between a customer and a receptionist at a swimming centre. 
+        You can play individual segments or the complete conversation. In a real test, you would hear this only once.
+    </div>
+    
+    <div class="controls">
+        <button class="play-all" onclick="playFullConversation()">▶️ Play Complete Conversation</button>
+        <button class="play-all" onclick="pauseAll()">⏸️ Pause All</button>
+    </div>
+    
+    <div class="conversation">
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Good morning, Riverside Swimming Centre. This is Sarah speaking. How can I help you?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-0">
+                        <source src="/uploads/tts/tts_en_1757373474905.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">Oh hello. I'm calling about swimming lessons for my daughter. I saw your advertisement in the local newspaper.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-1">
+                        <source src="/uploads/tts/tts_en_1757373475486.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Certainly! I'd be happy to help you with that. Could I start by taking some details? What's your daughter's name, please?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-2">
+                        <source src="/uploads/tts/tts_en_1757373476193.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">It's Emma. That's E-M-M-A. And her surname is Johnson - J-O-H-N-S-O-N.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-3">
+                        <source src="/uploads/tts/tts_en_1757373476929.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Thank you. And how old is Emma?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-4">
+                        <source src="/uploads/tts/tts_en_1757373477570.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">She's eight years old. She'll be nine next month, but she's eight now.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-5">
+                        <source src="/uploads/tts/tts_en_1757373478217.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Right, so she'll be in our junior group then. And what's your contact number in case we need to reach you?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-6">
+                        <source src="/uploads/tts/tts_en_1757373478847.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">It's 07956 483729. That's my mobile number.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-7">
+                        <source src="/uploads/tts/tts_en_1757373479570.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Let me just confirm that - 07956 483729. Perfect. And could I have your address please?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-8">
+                        <source src="/uploads/tts/tts_en_1757373480176.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">Yes, we live at 45 Park Avenue. That's in Millfield.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-9">
+                        <source src="/uploads/tts/tts_en_1757373480836.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Park Avenue in Millfield. And what's the postcode?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-10">
+                        <source src="/uploads/tts/tts_en_1757373481453.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">MF3 7RQ.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-11">
+                        <source src="/uploads/tts/tts_en_1757373482091.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Excellent. Now, what's Emma's current swimming level? Has she had any lessons before?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-12">
+                        <source src="/uploads/tts/tts_en_1757373482718.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">Well, she can swim a little bit. She can do basic front crawl for about 10 metres, but her technique isn't very good. I'd say she's a beginner really.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-13">
+                        <source src="/uploads/tts/tts_en_1757373483349.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">That sounds like our Level 2 class would be perfect for her. The Level 1 is for complete beginners who can't swim at all, and Level 2 focuses on improving basic strokes.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-14">
+                        <source src="/uploads/tts/tts_en_1757373484099.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">That sounds ideal. When are the classes held?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-15">
+                        <source src="/uploads/tts/tts_en_1757373484837.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">We have several options. There's a Wednesday evening class at 6:30, a Saturday morning class at 10:00, and a Sunday afternoon class at 2:15.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-16">
+                        <source src="/uploads/tts/tts_en_1757373485468.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">The Saturday morning sounds good. What time does it finish?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-17">
+                        <source src="/uploads/tts/tts_en_1757373486329.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">The Saturday class runs from 10:00 to 11:00, so it's a one-hour session.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-18">
+                        <source src="/uploads/tts/tts_en_1757373486984.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">Perfect. And how much does it cost?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-19">
+                        <source src="/uploads/tts/tts_en_1757373487616.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">The lessons are £15 per session, or you can buy a block of 8 lessons for £110. That works out slightly cheaper.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-20">
+                        <source src="/uploads/tts/tts_en_1757373488208.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">I think I'll start with the block of 8 lessons then. When can she start?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-21">
+                        <source src="/uploads/tts/tts_en_1757373488939.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">The next course starts this Saturday, the 16th of March. Would that suit you?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-22">
+                        <source src="/uploads/tts/tts_en_1757373489572.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">Yes, that's fine. What should she bring?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-23">
+                        <source src="/uploads/tts/tts_en_1757373490206.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">She'll need a swimming costume, towel, and goggles. We also recommend bringing a water bottle. Oh, and parents aren't allowed in the pool area during lessons for safety reasons, but you can watch from the viewing gallery.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-24">
+                        <source src="/uploads/tts/tts_en_1757373490812.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">That's understandable. Is there parking available?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-25">
+                        <source src="/uploads/tts/tts_en_1757373491651.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Yes, we have a car park right next to the building. It's free for customers.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-26">
+                        <source src="/uploads/tts/tts_en_1757373492257.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Right, let me just confirm the booking. That's Emma Johnson, aged 8, Level 2 swimming lessons, Saturday mornings at 10:00, starting March 16th, block of 8 lessons for £110. Is that correct?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-27">
+                        <source src="/uploads/tts/tts_en_1757373492926.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">Yes, that's perfect.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-28">
+                        <source src="/uploads/tts/tts_en_1757373493775.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Great! How would you like to pay? We accept cash, card, or bank transfer.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-29">
+                        <source src="/uploads/tts/tts_en_1757373494345.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">I'll pay by card when I come in on Saturday.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-30">
+                        <source src="/uploads/tts/tts_en_1757373494979.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">That's fine. Just arrive about 15 minutes early on Saturday for Emma to get changed. The changing rooms are on the ground floor.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-31">
+                        <source src="/uploads/tts/tts_en_1757373495617.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">Wonderful. Is there anything else I need to know?</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-32">
+                        <source src="/uploads/tts/tts_en_1757373496302.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Just that if Emma misses a lesson, we can arrange a make-up session, but you need to give us at least 24 hours notice. And if you have any questions, just give us a call.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-33">
+                        <source src="/uploads/tts/tts_en_1757373496909.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">That's great. Thank you so much for your help, Sarah.</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-34">
+                        <source src="/uploads/tts/tts_en_1757373497693.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">You're very welcome! We look forward to seeing Emma on Saturday. Have a lovely day!</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-35">
+                        <source src="/uploads/tts/tts_en_1757373498291.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment customer">
+                <div class="speaker-label">
+                    👩‍🦰 Customer
+                </div>
+                <div class="text">Thank you. Goodbye!</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-36">
+                        <source src="/uploads/tts/tts_en_1757373498938.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+            <div class="segment receptionist">
+                <div class="speaker-label">
+                    👩‍💼 Receptionist (Sarah)
+                </div>
+                <div class="text">Goodbye!</div>
+                
+                    <audio class="audio-player" controls preload="metadata" id="audio-37">
+                        <source src="/uploads/tts/tts_en_1757373499537.mp3" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                
+            </div>
+        
+    </div>
+    
+    <script>
+        let currentIndex = 0;
+        const audioElements = document.querySelectorAll('audio');
+        
+        function playFullConversation() {
+            currentIndex = 0;
+            playNext();
+        }
+        
+        function playNext() {
+            if (currentIndex < audioElements.length) {
+                const audio = audioElements[currentIndex];
+                audio.currentTime = 0;
+                audio.play();
+                
+                audio.onended = () => {
+                    setTimeout(() => {
+                        currentIndex++;
+                        playNext();
+                    }, 800); // 0.8 second pause between segments
+                };
+            }
+        }
+        
+        function pauseAll() {
+            audioElements.forEach(audio => {
+                audio.pause();
+            });
+        }
+        
+        // Add individual play tracking
+        audioElements.forEach((audio, index) => {
+            audio.addEventListener('play', () => {
+                // Pause other audio elements
+                audioElements.forEach((otherAudio, otherIndex) => {
+                    if (otherIndex !== index) {
+                        otherAudio.pause();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

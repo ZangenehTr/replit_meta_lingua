@@ -1,0 +1,236 @@
+{
+  "title": "IELTS Section 1 - Swimming Lesson Booking",
+  "totalSegments": 38,
+  "successfulSegments": 38,
+  "estimatedDuration": 321,
+  "segments": [
+    {
+      "speaker": "receptionist",
+      "text": "Good morning, Riverside Swimming Centre. This is Sarah speaking. How can I help you?",
+      "hasAudio": true,
+      "duration": 9
+    },
+    {
+      "speaker": "customer",
+      "text": "Oh hello. I'm calling about swimming lessons for my daughter. I saw your advertisement in the local ...",
+      "hasAudio": true,
+      "duration": 11
+    },
+    {
+      "speaker": "receptionist",
+      "text": "Certainly! I'd be happy to help you with that. Could I start by taking some details? What's your dau...",
+      "hasAudio": true,
+      "duration": 13
+    },
+    {
+      "speaker": "customer",
+      "text": "It's Emma. That's E-M-M-A. And her surname is Johnson - J-O-H-N-S-O-N.",
+      "hasAudio": true,
+      "duration": 7
+    },
+    {
+      "speaker": "receptionist",
+      "text": "Thank you. And how old is Emma?",
+      "hasAudio": true,
+      "duration": 4
+    },
+    {
+      "speaker": "customer",
+      "text": "She's eight years old. She'll be nine next month, but she's eight now.",
+      "hasAudio": true,
+      "duration": 7
+    },
+    {
+      "speaker": "receptionist",
+      "text": "Right, so she'll be in our junior group then. And what's your contact number in case we need to reac...",
+      "hasAudio": true,
+      "duration": 11
+    },
+    {
+      "speaker": "customer",
+      "text": "It's 07956 483729. That's my mobile number.",
+      "hasAudio": true,
+      "duration": 5
+    },
+    {
+      "speaker": "receptionist",
+      "text": "Let me just confirm that - 07956 483729. Perfect. And could I have your address please?",
+      "hasAudio": true,
+      "duration": 9
+    },
+    {
+      "speaker": "customer",
+      "text": "Yes, we live at 45 Park Avenue. That's in Millfield.",
+      "hasAudio": true,
+      "duration": 6
+    },
+    {
+      "speaker": "receptionist",
+      "text": "Park Avenue in Millfield. And what's the postcode?",
+      "hasAudio": true,
+      "duration": 5
+    },
+    {
+      "speaker": "customer",
+      "text": "MF3 7RQ.",
+      "hasAudio": true,
+      "duration": 1
+    },
+    {
+      "speaker": "receptionist",
+      "text": "Excellent. Now, what's Emma's current swimming level? Has she had any lessons before?",
+      "hasAudio": true,
+      "duration": 9
+    },
+    {
+      "speaker": "customer",
+      "text": "Well, she can swim a little bit. She can do basic front crawl for about 10 metres, but her technique...",
+      "hasAudio": true,
+      "duration": 15
+    },
+    {
+      "speaker": "receptionist",
+      "text": "That sounds like our Level 2 class would be perfect for her. The Level 1 is for complete beginners w...",
+      "hasAudio": true,
+      "duration": 17
+    },
+    {
+      "speaker": "customer",
+      "text": "That sounds ideal. When are the classes held?",
+      "hasAudio": true,
+      "duration": 5
+    },
+    {
+      "speaker": "receptionist",
+      "text": "We have several options. There's a Wednesday evening class at 6:30, a Saturday morning class at 10:0...",
+      "hasAudio": true,
+      "duration": 14
+    },
+    {
+      "speaker": "customer",
+      "text": "The Saturday morning sounds good. What time does it finish?",
+      "hasAudio": true,
+      "duration": 6
+    },
+    {
+      "speaker": "receptionist",
+      "text": "The Saturday class runs from 10:00 to 11:00, so it's a one-hour session.",
+      "hasAudio": true,
+      "duration": 8
+    },
+    {
+      "speaker": "customer",
+      "text": "Perfect. And how much does it cost?",
+      "hasAudio": true,
+      "duration": 4
+    },
+    {
+      "speaker": "receptionist",
+      "text": "The lessons are £15 per session, or you can buy a block of 8 lessons for £110. That works out slight...",
+      "hasAudio": true,
+      "duration": 12
+    },
+    {
+      "speaker": "customer",
+      "text": "I think I'll start with the block of 8 lessons then. When can she start?",
+      "hasAudio": true,
+      "duration": 8
+    },
+    {
+      "speaker": "receptionist",
+      "text": "The next course starts this Saturday, the 16th of March. Would that suit you?",
+      "hasAudio": true,
+      "duration": 8
+    },
+    {
+      "speaker": "customer",
+      "text": "Yes, that's fine. What should she bring?",
+      "hasAudio": true,
+      "duration": 4
+    },
+    {
+      "speaker": "receptionist",
+      "text": "She'll need a swimming costume, towel, and goggles. We also recommend bringing a water bottle. Oh, a...",
+      "hasAudio": true,
+      "duration": 23
+    },
+    {
+      "speaker": "customer",
+      "text": "That's understandable. Is there parking available?",
+      "hasAudio": true,
+      "duration": 5
+    },
+    {
+      "speaker": "receptionist",
+      "text": "Yes, we have a car park right next to the building. It's free for customers.",
+      "hasAudio": true,
+      "duration": 8
+    },
+    {
+      "speaker": "receptionist",
+      "text": "Right, let me just confirm the booking. That's Emma Johnson, aged 8, Level 2 swimming lessons, Satur...",
+      "hasAudio": true,
+      "duration": 19
+    },
+    {
+      "speaker": "customer",
+      "text": "Yes, that's perfect.",
+      "hasAudio": true,
+      "duration": 2
+    },
+    {
+      "speaker": "receptionist",
+      "text": "Great! How would you like to pay? We accept cash, card, or bank transfer.",
+      "hasAudio": true,
+      "duration": 8
+    },
+    {
+      "speaker": "customer",
+      "text": "I'll pay by card when I come in on Saturday.",
+      "hasAudio": true,
+      "duration": 5
+    },
+    {
+      "speaker": "receptionist",
+      "text": "That's fine. Just arrive about 15 minutes early on Saturday for Emma to get changed. The changing ro...",
+      "hasAudio": true,
+      "duration": 13
+    },
+    {
+      "speaker": "customer",
+      "text": "Wonderful. Is there anything else I need to know?",
+      "hasAudio": true,
+      "duration": 5
+    },
+    {
+      "speaker": "receptionist",
+      "text": "Just that if Emma misses a lesson, we can arrange a make-up session, but you need to give us at leas...",
+      "hasAudio": true,
+      "duration": 17
+    },
+    {
+      "speaker": "customer",
+      "text": "That's great. Thank you so much for your help, Sarah.",
+      "hasAudio": true,
+      "duration": 6
+    },
+    {
+      "speaker": "receptionist",
+      "text": "You're very welcome! We look forward to seeing Emma on Saturday. Have a lovely day!",
+      "hasAudio": true,
+      "duration": 9
+    },
+    {
+      "speaker": "customer",
+      "text": "Thank you. Goodbye!",
+      "hasAudio": true,
+      "duration": 2
+    },
+    {
+      "speaker": "receptionist",
+      "text": "Goodbye!",
+      "hasAudio": true,
+      "duration": 1
+    }
+  ]
+}
