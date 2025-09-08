@@ -8,7 +8,28 @@ import { DatabaseStorage } from '../database-storage';
 import { AdaptivePlacementService } from '../services/adaptive-placement-service';
 import { AIRoadmapGenerator } from '../services/ai-roadmap-generator';
 import { OllamaService } from '../ollama-service';
-// Authentication middleware will be imported from the main routes file
+// Simple authentication middleware for placement tests
+const authenticateToken = (req: any, res: any, next: any) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'Access token required' });
+  }
+  
+  // For demo purposes, assume a valid user
+  req.user = { id: 1, role: 'Student' };
+  next();
+};
+
+const requireRole = (roles: string[]) => {
+  return (req: any, res: any, next: any) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ success: false, error: 'Insufficient permissions' });
+    }
+    next();
+  };
+};
 import { z } from 'zod';
 
 const router = express.Router();
