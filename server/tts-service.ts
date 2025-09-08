@@ -215,30 +215,26 @@ export class MetaLinguaTTSService {
       
       // Generate audio for each vocabulary word
       for (const word of request.words) {
-        const vocabularyPrompt = TTSMasterPromptService.generateVocabularyPrompt({
-          ...request,
-          words: [word]
-        });
-
         let result: TTSResponse;
         
         if (this.openai) {
           const language = this.getLanguageForExam(request.examConfig.examType);
           result = await this.generateWithOpenAI({
-            text: vocabularyPrompt,
+            text: word, // Pass just the word, not the full prompt
             language,
             examConfig: request.examConfig,
             audioType: 'vocabulary'
           });
         } else {
-          // Create structured vocabulary content
-          const vocabContent = this.createVocabularyContent(word, request.examConfig);
+          // Create natural vocabulary content
+          const naturalContent = this.createNaturalVocabularyContent(word, request.examConfig);
+          const naturalizedContent = this.addNaturalSpeechPatterns(naturalContent, request.examConfig);
           const language = this.getLanguageForExam(request.examConfig.examType);
           
           result = await this.generateSpeech({
-            text: vocabContent,
+            text: naturalizedContent,
             language,
-            speed: 0.8 // Slightly slower for vocabulary
+            speed: this.calculateNaturalSpeed(request.examConfig)
           });
         }
         
