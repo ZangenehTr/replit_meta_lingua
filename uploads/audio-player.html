@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Lingua - Test Listening Audio</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #4a5568;
+        }
+        .header h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+        .audio-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 10px;
+            border-left: 4px solid #4299e1;
+        }
+        .audio-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .audio-section p {
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+        audio {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .audio-info {
+            background: #e6fffa;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            color: #234e52;
+        }
+        .vocab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .vocab-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .vocab-word {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        .emoji {
+            font-size: 1.2em;
+        }
+        .success-badge {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .feature-list {
+            background: #f0fff4;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .feature-list ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #22543d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span class="emoji">🎵</span> Meta Lingua Audio Generation Demo</h1>
+            <p>Real listening audio created by the TTS system - No mock data!</p>
+        </div>
+
+        <div class="audio-section">
+            <h3><span class="emoji">📻</span> Main Listening Practice - English <span class="success-badge">Generated</span></h3>
+            <p>Complete shopping vocabulary lesson with storytelling (B1 Level)</p>
+            <audio controls>
+                <source src="/tts/listening_practice_english_1757349581410.mp3" type="audio/mpeg">
+                <a href="/tts/listening_practice_english_1757349581410.mp3">Download English Listening Practice</a>
+            </audio>
+            <div class="audio-info">
+                <strong>Content:</strong> Sarah's shopping trip - vegetables, fruits, crowded store, checkout queue<br>
+                <strong>Duration:</strong> ~2-3 minutes | <strong>Topics:</strong> Grocery shopping, vegetables, cashier interaction
+            </div>
+        </div>
+
+        <div class="audio-section">
+            <h3><span class="emoji">🔤</span> Arabic Listening Sample <span class="success-badge">Generated</span></h3>
+            <p>Arabic welcome message for shopping vocabulary practice</p>
+            <audio controls>
+                <source src="/tts/listening_practice_persian_1757349581410_arabic.mp3" type="audio/mpeg">
+                <a href="/tts/listening_practice_persian_1757349581410_arabic.mp3">Download Arabic Sample</a>
+            </audio>
+            <div class="audio-info">
+                <strong>Content:</strong> مرحبا بكم في تدريب الاستماع. اليوم سنتدرب على مفردات التسوق<br>
+                <strong>Duration:</strong> ~30 seconds | <strong>Language:</strong> Arabic TTS
+            </div>
+        </div>
+
+        <div class="audio-section">
+            <h3><span class="emoji">📚</span> Individual Vocabulary Pronunciation <span class="success-badge">Generated</span></h3>
+            <p>Each vocabulary word with pronunciation and example sentence</p>
+            
+            <div class="vocab-grid">
+                <div class="vocab-item">
+                    <div class="vocab-word">🛒 Groceries</div>
+                    <audio controls>
+                        <source src="/tts/vocab_groceries_1757349581432.mp3" type="audio/mpeg">
+                        <a href="/tts/vocab_groceries_1757349581432.mp3">Download</a>
+                    </audio>
+                    <div style="font-size: 0.9em; color: #666;">
+                        "Groceries. I bought groceries at the supermarket."
+                    </div>
+                </div>
+
+                <div class="vocab-item">
+                    <div class="vocab-word">🥬 Vegetables</div>
+                    <audio controls>
+                        <source src="/tts/vocab_vegetables_1757349581435.mp3" type="audio/mpeg">
+                        <a href="/tts/vocab_vegetables_1757349581435.mp3">Download</a>
+                    </audio>
+                    <div style="font-size: 0.9em; color: #666;">
+                        "Vegetables. Fresh vegetables are healthy and delicious."
+                    </div>
+                </div>
+
+                <div class="vocab-item">
+                    <div class="vocab-word">👥 Crowded</div>
+                    <audio controls>
+                        <source src="/tts/vocab_crowded_1757349581443.mp3" type="audio/mpeg">
+                        <a href="/tts/vocab_crowded_1757349581443.mp3">Download</a>
+                    </audio>
+                    <div style="font-size: 0.9em; color: #666;">
+                        "Crowded. The store was very crowded on Saturday."
+                    </div>
+                </div>
+
+                <div class="vocab-item">
+                    <div class="vocab-word">📋 Queue</div>
+                    <audio controls>
+                        <source src="/tts/vocab_queue_1757349581445.mp3" type="audio/mpeg">
+                        <a href="/tts/vocab_queue_1757349581445.mp3">Download</a>
+                    </audio>
+                    <div style="font-size: 0.9em; color: #666;">
+                        "Queue. I waited in a long queue at the checkout."
+                    </div>
+                </div>
+
+                <div class="vocab-item">
+                    <div class="vocab-word">💰 Cashier</div>
+                    <audio controls>
+                        <source src="/tts/vocab_cashier_1757349581446.mp3" type="audio/mpeg">
+                        <a href="/tts/vocab_cashier_1757349581446.mp3">Download</a>
+                    </audio>
+                    <div style="font-size: 0.9em; color: #666;">
+                        "Cashier. The cashier was friendly and helpful."
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-list">
+            <h3><span class="emoji">✅</span> Audio Generation Features Demonstrated</h3>
+            <ul>
+                <li><strong>Real TTS Generation:</strong> All audio created by Meta Lingua's TTS system</li>
+                <li><strong>Multi-language Support:</strong> English and Arabic audio generated</li>
+                <li><strong>Content Variety:</strong> Full listening exercises + individual vocabulary</li>
+                <li><strong>Educational Structure:</strong> Story-based learning with vocabulary focus</li>
+                <li><strong>Self-hosted Solution:</strong> All files generated and stored locally</li>
+                <li><strong>CallerN Integration:</strong> Same system used in video calls for practice materials</li>
+                <li><strong>No Mock Data:</strong> Authentic audio generation for real learning scenarios</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; color: #666; font-size: 0.9em;">
+            <p><strong>Meta Lingua Platform</strong> - AI-Enhanced Language Learning<br>
+            Generated on: <span id="timestamp"></span></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>
