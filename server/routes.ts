@@ -20398,6 +20398,11 @@ Meta Lingua Academy`;
     }
   });
 
+  // Enhanced TTS Routes following Master Prompt Guidelines
+  const { default: ttsRoutes } = await import('./routes/tts-routes.js');
+  app.use('/api/tts/enhanced', ttsRoutes);
+  console.log('✅ Enhanced TTS routes with Master Prompt registered successfully');
+
   // ============================================================================
   // AI Training Dashboard API Routes (Fix blank page issue)
   // ============================================================================

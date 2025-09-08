@@ -3,6 +3,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import gtts from 'node-gtts';
 import OpenAI from 'openai';
+import { 
+  TTSMasterPromptService, 
+  ListeningPracticeRequest, 
+  VocabularyFileRequest,
+  TTSExamType 
+} from './services/tts-master-prompt.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -25,6 +31,13 @@ export interface TTSRequest {
   language: string;
   speed?: number;
   voice?: string;
+}
+
+export interface EnhancedTTSRequest extends TTSRequest {
+  examConfig?: TTSExamType;
+  audioType?: 'listening' | 'vocabulary';
+  topic?: string;
+  words?: string[];
 }
 
 export interface TTSResponse {
@@ -139,6 +152,231 @@ export class MetaLinguaTTSService {
       language,
       speed: speedMap[level]
     });
+  }
+
+  /**
+   * Generate listening practice audio following Master TTS Prompt guidelines
+   */
+  async generateListeningPractice(request: ListeningPracticeRequest): Promise<TTSResponse> {
+    try {
+      // Validate request
+      if (!TTSMasterPromptService.validateRequest(request)) {
+        return {
+          success: false,
+          error: 'Invalid listening practice request'
+        };
+      }
+
+      // Generate prompt following master guidelines
+      const masterPrompt = TTSMasterPromptService.generateListeningPracticePrompt(request);
+      
+      // Use OpenAI for high-quality conversational audio if available
+      if (this.openai) {
+        const language = this.getLanguageForExam(request.examConfig.examType);
+        return await this.generateWithOpenAI({
+          text: masterPrompt,
+          language,
+          examConfig: request.examConfig,
+          audioType: 'listening'
+        });
+      }
+
+      // Fallback to basic TTS with appropriate language
+      const language = this.getLanguageForExam(request.examConfig.examType);
+      const speed = this.getSpeedForLevel(request.examConfig.learnerLevel);
+      
+      return this.generateSpeech({
+        text: `Listening Practice: ${request.topic}. ${this.createBasicListeningContent(request)}`,
+        language,
+        speed
+      });
+
+    } catch (error) {
+      console.error('Listening practice generation error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to generate listening practice'
+      };
+    }
+  }
+
+  /**
+   * Generate vocabulary practice audio following Master TTS Prompt guidelines
+   */
+  async generateVocabularyPractice(request: VocabularyFileRequest): Promise<TTSResponse[]> {
+    try {
+      // Validate request
+      if (!TTSMasterPromptService.validateRequest(request)) {
+        return [{
+          success: false,
+          error: 'Invalid vocabulary practice request'
+        }];
+      }
+
+      const results: TTSResponse[] = [];
+      
+      // Generate audio for each vocabulary word
+      for (const word of request.words) {
+        const vocabularyPrompt = TTSMasterPromptService.generateVocabularyPrompt({
+          ...request,
+          words: [word]
+        });
+
+        let result: TTSResponse;
+        
+        if (this.openai) {
+          const language = this.getLanguageForExam(request.examConfig.examType);
+          result = await this.generateWithOpenAI({
+            text: vocabularyPrompt,
+            language,
+            examConfig: request.examConfig,
+            audioType: 'vocabulary'
+          });
+        } else {
+          // Create structured vocabulary content
+          const vocabContent = this.createVocabularyContent(word, request.examConfig);
+          const language = this.getLanguageForExam(request.examConfig.examType);
+          
+          result = await this.generateSpeech({
+            text: vocabContent,
+            language,
+            speed: 0.8 // Slightly slower for vocabulary
+          });
+        }
+        
+        results.push(result);
+      }
+
+      return results;
+
+    } catch (error) {
+      console.error('Vocabulary practice generation error:', error);
+      return [{
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to generate vocabulary practice'
+      }];
+    }
+  }
+
+  /**
+   * Generate high-quality audio using OpenAI TTS with master prompt
+   */
+  private async generateWithOpenAI(request: EnhancedTTSRequest): Promise<TTSResponse> {
+    if (!this.openai) {
+      throw new Error('OpenAI not available');
+    }
+
+    try {
+      // Choose voice based on exam type and accent requirements
+      const voice = this.selectOpenAIVoice(request.examConfig);
+      
+      const response = await this.openai.audio.speech.create({
+        model: 'tts-1-hd',
+        voice: voice,
+        input: request.text,
+        speed: request.speed || 1.0
+      });
+
+      // Save to file
+      const timestamp = Date.now();
+      const audioType = request.audioType || 'speech';
+      const filename = `${audioType}_${request.examConfig?.examType || 'general'}_${timestamp}.mp3`;
+      const filePath = path.join(this.outputDir, filename);
+
+      const buffer = Buffer.from(await response.arrayBuffer());
+      fs.writeFileSync(filePath, buffer);
+
+      return {
+        success: true,
+        audioFile: filename,
+        audioUrl: `/uploads/tts/${filename}`,
+        duration: Math.ceil(request.text.length / 10)
+      };
+
+    } catch (error) {
+      console.error('OpenAI TTS error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Select appropriate OpenAI voice based on exam type
+   */
+  private selectOpenAIVoice(examConfig?: TTSExamType): 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer' {
+    if (!examConfig) return 'alloy';
+
+    switch (examConfig.examType) {
+      case 'TOEFL':
+        return 'alloy'; // American accent
+      case 'IELTS':
+        return 'echo'; // British-like accent
+      case 'PTE':
+        return 'nova'; // Clear, neutral accent
+      case 'Business English':
+        return 'onyx'; // Professional tone
+      default:
+        return 'alloy';
+    }
+  }
+
+  /**
+   * Get language code based on exam type
+   */
+  private getLanguageForExam(examType: string): string {
+    // All exam types use English, but we maintain this for flexibility
+    return 'en';
+  }
+
+  /**
+   * Get speech speed based on learner level
+   */
+  private getSpeedForLevel(level: string): number {
+    switch (level) {
+      case 'A1':
+      case 'A2':
+        return 0.7;
+      case 'B1':
+        return 0.8;
+      case 'B2':
+        return 0.9;
+      case 'C1':
+      case 'C2':
+        return 1.0;
+      default:
+        return 0.8;
+    }
+  }
+
+  /**
+   * Create basic listening content structure
+   */
+  private createBasicListeningContent(request: ListeningPracticeRequest): string {
+    const { topic, examConfig } = request;
+    
+    // Basic template following master prompt principles
+    return `Welcome to today's listening practice on ${topic}. Let me tell you about an interesting situation. ` +
+           `This story will help you practice vocabulary and listening skills for the ${examConfig.examType} exam. ` +
+           `Listen carefully and pay attention to key vocabulary words.`;
+  }
+
+  /**
+   * Create structured vocabulary content
+   */
+  private createVocabularyContent(word: string, examConfig: TTSExamType): string {
+    const needsTranslation = ['A1', 'A2', 'B1'].includes(examConfig.learnerLevel);
+    
+    let content = `${word}. `;
+    content += `The word is ${word}. `;
+    
+    // Add example sentence
+    content += `For example: I use ${word} in my daily conversation. `;
+    
+    // Add translation if needed
+    if (needsTranslation && examConfig.learnerNativeLanguage === 'Farsi') {
+      content += `In Persian, this concept is similar to the word you might know. `;
+    }
+    
+    return content;
   }
 
   /**

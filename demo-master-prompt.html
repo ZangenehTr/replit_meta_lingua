@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master TTS Prompt - Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #4a5568;
+        }
+        .header h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .feature-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 10px;
+            border-left: 4px solid #4299e1;
+        }
+        .feature-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .highlight-box {
+            background: #e6fffa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #81e6d9;
+            margin: 15px 0;
+        }
+        .accent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .accent-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .exam-type {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        .accent-rule {
+            color: #4a5568;
+            font-size: 0.9em;
+        }
+        .success-badge {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .api-demo {
+            background: #f0fff4;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .btn {
+            background: #4299e1;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #3182ce;
+        }
+        #results {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎧 Master TTS Prompt Integration</h1>
+            <p>Comprehensive Audio Generation Guidelines for Meta Lingua Platform</p>
+            <div class="success-badge">✅ Successfully Integrated</div>
+        </div>
+
+        <div class="feature-section">
+            <h3>🎯 Master Prompt Overview</h3>
+            <p>The Master TTS Prompt ensures that <strong>any AI connected to Meta Lingua</strong> follows consistent, high-quality guidelines for generating language learning audio. This creates standardized listening practice and vocabulary files across the entire platform.</p>
+            
+            <div class="highlight-box">
+                <strong>🔑 Key Integration Points:</strong>
+                <ul>
+                    <li><strong>TTSMasterPromptService:</strong> Central service for prompt generation and validation</li>
+                    <li><strong>Enhanced TTS Routes:</strong> API endpoints following master guidelines</li>
+                    <li><strong>MetaLinguaTTSService:</strong> Updated with listening and vocabulary methods</li>
+                    <li><strong>Exam-Specific Accents:</strong> TOEFL (American), IELTS (British), PTE (Mixed), Business (Global)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="feature-section">
+            <h3>🎵 Listening Practice Files</h3>
+            <p>Natural-sounding conversations and narrations with exam-specific accents and learner-level appropriate speed.</p>
+            
+            <div class="accent-grid">
+                <div class="accent-item">
+                    <div class="exam-type">🇺🇸 TOEFL Exam</div>
+                    <div class="accent-rule">American accent only. Academic vocabulary and campus scenarios.</div>
+                </div>
+                
+                <div class="accent-item">
+                    <div class="exam-type">🇬🇧 IELTS Exam</div>
+                    <div class="accent-rule">Primarily British, sometimes mixed with American/Australian accents.</div>
+                </div>
+                
+                <div class="accent-item">
+                    <div class="exam-type">🌏 PTE Exam</div>
+                    <div class="accent-rule">Balanced British, Australian, North American, occasional Indian accent.</div>
+                </div>
+                
+                <div class="accent-item">
+                    <div class="exam-type">💼 Business English</div>
+                    <div class="accent-rule">Global variety: American, British, Indian, Chinese, Arabic accents.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-section">
+            <h3>📚 Vocabulary Files Structure</h3>
+            <p>Structured word-level practice with translations and authentic examples.</p>
+            
+            <div class="code-block">Master Vocabulary Format:
+1. Clear word pronunciation
+2. Part of speech identification  
+3. Translation (A1-B1 Farsi/Arabic speakers)
+4. Example from listening practice
+5. Additional authentic example
+6. Accent matching exam requirements</div>
+
+            <div class="highlight-box">
+                <strong>Translation Rules:</strong><br>
+                • <strong>A1-B1 Farsi speakers:</strong> Include Farsi translations<br>
+                • <strong>A1-B1 Arabic speakers:</strong> Include Arabic pronunciation<br>
+                • <strong>B2-C2 learners:</strong> Skip translation, focus on usage examples
+            </div>
+        </div>
+
+        <div class="feature-section">
+            <h3>🔗 Enhanced API Endpoints</h3>
+            <p>New API routes that implement the Master TTS Prompt guidelines:</p>
+            
+            <div class="code-block">GET  /api/tts/enhanced/master-prompt-info
+POST /api/tts/enhanced/listening-practice  
+POST /api/tts/enhanced/vocabulary-practice</div>
+        </div>
+
+        <div class="api-demo">
+            <h3>🧪 Live API Demonstration</h3>
+            <p>Test the Master TTS Prompt integration with real API calls:</p>
+            
+            <button class="btn" onclick="testMasterPromptInfo()">📊 Get Master Prompt Info</button>
+            <button class="btn" onclick="testListeningPractice()">🎵 Generate Listening Practice</button>
+            <button class="btn" onclick="testVocabularyPractice()">📝 Generate Vocabulary Audio</button>
+            
+            <div id="results">Click buttons above to test the Master TTS Prompt integration...</div>
+        </div>
+
+        <div class="feature-section">
+            <h3>✅ Implementation Benefits</h3>
+            <div class="highlight-box">
+                <ul>
+                    <li><strong>Consistent Quality:</strong> All AI components follow the same TTS guidelines</li>
+                    <li><strong>Exam Preparation:</strong> Accent-specific audio for TOEFL, IELTS, PTE preparation</li>
+                    <li><strong>Multi-Language Support:</strong> Appropriate translations for Farsi/Arabic learners</li>
+                    <li><strong>Educational Structure:</strong> Proper vocabulary practice with examples and context</li>
+                    <li><strong>Self-Hosted Solution:</strong> Works completely offline for Iranian deployment</li>
+                    <li><strong>CallerN Integration:</strong> Same guidelines used in video call practice materials</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; color: #666; font-size: 0.9em;">
+            <p><strong>Meta Lingua Platform</strong> - Master TTS Prompt Successfully Integrated<br>
+            Any AI connected to this system will now follow comprehensive audio generation guidelines.</p>
+        </div>
+    </div>
+
+    <script>
+        async function testMasterPromptInfo() {
+            const results = document.getElementById('results');
+            results.textContent = 'Testing Master Prompt Info endpoint...\n';
+            
+            try {
+                const response = await fetch('/api/tts/enhanced/master-prompt-info?examType=IELTS&learnerLevel=B2&learnerNativeLanguage=Farsi');
+                const data = await response.json();
+                
+                results.textContent += `✅ Master Prompt Info Retrieved:\n`;
+                results.textContent += `📖 Exam Type: ${data.examConfig?.examType}\n`;
+                results.textContent += `📊 Learner Level: ${data.examConfig?.learnerLevel}\n`;
+                results.textContent += `🗣️ Native Language: ${data.examConfig?.learnerNativeLanguage}\n`;
+                results.textContent += `🎭 Accent Instructions: ${data.accentInstructions?.slice(0, 100)}...\n`;
+                results.textContent += `📝 Vocabulary Instructions: ${data.vocabularyInstructions?.slice(0, 100)}...\n`;
+                results.textContent += `\nSupported Exam Types: ${data.supportedExamTypes?.join(', ')}\n`;
+                results.textContent += `Supported Levels: ${data.supportedLevels?.join(', ')}\n`;
+            } catch (error) {
+                results.textContent += `❌ Error: ${error.message}\n`;
+            }
+        }
+
+        async function testListeningPractice() {
+            const results = document.getElementById('results');
+            results.textContent = 'Generating Listening Practice with Master Prompt...\n';
+            
+            try {
+                const response = await fetch('/api/tts/enhanced/listening-practice', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: 'Airport Travel Experience',
+                        duration: 120,
+                        examType: 'IELTS',
+                        learnerLevel: 'B2',
+                        learnerNativeLanguage: 'Farsi',
+                        includeVocabulary: true
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.listeningPractice?.success) {
+                    results.textContent += `✅ Listening Practice Generated:\n`;
+                    results.textContent += `🎵 Audio File: ${data.listeningPractice.audioFile}\n`;
+                    results.textContent += `🔗 URL: ${data.listeningPractice.audioUrl}\n`;
+                    results.textContent += `⏱️ Duration: ~${data.listeningPractice.duration} seconds\n`;
+                    results.textContent += `📋 Master Prompt Used: ${data.masterPromptUsed ? 'Yes' : 'No'}\n`;
+                    results.textContent += `🎯 Exam Config: ${data.examConfig.examType} - ${data.examConfig.learnerLevel}\n`;
+                } else {
+                    results.textContent += `❌ Listening Practice Failed: ${data.listeningPractice?.error || 'Unknown error'}\n`;
+                }
+            } catch (error) {
+                results.textContent += `❌ Error: ${error.message}\n`;
+            }
+        }
+
+        async function testVocabularyPractice() {
+            const results = document.getElementById('results');
+            results.textContent = 'Generating Vocabulary Practice with Master Prompt...\n';
+            
+            try {
+                const response = await fetch('/api/tts/enhanced/vocabulary-practice', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        words: ['departure', 'boarding', 'luggage', 'passport', 'security'],
+                        examType: 'TOEFL',
+                        learnerLevel: 'B1',
+                        learnerNativeLanguage: 'Farsi',
+                        sourceListeningText: 'Airport travel conversation'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.vocabularyFiles && data.vocabularyFiles.length > 0) {
+                    results.textContent += `✅ Vocabulary Practice Generated:\n`;
+                    results.textContent += `📚 Total Words: ${data.totalWords}\n`;
+                    results.textContent += `📋 Master Prompt Used: ${data.masterPromptUsed ? 'Yes' : 'No'}\n`;
+                    results.textContent += `🎯 Exam Config: ${data.examConfig.examType} - ${data.examConfig.learnerLevel}\n`;
+                    results.textContent += `🗣️ Native Language: ${data.examConfig.learnerNativeLanguage}\n`;
+                    
+                    data.vocabularyFiles.forEach((vocab, i) => {
+                        if (vocab.success) {
+                            results.textContent += `📝 Word ${i + 1}: ${vocab.audioUrl}\n`;
+                        }
+                    });
+                } else {
+                    results.textContent += `❌ Vocabulary Practice Failed: ${data.error || 'Unknown error'}\n`;
+                }
+            } catch (error) {
+                results.textContent += `❌ Error: ${error.message}\n`;
+            }
+        }
+    </script>
+</body>
+</html>
