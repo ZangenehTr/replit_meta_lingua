@@ -167,28 +167,26 @@ export class MetaLinguaTTSService {
         };
       }
 
-      // Generate prompt following master guidelines
-      const masterPrompt = TTSMasterPromptService.generateListeningPracticePrompt(request);
-      
       // Use OpenAI for high-quality conversational audio if available
       if (this.openai) {
         const language = this.getLanguageForExam(request.examConfig.examType);
         return await this.generateWithOpenAI({
-          text: masterPrompt,
+          text: request.topic, // Pass just the topic, not the full prompt
           language,
           examConfig: request.examConfig,
           audioType: 'listening'
         });
       }
 
-      // Fallback to basic TTS with appropriate language
+      // Fallback to basic TTS with natural content
       const language = this.getLanguageForExam(request.examConfig.examType);
-      const speed = this.getSpeedForLevel(request.examConfig.learnerLevel);
+      const naturalContent = this.createNaturalListeningContent(request.topic, request.examConfig);
+      const naturalizedContent = this.addNaturalSpeechPatterns(naturalContent, request.examConfig);
       
       return this.generateSpeech({
-        text: `Listening Practice: ${request.topic}. ${this.createBasicListeningContent(request)}`,
+        text: naturalizedContent,
         language,
-        speed
+        speed: this.calculateNaturalSpeed(request.examConfig)
       });
 
     } catch (error) {
@@ -267,14 +265,20 @@ export class MetaLinguaTTSService {
     }
 
     try {
+      // Extract actual content from master prompt
+      const actualContent = this.extractContentFromPrompt(request.text, request);
+      
       // Choose voice based on exam type and accent requirements
       const voice = this.selectOpenAIVoice(request.examConfig);
+      
+      // Add SSML-like natural speech patterns
+      const naturalizedContent = this.addNaturalSpeechPatterns(actualContent, request.examConfig);
       
       const response = await this.openai.audio.speech.create({
         model: 'tts-1-hd',
         voice: voice,
-        input: request.text,
-        speed: request.speed || 1.0
+        input: naturalizedContent,
+        speed: this.calculateNaturalSpeed(request.examConfig)
       });
 
       // Save to file
@@ -290,7 +294,7 @@ export class MetaLinguaTTSService {
         success: true,
         audioFile: filename,
         audioUrl: `/uploads/tts/${filename}`,
-        duration: Math.ceil(request.text.length / 10)
+        duration: Math.ceil(naturalizedContent.length / 12) // More accurate estimation
       };
 
     } catch (error) {
@@ -307,15 +311,198 @@ export class MetaLinguaTTSService {
 
     switch (examConfig.examType) {
       case 'TOEFL':
-        return 'alloy'; // American accent
+        return 'alloy'; // American accent - natural and clear
       case 'IELTS':
-        return 'echo'; // British-like accent
+        return 'echo'; // British-like accent - sophisticated tone
       case 'PTE':
-        return 'nova'; // Clear, neutral accent
+        return 'nova'; // Clear, neutral accent - good for academic content
       case 'Business English':
-        return 'onyx'; // Professional tone
+        return 'onyx'; // Professional, deeper tone - authoritative
       default:
-        return 'alloy';
+        return 'shimmer'; // Warm, conversational tone for general English
+    }
+  }
+
+  /**
+   * Extract actual content from master prompt instructions
+   */
+  private extractContentFromPrompt(text: string, request: EnhancedTTSRequest): string {
+    // If text contains master prompt instructions, extract just the content
+    if (text.includes('SPECIFIC TASK:') || text.includes('Master Prompt')) {
+      const lines = text.split('\n');
+      let contentStart = -1;
+      let actualContent = '';
+
+      // Look for content indicators
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith('Topic:') || line.startsWith('Words to process:')) {
+          contentStart = i;
+          break;
+        }
+      }
+
+      // Generate natural content based on the extracted topic/words
+      if (contentStart >= 0) {
+        const topic = lines.find(l => l.startsWith('Topic:'))?.replace('Topic:', '').trim();
+        if (topic) {
+          return this.generateNaturalContent(topic, request);
+        }
+      }
+
+      // Fallback: try to extract any meaningful content
+      const contentSections = text.split(/SPECIFIC TASK:|Topic:|Words to process:/);
+      if (contentSections.length > 1) {
+        const rawContent = contentSections[1].split(/\n/)[0].trim();
+        if (rawContent) {
+          return this.generateNaturalContent(rawContent, request);
+        }
+      }
+    }
+
+    // If it's already clean content, use it directly
+    return text;
+  }
+
+  /**
+   * Generate natural conversational content based on topic and exam type
+   */
+  private generateNaturalContent(topic: string, request: EnhancedTTSRequest): string {
+    const { examConfig } = request;
+    if (!examConfig) return topic;
+
+    const level = examConfig.learnerLevel;
+    const examType = examConfig.examType;
+
+    // Generate natural conversation based on exam type and level
+    switch (request.audioType) {
+      case 'listening':
+        return this.createNaturalListeningContent(topic, examConfig);
+      case 'vocabulary':
+        return this.createNaturalVocabularyContent(topic, examConfig);
+      default:
+        return this.createNaturalGeneralContent(topic, examConfig);
+    }
+  }
+
+  /**
+   * Create natural listening content without robotic instructions
+   */
+  private createNaturalListeningContent(topic: string, examConfig: TTSExamType): string {
+    const isAdvanced = ['B2', 'C1', 'C2'].includes(examConfig.learnerLevel);
+    
+    // Create conversational, natural content
+    const templates = {
+      'shopping': isAdvanced 
+        ? "Hey Sarah, I went to that new grocery store downtown yesterday. The produce section was amazing - they had these organic vegetables that looked so fresh. The only downside was how crowded it got around lunch time. I had to wait in a long queue at the cashier, but at least they were offering a twenty percent discount on everything."
+        : "I went shopping yesterday. The store was very crowded. There were many people in the queue. The cashier was friendly. I got a good discount on vegetables.",
+      
+      'work': isAdvanced
+        ? "So I had this important meeting with my colleague yesterday about the project deadline. We realized we need to finish the presentation by Friday, which means working late this week. The good news is that if we do well, there might be a promotion opportunity. My schedule is pretty packed, but the extra salary would definitely be worth it."
+        : "I had a meeting with my colleague. We talked about the deadline. We need to finish our presentation. Our schedule is very busy. We hope to get a promotion.",
+
+      'travel': isAdvanced  
+        ? "Our journey to Paris was incredible, but getting to our destination took longer than expected. The airport was chaotic - people everywhere with their luggage, long lines for passport control. Our departure was delayed by two hours, but the arrival made it all worthwhile. The city was absolutely beautiful."
+        : "We went to Paris. The journey was long. There were many people at the airport. Everyone had big luggage. Our departure was late. But the arrival was good."
+    };
+
+    // Find the most appropriate template
+    const lowerTopic = topic.toLowerCase();
+    for (const [key, content] of Object.entries(templates)) {
+      if (lowerTopic.includes(key)) {
+        return content;
+      }
+    }
+
+    // Default natural content
+    return isAdvanced 
+      ? `Let me tell you something interesting about ${topic}. It's fascinating how different people approach this topic. Some find it challenging, while others think it's quite straightforward. What's your experience with ${topic}?`
+      : `Today we will talk about ${topic}. This topic is important. Many people like to learn about ${topic}. It is interesting and useful.`;
+  }
+
+  /**
+   * Create natural vocabulary content
+   */
+  private createNaturalVocabularyContent(word: string, examConfig: TTSExamType): string {
+    const isAdvanced = ['B2', 'C1', 'C2'].includes(examConfig.learnerLevel);
+    const needsTranslation = ['A1', 'A2', 'B1'].includes(examConfig.learnerLevel) && 
+                           examConfig.learnerNativeLanguage === 'Farsi';
+
+    let content = `${word}... The word is "${word}".`;
+    
+    if (isAdvanced) {
+      content += ` This is commonly used in both formal and informal contexts. For example: "The ${word} was evident in their discussion." You'll often hear this in academic and professional settings.`;
+    } else {
+      content += ` For example: "I can see the ${word} clearly." This word is very useful in everyday conversation.`;
+      
+      if (needsTranslation) {
+        content += ` در فارسی، این مفهوم قابل درک است.`; // "In Persian, this concept is understandable."
+      }
+    }
+
+    return content;
+  }
+
+  /**
+   * Create natural general content
+   */
+  private createNaturalGeneralContent(topic: string, examConfig: TTSExamType): string {
+    const isAdvanced = ['B2', 'C1', 'C2'].includes(examConfig.learnerLevel);
+    
+    return isAdvanced
+      ? `Speaking of ${topic}, this is definitely something worth discussing. It's interesting how perspectives vary from person to person. What are your thoughts on this?`
+      : `Let's talk about ${topic}. This is a good topic. Many people have different ideas about ${topic}.`;
+  }
+
+  /**
+   * Add natural speech patterns to reduce robotic sound
+   */
+  private addNaturalSpeechPatterns(content: string, examConfig?: TTSExamType): string {
+    // Remove unnecessary pauses after common words
+    let natural = content
+      .replace(/\bof\s*,\s*/g, 'of ') // Remove pauses after "of"
+      .replace(/\band\s*,\s*/g, 'and ') // Remove pauses after "and"  
+      .replace(/\bbut\s*,\s*/g, 'but ') // Remove pauses after "but"
+      .replace(/\bthe\s*,\s*/g, 'the ') // Remove pauses after "the"
+      .replace(/\bin\s*,\s*/g, 'in ') // Remove pauses after "in"
+      .replace(/\bto\s*,\s*/g, 'to ') // Remove pauses after "to"
+      .replace(/\bfor\s*,\s*/g, 'for ') // Remove pauses after "for"
+
+    // Add natural pauses in appropriate places
+    natural = natural
+      .replace(/\.\s+/g, '... ') // Longer pause after sentences
+      .replace(/,\s+/g, ', ') // Short pause after commas
+      .replace(/:\s+/g, ': ') // Appropriate pause after colons
+      .replace(/;\s+/g, '; ') // Medium pause after semicolons
+
+    // Add conversational elements for advanced levels
+    if (examConfig && ['B2', 'C1', 'C2'].includes(examConfig.learnerLevel)) {
+      // Occasionally add natural fillers (but not too many)
+      if (Math.random() < 0.3) {
+        natural = natural.replace(/\bWell,\s*/g, 'Well, uh, ');
+      }
+    }
+
+    return natural;
+  }
+
+  /**
+   * Calculate natural speaking speed based on exam config
+   */
+  private calculateNaturalSpeed(examConfig?: TTSExamType): number {
+    if (!examConfig) return 1.0;
+
+    const baseSpeed = this.getSpeedForLevel(examConfig.learnerLevel);
+    
+    // Adjust for exam type - business English slightly faster, academic slightly slower
+    switch (examConfig.examType) {
+      case 'Business English':
+        return Math.min(baseSpeed + 0.1, 1.2); // Slightly faster but not too fast
+      case 'TOEFL':
+      case 'IELTS':
+        return Math.max(baseSpeed - 0.05, 0.6); // Slightly slower for clarity
+      default:
+        return baseSpeed;
     }
   }
 
