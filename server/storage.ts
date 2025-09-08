@@ -107,8 +107,10 @@ export interface IStorage {
   getPlacementTestSessionsPaginated(page: number, limit: number): Promise<{ sessions: any[], total: number }>;
   getPlacementTestSessionsCount(): Promise<number>;
   createPlacementTestQuestion(data: any): Promise<any>;
+  getPlacementTestQuestion(id: number): Promise<any | undefined>;
   getPlacementTestQuestions(filters?: any): Promise<any[]>;
   createPlacementTestResponse(data: any): Promise<any>;
+  updatePlacementTestResponse(id: number, updates: any): Promise<any | undefined>;
   getPlacementTestResponses(sessionId: number): Promise<any[]>;
   createUserRoadmapEnrollment(data: any): Promise<any>;
 
@@ -4599,6 +4601,10 @@ export class MemStorage implements IStorage {
     return questionData;
   }
 
+  async getPlacementTestQuestion(id: number): Promise<any | undefined> {
+    return this.placementTestQuestions.get(id);
+  }
+
   async getPlacementTestQuestions(filters?: any): Promise<any[]> {
     let questions = Array.from(this.placementTestQuestions.values());
     
@@ -4630,6 +4636,15 @@ export class MemStorage implements IStorage {
     
     this.placementTestResponses.set(responseData.id, responseData);
     return responseData;
+  }
+
+  async updatePlacementTestResponse(id: number, updates: any): Promise<any | undefined> {
+    const response = this.placementTestResponses.get(id);
+    if (!response) return undefined;
+    
+    const updatedResponse = { ...response, ...updates };
+    this.placementTestResponses.set(id, updatedResponse);
+    return updatedResponse;
   }
 
   async getPlacementTestResponses(sessionId: number): Promise<any[]> {

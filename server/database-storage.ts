@@ -12978,6 +12978,10 @@ export class DatabaseStorage implements IStorage {
     return questionData;
   }
 
+  async getPlacementTestQuestion(id: number): Promise<any | undefined> {
+    return this.placementTestQuestions.get(id);
+  }
+
   async getPlacementTestQuestions(filters?: any): Promise<any[]> {
     let questions = Array.from(this.placementTestQuestions.values());
     
@@ -13009,6 +13013,15 @@ export class DatabaseStorage implements IStorage {
     
     this.placementTestResponses.set(responseData.id, responseData);
     return responseData;
+  }
+
+  async updatePlacementTestResponse(id: number, updates: any): Promise<any | undefined> {
+    const response = this.placementTestResponses.get(id);
+    if (!response) return undefined;
+    
+    const updatedResponse = { ...response, ...updates };
+    this.placementTestResponses.set(id, updatedResponse);
+    return updatedResponse;
   }
 
   async getPlacementTestResponses(sessionId: number): Promise<any[]> {
