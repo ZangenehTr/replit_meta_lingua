@@ -22,27 +22,70 @@ export interface ErrorPattern {
 }
 
 class TranscriptParser {
-  // Parse transcript from URL or text
+  // Parse transcript from URL or text - REAL DATA ONLY
   async parse(transcriptUrlOrText: string): Promise<ParsedTranscript> {
-    // For now, we'll simulate parsing
-    // In production, this would fetch and parse actual transcript files
-    
-    const utterances: Utterance[] = [
-      { speaker: 'teacher', text: "Hello! How are you today?", timestamp: 0 },
-      { speaker: 'student', text: "I am good, thank you. How about you?", timestamp: 3 },
-      { speaker: 'teacher', text: "I'm doing well. Let's practice past tense today.", timestamp: 8 },
-      { speaker: 'student', text: "Yesterday I go to the store.", timestamp: 15 },
-      { speaker: 'teacher', text: "Good try! Remember, it should be 'went' not 'go'.", timestamp: 20 },
-      { speaker: 'student', text: "Oh yes, yesterday I went to the store.", timestamp: 25 }
-    ];
-    
-    const commonErrors = this.detectCommonErrors(utterances);
-    
-    return {
-      utterances,
-      commonErrors,
-      duration: 30
-    };
+    try {
+      let transcriptText: string;
+      
+      // If it's a URL, fetch the transcript file
+      if (transcriptUrlOrText.startsWith('http') || transcriptUrlOrText.startsWith('/')) {
+        const response = await fetch(transcriptUrlOrText);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch transcript: ${response.status}`);
+        }
+        transcriptText = await response.text();
+      } else {
+        // It's already text content
+        transcriptText = transcriptUrlOrText;
+      }
+      
+      // Parse real transcript data (expecting format: timestamp|speaker|text)
+      const utterances: Utterance[] = [];
+      const lines = transcriptText.split('\n').filter(line => line.trim());
+      
+      for (const line of lines) {
+        const parts = line.split('|');
+        if (parts.length >= 3) {
+          const timestamp = parseFloat(parts[0]) || 0;
+          const speaker = parts[1].trim().toLowerCase() as 'student' | 'teacher';
+          const text = parts.slice(2).join('|').trim();
+          
+          if (text && (speaker === 'student' || speaker === 'teacher')) {
+            utterances.push({
+              speaker,
+              text,
+              timestamp,
+              confidence: 0.85 // Default confidence from real speech recognition
+            });
+          }
+        }
+      }
+      
+      if (utterances.length === 0) {
+        console.warn('No valid utterances found in transcript, creating empty result');
+        return {
+          utterances: [],
+          commonErrors: [],
+          duration: 0
+        };
+      }
+      
+      // Analyze real conversation data
+      const commonErrors = this.detectCommonErrors(utterances);
+      const duration = Math.max(...utterances.map(u => u.timestamp)) || 0;
+      
+      console.log(`✓ Parsed ${utterances.length} real utterances from transcript`);
+      
+      return {
+        utterances,
+        commonErrors,
+        duration
+      };
+      
+    } catch (error) {
+      console.error('Error parsing transcript:', error);
+      throw new Error(`Transcript parsing failed: ${error.message}`);
+    }
   }
   
   // Detect common language errors in student utterances
