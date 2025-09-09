@@ -64,11 +64,11 @@ export default function StudentMessagesMobile() {
   
 
 
-  // Fetch conversations
+  // Fetch conversations (class groups)
   const { data: conversations = [], isLoading: loadingConversations } = useQuery<Conversation[]>({
-    queryKey: ['/api/student/conversations'],
+    queryKey: ['/api/student/class-groups'],
     queryFn: async () => {
-      const response = await fetch('/api/student/conversations', {
+      const response = await fetch('/api/student/class-groups', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
@@ -294,40 +294,6 @@ export default function StudentMessagesMobile() {
               >
                 <h3 className="text-xl font-bold mb-4">{t('student:newConversation')}</h3>
                 <div className="space-y-4">
-                  <button 
-                    className="w-full p-4 rounded-xl bg-gray-100 dark:bg-gray-700 text-left flex items-center gap-3"
-                    onClick={() => {
-                      // Mock: Create conversation with teacher
-                      toast({
-                        title: t('student:conversationStarted'),
-                        description: t('student:teacherWillRespond')
-                      });
-                      setShowNewConversation(false);
-                    }}
-                  >
-                    <User className="w-5 h-5" />
-                    <div>
-                      <p className="font-semibold">{t('student:contactTeacher')}</p>
-                      <p className="text-sm text-gray-500">{t('student:askQuestions')}</p>
-                    </div>
-                  </button>
-                  
-                  <button 
-                    className="w-full p-4 rounded-xl bg-gray-100 dark:bg-gray-700 text-left flex items-center gap-3"
-                    onClick={() => {
-                      toast({
-                        title: t('student:groupCreated'),
-                        description: t('student:inviteClassmates')
-                      });
-                      setShowNewConversation(false);
-                    }}
-                  >
-                    <Users className="w-5 h-5" />
-                    <div>
-                      <p className="font-semibold">{t('student:createGroup')}</p>
-                      <p className="text-sm text-gray-500">{t('student:studyTogether')}</p>
-                    </div>
-                  </button>
                   
                   <button 
                     className="w-full p-4 rounded-xl bg-gray-100 dark:bg-gray-700 text-left flex items-center gap-3"
