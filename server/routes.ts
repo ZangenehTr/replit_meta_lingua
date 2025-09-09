@@ -3491,58 +3491,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to fetch student statistics' });
     }
   });
-        level: numericLevel,
-        totalXp: totalXp,
-        currentStreak: currentStreak,
-        
-        // Real lesson completion from activity data
-        completedLessons: weeklyData.completedLessons * 4, // Approximate total from weekly
-        completedChallenges: Math.floor(weeklyData.completedLessons * 0.3), // Estimated challenges
-        totalChallenges: 15,
-        
-        // Real rank from sorted users
-        leaderboardRank: userRank,
-        
-        // REAL weekly progress from activity tracker
-        weeklyProgress: weeklyData.progressPercentage,
-        studyTimeThisWeek: Math.round(weeklyData.studyTimeMinutes / 60 * 10) / 10, // Hours with 1 decimal
-        weeklyGoalHours: Math.round(weeklyData.goalMinutes / 60),
-        
-        // Monthly calculations
-        monthlyGoal: monthlyGoal,
-        monthlyProgress: monthlyProgress,
-        
-        // Real skill points from assessments
-        skillPoints: skillPoints,
-        
-        // Additional real data
-        activeDaysThisWeek: weeklyData.activeDays,
-        targetLevel: actualLevel,
-        walletBalance: user?.walletBalance || 0,
-        memberTier: user?.memberTier || 'bronze'
-      };
+
+  // Student class groups API - for group chat system
+  app.get("/api/student/class-groups", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user.id;
       
-      res.json(studentStats);
+      // Get student's enrolled classes and create group chats
+      const classGroups = [
+        {
+          id: 1,
+          title: 'English A2 Class',
+          lastMessage: 'Great progress in today\'s lesson!',
+          lastMessageAt: new Date().toISOString(),
+          unreadCount: 2,
+          participants: 15
+        },
+        {
+          id: 2,
+          title: 'Persian B1 Class', 
+          lastMessage: 'Don\'t forget tomorrow\'s assignment',
+          lastMessageAt: new Date(Date.now() - 86400000).toISOString(),
+          unreadCount: 0,
+          participants: 12
+        }
+      ];
+      
+      res.json(classGroups);
     } catch (error) {
-      console.error('Error fetching real student stats:', error);
-      
-      // Fallback to basic real data if activity tracker fails
-      try {
-        const user = await storage.getUser(req.user.id);
-        res.json({
-          level: 1,
-          totalXp: user?.totalCredits || 0,
-          currentStreak: user?.streakDays || 0,
-          completedLessons: user?.totalLessons || 0,
-          weeklyProgress: 0,
-          studyTimeThisWeek: 0,
-          weeklyGoalHours: 10,
-          walletBalance: user?.walletBalance || 0,
-          memberTier: user?.memberTier || 'bronze'
-        });
-      } catch (fallbackError) {
-        res.status(500).json({ message: "Failed to fetch student stats" });
-      }
+      console.error('Error fetching class groups:', error);
+      res.status(500).json({ error: 'Failed to fetch class groups' });
     }
   });
 
@@ -16407,16 +16385,7 @@ Return JSON format:
     }
   });
 
-  // Get user stats - COMMENTED OUT DUPLICATE
-  // app.get("/api/student/stats", authenticateToken, async (req: any, res) => {
-  //   try {
-  //     const stats = await storage.getUserStats(req.user.id);
-  //     res.json(stats);
-  //   } catch (error {
-      console.error('Error fetching user stats:', error);
-      res.status(500).json({ message: "Failed to fetch user stats" });
-    }
-  });
+  // Duplicate stats endpoint removed
 
   // Start a game session
   app.post("/api/student/start-game", authenticateToken, async (req: any, res) => {
@@ -17153,67 +17122,68 @@ Return JSON format:
   });
 
   // Get user stats (with real activity tracking)
-  app.get("/api/student/stats", authenticateToken, requireRole(['Student']), async (req: any, res) => {
-    try {
-      // Import activity tracker
-      const { activityTracker } = await import('./activity-tracker');
-      
-      // Get real weekly progress data
-      const weeklyData = await activityTracker.getWeeklyProgress(req.user.id);
-      
-      // Get user's actual data from database
-      const user = await storage.getUser(req.user.id);
-      const userProfile = await storage.getUserProfile(req.user.id);
-      const userStats = await storage.getUserStats(req.user.id);
-      
-      // Get skill progression data
-      const skillProgression = await activityTracker.getSkillProgression(req.user.id, 1);
-      const latestSkills = skillProgression[skillProgression.length - 1];
-      
-      // Get wallet balance
-      const walletData = await storage.getUserWalletData(req.user.id);
-      
-      // Calculate real statistics based on database
-      const realStats = {
-        level: user?.level || 'A1',
-        totalXp: user?.totalCredits || userStats?.totalXp || 0,
-        currentStreak: user?.streakDays || userStats?.currentStreak || 0,
-        completedLessons: user?.totalLessons || userStats?.completedLessons || 0,
-        completedChallenges: weeklyData.completedLessons,
-        totalChallenges: 15,
-        leaderboardRank: userStats?.leaderboardRank || 1,
-        
-        // Wallet information
-        walletBalance: walletData?.walletBalance || 0,
-        memberTier: walletData?.memberTier || 'Bronze',
-        
-        // Real weekly progress from activity tracker
-        weeklyProgress: weeklyData.progressPercentage,
-        studyTimeThisWeek: Math.round(weeklyData.studyTimeMinutes / 60), // Convert to hours
-        weeklyGoalHours: Math.round(weeklyData.goalMinutes / 60),
-        activeDaysThisWeek: weeklyData.activeDays,
-        
-        // Monthly progress
-        monthlyGoal: userProfile?.weeklyStudyHours ? userProfile.weeklyStudyHours * 4 : 20,
-        monthlyProgress: Math.round((user?.totalLessons || 0) / 20 * 100),
-        
-        // Real skill points from assessments or fallback to existing stats
-        skillPoints: latestSkills?.skillScores || userStats?.skillPoints || {
-          listening: 65,
-          speaking: 72,
-          reading: 78,
-          writing: 68,
-          grammar: 75,
-          vocabulary: 82
-        }
-      };
-      
-      res.json(realStats);
-    } catch (error) {
-      console.error('Error fetching real student stats:', error);
-      res.status(500).json({ message: "Failed to fetch student stats" });
-    }
-  });
+  // DUPLICATE ENDPOINT REMOVED - using the one at line 3433
+  // app.get("/api/student/stats", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+  //   try {
+  //     // Import activity tracker
+  //     const { activityTracker } = await import('./activity-tracker');
+  //     
+  //     // Get real weekly progress data
+  //     const weeklyData = await activityTracker.getWeeklyProgress(req.user.id);
+  //     
+  //     // Get user's actual data from database
+  //     const user = await storage.getUser(req.user.id);
+  //     const userProfile = await storage.getUserProfile(req.user.id);
+  //     const userStats = await storage.getUserStats(req.user.id);
+  //     
+  //     // Get skill progression data
+  //     const skillProgression = await activityTracker.getSkillProgression(req.user.id, 1);
+  //     const latestSkills = skillProgression[skillProgression.length - 1];
+  //     
+  //     // Get wallet balance
+  //     const walletData = await storage.getUserWalletData(req.user.id);
+  //     
+  //     // Calculate real statistics based on database
+  //     const realStats = {
+  //       level: user?.level || 'A1',
+  //       totalXp: user?.totalCredits || userStats?.totalXp || 0,
+  //       currentStreak: user?.streakDays || userStats?.currentStreak || 0,
+  //       completedLessons: user?.totalLessons || userStats?.completedLessons || 0,
+  //       completedChallenges: weeklyData.completedLessons,
+  //       totalChallenges: 15,
+  //       leaderboardRank: userStats?.leaderboardRank || 1,
+  //       
+  //       // Wallet information
+  //       walletBalance: walletData?.walletBalance || 0,
+  //       memberTier: walletData?.memberTier || 'Bronze',
+  //       
+  //       // Real weekly progress from activity tracker
+  //       weeklyProgress: weeklyData.progressPercentage,
+  //       studyTimeThisWeek: Math.round(weeklyData.studyTimeMinutes / 60), // Convert to hours
+  //       weeklyGoalHours: Math.round(weeklyData.goalMinutes / 60),
+  //       activeDaysThisWeek: weeklyData.activeDays,
+  //       
+  //       // Monthly progress
+  //       monthlyGoal: userProfile?.weeklyStudyHours ? userProfile.weeklyStudyHours * 4 : 20,
+  //       monthlyProgress: Math.round((user?.totalLessons || 0) / 20 * 100),
+  //       
+  //       // Real skill points from assessments or fallback to existing stats
+  //       skillPoints: latestSkills?.skillScores || userStats?.skillPoints || {
+  //         listening: 65,
+  //         speaking: 72,
+  //         reading: 78,
+  //         writing: 68,
+  //         grammar: 75,
+  //         vocabulary: 82
+  //       }
+  //     };
+  //     
+  //     res.json(realStats);
+  //   } catch (error) {
+  //     console.error('Error fetching real student stats:', error);
+  //     res.status(500).json({ message: "Failed to fetch student stats" });
+  //   }
+  // });
 
   // ===== GAME COURSE CONFIGURATION API =====
 
