@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Audio Quality Comparison Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .audio-panel {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .audio-panel:hover {
+            border-color: #007bff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .audio-panel h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.4em;
+        }
+        
+        .engine-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .online .engine-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .offline .engine-badge {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        audio {
+            width: 100%;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        
+        .specs {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            border-left: 4px solid #007bff;
+        }
+        
+        .specs strong {
+            color: #2c3e50;
+        }
+        
+        .content-text {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 0.95em;
+            line-height: 1.6;
+            border-left: 4px solid #28a745;
+        }
+        
+        .content-text h4 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .evaluation-section {
+            background: #fff3cd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .evaluation-section h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        
+        .criteria {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .criterion {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .playback-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .control-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .control-btn:hover {
+            background: #0056b3;
+        }
+        
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+        
+        .quality-indicator {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .online .quality-indicator {
+            color: #1976d2;
+        }
+        
+        .offline .quality-indicator {
+            color: #7b1fa2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎧 IELTS Audio Quality Test</h1>
+        <p class="subtitle">Compare Online vs Enhanced Offline TTS Quality</p>
+        
+        <div class="content-text">
+            <h4>📝 Test Content (IELTS Listening Style):</h4>
+            <p><em>"Good afternoon, everyone. I'm Dr. Helen Richardson from the University of Cambridge, and today I'm going to talk about sustainable transportation systems in modern cities...</em></p>
+            <p><strong>Length:</strong> ~90 seconds | <strong>Topic:</strong> Academic lecture | <strong>Accent:</strong> British English</p>
+        </div>
+        
+        <div class="comparison-grid">
+            <div class="audio-panel online">
+                <h3>🌐 Online Version</h3>
+                <div class="engine-badge">Edge TTS</div>
+                <div class="quality-indicator">⭐ Professional Quality</div>
+                <audio controls preload="metadata">
+                    <source src="online/ielts_test_online.wav" type="audio/wav">
+                    Your browser does not support audio playback.
+                </audio>
+                <div class="specs">
+                    <strong>Engine:</strong> Microsoft Edge TTS<br>
+                    <strong>Voice:</strong> Female British English<br>
+                    <strong>Speed:</strong> IELTS Slow (optimized)<br>
+                    <strong>Deployment:</strong> Requires internet<br>
+                    <strong>Iranian Access:</strong> ✅ Available
+                </div>
+            </div>
+            
+            <div class="audio-panel offline">
+                <h3>💿 Enhanced Offline Version</h3>
+                <div class="engine-badge">espeak-ng British</div>
+                <div class="quality-indicator">⭐ Enhanced Quality</div>
+                <audio controls preload="metadata">
+                    <source src="offline/ielts_test_offline.wav" type="audio/wav">
+                    Your browser does not support audio playback.
+                </audio>
+                <div class="specs">
+                    <strong>Engine:</strong> espeak-ng (en-gb)<br>
+                    <strong>Voice:</strong> British English<br>
+                    <strong>Speed:</strong> 140 WPM (IELTS standard)<br>
+                    <strong>Deployment:</strong> Fully offline<br>
+                    <strong>Iranian Access:</strong> ✅ Self-hosted
+                </div>
+            </div>
+        </div>
+        
+        <div class="playback-controls">
+            <button class="control-btn" onclick="playBoth()">▶️ Play Both</button>
+            <button class="control-btn" onclick="stopAll()">⏹️ Stop All</button>
+            <button class="control-btn" onclick="compareSection()">🔄 Compare Section</button>
+        </div>
+        
+        <div class="evaluation-section">
+            <h3>📊 IELTS Expert Evaluation Criteria</h3>
+            <p>As an IELTS professional, please evaluate based on:</p>
+            
+            <div class="criteria">
+                <div class="criterion">🗣️ <strong>Pronunciation</strong><br>British English authenticity</div>
+                <div class="criterion">⏱️ <strong>Pacing</strong><br>IELTS listening speed</div>
+                <div class="criterion">🔤 <strong>Clarity</strong><br>Word articulation</div>
+                <div class="criterion">🎯 <strong>Natural Flow</strong><br>Sentence intonation</div>
+                <div class="criterion">📚 <strong>Academic Tone</strong><br>University lecture style</div>
+                <div class="criterion">🇮🇷 <strong>Iranian Deployment</strong><br>Offline feasibility</div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; padding: 20px; background: #e8f5e8; border-radius: 10px;">
+            <h4 style="color: #2e7d32; margin-top: 0;">🎯 Quality Assessment</h4>
+            <p style="margin-bottom: 0;"><strong>Question:</strong> Is the enhanced offline version acceptable for professional IELTS practice in Iranian language institutes?</p>
+        </div>
+    </div>
+
+    <script>
+        let audioElements = document.querySelectorAll('audio');
+        
+        function playBoth() {
+            audioElements.forEach(audio => {
+                audio.currentTime = 0;
+                audio.play();
+            });
+        }
+        
+        function stopAll() {
+            audioElements.forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+        }
+        
+        function compareSection() {
+            // Play first 15 seconds of each for quick comparison
+            audioElements.forEach(audio => {
+                audio.currentTime = 0;
+                audio.play();
+                setTimeout(() => {
+                    audio.pause();
+                }, 15000);
+            });
+        }
+        
+        // Add event listeners for synchronized playback
+        audioElements.forEach((audio, index) => {
+            audio.addEventListener('play', () => {
+                // Optionally sync other audio (commented out for independent control)
+                // audioElements.forEach((otherAudio, otherIndex) => {
+                //     if (index !== otherIndex) {
+                //         otherAudio.pause();
+                //     }
+                // });
+            });
+        });
+    </script>
+</body>
+</html>
