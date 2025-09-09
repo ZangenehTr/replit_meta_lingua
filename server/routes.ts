@@ -21142,6 +21142,80 @@ Meta Lingua Academy`;
     }
   });
 
+  // ========================
+  // MISSING API ENDPOINT ALIASES - Fix for black-box test failures
+  // ========================
+  
+  // Alias for placement test status (redirect to existing endpoint)
+  app.get("/api/student/placement-test-status", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      // Redirect to existing placement-status endpoint
+      const userId = req.user?.id;
+      const placementStatus = await storage.getStudentPlacementStatus(userId);
+      res.json(placementStatus);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch placement test status' });
+    }
+  });
+
+  // Alias for peer groups (redirect to existing endpoint) 
+  app.get("/api/student/peer-groups", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const peerGroups = await storage.getPeerSocializerGroups(userId);
+      res.json(peerGroups);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch peer groups' });
+    }
+  });
+
+  // Alias for online teachers (redirect to Callern endpoint)
+  app.get("/api/student/online-teachers", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      // Get authorized Callern teachers from database
+      const authorizedTeachers = await storage.getAuthorizedCallernTeachers();
+      
+      // Get currently connected teachers from WebSocket server
+      const connectedTeacherIds = app.locals.websocketServer?.getConnectedTeachers?.() || [];
+      
+      // Format teachers for student display
+      const teachers = authorizedTeachers.map((teacher) => {
+        const isConnected = connectedTeacherIds.includes(teacher.id);
+        const hasCallernAvailability = teacher.isOnline === true;
+        const isOnline = isConnected && hasCallernAvailability;
+        
+        return {
+          id: teacher.id,
+          name: `${teacher.firstName || teacher.first_name} ${teacher.lastName || teacher.last_name}`,
+          email: teacher.email,
+          avatar: teacher.avatar || `https://ui-avatars.com/api/?name=${teacher.firstName || teacher.first_name}+${teacher.lastName || teacher.last_name}&background=random`,
+          isOnline,
+          status: isOnline ? "online" : "offline",
+          specializations: ["English", "Persian"],
+          isCallernAuthorized: true
+        };
+      });
+      
+      res.json(teachers);
+    } catch (error) {
+      console.error('Error fetching online teachers:', error);
+      res.status(500).json({ error: 'Failed to fetch online teachers' });
+    }
+  });
+
+  // ========================
+  // ERROR HANDLING - 404 for non-existent endpoints
+  // ========================
+  
+  // Catch-all route for API endpoints that don't exist
+  app.use('/api/*', (req, res) => {
+    res.status(404).json({ 
+      error: 'API endpoint not found',
+      path: req.path,
+      method: req.method
+    });
+  });
+
   const httpServer = createServer(app);
   
   // Initialize Callern WebSocket server
