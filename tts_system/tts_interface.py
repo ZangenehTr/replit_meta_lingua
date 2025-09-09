@@ -100,20 +100,10 @@ class TTSManager:
         """Initialize all available TTS providers"""
         logger.info("🎤 Initializing TTS Manager...")
         
-        # Initialize available providers 
+        # Production setup: Edge TTS only (confirmed working for Iranian deployment)
         provider_classes = [
             EdgeTTSProvider,
-            Pyttsx3Provider,
-            GTTSProvider,
-            SystemTTSProvider
         ]
-        
-        # Try to add enhanced pyttsx3 provider if available
-        try:
-            from .enhanced_pyttsx3_provider import EnhancedPyttsx3Provider
-            provider_classes.insert(1, EnhancedPyttsx3Provider)  # Insert after Edge TTS
-        except ImportError:
-            logger.warning("Enhanced Pyttsx3 provider not available")
         
         for provider_class in provider_classes:
             try:
@@ -135,20 +125,12 @@ class TTSManager:
         
         if TTSEngine.EDGE_TTS in self.providers:
             self.preferred_engine = TTSEngine.EDGE_TTS
-            logger.info("🎯 Preferred engine: Edge TTS (Production ready, professional quality)")
-        elif TTSEngine.PYTTSX3 in self.providers:
-            self.preferred_engine = TTSEngine.PYTTSX3
-            logger.info("🎯 Preferred engine: pyttsx3 (basic offline)")
+            self.fallback_engine = None  # No fallback needed - Edge TTS is production ready
+            logger.info("🎯 Production engine: Edge TTS (Professional quality, confirmed for Iranian deployment)")
         else:
             self.preferred_engine = None
-            logger.warning("❌ No preferred engine available")
-            
-        # Set fallback: pyttsx3 preferred, then others
-        for engine in [TTSEngine.PYTTSX3, TTSEngine.GTTS, TTSEngine.SYSTEM_TTS]:
-            if engine in self.providers and engine != self.preferred_engine:
-                self.fallback_engine = engine
-                logger.info(f"🔄 Fallback engine: {engine.value}")
-                break
+            self.fallback_engine = None
+            logger.error("❌ Edge TTS not available - Production TTS system failed to initialize")
                 
     async def synthesize(
         self,
@@ -160,15 +142,11 @@ class TTSManager:
     ) -> Dict[str, Any]:
         """Synthesize text using specified or preferred engine"""
         
-        # Determine which engine to use
+        # Use specified engine or production default
         target_engine = engine or self.preferred_engine
         
         if not target_engine or target_engine not in self.providers:
-            if self.fallback_engine:
-                logger.warning(f"⚠️ Using fallback engine: {self.fallback_engine.value}")
-                target_engine = self.fallback_engine
-            else:
-                raise RuntimeError("No TTS engines available")
+            raise RuntimeError("Edge TTS production engine not available")
                 
         provider = self.providers[target_engine]
         
@@ -179,19 +157,8 @@ class TTSManager:
             return result
             
         except Exception as e:
-            logger.error(f"❌ Synthesis failed with {target_engine.value}: {e}")
-            
-            # Try fallback if available
-            if self.fallback_engine and target_engine != self.fallback_engine:
-                logger.info(f"🔄 Trying fallback: {self.fallback_engine.value}")
-                fallback_provider = self.providers[self.fallback_engine]
-                result = await fallback_provider.synthesize_async(text, output_file, voice, **kwargs)
-                result['engine_used'] = self.fallback_engine.value
-                result['is_offline'] = fallback_provider.is_offline
-                result['used_fallback'] = True
-                return result
-            else:
-                raise e
+            logger.error(f"❌ TTS synthesis failed with {target_engine.value}: {e}")
+            raise RuntimeError(f"Production TTS synthesis failed: {e}")
                 
     def get_engine_info(self) -> Dict[str, Any]:
         """Get information about available engines"""
@@ -221,8 +188,5 @@ class TTSManager:
         return info
 
 
-# Import providers
+# Import production TTS provider
 from .edge_tts_provider import EdgeTTSProvider
-from .pyttsx3_provider import Pyttsx3Provider
-from .gtts_provider import GTTSProvider
-from .system_tts_provider import SystemTTSProvider
