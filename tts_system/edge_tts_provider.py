@@ -35,6 +35,7 @@ class EdgeTTSProvider(TTSProvider):
         text: str, 
         output_file: Path,
         voice: Optional[str] = None,
+        rate: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """Synthesize using Edge TTS"""
@@ -47,17 +48,27 @@ class EdgeTTSProvider(TTSProvider):
             
         # Add SSML for better prosody if not present
         if not text.strip().startswith('<speak'):
+            # Set default rate for IELTS listening (slower than normal)
+            default_rate = rate or "-10%"  # Slower for IELTS listening comprehension
+            
             if 'receptionist' in kwargs.get('speaker_type', '').lower():
                 # Professional tone
                 text = f'''<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-GB">
-                    <prosody rate="0.9" pitch="+2st">
+                    <prosody rate="{default_rate}" pitch="+2st">
                         <emphasis level="moderate">{text}</emphasis>
                     </prosody>
                 </speak>'''
             elif 'customer' in kwargs.get('speaker_type', '').lower():
                 # More casual tone  
                 text = f'''<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-GB">
-                    <prosody rate="0.85" pitch="-1st">
+                    <prosody rate="{default_rate}" pitch="-1st">
+                        {text}
+                    </prosody>
+                </speak>'''
+            else:
+                # Default IELTS monologue format - measured, clear pace
+                text = f'''<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-GB">
+                    <prosody rate="{default_rate}" pitch="+0st">
                         {text}
                     </prosody>
                 </speak>'''
