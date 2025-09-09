@@ -391,12 +391,14 @@ app.use((req, res, next) => {
     }
   });
 
-  // 404 handler for API endpoints
+  // Import and register routes from routes.ts
+  const { registerRoutes } = await import('./routes.js');
+  const server = await registerRoutes(app);
+
+  // 404 handler for API endpoints (moved after route registration)
   app.use('/api/*', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found', path: req.path });
   });
-
-  const server = createServer(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
