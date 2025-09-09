@@ -101,14 +101,21 @@ class TTSManager:
         """Initialize all available TTS providers"""
         logger.info("🎤 Initializing TTS Manager...")
         
-        # Try to initialize all providers
+        # Try to initialize all providers 
         provider_classes = [
             EdgeTTSProvider,
             # BarkTTSProvider,  # Temporarily disabled due to numpy issue
-            Pyttsx3Provider, 
+            Pyttsx3Provider,
             GTTSProvider,
             SystemTTSProvider
         ]
+        
+        # Try to add enhanced pyttsx3 provider if available
+        try:
+            from .enhanced_pyttsx3_provider import EnhancedPyttsx3Provider
+            provider_classes.insert(1, EnhancedPyttsx3Provider)  # Insert after Edge TTS
+        except ImportError:
+            logger.warning("Enhanced Pyttsx3 provider not available")
         
         for provider_class in provider_classes:
             try:
@@ -222,6 +229,6 @@ class TTSManager:
 # Import providers
 from .edge_tts_provider import EdgeTTSProvider
 # from .bark_tts_provider import BarkTTSProvider  # Temporarily disabled due to numpy issue
-from .pyttsx3_provider import Pyttsx3Provider  
+from .pyttsx3_provider import Pyttsx3Provider
 from .gtts_provider import GTTSProvider
 from .system_tts_provider import SystemTTSProvider
