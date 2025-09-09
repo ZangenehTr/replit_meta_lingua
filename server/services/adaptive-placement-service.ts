@@ -398,20 +398,263 @@ export class AdaptivePlacementService {
   }
 
   /**
+   * Generate specific question content based on skill and CEFR level
+   */
+  private generateQuestionContent(skill: Skill, level: CEFRLevel): {
+    type: string;
+    title: string;
+    prompt: string;
+    content: any;
+    expectedDurationSeconds: number;
+  } {
+    if (skill === 'speaking') {
+      return this.generateSpeakingQuestionContent(level);
+    } else if (skill === 'writing') {
+      return this.generateWritingQuestionContent(level);
+    } else if (skill === 'reading') {
+      return this.generateReadingQuestionContent(level);
+    } else if (skill === 'listening') {
+      return this.generateListeningQuestionContent(level);
+    }
+    
+    // Fallback
+    return {
+      type: `${skill}_assessment`,
+      title: `${skill.charAt(0).toUpperCase() + skill.slice(1)} Assessment - ${level} Level`,
+      prompt: `Please complete this ${skill} task at ${level} level.`,
+      content: {},
+      expectedDurationSeconds: 120
+    };
+  }
+
+  /**
+   * Generate speaking question content for specific CEFR level
+   */
+  private generateSpeakingQuestionContent(level: CEFRLevel): {
+    type: string;
+    title: string;
+    prompt: string;
+    content: any;
+    expectedDurationSeconds: number;
+  } {
+    const speakingQuestions = {
+      'A1': {
+        type: 'personal_introduction',
+        title: 'Personal Introduction',
+        prompt: 'Please introduce yourself. Tell us your name, where you are from, and what you like to do in your free time. Speak for about 1 minute.',
+        content: {
+          instructions: 'Speak clearly and try to use simple sentences. You can talk about your hobbies, family, or work.',
+          keywords: ['name', 'country', 'hobby', 'family', 'work']
+        },
+        expectedDurationSeconds: 60
+      },
+      'A2': {
+        type: 'daily_routine',
+        title: 'Describe Your Daily Routine',
+        prompt: 'Describe what you do on a typical day. Talk about your morning routine, work or studies, and evening activities. Try to speak for about 1-2 minutes.',
+        content: {
+          instructions: 'Use simple past and present tenses. Mention specific times if you can.',
+          keywords: ['morning', 'work', 'study', 'evening', 'activities', 'time']
+        },
+        expectedDurationSeconds: 90
+      },
+      'B1': {
+        type: 'opinion_expression',
+        title: 'Express Your Opinion',
+        prompt: 'What do you think about learning languages online? Give your opinion and explain why you think this way. Include both advantages and disadvantages. Speak for about 2 minutes.',
+        content: {
+          instructions: 'Express your opinion clearly and give reasons. Use connecting words like "because", "however", "also".',
+          keywords: ['opinion', 'advantages', 'disadvantages', 'online learning', 'reasons']
+        },
+        expectedDurationSeconds: 120
+      },
+      'B2': {
+        type: 'problem_solving',
+        title: 'Problem Solving Discussion',
+        prompt: 'Imagine you are planning to study abroad but you have limited budget. Discuss the challenges you might face and suggest some solutions. Speak for about 2-3 minutes.',
+        content: {
+          instructions: 'Identify problems clearly and propose practical solutions. Use conditional language like "if", "would", "could".',
+          keywords: ['challenges', 'solutions', 'budget', 'study abroad', 'planning']
+        },
+        expectedDurationSeconds: 150
+      },
+      'C1': {
+        type: 'abstract_discussion',
+        title: 'Abstract Topic Discussion',
+        prompt: 'Discuss the impact of artificial intelligence on education. Consider both current applications and future possibilities. Analyze the benefits and potential concerns. Speak for about 3 minutes.',
+        content: {
+          instructions: 'Analyze the topic from multiple perspectives. Use complex sentence structures and advanced vocabulary.',
+          keywords: ['artificial intelligence', 'education', 'impact', 'benefits', 'concerns', 'future']
+        },
+        expectedDurationSeconds: 180
+      },
+      'C2': {
+        type: 'critical_analysis',
+        title: 'Critical Analysis',
+        prompt: 'Critically analyze the statement: "Traditional education methods are becoming obsolete in the digital age." Present arguments for and against this view, and conclude with your own position. Speak for about 3-4 minutes.',
+        content: {
+          instructions: 'Demonstrate sophisticated argumentation skills. Use nuanced language and complex grammatical structures.',
+          keywords: ['critical analysis', 'traditional education', 'digital age', 'arguments', 'position']
+        },
+        expectedDurationSeconds: 210
+      }
+    };
+
+    return speakingQuestions[level] || speakingQuestions['B1'];
+  }
+
+  /**
+   * Generate writing question content for specific CEFR level
+   */
+  private generateWritingQuestionContent(level: CEFRLevel): {
+    type: string;
+    title: string;
+    prompt: string;
+    content: any;
+    expectedDurationSeconds: number;
+  } {
+    const writingQuestions = {
+      'A1': {
+        type: 'simple_description',
+        title: 'Write About Yourself',
+        prompt: 'Write a short paragraph about yourself. Include your name, age, country, and what you like to do.',
+        content: {
+          instructions: 'Use simple sentences. Write 3-4 sentences.',
+          minWords: 30,
+          maxWords: 60
+        },
+        expectedDurationSeconds: 300
+      },
+      'A2': {
+        type: 'email_writing',
+        title: 'Write an Email',
+        prompt: 'Write an email to a friend about your weekend plans. Tell them what you are going to do and invite them to join you.',
+        content: {
+          instructions: 'Use appropriate email format. Write 60-80 words.',
+          minWords: 60,
+          maxWords: 80
+        },
+        expectedDurationSeconds: 400
+      },
+      'B1': {
+        type: 'opinion_essay',
+        title: 'Opinion Essay',
+        prompt: 'Write your opinion about learning English online. Give reasons for your opinion with examples.',
+        content: {
+          instructions: 'Organize your ideas clearly. Write 100-150 words.',
+          minWords: 100,
+          maxWords: 150
+        },
+        expectedDurationSeconds: 600
+      },
+      'B2': {
+        type: 'formal_letter',
+        title: 'Formal Letter',
+        prompt: 'Write a formal letter to your local government suggesting improvements to public transportation in your area.',
+        content: {
+          instructions: 'Use formal language and proper letter structure. Write 150-200 words.',
+          minWords: 150,
+          maxWords: 200
+        },
+        expectedDurationSeconds: 800
+      },
+      'C1': {
+        type: 'report_writing',
+        title: 'Report Writing',
+        prompt: 'Write a report analyzing the effects of remote work on productivity and work-life balance.',
+        content: {
+          instructions: 'Use report format with clear sections. Write 200-250 words.',
+          minWords: 200,
+          maxWords: 250
+        },
+        expectedDurationSeconds: 1000
+      },
+      'C2': {
+        type: 'argumentative_essay',
+        title: 'Argumentative Essay',
+        prompt: 'Write an argumentative essay discussing whether universities should make attendance mandatory or optional.',
+        content: {
+          instructions: 'Present both sides and take a clear position. Write 250-300 words.',
+          minWords: 250,
+          maxWords: 300
+        },
+        expectedDurationSeconds: 1200
+      }
+    };
+
+    return writingQuestions[level] || writingQuestions['B1'];
+  }
+
+  /**
+   * Generate reading question content for specific CEFR level
+   */
+  private generateReadingQuestionContent(level: CEFRLevel): {
+    type: string;
+    title: string;
+    prompt: string;
+    content: any;
+    expectedDurationSeconds: number;
+  } {
+    return {
+      type: 'reading_comprehension',
+      title: `Reading Comprehension - ${level} Level`,
+      prompt: 'Read the passage below and answer the questions that follow.',
+      content: {
+        passage: 'Reading passage would be inserted here based on CEFR level...',
+        questions: [
+          'Sample question 1',
+          'Sample question 2',
+          'Sample question 3'
+        ]
+      },
+      expectedDurationSeconds: 300
+    };
+  }
+
+  /**
+   * Generate listening question content for specific CEFR level  
+   */
+  private generateListeningQuestionContent(level: CEFRLevel): {
+    type: string;
+    title: string;
+    prompt: string;
+    content: any;
+    expectedDurationSeconds: number;
+  } {
+    return {
+      type: 'listening_comprehension',
+      title: `Listening Comprehension - ${level} Level`,
+      prompt: 'Listen to the audio and answer the questions that follow.',
+      content: {
+        audioUrl: '/audio/sample-listening.mp3',
+        questions: [
+          'Sample listening question 1',
+          'Sample listening question 2',
+          'Sample listening question 3'
+        ]
+      },
+      expectedDurationSeconds: 240
+    };
+  }
+
+  /**
    * Get question for specific skill and level
    */
   private async getQuestionForLevel(skill: Skill, level: CEFRLevel): Promise<PlacementTestQuestion | null> {
+    // Generate specific content based on skill and level
+    const questionContent = this.generateQuestionContent(skill, level);
+    
     // Create and store question in database
     const questionData = {
       skill,
       level,
-      type: `${skill}_assessment`,
-      title: `${skill.charAt(0).toUpperCase() + skill.slice(1)} Assessment - ${level} Level`,
-      prompt: `Please complete this ${skill} task at ${level} level.`,
-      content: { /* Question-specific content */ },
+      type: questionContent.type,
+      title: questionContent.title,
+      prompt: questionContent.prompt,
+      content: questionContent.content,
       responseType: skill === 'speaking' ? 'audio' : 'text',
-      expectedDurationSeconds: 120,
-      estimatedMinutes: 2
+      expectedDurationSeconds: questionContent.expectedDurationSeconds,
+      estimatedMinutes: Math.ceil(questionContent.expectedDurationSeconds / 60)
     };
 
     // Store the question in the database
@@ -421,18 +664,18 @@ export class AdaptivePlacementService {
       id: createdQuestion.id,
       skill,
       cefrLevel: level,
-      questionType: `${skill}_assessment`,
-      title: `${skill.charAt(0).toUpperCase() + skill.slice(1)} Assessment - ${level} Level`,
-      prompt: `Please complete this ${skill} task at ${level} level.`,
-      content: { /* Question-specific content */ },
+      questionType: questionContent.type,
+      title: questionContent.title,
+      prompt: questionContent.prompt,
+      content: questionContent.content,
       responseType: skill === 'speaking' ? 'audio' : 'text',
-      expectedDurationSeconds: 120,
+      expectedDurationSeconds: questionContent.expectedDurationSeconds,
       scoringCriteria: { level, skill },
       maxScore: 100,
       difficultyWeight: 0.5,
       prerequisiteSkills: [],
       tags: [skill, level],
-      estimatedCompletionMinutes: 2,
+      estimatedCompletionMinutes: Math.ceil(questionContent.expectedDurationSeconds / 60),
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date()
