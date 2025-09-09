@@ -334,7 +334,7 @@ export default function StudentDashboard() {
           </motion.div>
         )}
 
-        {/* Peer Socializer System - Iranian Gender-Based Matching */}
+        {/* Socializer Availability System */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -349,34 +349,30 @@ export default function StudentDashboard() {
                   </div>
                   <div>
                     <h3 className="font-bold text-lg text-gray-900">
-                      {t('student:peerSocializer', 'همکلاسی‌های ایرانی')}
+                      {t('student:socializer', 'همکلاسی‌سازی')}
                     </h3>
                     <p className="text-gray-600 text-sm">
-                      {t('student:peerSocializerDesc', 'با همکلاسی‌های ایرانی خود تمرین کنید')}
+                      {t('student:socializerDesc', 'آماده پیوستن به جلسات دیگران')}
                     </p>
                   </div>
                 </div>
                 <Badge variant="outline" className="text-xs bg-purple-100 text-purple-700 border-purple-200">
-                  {t('student:smartMatching', '🧠 تطبیق هوشمند')}
+                  {t('student:aiMatching', '🤖 تطبیق هوشمند')}
                 </Badge>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <Button 
-                  className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                  onClick={() => {
+                    // Toggle socializer availability
+                  }}
                 >
-                  <Users className="w-4 h-4 mr-2" />
-                  {t('student:findPeers', 'پیدا کردن همکلاس')}
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="border-purple-300 text-purple-700 hover:bg-purple-50"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  {t('student:joinGroup', 'پیوستن به گروه')}
+                  <Heart className="w-4 h-4 mr-2" />
+                  {t('student:toggleAvailability', 'تغییر وضعیت دسترسی')}
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-3 text-center">
-                {t('student:genderAgeMatching', 'سیستم هوشمند بر اساس سن و جنسیت برای فرهنگ ایرانی بهینه‌سازی شده')}
+                {t('student:socializerNote', 'وقتی فعال باشید، در صورت نیاز معلمان شما را به جلسات دعوت می‌کنند')}
               </p>
             </CardContent>
           </Card>
