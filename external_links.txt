@@ -1,0 +1,42 @@
+🎧 IELTS Section 1 Audio Players - External Access Links
+===========================================================
+
+🌐 PROFESSIONAL IELTS LISTENING PRACTICE
+Complete Swimming Lesson Conversation (38 segments)
+British English • Exam-authentic format • Professional quality
+
+🇮🇷 OFFLINE VERSION (Iranian Production Ready)
+https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/ielts_swimming_lesson_offline.html
+
+✅ Features:
+• Fully offline TTS using pyttsx3
+• Zero external dependencies 
+• Self-hosted audio generation
+• Complete Iranian deployment compliance
+• 38 conversation segments with distinct male/female voices
+• Professional receptionist-customer dialogue
+
+🔗 ONLINE VERSION (Development Quality)
+https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/ielts_swimming_lesson_online.html
+
+✅ Features:
+• High-quality Edge TTS synthesis
+• Professional British English voices (en-GB-SoniaNeural, en-GB-RyanNeural)
+• Superior audio quality for development/testing
+• Same 38-segment conversation structure
+• Enhanced prosody and naturalness
+
+📱 MOBILE & DESKTOP COMPATIBLE
+• Responsive design works on all devices
+• Touch-optimized audio controls
+• Professional exam-style interface
+• Progress tracking and full conversation playback
+
+🎯 USAGE:
+• Individual segment playback for detailed study
+• Full conversation mode for exam practice
+• Professional IELTS Section 1 format
+• Suitable for language institutes and self-study
+
+🇮🇷 IRANIAN DEPLOYMENT STATUS:
+The offline version meets all requirements for Iranian hosting with zero external dependencies.
