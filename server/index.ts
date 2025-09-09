@@ -62,6 +62,11 @@ app.get('/ielts_section1_audio.html', (_req, res) => {
   res.sendFile(path.join(__dirname, '../ielts_section1_audio.html'));
 });
 
+// Serve improved IELTS audio page
+app.get('/ielts_improved_audio.html', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../ielts_improved_audio.html'));
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
