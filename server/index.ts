@@ -75,6 +75,22 @@ app.get('/professional_ielts_audio.html', (_req, res) => {
 // Serve professional audio files
 app.use('/professional_audio', express.static(path.join(__dirname, '../professional_audio')));
 
+// Serve final IELTS audio files
+app.use('/ielts_audio_final', express.static(path.join(__dirname, '../ielts_audio_final')));
+
+// Serve offline IELTS audio player
+app.get('/ielts_swimming_lesson_offline.html', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../ielts_swimming_lesson_offline.html'));
+});
+
+// Serve online IELTS audio player  
+app.get('/ielts_swimming_lesson_online.html', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../ielts_swimming_lesson_online.html'));
+});
+
+// Serve online IELTS audio files
+app.use('/ielts_audio_online', express.static(path.join(__dirname, '../ielts_audio_online')));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
