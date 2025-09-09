@@ -1591,8 +1591,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Optimized students list endpoint (no auth for testing)
-  app.get("/api/students/list", async (req: any, res) => {
+  // Optimized students list endpoint
+  app.get("/api/students/list", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
     try {
       // Use optimized query that fetches students with profiles and enrollments in a single query
       const students = await storage.getStudentsWithProfiles();
