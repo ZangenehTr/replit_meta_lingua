@@ -173,6 +173,98 @@ app.use((req, res, next) => {
     res.json([{ id: 1, title: "IELTS Speaking", level: "intermediate", enrollmentOpen: true }]);
   });
 
+  // Socializer availability toggle
+  app.put('/api/student/socializer-availability', authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const { isAvailable, level, skills } = req.body;
+      const userId = req.user.userId;
+      
+      // Mock response for now (storage implementation needed)
+      res.json({ success: true, message: 'Socializer availability updated' });
+    } catch (error) {
+      console.error('Error updating socializer availability:', error);
+      res.status(500).json({ error: 'Failed to update availability' });
+    }
+  });
+
+  // Get socializer status
+  app.get('/api/student/socializer-status', authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      
+      // Mock response for now
+      res.json({
+        isAvailable: false,
+        level: null,
+        skills: []
+      });
+    } catch (error) {
+      console.error('Error getting socializer status:', error);
+      res.status(500).json({ error: 'Failed to get status' });
+    }
+  });
+
+  // AI-powered socializer matching for teachers
+  app.post('/api/teacher/match-socializer', authenticateToken, requireRole(['Teacher', 'Tutor']), async (req: any, res) => {
+    try {
+      const { callernSessionId, studentLevel, studentWeakSkills } = req.body;
+      const teacherId = req.user.userId;
+      
+      // Mock AI matching response
+      const mockSocializer = {
+        id: 123,
+        name: "Alex Student",
+        level: studentLevel,
+        skills: ["speaking", "pronunciation"]
+      };
+      
+      res.json({
+        success: true,
+        socializer: mockSocializer,
+        matchReason: `Matched based on level similarity (${studentLevel}) and complementary skills`
+      });
+    } catch (error) {
+      console.error('Error matching socializer:', error);
+      res.status(500).json({ error: 'Failed to match socializer' });
+    }
+  });
+
+  // Get class group chats for enrolled students
+  app.get('/api/student/class-groups', authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      
+      // Mock class groups with Telegram-like chat environment
+      const classGroups = [
+        {
+          id: 1,
+          title: "Business English A2 - Group Chat",
+          description: "Class group chat for Business English A2 students",
+          classId: 101,
+          unreadCount: 3,
+          lastMessage: "Don't forget tomorrow's presentation!",
+          lastMessageAt: new Date().toISOString(),
+          participants: 15
+        },
+        {
+          id: 2,
+          title: "IELTS Speaking B2 - Group Chat", 
+          description: "Class group chat for IELTS Speaking B2 students",
+          classId: 102,
+          unreadCount: 0,
+          lastMessage: "Great job in today's mock exam everyone!",
+          lastMessageAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          participants: 12
+        }
+      ];
+      
+      res.json(classGroups);
+    } catch (error) {
+      console.error('Error getting class groups:', error);
+      res.status(500).json({ error: 'Failed to get class groups' });
+    }
+  });
+
   // CORS support for OPTIONS requests (fix for CORS configuration issue)
   app.options('*', (req, res) => {
     res.header('Access-Control-Allow-Origin', '*');
