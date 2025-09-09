@@ -3624,6 +3624,35 @@ export const srsCard = pgTable("srs_card", {
 });
 
 // ========================
+// SPECIAL CLASSES SYSTEM
+// ========================
+
+// Special Classes - admin-flagged featured classes for dashboard showcase
+export const specialClasses = pgTable("special_classes", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => courses.id).notNull(),
+  title: text("title").notNull(), // Display title for the special class
+  description: text("description"), // Special description/highlight
+  badge: text("badge"), // "Featured", "Popular", "New", "Limited Time"
+  badgeColor: text("badge_color").default("blue"), // blue, green, red, purple, orange
+  thumbnail: text("thumbnail"), // Special thumbnail for featured display
+  priority: integer("priority").default(1), // Higher = more priority in display
+  isActive: boolean("is_active").default(true),
+  validFrom: timestamp("valid_from").defaultNow(),
+  validUntil: timestamp("valid_until"), // Optional expiry date
+  maxEnrollments: integer("max_enrollments"), // Limited enrollment
+  currentEnrollments: integer("current_enrollments").default(0),
+  discountPercentage: integer("discount_percentage").default(0), // 0-100
+  originalPrice: integer("original_price"), // Original price if discounted
+  specialFeatures: text("special_features").array().default([]), // ["Native Speaker", "Certificate", "Small Class"]
+  targetAudience: text("target_audience"), // "Beginners", "Business Professionals", "IELTS Candidates"
+  adminNotes: text("admin_notes"), // Internal admin notes
+  createdBy: integer("created_by").references(() => users.id), // Admin who flagged it
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// ========================
 // PEER SOCIALIZER SYSTEM
 // ========================
 
@@ -3780,6 +3809,13 @@ export const insertSrsCardSchema = createInsertSchema(srsCard).omit({
   updatedAt: true
 });
 
+// Special Classes System Insert Schemas  
+export const insertSpecialClassSchema = createInsertSchema(specialClasses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Peer Socializer System Insert Schemas
 export const insertPeerSocializerGroupSchema = createInsertSchema(peerSocializerGroups).omit({
   id: true,
@@ -3840,6 +3876,10 @@ export type InsertSrsCard = z.infer<typeof insertSrsCardSchema>;
 // Course Roadmap Progress types (existing)
 export type CourseRoadmapProgress = typeof courseRoadmapProgress.$inferSelect;
 export type InsertCourseRoadmapProgress = typeof courseRoadmapProgress.$inferInsert;
+
+// Special Classes System Types
+export type SpecialClass = typeof specialClasses.$inferSelect;
+export type InsertSpecialClass = z.infer<typeof insertSpecialClassSchema>;
 
 // Peer Socializer System Types
 export type PeerSocializerGroup = typeof peerSocializerGroups.$inferSelect;

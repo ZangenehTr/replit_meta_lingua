@@ -381,6 +381,139 @@ export default function StudentDashboard() {
           </Card>
         </motion.div>
 
+        {/* Special Classes & Online Teacher Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Special Classes - Admin Featured */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-300 shadow-xl h-full">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center">
+                      <Star className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">
+                        {t('student:specialClasses', 'کلاس‌های ویژه')}
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        {t('student:specialClassesDesc', 'پیشنهادی مدیران آموزشی')}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                    {t('student:featured', 'پیشنهاد ویژه')}
+                  </Badge>
+                </div>
+                <div className="bg-white rounded-lg p-4 border border-emerald-200 mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge className="text-xs bg-emerald-500 text-white">
+                        {t('student:featured', 'پیشنهاد ویژه')}
+                      </Badge>
+                      <Badge className="text-xs bg-orange-500 text-white">
+                        25% {t('common:discount', 'تخفیف')}
+                      </Badge>
+                    </div>
+                    <span className="text-gray-500 text-xs">4 {t('student:spotsLeft', 'جا باقی')}</span>
+                  </div>
+                  <h4 className="font-bold text-gray-900 mb-1">
+                    {t('student:businessEnglish', 'انگلیسی تجاری پیشرفته')}
+                  </h4>
+                  <p className="text-gray-600 text-sm mb-3">
+                    {t('student:nativeSpeaker', 'با استاد بومی • 8 جلسه')}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900">750,000</span>
+                      <span className="text-gray-400 text-sm line-through">1,000,000</span>
+                      <span className="text-gray-600 text-sm">{t('common:currency', 'تومان')}</span>
+                    </div>
+                    <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600">
+                      {t('student:enroll', 'ثبت نام')}
+                    </Button>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                  <Award className="w-4 h-4 mr-2" />
+                  {t('student:viewAllSpecial', 'مشاهده همه کلاس‌های ویژه')}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Online Teacher Cards */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25 }}
+          >
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 shadow-xl h-full">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+                      <Video className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">
+                        {t('student:onlineTeachers', 'استادان آنلاین')}
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        {t('student:onlineTeachersDesc', 'استادان در دسترس برای CallerN')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-green-600 text-xs font-medium">3 آنلاین</span>
+                  </div>
+                </div>
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-blue-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        S
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">Sarah Johnson</p>
+                        <p className="text-gray-500 text-xs">Native English • IELTS Expert</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-xs text-gray-500">Available</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between bg-white rounded-lg p-3 border border-blue-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        M
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">Mike Chen</p>
+                        <p className="text-gray-500 text-xs">Business English • 5+ years</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-xs text-gray-500">Available</span>
+                    </div>
+                  </div>
+                </div>
+                <Button className="w-full bg-blue-500 hover:bg-blue-600">
+                  <Video className="w-4 h-4 mr-2" />
+                  {t('student:startCallerN', 'شروع جلسه CallerN')}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
         {/* Key Performance Indicators */}
         <motion.div 
           className="grid grid-cols-2 gap-3"

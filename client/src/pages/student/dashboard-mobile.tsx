@@ -293,6 +293,52 @@ export default function StudentDashboardMobile() {
               </div>
             </GlossyCard>
 
+            {/* Special Classes - Admin Featured */}
+            <GlossyCard className="border-2 border-emerald-500/50 bg-gradient-to-r from-emerald-500/20 to-green-500/20">
+              <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+                <Star className="w-5 h-5" />
+                {t('student:specialClasses', 'کلاس‌های ویژه')}
+              </h3>
+              <p className="text-white/80 text-sm mb-4">
+                {t('student:specialClassesDesc', 'کلاس‌های منتخب و پیشنهادی مدیران آموزشی با تخفیف ویژه')}
+              </p>
+              <div className="space-y-3">
+                <div className="bg-white/10 rounded-lg p-3 border border-white/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="success" className="text-xs">
+                        {t('student:featured', 'پیشنهاد ویژه')}
+                      </Badge>
+                      <Badge variant="warning" className="text-xs">
+                        25% {t('common:discount', 'تخفیف')}
+                      </Badge>
+                    </div>
+                    <span className="text-white/60 text-xs">4 {t('student:spotsLeft', 'جا باقی')}</span>
+                  </div>
+                  <h4 className="text-white font-bold text-sm mb-1">
+                    {t('student:businessEnglish', 'انگلیسی تجاری پیشرفته')}
+                  </h4>
+                  <p className="text-white/60 text-xs mb-2">
+                    {t('student:nativeSpeaker', 'با استاد بومی • 8 جلسه')}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-bold text-sm">750,000</span>
+                      <span className="text-white/40 text-xs line-through">1,000,000</span>
+                      <span className="text-white/60 text-xs">{t('common:currency', 'تومان')}</span>
+                    </div>
+                    <GlossyButton variant="success" className="text-xs px-3 py-1">
+                      {t('student:enroll', 'ثبت نام')}
+                    </GlossyButton>
+                  </div>
+                </div>
+                <GlossyButton variant="primary" className="w-full">
+                  <Award className="w-4 h-4 mr-2" />
+                  {t('student:viewAllSpecial', 'مشاهده همه کلاس‌های ویژه')}
+                </GlossyButton>
+              </div>
+            </GlossyCard>
+
             {/* Progress Section */}
             <GlossyCard>
               <h3 className="text-white font-bold mb-4 flex items-center gap-2">

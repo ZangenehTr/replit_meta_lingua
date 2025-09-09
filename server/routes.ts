@@ -3277,6 +3277,171 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // ========================
+  // SPECIAL CLASSES SYSTEM API - Admin-flagged featured classes
+  // ========================
+  
+  // Get special classes for student dashboard showcase
+  app.get("/api/student/special-classes", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const { specialClasses, courses, users } = await import('@shared/schema');
+      const { eq, and, desc, gte, or, isNull } = await import('drizzle-orm');
+      
+      // Get active special classes with course details
+      const featuredClasses = await db
+        .select({
+          id: specialClasses.id,
+          title: specialClasses.title,
+          description: specialClasses.description,
+          badge: specialClasses.badge,
+          badgeColor: specialClasses.badgeColor,
+          thumbnail: specialClasses.thumbnail,
+          priority: specialClasses.priority,
+          validUntil: specialClasses.validUntil,
+          maxEnrollments: specialClasses.maxEnrollments,
+          currentEnrollments: specialClasses.currentEnrollments,
+          discountPercentage: specialClasses.discountPercentage,
+          originalPrice: specialClasses.originalPrice,
+          specialFeatures: specialClasses.specialFeatures,
+          targetAudience: specialClasses.targetAudience,
+          // Course details
+          courseId: courses.id,
+          courseTitle: courses.title,
+          courseLevel: courses.level,
+          coursePrice: courses.price,
+          language: courses.language,
+          deliveryMode: courses.deliveryMode,
+          classFormat: courses.classFormat,
+          totalSessions: courses.totalSessions,
+          sessionDuration: courses.sessionDuration,
+          instructorId: courses.instructorId,
+          // Instructor details
+          instructorName: users.firstName,
+          instructorLastName: users.lastName
+        })
+        .from(specialClasses)
+        .innerJoin(courses, eq(specialClasses.courseId, courses.id))
+        .leftJoin(users, eq(courses.instructorId, users.id))
+        .where(and(
+          eq(specialClasses.isActive, true),
+          or(
+            isNull(specialClasses.validUntil),
+            gte(specialClasses.validUntil, new Date())
+          )
+        ))
+        .orderBy(desc(specialClasses.priority), desc(specialClasses.createdAt))
+        .limit(6); // Show top 6 special classes
+      
+      // Calculate discounted prices and availability
+      const processedClasses = featuredClasses.map(specialClass => {
+        const finalPrice = specialClass.discountPercentage > 0 
+          ? Math.round(specialClass.coursePrice * (1 - specialClass.discountPercentage / 100))
+          : specialClass.coursePrice;
+        
+        const isAvailable = !specialClass.maxEnrollments || 
+          specialClass.currentEnrollments < specialClass.maxEnrollments;
+        
+        const spotsLeft = specialClass.maxEnrollments 
+          ? specialClass.maxEnrollments - specialClass.currentEnrollments
+          : null;
+        
+        return {
+          ...specialClass,
+          finalPrice,
+          isAvailable,
+          spotsLeft,
+          instructorFullName: `${specialClass.instructorName || ''} ${specialClass.instructorLastName || ''}`.trim()
+        };
+      });
+      
+      res.json(processedClasses);
+    } catch (error) {
+      console.error('Error fetching special classes:', error);
+      res.status(500).json({ error: 'Failed to fetch special classes' });
+    }
+  });
+
+  // Enroll in special class
+  app.post("/api/student/special-classes/:specialClassId/enroll", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const specialClassId = parseInt(req.params.specialClassId);
+      const { specialClasses, courses, classEnrollments, insertClassEnrollmentSchema } = await import('@shared/schema');
+      const { eq, and, sql } = await import('drizzle-orm');
+      
+      // Get special class details
+      const [specialClass] = await db
+        .select()
+        .from(specialClasses)
+        .innerJoin(courses, eq(specialClasses.courseId, courses.id))
+        .where(eq(specialClasses.id, specialClassId));
+      
+      if (!specialClass) {
+        return res.status(404).json({ error: 'Special class not found' });
+      }
+      
+      if (!specialClass.special_classes.isActive) {
+        return res.status(400).json({ error: 'This special class is no longer available' });
+      }
+      
+      // Check enrollment limits
+      if (specialClass.special_classes.maxEnrollments && 
+          specialClass.special_classes.currentEnrollments >= specialClass.special_classes.maxEnrollments) {
+        return res.status(400).json({ error: 'Special class is full' });
+      }
+      
+      // Check if already enrolled
+      const existingEnrollment = await db
+        .select()
+        .from(classEnrollments)
+        .where(and(
+          eq(classEnrollments.courseId, specialClass.courses.id),
+          eq(classEnrollments.studentId, userId),
+          eq(classEnrollments.status, 'active')
+        ));
+      
+      if (existingEnrollment.length > 0) {
+        return res.status(400).json({ error: 'You are already enrolled in this class' });
+      }
+      
+      // Calculate final price
+      const finalPrice = specialClass.special_classes.discountPercentage > 0 
+        ? Math.round(specialClass.courses.price * (1 - specialClass.special_classes.discountPercentage / 100))
+        : specialClass.courses.price;
+      
+      // Create enrollment
+      const enrollmentData = insertClassEnrollmentSchema.parse({
+        courseId: specialClass.courses.id,
+        studentId: userId,
+        enrollmentDate: new Date(),
+        status: 'active',
+        paymentAmount: finalPrice
+      });
+      
+      await db.insert(classEnrollments).values(enrollmentData);
+      
+      // Update special class enrollment count
+      await db
+        .update(specialClasses)
+        .set({
+          currentEnrollments: sql`${specialClasses.currentEnrollments} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(specialClasses.id, specialClassId));
+      
+      res.json({
+        success: true,
+        message: 'Successfully enrolled in special class!',
+        finalPrice,
+        originalPrice: specialClass.courses.price,
+        discount: specialClass.special_classes.discountPercentage
+      });
+    } catch (error) {
+      console.error('Error enrolling in special class:', error);
+      res.status(500).json({ error: 'Failed to enroll in special class' });
+    }
+  });
+
   // Student Statistics API - Using REAL data from activity tracker
   app.get("/api/student/stats", authenticateToken, async (req: any, res) => {
     try {
