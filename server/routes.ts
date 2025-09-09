@@ -20528,20 +20528,64 @@ Meta Lingua Academy`;
   const placementTestRoutes = await import('./routes/placement-test-routes');
   app.use('/api/placement-test', placementTestRoutes.createPlacementTestRoutes(storage, ollamaService));
 
-  // Serve the IELTS quality comparison test
+  // Direct endpoint for IELTS quality comparison
   app.get('/ielts_quality_comparison.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/public/ielts_quality_comparison.html'));
+    try {
+      const htmlPath = path.join(__dirname, '../client/public/ielts_quality_comparison.html');
+      res.sendFile(htmlPath);
+    } catch (error) {
+      res.status(404).send('File not found');
+    }
   });
 
-  // Serve the audio files for the comparison test
+  // Direct endpoints for audio files
   app.get('/online/:filename', (req, res) => {
-    const filename = req.params.filename;
-    res.sendFile(path.join(__dirname, '../client/public/online', filename));
+    try {
+      const audioPath = path.join(__dirname, '../client/public/online', req.params.filename);
+      res.sendFile(audioPath);
+    } catch (error) {
+      res.status(404).send('Audio file not found');
+    }
   });
 
   app.get('/offline/:filename', (req, res) => {
-    const filename = req.params.filename;
-    res.sendFile(path.join(__dirname, '../client/public/offline', filename));
+    try {
+      const audioPath = path.join(__dirname, '../client/public/offline', req.params.filename);
+      res.sendFile(audioPath);
+    } catch (error) {
+      res.status(404).send('Audio file not found');
+    }
+  });
+  
+  // API endpoint for IELTS quality comparison
+  app.get('/api/ielts-comparison', (req, res) => {
+    try {
+      const htmlPath = path.join(__dirname, '../client/public/ielts_quality_comparison.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+      res.setHeader('Content-Type', 'text/html');
+      res.send(htmlContent);
+    } catch (error) {
+      res.status(404).json({ error: 'Comparison page not found' });
+    }
+  });
+
+  // API endpoints for audio files
+  app.get('/api/audio/online/:filename', (req, res) => {
+    try {
+      const audioPath = path.join(__dirname, '../client/public/online', req.params.filename);
+      res.sendFile(audioPath);
+    } catch (error) {
+      res.status(404).json({ error: 'Online audio file not found' });
+    }
+  });
+
+  app.get('/api/audio/offline/:filename', (req, res) => {
+    try {
+      const audioPath = path.join(__dirname, '../client/public/offline', req.params.filename);
+      res.sendFile(audioPath);
+    } catch (error) {
+      res.status(404).json({ error: 'Offline audio file not found' });
+    }
   });
 
   const httpServer = createServer(app);
