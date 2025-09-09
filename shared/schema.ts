@@ -22,6 +22,9 @@ export const users = pgTable("users", {
   status: text("status").default("active"), // Account status
   avatar: text("avatar"),
   isActive: boolean("is_active").default(true),
+  isAvailableToSocialize: boolean("is_available_to_socialize").default(false),
+  socializerLevel: text("socializer_level"), // Current proficiency level for matching
+  socializerSkills: text("socializer_skills").array().default([]), // Skills array for complementary matching
   preferences: jsonb("preferences"), // theme, language, notifications
   walletBalance: integer("wallet_balance").default(0), // IRR amount in wallet
   totalCredits: integer("total_credits").default(0), // Lifetime accumulated credits for tier calculation
@@ -3892,6 +3895,49 @@ export type PeerMatchingHistory = typeof peerMatchingHistory.$inferSelect;
 export type InsertPeerMatchingHistory = z.infer<typeof insertPeerMatchingHistorySchema>;
 export type PeerSocializerSettings = typeof peerSocializerSettings.$inferSelect;
 export type InsertPeerSocializerSettings = z.infer<typeof insertPeerSocializerSettingsSchema>;
+
+// Class Group Chats - Telegram-like environment for group classes
+export const classGroupChats = pgTable("class_group_chats", {
+  id: serial("id").primaryKey(),
+  classId: integer("class_id").references(() => courses.id).notNull(),
+  title: text("title").notNull(), // Class name + "Group Chat"
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Socializer Sessions - Track AI matching for CallernN
+export const socializerSessions = pgTable("socializer_sessions", {
+  id: serial("id").primaryKey(),
+  callernSessionId: text("callern_session_id").notNull(), // Reference to active CallernN session
+  teacherId: integer("teacher_id").references(() => users.id).notNull(),
+  requestingStudentId: integer("requesting_student_id").references(() => users.id).notNull(),
+  socializerId: integer("socializer_id").references(() => users.id).notNull(),
+  matchReason: text("match_reason"), // AI explanation for the match
+  sessionStatus: text("session_status").default("active"), // active, completed, declined
+  joinedAt: timestamp("joined_at").defaultNow(),
+  leftAt: timestamp("left_at"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Create insert schemas
+export const insertClassGroupChatSchema = createInsertSchema(classGroupChats).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertSocializerSessionSchema = createInsertSchema(socializerSessions).omit({
+  id: true,
+  createdAt: true
+});
+
+// Export types
+export type ClassGroupChat = typeof classGroupChats.$inferSelect;
+export type InsertClassGroupChat = z.infer<typeof insertClassGroupChatSchema>;
+export type SocializerSession = typeof socializerSessions.$inferSelect;
+export type InsertSocializerSession = z.infer<typeof insertSocializerSessionSchema>;
 
 // Export placement test schemas
 export * from './placement-test-schema';
