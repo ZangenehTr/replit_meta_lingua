@@ -37,7 +37,8 @@ import {
   Circle,
   ArrowUpRight,
   ArrowDownRight,
-  Coins
+  Coins,
+  MessageCircle
 } from "lucide-react";
 import { Link } from "wouter";
 import { Progress } from "@/components/ui/progress";
