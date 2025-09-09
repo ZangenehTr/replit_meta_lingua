@@ -16,8 +16,7 @@ logger = logging.getLogger(__name__)
 
 class TTSEngine(Enum):
     """Available TTS engines"""
-    EDGE_TTS = "edge_tts"          # High quality, online only
-    BARK = "bark"                  # High quality neural, offline
+    EDGE_TTS = "edge_tts"          # High quality, production ready
     PYTTSX3 = "pyttsx3"            # Basic quality, fully offline  
     GTTS = "gtts"                  # Google TTS, online only
     SYSTEM_TTS = "system"          # System native TTS
@@ -101,10 +100,9 @@ class TTSManager:
         """Initialize all available TTS providers"""
         logger.info("🎤 Initializing TTS Manager...")
         
-        # Try to initialize all providers 
+        # Initialize available providers 
         provider_classes = [
             EdgeTTSProvider,
-            # BarkTTSProvider,  # Temporarily disabled due to numpy issue
             Pyttsx3Provider,
             GTTSProvider,
             SystemTTSProvider
@@ -138,9 +136,6 @@ class TTSManager:
         if TTSEngine.EDGE_TTS in self.providers:
             self.preferred_engine = TTSEngine.EDGE_TTS
             logger.info("🎯 Preferred engine: Edge TTS (Production ready, professional quality)")
-        elif TTSEngine.BARK in self.providers:
-            self.preferred_engine = TTSEngine.BARK
-            logger.info("🎯 Preferred engine: Bark (neural synthesis, offline)")
         elif TTSEngine.PYTTSX3 in self.providers:
             self.preferred_engine = TTSEngine.PYTTSX3
             logger.info("🎯 Preferred engine: pyttsx3 (basic offline)")
@@ -148,8 +143,8 @@ class TTSManager:
             self.preferred_engine = None
             logger.warning("❌ No preferred engine available")
             
-        # Set fallback: Bark preferred, then pyttsx3
-        for engine in [TTSEngine.BARK, TTSEngine.PYTTSX3, TTSEngine.GTTS, TTSEngine.SYSTEM_TTS]:
+        # Set fallback: pyttsx3 preferred, then others
+        for engine in [TTSEngine.PYTTSX3, TTSEngine.GTTS, TTSEngine.SYSTEM_TTS]:
             if engine in self.providers and engine != self.preferred_engine:
                 self.fallback_engine = engine
                 logger.info(f"🔄 Fallback engine: {engine.value}")
@@ -228,7 +223,6 @@ class TTSManager:
 
 # Import providers
 from .edge_tts_provider import EdgeTTSProvider
-# from .bark_tts_provider import BarkTTSProvider  # Temporarily disabled due to numpy issue
 from .pyttsx3_provider import Pyttsx3Provider
 from .gtts_provider import GTTSProvider
 from .system_tts_provider import SystemTTSProvider
