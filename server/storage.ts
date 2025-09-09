@@ -87,6 +87,8 @@ import {
   type SupervisionObservation, type InsertSupervisionObservation,
   type TeacherObservationResponse, type InsertTeacherObservationResponse
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -1055,9 +1057,17 @@ export class MemStorage implements IStorage {
       password: "$2b$10$tO5lVOUKjyeG4Kv39wvYcO4dIhOkxxh6iFezQmMApZt39r2crgFmy", // password123
       firstName: "Ahmad",
       lastName: "Rezaei",
-      role: "student",
+      role: "Student",
       phoneNumber: "+989123456789",
-      phone: "+989123456789", // Compatibility alias
+      nationalId: "1234567890",
+      birthday: "1995-05-15",
+      gender: "male",
+      guardianName: "",
+      guardianPhone: "",
+      notes: "",
+      profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      level: "Intermediate",
+      status: "active",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
       isActive: true,
       preferences: { theme: "light", language: "en", notifications: true },
@@ -1066,6 +1076,9 @@ export class MemStorage implements IStorage {
       memberTier: "silver",
       streakDays: 15,
       totalLessons: 45,
+      targetLanguage: "English",
+      currentProficiency: "intermediate",
+      currentLevel: "B1",
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -1080,7 +1093,15 @@ export class MemStorage implements IStorage {
       lastName: "User",
       role: "Admin",
       phoneNumber: "+98-912-345-6789",
-      phone: "+98-912-345-6789", // Compatibility alias
+      nationalId: "0000000000",
+      birthday: "1985-01-01",
+      gender: "male",
+      guardianName: "",
+      guardianPhone: "",
+      notes: "System Administrator",
+      profileImage: null,
+      level: "Advanced",
+      status: "active",
       avatar: null,
       isActive: true,
       preferences: { theme: "light", language: "en", notifications: true },
@@ -1089,17 +1110,15 @@ export class MemStorage implements IStorage {
       memberTier: "diamond",
       streakDays: 0,
       totalLessons: 0,
+      targetLanguage: "English",
+      currentProficiency: "advanced",
+      currentLevel: "C2",
       createdAt: new Date(),
       updatedAt: new Date()
     };
     this.users.set(4, testAdmin);
     
-    // Update user schema compatibility for database 
-    this.users.forEach((user, id) => {
-      if (!user.phone && user.phoneNumber) {
-        user.phone = user.phoneNumber; // Add phone compatibility field
-      }
-    });
+    // Users are now properly initialized with correct schema
 
     // Add some tutors
     const tutor1: User = {
