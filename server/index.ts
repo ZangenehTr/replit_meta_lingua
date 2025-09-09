@@ -199,7 +199,23 @@ app.use((req, res, next) => {
   });
 
   app.get("/api/admin/branding", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
-    res.json({ id: 1, name: "Meta Lingua Academy", logo: "", primaryColor: "#0079F2" });
+    res.json({ 
+      id: 1, 
+      name: "Meta Lingua Academy", 
+      logo: "/logo.png", 
+      primaryColor: "#0079F2",
+      secondaryColor: "#00C851",
+      accentColor: "#FFC107",
+      backgroundColor: "#FFFFFF",
+      textColor: "#000000",
+      favicon: "/favicon.ico",
+      loginBackgroundImage: "/login-bg.jpg",
+      fontFamily: "Inter, sans-serif",
+      borderRadius: "0.5rem",
+      instituteName: "Meta Lingua Academy",
+      description: "AI-enhanced multilingual language learning platform",
+      updatedAt: new Date().toISOString()
+    });
   });
 
   // SECURITY FIX: Public branding endpoint (fix for frontend branding access)
@@ -210,8 +226,16 @@ app.use((req, res, next) => {
       logo: "/logo.png", 
       primaryColor: "#0079F2",
       secondaryColor: "#00C851",
+      accentColor: "#FFC107",
+      backgroundColor: "#FFFFFF",
+      textColor: "#000000",
+      favicon: "/favicon.ico",
+      loginBackgroundImage: "/login-bg.jpg",
+      fontFamily: "Inter, sans-serif",
+      borderRadius: "0.5rem",
       instituteName: "Meta Lingua Academy",
-      description: "AI-enhanced multilingual language learning platform"
+      description: "AI-enhanced multilingual language learning platform",
+      updatedAt: new Date().toISOString()
     });
   });
 

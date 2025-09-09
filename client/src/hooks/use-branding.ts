@@ -39,7 +39,12 @@ export function useBranding() {
       const root = document.documentElement;
       
       // Convert hex colors to HSL for CSS variables
-      const hexToHsl = (hex: string) => {
+      const hexToHsl = (hex: string | undefined) => {
+        // Return default HSL if hex is undefined or invalid
+        if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || hex.length !== 7) {
+          return '210 11% 15%'; // Default dark color
+        }
+        
         const r = parseInt(hex.slice(1, 3), 16) / 255;
         const g = parseInt(hex.slice(3, 5), 16) / 255;
         const b = parseInt(hex.slice(5, 7), 16) / 255;
@@ -62,18 +67,18 @@ export function useBranding() {
         return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
       };
 
-      // Apply colors as CSS variables
+      // Apply colors as CSS variables with safe fallbacks
       root.style.setProperty('--primary', hexToHsl(branding.primaryColor));
       root.style.setProperty('--secondary', hexToHsl(branding.secondaryColor));
       root.style.setProperty('--accent', hexToHsl(branding.accentColor));
       root.style.setProperty('--background', hexToHsl(branding.backgroundColor));
       root.style.setProperty('--foreground', hexToHsl(branding.textColor));
       
-      // Apply font family
-      root.style.setProperty('--font-family', branding.fontFamily);
+      // Apply font family with fallback
+      root.style.setProperty('--font-family', branding.fontFamily || 'Inter, sans-serif');
       
-      // Apply border radius
-      root.style.setProperty('--radius', branding.borderRadius);
+      // Apply border radius with fallback
+      root.style.setProperty('--radius', branding.borderRadius || '0.5rem');
 
       // Update document title and favicon
       document.title = branding.name;
