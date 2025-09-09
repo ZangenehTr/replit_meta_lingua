@@ -266,6 +266,33 @@ export default function StudentDashboardMobile() {
                 </div>
               </GlossyCard>
             )}
+            
+            {/* Peer Socializer System - Iranian Gender-Based Matching */}
+            <GlossyCard className="border-2 border-purple-500/50 bg-gradient-to-r from-purple-500/20 to-pink-500/20">
+              <h3 className="text-white font-bold mb-3 flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                {t('student:peerSocializer', 'همکلاسی‌های ایرانی')}
+              </h3>
+              <p className="text-white/80 text-sm mb-4">
+                {t('student:peerSocializerDesc', 'با همکلاسی‌های ایرانی خود تمرین کنید. سیستم هوشمند ما بهترین هم‌تمرین را برای شما پیدا می‌کند.')}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <GlossyButton variant="primary" className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700">
+                  <Users className="w-4 h-4 mr-2" />
+                  {t('student:findPeers', 'پیدا کردن همکلاس')}
+                </GlossyButton>
+                <GlossyButton variant="secondary" className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700">
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  {t('student:joinGroup', 'پیوستن به گروه')}
+                </GlossyButton>
+              </div>
+              <div className="mt-3 text-center">
+                <Badge variant="info" className="text-xs bg-white/20 text-white">
+                  {t('student:smartMatching', '🧠 تطبیق هوشمند بر اساس سن و جنسیت')}
+                </Badge>
+              </div>
+            </GlossyCard>
+
             {/* Progress Section */}
             <GlossyCard>
               <h3 className="text-white font-bold mb-4 flex items-center gap-2">

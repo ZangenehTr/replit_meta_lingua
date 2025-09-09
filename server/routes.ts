@@ -2938,6 +2938,345 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========================
+  // PEER SOCIALIZER SYSTEM API - Gender-based matching for Iranian students
+  // ========================
+  
+  // Get peer socializer groups for student
+  app.get("/api/student/peer-socializer/groups", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { peerSocializerGroups, peerSocializerParticipants, users } = await import('@shared/schema');
+      const { eq, and, ne, isNull, desc, sql } = await import('drizzle-orm');
+      
+      // Get available groups that user hasn't joined and aren't full
+      const availableGroups = await db
+        .select({
+          id: peerSocializerGroups.id,
+          groupName: peerSocializerGroups.groupName,
+          language: peerSocializerGroups.language,
+          proficiencyLevel: peerSocializerGroups.proficiencyLevel,
+          topic: peerSocializerGroups.topic,
+          maxParticipants: peerSocializerGroups.maxParticipants,
+          currentParticipants: peerSocializerGroups.currentParticipants,
+          status: peerSocializerGroups.status,
+          scheduledAt: peerSocializerGroups.scheduledAt,
+          durationMinutes: peerSocializerGroups.durationMinutes,
+          genderMixPreference: peerSocializerGroups.genderMixPreference
+        })
+        .from(peerSocializerGroups)
+        .where(and(
+          eq(peerSocializerGroups.status, 'waiting'),
+          sql`${peerSocializerGroups.currentParticipants} < ${peerSocializerGroups.maxParticipants}`
+        ))
+        .orderBy(desc(peerSocializerGroups.scheduledAt))
+        .limit(10);
+      
+      res.json(availableGroups);
+    } catch (error) {
+      console.error('Error fetching peer socializer groups:', error);
+      res.status(500).json({ error: 'Failed to fetch peer socializer groups' });
+    }
+  });
+
+  // Create peer matching request with gender-based preferences
+  app.post("/api/student/peer-socializer/match-request", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { language, proficiencyLevel, interests, preferredGender } = req.body;
+      const { peerMatchingRequests, insertPeerMatchingRequestSchema } = await import('@shared/schema');
+      
+      // Validate request data
+      const validatedData = insertPeerMatchingRequestSchema.parse({
+        userId,
+        language,
+        proficiencyLevel,
+        preferredGender: preferredGender || 'any',
+        interests: interests || [],
+        availableTimeSlots: req.body.availableTimeSlots || {},
+        status: 'active',
+        requestedAt: new Date(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
+      });
+      
+      // Create matching request
+      const [matchRequest] = await db
+        .insert(peerMatchingRequests)
+        .values(validatedData)
+        .returning();
+      
+      // Start matching algorithm
+      await performPeerMatching(userId);
+      
+      res.json({
+        success: true,
+        requestId: matchRequest.id,
+        message: 'Matching request created. We\'ll find suitable peers for you!'
+      });
+    } catch (error) {
+      console.error('Error creating peer matching request:', error);
+      res.status(500).json({ error: 'Failed to create matching request' });
+    }
+  });
+
+  // Join peer socializer group
+  app.post("/api/student/peer-socializer/join/:groupId", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const groupId = parseInt(req.params.groupId);
+      const { peerSocializerGroups, peerSocializerParticipants, insertPeerSocializerParticipantSchema } = await import('@shared/schema');
+      const { eq, and, sql } = await import('drizzle-orm');
+      
+      // Check if group exists and has space
+      const [group] = await db
+        .select()
+        .from(peerSocializerGroups)
+        .where(eq(peerSocializerGroups.id, groupId));
+      
+      if (!group) {
+        return res.status(404).json({ error: 'Group not found' });
+      }
+      
+      if (group.currentParticipants >= group.maxParticipants) {
+        return res.status(400).json({ error: 'Group is full' });
+      }
+      
+      if (group.status !== 'waiting') {
+        return res.status(400).json({ error: 'Group is no longer accepting participants' });
+      }
+      
+      // Check if user already joined
+      const existingParticipant = await db
+        .select()
+        .from(peerSocializerParticipants)
+        .where(and(
+          eq(peerSocializerParticipants.groupId, groupId),
+          eq(peerSocializerParticipants.userId, userId),
+          eq(peerSocializerParticipants.status, 'joined')
+        ));
+      
+      if (existingParticipant.length > 0) {
+        return res.status(400).json({ error: 'You have already joined this group' });
+      }
+      
+      // Add participant
+      const participantData = insertPeerSocializerParticipantSchema.parse({
+        groupId,
+        userId,
+        status: 'joined'
+      });
+      
+      await db.insert(peerSocializerParticipants).values(participantData);
+      
+      // Update group participant count
+      await db
+        .update(peerSocializerGroups)
+        .set({
+          currentParticipants: sql`${peerSocializerGroups.currentParticipants} + 1`,
+          updatedAt: new Date()
+        })
+        .where(eq(peerSocializerGroups.id, groupId));
+      
+      res.json({
+        success: true,
+        message: 'Successfully joined the peer socializer group!'
+      });
+    } catch (error) {
+      console.error('Error joining peer group:', error);
+      res.status(500).json({ error: 'Failed to join peer group' });
+    }
+  });
+
+  // Get user's peer socializer history and current groups
+  app.get("/api/student/peer-socializer/my-groups", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { peerSocializerGroups, peerSocializerParticipants } = await import('@shared/schema');
+      const { eq, desc } = await import('drizzle-orm');
+      
+      const myGroups = await db
+        .select({
+          id: peerSocializerGroups.id,
+          groupName: peerSocializerGroups.groupName,
+          language: peerSocializerGroups.language,
+          proficiencyLevel: peerSocializerGroups.proficiencyLevel,
+          topic: peerSocializerGroups.topic,
+          status: peerSocializerGroups.status,
+          scheduledAt: peerSocializerGroups.scheduledAt,
+          startedAt: peerSocializerGroups.startedAt,
+          endedAt: peerSocializerGroups.endedAt,
+          durationMinutes: peerSocializerGroups.durationMinutes,
+          participantStatus: peerSocializerParticipants.status,
+          joinedAt: peerSocializerParticipants.joinedAt,
+          participationRating: peerSocializerParticipants.participationRating
+        })
+        .from(peerSocializerParticipants)
+        .innerJoin(peerSocializerGroups, eq(peerSocializerParticipants.groupId, peerSocializerGroups.id))
+        .where(eq(peerSocializerParticipants.userId, userId))
+        .orderBy(desc(peerSocializerParticipants.joinedAt));
+      
+      res.json(myGroups);
+    } catch (error) {
+      console.error('Error fetching user peer groups:', error);
+      res.status(500).json({ error: 'Failed to fetch your peer groups' });
+    }
+  });
+
+  // Gender-based peer matching algorithm
+  async function performPeerMatching(requestingUserId: number) {
+    try {
+      const { users, peerMatchingRequests, peerSocializerGroups, insertPeerSocializerGroupSchema } = await import('@shared/schema');
+      const { eq, and, ne, inArray, sql, isNull } = await import('drizzle-orm');
+      
+      // Get requesting user info
+      const [requestingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, requestingUserId));
+      
+      if (!requestingUser || !requestingUser.birthday || !requestingUser.gender) {
+        console.log('User missing required profile data for matching');
+        return;
+      }
+      
+      // Get user's active matching request
+      const [matchRequest] = await db
+        .select()
+        .from(peerMatchingRequests)
+        .where(and(
+          eq(peerMatchingRequests.userId, requestingUserId),
+          eq(peerMatchingRequests.status, 'active')
+        ))
+        .orderBy(sql`${peerMatchingRequests.requestedAt} DESC`)
+        .limit(1);
+      
+      if (!matchRequest) return;
+      
+      // Calculate requesting user's age
+      const today = new Date();
+      const birthDate = new Date(requestingUser.birthday);
+      const requestingUserAge = today.getFullYear() - birthDate.getFullYear();
+      
+      // Get other active matching requests for same language/level
+      const otherRequests = await db
+        .select({
+          userId: peerMatchingRequests.userId,
+          requestId: peerMatchingRequests.id,
+          language: peerMatchingRequests.language,
+          proficiencyLevel: peerMatchingRequests.proficiencyLevel,
+          interests: peerMatchingRequests.interests,
+          user: users
+        })
+        .from(peerMatchingRequests)
+        .innerJoin(users, eq(peerMatchingRequests.userId, users.id))
+        .where(and(
+          ne(peerMatchingRequests.userId, requestingUserId),
+          eq(peerMatchingRequests.status, 'active'),
+          eq(peerMatchingRequests.language, matchRequest.language),
+          eq(peerMatchingRequests.proficiencyLevel, matchRequest.proficiencyLevel),
+          isNull(peerMatchingRequests.matchedGroupId)
+        ));
+      
+      if (otherRequests.length === 0) {
+        console.log('No other matching requests found');
+        return;
+      }
+      
+      // Apply Iranian gender-based matching algorithm
+      const scoredCandidates = otherRequests.map(candidate => {
+        if (!candidate.user.birthday || !candidate.user.gender) {
+          return { ...candidate, score: 0 };
+        }
+        
+        const candidateAge = today.getFullYear() - new Date(candidate.user.birthday).getFullYear();
+        let score = 50; // Base score
+        
+        // Gender preference scoring (70% opposite gender preference)
+        if (requestingUser.gender !== candidate.user.gender) {
+          score += 35; // 70% chance boost for opposite gender
+        } else {
+          score += 15; // 30% chance for same gender
+        }
+        
+        // Age-based priority for Iranian cultural context
+        // Boys 0-10+ years older than girls get priority
+        if (requestingUser.gender === 'male' && candidate.user.gender === 'female') {
+          const ageDiff = requestingUserAge - candidateAge;
+          if (ageDiff >= 0 && ageDiff <= 10) {
+            score += 20; // Priority boost for appropriate age difference
+          } else if (ageDiff < 0 && ageDiff >= -3) {
+            score += 10; // Small boost if female is slightly older (up to 3 years)
+          }
+        } else if (requestingUser.gender === 'female' && candidate.user.gender === 'male') {
+          const ageDiff = candidateAge - requestingUserAge;
+          if (ageDiff >= 0 && ageDiff <= 10) {
+            score += 20; // Priority boost for appropriate age difference
+          } else if (ageDiff < 0 && ageDiff >= -3) {
+            score += 10; // Small boost if male is slightly younger
+          }
+        }
+        
+        // Interest matching
+        const commonInterests = matchRequest.interests?.filter(interest => 
+          candidate.interests?.includes(interest)
+        ) || [];
+        score += commonInterests.length * 5;
+        
+        // Add randomization factor (10-20 points)
+        score += Math.random() * 10 + 10;
+        
+        return { ...candidate, score, candidateAge };
+      });
+      
+      // Sort by score (highest first) and take top candidates
+      const topCandidates = scoredCandidates
+        .filter(c => c.score > 60) // Minimum threshold
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5); // Max 6 people total (requesting user + 5 others)
+      
+      if (topCandidates.length === 0) {
+        console.log('No suitable candidates found');
+        return;
+      }
+      
+      // Create peer socializer group
+      const groupData = insertPeerSocializerGroupSchema.parse({
+        groupName: `${matchRequest.language} Practice Group`,
+        language: matchRequest.language,
+        proficiencyLevel: matchRequest.proficiencyLevel,
+        topic: 'Language Exchange & Cultural Practice',
+        maxParticipants: 6,
+        currentParticipants: 0,
+        status: 'waiting',
+        scheduledAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes from now
+        durationMinutes: 45,
+        genderMixPreference: 'mixed'
+      });
+      
+      const [newGroup] = await db
+        .insert(peerSocializerGroups)
+        .values(groupData)
+        .returning();
+      
+      // Update matching requests to point to new group
+      const candidateUserIds = [requestingUserId, ...topCandidates.map(c => c.userId)];
+      
+      await db
+        .update(peerMatchingRequests)
+        .set({
+          status: 'matched',
+          matchedGroupId: newGroup.id,
+          updatedAt: new Date()
+        })
+        .where(inArray(peerMatchingRequests.userId, candidateUserIds));
+      
+      console.log(`Created peer group ${newGroup.id} with ${candidateUserIds.length} matched users`);
+      
+    } catch (error) {
+      console.error('Error in peer matching algorithm:', error);
+    }
+  }
+
   // Student Statistics API - Using REAL data from activity tracker
   app.get("/api/student/stats", authenticateToken, async (req: any, res) => {
     try {

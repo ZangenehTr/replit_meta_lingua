@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   phoneNumber: text("phone_number"),
   nationalId: text("national_id"), // Student identification
   birthday: date("birthday"), // Birth date for age calculation
+  gender: text("gender"), // male, female - required for peer matching
   guardianName: text("guardian_name"), // For minor students
   guardianPhone: text("guardian_phone"), // Guardian contact
   notes: text("notes"), // Additional notes
@@ -3623,6 +3624,98 @@ export const srsCard = pgTable("srs_card", {
 });
 
 // ========================
+// PEER SOCIALIZER SYSTEM
+// ========================
+
+// Peer Socializer Groups/Rooms for language practice
+export const peerSocializerGroups = pgTable("peer_socializer_groups", {
+  id: serial("id").primaryKey(),
+  groupName: text("group_name").notNull(),
+  language: text("language").notNull(), // Target language for practice
+  proficiencyLevel: text("proficiency_level").notNull(), // beginner, intermediate, advanced
+  topic: text("topic"), // Conversation topic/theme
+  maxParticipants: integer("max_participants").default(6), // Maximum group size
+  currentParticipants: integer("current_participants").default(0),
+  status: text("status").default("waiting"), // waiting, active, completed, cancelled
+  hostId: integer("host_id").references(() => users.id), // Optional host/moderator
+  scheduledAt: timestamp("scheduled_at"), // When the session is scheduled
+  startedAt: timestamp("started_at"), // When session actually started
+  endedAt: timestamp("ended_at"), // When session ended
+  durationMinutes: integer("duration_minutes").default(30), // Session duration
+  genderMixPreference: text("gender_mix_preference").default("mixed"), // mixed, same_gender, opposite_gender
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Peer Socializer Participants - tracks who joins which groups
+export const peerSocializerParticipants = pgTable("peer_socializer_participants", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").references(() => peerSocializerGroups.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  leftAt: timestamp("left_at"), // When they left (if they left early)
+  participationRating: integer("participation_rating"), // 1-5 rating
+  feedback: text("feedback"), // Post-session feedback
+  status: text("status").default("joined"), // joined, left, completed
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Peer Matching Requests - for intelligent matching system
+export const peerMatchingRequests = pgTable("peer_matching_requests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  language: text("language").notNull(), // Target language
+  proficiencyLevel: text("proficiency_level").notNull(),
+  preferredGender: text("preferred_gender"), // same, opposite, any
+  preferredAgeRange: text("preferred_age_range"), // "18-25", "26-35", "36-50", "any"
+  interests: text("interests").array().default([]), // Topics of interest
+  availableTimeSlots: jsonb("available_time_slots"), // When they're available
+  matchingPriority: integer("matching_priority").default(1), // Higher = more priority
+  status: text("status").default("active"), // active, matched, cancelled, expired
+  requestedAt: timestamp("requested_at").defaultNow(),
+  expiresAt: timestamp("expires_at"), // When request expires
+  matchedGroupId: integer("matched_group_id").references(() => peerSocializerGroups.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Peer Matching History - tracks successful matches and quality
+export const peerMatchingHistory = pgTable("peer_matching_history", {
+  id: serial("id").primaryKey(),
+  requestId: integer("request_id").references(() => peerMatchingRequests.id).notNull(),
+  groupId: integer("group_id").references(() => peerSocializerGroups.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  matchScore: decimal("match_score", { precision: 3, scale: 2 }), // Algorithm calculated score
+  matchCriteria: jsonb("match_criteria"), // What criteria were used for matching
+  sessionQuality: integer("session_quality"), // 1-5 rating post-session
+  wouldMatchAgain: boolean("would_match_again"), // User feedback
+  reportIssues: text("report_issues"), // Any reported problems
+  matchedAt: timestamp("matched_at").defaultNow(),
+  sessionCompletedAt: timestamp("session_completed_at"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+// Peer Socializer Settings - user preferences for matching
+export const peerSocializerSettings = pgTable("peer_socializer_settings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  enableMatching: boolean("enable_matching").default(true),
+  preferredGender: text("preferred_gender").default("any"), // same, opposite, any
+  ageRangeMin: integer("age_range_min").default(18),
+  ageRangeMax: integer("age_range_max").default(65),
+  maxGroupSize: integer("max_group_size").default(6),
+  preferredLanguages: text("preferred_languages").array().default([]),
+  preferredTopics: text("preferred_topics").array().default([]),
+  availabilitySchedule: jsonb("availability_schedule"), // Weekly schedule
+  notificationPreferences: jsonb("notification_preferences"),
+  blockedUsers: integer("blocked_users").array().default([]), // List of blocked user IDs
+  privacyLevel: text("privacy_level").default("normal"), // strict, normal, open
+  autoJoinGroups: boolean("auto_join_groups").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// ========================
 // INSERT SCHEMAS AND TYPES
 // ========================
 
@@ -3687,6 +3780,35 @@ export const insertSrsCardSchema = createInsertSchema(srsCard).omit({
   updatedAt: true
 });
 
+// Peer Socializer System Insert Schemas
+export const insertPeerSocializerGroupSchema = createInsertSchema(peerSocializerGroups).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPeerSocializerParticipantSchema = createInsertSchema(peerSocializerParticipants).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertPeerMatchingRequestSchema = createInsertSchema(peerMatchingRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPeerMatchingHistorySchema = createInsertSchema(peerMatchingHistory).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertPeerSocializerSettingsSchema = createInsertSchema(peerSocializerSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // ========================
 // TYPE EXPORTS
 // ========================
@@ -3718,6 +3840,18 @@ export type InsertSrsCard = z.infer<typeof insertSrsCardSchema>;
 // Course Roadmap Progress types (existing)
 export type CourseRoadmapProgress = typeof courseRoadmapProgress.$inferSelect;
 export type InsertCourseRoadmapProgress = typeof courseRoadmapProgress.$inferInsert;
+
+// Peer Socializer System Types
+export type PeerSocializerGroup = typeof peerSocializerGroups.$inferSelect;
+export type InsertPeerSocializerGroup = z.infer<typeof insertPeerSocializerGroupSchema>;
+export type PeerSocializerParticipant = typeof peerSocializerParticipants.$inferSelect;
+export type InsertPeerSocializerParticipant = z.infer<typeof insertPeerSocializerParticipantSchema>;
+export type PeerMatchingRequest = typeof peerMatchingRequests.$inferSelect;
+export type InsertPeerMatchingRequest = z.infer<typeof insertPeerMatchingRequestSchema>;
+export type PeerMatchingHistory = typeof peerMatchingHistory.$inferSelect;
+export type InsertPeerMatchingHistory = z.infer<typeof insertPeerMatchingHistorySchema>;
+export type PeerSocializerSettings = typeof peerSocializerSettings.$inferSelect;
+export type InsertPeerSocializerSettings = z.infer<typeof insertPeerSocializerSettingsSchema>;
 
 // Export placement test schemas
 export * from './placement-test-schema';

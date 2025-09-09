@@ -333,6 +333,54 @@ export default function StudentDashboard() {
           </motion.div>
         )}
 
+        {/* Peer Socializer System - Iranian Gender-Based Matching */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.15 }}
+        >
+          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-300 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900">
+                      {t('student:peerSocializer', 'همکلاسی‌های ایرانی')}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      {t('student:peerSocializerDesc', 'با همکلاسی‌های ایرانی خود تمرین کنید')}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="text-xs bg-purple-100 text-purple-700 border-purple-200">
+                  {t('student:smartMatching', '🧠 تطبیق هوشمند')}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Button 
+                  className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  {t('student:findPeers', 'پیدا کردن همکلاس')}
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  {t('student:joinGroup', 'پیوستن به گروه')}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-3 text-center">
+                {t('student:genderAgeMatching', 'سیستم هوشمند بر اساس سن و جنسیت برای فرهنگ ایرانی بهینه‌سازی شده')}
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Key Performance Indicators */}
         <motion.div 
           className="grid grid-cols-2 gap-3"
