@@ -43,6 +43,10 @@ import crypto from "crypto";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { generatePayslipPDF, generateCertificatePDF } from "./utils/pdf-generator";
 import { z } from "zod";
 import { 
@@ -360,6 +364,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads/audio', express.static('uploads/audio'));
   app.use('/uploads/teacher-photos', express.static('uploads/teacher-photos'));
   app.use('/uploads/student-photos', express.static('uploads/student-photos'));
+  
+  // Serve IELTS Section 2 audio files
+  app.use('/ielts_section2_online', express.static(path.join(__dirname, '../ielts_section2_online')));
+  app.use('/ielts_section2_offline', express.static(path.join(__dirname, '../ielts_section2_offline')));
+  
+  // Serve IELTS comparison interface
+  app.get('/ielts_section2_comparison.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../ielts_section2_comparison.html'));
+  });
   
   // Serve test files from root directory
   app.get('/test-callern-system.html', (req, res) => {

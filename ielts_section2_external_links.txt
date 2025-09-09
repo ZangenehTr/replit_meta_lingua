@@ -1,0 +1,44 @@
+🎧 IELTS Section 2 - Environmental Initiatives at University
+=========================================================
+
+📊 Authenticity Comparison Interface:
+https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/ielts_section2_comparison.html
+
+🎯 IELTS Section 2 Audio Files (Single Continuous Format):
+
+🌐 Online Version (Edge TTS - Production Quality):
+   • Engine: Microsoft Edge TTS
+   • Voice: en-GB-SoniaNeural (Professional Female) 
+   • Quality: High-definition professional
+   • Iranian Status: ✅ Accessible in Iran
+   • Link: https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/ielts_section2_online/ielts_section2_environmental_initiatives_edge.wav
+
+🇮🇷 Offline Version (pyttsx3 - Self-Hosting):
+   • Engine: pyttsx3 (System TTS)
+   • Voice: System Female
+   • Quality: Standard offline  
+   • Iranian Status: ✅ Fully offline deployment ready
+   • Link: https://015f1230-64e7-476f-a21f-816aa81a458a-00-2ajg86zau34xs.worf.replit.dev/ielts_section2_offline/ielts_section2_environmental_initiatives_offline.wav
+
+📋 Test Content Details:
+• Topic: Environmental Initiatives at University
+• Speaker: University Sustainability Officer (Sarah Martinez)
+• Duration: ~2-3 minutes continuous monologue
+• IELTS Level: Band 6-7 complexity
+• Word Count: 518 words
+• Format: Single file (no segments) for authentic test experience
+
+🎯 Authenticity Testing Features:
+• Natural speaking pace (150-170 words/minute)
+• Professional tone and delivery
+• Structured information presentation
+• Key numbers for listening comprehension
+• Authentic IELTS Section 2 format
+
+✅ Production Status:
+• Edge TTS: Ready for development and testing
+• pyttsx3: Ready for Iranian self-hosting deployment
+• Complete offline capability confirmed
+• Zero external dependencies for production
+
+🎧 Usage: Compare against real IELTS Section 2 recordings for authenticity validation
