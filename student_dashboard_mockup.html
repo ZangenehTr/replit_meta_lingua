@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Lingua - Student Dashboard Optimized</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container { max-width: 390px; margin: 0 auto; background: #fff; min-height: 100vh; }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            position: relative;
+        }
+        .level-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: #ffd700;
+            color: #333;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .user-info h2 { font-size: 18px; margin-bottom: 5px; }
+        .user-info .greeting { opacity: 0.9; font-size: 14px; }
+        
+        /* Priority Section 1 - Critical Daily Use */
+        .priority-section {
+            padding: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .critical-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e1e8ed;
+        }
+        .card.urgent {
+            border-left: 4px solid #e74c3c;
+        }
+        .card.callern {
+            border-left: 4px solid #3498db;
+        }
+        .card.wallet {
+            border-left: 4px solid #27ae60;
+        }
+        .card.schedule {
+            border-left: 4px solid #f39c12;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .card-icon {
+            width: 24px;
+            height: 24px;
+            margin-left: 8px;
+        }
+        .card-title {
+            font-size: 12px;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+        .card-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .card-subtitle {
+            font-size: 11px;
+            color: #95a5a6;
+            margin-top: 4px;
+        }
+        
+        /* Progress Charts */
+        .progress-section {
+            padding: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .skill-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .skill-name {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        .skill-level {
+            font-size: 14px;
+            font-weight: bold;
+            color: #495057;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            padding: 20px;
+        }
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 10px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: #2c3e50;
+            transition: transform 0.2s;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+        .action-icon {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 8px;
+        }
+        .action-label {
+            font-size: 11px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 390px;
+            background: white;
+            padding: 10px 20px;
+            border-top: 1px solid #e1e8ed;
+            display: flex;
+            justify-content: space-around;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            color: #7f8c8d;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        .nav-item.active {
+            color: #667eea;
+        }
+        
+        /* Status indicators */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-dot.red { background: #e74c3c; }
+        .status-dot.green { background: #27ae60; }
+        .status-dot.orange { background: #f39c12; }
+        
+        /* Persian text adjustments */
+        .persian {
+            font-family: 'Iranian Sans', 'Tahoma', sans-serif;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="profile-section">
+                <div class="avatar">
+                    ع.ا
+                    <div class="level-badge">8</div>
+                </div>
+                <div class="user-info">
+                    <h2>عسیه احمدی</h2>
+                    <div class="greeting">صبح بخیر! 🌅</div>
+                </div>
+                <div style="margin-right: auto; text-align: center;">
+                    <div style="font-size: 12px; opacity: 0.8;">کیف پول</div>
+                    <div style="font-size: 16px; font-weight: bold;">۲,۵۰۰,۰۰۰</div>
+                    <div style="font-size: 10px; opacity: 0.7;">تومان</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Priority 1: Critical Daily Use -->
+        <div class="priority-section">
+            <div class="section-title">
+                🎯 اولویت امروز
+            </div>
+            
+            <div class="critical-cards">
+                <div class="card urgent">
+                    <div class="card-header">
+                        <div class="card-title">تکالیف باقیمانده</div>
+                        <span style="background: #e74c3c; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px;">3</span>
+                    </div>
+                    <div class="card-value">۳ تکلیف</div>
+                    <div class="card-subtitle">مهلت: امروز ۱۸:۰۰</div>
+                </div>
+                
+                <div class="card callern">
+                    <div class="card-header">
+                        <div class="card-title">جلسه کالرن</div>
+                        <div class="status-dot green"></div>
+                    </div>
+                    <div class="card-value">۴۵۰ دقیقه</div>
+                    <div class="card-subtitle">بسته VIP فعال</div>
+                </div>
+                
+                <div class="card schedule">
+                    <div class="card-header">
+                        <div class="card-title">جلسه بعدی</div>
+                        <div class="status-dot orange"></div>
+                    </div>
+                    <div class="card-value">۲ ساعت</div>
+                    <div class="card-subtitle">Speaking Practice</div>
+                </div>
+                
+                <div class="card wallet">
+                    <div class="card-header">
+                        <div class="card-title">پیشرفت این هفته</div>
+                        <div class="status-dot green"></div>
+                    </div>
+                    <div class="card-value">۷ روز</div>
+                    <div class="card-subtitle">رکورد جدید! 🔥</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Priority 2: Learning Progress -->
+        <div class="progress-section">
+            <div class="section-title">
+                📈 پیشرفت مهارت‌ها
+            </div>
+            
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <div class="skill-name">Speaking</div>
+                    <div class="skill-level">Level 7</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 65%;"></div>
+                    </div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name">Listening</div>
+                    <div class="skill-level">Level 8</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 80%;"></div>
+                    </div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name">Reading</div>
+                    <div class="skill-level">Level 9</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 45%;"></div>
+                    </div>
+                </div>
+                <div class="skill-item">
+                    <div class="skill-name">Writing</div>
+                    <div class="skill-level">Level 6</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 70%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Course Progress -->
+            <div class="card" style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-weight: bold;">IELTS Speaking B2</span>
+                    <span style="color: #27ae60; font-size: 14px; font-weight: bold;">85%</span>
+                </div>
+                <div class="progress-bar" style="height: 6px;">
+                    <div class="progress-fill" style="width: 85%;"></div>
+                </div>
+                <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">۱۷ از ۲۰ درس تکمیل شده</div>
+            </div>
+        </div>
+
+        <!-- Priority 3: Quick Actions -->
+        <div class="quick-actions">
+            <div class="section-title">
+                ⚡ دسترسی سریع
+            </div>
+            
+            <div class="action-grid">
+                <a href="#" class="action-btn">
+                    <div class="action-icon" style="background: #3498db; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">📹</div>
+                    <div class="action-label">کالرن</div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon" style="background: #27ae60; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">📚</div>
+                    <div class="action-label">دوره‌ها</div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon" style="background: #f39c12; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">🎯</div>
+                    <div class="action-label">تکالیف</div>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon" style="background: #9b59b6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">🤖</div>
+                    <div class="action-label">AI تمرین</div>
+                </a>
+            </div>
+
+            <!-- Recent Achievements -->
+            <div style="margin-top: 20px;">
+                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; color: #2c3e50;">🏆 دستاوردهای اخیر</div>
+                <div style="display: flex; gap: 10px; overflow-x: auto; padding: 5px 0;">
+                    <div style="min-width: 80px; text-align: center; background: #fff3cd; padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 20px;">🔥</div>
+                        <div style="font-size: 10px; color: #856404;">۷ روز متوالی</div>
+                    </div>
+                    <div style="min-width: 80px; text-align: center; background: #d4edda; padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 20px;">🎯</div>
+                        <div style="font-size: 10px; color: #155724;">استاد آزمون</div>
+                    </div>
+                    <div style="min-width: 80px; text-align: center; background: #d1ecf1; padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 20px;">⚡</div>
+                        <div style="font-size: 10px; color: #0c5460;">یادگیر سریع</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <div style="font-size: 20px;">🏠</div>
+                <div>خانه</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div style="font-size: 20px;">📚</div>
+                <div>دوره‌ها</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div style="font-size: 20px;">📹</div>
+                <div>کالرن</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div style="font-size: 20px;">💬</div>
+                <div>پیام‌ها</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div style="font-size: 20px;">👤</div>
+                <div>پروفایل</div>
+            </a>
+        </div>
+
+        <div style="height: 80px;"></div> <!-- Bottom padding for navigation -->
+    </div>
+</body>
+</html>
