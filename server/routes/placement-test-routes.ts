@@ -4,10 +4,24 @@
  */
 
 import express from 'express';
+import multer from 'multer';
 import { DatabaseStorage } from '../database-storage';
 import { AdaptivePlacementService } from '../services/adaptive-placement-service';
 import { AIRoadmapGenerator } from '../services/ai-roadmap-generator';
 import { OllamaService } from '../ollama-service';
+
+// Configure multer for audio uploads (store in memory)
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.fieldname === 'audio' && file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files are allowed'), false);
+    }
+  }
+});
 // Simple authentication middleware for placement tests
 const authenticateToken = (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
@@ -163,11 +177,34 @@ export function createPlacementTestRoutes(
   });
 
   // Submit response to question
-  router.post('/sessions/:sessionId/responses', authenticateToken, async (req, res) => {
+  router.post('/sessions/:sessionId/responses', authenticateToken, upload.single('audio'), async (req, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
-      const data = submitResponseSchema.parse(req.body);
       const userId = (req as any).user.id;
+      
+      let data;
+      
+      // Handle audio upload (FormData) vs regular JSON submission
+      if (req.file) {
+        // Audio submission via FormData
+        const questionId = parseInt(req.body.questionId);
+        const audioBuffer = req.file.buffer;
+        const audioBlob = audioBuffer; // Store the audio data
+        
+        data = {
+          questionId,
+          userResponse: {
+            audioUrl: '', // We'll process this later
+            transcript: '',
+            duration: 0,
+            audioData: audioBlob,
+            audioSize: audioBuffer.length
+          }
+        };
+      } else {
+        // Regular JSON submission
+        data = submitResponseSchema.parse(req.body);
+      }
 
       // Verify session belongs to user
       const session = await storage.getPlacementTestSession(sessionId);

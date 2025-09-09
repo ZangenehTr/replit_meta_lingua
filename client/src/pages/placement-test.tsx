@@ -116,18 +116,36 @@ export default function PlacementTestPage() {
 
   // Submit response mutation
   const submitResponseMutation = useMutation({
-    mutationFn: async (data: { sessionId: number; questionId: number; userResponse: any }) => {
-      const response = await fetch(`/api/placement-test/sessions/${data.sessionId}/responses`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          questionId: data.questionId,
-          userResponse: data.userResponse
-        })
-      });
+    mutationFn: async (data: { sessionId: number; questionId: number; userResponse: any; audioBlob?: Blob }) => {
+      let response;
+      
+      if (data.audioBlob) {
+        // Handle audio submission with FormData
+        const formData = new FormData();
+        formData.append('questionId', data.questionId.toString());
+        formData.append('audio', data.audioBlob, 'recording.webm');
+        
+        response = await fetch(`/api/placement-test/sessions/${data.sessionId}/responses`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: formData
+        });
+      } else {
+        // Handle text/multiple choice submission with JSON
+        response = await fetch(`/api/placement-test/sessions/${data.sessionId}/responses`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            questionId: data.questionId,
+            userResponse: data.userResponse
+          })
+        });
+      }
       
       if (!response.ok) {
         throw new Error('Failed to submit response');
@@ -369,16 +387,17 @@ export default function PlacementTestPage() {
     if (!currentSession || !currentQuestion) return;
 
     let responseData = userResponse;
+    let audioBlob = null;
 
     // Format response based on question type
     if (currentQuestion.responseType === 'multiple_choice') {
       responseData = { selectedOption: userResponse };
     } else if (currentQuestion.responseType === 'audio') {
+      audioBlob = userResponse?.audioBlob || null;
       responseData = { 
         audioUrl: userResponse?.audioUrl || '', 
         transcript: '',
-        duration: userResponse?.duration || 0,
-        audioBlob: userResponse?.audioBlob
+        duration: userResponse?.duration || 0
       };
     } else {
       responseData = { text: userResponse };
@@ -387,7 +406,8 @@ export default function PlacementTestPage() {
     submitResponseMutation.mutate({
       sessionId: currentSession.id,
       questionId: currentQuestion.id,
-      userResponse: responseData
+      userResponse: responseData,
+      audioBlob: audioBlob
     });
   };
 
