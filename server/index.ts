@@ -204,7 +204,15 @@ app.use((req, res, next) => {
 
   // SECURITY FIX: Public branding endpoint (fix for frontend branding access)
   app.get("/api/branding", async (req: any, res) => {
-    res.json({ id: 1, name: "Meta Lingua Academy", logo: "", primaryColor: "#0079F2" });
+    res.json({ 
+      id: 1, 
+      name: "Meta Lingua Academy", 
+      logo: "/logo.png", 
+      primaryColor: "#0079F2",
+      secondaryColor: "#00C851",
+      instituteName: "Meta Lingua Academy",
+      description: "AI-enhanced multilingual language learning platform"
+    });
   });
 
   // Essential user endpoints
