@@ -1,9 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
-import { app } from '../server/index';
+import express from 'express';
 import { db } from '../server/db';
-import { users, placementTestResults, courses } from '@shared/schema';
+import { users, placementTestResults, courses } from '../shared/schema';
 import { eq } from 'drizzle-orm';
+import { registerRoutes } from '../server/routes';
+
+// Create test app instance
+const app = express();
+app.use(express.json());
+registerRoutes(app);
 
 describe('Placement Test Priority System', () => {
   let authToken: string;
