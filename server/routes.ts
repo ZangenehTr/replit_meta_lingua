@@ -9325,7 +9325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ===== CALLERN LEARNING SYSTEM API =====
   
   // Get online teachers
-  app.get("/api/callern/online-teachers", async (req, res) => {
+  app.get("/api/callern/online-teachers", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
       // Get authorized Callern teachers from database
       const authorizedTeachers = await storage.getAuthorizedCallernTeachers();
@@ -10039,7 +10039,7 @@ Return JSON format:
   });
 
   // Institute Branding API (single endpoint to prevent conflicts)
-  app.get("/api/branding", async (req, res) => {
+  app.get("/api/branding", authenticateToken, async (req: any, res) => {
     try {
       const branding = await storage.getBranding();
       res.json(branding);
