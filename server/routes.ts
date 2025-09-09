@@ -2888,6 +2888,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check placement test status for student dashboard priority
+  app.get("/api/student/placement-status", authenticateToken, requireRole(['Student']), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Import placement test schema
+      const { placementTestSessions } = await import('@shared/placement-test-schema');
+      const { eq, and } = await import('drizzle-orm');
+      
+      // Check if user has completed placement test
+      const completedPlacementTest = await db
+        .select()
+        .from(placementTestSessions)
+        .where(and(
+          eq(placementTestSessions.userId, userId),
+          eq(placementTestSessions.status, 'completed')
+        ))
+        .limit(1);
+      
+      const hasCompletedPlacementTest = completedPlacementTest.length > 0;
+      let placementResults = null;
+      
+      if (hasCompletedPlacementTest) {
+        const session = completedPlacementTest[0];
+        placementResults = {
+          overallLevel: session.overallCEFRLevel,
+          speakingLevel: session.speakingLevel,
+          listeningLevel: session.listeningLevel,
+          readingLevel: session.readingLevel,
+          writingLevel: session.writingLevel,
+          completedAt: session.completedAt
+        };
+      }
+      
+      res.json({
+        hasCompletedPlacementTest,
+        placementResults,
+        message: hasCompletedPlacementTest 
+          ? 'Placement test completed' 
+          : 'Placement test required for optimal learning path'
+      });
+    } catch (error) {
+      console.error('Error checking placement test status:', error);
+      res.status(500).json({ 
+        error: 'Failed to check placement test status',
+        hasCompletedPlacementTest: false 
+      });
+    }
+  });
+
   // Student Statistics API - Using REAL data from activity tracker
   app.get("/api/student/stats", authenticateToken, async (req: any, res) => {
     try {

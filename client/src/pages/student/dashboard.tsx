@@ -67,6 +67,19 @@ interface StudentStats {
   recentAchievements: { id: number; title: string; icon: string; date: string }[];
 }
 
+interface PlacementTestStatus {
+  hasCompletedPlacementTest: boolean;
+  placementResults?: {
+    overallLevel: string;
+    speakingLevel: string;
+    listeningLevel: string;
+    readingLevel: string;
+    writingLevel: string;
+    completedAt: string;
+  };
+  message: string;
+}
+
 export default function StudentDashboard() {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
@@ -119,6 +132,20 @@ export default function StudentDashboard() {
     // Mark in localStorage that user has seen the modal (for this session)
     localStorage.setItem('profile_modal_shown', 'true');
   };
+
+  // Fetch placement test status - HIGHEST PRIORITY for new learners
+  const { data: placementStatus } = useQuery<PlacementTestStatus>({
+    queryKey: ['/api/student/placement-status'],
+    queryFn: async () => {
+      const response = await fetch('/api/student/placement-status', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch placement status');
+      return response.json();
+    }
+  });
 
   // Fetch comprehensive student stats with real data
   const { data: stats } = useQuery<StudentStats>({
@@ -233,6 +260,79 @@ export default function StudentDashboard() {
 
       {/* Main Content - Mobile First */}
       <div className="container mx-auto px-4 py-4 pb-20 space-y-4">
+        {/* HIGHEST PRIORITY: Placement Test for New Learners */}
+        {placementStatus && !placementStatus.hasCompletedPlacementTest && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-orange-300 shadow-xl">
+              <CardContent className="p-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
+                  <Target className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="font-bold text-xl text-gray-900 mb-2">
+                  {t('student:placementTestRequired', 'Complete Your Placement Test')}
+                </h3>
+                <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto">
+                  {t('student:placementTestDescription', 'Take our 6-minute placement test to create your personalized learning path and find your perfect starting level.')}
+                </p>
+                <Button 
+                  className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold px-6 py-3"
+                  asChild
+                >
+                  <Link href="/placement-test" className="flex items-center gap-2">
+                    <Zap className="w-5 h-5" />
+                    {t('student:startPlacementTest', 'Start Placement Test (6 min)')}
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Show placement results if completed */}
+        {placementStatus && placementStatus.hasCompletedPlacementTest && placementStatus.placementResults && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 shadow-xl">
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6 text-white" />
+                </div>
+                <h4 className="font-bold text-lg text-gray-900 mb-2">
+                  {t('student:placementCompleted', 'Placement Test Complete')}
+                </h4>
+                <p className="text-gray-600 text-sm mb-3">
+                  {t('student:yourLevel', 'Your Level')}: <span className="font-bold text-green-700">{placementStatus.placementResults.overallLevel}</span>
+                </p>
+                <div className="grid grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <div className="text-gray-500 text-xs">Speaking</div>
+                    <div className="font-bold text-green-700">{placementStatus.placementResults.speakingLevel}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 text-xs">Listening</div>
+                    <div className="font-bold text-green-700">{placementStatus.placementResults.listeningLevel}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 text-xs">Reading</div>
+                    <div className="font-bold text-green-700">{placementStatus.placementResults.readingLevel}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 text-xs">Writing</div>
+                    <div className="font-bold text-green-700">{placementStatus.placementResults.writingLevel}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         {/* Key Performance Indicators */}
         <motion.div 
           className="grid grid-cols-2 gap-3"

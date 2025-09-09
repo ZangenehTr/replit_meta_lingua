@@ -36,7 +36,8 @@ import {
   MessageCircle,
   Map,
   Gamepad2,
-  PlayCircle
+  PlayCircle,
+  CheckCircle2
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -51,6 +52,19 @@ interface StudentStats {
   memberTier: string;
   studyTimeThisWeek: number;
   weeklyGoalHours: number;
+}
+
+interface PlacementTestStatus {
+  hasCompletedPlacementTest: boolean;
+  placementResults?: {
+    overallLevel: string;
+    speakingLevel: string;
+    listeningLevel: string;
+    readingLevel: string;
+    writingLevel: string;
+    completedAt: string;
+  };
+  message: string;
 }
 
 export default function StudentDashboardMobile() {
@@ -105,6 +119,20 @@ export default function StudentDashboardMobile() {
         }
       });
       if (!response.ok) throw new Error('Failed to fetch sessions');
+      return response.json();
+    }
+  });
+
+  // Fetch placement test status - HIGHEST PRIORITY for new learners
+  const { data: placementStatus } = useQuery<PlacementTestStatus>({
+    queryKey: ['/api/student/placement-status'],
+    queryFn: async () => {
+      const response = await fetch('/api/student/placement-status', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch placement status');
       return response.json();
     }
   });
@@ -177,6 +205,67 @@ export default function StudentDashboardMobile() {
             exit={{ opacity: 0, x: 20 }}
             className="space-y-4"
           >
+            {/* HIGHEST PRIORITY: Placement Test for New Learners */}
+            {placementStatus && !placementStatus.hasCompletedPlacementTest && (
+              <GlossyCard className="border-2 border-red-500/50 bg-gradient-to-r from-red-500/20 to-orange-500/20">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                    <Target className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-2">
+                    {t('student:placementTestRequired', 'Complete Your Placement Test')}
+                  </h3>
+                  <p className="text-white/80 text-sm mb-4">
+                    {t('student:placementTestDescription', 'Take our 6-minute placement test to create your personalized learning path and find your perfect starting level.')}
+                  </p>
+                  <GlossyButton 
+                    variant="warning" 
+                    fullWidth 
+                    className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
+                  >
+                    <Link href="/placement-test" className="flex items-center justify-center gap-2 w-full">
+                      <Zap className="w-5 h-5" />
+                      {t('student:startPlacementTest', 'Start Placement Test (6 min)')}
+                    </Link>
+                  </GlossyButton>
+                </div>
+              </GlossyCard>
+            )}
+
+            {/* Show placement results if completed */}
+            {placementStatus && placementStatus.hasCompletedPlacementTest && placementStatus.placementResults && (
+              <GlossyCard className="border-2 border-green-500/50 bg-gradient-to-r from-green-500/20 to-emerald-500/20">
+                <div className="text-center">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                    <CheckCircle2 className="w-6 h-6 text-white" />
+                  </div>
+                  <h4 className="text-white font-bold mb-2">
+                    {t('student:placementCompleted', 'Placement Test Complete')}
+                  </h4>
+                  <p className="text-white/80 text-sm mb-2">
+                    {t('student:yourLevel', 'Your Level')}: <span className="font-bold text-white">{placementStatus.placementResults.overallLevel}</span>
+                  </p>
+                  <div className="grid grid-cols-4 gap-2 text-xs">
+                    <div>
+                      <div className="text-white/60">Speaking</div>
+                      <div className="text-white font-bold">{placementStatus.placementResults.speakingLevel}</div>
+                    </div>
+                    <div>
+                      <div className="text-white/60">Listening</div>
+                      <div className="text-white font-bold">{placementStatus.placementResults.listeningLevel}</div>
+                    </div>
+                    <div>
+                      <div className="text-white/60">Reading</div>
+                      <div className="text-white font-bold">{placementStatus.placementResults.readingLevel}</div>
+                    </div>
+                    <div>
+                      <div className="text-white/60">Writing</div>
+                      <div className="text-white font-bold">{placementStatus.placementResults.writingLevel}</div>
+                    </div>
+                  </div>
+                </div>
+              </GlossyCard>
+            )}
             {/* Progress Section */}
             <GlossyCard>
               <h3 className="text-white font-bold mb-4 flex items-center gap-2">
