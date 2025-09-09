@@ -74,6 +74,10 @@ export default function PlacementTestPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [testResults, setTestResults] = useState<PlacementTestResults | null>(null);
   const [testStep, setTestStep] = useState<'intro' | 'testing' | 'completed'>('intro');
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [recordingTimeLeft, setRecordingTimeLeft] = useState<number>(0);
+  const [recordingTimer, setRecordingTimer] = useState<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -241,6 +245,103 @@ export default function PlacementTestPage() {
     });
   };
 
+  // Audio recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/wav' });
+        setAudioBlob(blob);
+        
+        // Create audio URL for the response
+        const audioUrl = URL.createObjectURL(blob);
+        setUserResponse({ 
+          audioUrl, 
+          audioBlob: blob, 
+          duration: currentQuestion?.expectedDurationSeconds || 60 
+        });
+        
+        // Stop all tracks to release microphone
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      setMediaRecorder(recorder);
+      recorder.start();
+      setIsRecording(true);
+      
+      // Set recording timer
+      const duration = currentQuestion?.expectedDurationSeconds || 60;
+      setRecordingTimeLeft(duration);
+      
+      const timer = setInterval(() => {
+        setRecordingTimeLeft(prev => {
+          if (prev <= 1) {
+            stopRecording();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      setRecordingTimer(timer);
+      
+      // Auto-stop after duration
+      setTimeout(() => {
+        if (recorder.state === 'recording') {
+          stopRecording();
+        }
+      }, duration * 1000);
+      
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast({
+        title: 'Recording Error',
+        description: 'Failed to start recording. Please check your microphone permissions.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+    setIsRecording(false);
+    if (recordingTimer) {
+      clearInterval(recordingTimer);
+      setRecordingTimer(null);
+    }
+  };
+
+  const handleRecordingToggle = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  // Cleanup function
+  useEffect(() => {
+    return () => {
+      if (recordingTimer) {
+        clearInterval(recordingTimer);
+      }
+      if (mediaRecorder) {
+        mediaRecorder.stop();
+      }
+    };
+  }, [recordingTimer, mediaRecorder]);
+
   const handleSubmitResponse = () => {
     if (!currentSession || !currentQuestion) return;
 
@@ -250,7 +351,12 @@ export default function PlacementTestPage() {
     if (currentQuestion.responseType === 'multiple_choice') {
       responseData = { selectedOption: userResponse };
     } else if (currentQuestion.responseType === 'audio') {
-      responseData = { audioUrl: userResponse, transcript: '' };
+      responseData = { 
+        audioUrl: userResponse?.audioUrl || '', 
+        transcript: '',
+        duration: userResponse?.duration || 0,
+        audioBlob: userResponse?.audioBlob
+      };
     } else {
       responseData = { text: userResponse };
     }
@@ -437,20 +543,63 @@ export default function PlacementTestPage() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <Button
-                        onClick={() => setIsRecording(!isRecording)}
+                        onClick={handleRecordingToggle}
                         variant={isRecording ? 'destructive' : 'default'}
                         className="flex items-center gap-2"
+                        disabled={submitResponseMutation.isPending}
                       >
                         <Mic className="h-4 w-4" />
-                        {isRecording ? 'Stop Recording' : 'Start Recording'}
+                        {isRecording ? 'Stop Recording' : (audioBlob ? 'Record Again' : 'Start Recording')}
                       </Button>
                       {isRecording && (
-                        <Badge variant="destructive" className="animate-pulse">Recording...</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="destructive" className="animate-pulse">Recording...</Badge>
+                          <span className="text-sm font-mono text-red-600">
+                            {Math.floor(recordingTimeLeft / 60)}:{(recordingTimeLeft % 60).toString().padStart(2, '0')}
+                          </span>
+                        </div>
+                      )}
+                      {audioBlob && !isRecording && (
+                        <Badge variant="secondary" className="text-green-700">✓ Recording Complete</Badge>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600">
-                      Click the microphone button and speak your answer clearly. You have up to {currentQuestion.expectedDurationSeconds} seconds.
-                    </p>
+                    
+                    {/* Show instructions and additional content */}
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-800 mb-2">
+                        <strong>Instructions:</strong> Click the microphone button and speak your answer clearly. 
+                        You have up to {currentQuestion.expectedDurationSeconds} seconds.
+                      </p>
+                      {currentQuestion.content?.instructions && (
+                        <p className="text-sm text-blue-700">
+                          <strong>Tips:</strong> {currentQuestion.content.instructions}
+                        </p>
+                      )}
+                      {currentQuestion.content?.keywords && (
+                        <div className="mt-2">
+                          <p className="text-xs text-blue-600 font-medium">Key topics to include:</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {currentQuestion.content.keywords.map((keyword: string, index: number) => (
+                              <Badge key={index} variant="outline" className="text-xs border-blue-300 text-blue-600">
+                                {keyword}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Audio playback if recording exists */}
+                    {audioBlob && !isRecording && (
+                      <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                        <p className="text-sm text-green-800 mb-2">Your recording:</p>
+                        <audio 
+                          controls 
+                          src={userResponse?.audioUrl} 
+                          className="w-full"
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -491,7 +640,11 @@ export default function PlacementTestPage() {
                 
                 <Button 
                   onClick={handleSubmitResponse}
-                  disabled={!userResponse || submitResponseMutation.isPending}
+                  disabled={
+                    (currentQuestion.responseType === 'audio' ? !audioBlob : !userResponse) || 
+                    submitResponseMutation.isPending ||
+                    isRecording
+                  }
                   className="px-6"
                 >
                   {submitResponseMutation.isPending ? 'Submitting...' : 'Submit Answer'}
