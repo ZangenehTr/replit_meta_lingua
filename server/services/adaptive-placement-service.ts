@@ -316,41 +316,134 @@ export class AdaptivePlacementService {
       };
     }
 
-    const lastResponse = skillState.responses[skillState.responses.length - 1];
-    const lastScore = lastResponse.aiScore || 60;
+    // Calculate performance metrics
+    const performanceMetrics = this.calculatePerformanceMetrics(skillState);
+    const adaptiveStrategy = this.determineAdaptiveStrategy(skillState, performanceMetrics);
 
-    // Simple adaptive logic - would be more sophisticated in production
-    let nextLevel: CEFRLevel;
-    let shouldContinue = true;
-    let confidence = 0.7;
+    return adaptiveStrategy;
+  }
 
-    if (lastScore >= 80) {
-      // Move up a level
-      const currentIndex = CEFRLevels.indexOf(skillState.currentLevel);
-      nextLevel = CEFRLevels[Math.min(currentIndex + 1, CEFRLevels.length - 1)];
-    } else if (lastScore >= 60) {
-      // Stay at same level
-      nextLevel = skillState.currentLevel;
-      if (skillState.questionsAsked >= this.defaultConfig.minQuestionsPerSkill) {
-        shouldContinue = false;
-        confidence = 0.8;
-      }
-    } else {
-      // Move down a level
-      const currentIndex = CEFRLevels.indexOf(skillState.currentLevel);
-      nextLevel = CEFRLevels[Math.max(currentIndex - 1, 0)];
+  /**
+   * Calculate sophisticated performance metrics
+   */
+  private calculatePerformanceMetrics(skillState: SkillTestState): {
+    averageScore: number;
+    scoreConsistency: number;
+    improvementTrend: number;
+    levelStability: number;
+    confidence: number;
+  } {
+    const scores = skillState.responses.map(r => r.aiScore || 60);
+    const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    
+    // Calculate score consistency (lower variance = higher consistency)
+    const variance = scores.reduce((sum, score) => sum + Math.pow(score - averageScore, 2), 0) / scores.length;
+    const scoreConsistency = Math.max(0, 1 - (variance / 1000)); // Normalize to 0-1
+
+    // Calculate improvement trend
+    let improvementTrend = 0;
+    if (scores.length >= 2) {
+      const firstHalf = scores.slice(0, Math.ceil(scores.length / 2));
+      const secondHalf = scores.slice(Math.floor(scores.length / 2));
+      const firstAvg = firstHalf.reduce((sum, score) => sum + score, 0) / firstHalf.length;
+      const secondAvg = secondHalf.reduce((sum, score) => sum + score, 0) / secondHalf.length;
+      improvementTrend = (secondAvg - firstAvg) / 100; // Normalized improvement
     }
 
-    // Stop if we've asked enough questions or confidence is high
+    // Level stability - how consistent performance is at current level
+    const currentLevelPerformance = scores.filter((_, index) => {
+      const response = skillState.responses[index];
+      return response && response.nextQuestionLevel === skillState.currentLevel;
+    });
+    
+    const levelStability = currentLevelPerformance.length > 0 ? 
+      (currentLevelPerformance.reduce((sum, score) => sum + (score >= 70 ? 1 : 0), 0) / currentLevelPerformance.length) : 0;
+
+    // Overall confidence based on multiple factors
+    const confidence = Math.min(1, (
+      scoreConsistency * 0.3 + 
+      levelStability * 0.4 + 
+      (skillState.questionsAsked >= 2 ? 0.3 : 0.1)
+    ));
+
+    return {
+      averageScore,
+      scoreConsistency,
+      improvementTrend,
+      levelStability,
+      confidence
+    };
+  }
+
+  /**
+   * Determine adaptive strategy based on performance metrics
+   */
+  private determineAdaptiveStrategy(skillState: SkillTestState, metrics: {
+    averageScore: number;
+    scoreConsistency: number;
+    improvementTrend: number;
+    levelStability: number;
+    confidence: number;
+  }): AdaptiveDecision {
+    const currentIndex = CEFRLevels.indexOf(skillState.currentLevel);
+    let nextLevel: CEFRLevel = skillState.currentLevel;
+    let shouldContinue = true;
+    let reasoning = '';
+
+    // Sophisticated level adjustment logic
+    if (metrics.averageScore >= 85 && metrics.confidence >= 0.7) {
+      // Strong performance - move up
+      nextLevel = CEFRLevels[Math.min(currentIndex + 1, CEFRLevels.length - 1)];
+      reasoning = `Strong performance (avg: ${metrics.averageScore.toFixed(1)}) - moving to ${nextLevel}`;
+    } else if (metrics.averageScore >= 75 && metrics.levelStability >= 0.7) {
+      // Stable good performance - stay at level but check if we can stop
+      nextLevel = skillState.currentLevel;
+      if (skillState.questionsAsked >= this.defaultConfig.minQuestionsPerSkill && metrics.confidence >= 0.8) {
+        shouldContinue = false;
+        reasoning = `Stable performance at ${nextLevel} level - assessment complete`;
+      } else {
+        reasoning = `Stable performance at ${nextLevel} - confirming level`;
+      }
+    } else if (metrics.averageScore >= 60 && metrics.improvementTrend > 0.1) {
+      // Improving performance - give another chance at current level
+      nextLevel = skillState.currentLevel;
+      reasoning = `Improving performance (trend: +${(metrics.improvementTrend * 100).toFixed(1)}) - continuing at ${nextLevel}`;
+    } else if (metrics.averageScore < 60 && currentIndex > 0) {
+      // Poor performance - move down
+      nextLevel = CEFRLevels[Math.max(currentIndex - 1, 0)];
+      reasoning = `Performance below threshold (avg: ${metrics.averageScore.toFixed(1)}) - adjusting to ${nextLevel}`;
+    } else if (metrics.averageScore < 50 && skillState.questionsAsked >= 2) {
+      // Very poor performance - might stop early
+      if (currentIndex === 0) {
+        shouldContinue = false;
+        reasoning = `Very low performance at A1 level - placement at ${skillState.currentLevel}`;
+      } else {
+        nextLevel = CEFRLevels[Math.max(currentIndex - 1, 0)];
+        reasoning = `Very poor performance - significant level adjustment to ${nextLevel}`;
+      }
+    } else {
+      // Default case - continue at current level
+      nextLevel = skillState.currentLevel;
+      reasoning = `Standard assessment progression at ${nextLevel}`;
+    }
+
+    // Stopping criteria
     if (skillState.questionsAsked >= this.defaultConfig.maxQuestionsPerSkill) {
       shouldContinue = false;
+      reasoning += ' - maximum questions reached';
+    }
+
+    // High confidence early termination
+    if (metrics.confidence >= 0.9 && skillState.questionsAsked >= this.defaultConfig.minQuestionsPerSkill) {
+      shouldContinue = false;
+      reasoning += ' - high confidence achieved';
     }
 
     return {
-      nextQuestionLevel: nextLevel,
+      nextQuestionLevel: shouldContinue ? nextLevel : null,
       shouldContinueTesting: shouldContinue,
-      reasoning: `Based on score of ${lastScore}, ${shouldContinue ? 'continuing' : 'stopping'} at ${nextLevel}`,
-      confidence
+      reasoning,
+      confidence: metrics.confidence
     };
   }
 
@@ -363,13 +456,63 @@ export class AdaptivePlacementService {
       return 'B1'; // Default starting level
     }
 
-    // Use speaking results to influence other skill starting levels
+    // Calculate speaking performance metrics for more accurate influence
+    const speakingMetrics = this.calculatePerformanceMetrics(speakingState);
     const speakingLevel = speakingState.currentLevel;
     const speakingIndex = CEFRLevels.indexOf(speakingLevel);
 
-    // Start other skills slightly lower than speaking level
-    const adjustedIndex = Math.max(0, speakingIndex - 1);
-    return CEFRLevels[adjustedIndex];
+    // Skill-specific adjustments based on speaking performance
+    let adjustment = 0;
+    
+    switch (skill) {
+      case 'listening':
+        // Listening closely correlates with speaking - minimal adjustment
+        if (speakingMetrics.confidence >= 0.8) {
+          adjustment = 0; // Same level if high confidence
+        } else {
+          adjustment = -1; // One level down if lower confidence
+        }
+        break;
+        
+      case 'reading':
+        // Reading often higher than speaking for many learners
+        if (speakingMetrics.averageScore >= 80) {
+          adjustment = 0; // Same level for strong speakers
+        } else if (speakingMetrics.averageScore >= 60) {
+          adjustment = 0; // Same level for moderate speakers
+        } else {
+          adjustment = -1; // Lower level for weak speakers
+        }
+        break;
+        
+      case 'writing':
+        // Writing typically lags behind speaking
+        if (speakingMetrics.averageScore >= 85 && speakingMetrics.confidence >= 0.8) {
+          adjustment = -1; // One level down even for strong speakers
+        } else if (speakingMetrics.averageScore >= 70) {
+          adjustment = -1; // One level down for good speakers
+        } else {
+          adjustment = -2; // Two levels down for weaker speakers
+        }
+        break;
+        
+      default:
+        adjustment = -1;
+    }
+
+    // Apply confidence-based fine-tuning
+    if (speakingMetrics.confidence < 0.6) {
+      adjustment -= 1; // Be more conservative if speaking assessment wasn't confident
+    } else if (speakingMetrics.confidence >= 0.9 && speakingMetrics.averageScore >= 80) {
+      adjustment += 1; // Be more aggressive if very confident in speaking level
+    }
+
+    // Calculate final level with bounds checking
+    const finalIndex = Math.max(0, Math.min(CEFRLevels.length - 1, speakingIndex + adjustment));
+    
+    console.log(`[ADAPTIVE] Starting ${skill} at ${CEFRLevels[finalIndex]} based on speaking ${speakingLevel} (score: ${speakingMetrics.averageScore.toFixed(1)}, confidence: ${speakingMetrics.confidence.toFixed(2)}, adjustment: ${adjustment})`);
+    
+    return CEFRLevels[finalIndex];
   }
 
   /**
