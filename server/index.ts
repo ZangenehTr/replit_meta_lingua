@@ -67,6 +67,14 @@ app.get('/ielts_improved_audio.html', (_req, res) => {
   res.sendFile(path.join(__dirname, '../ielts_improved_audio.html'));
 });
 
+// Serve professional IELTS audio page
+app.get('/professional_ielts_audio.html', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../professional_ielts_audio.html'));
+});
+
+// Serve professional audio files
+app.use('/professional_audio', express.static(path.join(__dirname, '../professional_audio')));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

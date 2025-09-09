@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
+    "bark>=0.1.5",
+    "edge-tts>=7.2.3",
+    "gtts>=2.5.4",
     "librosa>=0.11.0",
     "numpy>=2.2.6",
     "pydub>=0.25.1",
