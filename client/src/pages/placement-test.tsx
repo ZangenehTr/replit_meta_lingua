@@ -146,6 +146,14 @@ export default function PlacementTestPage() {
         // Continue with next question
         setCurrentQuestion(data.nextQuestion);
         setUserResponse('');
+        // Reset audio state for new question
+        setAudioBlob(null);
+        setIsRecording(false);
+        setRecordingTimeLeft(0);
+        if (recordingTimer) {
+          clearInterval(recordingTimer);
+          setRecordingTimer(null);
+        }
       }
     },
     onError: (error) => {
@@ -177,6 +185,15 @@ export default function PlacementTestPage() {
         setTestResults(data.results);
       } else if (data.question) {
         setCurrentQuestion(data.question);
+        // Reset audio state for new question
+        setUserResponse('');
+        setAudioBlob(null);
+        setIsRecording(false);
+        setRecordingTimeLeft(0);
+        if (recordingTimer) {
+          clearInterval(recordingTimer);
+          setRecordingTimer(null);
+        }
       }
     } catch (error) {
       console.error('Error fetching next question:', error);
@@ -259,19 +276,29 @@ export default function PlacementTestPage() {
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/wav' });
+        console.log('Recording stopped, chunks:', chunks.length);
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        console.log('Audio blob created, size:', blob.size);
         setAudioBlob(blob);
         
         // Create audio URL for the response
         const audioUrl = URL.createObjectURL(blob);
-        setUserResponse({ 
+        const responseData = { 
           audioUrl, 
           audioBlob: blob, 
           duration: currentQuestion?.expectedDurationSeconds || 60 
-        });
+        };
+        console.log('Setting user response:', responseData);
+        setUserResponse(responseData);
         
         // Stop all tracks to release microphone
         stream.getTracks().forEach(track => track.stop());
+        
+        toast({
+          title: 'Recording Complete',
+          description: `Recorded ${blob.size} bytes of audio. You can now submit your answer.`,
+          variant: 'default'
+        });
       };
 
       setMediaRecorder(recorder);
@@ -284,22 +311,17 @@ export default function PlacementTestPage() {
       
       const timer = setInterval(() => {
         setRecordingTimeLeft(prev => {
-          if (prev <= 1) {
-            stopRecording();
+          const newTime = prev - 1;
+          if (newTime <= 0) {
+            // Auto-stop when time reaches 0
+            setTimeout(() => stopRecording(), 100);
             return 0;
           }
-          return prev - 1;
+          return newTime;
         });
       }, 1000);
       
       setRecordingTimer(timer);
-      
-      // Auto-stop after duration
-      setTimeout(() => {
-        if (recorder.state === 'recording') {
-          stopRecording();
-        }
-      }, duration * 1000);
       
     } catch (error) {
       console.error('Error starting recording:', error);
@@ -316,6 +338,7 @@ export default function PlacementTestPage() {
       mediaRecorder.stop();
     }
     setIsRecording(false);
+    setRecordingTimeLeft(0);
     if (recordingTimer) {
       clearInterval(recordingTimer);
       setRecordingTimer(null);
@@ -647,8 +670,21 @@ export default function PlacementTestPage() {
                   }
                   className="px-6"
                 >
-                  {submitResponseMutation.isPending ? 'Submitting...' : 'Submit Answer'}
+                  {submitResponseMutation.isPending ? 'Submitting...' : (
+                    currentQuestion.responseType === 'audio' && !audioBlob ? 
+                    'Record your answer first' : 'Submit Answer'
+                  )}
                 </Button>
+                
+                {/* Debug info */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="text-xs text-gray-500 mt-2">
+                    Debug: audioBlob={audioBlob ? 'exists' : 'null'}, 
+                    userResponse={userResponse ? 'exists' : 'empty'}, 
+                    isRecording={isRecording ? 'true' : 'false'},
+                    responseType={currentQuestion.responseType}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
