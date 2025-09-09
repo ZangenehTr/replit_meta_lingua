@@ -104,7 +104,7 @@ class TTSManager:
         # Try to initialize all providers
         provider_classes = [
             EdgeTTSProvider,
-            BarkTTSProvider,
+            # BarkTTSProvider,  # Temporarily disabled due to numpy issue
             Pyttsx3Provider, 
             GTTSProvider,
             SystemTTSProvider
@@ -221,7 +221,7 @@ class TTSManager:
 
 # Import providers
 from .edge_tts_provider import EdgeTTSProvider
-from .bark_tts_provider import BarkTTSProvider
+# from .bark_tts_provider import BarkTTSProvider  # Temporarily disabled due to numpy issue
 from .pyttsx3_provider import Pyttsx3Provider  
 from .gtts_provider import GTTSProvider
 from .system_tts_provider import SystemTTSProvider
