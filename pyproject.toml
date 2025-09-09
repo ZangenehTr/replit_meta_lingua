@@ -13,6 +13,7 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "pyttsx3>=2.99",
     "pyyaml>=6.0.2",
+    "requests>=2.32.5",
     "scipy>=1.16.1",
     "soundfile>=0.13.1",
 ]

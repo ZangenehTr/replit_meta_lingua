@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class TTSEngine(Enum):
     """Available TTS engines"""
     EDGE_TTS = "edge_tts"          # High quality, online only
+    BARK = "bark"                  # High quality neural, offline
     PYTTSX3 = "pyttsx3"            # Basic quality, fully offline  
     GTTS = "gtts"                  # Google TTS, online only
     SYSTEM_TTS = "system"          # System native TTS
@@ -103,6 +104,7 @@ class TTSManager:
         # Try to initialize all providers
         provider_classes = [
             EdgeTTSProvider,
+            BarkTTSProvider,
             Pyttsx3Provider, 
             GTTSProvider,
             SystemTTSProvider
@@ -124,21 +126,23 @@ class TTSManager:
         
     def _set_engine_preferences(self):
         """Set preferred and fallback engines based on availability"""
-        # For development: prefer high-quality Edge TTS
-        # For production: prefer offline engines
+        # New strategy: Edge TTS primary (Iranian accessible), Bark fallback
         
         if TTSEngine.EDGE_TTS in self.providers:
             self.preferred_engine = TTSEngine.EDGE_TTS
-            logger.info("🎯 Preferred engine: Edge TTS (high quality)")
+            logger.info("🎯 Preferred engine: Edge TTS (Iranian accessible, high quality)")
+        elif TTSEngine.BARK in self.providers:
+            self.preferred_engine = TTSEngine.BARK
+            logger.info("🎯 Preferred engine: Bark (neural synthesis, offline)")
         elif TTSEngine.PYTTSX3 in self.providers:
             self.preferred_engine = TTSEngine.PYTTSX3
-            logger.info("🎯 Preferred engine: pyttsx3 (offline)")
+            logger.info("🎯 Preferred engine: pyttsx3 (basic offline)")
         else:
             self.preferred_engine = None
             logger.warning("❌ No preferred engine available")
             
-        # Set fallback
-        for engine in [TTSEngine.PYTTSX3, TTSEngine.GTTS, TTSEngine.SYSTEM_TTS]:
+        # Set fallback: Bark preferred, then pyttsx3
+        for engine in [TTSEngine.BARK, TTSEngine.PYTTSX3, TTSEngine.GTTS, TTSEngine.SYSTEM_TTS]:
             if engine in self.providers and engine != self.preferred_engine:
                 self.fallback_engine = engine
                 logger.info(f"🔄 Fallback engine: {engine.value}")
