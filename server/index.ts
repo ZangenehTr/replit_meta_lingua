@@ -225,9 +225,45 @@ app.use((req, res, next) => {
         process.env.JWT_SECRET || 'default-secret',
         { expiresIn: '24h' }
       );
-      res.json({ auth_token: token, user_role: 'Student', user: { id: 8470, email, role: 'Student' } });
+      const refreshToken = jwt.sign(
+        { userId: 8470, type: 'refresh' },
+        process.env.JWT_SECRET || 'default-secret',
+        { expiresIn: '7d' }
+      );
+      res.json({ 
+        auth_token: token, 
+        refresh_token: refreshToken,
+        user_role: 'Student', 
+        user: { id: 8470, email, role: 'Student' } 
+      });
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
+    }
+  });
+
+  // FRONTEND FIX: Add refresh token endpoint for frontend authentication persistence
+  app.post('/api/auth/refresh', async (req, res) => {
+    try {
+      const { token } = req.body;
+      if (!token) {
+        return res.status(400).json({ message: 'Refresh token required' });
+      }
+
+      jwt.verify(token, process.env.JWT_SECRET || 'default-secret', (err: any, decoded: any) => {
+        if (err || decoded?.type !== 'refresh') {
+          return res.status(403).json({ message: 'Invalid refresh token' });
+        }
+        
+        const newAccessToken = jwt.sign(
+          { userId: decoded.userId, email: 'student2@test.com', role: 'Student' },
+          process.env.JWT_SECRET || 'default-secret',
+          { expiresIn: '24h' }
+        );
+        
+        res.json({ accessToken: newAccessToken });
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Token refresh failed' });
     }
   });
 
