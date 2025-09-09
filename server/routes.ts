@@ -20528,6 +20528,22 @@ Meta Lingua Academy`;
   const placementTestRoutes = await import('./routes/placement-test-routes');
   app.use('/api/placement-test', placementTestRoutes.createPlacementTestRoutes(storage, ollamaService));
 
+  // Serve the IELTS quality comparison test
+  app.get('/ielts_quality_comparison.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/public/ielts_quality_comparison.html'));
+  });
+
+  // Serve the audio files for the comparison test
+  app.get('/online/:filename', (req, res) => {
+    const filename = req.params.filename;
+    res.sendFile(path.join(__dirname, '../client/public/online', filename));
+  });
+
+  app.get('/offline/:filename', (req, res) => {
+    const filename = req.params.filename;
+    res.sendFile(path.join(__dirname, '../client/public/offline', filename));
+  });
+
   const httpServer = createServer(app);
   
   // Initialize Callern WebSocket server
