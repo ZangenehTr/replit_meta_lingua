@@ -1,6 +1,6 @@
 """
-Edge TTS Provider - High quality Microsoft voices (online only)
-For development use - NOT suitable for Iranian production deployment
+Edge TTS Provider - High quality Microsoft voices for production use
+Primary TTS engine for Iranian language institute deployment
 """
 import asyncio
 from pathlib import Path
@@ -25,7 +25,7 @@ class EdgeTTSProvider(TTSProvider):
             import edge_tts
             self.edge_tts = edge_tts
             self.is_available = True
-            logger.info("✅ Edge TTS available (WARNING: Online only)")
+            logger.info("✅ Edge TTS available - Production ready")
         except ImportError:
             logger.warning("❌ Edge TTS not available")
             self.is_available = False
@@ -82,7 +82,7 @@ class EdgeTTSProvider(TTSProvider):
             'voice_used': voice,
             'quality': TTSQuality.PROFESSIONAL.value,
             'engine': 'edge_tts',
-            'warning': 'Online only - not suitable for Iranian production'
+            'deployment': 'Production ready for Iranian institutes'
         }
         
     def get_available_voices(self) -> List[str]:

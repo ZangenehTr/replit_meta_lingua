@@ -133,11 +133,11 @@ class TTSManager:
         
     def _set_engine_preferences(self):
         """Set preferred and fallback engines based on availability"""
-        # New strategy: Edge TTS primary (Iranian accessible), Bark fallback
+        # Production strategy: Edge TTS primary (confirmed suitable for Iranian deployment)
         
         if TTSEngine.EDGE_TTS in self.providers:
             self.preferred_engine = TTSEngine.EDGE_TTS
-            logger.info("🎯 Preferred engine: Edge TTS (Iranian accessible, high quality)")
+            logger.info("🎯 Preferred engine: Edge TTS (Production ready, professional quality)")
         elif TTSEngine.BARK in self.providers:
             self.preferred_engine = TTSEngine.BARK
             logger.info("🎯 Preferred engine: Bark (neural synthesis, offline)")

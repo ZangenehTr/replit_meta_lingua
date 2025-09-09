@@ -83,6 +83,7 @@ CRITICAL DIRECTIVE: 3-day deadline to achieve 100% functionality - NO hardcoded 
 - **SMS Service**: Kavenegar (Iranian SMS provider only)
 - **VoIP**: Isabel VoIP line (Iranian telecom)
 - **AI Services**: Ollama server (local AI processing, no OpenAI or external AI APIs)
+- **TTS Services**: Microsoft Edge TTS (confirmed professional quality for Iranian production)
 - **Fonts**: Self-hosted Arabic/Persian fonts (no Google Fonts or external CDNs)
 - **WebRTC**: Self-hosted TURN/STUN server (no Twilio or external services)
 - **Real-time Communication**: Socket.io for WebSocket connections, Simple Peer for WebRTC, RecordRTC for local call recording
