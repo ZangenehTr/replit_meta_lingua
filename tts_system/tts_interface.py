@@ -221,6 +221,7 @@ class TTSManager:
 
 # Import providers
 from .edge_tts_provider import EdgeTTSProvider
+from .bark_tts_provider import BarkTTSProvider
 from .pyttsx3_provider import Pyttsx3Provider  
 from .gtts_provider import GTTSProvider
 from .system_tts_provider import SystemTTSProvider
