@@ -147,7 +147,6 @@ export class AdaptivePlacementService {
     userResponse: any
   ): Promise<{
     evaluation: CEFREvaluationResult;
-    nextQuestion: PlacementTestQuestion | null;
   }> {
     console.log(`[DEBUG] Submitting response for session ${sessionId}, question ${questionId}`);
     
@@ -194,12 +193,10 @@ export class AdaptivePlacementService {
       currentQuestionIndex: session.currentQuestionIndex + 1
     });
 
-    // Get next question
-    const nextQuestion = await this.getNextQuestion(sessionId);
-
+    // Don't call getNextQuestion here to avoid recursion - let client fetch it separately
+    
     return {
-      evaluation,
-      nextQuestion
+      evaluation
     };
   }
 

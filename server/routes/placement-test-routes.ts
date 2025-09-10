@@ -231,18 +231,8 @@ export function createPlacementTestRoutes(
           feedback: result.evaluation.detailedFeedback,
           recommendations: result.evaluation.recommendations
         },
-        nextQuestion: result.nextQuestion ? {
-          id: result.nextQuestion.id,
-          skill: result.nextQuestion.skill,
-          level: result.nextQuestion.cefrLevel,
-          type: result.nextQuestion.questionType,
-          title: result.nextQuestion.title,
-          prompt: result.nextQuestion.prompt,
-          content: result.nextQuestion.content,
-          responseType: result.nextQuestion.responseType,
-          expectedDurationSeconds: result.nextQuestion.expectedDurationSeconds
-        } : null,
-        testCompleted: !result.nextQuestion
+        // Don't return nextQuestion - let client fetch it separately to avoid recursion
+        submitted: true
       });
     } catch (error) {
       console.error('Error submitting response:', error);
