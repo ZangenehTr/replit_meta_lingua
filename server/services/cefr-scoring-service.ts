@@ -187,39 +187,7 @@ export class CEFRScoringService {
    * Evaluate speaking assessment using CEFR criteria
    */
   async evaluateSpeaking(data: SpeakingAssessmentData, targetLevel: CEFRLevel): Promise<CEFREvaluationResult> {
-    const criteria = this.cefrDescriptors.get(`speaking-${targetLevel}`) || [];
-    
-    const prompt = `
-You are a language assessment expert trained in CEFR evaluation. Evaluate this speaking sample against ${targetLevel} level criteria:
-
-SPEAKING SAMPLE:
-- Transcript: "${data.transcript}"
-- Duration: ${data.duration} seconds
-- Question: "${data.prompt}"
-
-CEFR ${targetLevel} CRITERIA FOR SPEAKING:
-${criteria.map(c => `- ${c.descriptor}`).join('\n')}
-
-EVALUATION INSTRUCTIONS:
-1. Analyze vocabulary range and accuracy
-2. Assess grammatical structures used
-3. Evaluate fluency and coherence
-4. Check pronunciation and clarity
-5. Determine if response meets ${targetLevel} descriptors
-
-Respond in JSON format:
-{
-  "level": "${targetLevel}",
-  "score": 0-100,
-  "confidence": 0.0-1.0,
-  "metCriteria": ["list of met criteria"],
-  "unmetCriteria": ["list of unmet criteria"],
-  "detailedFeedback": "specific feedback on performance",
-  "recommendations": ["specific areas for improvement"]
-}
-`;
-
-    // Use fallback evaluation for now to avoid memory issues
+    // Use fallback evaluation to avoid memory issues
     console.log(`Using fallback evaluation for speaking assessment - level: ${targetLevel}`);
     return this.getFallbackEvaluation(targetLevel, 'speaking');
   }
@@ -228,31 +196,7 @@ Respond in JSON format:
    * Evaluate writing assessment using CEFR criteria
    */
   async evaluateWriting(data: WritingAssessmentData, targetLevel: CEFRLevel): Promise<CEFREvaluationResult> {
-    const criteria = this.cefrDescriptors.get(`writing-${targetLevel}`) || [];
-    
-    const prompt = `
-Evaluate this writing sample against CEFR ${targetLevel} level criteria:
-
-WRITING SAMPLE:
-- Text: "${data.text}"
-- Word count: ${data.wordCount}
-- Time spent: ${data.timeSpent} seconds
-- Prompt: "${data.prompt}"
-
-CEFR ${targetLevel} CRITERIA FOR WRITING:
-${criteria.map(c => `- ${c.descriptor}`).join('\n')}
-
-EVALUATION FOCUS:
-1. Task fulfillment and content organization
-2. Vocabulary range and precision
-3. Grammatical accuracy and complexity
-4. Coherence and cohesion
-5. Register and style appropriateness
-
-Provide detailed assessment in JSON format with the same structure as speaking evaluation.
-`;
-
-    // Use fallback evaluation for now to avoid memory issues
+    // Use fallback evaluation to avoid memory issues
     console.log(`Using fallback evaluation for writing assessment - level: ${targetLevel}`);
     return this.getFallbackEvaluation(targetLevel, 'writing');
   }
