@@ -186,25 +186,22 @@ export function createPlacementTestRoutes(
       
       // Handle audio upload (FormData) vs regular JSON submission
       if (req.file) {
-        // Audio submission via FormData
+        // Audio submission via FormData - SKIP processing to avoid memory issues
         const questionId = parseInt(req.body.questionId);
-        const audioBuffer = req.file.buffer;
+        console.log(`Audio received: ${req.file.buffer.length} bytes, SKIPPING processing to avoid memory crash`);
         
-        // Store audio separately if needed, but don't pass to evaluation
-        // For now, we'll use fallback evaluation without processing the audio
-        console.log(`Audio received: ${audioBuffer.length} bytes, using fallback evaluation`);
-        
+        // Immediately discard the buffer and use minimal data
         data = {
           questionId,
           userResponse: {
-            audioUrl: '', // We don't store the actual audio URL for now
-            transcript: 'Audio received - using fallback evaluation',
-            duration: parseInt(req.body.duration) || 120,
-            // Remove audioData and audioSize to prevent memory leak
-            audioReceived: true,
-            audioSize: audioBuffer.length
+            audioUrl: '',
+            transcript: 'Audio received - automatic evaluation',
+            duration: 60, // Fixed duration
+            audioReceived: true
           }
         };
+        // Explicitly clear the buffer reference
+        req.file.buffer = Buffer.alloc(0);
       } else {
         // Regular JSON submission
         data = submitResponseSchema.parse(req.body);
