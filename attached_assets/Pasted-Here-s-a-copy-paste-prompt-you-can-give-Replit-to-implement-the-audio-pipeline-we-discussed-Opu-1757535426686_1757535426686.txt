@@ -1,0 +1,134 @@
+Here’s a **copy-paste prompt** you can give Replit to implement the audio pipeline we discussed (Opus primary, MP3 fallback for playback, Whisper-ready PCM), with strict latency and no new deps beyond Edge TTS + existing Whisper.
+
+---
+
+# Replit Prompt — Implement Smallest-Size Speech Pipeline (Opus primary, MP3 fallback), Whisper-ready, No New Deps
+
+## 0) Context & Constraints
+
+* App: **MetaLingua** 10-minute MST placement (L/R/S/W).
+* Goal: **Minimize audio size + latency** for Speaking; maintain broad playback compatibility.
+* **Self-hosted only.**
+* **No new runtime dependencies** except:
+
+  * **Microsoft Edge TTS** (already allowed).
+  * **Whisper** (already implemented; reuse its existing audio decode path, e.g., ffmpeg if already present).
+* We do **not** use LLM scoring on the main path.
+
+## 1) Requirements (Recording → Transport → ASR → Storage → Playback)
+
+### A) Client Recording (Browser)
+
+1. **Primary format:** **Opus** in **WebM or OGG** container, **mono**, **16 kHz**, **12–16 kbps** target.
+
+   * Use `MediaRecorder` with `mimeType: 'audio/webm;codecs=opus'` (or `'audio/ogg;codecs=opus'` if needed).
+   * Set `audioBitsPerSecond` ≈ **16000** (or **20000** if device rejects 16k).
+2. **Timeslicing / Streaming:** start recorder with `timeslice: 3000` ms; send chunks immediately to server (WebSocket or `fetch` stream).
+
+   * Purpose: flatten ASR load and reduce post-recording spikes.
+3. **Downmix to mono @16kHz:** use Web Audio API if needed (createMediaStreamSource → ScriptProcessor/AudioWorklet) when device enforces 44.1k/48k; ensure server receives **mono**.
+4. **Hard caps:**
+
+   * Max speaking per prompt: **≤ 40 s**.
+   * Total speaking audio budget per user: **≤ 80 s**.
+
+**Safari fallback (recording):** If `MediaRecorder` with Opus is unavailable, fallback to **AAC-LC** in MP4/M4A using native Safari support (`mimeType: 'audio/mp4'`). Keep **mono**, **24 kHz**, **32–48 kbps**. (No extra libs; use built-in encoder.)
+
+### B) Transport & Ingestion
+
+1. **Endpoint:** `/api/audio/ingest` accepts chunked uploads with headers: `X-Session-ID`, `X-User-ID`, `X-Prompt-ID`, `X-Seq`.
+2. **Assembly:** server reorders chunks by `X-Seq`, writes temp container file per prompt.
+3. **Immediate ASR:** as each chunk arrives, **queue to Whisper** streaming worker (don’t wait for full file).
+4. **Back-pressure:** if ASR queue depth > threshold, instruct client (over WS) to increase `timeslice` to 5s.
+
+### C) ASR (Whisper)
+
+1. **Decode to PCM 16 kHz mono** using the **existing audio decode path** used by Whisper (do not add new libs).
+2. **Model size:** default to **small/base** for placement (latency over WER).
+3. **Partial hypotheses:** accumulate partial transcripts across chunks; on final chunk, finalize and return transcript + timings.
+
+### D) Storage & Artifacts
+
+1. **Primary artifact:** store original **Opus** file per prompt (`.webm`/`.ogg`).
+2. **Whisper transcript JSON**: `{ words, offsets, asr_conf, dur_sec }`.
+3. **Playback fallback asset:** generate **MP3** **only if** needed for learner review or non-Opus playback. Use **existing toolchain** (the same decoder/encoder Whisper path relies on); do **not** add new deps.
+
+   * MP3 settings: **mono**, **22.05–24 kHz**, **32–48 kbps**.
+
+### E) Playback Rules
+
+* In modern Chrome/Edge/Firefox → serve **Opus** asset.
+* If user agent requires fallback → serve **MP3** (or Safari-recorded AAC as is).
+* Whisper always consumes **PCM 16 kHz mono**, regardless of source.
+
+## 2) Front-End Integration (Speaking UI)
+
+* UI shows **10 s prep → 35–40 s record** with visible countdown; **auto-start/stop** mic; no retries.
+* **Waveform** visualization from local stream.
+* On stop, **finish any in-flight chunk**, send `X-Final: true`, then close WS/stream.
+* If server instructs higher timeslice, apply immediately.
+
+## 3) API Contracts
+
+### `POST /api/audio/ingest`  (stream/chunk)
+
+* Headers: `X-Session-ID`, `X-User-ID`, `X-Prompt-ID`, `X-Seq`, `X-Final` (true/false), `Content-Type` (`audio/webm`, `audio/ogg`, or `audio/mp4`).
+* Body: binary chunk.
+* Response: `202 Accepted` + `{ ackSeq, queueDepth }`.
+
+### `POST /api/asr/commit`
+
+* Body: `{ sessionId, promptId }` (called when client sent `X-Final=true`).
+* Server returns `{ transcript, confidence, durationSec }` when finalization done (or stream interim via WS).
+
+### `GET /api/audio/playback`
+
+* Query: `{ sessionId, promptId, format?=auto }`
+* Server UA-detects; returns **Opus** by default; **MP3** if needed.
+
+## 4) Scoring Hooks (no LLM)
+
+* After ASR finalization, call the **Speaking quickscore** with features:
+
+  * `wpm, silenceRatio, filledPausesPer10s, typeTokenRatio, B-bandLexShare, errorDensityProxy, discourseMarkers`.
+* The Writing module continues to use **heuristic NLP features** (no new libs).
+* Return `p ∈ [0,1]` within **≤150 ms**, then route MST (UP/DOWN/STAY).
+
+## 5) Edge TTS Integration
+
+* **Cache TTS** by `{ itemId, voice, locale }`.
+* Never regenerate on the fly during an active session; warm the cache at test start.
+
+## 6) Clean-Up Tasks (MANDATORY)
+
+* Remove **all legacy audio code paths** not aligned with this pipeline:
+
+  * Old WAV/PCM direct uploads from client.
+  * Any multi-format recorder code not using Opus or Safari AAC fallback.
+  * Old synchronous ASR endpoints that block until full file upload.
+  * Redundant encoders/transcoders not used by Whisper’s existing pipeline.
+  * Dead feature flags, assets, and UI components from the previous placement system.
+* Verify tree is clean: build succeeds; no unused imports; no dead endpoints.
+
+## 7) Acceptance Criteria
+
+* **Recording:** Opus mono 16 kHz at \~12–16 kbps (or Safari AAC 32–48 kbps) confirmed by headers.
+* **End-to-end speaking prompt:**
+
+  * Chunked upload with 3s timeslice, server streaming to Whisper,
+  * Final transcript available **≤ 2 s** after recording stops (under nominal load).
+* **Artifact sizes:** \~**120 KB per 60 s** (Opus 16 kbps) ± overhead; Safari AAC ≤ **360 KB/min**.
+* **Playback:** modern browsers receive Opus; fallback gets MP3/AAC without user action.
+* **No new runtime deps** beyond Edge TTS + existing Whisper decode stack.
+* **Codebase audit:** legacy audio modules removed; only the new pipeline remains.
+
+## 8) Notes & Guardrails
+
+* If device rejects 16 kHz capture, accept 48 kHz input and **downsample server-side** when decoding to Whisper PCM (already in Whisper path).
+* Keep everything **mono**.
+* If ASR queue rises above threshold, server instructs clients to **increase timeslice** or **briefly delay** starting Speaking by 5–10 s (to smooth spikes).
+* If UA lacks Opus **and** AAC (edge case on very old browsers), block speaking test with a friendly message and suggested browser versions.
+
+---
+
+**Deliver this refactor as a single PR**, with: updated client speaking module, new ingest/ASR endpoints, storage/playback changes, and a thorough deletion of legacy code. Include a short README with the new audio flow and how to verify Opus/AAC/MP3 paths.
