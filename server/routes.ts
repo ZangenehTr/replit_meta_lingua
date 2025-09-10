@@ -2905,7 +2905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For now, return mock data since placement test schema has import issues
       // TODO: Fix placement test schema import later
-      const hasCompletedPlacementTest = Math.random() > 0.5; // Random for testing
+      const hasCompletedPlacementTest = false; // Reset to allow retaking test
       let placementResults = null;
       
       if (hasCompletedPlacementTest) {
@@ -21181,7 +21181,7 @@ Meta Lingua Academy`;
   app.get("/api/student/placement-status", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      const hasCompletedPlacementTest = Math.random() > 0.5;
+      const hasCompletedPlacementTest = false; // Reset to allow retaking test
       let placementResults = null;
       
       if (hasCompletedPlacementTest) {
