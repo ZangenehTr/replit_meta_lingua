@@ -579,7 +579,7 @@ export default function PlacementTestPage() {
             </div>
             
             <div className="mt-4">
-              <Progress value={Math.max(0, 100 - (timeRemaining / 600 * 100))} className="h-2" />
+              <Progress value={currentSession ? Math.min(100, (currentSession.currentQuestionIndex || 0) * 25) : 0} className="h-2" />
             </div>
           </div>
 
@@ -803,7 +803,7 @@ export default function PlacementTestPage() {
 
               {/* Strengths and Recommendations */}
               <div className="grid md:grid-cols-2 gap-6">
-                {testResults.analysis?.strengths && testResults.analysis.strengths.length > 0 && (
+                {testResults.analysis && Array.isArray(testResults.analysis.strengths) && testResults.analysis.strengths.length > 0 && (
                   <div className="bg-green-50 p-6 rounded-lg">
                     <h3 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
                       <CheckCircle className="h-5 w-5" />
@@ -817,7 +817,7 @@ export default function PlacementTestPage() {
                   </div>
                 )}
 
-                {testResults.analysis?.recommendations && testResults.analysis.recommendations.length > 0 && (
+                {testResults.analysis && Array.isArray(testResults.analysis.recommendations) && testResults.analysis.recommendations.length > 0 && (
                   <div className="bg-blue-50 p-6 rounded-lg">
                     <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
                       <Brain className="h-5 w-5" />
