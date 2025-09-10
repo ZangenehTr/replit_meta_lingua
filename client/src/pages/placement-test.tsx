@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,6 +78,7 @@ export default function PlacementTestPage() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [recordingTimeLeft, setRecordingTimeLeft] = useState<number>(0);
   const [recordingTimer, setRecordingTimer] = useState<NodeJS.Timeout | null>(null);
+  const autoSubmitAfterRecording = useRef(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -250,11 +251,13 @@ export default function PlacementTestPage() {
         setTimeRemaining(prev => {
           if (prev <= 1) {
             // Time's up - auto-submit test
-            if (currentSession) {
+            if (currentSession && currentQuestion) {
+              console.log('Test time expired, auto-submitting...');
               submitResponseMutation.mutate({
                 sessionId: currentSession.id,
-                questionId: currentQuestion?.id || 0,
-                userResponse: userResponse || 'Time expired'
+                questionId: currentQuestion.id,
+                userResponse: userResponse || 'Time expired',
+                audioBlob: audioBlob
               });
             }
             return 0;
@@ -265,7 +268,7 @@ export default function PlacementTestPage() {
 
       return () => clearInterval(timer);
     }
-  }, [testStep, timeRemaining]);
+  }, [testStep, timeRemaining, currentSession, currentQuestion, userResponse, audioBlob, submitResponseMutation]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -312,11 +315,29 @@ export default function PlacementTestPage() {
         // Stop all tracks to release microphone
         stream.getTracks().forEach(track => track.stop());
         
-        toast({
-          title: 'Recording Complete',
-          description: `Recorded ${blob.size} bytes of audio. You can now submit your answer.`,
-          variant: 'default'
-        });
+        // Check if we need to auto-submit due to recording time expiry
+        if (autoSubmitAfterRecording.current) {
+          console.log('Auto-submitting due to recording time expiry...');
+          autoSubmitAfterRecording.current = false;
+          
+          // Auto-submit after a short delay to ensure state is updated
+          setTimeout(() => {
+            if (currentSession && currentQuestion) {
+              submitResponseMutation.mutate({
+                sessionId: currentSession.id,
+                questionId: currentQuestion.id,
+                userResponse: responseData,
+                audioBlob: blob
+              });
+            }
+          }, 200);
+        } else {
+          toast({
+            title: 'Recording Complete',
+            description: `Recorded ${blob.size} bytes of audio. You can now submit your answer.`,
+            variant: 'default'
+          });
+        }
       };
 
       setMediaRecorder(recorder);
@@ -332,7 +353,11 @@ export default function PlacementTestPage() {
           const newTime = prev - 1;
           if (newTime <= 0) {
             // Auto-stop when time reaches 0
-            setTimeout(() => stopRecording(), 100);
+            setTimeout(() => {
+              console.log('Recording time expired, auto-stopping...');
+              autoSubmitAfterRecording.current = true;
+              stopRecording();
+            }, 100);
             return 0;
           }
           return newTime;
