@@ -155,24 +155,11 @@ export default function PlacementTestPage() {
       return response.json();
     },
     onSuccess: (data) => {
-      if (data.testCompleted || !data.nextQuestion) {
-        // Test completed
-        setTestStep('completed');
-        if (data.evaluation) {
-          fetchTestResults();
-        }
-      } else {
-        // Continue with next question
-        setCurrentQuestion(data.nextQuestion);
-        setUserResponse('');
-        // Reset audio state for new question
-        setAudioBlob(null);
-        setIsRecording(false);
-        setRecordingTimeLeft(0);
-        if (recordingTimer) {
-          clearInterval(recordingTimer);
-          setRecordingTimer(null);
-        }
+      console.log('Response submitted successfully:', data);
+      
+      // After successful submission, fetch the next question
+      if (currentSession) {
+        fetchNextQuestion(currentSession.id);
       }
     },
     onError: (error) => {
