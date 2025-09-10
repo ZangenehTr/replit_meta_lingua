@@ -189,15 +189,19 @@ export function createPlacementTestRoutes(
         // Audio submission via FormData
         const questionId = parseInt(req.body.questionId);
         const audioBuffer = req.file.buffer;
-        const audioBlob = audioBuffer; // Store the audio data
+        
+        // Store audio separately if needed, but don't pass to evaluation
+        // For now, we'll use fallback evaluation without processing the audio
+        console.log(`Audio received: ${audioBuffer.length} bytes, using fallback evaluation`);
         
         data = {
           questionId,
           userResponse: {
-            audioUrl: '', // We'll process this later
-            transcript: '',
-            duration: 0,
-            audioData: audioBlob,
+            audioUrl: '', // We don't store the actual audio URL for now
+            transcript: 'Audio received - using fallback evaluation',
+            duration: parseInt(req.body.duration) || 120,
+            // Remove audioData and audioSize to prevent memory leak
+            audioReceived: true,
             audioSize: audioBuffer.length
           }
         };
