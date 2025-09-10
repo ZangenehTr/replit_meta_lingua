@@ -13,7 +13,7 @@ import { OllamaService } from '../ollama-service';
 // Configure multer for audio uploads (store in memory)
 const upload = multer({ 
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit for audio files
   fileFilter: (req, file, cb) => {
     if (file.fieldname === 'audio' && file.mimetype.startsWith('audio/')) {
       cb(null, true);

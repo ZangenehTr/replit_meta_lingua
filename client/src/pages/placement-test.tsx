@@ -320,6 +320,12 @@ export default function PlacementTestPage() {
           console.log('Auto-submitting due to recording time expiry...');
           autoSubmitAfterRecording.current = false;
           
+          // Reset recording timer state to prevent multiple auto-submissions
+          if (recordingTimer) {
+            clearInterval(recordingTimer);
+            setRecordingTimer(null);
+          }
+          
           // Auto-submit after a short delay to ensure state is updated
           setTimeout(() => {
             if (currentSession && currentQuestion) {
@@ -353,11 +359,10 @@ export default function PlacementTestPage() {
           const newTime = prev - 1;
           if (newTime <= 0) {
             // Auto-stop when time reaches 0
-            setTimeout(() => {
-              console.log('Recording time expired, auto-stopping...');
-              autoSubmitAfterRecording.current = true;
-              stopRecording();
-            }, 100);
+            console.log('Recording time expired, auto-stopping...');
+            autoSubmitAfterRecording.current = true;
+            clearInterval(timer); // Clear the timer immediately
+            setTimeout(() => stopRecording(), 100);
             return 0;
           }
           return newTime;
@@ -798,28 +803,28 @@ export default function PlacementTestPage() {
 
               {/* Strengths and Recommendations */}
               <div className="grid md:grid-cols-2 gap-6">
-                {testResults.strengths.length > 0 && (
+                {testResults.analysis?.strengths && testResults.analysis.strengths.length > 0 && (
                   <div className="bg-green-50 p-6 rounded-lg">
                     <h3 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
                       <CheckCircle className="h-5 w-5" />
                       Your Strengths
                     </h3>
                     <ul className="space-y-2">
-                      {testResults.strengths.map((strength, index) => (
+                      {testResults.analysis.strengths.map((strength, index) => (
                         <li key={index} className="text-green-700 text-sm">• {strength}</li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                {testResults.recommendations.length > 0 && (
+                {testResults.analysis?.recommendations && testResults.analysis.recommendations.length > 0 && (
                   <div className="bg-blue-50 p-6 rounded-lg">
                     <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
                       <Brain className="h-5 w-5" />
                       Recommendations
                     </h3>
                     <ul className="space-y-2">
-                      {testResults.recommendations.map((rec, index) => (
+                      {testResults.analysis.recommendations.map((rec, index) => (
                         <li key={index} className="text-blue-700 text-sm">• {rec}</li>
                       ))}
                     </ul>
