@@ -81,10 +81,10 @@ export default function PlacementTestPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [testResults, setTestResults] = useState<PlacementTestResults | null>(null);
   const [testStep, setTestStep] = useState<'intro' | 'testing' | 'completed'>('intro');
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [recordingTimeLeft, setRecordingTimeLeft] = useState<number>(0);
   const [recordingTimer, setRecordingTimer] = useState<NodeJS.Timeout | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const autoSubmitAfterRecording = useRef(false);
 
   const { toast } = useToast();
@@ -347,7 +347,7 @@ export default function PlacementTestPage() {
         }
       };
 
-      setMediaRecorder(recorder);
+      mediaRecorderRef.current = recorder;
       recorder.start();
       setIsRecording(true);
       
@@ -410,8 +410,9 @@ export default function PlacementTestPage() {
   };
 
   const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.stop();
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state === 'recording') {
+      recorder.stop();
     }
     setIsRecording(false);
     setRecordingTimeLeft(0);
@@ -435,11 +436,12 @@ export default function PlacementTestPage() {
       if (recordingTimer) {
         clearInterval(recordingTimer);
       }
-      if (mediaRecorder) {
-        mediaRecorder.stop();
+      const recorder = mediaRecorderRef.current;
+      if (recorder && recorder.state === 'recording') {
+        recorder.stop();
       }
     };
-  }, [recordingTimer, mediaRecorder]);
+  }, [recordingTimer]);
 
   const handleSubmitResponse = () => {
     if (!currentSession || !currentQuestion) return;
@@ -774,14 +776,14 @@ export default function PlacementTestPage() {
                 <Button 
                   onClick={handleSubmitResponse}
                   disabled={
-                    (currentQuestion.responseType === 'audio' ? !audioBlob : !userResponse) || 
+                    (currentQuestion.responseType === 'audio' ? !userResponse?.audioBlob : !userResponse) || 
                     submitResponseMutation.isPending ||
                     isRecording
                   }
                   className="px-6"
                 >
                   {submitResponseMutation.isPending ? 'Submitting...' : (
-                    currentQuestion.responseType === 'audio' && !audioBlob ? 
+                    currentQuestion.responseType === 'audio' && !userResponse?.audioBlob ? 
                     'Record your answer first' : 'Submit Answer'
                   )}
                 </Button>
