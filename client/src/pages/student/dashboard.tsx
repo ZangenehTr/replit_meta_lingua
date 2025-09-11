@@ -113,7 +113,8 @@ export default function StudentDashboard() {
 
   // Check for first-time users and show profile completion modal
   useEffect(() => {
-    if (user && user.role === 'Student' && isFirstLogin && !hasEverCompletedProfile) {
+    const hasSkippedModal = localStorage.getItem('profile_modal_shown') === 'true';
+    if (user && user.role === 'Student' && isFirstLogin && !hasEverCompletedProfile && !hasSkippedModal) {
       // Show modal after a short delay to allow dashboard to load
       const timer = setTimeout(() => {
         setShowProfileModal(true);

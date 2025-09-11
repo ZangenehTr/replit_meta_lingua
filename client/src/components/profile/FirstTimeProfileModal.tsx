@@ -57,10 +57,9 @@ export function FirstTimeProfileModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <Dialog open={isOpen} onOpenChange={() => {}}>
+        <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onSkip(); }}>
           <DialogContent 
             className={`max-w-sm sm:max-w-md mx-auto max-h-[85vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}
-            hideCloseButton
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
