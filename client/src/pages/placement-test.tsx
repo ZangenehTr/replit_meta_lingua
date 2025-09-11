@@ -15,6 +15,7 @@ interface PlacementTestSession {
   id: number;
   status: 'in_progress' | 'completed' | 'abandoned';
   currentSkill: 'speaking' | 'listening' | 'reading' | 'writing';
+  currentQuestionIndex?: number;
   startedAt: string;
   maxDurationMinutes: number;
 }
@@ -50,6 +51,12 @@ interface PlacementTestResults {
   strengths: string[];
   recommendations: string[];
   confidence: number;
+  analysis?: {
+    strengths: string[];
+    weaknesses: string[];
+    recommendations: string[];
+    confidenceScore: number;
+  };
 }
 
 const skillIcons = {

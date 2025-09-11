@@ -330,10 +330,13 @@ export class AdaptivePlacementService {
     levelStability: number;
     confidence: number;
   } {
-    const scores = skillState.responses.map(r => r.aiScore || 60);
+    const scores = skillState.responses.map(r => {
+      const score = r.aiScore;
+      return typeof score === 'string' ? parseFloat(score) : (score || 60);
+    });
     const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
     
-    // Calculate score consistency (lower variance = higher consistency)
+    // Calculate score consistency (lower variance = higher consistency)  
     const variance = scores.reduce((sum, score) => sum + Math.pow(score - averageScore, 2), 0) / scores.length;
     const scoreConsistency = Math.max(0, 1 - (variance / 1000)); // Normalize to 0-1
 

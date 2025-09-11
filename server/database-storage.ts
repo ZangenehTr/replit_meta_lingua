@@ -110,6 +110,14 @@ import {
   type LevelAssessmentQuestion, type InsertLevelAssessmentQuestion,
   type LevelAssessmentResult, type InsertLevelAssessmentResult
 } from "@shared/schema";
+
+// Import placement test schema
+import {
+  placementTestSessions, placementTestQuestions, placementTestResponses,
+  type PlacementTestSession, type InsertPlacementTestSession,
+  type PlacementTestQuestion, type InsertPlacementTestQuestion,
+  type PlacementTestResponse, type InsertPlacementTestResponse
+} from "@shared/placement-test-schema";
 import { IStorage } from "./storage";
 
 export class DatabaseStorage implements IStorage {
@@ -12896,138 +12904,177 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Placement Test management
-  private placementTestSessions: Map<number, any> = new Map();
-  private placementTestQuestions: Map<number, any> = new Map();
-  private placementTestResponses: Map<number, any> = new Map();
+  // Placement Test management - Using actual database tables
   private userRoadmapEnrollments: Map<number, any> = new Map();
 
   async createPlacementTestSession(data: any): Promise<any> {
-    const sessionData = {
-      id: Math.floor(Math.random() * 10000) + 1,
-      userId: data.userId,
-      targetLanguage: data.targetLanguage,
-      learningGoal: data.learningGoal || 'general',
-      status: data.status || 'in_progress',
-      currentSkill: data.currentSkill || 'speaking',
-      currentQuestionIndex: data.currentQuestionIndex || 0,
-      startedAt: new Date(),
-      completedAt: null,
-      overallCEFRLevel: null,
-      speakingLevel: null,
-      listeningLevel: null,
-      readingLevel: null,
-      writingLevel: null,
-      overallScore: null,
-      speakingScore: null,
-      listeningScore: null,
-      readingScore: null,
-      writingScore: null
-    };
-    
-    this.placementTestSessions.set(sessionData.id, sessionData);
-    return sessionData;
+    try {
+      const [session] = await db.insert(placementTestSessions).values({
+        userId: data.userId,
+        targetLanguage: data.targetLanguage,
+        learningGoal: data.learningGoal || 'general',
+        status: data.status || 'in_progress',
+        currentSkill: data.currentSkill || 'speaking',
+        currentQuestionIndex: data.currentQuestionIndex || 0
+      }).returning();
+      return session;
+    } catch (error) {
+      console.error('Error creating placement test session:', error);
+      throw error;
+    }
   }
 
   async getPlacementTestSession(id: number): Promise<any | undefined> {
-    return this.placementTestSessions.get(id);
+    try {
+      const [session] = await db.select().from(placementTestSessions).where(eq(placementTestSessions.id, id));
+      return session;
+    } catch (error) {
+      console.error('Error getting placement test session:', error);
+      return undefined;
+    }
   }
 
   async updatePlacementTestSession(id: number, updates: any): Promise<any | undefined> {
-    const session = this.placementTestSessions.get(id);
-    if (!session) return undefined;
-    
-    const updatedSession = { ...session, ...updates };
-    this.placementTestSessions.set(id, updatedSession);
-    return updatedSession;
+    try {
+      const [updatedSession] = await db
+        .update(placementTestSessions)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(placementTestSessions.id, id))
+        .returning();
+      return updatedSession;
+    } catch (error) {
+      console.error('Error updating placement test session:', error);
+      return undefined;
+    }
   }
 
   async getUserPlacementTestSessions(userId: number): Promise<any[]> {
-    return Array.from(this.placementTestSessions.values())
-      .filter(session => session.userId === userId)
-      .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
+    try {
+      return await db.select()
+        .from(placementTestSessions)
+        .where(eq(placementTestSessions.userId, userId))
+        .orderBy(desc(placementTestSessions.startedAt));
+    } catch (error) {
+      console.error('Error getting user placement test sessions:', error);
+      return [];
+    }
   }
 
-  async getPlacementTestSessionsPaginated(page: number, limit: number): Promise<{ sessions: any[], total: number }> {
-    const allSessions = Array.from(this.placementTestSessions.values());
-    const startIndex = (page - 1) * limit;
-    const sessions = allSessions.slice(startIndex, startIndex + limit);
-    return { sessions, total: allSessions.length };
+  async getPlacementTestSessionsPaginated(limit: number, offset: number): Promise<any[]> {
+    try {
+      return await db.select()
+        .from(placementTestSessions)
+        .orderBy(desc(placementTestSessions.startedAt))
+        .limit(limit)
+        .offset(offset);
+    } catch (error) {
+      console.error('Error getting paginated placement test sessions:', error);
+      return [];
+    }
   }
 
   async getPlacementTestSessionsCount(): Promise<number> {
-    return this.placementTestSessions.size;
+    try {
+      const result = await db.select({ count: sql`COUNT(*)` }).from(placementTestSessions);
+      return parseInt(result[0]?.count || '0');
+    } catch (error) {
+      console.error('Error getting placement test sessions count:', error);
+      return 0;
+    }
   }
 
   async createPlacementTestQuestion(data: any): Promise<any> {
-    const questionData = {
-      id: Math.floor(Math.random() * 10000) + 1,
-      skill: data.skill,
-      level: data.level,
-      type: data.type,
-      title: data.title,
-      prompt: data.prompt,
-      content: data.content,
-      responseType: data.responseType,
-      expectedDurationSeconds: data.expectedDurationSeconds || 120,
-      estimatedMinutes: data.estimatedMinutes || 2,
-      createdAt: new Date()
-    };
-    
-    this.placementTestQuestions.set(questionData.id, questionData);
-    return questionData;
+    try {
+      const [question] = await db.insert(placementTestQuestions).values({
+        skill: data.skill,
+        cefrLevel: data.level,
+        questionType: data.type,
+        title: data.title,
+        prompt: data.prompt,
+        content: data.content,
+        responseType: data.responseType,
+        expectedDurationSeconds: data.expectedDurationSeconds || 120,
+        scoringCriteria: data.scoringCriteria || {},
+        estimatedCompletionMinutes: data.estimatedMinutes || 2
+      }).returning();
+      return question;
+    } catch (error) {
+      console.error('Error creating placement test question:', error);
+      throw error;
+    }
   }
 
   async getPlacementTestQuestion(id: number): Promise<any | undefined> {
-    return this.placementTestQuestions.get(id);
+    try {
+      const [question] = await db.select().from(placementTestQuestions).where(eq(placementTestQuestions.id, id));
+      return question;
+    } catch (error) {
+      console.error('Error getting placement test question:', error);
+      return undefined;
+    }
   }
 
   async getPlacementTestQuestions(filters?: any): Promise<any[]> {
-    let questions = Array.from(this.placementTestQuestions.values());
-    
-    if (filters) {
-      if (filters.skill) {
-        questions = questions.filter(q => q.skill === filters.skill);
+    try {
+      let query = db.select().from(placementTestQuestions).where(eq(placementTestQuestions.isActive, true));
+      
+      if (filters) {
+        if (filters.skill) {
+          query = query.where(eq(placementTestQuestions.skill, filters.skill));
+        }
+        if (filters.level) {
+          query = query.where(eq(placementTestQuestions.cefrLevel, filters.level));
+        }
       }
-      if (filters.level) {
-        questions = questions.filter(q => q.level === filters.level);
-      }
+      
+      return await query;
+    } catch (error) {
+      console.error('Error getting placement test questions:', error);
+      return [];
     }
-    
-    return questions;
   }
 
   async createPlacementTestResponse(data: any): Promise<any> {
-    const responseData = {
-      id: Math.floor(Math.random() * 10000) + 1,
-      sessionId: data.sessionId,
-      questionId: data.questionId,
-      userResponse: data.userResponse,
-      timeSpent: data.timeSpent || 0,
-      score: data.score || 0,
-      level: data.level || 'B1',
-      feedback: data.feedback || '',
-      confidence: data.confidence || 0.5,
-      createdAt: new Date()
-    };
-    
-    this.placementTestResponses.set(responseData.id, responseData);
-    return responseData;
+    try {
+      const [response] = await db.insert(placementTestResponses).values({
+        sessionId: data.sessionId,
+        questionId: data.questionId,
+        userResponse: data.userResponse,
+        responseStartTime: data.responseStartTime || new Date(),
+        responseEndTime: data.responseEndTime,
+        timeSpentSeconds: data.timeSpent || 0
+      }).returning();
+      return response;
+    } catch (error) {
+      console.error('Error creating placement test response:', error);
+      throw error;
+    }
   }
 
   async updatePlacementTestResponse(id: number, updates: any): Promise<any | undefined> {
-    const response = this.placementTestResponses.get(id);
-    if (!response) return undefined;
-    
-    const updatedResponse = { ...response, ...updates };
-    this.placementTestResponses.set(id, updatedResponse);
-    return updatedResponse;
+    try {
+      const [updatedResponse] = await db
+        .update(placementTestResponses)
+        .set(updates)
+        .where(eq(placementTestResponses.id, id))
+        .returning();
+      return updatedResponse;
+    } catch (error) {
+      console.error('Error updating placement test response:', error);
+      return undefined;
+    }
   }
 
   async getPlacementTestResponses(sessionId: number): Promise<any[]> {
-    return Array.from(this.placementTestResponses.values())
-      .filter(response => response.sessionId === sessionId)
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    try {
+      return await db.select()
+        .from(placementTestResponses)
+        .where(eq(placementTestResponses.sessionId, sessionId))
+        .orderBy(placementTestResponses.createdAt);
+    } catch (error) {
+      console.error('Error getting placement test responses:', error);
+      return [];
+    }
   }
 
   async createUserRoadmapEnrollment(data: any): Promise<any> {
