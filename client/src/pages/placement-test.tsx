@@ -690,6 +690,38 @@ export default function PlacementTestPage() {
                       )}
                     </div>
 
+                    {/* Test mode fallback option */}
+                    {!audioBlob && !isRecording && (
+                      <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                        <p className="text-sm text-yellow-800 mb-2">
+                          <strong>Having trouble with recording?</strong> You can continue in test mode:
+                        </p>
+                        <Button 
+                          onClick={() => {
+                            // Create mock audio for test mode
+                            const mockAudioBlob = new Blob(['test-mode-audio'], { type: 'audio/webm' });
+                            setAudioBlob(mockAudioBlob);
+                            const mockResponseData = {
+                              audioUrl: 'test-mode-url',
+                              audioBlob: mockAudioBlob,
+                              duration: currentQuestion?.expectedDurationSeconds || 60
+                            };
+                            setUserResponse(mockResponseData);
+                            toast({
+                              title: 'Test Mode Enabled',
+                              description: 'You can now submit your response and continue with the test.',
+                              variant: 'default'
+                            });
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
+                        >
+                          Continue in Test Mode
+                        </Button>
+                      </div>
+                    )}
+
                     {/* Audio playback if recording exists */}
                     {audioBlob && !isRecording && (
                       <div className="bg-green-50 p-3 rounded-lg border border-green-200">
