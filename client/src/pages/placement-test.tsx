@@ -292,6 +292,7 @@ export default function PlacementTestPage() {
       const chunks: Blob[] = [];
 
       recorder.ondataavailable = (event) => {
+        console.log('Audio data available:', event.data.size, 'bytes');
         if (event.data.size > 0) {
           chunks.push(event.data);
         }
@@ -300,6 +301,7 @@ export default function PlacementTestPage() {
       recorder.onstop = () => {
         console.log('Recording stopped, chunks:', chunks.length);
         const blob = new Blob(chunks, { type: 'audio/webm' });
+        console.log('Final audio blob size:', blob.size, 'bytes');
         console.log('Audio blob created, size:', blob.size);
         setAudioBlob(blob);
         
@@ -348,7 +350,7 @@ export default function PlacementTestPage() {
       };
 
       mediaRecorderRef.current = recorder;
-      recorder.start();
+      recorder.start(1000); // Request data every 1 second
       setIsRecording(true);
       
       // Set recording timer
