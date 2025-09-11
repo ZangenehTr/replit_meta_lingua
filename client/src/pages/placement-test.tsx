@@ -323,16 +323,16 @@ export default function PlacementTestPage() {
       };
 
       recorder.onstop = () => {
-        console.log('Recording stopped, chunks:', chunks.length);
+        console.log('Recording stopped, chunks:', chunks.length, 'total size:', chunks.reduce((total, chunk) => total + chunk.size, 0));
         const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
         console.log('Final audio blob size:', blob.size, 'bytes');
         
-        if (blob.size === 0 || blob.size < 100) {
-          console.warn(`Small/empty audio blob detected (${blob.size} bytes), this indicates microphone permission was denied or not working`);
+        if (blob.size === 0) {
+          console.warn(`Empty audio blob detected (${blob.size} bytes), this indicates recording failed`);
           
           toast({
             title: 'Recording Issue',
-            description: 'Microphone access denied or not working. Please allow microphone access and try recording again, or use the "Continue in Test Mode" button.',
+            description: 'Recording failed to capture audio. Please try again or use the "Continue in Test Mode" button.',
             variant: 'destructive'
           });
           
@@ -392,7 +392,8 @@ export default function PlacementTestPage() {
       };
 
       mediaRecorderRef.current = recorder;
-      recorder.start(1000); // Request data every 1 second
+      // Start recording without timeslice to collect all data at the end
+      recorder.start();
       console.log('MediaRecorder started, state:', recorder.state);
       setIsRecording(true);
       
