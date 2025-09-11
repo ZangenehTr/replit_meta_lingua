@@ -287,8 +287,11 @@ export default function PlacementTestPage() {
   // Audio recording functions
   const startRecording = async () => {
     try {
+      console.log('Starting recording...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log('Got media stream:', stream);
       const recorder = new MediaRecorder(stream);
+      console.log('MediaRecorder created, state:', recorder.state);
       const chunks: Blob[] = [];
 
       recorder.ondataavailable = (event) => {
@@ -302,7 +305,6 @@ export default function PlacementTestPage() {
         console.log('Recording stopped, chunks:', chunks.length);
         const blob = new Blob(chunks, { type: 'audio/webm' });
         console.log('Final audio blob size:', blob.size, 'bytes');
-        console.log('Audio blob created, size:', blob.size);
         setAudioBlob(blob);
         
         // Create audio URL for the response
@@ -349,8 +351,13 @@ export default function PlacementTestPage() {
         }
       };
 
+      recorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+      };
+
       mediaRecorderRef.current = recorder;
       recorder.start(1000); // Request data every 1 second
+      console.log('MediaRecorder started, state:', recorder.state);
       setIsRecording(true);
       
       // Set recording timer
@@ -412,9 +419,14 @@ export default function PlacementTestPage() {
   };
 
   const stopRecording = () => {
+    console.log('Stopping recording...');
     const recorder = mediaRecorderRef.current;
-    if (recorder && recorder.state === 'recording') {
-      recorder.stop();
+    if (recorder) {
+      console.log('Recorder state before stop:', recorder.state);
+      if (recorder.state === 'recording') {
+        recorder.stop();
+        console.log('Recorder stopped');
+      }
     }
     setIsRecording(false);
     setRecordingTimeLeft(0);
