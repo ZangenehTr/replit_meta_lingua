@@ -181,6 +181,7 @@ export default function PlacementTestPage() {
   // Fetch next question
   const fetchNextQuestion = async (sessionId: number) => {
     try {
+      console.log('[DEBUG] Fetching next question for session:', sessionId);
       const response = await fetch(`/api/placement-test/sessions/${sessionId}/next-question`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -192,11 +193,14 @@ export default function PlacementTestPage() {
       }
       
       const data = await response.json();
+      console.log('[DEBUG] Next question response:', data);
       
       if (data.testCompleted) {
+        console.log('[DEBUG] Test completed, showing results');
         setTestStep('completed');
         setTestResults(data.results);
       } else if (data.question) {
+        console.log('[DEBUG] Setting new question:', data.question);
         setCurrentQuestion(data.question);
         // Reset audio state for new question
         setUserResponse('');
@@ -207,6 +211,9 @@ export default function PlacementTestPage() {
           clearInterval(recordingTimer);
           setRecordingTimer(null);
         }
+        console.log('[DEBUG] Question state updated, new question ID:', data.question.id);
+      } else {
+        console.log('[DEBUG] No question in response:', data);
       }
     } catch (error) {
       console.error('Error fetching next question:', error);
