@@ -294,8 +294,17 @@ export default function PlacementTestPage() {
   const startRecording = async () => {
     try {
       console.log('Starting recording...');
+      console.log('Requesting microphone permission...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       console.log('Got media stream:', stream);
+      console.log('Stream active tracks:', stream.getAudioTracks().length);
+      
+      // Check if audio tracks are active
+      const audioTracks = stream.getAudioTracks();
+      if (audioTracks.length === 0) {
+        throw new Error('No audio tracks available');
+      }
+      console.log('Audio track state:', audioTracks[0].readyState);
       
       // Select a supported mime type
       const mimeType = ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg"]
@@ -318,23 +327,18 @@ export default function PlacementTestPage() {
         const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
         console.log('Final audio blob size:', blob.size, 'bytes');
         
-        if (blob.size === 0) {
-          console.warn('0-byte audio blob detected, falling back to test mode');
-          // Create test mode blob
-          const testBlob = new Blob(['test-audio-data'], { type: 'audio/webm' });
-          setAudioBlob(testBlob);
-          const testResponseData = {
-            audioUrl: 'test-audio-url',
-            audioBlob: testBlob,
-            duration: currentQuestion?.expectedDurationSeconds || 60
-          };
-          setUserResponse(testResponseData);
+        if (blob.size === 0 || blob.size < 100) {
+          console.warn(`Small/empty audio blob detected (${blob.size} bytes), this indicates microphone permission was denied or not working`);
           
           toast({
-            title: 'Test Mode',
-            description: 'Recording created 0 bytes - using test mode. You can now submit.',
-            variant: 'default'
+            title: 'Recording Issue',
+            description: 'Microphone access denied or not working. Please allow microphone access and try recording again, or use the "Continue in Test Mode" button.',
+            variant: 'destructive'
           });
+          
+          // Don't automatically fall back to test mode - let user choose
+          setIsRecording(false);
+          return;
         } else {
           setAudioBlob(blob);
         
@@ -418,7 +422,7 @@ export default function PlacementTestPage() {
       
       // For test environments or when microphone is not available,
       // create a mock audio blob to allow testing to continue
-      if (error instanceof DOMException && error.name === 'NotFoundError') {
+      if (error instanceof DOMException && (error.name === 'NotFoundError' || error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError')) {
         console.log('Microphone not available, creating mock audio for testing...');
         
         // Create a minimal mock audio blob
@@ -456,14 +460,9 @@ export default function PlacementTestPage() {
     if (recorder) {
       console.log('Recorder state before stop:', recorder.state);
       if (recorder.state === 'recording') {
-        // Flush any remaining data before stopping
-        recorder.requestData();
-        setTimeout(() => {
-          if (recorder.state === 'recording') {
-            recorder.stop();
-            console.log('Recorder stopped');
-          }
-        }, 50);
+        // Simply stop the recorder without requestData - this was causing issues
+        recorder.stop();
+        console.log('Recorder stopped');
       }
     }
     setIsRecording(false);
