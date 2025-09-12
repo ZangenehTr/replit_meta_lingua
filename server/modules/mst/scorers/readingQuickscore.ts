@@ -19,10 +19,24 @@ export function scoreReading(
   let totalQuestions = item.questions.length;
   let partialPoints = 0;
   
+  // Handle different response formats - could be array directly or wrapped object
+  let answers: any[];
+  if (Array.isArray(response)) {
+    answers = response;
+  } else if (response && Array.isArray(response.answers)) {
+    answers = response.answers;
+  } else if (response && typeof response === 'object') {
+    // Convert object keys to array
+    answers = Object.values(response);
+  } else {
+    console.error('Invalid response format for reading:', response);
+    return { p: 0, route: 'down', confidence: 0.1 };
+  }
+
   // Score each question
   for (let i = 0; i < item.questions.length; i++) {
     const question = item.questions[i];
-    const userAnswer = response.answers[i];
+    const userAnswer = answers[i];
     
     if (question.type === 'mcq_single' && typeof userAnswer === 'number') {
       if (userAnswer === question.answerIndex) {
@@ -57,10 +71,11 @@ export function scoreReading(
   // Base score combining full and partial credit
   let p = totalQuestions > 0 ? (correctCount + partialPoints) / totalQuestions : 0;
   
-  // Reading speed analysis
+  // Reading speed analysis (if latency data available)
   const passageWordCount = estimateWordCount(item.assets.passage);
-  const readingTimeMs = response.latencyMs;
-  const readingSpeedWPM = (passageWordCount / (readingTimeMs / 60000));
+  const responseLatency = (response && typeof response === 'object' && response.latencyMs) || 0;
+  const readingTimeMs = responseLatency;
+  const readingSpeedWPM = readingTimeMs > 0 ? (passageWordCount / (readingTimeMs / 60000)) : 200;
   
   // Penalize extreme speeds (too fast = skimming, too slow = struggling)
   const optimalSpeedRange = { min: 150, max: 300 }; // WPM
