@@ -82,6 +82,7 @@ export default function MSTPage() {
   const [guardTimer, setGuardTimer] = useState(0);
   const [itemTimer, setItemTimer] = useState(0);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [testResults, setTestResults] = useState<any>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
 
@@ -338,7 +339,7 @@ export default function MSTPage() {
     if (!currentSession) return;
     
     try {
-      await fetch('/api/mst/finalize', {
+      const response = await fetch('/api/mst/finalize', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -348,6 +349,13 @@ export default function MSTPage() {
           sessionId: currentSession.sessionId
         })
       });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setTestResults(data.result);
+        }
+      }
     } catch (error) {
       console.error('Error finalizing test:', error);
     }
@@ -592,18 +600,136 @@ export default function MSTPage() {
   }
 
   if (testPhase === 'completed') {
+    if (!testResults) {
+      return (
+        <div className="container mx-auto p-4 sm:p-6 max-w-4xl mst-container" style={mstStyle}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl text-center">Processing Results...</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <p>Calculating your English proficiency level...</p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    const skillEmojis = {
+      listening: '👂',
+      reading: '📖', 
+      speaking: '🗣️',
+      writing: '✍️'
+    };
+
+    const getBandColor = (band: string) => {
+      if (band.startsWith('C')) return 'text-purple-600 bg-purple-100 dark:bg-purple-900/20';
+      if (band.startsWith('B')) return 'text-blue-600 bg-blue-100 dark:bg-blue-900/20'; 
+      if (band.startsWith('A')) return 'text-green-600 bg-green-100 dark:bg-green-900/20';
+      return 'text-gray-600 bg-gray-100 dark:bg-gray-900/20';
+    };
+
+    const getInspiringMessage = (overallBand: string) => {
+      const band = overallBand.charAt(0);
+      switch (band) {
+        case 'C': return "🎉 Exceptional! You have mastery-level English skills.";
+        case 'B': return "🌟 Great progress! You're developing strong English proficiency.";
+        case 'A': return "🚀 Good foundation! You're building solid English skills.";
+        default: return "💪 Every expert was once a beginner. Keep practicing!";
+      }
+    };
+
     return (
       <div className="container mx-auto p-4 sm:p-6 max-w-4xl mst-container" style={mstStyle}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">Test Completed</CardTitle>
+        <Card className="overflow-hidden">
+          {/* Celebratory Header */}
+          <CardHeader className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white text-center py-8">
+            <div className="animate-bounce mb-4 text-6xl">🎊</div>
+            <CardTitle className="text-3xl font-bold mb-2">Congratulations!</CardTitle>
+            <p className="text-xl opacity-90">Your MST Placement Test Results</p>
           </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p>Your MST placement test has been completed successfully.</p>
-            <p>Results will be available shortly in your profile.</p>
-            <Button onClick={() => window.location.href = '/dashboard'}>
-              Return to Dashboard
-            </Button>
+
+          <CardContent className="p-8 space-y-8">
+            {/* Overall Level */}
+            <div className="text-center space-y-4">
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">Your Overall Level</h2>
+              <div className={`inline-flex items-center px-8 py-4 rounded-full text-4xl font-bold ${getBandColor(testResults.overallBand)}`}>
+                {testResults.overallBand}
+              </div>
+              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-md mx-auto">
+                {getInspiringMessage(testResults.overallBand)}
+              </p>
+            </div>
+
+            {/* Individual Skills */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-center text-gray-800 dark:text-gray-100">Individual Skill Levels</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {testResults.skills.map((skill: any) => (
+                  <Card key={skill.skill} className="p-4 hover:shadow-lg transition-shadow">
+                    <div className="text-center space-y-2">
+                      <div className="text-3xl">{skillEmojis[skill.skill as keyof typeof skillEmojis]}</div>
+                      <h4 className="font-semibold capitalize text-gray-700 dark:text-gray-200">{skill.skill}</h4>
+                      <div className={`inline-flex px-3 py-1 rounded-full text-xl font-bold ${getBandColor(skill.band)}`}>
+                        {skill.band}
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full transition-all duration-1000"
+                          style={{ width: `${Math.round(skill.confidence * 100)}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-gray-500">{Math.round(skill.confidence * 100)}% confidence</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Recommendations */}
+            {testResults.recommendations && testResults.recommendations.length > 0 && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg space-y-3">
+                <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200">📈 Recommendations</h3>
+                <ul className="space-y-2">
+                  {testResults.recommendations.map((rec: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2 text-blue-700 dark:text-blue-300">
+                      <span className="text-blue-500 mt-1">•</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+              <Button 
+                size="lg" 
+                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                onClick={() => {
+                  // Store results for roadmap generation
+                  localStorage.setItem('placementResults', JSON.stringify(testResults));
+                  window.location.href = '/roadmap';
+                }}
+              >
+                🎯 Create Learning Roadmap
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => window.location.href = '/dashboard'}
+              >
+                📊 Return to Dashboard
+              </Button>
+            </div>
+
+            {/* Test Stats */}
+            <div className="text-center text-sm text-gray-500 pt-4 border-t">
+              <p>Test completed in {Math.round(testResults.totalTimeMin)} minutes</p>
+              <p className="mt-1">Assessment confidence: {Math.round(testResults.confidence * 100)}%</p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -628,10 +754,25 @@ export default function MSTPage() {
           
           {/* Timers */}
           <div className="space-y-2">
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 text-xs sm:text-sm">
-              <span className="text-center sm:text-left">Total: {formatTime(status?.timing.totalRemainingSec || 0)}</span>
-              <span className="text-center sm:text-left">Skill: {formatTime(status?.timing.skillRemainingSec || 0)}</span>
-              <span className="text-center sm:text-left">Item: {formatTime(itemTimer)}</span>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-4">
+              {/* Prominent per-question countdown with warning */}
+              <div className="text-center sm:text-left">
+                <div className={`text-lg sm:text-xl font-bold transition-all duration-300 ${
+                  itemTimer > 0 && itemTimer <= 3 
+                    ? 'text-red-600 animate-bounce' 
+                    : itemTimer <= 10 && itemTimer > 0 
+                      ? 'text-red-500 animate-pulse' 
+                      : 'text-gray-900 dark:text-gray-100'
+                }`}>
+                  {formatTime(itemTimer)}
+                </div>
+                <div className="text-xs text-gray-500">Question Time</div>
+              </div>
+              
+              {/* Secondary timers - smaller */}
+              <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-400">
+                <span>Skill: {formatTime(status?.timing.skillRemainingSec || 0)}</span>
+              </div>
             </div>
             <Progress 
               value={status ? ((status.timing.totalElapsedSec / 600) * 100) : 0} 
