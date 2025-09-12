@@ -193,9 +193,16 @@ export default function MSTPage() {
         }
       }
       
-      // Reset form
+      // Reset form and audio
       setCurrentResponse('');
       setRecordingBlob(null);
+      
+      // Reset audio element for new item
+      if (audioElement) {
+        setAudioElement(null);
+        setIsAudioPlaying(false);
+        setAudioProgress(0);
+      }
     },
     onError: (error) => {
       toast({
@@ -231,7 +238,7 @@ export default function MSTPage() {
     
     try {
       const currentSkill = status.session.skillOrder[currentSkillIndex];
-      const stage = currentStage === 'S1' ? 'core' : 'upper'; // Simplified routing
+      const stage = currentStage; // Use actual stage
       
       const response = await fetch(`/api/mst/item?skill=${currentSkill}&stage=${stage}&sessionId=${currentSession.sessionId}`, {
         headers: {
@@ -320,7 +327,7 @@ export default function MSTPage() {
     submitResponseMutation.mutate({
       sessionId: currentSession.sessionId,
       skill: currentItem.skill,
-      stage: currentStage === 'S1' ? 'core' : 'upper',
+      stage: currentStage,
       itemId: currentItem.id,
       responseData: currentResponse || 'Time expired',
       audioBlob: recordingBlob,
@@ -438,12 +445,30 @@ export default function MSTPage() {
     submitResponseMutation.mutate({
       sessionId: currentSession.sessionId,
       skill: currentItem.skill,
-      stage: currentStage === 'S1' ? 'core' : 'upper',
+      stage: currentStage,
       itemId: currentItem.id,
       responseData: currentResponse,
       audioBlob: recordingBlob,
       timeSpentMs
     });
+  };
+
+  // Check if response is valid for submission
+  const isValidResponse = () => {
+    if (!currentItem || !currentResponse) return false;
+    
+    if (currentItem.skill === 'listening' || currentItem.skill === 'reading') {
+      // For MCQ, check if all questions are answered
+      if (Array.isArray(currentResponse)) {
+        const questionCount = currentItem.content?.questions?.length || 0;
+        return currentResponse.length >= questionCount && currentResponse.every(r => r !== null && r !== undefined && r !== '');
+      }
+    } else {
+      // For speaking/writing, check if response exists
+      return typeof currentResponse === 'string' && currentResponse.trim().length > 0;
+    }
+    
+    return false;
   };
 
   // Format time display
@@ -582,9 +607,10 @@ export default function MSTPage() {
                     <div key={idx} className="space-y-3">
                       <h3 className="font-medium">{question.stem}</h3>
                       <RadioGroup 
-                        value={currentResponse[idx]?.toString()} 
+                        value={currentResponse[idx]?.toString() || ''} 
                         onValueChange={(value) => {
-                          const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill('');
+                          console.log('Radio selection changed:', idx, value);
+                          const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill(null);
                           newResponse[idx] = parseInt(value);
                           setCurrentResponse(newResponse);
                         }}
@@ -619,9 +645,10 @@ export default function MSTPage() {
                       <h3 className="font-medium">{question.stem}</h3>
                       {question.type === 'mcq_single' && (
                         <RadioGroup 
-                          value={currentResponse[idx]?.toString()} 
+                          value={currentResponse[idx]?.toString() || ''} 
                           onValueChange={(value) => {
-                            const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill('');
+                            console.log('Radio selection changed:', idx, value);
+                            const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill(null);
                             newResponse[idx] = parseInt(value);
                             setCurrentResponse(newResponse);
                           }}
@@ -717,7 +744,7 @@ export default function MSTPage() {
                 
                 <Button
                   onClick={handleSubmit}
-                  disabled={guardTimer > 0 || submitResponseMutation.isPending || !currentResponse || (Array.isArray(currentResponse) && currentResponse.length === 0)}
+                  disabled={guardTimer > 0 || submitResponseMutation.isPending || !isValidResponse()}
                   data-testid="button-submit"
                 >
                   {submitResponseMutation.isPending ? 'Submitting...' : 'Submit Response'}
