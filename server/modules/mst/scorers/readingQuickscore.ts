@@ -38,8 +38,10 @@ export function scoreReading(
     const question = item.questions[i];
     const userAnswer = answers[i];
     
-    if (question.type === 'mcq_single' && typeof userAnswer === 'number') {
-      if (userAnswer === question.answerIndex) {
+    if (question.type === 'mcq_single') {
+      // Handle both string and number answers from frontend
+      const answerIndex = typeof userAnswer === 'string' ? parseInt(userAnswer, 10) : userAnswer;
+      if (typeof answerIndex === 'number' && !isNaN(answerIndex) && answerIndex === question.answerIndex) {
         correctCount++;
       }
     } else if (question.type === 'mcq_multi' && Array.isArray(userAnswer)) {
