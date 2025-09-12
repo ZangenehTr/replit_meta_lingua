@@ -514,16 +514,20 @@ export default function MSTPage() {
 
   // Check if response is valid for submission
   const isValidResponse = () => {
-    if (!currentItem || !currentResponse) return false;
+    if (!currentItem) return false;
     
     if (currentItem.skill === 'listening' || currentItem.skill === 'reading') {
       // For MCQ, check if all questions are answered
+      if (!currentResponse) return false;
       if (Array.isArray(currentResponse)) {
         const questionCount = currentItem.content?.questions?.length || 0;
         return currentResponse.length >= questionCount && currentResponse.every(r => r !== null && r !== undefined && r !== '');
       }
-    } else {
-      // For speaking/writing, check if response exists
+    } else if (currentItem.skill === 'speaking') {
+      // For speaking, check if audio recording exists
+      return !!recordingBlob;
+    } else if (currentItem.skill === 'writing') {
+      // For writing, check if text response exists
       return typeof currentResponse === 'string' && currentResponse.trim().length > 0;
     }
     
