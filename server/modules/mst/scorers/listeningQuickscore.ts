@@ -11,17 +11,31 @@ import { ListeningItem } from '../schemas/itemSchema';
  */
 export function scoreListening(
   item: ListeningItem,
-  response: ListeningResponse
+  response: any
 ): QuickscoreResult {
   const startTime = Date.now();
   
   let correctCount = 0;
   let totalQuestions = item.questions.length;
   
+  // Handle different response formats - could be array directly or wrapped object
+  let answers: any[];
+  if (Array.isArray(response)) {
+    answers = response;
+  } else if (response && Array.isArray(response.answers)) {
+    answers = response.answers;
+  } else if (response && typeof response === 'object') {
+    // Convert object keys to array
+    answers = Object.values(response);
+  } else {
+    console.error('Invalid response format for listening:', response);
+    return { p: 0, route: 'down', confidence: 0.1 };
+  }
+  
   // Score each question
   for (let i = 0; i < item.questions.length; i++) {
     const question = item.questions[i];
-    const userAnswer = response.answers[i];
+    const userAnswer = answers[i];
     
     if (question.type === 'mcq_single' && typeof userAnswer === 'number') {
       if (userAnswer === question.answerIndex) {
@@ -42,8 +56,9 @@ export function scoreListening(
   // Base score from accuracy
   let p = totalQuestions > 0 ? correctCount / totalQuestions : 0;
   
-  // Penalize extremely slow responses
-  const avgLatency = response.latencyMs / totalQuestions;
+  // Penalize extremely slow responses (if latency data available)
+  const responseLatency = (response && typeof response === 'object' && response.latencyMs) || 0;
+  const avgLatency = responseLatency / Math.max(totalQuestions, 1);
   const expectedLatency = item.timing.maxAnswerSec * 1000 * 0.6; // 60% of max time
   
   if (avgLatency > expectedLatency * 1.5) {

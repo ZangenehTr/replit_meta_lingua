@@ -65,7 +65,7 @@ export default function MSTPage() {
   const { toast } = useToast();
   const [currentSession, setCurrentSession] = useState<MSTSession | null>(null);
   const [currentItem, setCurrentItem] = useState<MSTItem | null>(null);
-  const [currentResponse, setCurrentResponse] = useState<any>('');
+  const [currentResponse, setCurrentResponse] = useState<any>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
@@ -570,20 +570,15 @@ export default function MSTPage() {
                     </span>
                   </div>
                   
-                  {/* Show transcript for debugging */}
-                  {currentItem?.content?.assets?.transcript && (
-                    <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
-                      <strong>Audio transcript:</strong> {currentItem.content.assets.transcript}
-                    </div>
-                  )}
+                  {/* Transcript hidden during actual test */}
                   
                   {currentItem.content.questions?.map((question: any, idx: number) => (
                     <div key={idx} className="space-y-3">
                       <h3 className="font-medium">{question.stem}</h3>
                       <RadioGroup 
-                        value={currentResponse[idx]} 
+                        value={currentResponse[idx]?.toString()} 
                         onValueChange={(value) => {
-                          const newResponse = [...(currentResponse || [])];
+                          const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : [];
                           newResponse[idx] = parseInt(value);
                           setCurrentResponse(newResponse);
                         }}
@@ -620,7 +615,7 @@ export default function MSTPage() {
                         <RadioGroup 
                           value={currentResponse[idx]?.toString()} 
                           onValueChange={(value) => {
-                            const newResponse = [...(currentResponse || [])];
+                            const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : [];
                             newResponse[idx] = parseInt(value);
                             setCurrentResponse(newResponse);
                           }}
@@ -716,7 +711,7 @@ export default function MSTPage() {
                 
                 <Button
                   onClick={handleSubmit}
-                  disabled={guardTimer > 0 || submitResponseMutation.isPending || !currentResponse}
+                  disabled={guardTimer > 0 || submitResponseMutation.isPending || !currentResponse || (Array.isArray(currentResponse) && currentResponse.length === 0)}
                   data-testid="button-submit"
                 >
                   {submitResponseMutation.isPending ? 'Submitting...' : 'Submit Response'}
