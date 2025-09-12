@@ -395,9 +395,8 @@ export default function MSTPage() {
           });
         });
         
-        // For demo purposes, use a test audio URL or synthesized audio
-        // Since the actual audio files don't exist, we'll create a placeholder
-        const audioUrl = '/api/tts/speak?text=' + encodeURIComponent(currentItem.content.assets.transcript || 'Test audio') + '&voice=en-US';
+        // Use the generated audio file
+        const audioUrl = currentItem.content.assets.audio || '/assets/audio/default.mp3';
         audio.src = audioUrl;
         
         setAudioElement(audio);
