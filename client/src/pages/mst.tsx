@@ -183,10 +183,20 @@ export default function MSTPage() {
       // Handle routing decision and fetch next item
       if (data.success) {
         if (currentStage === 'core') {
-          // Determine next stage based on routing  
-          const nextStage: MSTStage = data.route === 'up' ? 'upper' : 'lower';
-          setCurrentStage(nextStage);
-          fetchNextItemWithStage(nextStage);
+          // Check if we're at A1 level and trying to route down
+          const isA1Level = currentItem?.cefr === 'A1';
+          const routingDown = data.route === 'down';
+          
+          if (isA1Level && routingDown) {
+            // Can't go below A1, so complete skill immediately with A0/pre-A1 classification
+            console.log('⚠️ At A1 level routing down - completing skill with A0/pre-A1 classification');
+            advanceToNextSkill();
+          } else {
+            // Normal routing logic
+            const nextStage: MSTStage = data.route === 'up' ? 'upper' : 'lower';
+            setCurrentStage(nextStage);
+            fetchNextItemWithStage(nextStage);
+          }
         } else {
           // Complete skill, advance to next
           advanceToNextSkill();
