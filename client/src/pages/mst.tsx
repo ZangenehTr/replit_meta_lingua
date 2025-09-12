@@ -314,7 +314,7 @@ export default function MSTPage() {
     submitResponseMutation.mutate({
       sessionId: currentSession.sessionId,
       skill: currentItem.skill,
-      stage: currentStage,
+      stage: currentStage === 'S1' ? 'core' : 'upper',
       itemId: currentItem.id,
       responseData: currentResponse || 'Time expired',
       audioBlob: recordingBlob,
@@ -355,30 +355,72 @@ export default function MSTPage() {
   };
 
   // Audio playback for listening items
-  const playAudio = () => {
-    if (!currentItem?.content?.assets?.audio) return;
+  const playAudio = async () => {
+    if (!currentItem?.content?.assets?.audio) {
+      toast({
+        title: 'Error',
+        description: 'No audio file available for this item',
+        variant: 'destructive'
+      });
+      return;
+    }
     
-    if (!audioElement) {
-      const audio = new Audio(currentItem.content.assets.audio);
-      audio.addEventListener('loadedmetadata', () => {
+    try {
+      if (!audioElement) {
+        // Create new audio element
+        const audio = new Audio();
+        
+        // Set up event listeners
+        audio.addEventListener('loadedmetadata', () => {
+          console.log('Audio loaded:', audio.duration, 'seconds');
+        });
+        
+        audio.addEventListener('timeupdate', () => {
+          if (audio.duration) {
+            setAudioProgress((audio.currentTime / audio.duration) * 100);
+          }
+        });
+        
+        audio.addEventListener('ended', () => {
+          setIsAudioPlaying(false);
+          setAudioProgress(0);
+        });
+        
+        audio.addEventListener('error', (e) => {
+          console.error('Audio error:', e);
+          toast({
+            title: 'Audio Error',
+            description: 'Failed to load audio file',
+            variant: 'destructive'
+          });
+        });
+        
+        // For demo purposes, use a test audio URL or synthesized audio
+        // Since the actual audio files don't exist, we'll create a placeholder
+        const audioUrl = '/api/tts/speak?text=' + encodeURIComponent(currentItem.content.assets.transcript || 'Test audio') + '&voice=en-US';
+        audio.src = audioUrl;
+        
         setAudioElement(audio);
-      });
-      audio.addEventListener('timeupdate', () => {
-        setAudioProgress((audio.currentTime / audio.duration) * 100);
-      });
-      audio.addEventListener('ended', () => {
-        setIsAudioPlaying(false);
-        setAudioProgress(0);
-      });
-      audio.load();
-    } else {
-      if (isAudioPlaying) {
-        audioElement.pause();
-        setIsAudioPlaying(false);
-      } else {
-        audioElement.play();
+        
+        // Auto-play after loading
+        await audio.play();
         setIsAudioPlaying(true);
+      } else {
+        if (isAudioPlaying) {
+          audioElement.pause();
+          setIsAudioPlaying(false);
+        } else {
+          await audioElement.play();
+          setIsAudioPlaying(true);
+        }
       }
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      toast({
+        title: 'Playback Error',
+        description: 'Failed to play audio. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -391,7 +433,7 @@ export default function MSTPage() {
     submitResponseMutation.mutate({
       sessionId: currentSession.sessionId,
       skill: currentItem.skill,
-      stage: currentStage,
+      stage: currentStage === 'S1' ? 'core' : 'upper',
       itemId: currentItem.id,
       responseData: currentResponse,
       audioBlob: recordingBlob,
@@ -516,6 +558,7 @@ export default function MSTPage() {
                       variant="outline"
                       size="sm"
                       data-testid="button-play-audio"
+                      disabled={!currentItem?.content?.assets?.transcript}
                     >
                       {isAudioPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       {isAudioPlaying ? 'Pause' : 'Play'} Audio
@@ -523,7 +566,17 @@ export default function MSTPage() {
                     <div className="flex-1">
                       <Progress value={audioProgress} className="h-2" />
                     </div>
+                    <span className="text-xs text-gray-500">
+                      {audioProgress > 0 && `${Math.round(audioProgress)}%`}
+                    </span>
                   </div>
+                  
+                  {/* Show transcript for debugging */}
+                  {currentItem?.content?.assets?.transcript && (
+                    <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                      <strong>Audio transcript:</strong> {currentItem.content.assets.transcript}
+                    </div>
+                  )}
                   
                   {currentItem.content.questions?.map((question: any, idx: number) => (
                     <div key={idx} className="space-y-3">
