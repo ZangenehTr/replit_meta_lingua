@@ -135,6 +135,9 @@ router.get('/item', authenticateToken, async (req, res) => {
       timer.createSkillTimer(skill, session.perSkillSeconds);
     }
 
+    // Store the item for this session
+    sessionController.setSessionItem(sessionId, skill, stage, item);
+
     res.json({
       success: true,
       item: {
@@ -177,8 +180,8 @@ router.post('/response', authenticateToken, upload.single('audio'), async (req, 
       });
     }
 
-    // Get the item
-    const item = itemsController.getItem(parsedSkill, parsedStage);
+    // Get the stored item for this session
+    const item = sessionController.getSessionItem(sessionId, parsedSkill, parsedStage);
     if (!item || item.id !== itemId) {
       return res.status(404).json({
         success: false,

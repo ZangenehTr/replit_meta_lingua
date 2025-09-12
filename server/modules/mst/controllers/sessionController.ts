@@ -11,6 +11,7 @@ export class MstSessionController {
   private sessions: Map<string, MstSession> = new Map();
   private timers: Map<string, MstSessionTimer> = new Map();
   private skillResults: Map<string, SkillResult[]> = new Map();
+  private sessionItems: Map<string, Map<string, any>> = new Map(); // sessionId -> itemKey -> item
 
   /**
    * Start a new MST session
@@ -38,6 +39,7 @@ export class MstSessionController {
     this.sessions.set(sessionId, session);
     this.timers.set(sessionId, new MstSessionTimer());
     this.skillResults.set(sessionId, []);
+    this.sessionItems.set(sessionId, new Map());
     
     return {
       sessionId,
@@ -206,6 +208,29 @@ export class MstSessionController {
   }
 
   /**
+   * Store item for session
+   */
+  setSessionItem(sessionId: string, skill: string, stage: string, item: any): void {
+    const sessionItems = this.sessionItems.get(sessionId);
+    if (sessionItems) {
+      const itemKey = `${skill}_${stage}`;
+      sessionItems.set(itemKey, item);
+    }
+  }
+
+  /**
+   * Get stored item for session
+   */
+  getSessionItem(sessionId: string, skill: string, stage: string): any {
+    const sessionItems = this.sessionItems.get(sessionId);
+    if (sessionItems) {
+      const itemKey = `${skill}_${stage}`;
+      return sessionItems.get(itemKey);
+    }
+    return null;
+  }
+
+  /**
    * Clean up old sessions (call periodically)
    */
   cleanupSessions(maxAgeHours: number = 24): void {
@@ -216,6 +241,7 @@ export class MstSessionController {
         this.sessions.delete(sessionId);
         this.timers.delete(sessionId);
         this.skillResults.delete(sessionId);
+        this.sessionItems.delete(sessionId);
       }
     }
   }
