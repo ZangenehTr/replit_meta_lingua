@@ -25,8 +25,18 @@ const sessionController = new MstSessionController();
 const itemsController = new MstItemsController();
 const responsesController = new MstResponsesController();
 
+// Extend Express Request interface to include user
+declare module 'express' {
+  interface Request {
+    user?: {
+      id: number;
+      role: string;
+    };
+  }
+}
+
 // Simple auth middleware (replace with proper auth)
-const authenticateToken = (req: any, res: any, next: any) => {
+const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   
