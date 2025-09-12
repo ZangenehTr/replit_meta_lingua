@@ -833,14 +833,6 @@ export default function PlacementTestPage() {
                 </Button>
                 
                 {/* Debug info */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-gray-500 mt-2">
-                    Debug: audioBlob={audioBlob ? 'exists' : 'null'}, 
-                    userResponse={userResponse ? 'exists' : 'empty'}, 
-                    isRecording={isRecording ? 'true' : 'false'},
-                    responseType={currentQuestion.responseType}
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
