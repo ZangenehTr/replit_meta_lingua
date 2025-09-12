@@ -68,6 +68,11 @@ export class MstItemsController {
           if (skillData.S2_down) {
             items.push(...skillData.S2_down);
           }
+          
+          // Load S3 items (A1 level)
+          if (skillData.S3_down) {
+            items.push(...skillData.S3_down);
+          }
         }
       }
     } catch (error) {

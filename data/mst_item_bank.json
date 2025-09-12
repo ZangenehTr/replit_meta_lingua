@@ -176,6 +176,70 @@
             "accent": "genAm"
           }
         }
+      ],
+      "S3_down": [
+        {
+          "id": "L-A1-001",
+          "skill": "listening",
+          "stage": "lower",
+          "cefr": "A1",
+          "assets": {
+            "audio": "/assets/audio/l-a1-001.mp3",
+            "transcript": "This is a cat. The cat is black. The cat likes milk."
+          },
+          "timing": {
+            "audioSec": 8,
+            "maxAnswerSec": 30
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "What color is the cat?",
+              "options": [
+                "White",
+                "Black",
+                "Brown",
+                "Gray"
+              ],
+              "answerIndex": 1
+            }
+          ],
+          "metadata": {
+            "domain": "social",
+            "accent": "genAm"
+          }
+        },
+        {
+          "id": "L-A1-002",
+          "skill": "listening",
+          "stage": "lower",
+          "cefr": "A1",
+          "assets": {
+            "audio": "/assets/audio/l-a1-002.mp3",
+            "transcript": "My name is Tom. I am ten years old. I go to school every day."
+          },
+          "timing": {
+            "audioSec": 8,
+            "maxAnswerSec": 30
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "How old is Tom?",
+              "options": [
+                "Eight years old",
+                "Nine years old", 
+                "Ten years old",
+                "Eleven years old"
+              ],
+              "answerIndex": 2
+            }
+          ],
+          "metadata": {
+            "domain": "social",
+            "accent": "genAm"
+          }
+        }
       ]
     },
     "reading": {
@@ -313,6 +377,64 @@
             "domain": "social"
           }
         }
+      ],
+      "S3_down": [
+        {
+          "id": "R-A1-001",
+          "skill": "reading",
+          "stage": "lower",
+          "cefr": "A1",
+          "assets": {
+            "passage": "This is my family. My father is a teacher. My mother is a doctor. I have one brother. His name is Jim. We live in a small house."
+          },
+          "timing": {
+            "maxAnswerSec": 45
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "What is the father's job?",
+              "options": [
+                "Doctor",
+                "Teacher", 
+                "Student",
+                "Worker"
+              ],
+              "answerIndex": 1
+            }
+          ],
+          "metadata": {
+            "domain": "social"
+          }
+        },
+        {
+          "id": "R-A1-002",
+          "skill": "reading",
+          "stage": "lower",
+          "cefr": "A1",
+          "assets": {
+            "passage": "I like apples. Apples are red. I eat apples every day. Apples are good for me."
+          },
+          "timing": {
+            "maxAnswerSec": 40
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "What color are apples?",
+              "options": [
+                "Green",
+                "Yellow",
+                "Red",
+                "Blue"
+              ],
+              "answerIndex": 2
+            }
+          ],
+          "metadata": {
+            "domain": "social"
+          }
+        }
       ]
     },
     "speaking": {
@@ -426,6 +548,42 @@
             "domain": "social"
           }
         }
+      ],
+      "S3_down": [
+        {
+          "id": "S-A1-001",
+          "skill": "speaking",
+          "stage": "lower",
+          "cefr": "A1",
+          "assets": {
+            "prompt": "Introduce yourself. Say your name, age, and what you like to do.",
+            "prepSec": 30,
+            "recordSec": 45
+          },
+          "timing": {
+            "maxAnswerSec": 75
+          },
+          "metadata": {
+            "domain": "social"
+          }
+        },
+        {
+          "id": "S-A1-002",
+          "skill": "speaking",
+          "stage": "lower",
+          "cefr": "A1",
+          "assets": {
+            "prompt": "Describe your family. Tell me about your mother, father, and any brothers or sisters.",
+            "prepSec": 30,
+            "recordSec": 45
+          },
+          "timing": {
+            "maxAnswerSec": 75
+          },
+          "metadata": {
+            "domain": "social"
+          }
+        }
       ]
     },
     "writing": {
@@ -503,6 +661,44 @@
           },
           "timing": {
             "maxAnswerSec": 90
+          },
+          "metadata": {
+            "domain": "social"
+          }
+        }
+      ],
+      "S3_down": [
+        {
+          "id": "W-A1-001",
+          "skill": "writing",
+          "stage": "lower",
+          "cefr": "A1",
+          "assets": {
+            "prompt": "Write about yourself. Tell me your name, age, where you live, and what you like to do.",
+            "minWords": 40,
+            "maxWords": 80,
+            "taskType": "description"
+          },
+          "timing": {
+            "maxAnswerSec": 60
+          },
+          "metadata": {
+            "domain": "social"
+          }
+        },
+        {
+          "id": "W-A1-002",
+          "skill": "writing",
+          "stage": "lower",
+          "cefr": "A1",
+          "assets": {
+            "prompt": "Describe your bedroom. What furniture do you have? What color is your bed?",
+            "minWords": 30,
+            "maxWords": 70,
+            "taskType": "description"
+          },
+          "timing": {
+            "maxAnswerSec": 50
           },
           "metadata": {
             "domain": "social"
