@@ -157,14 +157,14 @@ export function createPlacementTestRoutes(
         question: {
           id: nextQuestion.id,
           skill: nextQuestion.skill,
-          level: nextQuestion.cefrLevel,
-          type: nextQuestion.questionType,
+          cefrLevel: nextQuestion.cefrLevel,
+          questionType: nextQuestion.questionType,
           title: nextQuestion.title,
           prompt: nextQuestion.prompt,
           content: nextQuestion.content,
           responseType: nextQuestion.responseType,
           expectedDurationSeconds: nextQuestion.expectedDurationSeconds,
-          estimatedMinutes: nextQuestion.estimatedCompletionMinutes
+          estimatedCompletionMinutes: nextQuestion.estimatedCompletionMinutes
         }
       });
     } catch (error) {

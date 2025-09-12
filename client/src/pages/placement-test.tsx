@@ -392,17 +392,13 @@ export default function PlacementTestPage() {
       
       // Set recording timer
       const duration = currentQuestion?.expectedDurationSeconds || 120;
-      console.log('Setting recording duration:', duration, 'seconds');
-      console.log('Current question:', currentQuestion);
       setRecordingTimeLeft(duration);
       
       const timer = setInterval(() => {
         setRecordingTimeLeft(prev => {
-          console.log('Recording timer tick, prev:', prev);
           const newTime = prev - 1;
           if (newTime <= 0) {
             // Auto-stop when time reaches 0 but DON'T auto-submit
-            console.log('Recording time expired (prev was', prev, '), auto-stopping...');
             clearInterval(timer); // Clear the timer immediately
             setTimeout(() => stopRecording(), 100);
             return 0;
