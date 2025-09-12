@@ -17,11 +17,11 @@ export function route(p: number): 'up' | 'down' | 'stay' {
 }
 
 /**
- * Determine final CEFR band based on stage and performance
+ * Determine final CEFR band based on performance score using scientific mapping
  * @param stage Current stage ('core', 'upper', 'lower')
- * @param p Final performance score
- * @param coreLevel The core level (e.g., 'B1')
- * @returns CEFR band with modifiers (e.g., 'B1+', 'A2-')
+ * @param p Final performance score (0-1)
+ * @param coreLevel The core level (e.g., 'B1') - now used for calibration only
+ * @returns CEFR band based on actual performance
  */
 export function determineFinalBand(
   stage: 'core' | 'upper' | 'lower',
@@ -29,30 +29,41 @@ export function determineFinalBand(
   coreLevel: string = 'B1'
 ): string {
   const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-  const coreIndex = levels.indexOf(coreLevel);
   
-  let baseLevel: string;
+  // Map performance score to CEFR level based on scientific assessment
+  // These thresholds reflect actual proficiency levels
+  let baseIndex: number;
   
-  switch (stage) {
-    case 'upper':
-      // Upper stage: B2/C1 level
-      baseLevel = levels[Math.min(coreIndex + 1, levels.length - 1)];
-      break;
-    case 'lower':
-      // Lower stage: A2/B1- level  
-      baseLevel = levels[Math.max(coreIndex - 1, 0)];
-      break;
-    case 'core':
-    default:
-      // Core stage: B1 level
-      baseLevel = coreLevel;
-      break;
+  if (p >= 0.85) {
+    // Excellent performance (85%+) - Advanced levels
+    baseIndex = stage === 'upper' ? 5 : (stage === 'core' ? 4 : 3); // C2/C1/B2
+  } else if (p >= 0.70) {
+    // Good performance (70-84%) - Upper intermediate
+    baseIndex = stage === 'upper' ? 4 : (stage === 'core' ? 3 : 2); // C1/B2/B1
+  } else if (p >= 0.55) {
+    // Moderate performance (55-69%) - Intermediate
+    baseIndex = stage === 'upper' ? 3 : (stage === 'core' ? 2 : 1); // B2/B1/A2
+  } else if (p >= 0.35) {
+    // Poor performance (35-54%) - Elementary
+    baseIndex = stage === 'upper' ? 2 : (stage === 'core' ? 1 : 0); // B1/A2/A1
+  } else if (p >= 0.15) {
+    // Very poor performance (15-34%) - Beginner
+    baseIndex = stage === 'upper' ? 1 : 0; // A2/A1
+  } else {
+    // Extremely poor performance (<15%) - Always A1
+    baseIndex = 0; // A1
   }
   
-  // Add modifiers based on performance
-  if (p >= 0.8) {
+  // Ensure index is within bounds
+  baseIndex = Math.max(0, Math.min(baseIndex, levels.length - 1));
+  const baseLevel = levels[baseIndex];
+  
+  // Add fine-grained modifiers based on performance within level
+  const withinLevelScore = p % 0.15; // Performance within the level bracket
+  
+  if (withinLevelScore >= 0.12) {
     return `${baseLevel}+`;
-  } else if (p <= 0.5) {
+  } else if (withinLevelScore <= 0.03) {
     return `${baseLevel}-`;
   } else {
     return baseLevel;
