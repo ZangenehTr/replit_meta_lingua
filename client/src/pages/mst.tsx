@@ -289,6 +289,30 @@ export default function MSTPage() {
     }
   };
 
+  // Fetch next item with specific skill and stage (to avoid race conditions)
+  const fetchNextItemWithSkillAndStage = async (skillIndex: number, stage: MSTStage) => {
+    if (!currentSession || !status) return;
+    
+    try {
+      const skill = status.session.skillOrder[skillIndex];
+      console.log(`📝 Fetching item for skill: ${skill}, stage: ${stage}, skillIndex: ${skillIndex}`);
+      
+      const response = await fetch(`/api/mst/item?skill=${skill}&stage=${stage}&sessionId=${currentSession.sessionId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentItem(data.item);
+        startItemTimer(data.item.timing.maxAnswerSec);
+      }
+    } catch (error) {
+      console.error('Error fetching next item:', error);
+    }
+  };
+
   // Advance to next skill
   const advanceToNextSkill = () => {
     if (!currentSession || !status) return;
@@ -300,9 +324,11 @@ export default function MSTPage() {
       setTestPhase('completed');
       finalizeTest();
     } else {
+      console.log(`🎯 Advancing from skill ${currentSkillIndex} (${status.session.skillOrder[currentSkillIndex]}) to skill ${nextSkillIndex} (${status.session.skillOrder[nextSkillIndex]})`);
       setCurrentSkillIndex(nextSkillIndex);
       setCurrentStage('core');
-      fetchNextItem();
+      // Fetch next item with the new skill index directly to avoid race condition
+      fetchNextItemWithSkillAndStage(nextSkillIndex, 'core');
     }
   };
 
