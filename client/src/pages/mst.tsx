@@ -18,7 +18,7 @@ const mstStyle = {
 };
 
 type MSTSkill = 'listening' | 'reading' | 'speaking' | 'writing';
-type MSTStage = 'S1' | 'S2';
+type MSTStage = 'core' | 'upper' | 'lower';
 
 interface MSTSession {
   sessionId: string;
@@ -77,7 +77,7 @@ export default function MSTPage() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [testPhase, setTestPhase] = useState<'intro' | 'testing' | 'completed'>('intro');
   const [currentSkillIndex, setCurrentSkillIndex] = useState(0);
-  const [currentStage, setCurrentStage] = useState<MSTStage>('S1');
+  const [currentStage, setCurrentStage] = useState<MSTStage>('core');
   const [guardTimer, setGuardTimer] = useState(0);
   const [itemTimer, setItemTimer] = useState(0);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
@@ -182,9 +182,9 @@ export default function MSTPage() {
     onSuccess: (data) => {
       // Handle routing decision and fetch next item
       if (data.success) {
-        if (currentStage === 'S1') {
-          // Determine S2 stage based on routing
-          const nextStage: MSTStage = 'S2';
+        if (currentStage === 'core') {
+          // Determine next stage based on routing  
+          const nextStage: MSTStage = data.route === 'up' ? 'upper' : 'lower';
           setCurrentStage(nextStage);
           fetchNextItem();
         } else {
@@ -268,7 +268,7 @@ export default function MSTPage() {
       finalizeTest();
     } else {
       setCurrentSkillIndex(nextSkillIndex);
-      setCurrentStage('S1');
+      setCurrentStage('core');
       fetchNextItem();
     }
   };
@@ -610,21 +610,25 @@ export default function MSTPage() {
                         value={currentResponse[idx]?.toString() || ''} 
                         onValueChange={(value) => {
                           console.log('Radio selection changed:', idx, value);
-                          const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill(null);
-                          newResponse[idx] = parseInt(value);
+                          const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill('');
+                          newResponse[idx] = value;
                           setCurrentResponse(newResponse);
                         }}
+                        data-testid={`radiogroup-q-${idx}`}
                       >
-                        {question.options?.map((option: string, optIdx: number) => (
-                          <div key={optIdx} className="flex items-center space-x-2">
-                            <RadioGroupItem 
-                              value={optIdx.toString()} 
-                              id={`q${idx}-opt${optIdx}`}
-                              data-testid={`radio-q${idx}-opt${optIdx}`}
-                            />
-                            <Label htmlFor={`q${idx}-opt${optIdx}`}>{option}</Label>
-                          </div>
-                        ))}
+                        {question.options?.map((option: string, optIdx: number) => {
+                          const id = `q${idx}-opt${optIdx}`;
+                          return (
+                            <div key={optIdx} className="flex items-center space-x-2">
+                              <RadioGroupItem 
+                                value={optIdx.toString()} 
+                                id={id}
+                                data-testid={`radio-q-${idx}-opt-${optIdx}`}
+                              />
+                              <Label htmlFor={id} className="cursor-pointer">{option}</Label>
+                            </div>
+                          );
+                        })}
                       </RadioGroup>
                     </div>
                   ))}
@@ -648,21 +652,25 @@ export default function MSTPage() {
                           value={currentResponse[idx]?.toString() || ''} 
                           onValueChange={(value) => {
                             console.log('Radio selection changed:', idx, value);
-                            const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill(null);
-                            newResponse[idx] = parseInt(value);
+                            const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill('');
+                            newResponse[idx] = value;
                             setCurrentResponse(newResponse);
                           }}
+                          data-testid={`radiogroup-q-${idx}`}
                         >
-                          {question.options?.map((option: string, optIdx: number) => (
-                            <div key={optIdx} className="flex items-center space-x-2">
-                              <RadioGroupItem 
-                                value={optIdx.toString()} 
-                                id={`q${idx}-opt${optIdx}`}
-                                data-testid={`radio-q${idx}-opt${optIdx}`}
-                              />
-                              <Label htmlFor={`q${idx}-opt${optIdx}`}>{option}</Label>
-                            </div>
-                          ))}
+                          {question.options?.map((option: string, optIdx: number) => {
+                            const id = `q${idx}-opt${optIdx}`;
+                            return (
+                              <div key={optIdx} className="flex items-center space-x-2">
+                                <RadioGroupItem 
+                                  value={optIdx.toString()} 
+                                  id={id}
+                                  data-testid={`radio-q-${idx}-opt-${optIdx}`}
+                                />
+                                <Label htmlFor={id} className="cursor-pointer">{option}</Label>
+                              </div>
+                            );
+                          })}
                         </RadioGroup>
                       )}
                     </div>

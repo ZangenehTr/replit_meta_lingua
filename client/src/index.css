@@ -85,21 +85,7 @@ body.rtl p, body.rtl div, body.rtl span {
   margin-left: 0 !important;
 }
 
-/* MST Radio Button Fix */
-.mst-container [role="radiogroup"] {
-  display: block !important;
-}
-
-.mst-container [role="radio"] {
-  pointer-events: all !important;
-  cursor: pointer !important;
-  display: inline-block !important;
-}
-
-.mst-container input[type="radio"] {
-  pointer-events: all !important;
-  cursor: pointer !important;
-}
+/* MST Radio Button - Let Radix handle defaults */
 
 /* Clean desktop layout for RTL/LTR */
 @media (min-width: 768px) {
