@@ -223,7 +223,7 @@ export default function StudentDashboardMobile() {
                     fullWidth 
                     className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600"
                   >
-                    <Link href="/placement-test" className="flex items-center justify-center gap-2 w-full">
+                    <Link href="/mst" className="flex items-center justify-center gap-2 w-full">
                       <Zap className="w-5 h-5" />
                       {t('student:startPlacementTest', 'Start Placement Test (6 min)')}
                     </Link>
