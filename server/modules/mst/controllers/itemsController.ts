@@ -11,7 +11,7 @@ export class MstItemsController {
   private itemBank: Map<string, Item[]> = new Map();
   private initialized = false;
 
-  constructor(private itemBankPath: string = 'server/modules/mst/itemBank') {}
+  constructor(private itemBankPath: string = 'data/mst_item_bank.json') {}
 
   /**
    * Initialize item bank from JSON files
@@ -39,30 +39,39 @@ export class MstItemsController {
   }
 
   /**
-   * Load items for a specific skill
+   * Load items for a specific skill from main JSON file
    */
   private async loadSkillItems(skill: Skill): Promise<Item[]> {
-    const skillPath = join(this.itemBankPath, skill);
     const items: Item[] = [];
 
-    // Try to load items from JSON files
-    const stages: Stage[] = ['core', 'upper', 'lower'];
-    const levels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-
-    for (const stage of stages) {
-      for (const level of levels) {
-        const filePath = join(skillPath, `${stage}_${level}.json`);
+    try {
+      // Load from main item bank JSON file
+      if (existsSync(this.itemBankPath)) {
+        const fileContent = readFileSync(this.itemBankPath, 'utf-8');
+        const itemBank = JSON.parse(fileContent);
         
-        if (existsSync(filePath)) {
-          try {
-            const fileContent = readFileSync(filePath, 'utf-8');
-            const stageItems = JSON.parse(fileContent);
-            items.push(...stageItems);
-          } catch (error) {
-            console.warn(`⚠️ Failed to load ${filePath}:`, error);
+        if (itemBank.skills && itemBank.skills[skill]) {
+          const skillData = itemBank.skills[skill];
+          
+          // Load S1 (core) items
+          if (skillData.S1) {
+            items.push(...skillData.S1);
+          }
+          
+          // Load S2 items (upper, stay, down)
+          if (skillData.S2_up) {
+            items.push(...skillData.S2_up);
+          }
+          if (skillData.S2_stay) {
+            items.push(...skillData.S2_stay);
+          }
+          if (skillData.S2_down) {
+            items.push(...skillData.S2_down);
           }
         }
       }
+    } catch (error) {
+      console.warn(`⚠️ Failed to load items for ${skill}:`, error);
     }
 
     // If no items loaded, create fallback items

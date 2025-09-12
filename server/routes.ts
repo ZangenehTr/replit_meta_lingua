@@ -16,6 +16,7 @@ import callernRoadmapRoutes from "./routes/callern-roadmap-routes";
 import courseRoadmapRoutes from "./routes/course-roadmap-routes";
 import tttRoutes from "./ttt-routes";
 import aiWebhookRoutes from "./ai-webhook-routes";
+import mstRoutes from "./modules/mst/routes/mstRoutes";
 import { 
   filterTeachers, 
   filterActiveTeachers,
@@ -21051,6 +21052,9 @@ Meta Lingua Academy`;
   // Register placement test routes
   const placementTestRoutes = await import('./routes/placement-test-routes');
   app.use('/api/placement-test', placementTestRoutes.createPlacementTestRoutes(storage, ollamaService));
+
+  // Register MST routes
+  app.use('/api/mst', mstRoutes);
 
   // Direct endpoint for IELTS quality comparison
   app.get('/ielts_quality_comparison.html', (req, res) => {
