@@ -30,6 +30,7 @@ interface ItemBank {
       S2_up: MSTItem[];
       S2_stay: MSTItem[];
       S2_down: MSTItem[];
+      S3_down: MSTItem[];
     };
   };
 }
