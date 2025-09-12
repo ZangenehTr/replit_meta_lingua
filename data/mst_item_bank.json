@@ -1,0 +1,428 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-09-12",
+  "skills": {
+    "listening": {
+      "S1": [
+        {
+          "id": "L-B1-001",
+          "skill": "listening",
+          "stage": "core",
+          "cefr": "B1",
+          "assets": {
+            "audio": "/assets/audio/l-b1-001.mp3",
+            "transcript": "Welcome to our restaurant. Today's special is grilled salmon with vegetables. We also have pasta and pizza available. Would you like to see the menu?"
+          },
+          "timing": {
+            "audioSec": 15,
+            "maxAnswerSec": 45
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "What is today's special at the restaurant?",
+              "options": ["Grilled salmon with vegetables", "Pasta and pizza", "Fresh salad", "Chicken soup"],
+              "answerIndex": 0
+            },
+            {
+              "type": "mcq_single", 
+              "stem": "What else does the restaurant offer?",
+              "options": ["Only seafood", "Pasta and pizza", "Just beverages", "Desserts only"],
+              "answerIndex": 1
+            }
+          ],
+          "metadata": {
+            "domain": "social",
+            "accent": "genAm"
+          }
+        },
+        {
+          "id": "L-B1-002",
+          "skill": "listening",
+          "stage": "core",
+          "cefr": "B1",
+          "assets": {
+            "audio": "/assets/audio/l-b1-002.mp3",
+            "transcript": "The meeting is scheduled for next Tuesday at 3 PM in the conference room. Please bring your reports and be prepared to discuss the quarterly results."
+          },
+          "timing": {
+            "audioSec": 12,
+            "maxAnswerSec": 40
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "When is the meeting scheduled?",
+              "options": ["Monday at 2 PM", "Tuesday at 3 PM", "Wednesday at 4 PM", "Thursday at 1 PM"],
+              "answerIndex": 1
+            }
+          ],
+          "metadata": {
+            "domain": "workplace",
+            "accent": "genAm"
+          }
+        }
+      ],
+      "S2_up": [
+        {
+          "id": "L-B2-001",
+          "skill": "listening",
+          "stage": "upper",
+          "cefr": "B2",
+          "assets": {
+            "audio": "/assets/audio/l-b2-001.mp3",
+            "transcript": "The implementation of renewable energy sources has significantly impacted global economics. Studies indicate that countries investing in solar and wind technologies have seen substantial job growth in green sectors."
+          },
+          "timing": {
+            "audioSec": 20,
+            "maxAnswerSec": 50
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "According to the speaker, what has renewable energy impacted?",
+              "options": ["Local politics", "Global economics", "Weather patterns", "Transportation systems"],
+              "answerIndex": 1
+            }
+          ],
+          "metadata": {
+            "domain": "academic",
+            "accent": "britEng"
+          }
+        }
+      ],
+      "S2_stay": [
+        {
+          "id": "L-B1-003",
+          "skill": "listening",
+          "stage": "core",
+          "cefr": "B1",
+          "assets": {
+            "audio": "/assets/audio/l-b1-003.mp3",
+            "transcript": "I'm calling to reschedule our appointment from Friday to Monday morning. Is 10 AM convenient for you? Please let me know as soon as possible."
+          },
+          "timing": {
+            "audioSec": 14,
+            "maxAnswerSec": 45
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "What does the caller want to do?",
+              "options": ["Cancel the appointment", "Reschedule the appointment", "Confirm the time", "Change the location"],
+              "answerIndex": 1
+            }
+          ],
+          "metadata": {
+            "domain": "social",
+            "accent": "genAm"
+          }
+        }
+      ],
+      "S2_down": [
+        {
+          "id": "L-A2-001",
+          "skill": "listening",
+          "stage": "lower",
+          "cefr": "A2",
+          "assets": {
+            "audio": "/assets/audio/l-a2-001.mp3",
+            "transcript": "Hello, my name is Sarah. I live in New York. I work in a hospital. I like reading books and watching movies."
+          },
+          "timing": {
+            "audioSec": 10,
+            "maxAnswerSec": 35
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "Where does Sarah work?",
+              "options": ["In a school", "In a hospital", "In a restaurant", "In a shop"],
+              "answerIndex": 1
+            }
+          ],
+          "metadata": {
+            "domain": "social",
+            "accent": "genAm"
+          }
+        }
+      ]
+    },
+    "reading": {
+      "S1": [
+        {
+          "id": "R-B1-001",
+          "skill": "reading",
+          "stage": "core",
+          "cefr": "B1",
+          "assets": {
+            "passage": "Online shopping has become increasingly popular in recent years. Many people prefer the convenience of shopping from home rather than visiting physical stores. However, some customers still enjoy the experience of touching and trying products before purchasing them. Both shopping methods have their advantages and disadvantages."
+          },
+          "timing": {
+            "maxAnswerSec": 60
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "According to the passage, what do some customers prefer about physical stores?",
+              "options": ["Lower prices", "Touching and trying products", "Faster delivery", "Better customer service"],
+              "answerIndex": 1
+            },
+            {
+              "type": "mcq_single",
+              "stem": "What is the main topic of this passage?",
+              "options": ["Problems with online shopping", "Advantages of physical stores", "Comparison of shopping methods", "Future of retail"],
+              "answerIndex": 2
+            }
+          ],
+          "metadata": {
+            "domain": "social"
+          }
+        }
+      ],
+      "S2_up": [
+        {
+          "id": "R-B2-001",
+          "skill": "reading",
+          "stage": "upper",
+          "cefr": "B2",
+          "assets": {
+            "passage": "The phenomenon of urban heat islands represents a significant environmental challenge in contemporary metropolitan areas. These thermal anomalies occur when urban surfaces absorb and retain solar radiation more efficiently than surrounding rural landscapes, resulting in elevated temperatures that can exceed rural areas by several degrees Celsius. Mitigation strategies include increasing green spaces, implementing reflective building materials, and promoting sustainable urban planning practices."
+          },
+          "timing": {
+            "maxAnswerSec": 80
+          },
+          "questions": [
+            {
+              "type": "mcq_multi",
+              "stem": "Which mitigation strategies are mentioned in the passage?",
+              "options": ["Increasing green spaces", "Using reflective materials", "Reducing population density", "Sustainable urban planning"],
+              "answerIndices": [0, 1, 3]
+            }
+          ],
+          "metadata": {
+            "domain": "academic"
+          }
+        }
+      ],
+      "S2_stay": [
+        {
+          "id": "R-B1-002",
+          "skill": "reading",
+          "stage": "core",
+          "cefr": "B1",
+          "assets": {
+            "passage": "Learning a new language requires dedication and consistent practice. Many experts recommend studying for at least 30 minutes daily rather than longer sessions once or twice a week. Using various learning methods such as listening to music, watching movies, and speaking with native speakers can significantly improve your progress."
+          },
+          "timing": {
+            "maxAnswerSec": 60
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "How often do experts recommend studying a new language?",
+              "options": ["Once a week for long sessions", "Daily for 30 minutes", "Twice a week intensively", "Only on weekends"],
+              "answerIndex": 1
+            }
+          ],
+          "metadata": {
+            "domain": "academic"
+          }
+        }
+      ],
+      "S2_down": [
+        {
+          "id": "R-A2-001",
+          "skill": "reading",
+          "stage": "lower",
+          "cefr": "A2",
+          "assets": {
+            "passage": "My daily routine is simple. I wake up at 7 AM and have breakfast. Then I go to work by bus. I work from 9 AM to 5 PM. After work, I go home and cook dinner. In the evening, I watch TV or read a book."
+          },
+          "timing": {
+            "maxAnswerSec": 45
+          },
+          "questions": [
+            {
+              "type": "mcq_single",
+              "stem": "What time does the person wake up?",
+              "options": ["6 AM", "7 AM", "8 AM", "9 AM"],
+              "answerIndex": 1
+            }
+          ],
+          "metadata": {
+            "domain": "social"
+          }
+        }
+      ]
+    },
+    "speaking": {
+      "S1": [
+        {
+          "id": "S-B1-001",
+          "skill": "speaking",
+          "stage": "core",
+          "cefr": "B1",
+          "assets": {
+            "prompt": "Express your opinion about learning languages online. Give your opinion and explain why you think this way. Include both advantages and disadvantages. Speak for about 2 minutes.",
+            "keywords": ["opinion", "advantages", "disadvantages", "because", "for example"],
+            "structure": "Introduction + Opinion + Reasons + Examples + Conclusion"
+          },
+          "timing": {
+            "prepSec": 30,
+            "recordSec": 120,
+            "maxAnswerSec": 150
+          },
+          "metadata": {
+            "domain": "social"
+          }
+        }
+      ],
+      "S2_up": [
+        {
+          "id": "S-B2-001",
+          "skill": "speaking",
+          "stage": "upper",
+          "cefr": "B2",
+          "assets": {
+            "prompt": "Discuss the impact of technology on modern education. Analyze both the benefits and challenges, and suggest how educational institutions can adapt to technological changes while maintaining educational quality.",
+            "keywords": ["analyze", "benefits", "challenges", "adapt", "suggest", "educational quality"],
+            "structure": "Analysis + Multiple perspectives + Suggestions + Justification"
+          },
+          "timing": {
+            "prepSec": 45,
+            "recordSec": 150,
+            "maxAnswerSec": 180
+          },
+          "metadata": {
+            "domain": "academic"
+          }
+        }
+      ],
+      "S2_stay": [
+        {
+          "id": "S-B1-002",
+          "skill": "speaking",
+          "stage": "core",
+          "cefr": "B1",
+          "assets": {
+            "prompt": "Describe your favorite place to visit in your city. Explain why you like it and what activities you can do there. Give specific details and examples.",
+            "keywords": ["describe", "favorite place", "explain", "activities", "details", "examples"],
+            "structure": "Description + Reasons + Activities + Personal experience"
+          },
+          "timing": {
+            "prepSec": 30,
+            "recordSec": 120,
+            "maxAnswerSec": 150
+          },
+          "metadata": {
+            "domain": "social"
+          }
+        }
+      ],
+      "S2_down": [
+        {
+          "id": "S-A2-001",
+          "skill": "speaking",
+          "stage": "lower",
+          "cefr": "A2",
+          "assets": {
+            "prompt": "Talk about your daily routine. What do you do in the morning, afternoon, and evening? Speak for about 1 minute.",
+            "keywords": ["daily routine", "morning", "afternoon", "evening", "usually", "then"],
+            "structure": "Morning + Afternoon + Evening"
+          },
+          "timing": {
+            "prepSec": 20,
+            "recordSec": 60,
+            "maxAnswerSec": 75
+          },
+          "metadata": {
+            "domain": "social"
+          }
+        }
+      ]
+    },
+    "writing": {
+      "S1": [
+        {
+          "id": "W-B1-001",
+          "skill": "writing",
+          "stage": "core",
+          "cefr": "B1",
+          "assets": {
+            "prompt": "Some people think that studying abroad is the best way to learn a language, while others believe you can learn effectively in your home country. Write your opinion on this topic. Give reasons and examples to support your view.",
+            "minWords": 120,
+            "maxWords": 180,
+            "taskType": "opinion"
+          },
+          "timing": {
+            "maxAnswerSec": 120
+          },
+          "metadata": {
+            "domain": "academic"
+          }
+        }
+      ],
+      "S2_up": [
+        {
+          "id": "W-B2-001",
+          "skill": "writing",
+          "stage": "upper",
+          "cefr": "B2",
+          "assets": {
+            "prompt": "The increasing reliance on artificial intelligence in various sectors has sparked debate about its long-term implications for employment and society. Write an argumentative essay discussing both the potential benefits and risks of AI integration, and propose strategies for managing this technological transition responsibly.",
+            "minWords": 200,
+            "maxWords": 280,
+            "taskType": "argument"
+          },
+          "timing": {
+            "maxAnswerSec": 150
+          },
+          "metadata": {
+            "domain": "academic"
+          }
+        }
+      ],
+      "S2_stay": [
+        {
+          "id": "W-B1-002",
+          "skill": "writing",
+          "stage": "core",
+          "cefr": "B1",
+          "assets": {
+            "prompt": "Compare living in a big city versus living in a small town. Discuss the advantages and disadvantages of each option and explain which you would prefer and why.",
+            "minWords": 120,
+            "maxWords": 180,
+            "taskType": "comparison"
+          },
+          "timing": {
+            "maxAnswerSec": 120
+          },
+          "metadata": {
+            "domain": "social"
+          }
+        }
+      ],
+      "S2_down": [
+        {
+          "id": "W-A2-001",
+          "skill": "writing",
+          "stage": "lower",
+          "cefr": "A2",
+          "assets": {
+            "prompt": "Describe your ideal weekend. What activities would you do? Who would you spend time with? Write about your perfect Saturday and Sunday.",
+            "minWords": 80,
+            "maxWords": 120,
+            "taskType": "description"
+          },
+          "timing": {
+            "maxAnswerSec": 90
+          },
+          "metadata": {
+            "domain": "social"
+          }
+        }
+      ]
+    }
+  }
+}

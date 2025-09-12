@@ -72,6 +72,84 @@ export const userProfiles = pgTable("user_profiles", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// ============================================================================
+// MST (Multi-Stage Test) Schema
+// ============================================================================
+
+export const mstSessions = pgTable("mst_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  targetLanguage: text("target_language").notNull(),
+  status: text("status").notNull().default("in_progress"), // in_progress, completed, expired
+  skillOrder: text("skill_order").array().default(["listening", "reading", "speaking", "writing"]),
+  currentSkillIndex: integer("current_skill_index").default(0),
+  startedAt: timestamp("started_at").defaultNow(),
+  endsAt: timestamp("ends_at").notNull(), // 10 minutes from start
+  completedAt: timestamp("completed_at"),
+  results: jsonb("results"), // Final CEFR results per skill
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const mstSkillStates = pgTable("mst_skill_states", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => mstSessions.id).notNull(),
+  skill: text("skill").notNull(), // listening, reading, speaking, writing
+  currentStage: text("current_stage").notNull().default("S1"), // S1, S2
+  timeSpentSec: integer("time_spent_sec").default(0),
+  timeBudgetSec: integer("time_budget_sec").default(150), // 2.5 minutes per skill
+  itemsAsked: text("items_asked").array().default([]),
+  s1Score: integer("s1_score"), // 0-100
+  s1Route: text("s1_route"), // up, down, stay
+  s2Score: integer("s2_score"), // 0-100
+  finalBand: text("final_band"), // A2, B1, B2, C1
+  confidence: decimal("confidence", { precision: 3, scale: 2 }), // 0.00-1.00
+  completed: boolean("completed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const mstResponses = pgTable("mst_responses", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => mstSessions.id).notNull(),
+  skillStateId: integer("skill_state_id").references(() => mstSkillStates.id).notNull(),
+  itemId: text("item_id").notNull(),
+  skill: text("skill").notNull(),
+  stage: text("stage").notNull(),
+  response: jsonb("response").notNull(), // User's answer data
+  score: integer("score"), // 0-100
+  timeSpentMs: integer("time_spent_ms"),
+  submittedAt: timestamp("submitted_at").defaultNow()
+});
+
+// MST Types and Schemas
+export type MSTSkill = 'listening' | 'reading' | 'speaking' | 'writing';
+export type MSTStage = 'S1' | 'S2';
+export type MSTRoute = 'up' | 'down' | 'stay';
+
+export const mstSessionInsertSchema = createInsertSchema(mstSessions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  startedAt: true
+});
+
+export const mstSkillStateInsertSchema = createInsertSchema(mstSkillStates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const mstResponseInsertSchema = createInsertSchema(mstResponses).omit({
+  id: true,
+  submittedAt: true
+});
+
+export type MSTSessionInsert = z.infer<typeof mstSessionInsertSchema>;
+export type MSTSession = typeof mstSessions.$inferSelect;
+export type MSTSkillState = typeof mstSkillStates.$inferSelect;
+export type MSTResponse = typeof mstResponses.$inferSelect;
+
 // Role Permissions
 export const rolePermissions = pgTable("role_permissions", {
   id: serial("id").primaryKey(),
