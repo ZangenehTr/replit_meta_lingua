@@ -123,6 +123,7 @@ import TeacherStudentMatchingPage from "@/pages/admin/teacher-student-matching";
 import RoomManagement from "@/pages/admin/room-management";
 import { CallernManagement } from "@/pages/admin/callern-management";
 import RoadmapDesigner from "@/pages/admin/roadmap-designer";
+import RoadmapPage from "@/pages/roadmap";
 import CallernSystem from "@/pages/callern";
 import CallernEnhancements from "@/pages/callern-enhancements";
 import CallernVideoSession from "@/pages/callern-video-session";
@@ -756,6 +757,12 @@ function Router() {
       <Route path="/admin/roadmap-designer">
         <ProtectedRoute>
           <RoadmapDesigner />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/roadmap">
+        <ProtectedRoute>
+          <RoadmapPage />
         </ProtectedRoute>
       </Route>
 

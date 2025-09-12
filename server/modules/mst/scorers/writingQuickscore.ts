@@ -43,11 +43,25 @@ const DISCOURSE_MARKERS = [
  */
 export function scoreWriting(
   item: WritingItem,
-  response: WritingResponse
+  response: WritingResponse | string
 ): QuickscoreResult {
   const startTime = Date.now();
   
-  const text = response.text.trim();
+  // Handle both object format {text: string} and plain string format
+  let text: string;
+  if (typeof response === 'string') {
+    text = response.trim();
+  } else if (response && typeof response.text === 'string') {
+    text = response.text.trim();
+  } else {
+    // Invalid response format
+    return {
+      p: 0,
+      route: 'down',
+      features: { invalidResponse: 1 },
+      computeTimeMs: Date.now() - startTime,
+    };
+  }
   
   if (text.length < 20) {
     return {
@@ -273,7 +287,12 @@ function routeFromScore(p: number): 'up' | 'down' | 'stay' {
  */
 export function validateWritingResponse(
   item: WritingItem,
-  response: WritingResponse
+  response: WritingResponse | string
 ): boolean {
-  return response.text && response.text.trim().length > 0;
+  if (typeof response === 'string') {
+    return response.trim().length > 0;
+  } else if (response && typeof response.text === 'string') {
+    return response.text.trim().length > 0;
+  }
+  return false;
 }
