@@ -65,7 +65,7 @@ export default function MSTPage() {
   const { toast } = useToast();
   const [currentSession, setCurrentSession] = useState<MSTSession | null>(null);
   const [currentItem, setCurrentItem] = useState<MSTItem | null>(null);
-  const [currentResponse, setCurrentResponse] = useState<any>([]);
+  const [currentResponse, setCurrentResponse] = useState<any>('');
   const [isRecording, setIsRecording] = useState(false);
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
@@ -450,7 +450,7 @@ export default function MSTPage() {
   // Render different test phases
   if (testPhase === 'intro') {
     return (
-      <div className="container mx-auto p-6 max-w-4xl">
+      <div className="container mx-auto p-6 max-w-4xl" dir="ltr">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center">MST Placement Test</CardTitle>
@@ -498,7 +498,7 @@ export default function MSTPage() {
 
   if (testPhase === 'completed') {
     return (
-      <div className="container mx-auto p-6 max-w-4xl">
+      <div className="container mx-auto p-6 max-w-4xl" dir="ltr">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center">Test Completed</CardTitle>
@@ -578,7 +578,7 @@ export default function MSTPage() {
                       <RadioGroup 
                         value={currentResponse[idx]?.toString()} 
                         onValueChange={(value) => {
-                          const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : [];
+                          const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill('');
                           newResponse[idx] = parseInt(value);
                           setCurrentResponse(newResponse);
                         }}
@@ -615,7 +615,7 @@ export default function MSTPage() {
                         <RadioGroup 
                           value={currentResponse[idx]?.toString()} 
                           onValueChange={(value) => {
-                            const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : [];
+                            const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill('');
                             newResponse[idx] = parseInt(value);
                             setCurrentResponse(newResponse);
                           }}
