@@ -218,6 +218,10 @@ router.post('/response', authenticateToken, upload.single('audio'), async (req, 
 
     res.json({
       success: true,
+      route: quickscoreResult.route,
+      p: quickscoreResult.p,
+      features: quickscoreResult.features,
+      computeTimeMs: quickscoreResult.computeTimeMs,
       quickscore: quickscoreResult
     });
   } catch (error) {
@@ -304,8 +308,27 @@ router.post('/skill-complete', authenticateToken, async (req, res) => {
       });
     }
 
-    // Determine final stage and score
-    const finalStage = route === 'up' ? 'upper' : (route === 'down' ? 'lower' : 'core');
+    // Determine final stage and score based on current stage and routing decision
+    let finalStage: 'core' | 'upper' | 'lower';
+    
+    // Get current stage from session - this will be 'core', 'upper', or 'lower'
+    const currentStage = session.currentStage || 'core'; // Default to core if not set
+    
+    if (route === 'up') {
+      finalStage = 'upper';
+    } else if (route === 'down') {
+      // Check if we're already at the lowest stage
+      if (currentStage === 'lower') {
+        // Can't go lower than 'lower' stage (A1 level), so stay at core level
+        finalStage = 'core';
+        console.log(`⚠️  Cannot route down from lowest stage (${currentStage}), staying at core`);
+      } else {
+        finalStage = 'lower';
+      }
+    } else {
+      finalStage = 'core';
+    }
+    
     const finalScore = stage2Score || stage1Score;
     
     // Calculate band and confidence

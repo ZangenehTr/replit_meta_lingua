@@ -504,7 +504,7 @@ export default function MSTPage() {
   // Render different test phases
   if (testPhase === 'intro') {
     return (
-      <div className="container mx-auto p-6 max-w-4xl mst-container" style={mstStyle}>
+      <div className="container mx-auto p-4 sm:p-6 max-w-4xl mst-container" style={mstStyle}>
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center">MST Placement Test</CardTitle>
@@ -512,7 +512,7 @@ export default function MSTPage() {
           <CardContent className="space-y-6">
             <div className="text-center space-y-4">
               <h3 className="text-lg font-semibold">Multi-Stage Test Instructions</h3>
-              <div className="grid md:grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="space-y-2">
                   <h4 className="font-semibold">Test Structure</h4>
                   <ul className="space-y-1 text-left">
@@ -552,7 +552,7 @@ export default function MSTPage() {
 
   if (testPhase === 'completed') {
     return (
-      <div className="container mx-auto p-6 max-w-4xl mst-container" style={mstStyle}>
+      <div className="container mx-auto p-4 sm:p-6 max-w-4xl mst-container" style={mstStyle}>
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center">Test Completed</CardTitle>
@@ -571,26 +571,26 @@ export default function MSTPage() {
 
   // Main testing interface
   return (
-    <div className="container mx-auto p-6 max-w-4xl mst-container" style={mstStyle}>
+    <div className="container mx-auto p-4 sm:p-6 max-w-4xl mst-container" style={mstStyle}>
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              MST Test - {currentItem?.skill?.toUpperCase()}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="truncate">MST Test - {currentItem?.skill?.toUpperCase()}</span>
             </CardTitle>
-            <div className="flex items-center gap-4">
-              <Badge variant="outline">{currentStage}</Badge>
-              <Badge variant="secondary">{currentItem?.cefr}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">{currentStage}</Badge>
+              <Badge variant="secondary" className="text-xs">{currentItem?.cefr}</Badge>
             </div>
           </div>
           
           {/* Timers */}
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Total Time: {formatTime(status?.timing.totalRemainingSec || 0)}</span>
-              <span>Skill Time: {formatTime(status?.timing.skillRemainingSec || 0)}</span>
-              <span>Item Time: {formatTime(itemTimer)}</span>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-4 text-xs sm:text-sm">
+              <span className="text-center sm:text-left">Total: {formatTime(status?.timing.totalRemainingSec || 0)}</span>
+              <span className="text-center sm:text-left">Skill: {formatTime(status?.timing.skillRemainingSec || 0)}</span>
+              <span className="text-center sm:text-left">Item: {formatTime(itemTimer)}</span>
             </div>
             <Progress 
               value={status ? ((status.timing.totalElapsedSec / 600) * 100) : 0} 
@@ -605,23 +605,24 @@ export default function MSTPage() {
               {/* Listening Items */}
               {currentItem.skill === 'listening' && (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                     <Button
                       onClick={playAudio}
                       variant="outline"
-                      size="sm"
+                      size="default"
+                      className="w-full sm:w-auto min-h-[48px] touch-target font-medium"
                       data-testid="button-play-audio"
                       disabled={!currentItem?.content?.assets?.transcript}
                     >
                       {isAudioPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                       {isAudioPlaying ? 'Pause' : 'Play'} Audio
                     </Button>
-                    <div className="flex-1">
-                      <Progress value={audioProgress} className="h-2" />
+                    <div className="flex-1 flex items-center gap-2">
+                      <Progress value={audioProgress} className="h-3 flex-1" />
+                      <span className="text-xs text-gray-500 min-w-[3rem] text-right">
+                        {audioProgress > 0 && `${Math.round(audioProgress)}%`}
+                      </span>
                     </div>
-                    <span className="text-xs text-gray-500">
-                      {audioProgress > 0 && `${Math.round(audioProgress)}%`}
-                    </span>
                   </div>
                   
                   {/* Transcript hidden during actual test */}
@@ -642,13 +643,14 @@ export default function MSTPage() {
                         {question.options?.map((option: string, optIdx: number) => {
                           const id = `q${idx}-opt${optIdx}`;
                           return (
-                            <div key={optIdx} className="flex items-center space-x-2">
+                            <div key={optIdx} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 min-h-[48px] touch-target">
                               <RadioGroupItem 
                                 value={optIdx.toString()} 
                                 id={id}
                                 data-testid={`radio-q-${idx}-opt-${optIdx}`}
+                                className="mt-0"
                               />
-                              <Label htmlFor={id} className="cursor-pointer">{option}</Label>
+                              <Label htmlFor={id} className="cursor-pointer flex-1 leading-relaxed text-sm sm:text-base">{option}</Label>
                             </div>
                           );
                         })}
@@ -721,6 +723,7 @@ export default function MSTPage() {
                         onClick={isRecording ? stopRecording : startRecording}
                         variant={isRecording ? 'destructive' : 'default'}
                         size="lg"
+                        className="w-full sm:w-auto min-h-[52px] text-base font-medium touch-target"
                         data-testid="button-record"
                       >
                         {isRecording ? <MicOff className="w-5 h-5 mr-2" /> : <Mic className="w-5 h-5 mr-2" />}
@@ -753,7 +756,7 @@ export default function MSTPage() {
                       value={currentResponse}
                       onChange={(e) => setCurrentResponse(e.target.value)}
                       placeholder="Type your response here..."
-                      className="min-h-[200px]"
+                      className="min-h-[150px] sm:min-h-[200px] text-base touch-target"
                       data-testid="textarea-writing"
                     />
                     <div className="mt-2 text-xs text-gray-600">
@@ -764,8 +767,8 @@ export default function MSTPage() {
               )}
 
               {/* Submit button */}
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-gray-500">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
                   {guardTimer > 0 && (
                     <span data-testid="text-guard-timer">
                       Please wait {guardTimer} seconds before submitting
@@ -776,6 +779,8 @@ export default function MSTPage() {
                 <Button
                   onClick={handleSubmit}
                   disabled={guardTimer > 0 || submitResponseMutation.isPending || !isValidResponse()}
+                  size="lg"
+                  className="w-full sm:w-auto min-h-[52px] text-base font-medium touch-target"
                   data-testid="button-submit"
                 >
                   {submitResponseMutation.isPending ? 'Submitting...' : 'Submit Response'}
