@@ -371,29 +371,9 @@ export default function PlacementTestPage() {
           // Stop all tracks to release microphone
           stream.getTracks().forEach(track => track.stop());
           
-          // Check if we need to auto-submit due to recording time expiry
-          if (autoSubmitAfterRecording.current) {
-            console.log('Auto-submitting due to recording time expiry...');
-            autoSubmitAfterRecording.current = false;
-            
-            // Reset recording timer state to prevent multiple auto-submissions
-            if (recordingTimer) {
-              clearInterval(recordingTimer);
-              setRecordingTimer(null);
-            }
-            
-            // Auto-submit after a short delay to ensure state is updated
-            setTimeout(() => {
-              if (currentSession && currentQuestion) {
-                submitResponseMutation.mutate({
-                  sessionId: currentSession.id,
-                  questionId: currentQuestion.id,
-                  userResponse: responseData,
-                  audioBlob: blob
-                });
-              }
-            }, 200);
-          } else {
+          // Don't auto-submit - let user decide when to submit
+          // (Removed aggressive auto-submit logic that was causing immediate submissions)
+          {
             toast({
               title: 'Recording Complete',
               description: `Recorded ${blob.size} bytes of audio. You can now submit your answer.`,
@@ -421,9 +401,8 @@ export default function PlacementTestPage() {
         setRecordingTimeLeft(prev => {
           const newTime = prev - 1;
           if (newTime <= 0) {
-            // Auto-stop when time reaches 0
+            // Auto-stop when time reaches 0 but DON'T auto-submit
             console.log('Recording time expired, auto-stopping...');
-            autoSubmitAfterRecording.current = true;
             clearInterval(timer); // Clear the timer immediately
             setTimeout(() => stopRecording(), 100);
             return 0;
