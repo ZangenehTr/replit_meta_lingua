@@ -159,6 +159,16 @@ export default function PlacementTestPage() {
         throw new Error('Failed to submit response');
       }
       
+      // Safe JSON parsing - handle non-JSON responses
+      if (response.status === 204) {
+        return {};
+      }
+      
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        return {};
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -176,9 +186,11 @@ export default function PlacementTestPage() {
       }
     },
     onError: (error) => {
+      console.error('Submit response error:', error);
+      const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
       toast({
         title: 'Error',
-        description: 'Failed to submit response. Please try again.',
+        description: `Failed to submit response: ${errorMessage}. Please try again.`,
         variant: 'destructive'
       });
     }
@@ -306,9 +318,10 @@ export default function PlacementTestPage() {
       }
       console.log('Audio track state:', audioTracks[0].readyState);
       
-      // Select a supported mime type
-      const mimeType = ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg"]
-        .find(t => MediaRecorder.isTypeSupported(t));
+      // Select a supported mime type safely
+      const candidates = ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg"];
+      const supports = typeof MediaRecorder !== 'undefined' && typeof (MediaRecorder as any).isTypeSupported === 'function';
+      const mimeType = supports ? candidates.find(t => (MediaRecorder as any).isTypeSupported(t)) : undefined;
       console.log('Selected mime type:', mimeType);
       
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
@@ -327,12 +340,12 @@ export default function PlacementTestPage() {
         const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
         console.log('Final audio blob size:', blob.size, 'bytes');
         
-        if (blob.size === 0) {
-          console.warn(`Empty audio blob detected (${blob.size} bytes), this indicates recording failed`);
+        if (blob.size === 0 || blob.size < 1000) {
+          console.warn(`Small/empty audio blob detected (${blob.size} bytes), audio too short or quiet`);
           
           toast({
-            title: 'Recording Issue',
-            description: 'Recording failed to capture audio. Please try again or use the "Continue in Test Mode" button.',
+            title: 'Recording Too Short',
+            description: `Audio recording too short/quiet (${blob.size} bytes). Please speak louder and longer, or use the "Continue in Test Mode" button.`,
             variant: 'destructive'
           });
           
