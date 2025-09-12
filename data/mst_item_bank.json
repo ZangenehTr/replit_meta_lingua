@@ -21,13 +21,23 @@
             {
               "type": "mcq_single",
               "stem": "What is today's special at the restaurant?",
-              "options": ["Grilled salmon with vegetables", "Pasta and pizza", "Fresh salad", "Chicken soup"],
+              "options": [
+                "Grilled salmon with vegetables",
+                "Pasta and pizza",
+                "Fresh salad",
+                "Chicken soup"
+              ],
               "answerIndex": 0
             },
             {
-              "type": "mcq_single", 
+              "type": "mcq_single",
               "stem": "What else does the restaurant offer?",
-              "options": ["Only seafood", "Pasta and pizza", "Just beverages", "Desserts only"],
+              "options": [
+                "Only seafood",
+                "Pasta and pizza",
+                "Just beverages",
+                "Desserts only"
+              ],
               "answerIndex": 1
             }
           ],
@@ -53,7 +63,12 @@
             {
               "type": "mcq_single",
               "stem": "When is the meeting scheduled?",
-              "options": ["Monday at 2 PM", "Tuesday at 3 PM", "Wednesday at 4 PM", "Thursday at 1 PM"],
+              "options": [
+                "Monday at 2 PM",
+                "Tuesday at 3 PM",
+                "Wednesday at 4 PM",
+                "Thursday at 1 PM"
+              ],
               "answerIndex": 1
             }
           ],
@@ -81,7 +96,12 @@
             {
               "type": "mcq_single",
               "stem": "According to the speaker, what has renewable energy impacted?",
-              "options": ["Local politics", "Global economics", "Weather patterns", "Transportation systems"],
+              "options": [
+                "Local politics",
+                "Global economics",
+                "Weather patterns",
+                "Transportation systems"
+              ],
               "answerIndex": 1
             }
           ],
@@ -109,7 +129,12 @@
             {
               "type": "mcq_single",
               "stem": "What does the caller want to do?",
-              "options": ["Cancel the appointment", "Reschedule the appointment", "Confirm the time", "Change the location"],
+              "options": [
+                "Cancel the appointment",
+                "Reschedule the appointment",
+                "Confirm the time",
+                "Change the location"
+              ],
               "answerIndex": 1
             }
           ],
@@ -137,7 +162,12 @@
             {
               "type": "mcq_single",
               "stem": "Where does Sarah work?",
-              "options": ["In a school", "In a hospital", "In a restaurant", "In a shop"],
+              "options": [
+                "In a school",
+                "In a hospital",
+                "In a restaurant",
+                "In a shop"
+              ],
               "answerIndex": 1
             }
           ],
@@ -165,13 +195,23 @@
             {
               "type": "mcq_single",
               "stem": "According to the passage, what do some customers prefer about physical stores?",
-              "options": ["Lower prices", "Touching and trying products", "Faster delivery", "Better customer service"],
+              "options": [
+                "Lower prices",
+                "Touching and trying products",
+                "Faster delivery",
+                "Better customer service"
+              ],
               "answerIndex": 1
             },
             {
               "type": "mcq_single",
               "stem": "What is the main topic of this passage?",
-              "options": ["Problems with online shopping", "Advantages of physical stores", "Comparison of shopping methods", "Future of retail"],
+              "options": [
+                "Problems with online shopping",
+                "Advantages of physical stores",
+                "Comparison of shopping methods",
+                "Future of retail"
+              ],
               "answerIndex": 2
             }
           ],
@@ -196,8 +236,17 @@
             {
               "type": "mcq_multi",
               "stem": "Which mitigation strategies are mentioned in the passage?",
-              "options": ["Increasing green spaces", "Using reflective materials", "Reducing population density", "Sustainable urban planning"],
-              "answerIndices": [0, 1, 3]
+              "options": [
+                "Increasing green spaces",
+                "Using reflective materials",
+                "Reducing population density",
+                "Sustainable urban planning"
+              ],
+              "answerIndices": [
+                0,
+                1,
+                3
+              ]
             }
           ],
           "metadata": {
@@ -221,7 +270,12 @@
             {
               "type": "mcq_single",
               "stem": "How often do experts recommend studying a new language?",
-              "options": ["Once a week for long sessions", "Daily for 30 minutes", "Twice a week intensively", "Only on weekends"],
+              "options": [
+                "Once a week for long sessions",
+                "Daily for 30 minutes",
+                "Twice a week intensively",
+                "Only on weekends"
+              ],
               "answerIndex": 1
             }
           ],
@@ -246,7 +300,12 @@
             {
               "type": "mcq_single",
               "stem": "What time does the person wake up?",
-              "options": ["6 AM", "7 AM", "8 AM", "9 AM"],
+              "options": [
+                "6 AM",
+                "7 AM",
+                "8 AM",
+                "9 AM"
+              ],
               "answerIndex": 1
             }
           ],
@@ -265,7 +324,13 @@
           "cefr": "B1",
           "assets": {
             "prompt": "Express your opinion about learning languages online. Give your opinion and explain why you think this way. Include both advantages and disadvantages. Speak for about 2 minutes.",
-            "keywords": ["opinion", "advantages", "disadvantages", "because", "for example"],
+            "keywords": [
+              "opinion",
+              "advantages",
+              "disadvantages",
+              "because",
+              "for example"
+            ],
             "structure": "Introduction + Opinion + Reasons + Examples + Conclusion"
           },
           "timing": {
@@ -286,7 +351,14 @@
           "cefr": "B2",
           "assets": {
             "prompt": "Discuss the impact of technology on modern education. Analyze both the benefits and challenges, and suggest how educational institutions can adapt to technological changes while maintaining educational quality.",
-            "keywords": ["analyze", "benefits", "challenges", "adapt", "suggest", "educational quality"],
+            "keywords": [
+              "analyze",
+              "benefits",
+              "challenges",
+              "adapt",
+              "suggest",
+              "educational quality"
+            ],
             "structure": "Analysis + Multiple perspectives + Suggestions + Justification"
           },
           "timing": {
@@ -307,7 +379,14 @@
           "cefr": "B1",
           "assets": {
             "prompt": "Describe your favorite place to visit in your city. Explain why you like it and what activities you can do there. Give specific details and examples.",
-            "keywords": ["describe", "favorite place", "explain", "activities", "details", "examples"],
+            "keywords": [
+              "describe",
+              "favorite place",
+              "explain",
+              "activities",
+              "details",
+              "examples"
+            ],
             "structure": "Description + Reasons + Activities + Personal experience"
           },
           "timing": {
@@ -328,7 +407,14 @@
           "cefr": "A2",
           "assets": {
             "prompt": "Talk about your daily routine. What do you do in the morning, afternoon, and evening? Speak for about 1 minute.",
-            "keywords": ["daily routine", "morning", "afternoon", "evening", "usually", "then"],
+            "keywords": [
+              "daily routine",
+              "morning",
+              "afternoon",
+              "evening",
+              "usually",
+              "then"
+            ],
             "structure": "Morning + Afternoon + Evening"
           },
           "timing": {
