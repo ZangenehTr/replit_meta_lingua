@@ -269,8 +269,8 @@ export default function PlacementTestPage() {
       const timer = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
-            // Time's up - auto-submit test
-            if (currentSession && currentQuestion) {
+            // Time's up - auto-submit test ONLY if not actively recording
+            if (currentSession && currentQuestion && !isRecording) {
               console.log('Test time expired, auto-submitting...');
               submitResponseMutation.mutate({
                 sessionId: currentSession.id,
@@ -278,6 +278,9 @@ export default function PlacementTestPage() {
                 userResponse: userResponse || 'Time expired',
                 audioBlob: audioBlob
               });
+            } else if (isRecording) {
+              console.log('Test time expired but recording in progress, extending time by 2 minutes...');
+              return 120; // Give 2 more minutes when recording
             }
             return 0;
           }
