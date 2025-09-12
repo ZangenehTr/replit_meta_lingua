@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -737,6 +738,41 @@ export default function MSTPage() {
                             );
                           })}
                         </RadioGroup>
+                      )}
+                      {question.type === 'mcq_multi' && (
+                        <div className="space-y-2" data-testid={`checkboxgroup-q-${idx}`}>
+                          <p className="text-sm text-gray-600 mb-3">Select all that apply:</p>
+                          {question.options?.map((option: string, optIdx: number) => {
+                            const id = `q${idx}-opt${optIdx}`;
+                            const isChecked = currentResponse[idx] && Array.isArray(currentResponse[idx]) && currentResponse[idx].includes(optIdx);
+                            return (
+                              <div key={optIdx} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 min-h-[48px] touch-target">
+                                <Checkbox
+                                  id={id}
+                                  checked={isChecked}
+                                  onCheckedChange={(checked) => {
+                                    console.log('Checkbox selection changed:', idx, optIdx, checked);
+                                    const newResponse = Array.isArray(currentResponse) ? [...currentResponse] : new Array(currentItem.content.questions.length).fill([]);
+                                    let currentAnswers = Array.isArray(newResponse[idx]) ? [...newResponse[idx]] : [];
+                                    
+                                    if (checked) {
+                                      if (!currentAnswers.includes(optIdx)) {
+                                        currentAnswers.push(optIdx);
+                                      }
+                                    } else {
+                                      currentAnswers = currentAnswers.filter(a => a !== optIdx);
+                                    }
+                                    
+                                    newResponse[idx] = currentAnswers;
+                                    setCurrentResponse(newResponse);
+                                  }}
+                                  data-testid={`checkbox-q-${idx}-opt-${optIdx}`}
+                                />
+                                <Label htmlFor={id} className="cursor-pointer flex-1 leading-relaxed text-sm sm:text-base">{option}</Label>
+                              </div>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
                   ))}
