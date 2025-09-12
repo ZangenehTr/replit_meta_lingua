@@ -340,12 +340,12 @@ export default function PlacementTestPage() {
         const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
         console.log('Final audio blob size:', blob.size, 'bytes');
         
-        if (blob.size === 0 || blob.size < 1000) {
-          console.warn(`Small/empty audio blob detected (${blob.size} bytes), audio too short or quiet`);
+        if (blob.size === 0) {
+          console.warn(`Empty audio blob detected (${blob.size} bytes), recording failed`);
           
           toast({
-            title: 'Recording Too Short',
-            description: `Audio recording too short/quiet (${blob.size} bytes). Please speak louder and longer, or use the "Continue in Test Mode" button.`,
+            title: 'Recording Failed',
+            description: 'Recording failed to capture audio. Please try again or use the "Continue in Test Mode" button.',
             variant: 'destructive'
           });
           
