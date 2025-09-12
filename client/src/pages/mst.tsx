@@ -186,7 +186,7 @@ export default function MSTPage() {
           // Determine next stage based on routing  
           const nextStage: MSTStage = data.route === 'up' ? 'upper' : 'lower';
           setCurrentStage(nextStage);
-          fetchNextItem();
+          fetchNextItemWithStage(nextStage);
         } else {
           // Complete skill, advance to next
           advanceToNextSkill();
@@ -239,6 +239,29 @@ export default function MSTPage() {
     try {
       const currentSkill = status.session.skillOrder[currentSkillIndex];
       const stage = currentStage; // Use actual stage
+      
+      const response = await fetch(`/api/mst/item?skill=${currentSkill}&stage=${stage}&sessionId=${currentSession.sessionId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentItem(data.item);
+        startItemTimer(data.item.timing.maxAnswerSec);
+      }
+    } catch (error) {
+      console.error('Error fetching next item:', error);
+    }
+  };
+
+  // Fetch next item with specific stage (to avoid race conditions)
+  const fetchNextItemWithStage = async (stage: MSTStage) => {
+    if (!currentSession || !status) return;
+    
+    try {
+      const currentSkill = status.session.skillOrder[currentSkillIndex];
       
       const response = await fetch(`/api/mst/item?skill=${currentSkill}&stage=${stage}&sessionId=${currentSession.sessionId}`, {
         headers: {
