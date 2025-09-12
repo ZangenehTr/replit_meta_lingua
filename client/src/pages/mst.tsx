@@ -11,6 +11,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Clock, Mic, MicOff, Play, Pause, Volume2 } from 'lucide-react';
 
+// Force LTR styles for MST component
+const mstStyle = {
+  direction: 'ltr' as const,
+  textAlign: 'left' as const,
+};
+
 type MSTSkill = 'listening' | 'reading' | 'speaking' | 'writing';
 type MSTStage = 'S1' | 'S2';
 
@@ -450,7 +456,7 @@ export default function MSTPage() {
   // Render different test phases
   if (testPhase === 'intro') {
     return (
-      <div className="container mx-auto p-6 max-w-4xl" dir="ltr">
+      <div className="container mx-auto p-6 max-w-4xl mst-container" style={mstStyle}>
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center">MST Placement Test</CardTitle>
@@ -498,7 +504,7 @@ export default function MSTPage() {
 
   if (testPhase === 'completed') {
     return (
-      <div className="container mx-auto p-6 max-w-4xl" dir="ltr">
+      <div className="container mx-auto p-6 max-w-4xl mst-container" style={mstStyle}>
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl text-center">Test Completed</CardTitle>
@@ -517,7 +523,7 @@ export default function MSTPage() {
 
   // Main testing interface
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <div className="container mx-auto p-6 max-w-4xl mst-container" style={mstStyle}>
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
