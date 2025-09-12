@@ -351,7 +351,7 @@ export function SessionQuizTaker({ sessionId, onComplete }: SessionQuizTakerProp
           <h3 className="text-lg font-medium">{currentQuestion.question}</h3>
           
           {/* Render based on question type */}
-          {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
+          {currentQuestion.questionType === 'multiple_choice' && currentQuestion.options && (
             <RadioGroup value={currentAnswer as string} onValueChange={setCurrentAnswer}>
               <div className="space-y-3">
                 {currentQuestion.options.map((option, idx) => (
@@ -372,7 +372,7 @@ export function SessionQuizTaker({ sessionId, onComplete }: SessionQuizTakerProp
             </RadioGroup>
           )}
 
-          {currentQuestion.type === 'true_false' && (
+          {currentQuestion.questionType === 'true_false' && (
             <RadioGroup value={currentAnswer as string} onValueChange={setCurrentAnswer}>
               <div className="space-y-3">
                 <motion.div
@@ -396,7 +396,7 @@ export function SessionQuizTaker({ sessionId, onComplete }: SessionQuizTakerProp
             </RadioGroup>
           )}
 
-          {currentQuestion.type === 'fill_blank' && (
+          {currentQuestion.questionType === 'fill_blank' && (
             <Input
               value={currentAnswer as string}
               onChange={(e) => setCurrentAnswer(e.target.value)}
@@ -405,7 +405,7 @@ export function SessionQuizTaker({ sessionId, onComplete }: SessionQuizTakerProp
             />
           )}
 
-          {currentQuestion.type === 'short_answer' && (
+          {currentQuestion.questionType === 'short_answer' && (
             <Textarea
               value={currentAnswer as string}
               onChange={(e) => setCurrentAnswer(e.target.value)}
