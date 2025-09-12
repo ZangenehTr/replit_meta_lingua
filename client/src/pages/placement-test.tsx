@@ -23,14 +23,14 @@ interface PlacementTestSession {
 interface PlacementTestQuestion {
   id: number;
   skill: string;
-  level: string;
-  type: string;
+  cefrLevel: string;
+  questionType: string;
   title: string;
   prompt: string;
   content: any;
   responseType: 'audio' | 'text' | 'multiple_choice';
   expectedDurationSeconds: number;
-  estimatedMinutes: number;
+  estimatedCompletionMinutes: number;
 }
 
 interface PlacementTestResults {
@@ -372,14 +372,11 @@ export default function PlacementTestPage() {
           stream.getTracks().forEach(track => track.stop());
           
           // Don't auto-submit - let user decide when to submit
-          // (Removed aggressive auto-submit logic that was causing immediate submissions)
-          {
-            toast({
-              title: 'Recording Complete',
-              description: `Recorded ${blob.size} bytes of audio. You can now submit your answer.`,
-              variant: 'default'
-            });
-          }
+          toast({
+            title: 'Recording Complete',
+            description: `Recorded ${blob.size} bytes of audio. You can now submit your answer.`,
+            variant: 'default'
+          });
         }
       };
 
@@ -394,15 +391,18 @@ export default function PlacementTestPage() {
       setIsRecording(true);
       
       // Set recording timer
-      const duration = currentQuestion?.expectedDurationSeconds || 60;
+      const duration = currentQuestion?.expectedDurationSeconds || 120;
+      console.log('Setting recording duration:', duration, 'seconds');
+      console.log('Current question:', currentQuestion);
       setRecordingTimeLeft(duration);
       
       const timer = setInterval(() => {
         setRecordingTimeLeft(prev => {
+          console.log('Recording timer tick, prev:', prev);
           const newTime = prev - 1;
           if (newTime <= 0) {
             // Auto-stop when time reaches 0 but DON'T auto-submit
-            console.log('Recording time expired, auto-stopping...');
+            console.log('Recording time expired (prev was', prev, '), auto-stopping...');
             clearInterval(timer); // Clear the timer immediately
             setTimeout(() => stopRecording(), 100);
             return 0;
@@ -638,7 +638,7 @@ export default function PlacementTestPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold capitalize">{currentQuestion.skill} Assessment</h2>
-                  <p className="text-sm text-gray-600">Level: {currentQuestion.level} • {currentQuestion.type}</p>
+                  <p className="text-sm text-gray-600">Level: {currentQuestion.cefrLevel} • {currentQuestion.questionType}</p>
                 </div>
               </div>
               
@@ -817,7 +817,7 @@ export default function PlacementTestPage() {
 
               <div className="flex justify-between pt-4">
                 <div className="text-sm text-gray-500">
-                  Estimated time: {currentQuestion.estimatedMinutes} minutes
+                  Estimated time: {currentQuestion.estimatedCompletionMinutes} minutes
                 </div>
                 
                 <Button 

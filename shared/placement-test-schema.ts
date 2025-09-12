@@ -204,38 +204,17 @@ export const aiRoadmapTemplates = pgTable("ai_roadmap_templates", {
 });
 
 // Insert schemas
-export const insertPlacementTestSessionSchema = createInsertSchema(placementTestSessions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertPlacementTestSessionSchema = createInsertSchema(placementTestSessions);
 
-export const insertPlacementTestQuestionSchema = createInsertSchema(placementTestQuestions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertPlacementTestQuestionSchema = createInsertSchema(placementTestQuestions);
 
-export const insertPlacementTestResponseSchema = createInsertSchema(placementTestResponses).omit({
-  id: true,
-  createdAt: true
-});
+export const insertPlacementTestResponseSchema = createInsertSchema(placementTestResponses);
 
-export const insertCEFRDescriptorSchema = createInsertSchema(cefrDescriptors).omit({
-  id: true,
-  createdAt: true
-});
+export const insertCEFRDescriptorSchema = createInsertSchema(cefrDescriptors);
 
-export const insertAdaptiveTestAlgorithmSchema = createInsertSchema(adaptiveTestAlgorithms).omit({
-  id: true,
-  createdAt: true
-});
+export const insertAdaptiveTestAlgorithmSchema = createInsertSchema(adaptiveTestAlgorithms);
 
-export const insertAIRoadmapTemplateSchema = createInsertSchema(aiRoadmapTemplates).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertAIRoadmapTemplateSchema = createInsertSchema(aiRoadmapTemplates);
 
 // Type exports
 export type PlacementTestSession = typeof placementTestSessions.$inferSelect;
