@@ -4,6 +4,7 @@
  */
 
 import { Item, Skill, Stage, CEFRLevel } from '../schemas/itemSchema';
+import { getListeningResponseTime, getWritingCompositionTime } from '../utils/timers';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
@@ -167,7 +168,10 @@ export class MstItemsController {
             skill: 'listening',
             stage,
             cefr: level,
-            timing: { maxAnswerSec: 60, audioSec: 30 },
+            timing: { 
+              audioSec: 30, 
+              maxAnswerSec: getListeningResponseTime(level) // Level-specific response time AFTER audio
+            },
             metadata: { domain: 'general' },
             assets: {
               audio: '/assets/fallback/listening_sample.mp3',
@@ -223,12 +227,12 @@ export class MstItemsController {
             skill: 'writing',
             stage,
             cefr: level,
-            timing: { maxAnswerSec: 120 },
+            timing: { maxAnswerSec: getWritingCompositionTime(level) }, // Single question with adequate time
             metadata: { domain: 'general' },
             assets: {
               prompt: 'Do you think social media has a positive or negative impact on society? Give your opinion with reasons.',
-              minWords: 50,
-              maxWords: 150,
+              minWords: 100, // Increased for single comprehensive question
+              maxWords: 200,
               taskType: 'opinion'
             }
           } as any);
