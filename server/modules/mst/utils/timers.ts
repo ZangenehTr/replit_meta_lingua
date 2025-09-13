@@ -34,6 +34,22 @@ export function getListeningResponseTime(level: string): number {
 }
 
 /**
+ * Get level-specific speaking recording time
+ * Same pedagogically sound progression as listening response times
+ */
+export function getSpeakingRecordTime(level: string): number {
+  switch (level) {
+    case 'A1': return 90; // Beginners need more time to formulate responses
+    case 'A2': return 90; // Still building speaking confidence
+    case 'B1': return 60; // Intermediate level - more fluent responses
+    case 'B2': return 45; // Upper-intermediate - quicker responses
+    case 'C1': return 30; // Advanced - concise, fluent responses
+    case 'C2': return 30; // Proficient - rapid, sophisticated responses
+    default: return 60; // Default to B1 timing
+  }
+}
+
+/**
  * Get level-specific writing composition time
  */
 export function getWritingCompositionTime(level: string): number {

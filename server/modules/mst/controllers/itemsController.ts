@@ -4,7 +4,7 @@
  */
 
 import { Item, Skill, Stage, CEFRLevel } from '../schemas/itemSchema';
-import { getListeningResponseTime, getWritingCompositionTime } from '../utils/timers';
+import { getListeningResponseTime, getWritingCompositionTime, getSpeakingRecordTime } from '../utils/timers';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
@@ -212,7 +212,11 @@ export class MstItemsController {
             skill: 'speaking',
             stage,
             cefr: level,
-            timing: { prepSec: 10, recordSec: 45, maxAnswerSec: 55 },
+            timing: { 
+              prepSec: 10, 
+              recordSec: getSpeakingRecordTime(level), 
+              maxAnswerSec: 10 + getSpeakingRecordTime(level) 
+            },
             metadata: { domain: 'general' },
             assets: {
               prompt: 'Describe your favorite hobby and explain why you enjoy it.',
