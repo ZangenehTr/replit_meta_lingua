@@ -454,7 +454,115 @@ export function createPlacementTestRoutes(
     }
   });
 
+  // Generate roadmap from placement results
+  router.post('/sessions/:sessionId/generate-roadmap', authenticateToken, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const { learningGoals, timeAvailability, preferredPace, focusAreas } = req.body;
+      const userId = (req as any).user.id;
+
+      // Validate request body
+      if (!learningGoals || !Array.isArray(learningGoals) || learningGoals.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Learning goals are required'
+        });
+      }
+
+      if (!timeAvailability || !preferredPace) {
+        return res.status(400).json({
+          success: false,
+          error: 'Time availability and preferred pace are required'
+        });
+      }
+
+      // Get placement results for the session
+      const session = await storage.getPlacementTestSession(sessionId);
+      if (!session || session.userId !== userId) {
+        return res.status(404).json({
+          success: false,
+          error: 'Session not found or access denied'
+        });
+      }
+
+      if (session.status !== 'completed') {
+        return res.status(400).json({
+          success: false,
+          error: 'Complete placement test before generating roadmap'
+        });
+      }
+
+      // Generate roadmap based on placement results and user preferences
+      const roadmap = {
+        id: Date.now(), // Simple ID generation
+        title: `Personalized ${session.overallCEFRLevel || 'B1'} Learning Path`,
+        description: `A customized roadmap to help you achieve your language learning goals at ${session.overallCEFRLevel || 'B1'} level`,
+        estimatedWeeks: timeAvailability >= 10 ? 12 : timeAvailability >= 5 ? 16 : 20,
+        weeklyHours: timeAvailability,
+        currentLevel: session.overallCEFRLevel || 'B1',
+        targetLevel: getTargetLevel(session.overallCEFRLevel || 'B1'),
+        milestones: generateMilestones(session.overallCEFRLevel || 'B1', learningGoals, preferredPace),
+        personalizedRecommendations: generateRecommendations(session, learningGoals, focusAreas || [])
+      };
+
+      console.log(`🎯 Generated roadmap for session ${sessionId}: ${roadmap.title}`);
+
+      res.json({
+        success: true,
+        roadmap
+      });
+    } catch (error) {
+      console.error('❌ Error generating roadmap:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate roadmap'
+      });
+    }
+  });
+
   return router;
+
+// Helper functions for roadmap generation
+function getTargetLevel(currentLevel: string): string {
+  const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  const currentIndex = levels.indexOf(currentLevel);
+  return currentIndex < levels.length - 1 ? levels[currentIndex + 1] : 'C2';
+}
+
+function generateMilestones(level: string, goals: string[], pace: string) {
+  const baseMilestones = [
+    { title: 'Foundation Building', description: 'Master basic vocabulary and grammar structures', weekEstimate: pace === 'fast' ? 2 : pace === 'normal' ? 3 : 4 },
+    { title: 'Practical Communication', description: 'Develop conversational skills for daily situations', weekEstimate: pace === 'fast' ? 3 : pace === 'normal' ? 4 : 6 },
+    { title: 'Fluency Development', description: 'Enhance speaking confidence and natural expression', weekEstimate: pace === 'fast' ? 4 : pace === 'normal' ? 6 : 8 },
+    { title: 'Advanced Proficiency', description: 'Achieve your target level with comprehensive skills', weekEstimate: pace === 'fast' ? 3 : pace === 'normal' ? 3 : 4 }
+  ];
+
+  return baseMilestones.map((milestone, index) => ({
+    ...milestone,
+    id: index + 1,
+    completed: false,
+    skills: goals.slice(0, 2) // Focus on top goals
+  }));
+}
+
+function generateRecommendations(session: any, goals: string[], focusAreas: string[]) {
+  const recommendations = [
+    `Start with ${session.overallCEFRLevel || 'B1'} level materials to build confidence`,
+    'Practice speaking daily for at least 15 minutes',
+    'Use spaced repetition for vocabulary learning'
+  ];
+
+  if (goals.includes('business')) {
+    recommendations.push('Focus on business English vocabulary and formal communication');
+  }
+  if (goals.includes('travel')) {
+    recommendations.push('Learn practical phrases for travel situations');
+  }
+  if (focusAreas.includes('pronunciation')) {
+    recommendations.push('Use pronunciation apps and record yourself speaking');
+  }
+
+  return recommendations;
 }
 
 export default createPlacementTestRoutes;

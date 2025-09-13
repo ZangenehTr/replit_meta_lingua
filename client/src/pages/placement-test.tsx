@@ -123,8 +123,17 @@ export default function PlacementTestPage() {
   });
 
   // Submit response mutation
+  const [submittingQuestionId, setSubmittingQuestionId] = useState<number | null>(null);
+
   const submitResponseMutation = useMutation({
     mutationFn: async (data: { sessionId: number; questionId: number; userResponse: any; audioBlob?: Blob }) => {
+      // Prevent duplicate submissions
+      if (submittingQuestionId === data.questionId) {
+        console.log('⚠️ Duplicate submission prevented for question:', data.questionId);
+        return {};
+      }
+      
+      setSubmittingQuestionId(data.questionId);
       let response;
       
       if (data.audioBlob) {
@@ -170,6 +179,10 @@ export default function PlacementTestPage() {
       }
       
       return response.json();
+    },
+    onSettled: () => {
+      // Clear the submitting flag when done
+      setSubmittingQuestionId(null);
     },
     onSuccess: (data) => {
       console.log('Response submitted successfully:', data);
@@ -279,8 +292,8 @@ export default function PlacementTestPage() {
                 audioBlob: audioBlob
               });
             } else if (isRecording) {
-              console.log('Test time expired but recording in progress, extending time by 2 minutes...');
-              return 120; // Give 2 more minutes when recording
+              console.log('Test time expired but recording in progress, extending time by 1 minute...');
+              return 60; // Give 1 more minute when recording
             }
             return 0;
           }

@@ -317,23 +317,20 @@ router.post('/skill-complete', authenticateToken, async (req, res) => {
     if (route === 'up') {
       finalStage = 'upper';
     } else if (route === 'down') {
-      // Check if we're already at the lowest stage
-      if (currentStage === 'lower') {
-        // Can't go lower than 'lower' stage (A1 level), so stay at core level
-        finalStage = 'core';
-        console.log(`⚠️  Cannot route down from lowest stage (${currentStage}), staying at core`);
-      } else {
-        finalStage = 'lower';
-      }
+      // Allow routing to lower stage for A1-A2 levels
+      finalStage = 'lower';
     } else {
       finalStage = 'core';
     }
     
     const finalScore = stage2Score || stage1Score;
     
-    // Calculate band and confidence
-    const band = determineFinalBand(finalStage, finalScore / 100, 'B1');
+    // Calculate band and confidence - finalScore is already normalized 0-100
+    const normalizedScore = finalScore / 100; // Convert to 0-1 range
+    const band = determineFinalBand(finalStage, normalizedScore, 'B1');
     const confidence = Math.min(1.0, finalScore / 80); // Simple confidence calculation
+    
+    console.log(`🎯 MST Final Band Calculation: stage=${finalStage}, score=${finalScore}, normalized=${normalizedScore}, band=${band}`);
 
     // Create skill result
     const skillResult: SkillResult = {

@@ -12,10 +12,10 @@ export interface TimingConfig {
 }
 
 export const DEFAULT_TIMING: TimingConfig = {
-  globalPerSkillSec: 150, // 2.5 minutes per skill
+  globalPerSkillSec: 90, // 1.5 minutes per skill (more reasonable)
   listeningAudioMaxSec: 40,
   readingPassageWords: { min: 80, max: 180 },
-  speakingRecordSec: { min: 30, max: 40 },
+  speakingRecordSec: { min: 60, max: 60 }, // 1 minute for speaking (not 2 minutes)
   writingComposeSec: { min: 80, max: 90 },
 };
 
