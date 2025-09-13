@@ -184,7 +184,11 @@ export default function MSTPage() {
     onSuccess: (data) => {
       // Handle routing decision and fetch next item
       if (data.success) {
-        if (currentStage === 'core') {
+        // CRITICAL: Writing skill should always advance to next skill after first response
+        if (currentItem?.skill === 'writing') {
+          console.log('🎯 Writing completed - advancing to next skill (writing uses only ONE question)');
+          advanceToNextSkill();
+        } else if (currentStage === 'core') {
           // Check if we're at A1 level and trying to route down
           const isA1Level = currentItem?.cefr === 'A1';
           const routingDown = data.route === 'down';
