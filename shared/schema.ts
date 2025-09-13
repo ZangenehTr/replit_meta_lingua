@@ -97,7 +97,7 @@ export const mstSkillStates = pgTable("mst_skill_states", {
   skill: text("skill").notNull(), // listening, reading, speaking, writing
   currentStage: text("current_stage").notNull().default("S1"), // S1, S2
   timeSpentSec: integer("time_spent_sec").default(0),
-  timeBudgetSec: integer("time_budget_sec").default(150), // 2.5 minutes per skill
+  timeBudgetSec: integer("time_budget_sec").default(60), // 1 minute for speaking, can be adjusted per skill
   itemsAsked: text("items_asked").array().default([]),
   s1Score: integer("s1_score"), // 0-100
   s1Route: text("s1_route"), // up, down, stay

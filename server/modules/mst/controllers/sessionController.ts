@@ -25,7 +25,7 @@ export class MstSessionController {
     
     // Default skill order (can be randomized later)
     const skillOrder = ['listening', 'reading', 'speaking', 'writing'];
-    const perSkillSeconds = 150; // 2.5 minutes per skill
+    const perSkillSeconds = 60; // 1 minute for speaking (first question), adjustable per skill
     
     const session: MstSession = {
       sessionId,

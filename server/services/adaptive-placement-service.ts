@@ -404,15 +404,15 @@ export class AdaptivePlacementService {
       } else {
         reasoning = `Stable performance at ${nextLevel} - confirming level`;
       }
-    } else if (metrics.averageScore >= 60 && metrics.improvementTrend > 0.1) {
-      // Improving performance - give another chance at current level
+    } else if (metrics.averageScore >= 55) {
+      // Moderate performance - stay at current level to confirm
       nextLevel = skillState.currentLevel;
-      reasoning = `Improving performance (trend: +${(metrics.improvementTrend * 100).toFixed(1)}) - continuing at ${nextLevel}`;
-    } else if (metrics.averageScore < 60 && currentIndex > 0) {
-      // Poor performance - move down
+      reasoning = `Moderate performance (avg: ${metrics.averageScore.toFixed(1)}) - staying at ${nextLevel} to confirm level`;
+    } else if (metrics.averageScore < 45 && currentIndex > 0) {
+      // Poor performance - move down (lowered threshold from 60 to 45)
       nextLevel = CEFRLevels[Math.max(currentIndex - 1, 0)];
       reasoning = `Performance below threshold (avg: ${metrics.averageScore.toFixed(1)}) - adjusting to ${nextLevel}`;
-    } else if (metrics.averageScore < 50 && skillState.questionsAsked >= 2) {
+    } else if (metrics.averageScore < 35 && skillState.questionsAsked >= 2) {
       // Very poor performance - might stop early
       if (currentIndex === 0) {
         shouldContinue = false;
@@ -894,7 +894,7 @@ export class AdaptivePlacementService {
     else if (avgScore >= 80) level = 'C1';
     else if (avgScore >= 70) level = 'B2';
     else if (avgScore >= 60) level = 'B1';
-    else if (avgScore >= 50) level = 'A2';
+    else if (avgScore >= 40) level = 'A2';
     else level = 'A1';
 
     return {
