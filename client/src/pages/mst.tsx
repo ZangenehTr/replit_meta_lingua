@@ -85,6 +85,14 @@ export default function MSTPage() {
   const [testResults, setTestResults] = useState<any>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
+  
+  // TOEFL Speaking Flow States
+  const [speakingPhase, setSpeakingPhase] = useState<'narration' | 'preparation' | 'recording' | 'completed'>('narration');
+  const [prepTimer, setPrepTimer] = useState(0);
+  const [prepTimeDisplay, setPrepTimeDisplay] = useState('00:15');
+  
+  // Score tracking for proper skill completion
+  const [skillScores, setSkillScores] = useState<{[skill: string]: {stage1Score?: number, stage2Score?: number, route?: string}}>({});
 
   // Start MST session
   const startSessionMutation = useMutation({
@@ -183,9 +191,23 @@ export default function MSTPage() {
     },
     onSuccess: (data) => {
       // Handle routing decision and fetch next item
-      if (data.success) {
+      if (data.success && currentItem) {
+        // CRITICAL: Store score for this stage
+        const skillKey = currentItem.skill;
+        const currentScores = skillScores[skillKey] || {};
+        
+        if (currentStage === 'core') {
+          currentScores.stage1Score = Math.round(data.p * 100);
+          currentScores.route = data.route;
+        } else {
+          currentScores.stage2Score = Math.round(data.p * 100);
+        }
+        
+        setSkillScores(prev => ({...prev, [skillKey]: currentScores}));
+        console.log(`📊 Stored score for ${skillKey} ${currentStage}:`, currentScores);
+        
         // CRITICAL: Writing skill should always advance to next skill after first response
-        if (currentItem?.skill === 'writing') {
+        if (currentItem.skill === 'writing') {
           console.log('🎯 Writing completed - advancing to next skill (writing uses only ONE question)');
           advanceToNextSkill();
         } else if (currentStage === 'core') {
@@ -245,8 +267,9 @@ export default function MSTPage() {
         if (data.item.skill === 'listening') {
           console.log('Waiting for audio to end before starting timer for listening question');
         } else if (data.item.skill === 'speaking') {
-          console.log('Starting speaking timer with recordSec:', data.item.timing.recordSec);
-          startItemTimer(data.item.timing.recordSec || data.item.timing.maxAnswerSec);
+          console.log('🎙️ Starting TOEFL speaking flow - narration phase');
+          setSpeakingPhase('narration');
+          // No timer yet - will start after narration ends
         } else if (data.item.skill === 'writing') {
           console.log('Starting writing timer with 5 minutes (300s)');
           startItemTimer(300); // 5 minutes for writing
@@ -281,8 +304,9 @@ export default function MSTPage() {
         if (data.item.skill === 'listening') {
           console.log('Waiting for audio to end before starting timer for listening question');
         } else if (data.item.skill === 'speaking') {
-          console.log('Starting speaking timer with recordSec:', data.item.timing.recordSec);
-          startItemTimer(data.item.timing.recordSec || data.item.timing.maxAnswerSec);
+          console.log('🎙️ Starting TOEFL speaking flow - narration phase');
+          setSpeakingPhase('narration');
+          // No timer yet - will start after narration ends
         } else if (data.item.skill === 'writing') {
           console.log('Starting writing timer with 5 minutes (300s)');
           startItemTimer(300); // 5 minutes for writing
@@ -316,8 +340,9 @@ export default function MSTPage() {
         if (data.item.skill === 'listening') {
           console.log('Waiting for audio to end before starting timer for listening question');
         } else if (data.item.skill === 'speaking') {
-          console.log('Starting speaking timer with recordSec:', data.item.timing.recordSec);
-          startItemTimer(data.item.timing.recordSec || data.item.timing.maxAnswerSec);
+          console.log('🎙️ Starting TOEFL speaking flow - narration phase');
+          setSpeakingPhase('narration');
+          // No timer yet - will start after narration ends
         } else if (data.item.skill === 'writing') {
           console.log('Starting writing timer with 5 minutes (300s)');
           startItemTimer(300); // 5 minutes for writing
@@ -352,8 +377,9 @@ export default function MSTPage() {
         if (data.item.skill === 'listening') {
           console.log('Waiting for audio to end before starting timer for listening question');
         } else if (data.item.skill === 'speaking') {
-          console.log('Starting speaking timer with recordSec:', data.item.timing.recordSec);
-          startItemTimer(data.item.timing.recordSec || data.item.timing.maxAnswerSec);
+          console.log('🎙️ Starting TOEFL speaking flow - narration phase');
+          setSpeakingPhase('narration');
+          // No timer yet - will start after narration ends
         } else if (data.item.skill === 'writing') {
           console.log('Starting writing timer with 5 minutes (300s)');
           startItemTimer(300); // 5 minutes for writing
@@ -368,8 +394,42 @@ export default function MSTPage() {
   };
 
   // Advance to next skill
-  const advanceToNextSkill = () => {
+  const advanceToNextSkill = async () => {
     if (!currentSession || !status) return;
+    
+    // CRITICAL: Complete current skill and store results before advancing
+    try {
+      const currentSkill = status.session.skillOrder[currentSkillIndex];
+      
+      // Send skill completion with REAL scores from responses
+      const scores = skillScores[currentSkill] || {};
+      console.log(`🎯 Completing skill ${currentSkill} with real scores:`, scores);
+      
+      const skillCompleteResponse = await fetch('/api/mst/skill-complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          sessionId: currentSession.sessionId,
+          skill: currentSkill,
+          stage1Score: scores.stage1Score || 50, // Use real score or fallback
+          stage2Score: scores.stage2Score || scores.stage1Score || 50, // Use stage2 or stage1 as fallback
+          route: scores.route || 'stay', // Use real routing decision
+          timeSpentSec: 60
+        })
+      });
+      
+      if (skillCompleteResponse.ok) {
+        const skillData = await skillCompleteResponse.json();
+        console.log(`✅ Skill ${currentSkill} completed successfully:`, skillData);
+      } else {
+        console.error('❌ Failed to complete skill:', currentSkill);
+      }
+    } catch (error) {
+      console.error('❌ Error completing skill:', error);
+    }
     
     const nextSkillIndex = currentSkillIndex + 1;
     
@@ -487,6 +547,64 @@ export default function MSTPage() {
     }
   };
 
+  // TOEFL Speaking Flow Functions
+  const startPreparationTimer = () => {
+    setPrepTimer(15);
+    setPrepTimeDisplay('00:15');
+    
+    const interval = setInterval(() => {
+      setPrepTimer(prev => {
+        const newTime = prev - 1;
+        setPrepTimeDisplay(`00:${newTime.toString().padStart(2, '0')}`);
+        
+        if (newTime <= 0) {
+          clearInterval(interval);
+          // Play beep and start recording
+          playBeepAndStartRecording();
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+  };
+
+  const playBeepAndStartRecording = async () => {
+    setSpeakingPhase('recording');
+    
+    // Play beep sound
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800; // 800Hz beep
+      gainNode.gain.value = 0.3;
+      
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.2); // 200ms beep
+      
+      // Start recording after beep
+      setTimeout(() => {
+        startRecording();
+        // Auto-stop recording after 60 seconds
+        setTimeout(() => {
+          if (isRecording) {
+            stopRecording();
+            setSpeakingPhase('completed');
+          }
+        }, 60000); // 60 seconds
+      }, 300);
+      
+    } catch (error) {
+      console.error('Beep sound failed:', error);
+      // Start recording anyway
+      startRecording();
+    }
+  };
+
   // Audio playback for listening items
   const playAudio = async () => {
     if (!currentItem?.content?.assets?.audio) {
@@ -521,6 +639,10 @@ export default function MSTPage() {
           if (currentItem?.skill === 'listening') {
             console.log('Audio ended - starting listening timer:', currentItem.timing.maxAnswerSec);
             startItemTimer(currentItem.timing.maxAnswerSec);
+          } else if (currentItem?.skill === 'speaking') {
+            console.log('🎙️ Speaking narration ended - starting 15s preparation');
+            setSpeakingPhase('preparation');
+            startPreparationTimer();
           }
         });
         
@@ -988,7 +1110,7 @@ export default function MSTPage() {
                 </div>
               )}
 
-              {/* Speaking Items */}
+              {/* Speaking Items - TOEFL Style */}
               {currentItem.skill === 'speaking' && (
                 <div className="space-y-4">
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
@@ -1003,23 +1125,61 @@ export default function MSTPage() {
                   </div>
                   
                   <div className="text-center space-y-4">
-                    <div className="flex justify-center items-center gap-4">
-                      <Button
-                        onClick={isRecording ? stopRecording : startRecording}
-                        variant={isRecording ? 'destructive' : 'default'}
-                        size="lg"
-                        className="w-full sm:w-auto min-h-[52px] text-base font-medium touch-target"
-                        data-testid="button-record"
-                      >
-                        {isRecording ? <MicOff className="w-5 h-5 mr-2" /> : <Mic className="w-5 h-5 mr-2" />}
-                        {isRecording ? 'Stop Recording' : 'Start Recording'}
-                      </Button>
-                    </div>
+                    {/* TOEFL Speaking Phase Display */}
+                    {speakingPhase === 'narration' && (
+                      <div className="space-y-3">
+                        <div className="text-lg font-semibold text-blue-600">🎧 Listen to the question</div>
+                        <p className="text-sm text-gray-600">The question is being read to you...</p>
+                        {currentItem.content.assets?.audio && (
+                          <Button
+                            onClick={playAudio}
+                            disabled={isAudioPlaying}
+                            size="lg"
+                            className="w-full sm:w-auto min-h-[52px] text-base font-medium touch-target"
+                            data-testid="button-play-narration"
+                          >
+                            {isAudioPlaying ? <Volume2 className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
+                            {isAudioPlaying ? 'Playing Question...' : 'Play Question'}
+                          </Button>
+                        )}
+                      </div>
+                    )}
                     
-                    {recordingBlob && (
-                      <p className="text-sm text-green-600" data-testid="text-recording-ready">
-                        Recording ready for submission
-                      </p>
+                    {speakingPhase === 'preparation' && (
+                      <div className="space-y-3">
+                        <div className="text-lg font-semibold text-orange-600">⏰ Preparation Time</div>
+                        <div className="text-4xl font-mono font-bold text-orange-600">{prepTimeDisplay}</div>
+                        <p className="text-sm text-gray-600">Think about your response. Recording will start automatically.</p>
+                      </div>
+                    )}
+                    
+                    {speakingPhase === 'recording' && (
+                      <div className="space-y-3">
+                        <div className="text-lg font-semibold text-red-600">🎙️ Recording (60 seconds)</div>
+                        <div className="flex justify-center">
+                          <div className="animate-pulse bg-red-500 rounded-full w-6 h-6"></div>
+                        </div>
+                        <p className="text-sm text-gray-600">Speak clearly. Recording will stop automatically after 60 seconds.</p>
+                        <Button
+                          onClick={stopRecording}
+                          variant="destructive"
+                          size="lg"
+                          className="w-full sm:w-auto min-h-[52px] text-base font-medium touch-target"
+                          data-testid="button-stop-recording"
+                        >
+                          <MicOff className="w-5 h-5 mr-2" />
+                          Stop Recording Early
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {speakingPhase === 'completed' && recordingBlob && (
+                      <div className="space-y-3">
+                        <div className="text-lg font-semibold text-green-600">✅ Recording Complete</div>
+                        <p className="text-sm text-green-600" data-testid="text-recording-ready">
+                          Recording ready for submission
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
