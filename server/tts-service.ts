@@ -219,8 +219,9 @@ export class MetaLinguaTTSService {
         const ratePercent = Math.round((speed - 1.0) * 50); // Convert to percentage
         const rateParam = ratePercent >= 0 ? `+${ratePercent}%` : `${ratePercent}%`;
 
-        // Use edge-tts Python command with rate adjustment
-        const process = spawn('edge-tts', [
+        // Use edge-tts Python command with rate adjustment (full path to ensure it's found)
+        const edgeTtsPath = '/home/runner/workspace/.pythonlibs/bin/edge-tts';
+        const process = spawn(edgeTtsPath, [
           '--voice', voice,
           '--rate', rateParam,
           '--text', text,

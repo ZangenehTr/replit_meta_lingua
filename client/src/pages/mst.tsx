@@ -225,22 +225,13 @@ export default function MSTPage() {
             console.log('⚠️ Writing already completed, skipping duplicate advancement');
           }
         } else if (currentStage === 'core') {
-          // Check if we're at A1 level and trying to route down
-          const isA1Level = currentItem?.cefr === 'A1';
-          const routingDown = data.route === 'down';
-          
-          if (isA1Level && routingDown) {
-            // Can't go below A1, so complete skill immediately with A0/pre-A1 classification
-            console.log('⚠️ At A1 level routing down - completing skill with A0/pre-A1 classification');
-            advanceToNextSkill();
-          } else {
-            // Normal routing logic
-            const nextStage: MSTStage = data.route === 'up' ? 'upper' 
-              : data.route === 'stay' ? 'upper' 
-              : 'lower';
-            setCurrentStage(nextStage);
-            fetchNextItemWithStage(nextStage);
-          }
+          // FIXED: Removed A1 auto-skip logic to ensure all learners can attempt both questions
+          // Normal routing logic for all levels
+          const nextStage: MSTStage = data.route === 'up' ? 'upper' 
+            : data.route === 'stay' ? 'upper' 
+            : 'lower';
+          setCurrentStage(nextStage);
+          fetchNextItemWithStage(nextStage);
         } else {
           // Complete skill, advance to next
           advanceToNextSkill();
