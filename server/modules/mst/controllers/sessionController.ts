@@ -4,12 +4,12 @@
  */
 
 import { MstSession, MstResult, SkillResult } from '../schemas/resultSchema';
-import { MstSessionTimer } from '../utils/timers';
+import { SessionTimer, createSessionTimer, getSessionRemainingTime, isSessionTimeUp } from '../utils/timers';
 import { calculateOverallLevel } from '../routing/router';
 
 export class MstSessionController {
   private sessions: Map<string, MstSession> = new Map();
-  private timers: Map<string, MstSessionTimer> = new Map();
+  private timers: Map<string, SessionTimer> = new Map();
   private skillResults: Map<string, SkillResult[]> = new Map();
   private sessionItems: Map<string, Map<string, any>> = new Map(); // sessionId -> itemKey -> item
 
@@ -37,7 +37,7 @@ export class MstSessionController {
     };
     
     this.sessions.set(sessionId, session);
-    this.timers.set(sessionId, new MstSessionTimer());
+    this.timers.set(sessionId, createSessionTimer());
     this.skillResults.set(sessionId, []);
     this.sessionItems.set(sessionId, new Map());
     
@@ -70,8 +70,26 @@ export class MstSessionController {
   /**
    * Get session timer
    */
-  getTimer(sessionId: string): MstSessionTimer | null {
+  getTimer(sessionId: string): SessionTimer | null {
     return this.timers.get(sessionId) || null;
+  }
+
+  /**
+   * Get session remaining time
+   */
+  getSessionRemainingTime(sessionId: string): number {
+    const timer = this.timers.get(sessionId);
+    if (!timer) return 0;
+    return getSessionRemainingTime(timer);
+  }
+
+  /**
+   * Check if session time is up
+   */
+  isSessionTimeUp(sessionId: string): boolean {
+    const timer = this.timers.get(sessionId);
+    if (!timer) return true;
+    return isSessionTimeUp(timer);
   }
 
   /**
@@ -100,17 +118,12 @@ export class MstSessionController {
     if (!timer || !session) return false;
     
     // Check global timeout
-    if (timer.isSessionTimeUp()) {
+    if (isSessionTimeUp(timer)) {
       return true;
     }
     
-    // Check current skill timeout
-    if (session.currentSkill) {
-      const skillTimer = timer.getSkillTimer(session.currentSkill);
-      if (skillTimer && skillTimer.isTimeUp()) {
-        return true;
-      }
-    }
+    // Skill-specific timing is now handled per question
+    // Auto-advance logic simplified
     
     return false;
   }
@@ -164,7 +177,7 @@ export class MstSessionController {
       overallBand,
       overallConfidence,
       skills: skillResults,
-      totalTimeMin: timer.getTotalElapsedTime() / 60,
+      totalTimeMin: getSessionElapsedTime(timer) / 60,
       completedAt: new Date(),
       recommendations: this.generateRecommendations(skillResults)
     };

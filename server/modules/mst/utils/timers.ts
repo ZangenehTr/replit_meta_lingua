@@ -1,161 +1,115 @@
 /**
  * MST Timing Utilities
- * Strict timing guards and auto-advance logic
+ * Level-specific timing for academic validity
  */
 
 export interface TimingConfig {
-  globalPerSkillSec: number; // 150s (2.5 minutes)
-  listeningAudioMaxSec: number; // 40s
-  readingPassageWords: { min: number; max: number }; // 80-180 words
-  speakingRecordSec: { min: number; max: number }; // 30-40s
-  writingComposeSec: { min: number; max: number }; // 80-90s
+  listeningAudioMaxSec: number;
+  readingPassageWords: { min: number; max: number };
+  speakingRecordSec: { min: number; max: number };
+  writingComposeSec: { min: number; max: number };
 }
 
 export const DEFAULT_TIMING: TimingConfig = {
-  globalPerSkillSec: 90, // 1.5 minutes per skill (more reasonable)
   listeningAudioMaxSec: 40,
   readingPassageWords: { min: 80, max: 180 },
-  speakingRecordSec: { min: 60, max: 60 }, // 1 minute for speaking (not 2 minutes)
-  writingComposeSec: { min: 80, max: 90 },
+  speakingRecordSec: { min: 60, max: 60 },
+  writingComposeSec: { min: 180, max: 240 }, // Single question with 3-4 minutes
 };
 
 /**
- * Timer class for tracking skill-specific time limits
+ * Get level-specific listening response time (after audio ends)
  */
-export class SkillTimer {
-  private startTime: number;
-  private timeLimit: number;
-  private callbacks: Array<() => void> = [];
-
-  constructor(timeLimitSec: number) {
-    this.timeLimit = timeLimitSec * 1000; // Convert to milliseconds
-    this.startTime = Date.now();
-  }
-
-  /**
-   * Get remaining time in seconds
-   */
-  getRemainingTime(): number {
-    const elapsed = Date.now() - this.startTime;
-    const remaining = Math.max(0, this.timeLimit - elapsed);
-    return Math.floor(remaining / 1000);
-  }
-
-  /**
-   * Check if time is up
-   */
-  isTimeUp(): boolean {
-    return this.getRemainingTime() <= 0;
-  }
-
-  /**
-   * Get elapsed time in seconds
-   */
-  getElapsedTime(): number {
-    return Math.floor((Date.now() - this.startTime) / 1000);
-  }
-
-  /**
-   * Add callback for when time runs out
-   */
-  onTimeUp(callback: () => void): void {
-    this.callbacks.push(callback);
-    
-    // Set timeout for remaining time
-    const remaining = this.getRemainingTime();
-    if (remaining > 0) {
-      setTimeout(() => {
-        if (this.isTimeUp()) {
-          this.callbacks.forEach(cb => cb());
-        }
-      }, remaining * 1000);
-    } else {
-      // Time is already up
-      callback();
-    }
-  }
-
-  /**
-   * Reset timer
-   */
-  reset(newTimeLimitSec?: number): void {
-    this.startTime = Date.now();
-    if (newTimeLimitSec) {
-      this.timeLimit = newTimeLimitSec * 1000;
-    }
-    this.callbacks = [];
+export function getListeningResponseTime(level: string): number {
+  switch (level) {
+    case 'A1': return 45;
+    case 'A2': return 60;
+    case 'B1': return 90;
+    case 'B2': return 90;
+    case 'C1': return 20;
+    case 'C2': return 20;
+    default: return 60; // Default to A2 timing
   }
 }
 
 /**
- * Global MST session timer (10-minute total)
+ * Get level-specific writing composition time
  */
-export class MstSessionTimer {
-  private startTime: number;
-  private readonly totalTimeLimit = 10 * 60 * 1000; // 10 minutes
-  private skillTimers: Map<string, SkillTimer> = new Map();
-
-  constructor() {
-    this.startTime = Date.now();
-  }
-
-  /**
-   * Create timer for specific skill
-   */
-  createSkillTimer(skill: string, timeLimitSec: number = 150): SkillTimer {
-    const timer = new SkillTimer(timeLimitSec);
-    this.skillTimers.set(skill, timer);
-    return timer;
-  }
-
-  /**
-   * Get skill timer
-   */
-  getSkillTimer(skill: string): SkillTimer | undefined {
-    return this.skillTimers.get(skill);
-  }
-
-  /**
-   * Get total elapsed time
-   */
-  getTotalElapsedTime(): number {
-    return Math.floor((Date.now() - this.startTime) / 1000);
-  }
-
-  /**
-   * Get total remaining time
-   */
-  getTotalRemainingTime(): number {
-    const elapsed = Date.now() - this.startTime;
-    const remaining = Math.max(0, this.totalTimeLimit - elapsed);
-    return Math.floor(remaining / 1000);
-  }
-
-  /**
-   * Check if total session time is up
-   */
-  isSessionTimeUp(): boolean {
-    return this.getTotalRemainingTime() <= 0;
-  }
-
-  /**
-   * Force timeout all skills if session time is up
-   */
-  enforceGlobalTimeout(): boolean {
-    if (this.isSessionTimeUp()) {
-      // Auto-advance all remaining skills
-      return true;
-    }
-    return false;
-  }
+export function getWritingCompositionTime(level: string): number {
+  // Single comprehensive writing question with adequate time
+  return 240; // 4 minutes for all levels - single question approach
 }
 
 /**
- * Validate item timing against stage requirements
+ * Simple timer utilities for placement test
+ */
+export interface TimerState {
+  startTime: number;
+  timeLimit: number;
+  isActive: boolean;
+}
+
+export function createTimer(timeLimitSec: number): TimerState {
+  return {
+    startTime: Date.now(),
+    timeLimit: timeLimitSec * 1000,
+    isActive: true
+  };
+}
+
+export function getRemainingTime(timer: TimerState): number {
+  if (!timer.isActive) return 0;
+  const elapsed = Date.now() - timer.startTime;
+  const remaining = Math.max(0, timer.timeLimit - elapsed);
+  return Math.floor(remaining / 1000);
+}
+
+export function isTimeUp(timer: TimerState): boolean {
+  return getRemainingTime(timer) <= 0;
+}
+
+export function getElapsedTime(timer: TimerState): number {
+  return Math.floor((Date.now() - timer.startTime) / 1000);
+}
+
+export function stopTimer(timer: TimerState): void {
+  timer.isActive = false;
+}
+
+/**
+ * Session timer for overall placement test
+ */
+export interface SessionTimer {
+  startTime: number;
+  totalTimeLimit: number;
+}
+
+export function createSessionTimer(): SessionTimer {
+  return {
+    startTime: Date.now(),
+    totalTimeLimit: 10 * 60 * 1000 // 10 minutes total
+  };
+}
+
+export function getSessionElapsedTime(sessionTimer: SessionTimer): number {
+  return Math.floor((Date.now() - sessionTimer.startTime) / 1000);
+}
+
+export function getSessionRemainingTime(sessionTimer: SessionTimer): number {
+  const elapsed = Date.now() - sessionTimer.startTime;
+  const remaining = Math.max(0, sessionTimer.totalTimeLimit - elapsed);
+  return Math.floor(remaining / 1000);
+}
+
+export function isSessionTimeUp(sessionTimer: SessionTimer): boolean {
+  return getSessionRemainingTime(sessionTimer) <= 0;
+}
+
+/**
+ * Validate item timing against requirements
  */
 export function validateItemTiming(
   skill: string,
-  stage: 'core' | 'upper' | 'lower',
   timing: any
 ): boolean {
   const config = DEFAULT_TIMING;
@@ -165,8 +119,7 @@ export function validateItemTiming(
       return timing.audioSec <= config.listeningAudioMaxSec;
     
     case 'reading':
-      // Validate passage length is reasonable for timing
-      return timing.maxAnswerSec <= config.globalPerSkillSec;
+      return timing.maxAnswerSec > 0 && timing.maxAnswerSec <= 180;
     
     case 'speaking':
       return timing.recordSec >= config.speakingRecordSec.min &&
