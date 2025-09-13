@@ -18,6 +18,10 @@ const mstStyle = {
   textAlign: 'left' as const,
 };
 
+// Speaking flow constants
+const PREP_SEC = 15;
+const RECORD_SEC = 60;
+
 type MSTSkill = 'listening' | 'reading' | 'speaking' | 'writing';
 type MSTStage = 'core' | 'upper' | 'lower';
 
@@ -88,10 +92,14 @@ export default function MSTPage() {
   
   // TOEFL Speaking Flow States
   const [speakingPhase, setSpeakingPhase] = useState<'narration' | 'preparation' | 'recording' | 'completed'>('narration');
-  const [prepTimer, setPrepTimer] = useState(0);
+  const [prepTimer, setPrepTimer] = useState(PREP_SEC);
+  const [recordTimer, setRecordTimer] = useState(RECORD_SEC);
   const [prepTimeDisplay, setPrepTimeDisplay] = useState('00:15');
+  const [recordTimeDisplay, setRecordTimeDisplay] = useState('01:00');
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   const [narrationPlayButton, setNarrationPlayButton] = useState(false);
+  const [prepInterval, setPrepInterval] = useState<NodeJS.Timeout | null>(null);
+  const [recordInterval, setRecordInterval] = useState<NodeJS.Timeout | null>(null);
   
   // Score tracking for proper skill completion
   const [skillScores, setSkillScores] = useState<{[skill: string]: {stage1Score?: number, stage2Score?: number, route?: string}}>({});
@@ -452,13 +460,32 @@ export default function MSTPage() {
       setAudioProgress(0);
     }
     
+    // Clear any existing intervals
+    if (prepInterval) {
+      clearInterval(prepInterval);
+      setPrepInterval(null);
+    }
+    if (recordInterval) {
+      clearInterval(recordInterval);
+      setRecordInterval(null);
+    }
+    
     // Handle skill-specific setup with proper state validation
     if (currentItem.skill === 'listening') {
       console.log('🎧 Setting up listening item - waiting for audio');
       // Timer will start when audio ends
     } else if (currentItem.skill === 'speaking') {
-      console.log('🎙️ Setting up speaking item - starting narration phase');
+      console.log('🎙️ Setting up speaking item - resetting state and starting narration phase');
+      
+      // CRITICAL: Reset speaking state per item
       setSpeakingPhase('narration');
+      setPrepTimer(PREP_SEC);
+      setRecordTimer(RECORD_SEC);
+      setPrepTimeDisplay('00:15');
+      setRecordTimeDisplay('01:00');
+      setIsRecording(false);
+      setRecordingBlob(null);
+      setNarrationPlayButton(false);
       
       // CRITICAL: Check if we've already processed this speaking item
       const itemKey = `${currentItem.id}-${currentStage}`;
@@ -505,8 +532,11 @@ export default function MSTPage() {
     }
   }, [currentItem, currentStage, testPhase]);
   
-  // Timer effects
+  // Timer effects (excluding speaking phases)
   useEffect(() => {
+    // CRITICAL: Don't run generic timer during speaking phases
+    if (currentItem?.skill === 'speaking') return;
+    
     if (testPhase === 'testing' && itemTimer > 0) {
       const timer = setInterval(() => {
         setItemTimer(prev => {
@@ -522,7 +552,7 @@ export default function MSTPage() {
       
       return () => clearInterval(timer);
     }
-  }, [testPhase, itemTimer]);
+  }, [testPhase, itemTimer, currentItem?.skill]);
 
   // Auto-submit when time expires
   const handleAutoSubmit = () => {
@@ -888,36 +918,48 @@ export default function MSTPage() {
       return;
     }
     
-    console.log('⏰ Starting preparation phase');
+    console.log('⏰ Starting preparation phase with 15-second countdown');
     setSpeakingPhase('preparation');
     
-    // Use actual preparation time from item timing
-    const prepTimeSeconds = currentItem.timing.prepSec || 15;
-    setPrepTimer(prepTimeSeconds);
-    setPrepTimeDisplay(formatTime(prepTimeSeconds));
+    // Reset preparation timer to constants
+    setPrepTimer(PREP_SEC);
+    setPrepTimeDisplay(formatTime(PREP_SEC));
+    
+    // Clear any existing interval
+    if (prepInterval) {
+      clearInterval(prepInterval);
+    }
     
     // Start preparation countdown
-    const prepInterval = setInterval(() => {
+    const newPrepInterval = setInterval(() => {
       setPrepTimer(prev => {
         const newTime = prev - 1;
         setPrepTimeDisplay(formatTime(newTime));
         
         if (newTime <= 0) {
-          clearInterval(prepInterval);
+          clearInterval(newPrepInterval);
+          setPrepInterval(null);
           startRecordingPhase();
+          return 0;
         }
         
         return newTime;
       });
     }, 1000);
+    
+    setPrepInterval(newPrepInterval);
   };
 
   // Start recording phase with proper timing
   const startRecordingPhase = async () => {
     if (!currentItem) return;
     
-    console.log('🎙️ Starting recording phase');
+    console.log('🎙️ Starting recording phase with 60-second countdown');
     setSpeakingPhase('recording');
+    
+    // Reset record timer to constants
+    setRecordTimer(RECORD_SEC);
+    setRecordTimeDisplay(formatTime(RECORD_SEC));
     
     try {
       // Start recording
@@ -938,23 +980,46 @@ export default function MSTPage() {
         
         // Stop the stream
         stream.getTracks().forEach(track => track.stop());
+        
+        // Clear recording interval
+        if (recordInterval) {
+          clearInterval(recordInterval);
+          setRecordInterval(null);
+        }
       };
       
       setMediaRecorder(recorder);
       recorder.start();
       setIsRecording(true);
       
-      // Auto-stop recording after the specified time
-      const recordTimeSeconds = currentItem.timing.recordSec || 60;
-      console.log(`🎙️ Recording for ${recordTimeSeconds} seconds`);
+      // Clear any existing interval
+      if (recordInterval) {
+        clearInterval(recordInterval);
+      }
       
-      setTimeout(() => {
-        if (recorder.state === 'recording') {
-          console.log('⏹️ Auto-stopping recording after time limit');
-          recorder.stop();
-          setIsRecording(false);
-        }
-      }, recordTimeSeconds * 1000);
+      // Start recording countdown timer
+      const newRecordInterval = setInterval(() => {
+        setRecordTimer(prev => {
+          const newTime = prev - 1;
+          setRecordTimeDisplay(formatTime(newTime));
+          
+          if (newTime <= 0) {
+            // Auto-stop recording and submit
+            if (recorder.state === 'recording') {
+              console.log('⏹️ Auto-stopping recording after 60-second countdown');
+              recorder.stop();
+              setIsRecording(false);
+            }
+            clearInterval(newRecordInterval);
+            setRecordInterval(null);
+            return 0;
+          }
+          
+          return newTime;
+        });
+      }, 1000);
+      
+      setRecordInterval(newRecordInterval);
       
     } catch (error) {
       console.error('❌ Recording error:', error);
@@ -1183,18 +1248,54 @@ export default function MSTPage() {
                 <div className="text-sm text-gray-600">Question Progress</div>
               </div>
               
-              {/* Timer moved to right side */}
+              {/* Timer moved to right side - Speaking-specific or generic */}
               <div className="text-center sm:text-right">
-                <div className={`text-lg sm:text-xl font-bold transition-all duration-300 ${
-                  itemTimer > 0 && itemTimer <= 3 
-                    ? 'text-red-600 animate-bounce' 
-                    : itemTimer <= 10 && itemTimer > 0 
-                      ? 'text-red-500 animate-pulse' 
-                      : 'text-gray-900 dark:text-gray-100'
-                }`}>
-                  {formatTime(itemTimer)}
-                </div>
-                <div className="text-xs text-gray-500">Time Remaining</div>
+                {currentItem?.skill === 'speaking' ? (
+                  // Speaking-specific timer display
+                  speakingPhase === 'preparation' ? (
+                    <div>
+                      <div className="text-lg sm:text-xl font-bold text-orange-600">
+                        {prepTimeDisplay}
+                      </div>
+                      <div className="text-xs text-orange-500">Preparation Time</div>
+                    </div>
+                  ) : speakingPhase === 'recording' ? (
+                    <div>
+                      <div className="text-lg sm:text-xl font-bold text-red-600">
+                        {recordTimeDisplay}
+                      </div>
+                      <div className="text-xs text-red-500">Recording Time</div>
+                    </div>
+                  ) : speakingPhase === 'narration' ? (
+                    <div>
+                      <div className="text-lg sm:text-xl font-bold text-blue-600">
+                        🎧 Listening
+                      </div>
+                      <div className="text-xs text-blue-500">Question Audio</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-lg sm:text-xl font-bold text-green-600">
+                        ✓ Complete
+                      </div>
+                      <div className="text-xs text-green-500">Recording Ready</div>
+                    </div>
+                  )
+                ) : (
+                  // Generic timer for non-speaking skills
+                  <div>
+                    <div className={`text-lg sm:text-xl font-bold transition-all duration-300 ${
+                      itemTimer > 0 && itemTimer <= 3 
+                        ? 'text-red-600 animate-bounce' 
+                        : itemTimer <= 10 && itemTimer > 0 
+                          ? 'text-red-500 animate-pulse' 
+                          : 'text-gray-900 dark:text-gray-100'
+                    }`}>
+                      {formatTime(itemTimer)}
+                    </div>
+                    <div className="text-xs text-gray-500">Time Remaining</div>
+                  </div>
+                )}
               </div>
             </div>
             <Progress 
@@ -1412,11 +1513,12 @@ export default function MSTPage() {
                     
                     {speakingPhase === 'recording' && (
                       <div className="space-y-3">
-                        <div className="text-lg font-semibold text-red-600">🎙️ Recording ({currentItem.timing.recordSec || 60} seconds)</div>
+                        <div className="text-lg font-semibold text-red-600">🎙️ Recording Now</div>
+                        <div className="text-4xl font-mono font-bold text-red-600">{recordTimeDisplay}</div>
                         <div className="flex justify-center">
                           <div className="animate-pulse bg-red-500 rounded-full w-6 h-6"></div>
                         </div>
-                        <p className="text-sm text-gray-600">Speak clearly. Recording will stop automatically after {currentItem.timing.recordSec || 60} seconds.</p>
+                        <p className="text-sm text-gray-600">Speak clearly. Recording will stop automatically when time expires.</p>
                         <Button
                           onClick={stopRecording}
                           variant="destructive"
