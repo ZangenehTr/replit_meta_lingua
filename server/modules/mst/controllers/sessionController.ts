@@ -4,7 +4,7 @@
  */
 
 import { MstSession, MstResult, SkillResult } from '../schemas/resultSchema';
-import { SessionTimer, createSessionTimer, getSessionRemainingTime, isSessionTimeUp } from '../utils/timers';
+import { SessionTimer, createSessionTimer, getSessionRemainingTime, isSessionTimeUp, getSessionElapsedTime } from '../utils/timers';
 import { calculateOverallLevel } from '../routing/router';
 
 export class MstSessionController {
