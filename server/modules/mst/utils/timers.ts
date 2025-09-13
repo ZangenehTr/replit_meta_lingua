@@ -19,16 +19,17 @@ export const DEFAULT_TIMING: TimingConfig = {
 
 /**
  * Get level-specific listening response time (after audio ends)
+ * Pedagogically sound progression: more time at lower levels, less at higher levels
  */
 export function getListeningResponseTime(level: string): number {
   switch (level) {
-    case 'A1': return 45;
-    case 'A2': return 60;
-    case 'B1': return 90;
-    case 'B2': return 90;
-    case 'C1': return 20;
-    case 'C2': return 20;
-    default: return 60; // Default to A2 timing
+    case 'A1': return 90; // Beginners need more time to process
+    case 'A2': return 90; // Still building comprehension skills
+    case 'B1': return 60; // Intermediate level - faster processing
+    case 'B2': return 45; // Upper-intermediate - quicker responses
+    case 'C1': return 30; // Advanced - quick comprehension expected
+    case 'C2': return 30; // Proficient - rapid processing
+    default: return 60; // Default to B1 timing
   }
 }
 

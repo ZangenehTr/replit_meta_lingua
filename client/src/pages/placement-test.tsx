@@ -77,7 +77,9 @@ export default function PlacementTestPage() {
   const [currentSession, setCurrentSession] = useState<PlacementTestSession | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<PlacementTestQuestion | null>(null);
   const [userResponse, setUserResponse] = useState<any>('');
-  const [timeRemaining, setTimeRemaining] = useState<number>(600); // 10 minutes
+  const [timeRemaining, setTimeRemaining] = useState<number>(600); // 10 minutes session timer
+  const [questionTimeRemaining, setQuestionTimeRemaining] = useState<number>(0); // Level-specific question timer
+  const [isQuestionTimerActive, setIsQuestionTimerActive] = useState<boolean>(false); // Controls when question timer runs
   const [isRecording, setIsRecording] = useState(false);
   const [testResults, setTestResults] = useState<PlacementTestResults | null>(null);
   const [testStep, setTestStep] = useState<'intro' | 'testing' | 'completed'>('intro');
@@ -242,6 +244,20 @@ export default function PlacementTestPage() {
           clearInterval(recordingTimer);
           setRecordingTimer(null);
         }
+        
+        // Initialize question-specific timer
+        const questionTimeLimit = getQuestionTimeLimit(data.question);
+        setQuestionTimeRemaining(questionTimeLimit);
+        
+        // Start timer immediately for writing, wait for audio end for listening
+        if (data.question.skill === 'writing' || data.question.skill === 'reading' || data.question.skill === 'speaking') {
+          setIsQuestionTimerActive(true);
+          console.log(`[DEBUG] Started ${data.question.skill} timer: ${questionTimeLimit}s`);
+        } else if (data.question.skill === 'listening') {
+          setIsQuestionTimerActive(false); // Will start after audio ends
+          console.log(`[DEBUG] Listening question loaded, timer will start after audio ends: ${questionTimeLimit}s`);
+        }
+        
         console.log('[DEBUG] Question state updated, new question ID:', data.question.id);
       } else {
         console.log('[DEBUG] No question in response:', data);
@@ -276,7 +292,7 @@ export default function PlacementTestPage() {
     }
   };
 
-  // Timer effect
+  // Enhanced Timer effect with skill-specific logic
   useEffect(() => {
     if (testStep === 'testing' && timeRemaining > 0) {
       const timer = setInterval(() => {
@@ -304,6 +320,62 @@ export default function PlacementTestPage() {
       return () => clearInterval(timer);
     }
   }, [testStep, timeRemaining, currentSession, currentQuestion, userResponse, audioBlob, submitResponseMutation]);
+
+  // Question-specific timer effect
+  useEffect(() => {
+    if (isQuestionTimerActive && questionTimeRemaining > 0) {
+      const timer = setInterval(() => {
+        setQuestionTimeRemaining(prev => {
+          if (prev <= 1) {
+            // Question time expired - auto-submit
+            console.log('Question time expired, auto-submitting...');
+            if (currentSession && currentQuestion) {
+              submitResponseMutation.mutate({
+                sessionId: currentSession.id,
+                questionId: currentQuestion.id,
+                userResponse: userResponse || 'Time expired',
+                audioBlob: audioBlob
+              });
+            }
+            setIsQuestionTimerActive(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [isQuestionTimerActive, questionTimeRemaining, currentSession, currentQuestion, userResponse, audioBlob, submitResponseMutation]);
+
+  // Level-specific timing helper
+  const getQuestionTimeLimit = (question: PlacementTestQuestion) => {
+    if (!question) return 120;
+    
+    switch (question.skill) {
+      case 'listening':
+        // Timer starts AFTER audio ends - level-specific response time
+        const level = question.cefrLevel;
+        switch (level) {
+          case 'A1': return 90; // Beginners need more time to process
+          case 'A2': return 90; // Still building comprehension skills  
+          case 'B1': return 60; // Intermediate level - faster processing
+          case 'B2': return 45; // Upper-intermediate - quicker responses
+          case 'C1': return 30; // Advanced - quick comprehension expected
+          case 'C2': return 30; // Proficient - rapid processing
+          default: return 60;
+        }
+      case 'writing':
+        // Single question with adequate time (starts immediately)
+        return 240; // 4 minutes for comprehensive writing assessment
+      case 'speaking':
+        return question.expectedDurationSeconds || 60;
+      case 'reading':
+        return question.expectedDurationSeconds || 90;
+      default:
+        return question.expectedDurationSeconds || 120;
+    }
+  };
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -652,14 +724,28 @@ export default function PlacementTestPage() {
               </div>
               
               <div className="flex items-center gap-4">
+                {/* Show question timer when active, otherwise show session timer */}
                 <div className="text-right">
-                  <div className="text-sm text-gray-500">Time Remaining</div>
-                  <div className={`text-lg font-mono font-bold ${timeRemaining < 120 ? 'text-red-600' : 'text-green-600'}`}>
-                    {formatTime(timeRemaining)}
+                  <div className="text-sm text-gray-500">
+                    {isQuestionTimerActive ? 'Question Time' : 'Session Time'}
+                  </div>
+                  <div className={`text-lg font-mono font-bold ${
+                    isQuestionTimerActive 
+                      ? (questionTimeRemaining < 30 ? 'text-red-600' : 'text-blue-600')
+                      : (timeRemaining < 120 ? 'text-red-600' : 'text-green-600')
+                  }`}>
+                    {isQuestionTimerActive ? formatTime(questionTimeRemaining) : formatTime(timeRemaining)}
                   </div>
                 </div>
-                <Badge variant={timeRemaining < 120 ? 'destructive' : 'secondary'}>
-                  {timeRemaining < 120 ? 'Hurry!' : 'On Track'}
+                <Badge variant={
+                  isQuestionTimerActive 
+                    ? (questionTimeRemaining < 30 ? 'destructive' : 'default')
+                    : (timeRemaining < 120 ? 'destructive' : 'secondary')
+                }>
+                  {isQuestionTimerActive 
+                    ? (questionTimeRemaining < 30 ? 'Almost Out!' : 'Question Timer')
+                    : (timeRemaining < 120 ? 'Hurry!' : 'On Track')
+                  }
                 </Badge>
               </div>
             </div>
@@ -690,7 +776,18 @@ export default function PlacementTestPage() {
                   {currentQuestion.content.audioUrl && (
                     <div className="flex items-center gap-3">
                       <Headphones className="h-5 w-5 text-gray-600" />
-                      <audio controls src={currentQuestion.content.audioUrl} className="flex-1" />
+                      <audio 
+                        controls 
+                        src={currentQuestion.content.audioUrl} 
+                        className="flex-1"
+                        onEnded={() => {
+                          // Start timer AFTER audio ends for listening questions
+                          if (currentQuestion.skill === 'listening') {
+                            setIsQuestionTimerActive(true);
+                            console.log(`[DEBUG] Audio ended, starting listening timer: ${questionTimeRemaining}s`);
+                          }
+                        }}
+                      />
                     </div>
                   )}
                 </div>
