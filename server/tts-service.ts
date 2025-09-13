@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import gtts from 'node-gtts';
 import OpenAI from 'openai';
+import { spawn } from 'child_process';
 import { 
   TTSMasterPromptService, 
   ListeningPracticeRequest, 
@@ -135,6 +136,124 @@ export class MetaLinguaTTSService {
         error: error instanceof Error ? error.message : 'Unknown TTS error'
       };
     }
+  }
+
+  /**
+   * Generate speech using Microsoft Edge TTS (Professional Quality)
+   */
+  async generateSpeechWithEdgeTTS(request: TTSRequest): Promise<TTSResponse> {
+    try {
+      const { text, language, speed = 1.0 } = request;
+      
+      // Validate text
+      if (!text || text.trim().length === 0) {
+        return {
+          success: false,
+          error: 'Text cannot be empty'
+        };
+      }
+
+      // Generate filename
+      const timestamp = Date.now();
+      const filename = `edge_tts_${timestamp}.mp3`;
+      const filePath = path.join(this.outputDir, filename);
+
+      // Voice mapping for Microsoft Edge TTS
+      const voiceMap: Record<string, string> = {
+        'en': 'en-US-AriaNeural',       // American English - natural, clear
+        'english': 'en-US-AriaNeural',
+        'fa': 'fa-IR-FaridNeural',      // Persian
+        'farsi': 'fa-IR-FaridNeural',
+        'persian': 'fa-IR-FaridNeural',
+        'ar': 'ar-SA-HamedNeural',      // Arabic
+        'arabic': 'ar-SA-HamedNeural'
+      };
+
+      const voice = voiceMap[language.toLowerCase()] || 'en-US-AriaNeural';
+
+      // Generate TTS using Python edge-tts command
+      const success = await this.generateWithEdgeTTSCommand(text, filePath, voice, speed);
+      
+      if (!success) {
+        return {
+          success: false,
+          error: 'Failed to generate audio with Microsoft Edge TTS'
+        };
+      }
+
+      // Verify file was created
+      if (!fs.existsSync(filePath)) {
+        return {
+          success: false,
+          error: 'Audio file was not created'
+        };
+      }
+
+      // Get file stats for duration estimation
+      const stats = fs.statSync(filePath);
+      const estimatedDuration = Math.ceil(text.length / 12); // More accurate for Edge TTS
+
+      return {
+        success: true,
+        audioFile: filename,
+        audioUrl: `/uploads/tts/${filename}`,
+        duration: estimatedDuration
+      };
+
+    } catch (error) {
+      console.error('Edge TTS Service Error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown Edge TTS error'
+      };
+    }
+  }
+
+  /**
+   * Generate audio file using edge-tts Python command
+   */
+  private async generateWithEdgeTTSCommand(text: string, outputPath: string, voice: string, speed: number = 1.0): Promise<boolean> {
+    return new Promise((resolve) => {
+      try {
+        // Calculate rate parameter for edge-tts (speed adjustment)
+        const ratePercent = Math.round((speed - 1.0) * 50); // Convert to percentage
+        const rateParam = ratePercent >= 0 ? `+${ratePercent}%` : `${ratePercent}%`;
+
+        // Use edge-tts Python command with rate adjustment
+        const process = spawn('edge-tts', [
+          '--voice', voice,
+          '--rate', rateParam,
+          '--text', text,
+          '--write-media', outputPath
+        ]);
+
+        process.on('close', (code) => {
+          if (code === 0) {
+            console.log(`✅ Edge TTS generated: ${outputPath}`);
+            resolve(true);
+          } else {
+            console.log(`❌ Edge TTS failed: ${outputPath} (exit code: ${code})`);
+            resolve(false);
+          }
+        });
+
+        process.on('error', (error) => {
+          console.error(`❌ Edge TTS error for ${outputPath}:`, error.message);
+          resolve(false);
+        });
+
+        // Set timeout for TTS generation (30 seconds max)
+        setTimeout(() => {
+          process.kill();
+          console.error(`❌ Edge TTS timeout for ${outputPath}`);
+          resolve(false);
+        }, 30000);
+
+      } catch (error) {
+        console.error(`❌ Edge TTS exception for ${outputPath}:`, error);
+        resolve(false);
+      }
+    });
   }
 
   /**

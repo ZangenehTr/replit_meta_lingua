@@ -30,12 +30,24 @@ router.post('/generate', authenticateToken, async (req, res) => {
       });
     }
 
-    const result = await ttsService.generateSpeech({
+    // Use Microsoft Edge TTS for better quality, fallback to Google TTS
+    let result = await ttsService.generateSpeechWithEdgeTTS({
       text,
       language,
       speed,
       voice
     });
+
+    // Fallback to Google TTS if Edge TTS fails
+    if (!result.success) {
+      console.log('🔄 Edge TTS failed, falling back to Google TTS');
+      result = await ttsService.generateSpeech({
+        text,
+        language,
+        speed,
+        voice
+      });
+    }
 
     res.json(result);
   } catch (error) {
