@@ -537,6 +537,11 @@ function Router() {
           <MSTPage />
         </ProtectedRoute>
       </Route>
+      <Route path="/mst">
+        <ProtectedRoute>
+          <MSTPage />
+        </ProtectedRoute>
+      </Route>
       <Route path="/games">
         <ProtectedRoute>
           <GamesPage />
