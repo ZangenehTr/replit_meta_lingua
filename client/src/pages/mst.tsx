@@ -109,6 +109,9 @@ export default function MSTPage() {
   
   // Prevent duplicate TTS generation for speaking items
   const [processedSpeakingItems, setProcessedSpeakingItems] = useState<Set<string>>(new Set());
+  
+  // CRITICAL: Prevent duplicate auto-advance calls for speaking questions
+  const [isAutoAdvancing, setIsAutoAdvancing] = useState(false);
 
   // Start MST session
   const startSessionMutation = useMutation({
@@ -212,6 +215,8 @@ export default function MSTPage() {
         const skillKey = currentItem.skill;
         const currentScores = skillScores[skillKey] || {};
         
+        console.log(`🔍 SUBMIT RESPONSE SUCCESS: skill=${skillKey}, stage=${currentStage}, route=${data.route}, p=${data.p}`);
+        
         if (currentStage === 'core') {
           currentScores.stage1Score = Math.round(data.p * 100);
           currentScores.route = data.route;
@@ -238,11 +243,60 @@ export default function MSTPage() {
           const nextStage: MSTStage = data.route === 'up' ? 'upper' 
             : data.route === 'stay' ? 'upper' 
             : 'lower';
+          console.log(`📊 STAGE TRANSITION: ${currentItem.skill} ${currentStage} → ${nextStage} (route: ${data.route})`);
+          
+          // CRITICAL: For speaking skill, ensure we reset auto-advancing flag before transitioning
+          if (currentItem.skill === 'speaking') {
+            console.log('🎙️ SPEAKING Q1→Q2 TRANSITION: Transitioning from Q1 to Q2, resetting speaking state');
+            console.log(`🎙️ SPEAKING Q1→Q2: route=${data.route}, nextStage=${nextStage}`);
+            setIsAutoAdvancing(false);
+            // Reset speaking-specific states for Q2
+            setRecordingBlob(null);
+            setSpeakingPhase('narration');
+            setPrepTimer(PREP_SEC);
+            setRecordTimer(RECORD_SEC);
+            setPrepTimeDisplay('00:15');
+            setRecordTimeDisplay('01:00');
+            setNarrationPlayButton(false);
+            // Clear any processed speaking items to allow Q2 setup
+            setProcessedSpeakingItems(prev => {
+              const newSet = new Set(prev);
+              // Don't clear current item, but ensure Q2 can be processed
+              return newSet;
+            });
+          }
+          
           setCurrentStage(nextStage);
           fetchNextItemWithStage(nextStage);
         } else {
-          // Complete skill, advance to next
-          advanceToNextSkill();
+          // CRITICAL FIX: For speaking skill, ensure Q2 is actually completed by user before skill completion
+          if (currentItem.skill === 'speaking' && currentStage !== 'core') {
+            // Check if this is a REAL response submission (user completed Q2) or just a stage transition
+            const hasActualResponse = recordingBlob || currentResponse.trim().length > 0;
+            
+            if (hasActualResponse) {
+              // User actually completed Q2 - now we can complete the speaking skill
+              console.log('🎙️ SPEAKING SKILL COMPLETION: Q2 actually completed by user, marking speaking skill as finished');
+              console.log(`🎙️ SPEAKING COMPLETED STAGE: ${currentStage} (Q2 completed with actual response)`);
+              setIsAutoAdvancing(false);
+              // Clear speaking state since skill is complete
+              setSpeakingPhase('narration');
+              setRecordingBlob(null);
+              setProcessedSpeakingItems(new Set());
+              
+              // Complete skill, advance to next
+              console.log(`📊 SKILL COMPLETION: ${currentItem.skill} completed after actual Q2 response`);
+              advanceToNextSkill();
+            } else {
+              // This is just a stage transition, not a real completion - stay in speaking skill for Q2
+              console.log('🎙️ SPEAKING STAGE TRANSITION: Not completing skill yet, user needs to complete Q2');
+              console.log(`🎙️ SPEAKING Q2 LOADING: stage=${currentStage}, waiting for user response`);
+            }
+          } else {
+            // For all other skills, complete normally
+            console.log(`📊 SKILL COMPLETION: ${currentItem.skill} completed after stage ${currentStage}`);
+            advanceToNextSkill();
+          }
         }
       }
       
@@ -363,6 +417,11 @@ export default function MSTPage() {
     // CRITICAL: Complete current skill and store results before advancing
     try {
       const currentSkill = status.session.skillOrder[currentSkillIndex];
+      
+      // CRITICAL: Add comprehensive logging for speaking skill advancement
+      console.log(`🎯 ADVANCE TO NEXT SKILL: Current skill=${currentSkill}, stage=${currentStage}, skillIndex=${currentSkillIndex}`);
+      console.log(`🎯 SKILL ORDER:`, status.session.skillOrder);
+      console.log(`🎯 NEXT SKILL WILL BE:`, status.session.skillOrder[currentSkillIndex + 1]);
       
       // Send skill completion with REAL scores from responses
       const scores = skillScores[currentSkill] || {};
@@ -576,45 +635,38 @@ export default function MSTPage() {
     });
   };
 
-  // CRITICAL FIX: Handle speaking auto-advance (Q1 → Q2 → Complete)
+  // SIMPLIFIED: Handle speaking response submission (same flow for Q1 and Q2)
   const handleSpeakingAutoAdvance = async (audioBlob: Blob) => {
     if (!currentSession || !currentItem) return;
     
-    console.log(`🎙️ Auto-advancing speaking: ${currentStage} stage completed`);
+    // CRITICAL: Prevent duplicate auto-advance calls
+    if (isAutoAdvancing) {
+      console.log('⚠️ Auto-advance already in progress, skipping duplicate call');
+      return;
+    }
+    
+    setIsAutoAdvancing(true);
+    console.log(`🎙️ SPEAKING AUTO-ADVANCE: Recording completed for ${currentItem.skill} stage: ${currentStage}`);
+    console.log(`🎙️ SPEAKING STATE CHECK: skillIndex=${currentSkillIndex}, currentStage=${currentStage}, itemId=${currentItem.id}`);
     
     // Calculate time spent (prep + recording time)
     const timeSpentMs = ((currentItem.timing.prepSec || PREP_SEC) + (currentItem.timing.recordSec || RECORD_SEC)) * 1000;
     
-    // Submit current speaking response
-    try {
-      const response = await submitResponseMutation.mutateAsync({
-        sessionId: currentSession.sessionId,
-        skill: currentItem.skill,
-        stage: currentStage,
-        itemId: currentItem.id,
-        audioBlob: audioBlob,
-        timeSpentMs
-      });
-      
-      console.log('🎙️ Speaking response submitted successfully, response:', response);
-      
-      // Reset speaking-specific states for next question
-      setRecordingBlob(null);
-      setSpeakingPhase('narration');
-      setPrepTimer(PREP_SEC);
-      setRecordTimer(RECORD_SEC);
-      setPrepTimeDisplay('00:15');
-      setRecordTimeDisplay('01:00');
-      setNarrationPlayButton(false);
-      
-    } catch (error) {
-      console.error('❌ Error auto-advancing speaking:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to advance to next question. Please try again.',
-        variant: 'destructive'
-      });
-    }
+    // CRITICAL: Use normal flow for ALL speaking responses - let submitResponseMutation.onSuccess handle stage transitions
+    console.log('🎙️ SPEAKING: Submitting response via normal mutation flow...');
+    submitResponseMutation.mutate({
+      sessionId: currentSession.sessionId,
+      skill: currentItem.skill,
+      stage: currentStage,
+      itemId: currentItem.id,
+      audioBlob: audioBlob,
+      timeSpentMs
+    });
+    
+    // Reset auto-advancing flag after submission
+    setTimeout(() => {
+      setIsAutoAdvancing(false);
+    }, 1000);
   };
 
   // Audio recording functions
@@ -1035,9 +1087,14 @@ export default function MSTPage() {
         
         // CRITICAL FIX: Auto-advance speaking to next stage after recording completes
         console.log('🎙️ Speaking recording completed, auto-advancing to next stage...');
-        setTimeout(() => {
-          handleSpeakingAutoAdvance(blob);
-        }, 1000); // Small delay to ensure UI updates
+        // Prevent duplicate calls by checking if already auto-advancing
+        if (!isAutoAdvancing) {
+          setTimeout(() => {
+            handleSpeakingAutoAdvance(blob);
+          }, 1000); // Small delay to ensure UI updates
+        } else {
+          console.log('⚠️ Auto-advance already in progress, skipping recording completion callback');
+        }
       };
       
       setMediaRecorder(recorder);
@@ -1278,7 +1335,11 @@ export default function MSTPage() {
 
   // Main testing interface
   return (
-    <div className="container mx-auto p-4 sm:p-6 max-w-4xl mst-container" style={mstStyle}>
+    <div 
+      key={`mst-test-${currentItem?.skill}-${currentStage}-${currentItem?.id}`}
+      className="container mx-auto p-4 sm:p-6 max-w-4xl mst-container" 
+      style={mstStyle}
+    >
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
