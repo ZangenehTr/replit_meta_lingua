@@ -237,13 +237,18 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        // CRITICAL: Only start timer immediately for non-listening questions
-        // For listening questions, timer starts when audio ends
-        if (data.item.skill !== 'listening') {
+        // CRITICAL: Use correct timing for each skill type
+        if (data.item.skill === 'listening') {
+          console.log('Waiting for audio to end before starting timer for listening question');
+        } else if (data.item.skill === 'speaking') {
+          console.log('Starting speaking timer with recordSec:', data.item.timing.recordSec);
+          startItemTimer(data.item.timing.recordSec || data.item.timing.maxAnswerSec);
+        } else if (data.item.skill === 'writing') {
+          console.log('Starting writing timer with 5 minutes (300s)');
+          startItemTimer(300); // 5 minutes for writing
+        } else {
           console.log('Starting timer immediately for:', data.item.skill);
           startItemTimer(data.item.timing.maxAnswerSec);
-        } else {
-          console.log('Waiting for audio to end before starting timer for listening question');
         }
       }
     } catch (error) {
@@ -268,13 +273,18 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        // CRITICAL: Only start timer immediately for non-listening questions
-        // For listening questions, timer starts when audio ends
-        if (data.item.skill !== 'listening') {
+        // CRITICAL: Use correct timing for each skill type
+        if (data.item.skill === 'listening') {
+          console.log('Waiting for audio to end before starting timer for listening question');
+        } else if (data.item.skill === 'speaking') {
+          console.log('Starting speaking timer with recordSec:', data.item.timing.recordSec);
+          startItemTimer(data.item.timing.recordSec || data.item.timing.maxAnswerSec);
+        } else if (data.item.skill === 'writing') {
+          console.log('Starting writing timer with 5 minutes (300s)');
+          startItemTimer(300); // 5 minutes for writing
+        } else {
           console.log('Starting timer immediately for:', data.item.skill);
           startItemTimer(data.item.timing.maxAnswerSec);
-        } else {
-          console.log('Waiting for audio to end before starting timer for listening question');
         }
       }
     } catch (error) {
@@ -298,13 +308,18 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        // CRITICAL: Only start timer immediately for non-listening questions
-        // For listening questions, timer starts when audio ends
-        if (data.item.skill !== 'listening') {
+        // CRITICAL: Use correct timing for each skill type
+        if (data.item.skill === 'listening') {
+          console.log('Waiting for audio to end before starting timer for listening question');
+        } else if (data.item.skill === 'speaking') {
+          console.log('Starting speaking timer with recordSec:', data.item.timing.recordSec);
+          startItemTimer(data.item.timing.recordSec || data.item.timing.maxAnswerSec);
+        } else if (data.item.skill === 'writing') {
+          console.log('Starting writing timer with 5 minutes (300s)');
+          startItemTimer(300); // 5 minutes for writing
+        } else {
           console.log('Starting timer immediately for:', data.item.skill);
           startItemTimer(data.item.timing.maxAnswerSec);
-        } else {
-          console.log('Waiting for audio to end before starting timer for listening question');
         }
       }
     } catch (error) {
@@ -329,13 +344,18 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        // CRITICAL: Only start timer immediately for non-listening questions
-        // For listening questions, timer starts when audio ends
-        if (data.item.skill !== 'listening') {
+        // CRITICAL: Use correct timing for each skill type
+        if (data.item.skill === 'listening') {
+          console.log('Waiting for audio to end before starting timer for listening question');
+        } else if (data.item.skill === 'speaking') {
+          console.log('Starting speaking timer with recordSec:', data.item.timing.recordSec);
+          startItemTimer(data.item.timing.recordSec || data.item.timing.maxAnswerSec);
+        } else if (data.item.skill === 'writing') {
+          console.log('Starting writing timer with 5 minutes (300s)');
+          startItemTimer(300); // 5 minutes for writing
+        } else {
           console.log('Starting timer immediately for:', data.item.skill);
           startItemTimer(data.item.timing.maxAnswerSec);
-        } else {
-          console.log('Waiting for audio to end before starting timer for listening question');
         }
       }
     } catch (error) {
@@ -606,7 +626,7 @@ export default function MSTPage() {
                   <h4 className="font-semibold">Test Structure</h4>
                   <ul className="space-y-1 text-left">
                     <li>• 4 skills: Listening, Reading, Speaking, Writing</li>
-                    <li>• 2.5 minutes per skill (10 minutes total)</li>
+                    <li>• Level-based timing (A1/A2: 90s, B1: 60s, B2: 45s, C1/C2: 30s)</li>
                     <li>• 2 stages per skill (S1 → S2 based on performance)</li>
                     <li>• Auto-advance when time expires</li>
                   </ul>
