@@ -41,6 +41,67 @@ app.use(express.urlencoded({ extended: false }));
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Audio fallback middleware for MST listening files
+app.get('/assets/audio/:filename', async (req, res) => {
+  const filename = req.params.filename;
+  const originalPath = path.join(__dirname, '../client/public/assets/audio', filename);
+  
+  // Check if file exists
+  if (fs.existsSync(originalPath)) {
+    res.setHeader('Content-Type', 'audio/mpeg');
+    return res.sendFile(originalPath);
+  }
+  
+  try {
+    // Import TTS service and MST item bank
+    const { ttsService } = await import('./tts-service.js');
+    const mstItemBank = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/mst_item_bank.json'), 'utf8'));
+    
+    // Find the item with matching audio filename
+    let transcript = null;
+    for (const skill in mstItemBank.skills) {
+      for (const stage in mstItemBank.skills[skill]) {
+        const items = mstItemBank.skills[skill][stage];
+        for (const item of items) {
+          if (item.assets?.audio && item.assets.audio.includes(filename)) {
+            transcript = item.assets.transcript;
+            break;
+          }
+        }
+        if (transcript) break;
+      }
+      if (transcript) break;
+    }
+    
+    if (transcript) {
+      console.log(`🎧 Generating TTS audio for missing file: ${filename}`);
+      
+      // Generate TTS audio
+      const ttsResult = await ttsService.generateSpeech({
+        text: transcript,
+        language: 'en',
+        speed: 1.0
+      });
+      
+      if (ttsResult.success && ttsResult.audioFile) {
+        const ttsPath = path.join(__dirname, '../uploads/tts', ttsResult.audioFile);
+        if (fs.existsSync(ttsPath)) {
+          res.setHeader('Content-Type', 'audio/mpeg');
+          return res.sendFile(ttsPath);
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`❌ Error generating TTS for ${filename}:`, error);
+  }
+  
+  // If all else fails, return 404
+  res.status(404).json({ error: 'Audio file not found' });
+});
+
+// Serve static assets from client/public/assets (for MST audio files)
+app.use('/assets', express.static(path.join(__dirname, '../client/public/assets')));
+
 // Serve test HTML files directly
 app.get('/test-video-call.html', (_req, res) => {
   res.sendFile(path.join(__dirname, '../test-video-call.html'));
