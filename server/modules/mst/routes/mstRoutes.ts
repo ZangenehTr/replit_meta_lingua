@@ -438,14 +438,10 @@ router.get('/status', authenticateToken, async (req, res) => {
         skillOrder: session.skillOrder
       },
       timing: {
-        totalElapsedSec: timer?.getTotalElapsedTime() || 0,
-        totalRemainingSec: timer?.getTotalRemainingTime() || 0,
-        skillElapsedSec: session.currentSkill && timer 
-          ? timer.getSkillTimer(session.currentSkill)?.getElapsedTime() || 0
-          : 0,
-        skillRemainingSec: session.currentSkill && timer 
-          ? timer.getSkillTimer(session.currentSkill)?.getRemainingTime() || 0
-          : 0
+        totalElapsedSec: 0, // Session timing handled by frontend
+        totalRemainingSec: 600, // 10 minute session limit
+        skillElapsedSec: 0, // Question timing handled by frontend
+        skillRemainingSec: 0 // Question timing handled by frontend
       },
       progress: {
         completedSkills: skillResults.length,
