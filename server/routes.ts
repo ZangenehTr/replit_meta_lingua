@@ -20976,7 +20976,7 @@ Meta Lingua Academy`;
   // Enhanced TTS Routes following Master Prompt Guidelines
   const { default: ttsRoutes } = await import('./routes/tts-routes.js');
   const { default: ttsPipelineRoutes } = await import('./routes/tts-pipeline-routes.js');
-  app.use('/api/tts/enhanced', ttsRoutes);
+  app.use('/api/tts', ttsRoutes);  // Fixed: Mount directly at /api/tts for frontend compatibility
   app.use('/api/tts-pipeline', ttsPipelineRoutes);
   console.log('✅ Enhanced TTS routes with Master Prompt registered successfully');
   console.log('✅ Advanced TTS Pipeline routes registered successfully');

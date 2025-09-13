@@ -452,6 +452,48 @@ app.use((req, res, next) => {
     }
   });
 
+  // CRITICAL FIX: Direct TTS route bypass for MST compatibility
+  app.post('/api/tts/generate', async (req, res) => {
+    try {
+      const { ttsService } = await import('./tts-service.js');
+      const { text, language, speed, voice } = req.body;
+      
+      if (!text || !language) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Text and language are required' 
+        });
+      }
+
+      // Use Microsoft Edge TTS for better quality, fallback to Google TTS
+      let result = await ttsService.generateSpeechWithEdgeTTS({
+        text,
+        language,
+        speed: speed || 1.0,
+        voice
+      });
+
+      // Fallback to Google TTS if Edge TTS fails
+      if (!result.success) {
+        console.log('🔄 Edge TTS failed, falling back to Google TTS');
+        result = await ttsService.generateSpeech({
+          text,
+          language,
+          speed: speed || 1.0,
+          voice
+        });
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('TTS generation error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Internal server error' 
+      });
+    }
+  });
+
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);

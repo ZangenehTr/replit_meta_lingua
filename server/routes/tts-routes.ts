@@ -1,10 +1,5 @@
 import { Router } from 'express';
-// Authentication middleware - simplified for TTS routes
-const authenticateToken = (req: any, res: any, next: any) => {
-  // For development, allow all requests
-  // In production, implement proper JWT authentication
-  next();
-};
+// Remove authentication requirement for TTS routes - they should be public for MST test functionality
 import { ttsService } from '../tts-service.js';
 import { 
   TTSMasterPromptService, 
@@ -18,8 +13,8 @@ const router = Router();
  * Enhanced TTS Routes following Master Prompt Guidelines
  */
 
-// Generate basic TTS (existing functionality)
-router.post('/generate', authenticateToken, async (req, res) => {
+// Generate basic TTS (existing functionality) - PUBLIC for MST compatibility
+router.post('/generate', async (req, res) => {
   try {
     const { text, language, speed, voice } = req.body;
     
@@ -59,8 +54,8 @@ router.post('/generate', authenticateToken, async (req, res) => {
   }
 });
 
-// Generate listening practice following Master Prompt
-router.post('/listening-practice', authenticateToken, async (req, res) => {
+// Generate listening practice following Master Prompt - PUBLIC for MST compatibility
+router.post('/listening-practice', async (req, res) => {
   try {
     const request: ListeningPracticeRequest = {
       topic: req.body.topic,
@@ -115,8 +110,8 @@ router.post('/listening-practice', authenticateToken, async (req, res) => {
   }
 });
 
-// Generate vocabulary practice following Master Prompt
-router.post('/vocabulary-practice', authenticateToken, async (req, res) => {
+// Generate vocabulary practice following Master Prompt - PUBLIC for MST compatibility
+router.post('/vocabulary-practice', async (req, res) => {
   try {
     const request: VocabularyFileRequest = {
       words: req.body.words || [],
@@ -154,8 +149,8 @@ router.post('/vocabulary-practice', authenticateToken, async (req, res) => {
   }
 });
 
-// Get TTS Master Prompt information
-router.get('/master-prompt-info', authenticateToken, async (req, res) => {
+// Get TTS Master Prompt information - PUBLIC for MST compatibility
+router.get('/master-prompt-info', async (req, res) => {
   try {
     const examType = req.query.examType as any;
     const learnerLevel = req.query.learnerLevel as any;
@@ -192,8 +187,8 @@ router.get('/master-prompt-info', authenticateToken, async (req, res) => {
   }
 });
 
-// Pronunciation practice (existing but enhanced)
-router.post('/pronunciation', authenticateToken, async (req, res) => {
+// Pronunciation practice (existing but enhanced) - PUBLIC for MST compatibility
+router.post('/pronunciation', async (req, res) => {
   try {
     const { text, language, level } = req.body;
     
@@ -215,8 +210,8 @@ router.post('/pronunciation', authenticateToken, async (req, res) => {
   }
 });
 
-// Get supported languages
-router.get('/languages', authenticateToken, async (req, res) => {
+// Get supported languages - PUBLIC for MST compatibility
+router.get('/languages', async (req, res) => {
   try {
     const languages = ttsService.getSupportedLanguages();
     res.json({
