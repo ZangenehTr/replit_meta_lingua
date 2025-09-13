@@ -600,8 +600,12 @@ export default function MSTPage() {
       // For speaking, check if audio recording exists
       return !!recordingBlob;
     } else if (currentItem.skill === 'writing') {
-      // For writing, check if text response exists
-      return typeof currentResponse === 'string' && currentResponse.trim().length > 0;
+      // For writing, check if text response exists and meets 80-word minimum
+      if (typeof currentResponse !== 'string' || currentResponse.trim().length === 0) {
+        return false;
+      }
+      const wordCount = currentResponse.trim().split(/\s+/).filter(Boolean).length;
+      return wordCount >= 80;
     }
     
     return false;
@@ -1040,8 +1044,15 @@ export default function MSTPage() {
                       className="min-h-[150px] sm:min-h-[200px] text-base touch-target"
                       data-testid="textarea-writing"
                     />
-                    <div className="mt-2 text-xs text-gray-600">
-                      Words: {currentResponse?.split(' ').filter(Boolean).length || 0}
+                    <div className="mt-2 text-xs">
+                      <span className={`${(currentResponse?.trim().split(/\s+/).filter(Boolean).length || 0) >= 80 ? 'text-green-600' : 'text-red-600'}`}>
+                        Words: {currentResponse?.trim().split(/\s+/).filter(Boolean).length || 0} / 80 minimum
+                      </span>
+                      {(currentResponse?.trim().split(/\s+/).filter(Boolean).length || 0) < 80 && (
+                        <div className="text-red-600 text-xs mt-1">
+                          Please write at least 80 words to continue
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
