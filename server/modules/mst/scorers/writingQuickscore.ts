@@ -283,6 +283,43 @@ function routeFromScore(p: number): 'up' | 'down' | 'stay' {
 }
 
 /**
+ * Map writing score directly to CEFR level (for single question approach)
+ */
+export function mapScoreToLevel(p: number): string {
+  if (p >= 0.90) return 'C1'; // Exceptional performance
+  if (p >= 0.75) return 'B2'; // Good performance with sophisticated language
+  if (p >= 0.60) return 'B1'; // Adequate performance meeting B1 criteria
+  if (p >= 0.45) return 'A2'; // Basic performance with simple structures
+  return 'A1'; // Needs significant work on fundamental skills
+}
+
+/**
+ * Get detailed level justification for feedback
+ */
+export function getLevelJustification(p: number, features: any): string {
+  const level = mapScoreToLevel(p);
+  const task = Math.round(features.task * 100);
+  const coherence = Math.round(features.coherence * 100);
+  const grammar = Math.round(features.grammar * 100);
+  const lexical = Math.round(features.lexical * 100);
+  
+  switch (level) {
+    case 'C1':
+      return `Exceptional ${level} level writing. Task completion: ${task}%, Coherence: ${coherence}%, Grammar: ${grammar}%, Vocabulary: ${lexical}%. Shows sophisticated language control and complex ideas.`;
+    case 'B2':
+      return `Strong ${level} level writing. Task completion: ${task}%, Coherence: ${coherence}%, Grammar: ${grammar}%, Vocabulary: ${lexical}%. Good range of language with clear argumentation.`;
+    case 'B1':
+      return `Solid ${level} level writing. Task completion: ${task}%, Coherence: ${coherence}%, Grammar: ${grammar}%, Vocabulary: ${lexical}%. Meets intermediate criteria with adequate language control.`;
+    case 'A2':
+      return `Basic ${level} level writing. Task completion: ${task}%, Coherence: ${coherence}%, Grammar: ${grammar}%, Vocabulary: ${lexical}%. Simple but communicative with room for improvement.`;
+    case 'A1':
+      return `Elementary ${level} level writing. Task completion: ${task}%, Coherence: ${coherence}%, Grammar: ${grammar}%, Vocabulary: ${lexical}%. Focus needed on fundamental language skills.`;
+    default:
+      return `${level} level writing with ${Math.round(p * 100)}% overall score.`;
+  }
+}
+
+/**
  * Validate writing response format
  */
 export function validateWritingResponse(
