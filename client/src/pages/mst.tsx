@@ -91,6 +91,7 @@ export default function MSTPage() {
   const [prepTimer, setPrepTimer] = useState(0);
   const [prepTimeDisplay, setPrepTimeDisplay] = useState('00:15');
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
+  const [narrationPlayButton, setNarrationPlayButton] = useState(false);
   
   // Score tracking for proper skill completion
   const [skillScores, setSkillScores] = useState<{[skill: string]: {stage1Score?: number, stage2Score?: number, route?: string}}>({});
@@ -837,7 +838,7 @@ export default function MSTPage() {
     }
   };
 
-  // Auto-play narration audio for speaking questions
+  // Auto-play narration audio for speaking questions (with manual fallback)
   const autoPlayNarration = async (audioUrl: string) => {
     try {
       console.log('🎧 Auto-playing narration audio:', audioUrl);
@@ -847,23 +848,41 @@ export default function MSTPage() {
       audio.addEventListener('ended', () => {
         console.log('🎵 Narration ended - starting preparation phase');
         setIsAudioPlaying(false);
+        setNarrationPlayButton(false); // Hide play button
         startPreparationPhase();
       });
       
       audio.addEventListener('error', (e) => {
         console.error('❌ Audio playback error:', e);
         setIsAudioPlaying(false);
-        // Continue to preparation phase even if audio fails
-        startPreparationPhase();
+        setNarrationPlayButton(true); // Show manual play button
       });
       
       setAudioElement(audio);
       await audio.play();
       setIsAudioPlaying(true);
+      setNarrationPlayButton(false); // Hide play button on successful autoplay
       
     } catch (error) {
       console.error('❌ Auto-play error:', error);
-      // Continue to preparation phase if auto-play fails
+      // Show manual play button when autoplay fails
+      setNarrationPlayButton(true);
+      setIsAudioPlaying(false);
+    }
+  };
+
+  // Manual play narration audio when autoplay fails
+  const playNarrationManually = async () => {
+    if (!audioElement || !currentItem?.content?.assets?.audio) return;
+    
+    try {
+      console.log('🔘 Playing narration manually');
+      await audioElement.play();
+      setIsAudioPlaying(true);
+      setNarrationPlayButton(false); // Hide play button
+    } catch (error) {
+      console.error('❌ Manual play error:', error);
+      // If manual play also fails, continue to preparation
       startPreparationPhase();
     }
   };
@@ -1168,8 +1187,13 @@ export default function MSTPage() {
           {/* Timers */}
           <div className="space-y-2">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-4">
-              {/* Prominent per-question countdown with warning */}
+              {/* Progress info */}
               <div className="text-center sm:text-left">
+                <div className="text-sm text-gray-600">Question Progress</div>
+              </div>
+              
+              {/* Timer moved to right side */}
+              <div className="text-center sm:text-right">
                 <div className={`text-lg sm:text-xl font-bold transition-all duration-300 ${
                   itemTimer > 0 && itemTimer <= 3 
                     ? 'text-red-600 animate-bounce' 
@@ -1179,12 +1203,7 @@ export default function MSTPage() {
                 }`}>
                   {formatTime(itemTimer)}
                 </div>
-                <div className="text-xs text-gray-500">Question Time</div>
-              </div>
-              
-              {/* Secondary timers - smaller */}
-              <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-400">
-                <span>Skill: {formatTime(status?.timing.skillRemainingSec || 0)}</span>
+                <div className="text-xs text-gray-500">Time Remaining</div>
               </div>
             </div>
             <Progress 
@@ -1353,13 +1372,15 @@ export default function MSTPage() {
                       <div className="space-y-3">
                         <div className="text-lg font-semibold text-blue-600">🎧 Listen to the question</div>
                         <p className="text-sm text-gray-600">The question is being read to you...</p>
-                        {currentItem.content.assets?.audio && (
+                        {/* Show manual play button when autoplay fails or audio is ready */}
+                        {(narrationPlayButton || currentItem.content.assets?.audio) && (
                           <Button
-                            onClick={playAudio}
+                            onClick={narrationPlayButton ? playNarrationManually : playAudio}
                             disabled={isAudioPlaying || isGeneratingTTS}
                             size="lg"
                             className="w-full sm:w-auto min-h-[52px] text-base font-medium touch-target"
                             data-testid="button-play-narration"
+                            variant={narrationPlayButton ? "default" : "outline"}
                           >
                             {isGeneratingTTS ? (
                               <>
@@ -1370,6 +1391,11 @@ export default function MSTPage() {
                               <>
                                 <Volume2 className="w-5 h-5 mr-2" />
                                 Playing Question...
+                              </>
+                            ) : narrationPlayButton ? (
+                              <>
+                                <Play className="w-5 h-5 mr-2" />
+                                Click to Play Question
                               </>
                             ) : (
                               <>
@@ -1444,11 +1470,8 @@ export default function MSTPage() {
                       className="min-h-[150px] sm:min-h-[200px] text-base touch-target"
                       data-testid="textarea-writing"
                     />
-                    <div className="mt-2 text-xs">
-                      <span className={`${(currentResponse?.trim().split(/\s+/).filter(Boolean).length || 0) >= 80 ? 'text-green-600' : 'text-red-600'}`}>
-                        Words: {currentResponse?.trim().split(/\s+/).filter(Boolean).length || 0} / 80 minimum
-                      </span>
-                      {/* Word count guidance is sufficient - removed red error text for better UX */}
+                    <div className="mt-2 text-xs text-gray-600">
+                      Words: {currentResponse?.trim().split(/\s+/).filter(Boolean).length || 0}
                     </div>
                   </div>
                 </div>
