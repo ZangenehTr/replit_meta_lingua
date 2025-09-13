@@ -80,7 +80,6 @@ import VideoCoursDetail from "@/pages/student/video-course-detail";
 import VideoPlayer from "@/pages/student/video-player";
 import StudentProfile from "@/pages/student/profile";
 import LevelAssessment from "@/pages/level-assessment";
-import PlacementTest from "@/pages/placement-test";
 import MSTPage from "@/pages/mst";
 import GamesPage from "@/pages/games";
 import GamePlayer from "@/pages/game-player";
@@ -534,11 +533,6 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/placement-test">
-        <ProtectedRoute>
-          <PlacementTest />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/mst">
         <ProtectedRoute>
           <MSTPage />
         </ProtectedRoute>
