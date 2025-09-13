@@ -237,7 +237,14 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        startItemTimer(data.item.timing.maxAnswerSec);
+        // CRITICAL: Only start timer immediately for non-listening questions
+        // For listening questions, timer starts when audio ends
+        if (data.item.skill !== 'listening') {
+          console.log('Starting timer immediately for:', data.item.skill);
+          startItemTimer(data.item.timing.maxAnswerSec);
+        } else {
+          console.log('Waiting for audio to end before starting timer for listening question');
+        }
       }
     } catch (error) {
       console.error('Error fetching first item:', error);
@@ -261,7 +268,14 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        startItemTimer(data.item.timing.maxAnswerSec);
+        // CRITICAL: Only start timer immediately for non-listening questions
+        // For listening questions, timer starts when audio ends
+        if (data.item.skill !== 'listening') {
+          console.log('Starting timer immediately for:', data.item.skill);
+          startItemTimer(data.item.timing.maxAnswerSec);
+        } else {
+          console.log('Waiting for audio to end before starting timer for listening question');
+        }
       }
     } catch (error) {
       console.error('Error fetching next item:', error);
@@ -284,7 +298,14 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        startItemTimer(data.item.timing.maxAnswerSec);
+        // CRITICAL: Only start timer immediately for non-listening questions
+        // For listening questions, timer starts when audio ends
+        if (data.item.skill !== 'listening') {
+          console.log('Starting timer immediately for:', data.item.skill);
+          startItemTimer(data.item.timing.maxAnswerSec);
+        } else {
+          console.log('Waiting for audio to end before starting timer for listening question');
+        }
       }
     } catch (error) {
       console.error('Error fetching next item:', error);
@@ -308,7 +329,14 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        startItemTimer(data.item.timing.maxAnswerSec);
+        // CRITICAL: Only start timer immediately for non-listening questions
+        // For listening questions, timer starts when audio ends
+        if (data.item.skill !== 'listening') {
+          console.log('Starting timer immediately for:', data.item.skill);
+          startItemTimer(data.item.timing.maxAnswerSec);
+        } else {
+          console.log('Waiting for audio to end before starting timer for listening question');
+        }
       }
     } catch (error) {
       console.error('Error fetching next item:', error);
@@ -465,6 +493,11 @@ export default function MSTPage() {
         audio.addEventListener('ended', () => {
           setIsAudioPlaying(false);
           setAudioProgress(0);
+          // CRITICAL: Start response timer ONLY when audio finishes for listening questions
+          if (currentItem?.skill === 'listening') {
+            console.log('Audio ended - starting listening timer:', currentItem.timing.maxAnswerSec);
+            startItemTimer(currentItem.timing.maxAnswerSec);
+          }
         });
         
         audio.addEventListener('error', (e) => {
@@ -507,6 +540,13 @@ export default function MSTPage() {
   // Handle submit
   const handleSubmit = () => {
     if (!currentSession || !currentItem || guardTimer > 0) return;
+    
+    // CRITICAL: Stop and cleanup audio if it's still playing
+    if (audioElement && !audioElement.paused) {
+      console.log('Stopping audio on submit');
+      audioElement.pause();
+      audioElement.currentTime = 0;
+    }
     
     const timeSpentMs = (currentItem.timing.maxAnswerSec - itemTimer) * 1000;
     
