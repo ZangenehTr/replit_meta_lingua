@@ -84,7 +84,10 @@ export function calculateOverallLevel(skillBands: string[]): string {
     return levels.indexOf(baseLevel);
   }).filter(index => index !== -1);
   
-  if (baseLevels.length === 0) return 'B1';
+  if (baseLevels.length === 0) {
+    console.warn('⚠️ No valid skill results found for overall calculation, defaulting to A1');
+    return 'A1'; // Default to lowest level instead of hardcoded B1
+  }
   
   // Use median for overall level
   baseLevels.sort((a, b) => a - b);
