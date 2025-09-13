@@ -623,19 +623,35 @@ export default function MSTPage() {
       // Start recording after beep
       setTimeout(() => {
         startRecording();
-        // Auto-stop recording after 60 seconds
+        
+        // Auto-stop recording after proper time limit from item timing
+        const recordingTime = (currentItem?.timing?.recordSec || 60) * 1000;
+        console.log('🎙️ Recording for', currentItem?.timing?.recordSec || 60, 'seconds');
+        
         setTimeout(() => {
           if (isRecording) {
+            console.log('⏹️ Auto-stopping recording after time limit');
             stopRecording();
             setSpeakingPhase('completed');
           }
-        }, 60000); // 60 seconds
+        }, recordingTime);
       }, 300);
       
     } catch (error) {
       console.error('Beep sound failed:', error);
-      // Start recording anyway
+      // Start recording anyway with proper timing
       startRecording();
+      
+      const recordingTime = (currentItem?.timing?.recordSec || 60) * 1000;
+      console.log('🎙️ Recording for', currentItem?.timing?.recordSec || 60, 'seconds (fallback)');
+      
+      setTimeout(() => {
+        if (isRecording) {
+          console.log('⏹️ Auto-stopping recording after time limit (fallback)');
+          stopRecording();
+          setSpeakingPhase('completed');
+        }
+      }, recordingTime);
     }
   };
 
@@ -855,6 +871,12 @@ export default function MSTPage() {
   // Start preparation phase with proper timing
   const startPreparationPhase = () => {
     if (!currentItem) return;
+    
+    // Guard against multiple calls - only start if not already in preparation or recording
+    if (speakingPhase === 'preparation' || speakingPhase === 'recording' || speakingPhase === 'completed') {
+      console.log('⚠️ Preparation phase already started or in progress, skipping duplicate call');
+      return;
+    }
     
     console.log('⏰ Starting preparation phase');
     setSpeakingPhase('preparation');
