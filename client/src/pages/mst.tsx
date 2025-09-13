@@ -97,6 +97,9 @@ export default function MSTPage() {
   
   // Prevent duplicate skill completions
   const [completedSkills, setCompletedSkills] = useState<Set<string>>(new Set());
+  
+  // Prevent duplicate TTS generation for speaking items
+  const [processedSpeakingItems, setProcessedSpeakingItems] = useState<Set<string>>(new Set());
 
   // Start MST session
   const startSessionMutation = useMutation({
@@ -275,34 +278,7 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        // CRITICAL: Use correct timing for each skill type
-        if (data.item.skill === 'listening') {
-          console.log('Waiting for audio to end before starting timer for listening question');
-        } else if (data.item.skill === 'speaking') {
-          console.log('🎙️ Starting TOEFL speaking flow - narration phase');
-          setSpeakingPhase('narration');
-          // Generate TTS for speaking prompt and auto-play
-          const prompt = data.item.content.assets?.prompt;
-          if (prompt) {
-            generateSpeakingTTS(prompt).then(audioUrl => {
-              if (audioUrl) {
-                autoPlayNarration(audioUrl);
-              } else {
-                // If TTS fails, wait 3 seconds then start preparation
-                setTimeout(() => startPreparationPhase(), 3000);
-              }
-            });
-          } else {
-            console.warn('⚠️ No prompt found for speaking item');
-            setTimeout(() => startPreparationPhase(), 2000);
-          }
-        } else if (data.item.skill === 'writing') {
-          console.log('Starting writing timer with 5 minutes (300s)');
-          startItemTimer(300); // 5 minutes for writing
-        } else {
-          console.log('Starting timer immediately for:', data.item.skill);
-          startItemTimer(data.item.timing.maxAnswerSec);
-        }
+        // NOTE: Skill-specific setup now handled in useEffect to prevent race conditions
       }
     } catch (error) {
       console.error('Error fetching first item:', error);
@@ -326,34 +302,7 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        // CRITICAL: Use correct timing for each skill type
-        if (data.item.skill === 'listening') {
-          console.log('Waiting for audio to end before starting timer for listening question');
-        } else if (data.item.skill === 'speaking') {
-          console.log('🎙️ Starting TOEFL speaking flow - narration phase');
-          setSpeakingPhase('narration');
-          // Generate TTS for speaking prompt and auto-play
-          const prompt = data.item.content.assets?.prompt;
-          if (prompt) {
-            generateSpeakingTTS(prompt).then(audioUrl => {
-              if (audioUrl) {
-                autoPlayNarration(audioUrl);
-              } else {
-                // If TTS fails, wait 3 seconds then start preparation
-                setTimeout(() => startPreparationPhase(), 3000);
-              }
-            });
-          } else {
-            console.warn('⚠️ No prompt found for speaking item');
-            setTimeout(() => startPreparationPhase(), 2000);
-          }
-        } else if (data.item.skill === 'writing') {
-          console.log('Starting writing timer with 5 minutes (300s)');
-          startItemTimer(300); // 5 minutes for writing
-        } else {
-          console.log('Starting timer immediately for:', data.item.skill);
-          startItemTimer(data.item.timing.maxAnswerSec);
-        }
+        // NOTE: Skill-specific setup now handled in useEffect to prevent race conditions
       }
     } catch (error) {
       console.error('Error fetching next item:', error);
@@ -376,34 +325,7 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        // CRITICAL: Use correct timing for each skill type
-        if (data.item.skill === 'listening') {
-          console.log('Waiting for audio to end before starting timer for listening question');
-        } else if (data.item.skill === 'speaking') {
-          console.log('🎙️ Starting TOEFL speaking flow - narration phase');
-          setSpeakingPhase('narration');
-          // Generate TTS for speaking prompt and auto-play
-          const prompt = data.item.content.assets?.prompt;
-          if (prompt) {
-            generateSpeakingTTS(prompt).then(audioUrl => {
-              if (audioUrl) {
-                autoPlayNarration(audioUrl);
-              } else {
-                // If TTS fails, wait 3 seconds then start preparation
-                setTimeout(() => startPreparationPhase(), 3000);
-              }
-            });
-          } else {
-            console.warn('⚠️ No prompt found for speaking item');
-            setTimeout(() => startPreparationPhase(), 2000);
-          }
-        } else if (data.item.skill === 'writing') {
-          console.log('Starting writing timer with 5 minutes (300s)');
-          startItemTimer(300); // 5 minutes for writing
-        } else {
-          console.log('Starting timer immediately for:', data.item.skill);
-          startItemTimer(data.item.timing.maxAnswerSec);
-        }
+        // NOTE: Skill-specific setup now handled in useEffect to prevent race conditions
       }
     } catch (error) {
       console.error('Error fetching next item:', error);
@@ -427,34 +349,7 @@ export default function MSTPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentItem(data.item);
-        // CRITICAL: Use correct timing for each skill type
-        if (data.item.skill === 'listening') {
-          console.log('Waiting for audio to end before starting timer for listening question');
-        } else if (data.item.skill === 'speaking') {
-          console.log('🎙️ Starting TOEFL speaking flow - narration phase');
-          setSpeakingPhase('narration');
-          // Generate TTS for speaking prompt and auto-play
-          const prompt = data.item.content.assets?.prompt;
-          if (prompt) {
-            generateSpeakingTTS(prompt).then(audioUrl => {
-              if (audioUrl) {
-                autoPlayNarration(audioUrl);
-              } else {
-                // If TTS fails, wait 3 seconds then start preparation
-                setTimeout(() => startPreparationPhase(), 3000);
-              }
-            });
-          } else {
-            console.warn('⚠️ No prompt found for speaking item');
-            setTimeout(() => startPreparationPhase(), 2000);
-          }
-        } else if (data.item.skill === 'writing') {
-          console.log('Starting writing timer with 5 minutes (300s)');
-          startItemTimer(300); // 5 minutes for writing
-        } else {
-          console.log('Starting timer immediately for:', data.item.skill);
-          startItemTimer(data.item.timing.maxAnswerSec);
-        }
+        // NOTE: Skill-specific setup now handled in useEffect to prevent race conditions
       }
     } catch (error) {
       console.error('Error fetching next item:', error);
@@ -547,6 +442,77 @@ export default function MSTPage() {
     setGuardTimer(Math.min(2, maxSeconds)); // 2 second minimum guard
   };
 
+  // Effect to handle skill-specific logic when currentItem changes
+  useEffect(() => {
+    if (!currentItem) return;
+    
+    console.log(`🔄 Item changed: ${currentItem.skill}/${currentStage}, validating state sync`);
+    
+    // CRITICAL: Only process skill-specific logic if we're in the right state
+    if (testPhase !== 'testing') return;
+    
+    // Cleanup any previous audio to prevent conflicts
+    if (audioElement && !audioElement.paused) {
+      console.log('🛑 Stopping previous audio on item change');
+      audioElement.pause();
+      audioElement.currentTime = 0;
+      setIsAudioPlaying(false);
+      setAudioProgress(0);
+    }
+    
+    // Handle skill-specific setup with proper state validation
+    if (currentItem.skill === 'listening') {
+      console.log('🎧 Setting up listening item - waiting for audio');
+      // Timer will start when audio ends
+    } else if (currentItem.skill === 'speaking') {
+      console.log('🎙️ Setting up speaking item - starting narration phase');
+      setSpeakingPhase('narration');
+      
+      // CRITICAL: Check if we've already processed this speaking item
+      const itemKey = `${currentItem.id}-${currentStage}`;
+      if (!processedSpeakingItems.has(itemKey)) {
+        setProcessedSpeakingItems(prev => new Set(prev).add(itemKey));
+        
+        // Generate TTS for speaking prompt with validation
+        const prompt = currentItem.content.assets?.prompt;
+        if (prompt && currentItem.skill === 'speaking') { // Double-check we're still in speaking
+          console.log('🎵 Generating TTS for speaking prompt after state validation');
+          generateSpeakingTTS(prompt).then(audioUrl => {
+            // Triple-check state is still consistent before playing TTS
+            if (audioUrl && currentItem?.skill === 'speaking') {
+              autoPlayNarration(audioUrl);
+            } else if (currentItem?.skill !== 'speaking') {
+              console.warn('⚠️ State changed during TTS generation, aborting speaking setup');
+            } else {
+              console.warn('⚠️ TTS generation failed for speaking prompt');
+              setTimeout(() => startPreparationPhase(), 3000);
+            }
+          });
+        } else {
+          console.warn('⚠️ No prompt found for speaking item or state inconsistency');
+          setTimeout(() => startPreparationPhase(), 2000);
+        }
+      } else {
+        console.log('🔄 Speaking item already processed, skipping TTS generation');
+        // If already processed, try to play existing audio or go to preparation
+        if (currentItem.content.assets?.audio) {
+          autoPlayNarration(currentItem.content.assets.audio);
+        } else {
+          setTimeout(() => startPreparationPhase(), 1000);
+        }
+      }
+    } else if (currentItem.skill === 'writing') {
+      console.log('✍️ Setting up writing item - starting 5 minute timer');
+      startItemTimer(300); // 5 minutes for writing
+    } else if (currentItem.skill === 'reading') {
+      console.log('📖 Setting up reading item - starting timer immediately');
+      startItemTimer(currentItem.timing.maxAnswerSec);
+    } else {
+      console.log('⏱️ Starting timer immediately for:', currentItem.skill);
+      startItemTimer(currentItem.timing.maxAnswerSec);
+    }
+  }, [currentItem, currentStage, testPhase]);
+  
   // Timer effects
   useEffect(() => {
     if (testPhase === 'testing' && itemTimer > 0) {
