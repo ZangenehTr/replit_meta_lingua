@@ -534,8 +534,13 @@ export default function MSTPage() {
   
   // Timer effects (excluding speaking phases)
   useEffect(() => {
-    // CRITICAL: Don't run generic timer during speaking phases
-    if (currentItem?.skill === 'speaking') return;
+    // CRITICAL FIX: Don't run generic timer during speaking phases to prevent duplicate timers
+    if (currentItem?.skill === 'speaking') {
+      // Reset generic timer states during speaking to prevent display conflicts
+      setItemTimer(0);
+      setGuardTimer(0);
+      return;
+    }
     
     if (testPhase === 'testing' && itemTimer > 0) {
       const timer = setInterval(() => {
@@ -569,6 +574,47 @@ export default function MSTPage() {
       audioBlob: recordingBlob,
       timeSpentMs
     });
+  };
+
+  // CRITICAL FIX: Handle speaking auto-advance (Q1 → Q2 → Complete)
+  const handleSpeakingAutoAdvance = async (audioBlob: Blob) => {
+    if (!currentSession || !currentItem) return;
+    
+    console.log(`🎙️ Auto-advancing speaking: ${currentStage} stage completed`);
+    
+    // Calculate time spent (prep + recording time)
+    const timeSpentMs = ((currentItem.timing.prepSec || PREP_SEC) + (currentItem.timing.recordSec || RECORD_SEC)) * 1000;
+    
+    // Submit current speaking response
+    try {
+      const response = await submitResponseMutation.mutateAsync({
+        sessionId: currentSession.sessionId,
+        skill: currentItem.skill,
+        stage: currentStage,
+        itemId: currentItem.id,
+        audioBlob: audioBlob,
+        timeSpentMs
+      });
+      
+      console.log('🎙️ Speaking response submitted successfully, response:', response);
+      
+      // Reset speaking-specific states for next question
+      setRecordingBlob(null);
+      setSpeakingPhase('narration');
+      setPrepTimer(PREP_SEC);
+      setRecordTimer(RECORD_SEC);
+      setPrepTimeDisplay('00:15');
+      setRecordTimeDisplay('01:00');
+      setNarrationPlayButton(false);
+      
+    } catch (error) {
+      console.error('❌ Error auto-advancing speaking:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to advance to next question. Please try again.',
+        variant: 'destructive'
+      });
+    }
   };
 
   // Audio recording functions
@@ -986,6 +1032,12 @@ export default function MSTPage() {
           clearInterval(recordInterval);
           setRecordInterval(null);
         }
+        
+        // CRITICAL FIX: Auto-advance speaking to next stage after recording completes
+        console.log('🎙️ Speaking recording completed, auto-advancing to next stage...');
+        setTimeout(() => {
+          handleSpeakingAutoAdvance(blob);
+        }, 1000); // Small delay to ensure UI updates
       };
       
       setMediaRecorder(recorder);
@@ -1570,26 +1622,40 @@ export default function MSTPage() {
                 </div>
               )}
 
-              {/* Submit button */}
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
-                  {guardTimer > 0 && (
-                    <span data-testid="text-guard-timer">
-                      Please wait {guardTimer} seconds before submitting
-                    </span>
-                  )}
+              {/* Submit button - HIDDEN for speaking since it auto-advances */}
+              {currentItem.skill !== 'speaking' && (
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                  <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
+                    {guardTimer > 0 && (
+                      <span data-testid="text-guard-timer">
+                        Please wait {guardTimer} seconds before submitting
+                      </span>
+                    )}
+                  </div>
+                  
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={guardTimer > 0 || submitResponseMutation.isPending || !isValidResponse()}
+                    size="lg"
+                    className="w-full sm:w-auto min-h-[52px] text-base font-medium touch-target"
+                    data-testid="button-submit"
+                  >
+                    {submitResponseMutation.isPending ? 'Submitting...' : 'Submit Response'}
+                  </Button>
                 </div>
-                
-                <Button
-                  onClick={handleSubmit}
-                  disabled={guardTimer > 0 || submitResponseMutation.isPending || !isValidResponse()}
-                  size="lg"
-                  className="w-full sm:w-auto min-h-[52px] text-base font-medium touch-target"
-                  data-testid="button-submit"
-                >
-                  {submitResponseMutation.isPending ? 'Submitting...' : 'Submit Response'}
-                </Button>
-              </div>
+              )}
+              
+              {/* Speaking auto-advance message - No manual submission needed */}
+              {currentItem.skill === 'speaking' && speakingPhase === 'completed' && (
+                <div className="text-center py-4">
+                  <div className="text-sm text-green-600 font-medium" data-testid="text-speaking-auto-advance">
+                    ✨ Recording complete! Advancing automatically...
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    No manual submission needed for speaking questions
+                  </p>
+                </div>
+              )}
             </>
           )}
         </CardContent>
