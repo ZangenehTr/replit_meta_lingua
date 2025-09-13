@@ -90,9 +90,13 @@ export default function MSTPage() {
   const [speakingPhase, setSpeakingPhase] = useState<'narration' | 'preparation' | 'recording' | 'completed'>('narration');
   const [prepTimer, setPrepTimer] = useState(0);
   const [prepTimeDisplay, setPrepTimeDisplay] = useState('00:15');
+  const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   
   // Score tracking for proper skill completion
   const [skillScores, setSkillScores] = useState<{[skill: string]: {stage1Score?: number, stage2Score?: number, route?: string}}>({});
+  
+  // Prevent duplicate skill completions
+  const [completedSkills, setCompletedSkills] = useState<Set<string>>(new Set());
 
   // Start MST session
   const startSessionMutation = useMutation({
@@ -100,7 +104,7 @@ export default function MSTPage() {
       const response = await fetch('/api/mst/start', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -136,7 +140,7 @@ export default function MSTPage() {
       
       const response = await fetch(`/api/mst/status?sessionId=${currentSession.sessionId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
       
@@ -178,7 +182,7 @@ export default function MSTPage() {
       const response = await fetch('/api/mst/response', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
         body: formData
       });
@@ -208,8 +212,14 @@ export default function MSTPage() {
         
         // CRITICAL: Writing skill should always advance to next skill after first response
         if (currentItem.skill === 'writing') {
-          console.log('🎯 Writing completed - advancing to next skill (writing uses only ONE question)');
-          advanceToNextSkill();
+          const skillKey = `${currentItem.skill}-${currentStage}`;
+          if (!completedSkills.has(skillKey)) {
+            console.log('🎯 Writing completed - advancing to next skill (writing uses only ONE question)');
+            setCompletedSkills(prev => new Set(prev).add(skillKey));
+            advanceToNextSkill();
+          } else {
+            console.log('⚠️ Writing already completed, skipping duplicate advancement');
+          }
         } else if (currentStage === 'core') {
           // Check if we're at A1 level and trying to route down
           const isA1Level = currentItem?.cefr === 'A1';
@@ -221,7 +231,9 @@ export default function MSTPage() {
             advanceToNextSkill();
           } else {
             // Normal routing logic
-            const nextStage: MSTStage = data.route === 'up' ? 'upper' : 'lower';
+            const nextStage: MSTStage = data.route === 'up' ? 'upper' 
+              : data.route === 'stay' ? 'upper' 
+              : 'lower';
             setCurrentStage(nextStage);
             fetchNextItemWithStage(nextStage);
           }
@@ -256,7 +268,7 @@ export default function MSTPage() {
     try {
       const response = await fetch(`/api/mst/item?skill=listening&stage=core&sessionId=${sessionId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
       
@@ -269,7 +281,21 @@ export default function MSTPage() {
         } else if (data.item.skill === 'speaking') {
           console.log('🎙️ Starting TOEFL speaking flow - narration phase');
           setSpeakingPhase('narration');
-          // No timer yet - will start after narration ends
+          // Generate TTS for speaking prompt and auto-play
+          const prompt = data.item.content.assets?.prompt;
+          if (prompt) {
+            generateSpeakingTTS(prompt).then(audioUrl => {
+              if (audioUrl) {
+                autoPlayNarration(audioUrl);
+              } else {
+                // If TTS fails, wait 3 seconds then start preparation
+                setTimeout(() => startPreparationPhase(), 3000);
+              }
+            });
+          } else {
+            console.warn('⚠️ No prompt found for speaking item');
+            setTimeout(() => startPreparationPhase(), 2000);
+          }
         } else if (data.item.skill === 'writing') {
           console.log('Starting writing timer with 5 minutes (300s)');
           startItemTimer(300); // 5 minutes for writing
@@ -293,7 +319,7 @@ export default function MSTPage() {
       
       const response = await fetch(`/api/mst/item?skill=${currentSkill}&stage=${stage}&sessionId=${currentSession.sessionId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
       
@@ -306,7 +332,21 @@ export default function MSTPage() {
         } else if (data.item.skill === 'speaking') {
           console.log('🎙️ Starting TOEFL speaking flow - narration phase');
           setSpeakingPhase('narration');
-          // No timer yet - will start after narration ends
+          // Generate TTS for speaking prompt and auto-play
+          const prompt = data.item.content.assets?.prompt;
+          if (prompt) {
+            generateSpeakingTTS(prompt).then(audioUrl => {
+              if (audioUrl) {
+                autoPlayNarration(audioUrl);
+              } else {
+                // If TTS fails, wait 3 seconds then start preparation
+                setTimeout(() => startPreparationPhase(), 3000);
+              }
+            });
+          } else {
+            console.warn('⚠️ No prompt found for speaking item');
+            setTimeout(() => startPreparationPhase(), 2000);
+          }
         } else if (data.item.skill === 'writing') {
           console.log('Starting writing timer with 5 minutes (300s)');
           startItemTimer(300); // 5 minutes for writing
@@ -329,7 +369,7 @@ export default function MSTPage() {
       
       const response = await fetch(`/api/mst/item?skill=${currentSkill}&stage=${stage}&sessionId=${currentSession.sessionId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
       
@@ -342,7 +382,21 @@ export default function MSTPage() {
         } else if (data.item.skill === 'speaking') {
           console.log('🎙️ Starting TOEFL speaking flow - narration phase');
           setSpeakingPhase('narration');
-          // No timer yet - will start after narration ends
+          // Generate TTS for speaking prompt and auto-play
+          const prompt = data.item.content.assets?.prompt;
+          if (prompt) {
+            generateSpeakingTTS(prompt).then(audioUrl => {
+              if (audioUrl) {
+                autoPlayNarration(audioUrl);
+              } else {
+                // If TTS fails, wait 3 seconds then start preparation
+                setTimeout(() => startPreparationPhase(), 3000);
+              }
+            });
+          } else {
+            console.warn('⚠️ No prompt found for speaking item');
+            setTimeout(() => startPreparationPhase(), 2000);
+          }
         } else if (data.item.skill === 'writing') {
           console.log('Starting writing timer with 5 minutes (300s)');
           startItemTimer(300); // 5 minutes for writing
@@ -366,7 +420,7 @@ export default function MSTPage() {
       
       const response = await fetch(`/api/mst/item?skill=${skill}&stage=${stage}&sessionId=${currentSession.sessionId}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
       
@@ -379,7 +433,21 @@ export default function MSTPage() {
         } else if (data.item.skill === 'speaking') {
           console.log('🎙️ Starting TOEFL speaking flow - narration phase');
           setSpeakingPhase('narration');
-          // No timer yet - will start after narration ends
+          // Generate TTS for speaking prompt and auto-play
+          const prompt = data.item.content.assets?.prompt;
+          if (prompt) {
+            generateSpeakingTTS(prompt).then(audioUrl => {
+              if (audioUrl) {
+                autoPlayNarration(audioUrl);
+              } else {
+                // If TTS fails, wait 3 seconds then start preparation
+                setTimeout(() => startPreparationPhase(), 3000);
+              }
+            });
+          } else {
+            console.warn('⚠️ No prompt found for speaking item');
+            setTimeout(() => startPreparationPhase(), 2000);
+          }
         } else if (data.item.skill === 'writing') {
           console.log('Starting writing timer with 5 minutes (300s)');
           startItemTimer(300); // 5 minutes for writing
@@ -409,7 +477,7 @@ export default function MSTPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
         body: JSON.stringify({
           sessionId: currentSession.sessionId,
@@ -454,7 +522,7 @@ export default function MSTPage() {
       const response = await fetch('/api/mst/finalize', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -605,9 +673,11 @@ export default function MSTPage() {
     }
   };
 
-  // Audio playback for listening items
+  // Audio playback for listening items and speaking narration
   const playAudio = async () => {
-    if (!currentItem?.content?.assets?.audio) {
+    // Check for audio source (either original or generated TTS)
+    const audioSource = currentItem?.content?.assets?.audio;
+    if (!audioSource) {
       toast({
         title: 'Error',
         description: 'No audio file available for this item',
@@ -640,9 +710,8 @@ export default function MSTPage() {
             console.log('Audio ended - starting listening timer:', currentItem.timing.maxAnswerSec);
             startItemTimer(currentItem.timing.maxAnswerSec);
           } else if (currentItem?.skill === 'speaking') {
-            console.log('🎙️ Speaking narration ended - starting 15s preparation');
-            setSpeakingPhase('preparation');
-            startPreparationTimer();
+            console.log('🎙️ Speaking narration ended - starting preparation phase');
+            startPreparationPhase();
           }
         });
         
@@ -655,9 +724,8 @@ export default function MSTPage() {
           });
         });
         
-        // Use the generated audio file
-        const audioUrl = currentItem.content.assets.audio || '/assets/audio/default.mp3';
-        audio.src = audioUrl;
+        // Use the audio source (either original or generated TTS)
+        audio.src = audioSource;
         
         setAudioElement(audio);
         
@@ -731,6 +799,173 @@ export default function MSTPage() {
     }
     
     return false;
+  };
+
+  // Generate TTS for speaking prompt
+  const generateSpeakingTTS = async (prompt: string) => {
+    if (!prompt || isGeneratingTTS) return null;
+    
+    setIsGeneratingTTS(true);
+    console.log('🎵 Generating TTS for speaking prompt:', prompt);
+    
+    try {
+      const response = await fetch('/api/tts/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          text: prompt,
+          language: 'english',
+          speed: 1.0
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate TTS');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.audioUrl) {
+        console.log('✅ TTS generated successfully:', data.audioUrl);
+        // CRITICAL: Set audio URL directly on currentItem for proper playback
+        if (currentItem) {
+          if (!currentItem.content.assets) {
+            currentItem.content.assets = {};
+          }
+          currentItem.content.assets.audio = data.audioUrl;
+          setCurrentItem({ ...currentItem }); // Trigger re-render
+        }
+        return data.audioUrl;
+      } else {
+        throw new Error(data.error || 'TTS generation failed');
+      }
+    } catch (error) {
+      console.error('❌ TTS generation error:', error);
+      toast({
+        title: 'Audio Generation Error',
+        description: 'Failed to generate speech. Continuing with visual prompt only.',
+        variant: 'destructive'
+      });
+      return null;
+    } finally {
+      setIsGeneratingTTS(false);
+    }
+  };
+
+  // Auto-play narration audio for speaking questions
+  const autoPlayNarration = async (audioUrl: string) => {
+    try {
+      console.log('🎧 Auto-playing narration audio:', audioUrl);
+      const audio = new Audio(audioUrl);
+      
+      // Handle audio events
+      audio.addEventListener('ended', () => {
+        console.log('🎵 Narration ended - starting preparation phase');
+        setIsAudioPlaying(false);
+        startPreparationPhase();
+      });
+      
+      audio.addEventListener('error', (e) => {
+        console.error('❌ Audio playback error:', e);
+        setIsAudioPlaying(false);
+        // Continue to preparation phase even if audio fails
+        startPreparationPhase();
+      });
+      
+      setAudioElement(audio);
+      await audio.play();
+      setIsAudioPlaying(true);
+      
+    } catch (error) {
+      console.error('❌ Auto-play error:', error);
+      // Continue to preparation phase if auto-play fails
+      startPreparationPhase();
+    }
+  };
+
+  // Start preparation phase with proper timing
+  const startPreparationPhase = () => {
+    if (!currentItem) return;
+    
+    console.log('⏰ Starting preparation phase');
+    setSpeakingPhase('preparation');
+    
+    // Use actual preparation time from item timing
+    const prepTimeSeconds = currentItem.timing.prepSec || 15;
+    setPrepTimer(prepTimeSeconds);
+    setPrepTimeDisplay(formatTime(prepTimeSeconds));
+    
+    // Start preparation countdown
+    const prepInterval = setInterval(() => {
+      setPrepTimer(prev => {
+        const newTime = prev - 1;
+        setPrepTimeDisplay(formatTime(newTime));
+        
+        if (newTime <= 0) {
+          clearInterval(prepInterval);
+          startRecordingPhase();
+        }
+        
+        return newTime;
+      });
+    }, 1000);
+  };
+
+  // Start recording phase with proper timing
+  const startRecordingPhase = async () => {
+    if (!currentItem) return;
+    
+    console.log('🎙️ Starting recording phase');
+    setSpeakingPhase('recording');
+    
+    try {
+      // Start recording
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: BlobPart[] = [];
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+      
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        setRecordingBlob(blob);
+        setSpeakingPhase('completed');
+        
+        // Stop the stream
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      setMediaRecorder(recorder);
+      recorder.start();
+      setIsRecording(true);
+      
+      // Auto-stop recording after the specified time
+      const recordTimeSeconds = currentItem.timing.recordSec || 60;
+      console.log(`🎙️ Recording for ${recordTimeSeconds} seconds`);
+      
+      setTimeout(() => {
+        if (recorder.state === 'recording') {
+          console.log('⏹️ Auto-stopping recording after time limit');
+          recorder.stop();
+          setIsRecording(false);
+        }
+      }, recordTimeSeconds * 1000);
+      
+    } catch (error) {
+      console.error('❌ Recording error:', error);
+      toast({
+        title: 'Recording Error',
+        description: 'Failed to start recording. Please check microphone permissions.',
+        variant: 'destructive'
+      });
+    }
   };
 
   // Format time display
@@ -1133,14 +1368,31 @@ export default function MSTPage() {
                         {currentItem.content.assets?.audio && (
                           <Button
                             onClick={playAudio}
-                            disabled={isAudioPlaying}
+                            disabled={isAudioPlaying || isGeneratingTTS}
                             size="lg"
                             className="w-full sm:w-auto min-h-[52px] text-base font-medium touch-target"
                             data-testid="button-play-narration"
                           >
-                            {isAudioPlaying ? <Volume2 className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
-                            {isAudioPlaying ? 'Playing Question...' : 'Play Question'}
+                            {isGeneratingTTS ? (
+                              <>
+                                <Volume2 className="w-5 h-5 mr-2 animate-pulse" />
+                                Generating Audio...
+                              </>
+                            ) : isAudioPlaying ? (
+                              <>
+                                <Volume2 className="w-5 h-5 mr-2" />
+                                Playing Question...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-5 h-5 mr-2" />
+                                Play Question
+                              </>
+                            )}
                           </Button>
+                        )}
+                        {isGeneratingTTS && (
+                          <p className="text-sm text-blue-600">🎵 Generating narration audio...</p>
                         )}
                       </div>
                     )}
@@ -1155,11 +1407,11 @@ export default function MSTPage() {
                     
                     {speakingPhase === 'recording' && (
                       <div className="space-y-3">
-                        <div className="text-lg font-semibold text-red-600">🎙️ Recording (60 seconds)</div>
+                        <div className="text-lg font-semibold text-red-600">🎙️ Recording ({currentItem.timing.recordSec || 60} seconds)</div>
                         <div className="flex justify-center">
                           <div className="animate-pulse bg-red-500 rounded-full w-6 h-6"></div>
                         </div>
-                        <p className="text-sm text-gray-600">Speak clearly. Recording will stop automatically after 60 seconds.</p>
+                        <p className="text-sm text-gray-600">Speak clearly. Recording will stop automatically after {currentItem.timing.recordSec || 60} seconds.</p>
                         <Button
                           onClick={stopRecording}
                           variant="destructive"
@@ -1192,7 +1444,7 @@ export default function MSTPage() {
                     <h3 className="font-medium mb-2">Writing Task</h3>
                     <p className="text-sm">{currentItem.content.assets?.prompt}</p>
                     <div className="mt-2 text-xs text-gray-600">
-                      Word limit: {currentItem.content.assets?.minWords} - {currentItem.content.assets?.maxWords} words
+                      Word limit: minimum 80 words
                     </div>
                   </div>
                   
@@ -1208,11 +1460,7 @@ export default function MSTPage() {
                       <span className={`${(currentResponse?.trim().split(/\s+/).filter(Boolean).length || 0) >= 80 ? 'text-green-600' : 'text-red-600'}`}>
                         Words: {currentResponse?.trim().split(/\s+/).filter(Boolean).length || 0} / 80 minimum
                       </span>
-                      {(currentResponse?.trim().split(/\s+/).filter(Boolean).length || 0) < 80 && (
-                        <div className="text-red-600 text-xs mt-1">
-                          Please write at least 80 words to continue
-                        </div>
-                      )}
+                      {/* Word count guidance is sufficient - removed red error text for better UX */}
                     </div>
                   </div>
                 </div>
