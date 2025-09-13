@@ -129,11 +129,7 @@ router.get('/item', authenticateToken, async (req, res) => {
       currentStage: stage
     });
 
-    // Start skill timer
-    const timer = sessionController.getTimer(sessionId);
-    if (timer) {
-      timer.createSkillTimer(skill, session.perSkillSeconds);
-    }
+    // Timer logic now handled on frontend - no server-side skill timers needed
 
     // Store the item for this session
     sessionController.setSessionItem(sessionId, skill, stage, item);
