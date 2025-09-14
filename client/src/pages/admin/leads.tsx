@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -52,8 +52,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   Form,
   FormControl,
@@ -81,32 +80,40 @@ interface LeadWithAssignee extends Lead {
 }
 
 // Enhanced insert schemas for frontend forms with validation
-const createLeadFormSchema = insertLeadSchema.omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  assignedTo: true,
-  lastContactDate: true,
-  conversionDate: true,
-  studentId: true
-}).extend({
+const createLeadFormSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email format").optional().or(z.literal("")),
-  budget: z.string().optional().or(z.number().optional()),
-  nextFollowUpDate: z.string().optional()
+  phoneNumber: z.string().min(1, "Phone number is required"),
+  source: z.string().min(1, "Source is required"),
+  status: z.string().default("new"),
+  priority: z.string().default("medium"),
+  level: z.string().min(1, "Level is required"),
+  interestedLanguage: z.string().optional(),
+  interestedLevel: z.string().optional(),
+  preferredFormat: z.string().optional(),
+  budget: z.number().optional(),
+  notes: z.string().optional(),
+  assignedTo: z.number().optional(),
+  lastContactDate: z.string().optional(),
+  nextFollowUpDate: z.string().optional(),
+  conversionDate: z.string().optional(),
+  studentId: z.number().optional()
 });
 
-const communicationFormSchema = insertCommunicationLogSchema.omit({
-  id: true,
-  fromUserId: true,
-  toUserId: true,
-  toParentId: true,
-  sentAt: true,
-  readAt: true,
-  metadata: true,
-  createdAt: true,
-  studentId: true
-}).extend({
-  scheduledFor: z.string().optional()
+const communicationFormSchema = z.object({
+  type: z.string().min(1, "Communication type is required"),
+  subject: z.string().optional(),
+  content: z.string().min(1, "Content is required"),
+  status: z.string().default("sent"),
+  fromUserId: z.number().optional(),
+  toUserId: z.number().optional(),
+  toParentId: z.number().optional(),
+  sentAt: z.string().optional(),
+  readAt: z.string().optional(),
+  metadata: z.any().optional(),
+  scheduledFor: z.string().optional(),
+  studentId: z.number().optional()
 });
 
 type CreateLeadFormData = z.infer<typeof createLeadFormSchema>;
@@ -146,9 +153,13 @@ export default function AdminLeadsPage() {
       interestedLanguage: '',
       interestedLevel: '',
       preferredFormat: '',
-      budget: '',
+      budget: undefined,
       notes: '',
-      nextFollowUpDate: ''
+      assignedTo: undefined,
+      lastContactDate: undefined,
+      nextFollowUpDate: undefined,
+      conversionDate: undefined,
+      studentId: undefined
     }
   });
 
@@ -159,7 +170,14 @@ export default function AdminLeadsPage() {
       subject: '',
       content: '',
       status: 'sent',
-      scheduledFor: ''
+      fromUserId: undefined,
+      toUserId: undefined,
+      toParentId: undefined,
+      sentAt: undefined,
+      readAt: undefined,
+      metadata: undefined,
+      scheduledFor: '',
+      studentId: undefined
     }
   });
 
@@ -196,7 +214,7 @@ export default function AdminLeadsPage() {
       // Transform form data for API
       const apiData = {
         ...leadData,
-        budget: leadData.budget ? (typeof leadData.budget === 'string' ? parseInt(leadData.budget) || null : leadData.budget) : null,
+        budget: leadData.budget || null,
         nextFollowUpDate: leadData.nextFollowUpDate ? new Date(leadData.nextFollowUpDate).toISOString() : null
       };
       
@@ -311,8 +329,8 @@ export default function AdminLeadsPage() {
     setBulkSelected([]);
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    const variants: { [key: string]: string } = {
+  const getStatusBadgeVariant = (status: string): "default" | "destructive" | "secondary" | "outline" => {
+    const variants: { [key: string]: "default" | "destructive" | "secondary" | "outline" } = {
       'new': 'default',
       'contacted': 'secondary',
       'interested': 'outline',
@@ -323,8 +341,8 @@ export default function AdminLeadsPage() {
     return variants[status] || 'default';
   };
 
-  const getPriorityBadgeVariant = (priority: string) => {
-    const variants: { [key: string]: string } = {
+  const getPriorityBadgeVariant = (priority: string): "default" | "destructive" | "secondary" | "outline" => {
+    const variants: { [key: string]: "default" | "destructive" | "secondary" | "outline" } = {
       'low': 'outline',
       'medium': 'secondary',
       'high': 'destructive',
@@ -519,84 +537,172 @@ export default function AdminLeadsPage() {
                       </FormItem>
                     )}
                   />
-                
-                <div>
-                  <Label htmlFor="interestedLanguage">{t('admin:leads.interestedLanguage')}</Label>
-                  <Select value={newLeadData.interestedLanguage} onValueChange={(value) => setNewLeadData({...newLeadData, interestedLanguage: value})}>
-                    <SelectTrigger data-testid="select-interestedLanguage">
-                      <SelectValue placeholder={t('admin:leads.selectLanguage')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="english">{t('admin:leads.languageEnglish')}</SelectItem>
-                      <SelectItem value="persian">{t('admin:leads.languagePersian')}</SelectItem>
-                      <SelectItem value="arabic">{t('admin:leads.languageArabic')}</SelectItem>
-                      <SelectItem value="french">{t('admin:leads.languageFrench')}</SelectItem>
-                      <SelectItem value="german">{t('admin:leads.languageGerman')}</SelectItem>
-                      <SelectItem value="spanish">{t('admin:leads.languageSpanish')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="interestedLevel">{t('admin:leads.interestedLevel')}</Label>
-                  <Select value={newLeadData.interestedLevel} onValueChange={(value) => setNewLeadData({...newLeadData, interestedLevel: value})}>
-                    <SelectTrigger data-testid="select-interestedLevel">
-                      <SelectValue placeholder={t('admin:leads.selectLevel')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">{t('admin:leads.levelBeginner')}</SelectItem>
-                      <SelectItem value="intermediate">{t('admin:leads.levelIntermediate')}</SelectItem>
-                      <SelectItem value="advanced">{t('admin:leads.levelAdvanced')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="preferredFormat">{t('admin:leads.preferredFormat')}</Label>
-                  <Select value={newLeadData.preferredFormat} onValueChange={(value) => setNewLeadData({...newLeadData, preferredFormat: value})}>
-                    <SelectTrigger data-testid="select-preferredFormat">
-                      <SelectValue placeholder={t('admin:leads.selectFormat')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="group">{t('admin:leads.formatGroup')}</SelectItem>
-                      <SelectItem value="individual">{t('admin:leads.formatIndividual')}</SelectItem>
-                      <SelectItem value="online">{t('admin:leads.formatOnline')}</SelectItem>
-                      <SelectItem value="in_person">{t('admin:leads.formatInPerson')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="budget">{t('admin:leads.budget')}</Label>
-                  <Input
-                    id="budget"
-                    type="number"
-                    value={newLeadData.budget}
-                    onChange={(e) => setNewLeadData({...newLeadData, budget: e.target.value})}
-                    placeholder={t('admin:leads.budgetPlaceholder')}
-                    data-testid="input-budget"
+
+                  <FormField
+                    control={leadForm.control}
+                    name="level"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('admin:leads.level')} *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-level">
+                              <SelectValue placeholder={t('admin:leads.selectLevel')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="beginner">{t('admin:leads.levelBeginner')}</SelectItem>
+                            <SelectItem value="intermediate">{t('admin:leads.levelIntermediate')}</SelectItem>
+                            <SelectItem value="advanced">{t('admin:leads.levelAdvanced')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
                 
-                <div className="col-span-2">
-                  <Label htmlFor="notes">{t('admin:leads.notes')}</Label>
-                  <Textarea
-                    id="notes"
-                    value={newLeadData.notes}
-                    onChange={(e) => setNewLeadData({...newLeadData, notes: e.target.value})}
-                    placeholder={t('admin:leads.notesPlaceholder')}
-                    rows={3}
-                    data-testid="textarea-notes"
+                  <FormField
+                    control={leadForm.control}
+                    name="interestedLanguage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('admin:leads.interestedLanguage')}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-interestedLanguage">
+                              <SelectValue placeholder={t('admin:leads.selectLanguage')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="english">{t('admin:leads.languageEnglish')}</SelectItem>
+                            <SelectItem value="persian">{t('admin:leads.languagePersian')}</SelectItem>
+                            <SelectItem value="arabic">{t('admin:leads.languageArabic')}</SelectItem>
+                            <SelectItem value="french">{t('admin:leads.languageFrench')}</SelectItem>
+                            <SelectItem value="german">{t('admin:leads.languageGerman')}</SelectItem>
+                            <SelectItem value="spanish">{t('admin:leads.languageSpanish')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-              </div>
+                
+                  <FormField
+                    control={leadForm.control}
+                    name="interestedLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('admin:leads.interestedLevel')}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-interestedLevel">
+                              <SelectValue placeholder={t('admin:leads.selectLevel')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="beginner">{t('admin:leads.levelBeginner')}</SelectItem>
+                            <SelectItem value="intermediate">{t('admin:leads.levelIntermediate')}</SelectItem>
+                            <SelectItem value="advanced">{t('admin:leads.levelAdvanced')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                
+                  <FormField
+                    control={leadForm.control}
+                    name="preferredFormat"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('admin:leads.preferredFormat')}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-preferredFormat">
+                              <SelectValue placeholder={t('admin:leads.selectFormat')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="group">{t('admin:leads.formatGroup')}</SelectItem>
+                            <SelectItem value="individual">{t('admin:leads.formatIndividual')}</SelectItem>
+                            <SelectItem value="online">{t('admin:leads.formatOnline')}</SelectItem>
+                            <SelectItem value="in_person">{t('admin:leads.formatInPerson')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                
+                  <FormField
+                    control={leadForm.control}
+                    name="budget"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('admin:leads.budget')}</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder={t('admin:leads.budgetPlaceholder')}
+                            data-testid="input-budget"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                
+                  <div className="col-span-2">
+                    <FormField
+                      control={leadForm.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('admin:leads.notes')}</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder={t('admin:leads.notesPlaceholder')}
+                              rows={3}
+                              data-testid="textarea-notes"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <FormField
+                      control={leadForm.control}
+                      name="nextFollowUpDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('admin:leads.nextFollowUpDate')}</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="datetime-local"
+                              data-testid="input-nextFollowUpDate"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </form>
+              </Form>
               
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowNewLeadForm(false)} data-testid="button-cancel">
                   {t('admin:leads.cancel')}
                 </Button>
                 <Button 
-                  onClick={handleCreateLead}
+                  onClick={leadForm.handleSubmit(handleCreateLead)}
                   disabled={createLeadMutation.isPending}
                   className="bg-blue-600 hover:bg-blue-700"
                   data-testid="button-createLead"
@@ -775,18 +881,20 @@ export default function AdminLeadsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8" data-testid="text-loading">{t('admin:leads.loading')}</div>
+            <div className="flex items-center justify-center py-8">
+              <div className="text-muted-foreground">{t('admin:leads.loading')}</div>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={bulkSelected.length === filteredLeads.length}
+                    <TableHead className="w-[50px]">
+                      <Checkbox 
+                        checked={bulkSelected.length === filteredLeads.length && filteredLeads.length > 0}
                         onCheckedChange={(checked) => {
                           if (checked) {
-                            setBulkSelected(filteredLeads.map((lead: Lead) => lead.id));
+                            setBulkSelected(filteredLeads.map(lead => lead.id));
                           } else {
                             setBulkSelected([]);
                           }
@@ -795,119 +903,137 @@ export default function AdminLeadsPage() {
                       />
                     </TableHead>
                     <TableHead>{t('admin:leads.name')}</TableHead>
-                    <TableHead>{t('admin:leads.phone')}</TableHead>
+                    <TableHead>{t('admin:leads.contact')}</TableHead>
                     <TableHead>{t('admin:leads.status')}</TableHead>
                     <TableHead>{t('admin:leads.priority')}</TableHead>
                     <TableHead>{t('admin:leads.source')}</TableHead>
-                    <TableHead>{t('admin:leads.language')}</TableHead>
-                    <TableHead>{t('admin:leads.agent')}</TableHead>
-                    <TableHead>{t('admin:leads.created')}</TableHead>
-                    <TableHead>{t('admin:leads.actions')}</TableHead>
+                    <TableHead>{t('admin:leads.assignedTo')}</TableHead>
+                    <TableHead>{t('admin:leads.createdAt')}</TableHead>
+                    <TableHead className="text-right">{t('admin:leads.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredLeads.map((lead: Lead) => (
-                    <TableRow key={lead.id} data-testid={`row-lead-${lead.id}`}>
-                      <TableCell>
-                        <Checkbox
-                          checked={bulkSelected.includes(lead.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setBulkSelected([...bulkSelected, lead.id]);
-                            } else {
-                              setBulkSelected(bulkSelected.filter(id => id !== lead.id));
-                            }
-                          }}
-                          data-testid={`checkbox-lead-${lead.id}`}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium" data-testid={`text-leadName-${lead.id}`}>{lead.firstName} {lead.lastName}</div>
-                          <div className="text-sm text-muted-foreground" data-testid={`text-leadEmail-${lead.id}`}>{lead.email}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span data-testid={`text-leadPhone-${lead.id}`}>{lead.phoneNumber}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(lead.status)} data-testid={`badge-leadStatus-${lead.id}`}>
-                          {lead.status === 'new' ? t('admin:leads.new') :
-                           lead.status === 'contacted' ? t('admin:leads.contacted') :
-                           lead.status === 'interested' ? t('admin:leads.interested') :
-                           lead.status === 'qualified' ? t('admin:leads.qualified') :
-                           lead.status === 'converted' ? t('admin:leads.converted') :
-                           lead.status === 'lost' ? t('admin:leads.lost') : lead.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getPriorityBadgeVariant(lead.priority)} data-testid={`badge-leadPriority-${lead.id}`}>
-                          {lead.priority === 'low' ? t('admin:leads.priorityLow') :
-                           lead.priority === 'medium' ? t('admin:leads.priorityMedium') :
-                           lead.priority === 'high' ? t('admin:leads.priorityHigh') :
-                           lead.priority === 'urgent' ? t('admin:leads.priorityUrgent') : lead.priority}
-                        </Badge>
-                      </TableCell>
-                      <TableCell data-testid={`text-leadSource-${lead.id}`}>
-                        {lead.source === 'website' ? t('admin:leads.sourceWebsite') :
-                         lead.source === 'social_media' ? t('admin:leads.sourceSocialMedia') :
-                         lead.source === 'referral' ? t('admin:leads.sourceReferral') :
-                         lead.source === 'advertisement' ? t('admin:leads.sourceAdvertisement') :
-                         lead.source === 'walk_in' ? t('admin:leads.sourceWalkIn') :
-                         lead.source === 'call_center' ? t('admin:leads.sourceCallCenter') : lead.source}
-                      </TableCell>
-                      <TableCell data-testid={`text-leadLanguage-${lead.id}`}>{lead.interestedLanguage}</TableCell>
-                      <TableCell data-testid={`text-leadAgent-${lead.id}`}>{lead.assignedToName || t('admin:leads.noAssignee')}</TableCell>
-                      <TableCell data-testid={`text-leadCreated-${lead.id}`}>{formatPersianDate(lead.createdAt)}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0" data-testid={`button-leadActions-${lead.id}`}>
-                              <ChevronDown className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>{t('admin:leads.actions')}</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => {
-                              setSelectedLead(lead);
-                              setShowLeadDetails(true);
-                            }} data-testid={`menuitem-viewDetails-${lead.id}`}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              {t('admin:leads.viewDetails')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {
-                              setSelectedLead(lead);
-                              setShowCommunicationForm(true);
-                            }} data-testid={`menuitem-logCommunication-${lead.id}`}>
-                              <MessageSquare className="mr-2 h-4 w-4" />
-                              {t('admin:leads.logCommunication')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem data-testid={`menuitem-makeCall-${lead.id}`}>
-                              <PhoneCall className="mr-2 h-4 w-4" />
-                              {t('admin:leads.makeCall')}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleUpdateLeadStatus(lead.id, 'contacted')} data-testid={`menuitem-markContacted-${lead.id}`}>
-                              {t('admin:leads.markContacted')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateLeadStatus(lead.id, 'qualified')} data-testid={`menuitem-markQualified-${lead.id}`}>
-                              {t('admin:leads.markQualified')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateLeadStatus(lead.id, 'converted')} data-testid={`menuitem-markConverted-${lead.id}`}>
-                              {t('admin:leads.markConverted')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateLeadStatus(lead.id, 'lost')} data-testid={`menuitem-markLost-${lead.id}`}>
-                              {t('admin:leads.markLost')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                  {filteredLeads.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                        {t('admin:leads.noLeadsFound')}
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredLeads.map((lead) => (
+                      <TableRow key={lead.id}>
+                        <TableCell>
+                          <Checkbox 
+                            checked={bulkSelected.includes(lead.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setBulkSelected([...bulkSelected, lead.id]);
+                              } else {
+                                setBulkSelected(bulkSelected.filter(id => id !== lead.id));
+                              }
+                            }}
+                            data-testid={`checkbox-lead-${lead.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div className="font-medium" data-testid={`text-leadName-${lead.id}`}>
+                                {lead.firstName} {lead.lastName}
+                              </div>
+                              {lead.interestedLanguage && (
+                                <div className="text-sm text-muted-foreground">
+                                  {lead.interestedLanguage} ({lead.interestedLevel})
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {lead.phoneNumber && (
+                              <div className="flex items-center gap-1 text-sm">
+                                <Phone className="h-3 w-3" />
+                                <span data-testid={`text-leadPhone-${lead.id}`}>{lead.phoneNumber}</span>
+                              </div>
+                            )}
+                            {lead.email && (
+                              <div className="flex items-center gap-1 text-sm">
+                                <Mail className="h-3 w-3" />
+                                <span data-testid={`text-leadEmail-${lead.id}`}>{lead.email}</span>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusBadgeVariant(lead.status)} data-testid={`badge-leadStatus-${lead.id}`}>
+                            {t(`admin:leads.${lead.status}`)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getPriorityBadgeVariant(lead.priority || 'medium')} data-testid={`badge-leadPriority-${lead.id}`}>
+                            {t(`admin:leads.priority${lead.priority?.charAt(0).toUpperCase()}${lead.priority?.slice(1)}`)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm" data-testid={`text-leadSource-${lead.id}`}>
+                            {t(`admin:leads.source${lead.source.charAt(0).toUpperCase()}${lead.source.slice(1)}`)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm" data-testid={`text-leadAssignedTo-${lead.id}`}>
+                            {(lead as LeadWithAssignee).assignedToName || t('admin:leads.unassigned')}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm" data-testid={`text-leadCreatedAt-${lead.id}`}>
+                            {formatPersianDate(lead.createdAt)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0" data-testid={`button-leadActions-${lead.id}`}>
+                                <span className="sr-only">{t('admin:leads.openMenu')}</span>
+                                <ChevronDown className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>{t('admin:leads.actions')}</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedLead(lead as LeadWithAssignee);
+                                setShowLeadDetails(true);
+                              }}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                {t('admin:leads.viewDetails')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedLead(lead as LeadWithAssignee);
+                                setShowCommunicationForm(true);
+                              }}>
+                                <MessageSquare className="mr-2 h-4 w-4" />
+                                {t('admin:leads.addCommunication')}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleUpdateLeadStatus(lead.id, 'contacted')}>
+                                <PhoneCall className="mr-2 h-4 w-4" />
+                                {t('admin:leads.markContacted')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleUpdateLeadStatus(lead.id, 'qualified')}>
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                {t('admin:leads.markQualified')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleUpdateLeadStatus(lead.id, 'lost')}>
+                                <XCircle className="mr-2 h-4 w-4" />
+                                {t('admin:leads.markLost')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -915,72 +1041,107 @@ export default function AdminLeadsPage() {
         </CardContent>
       </Card>
 
-      {/* Communication Form Dialog */}
+      {/* Communication Form Modal */}
       <Dialog open={showCommunicationForm} onOpenChange={setShowCommunicationForm}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{t('admin:leads.communicationLog')}</DialogTitle>
+            <DialogTitle>{t('admin:leads.recordCommunication')}</DialogTitle>
             <DialogDescription>
-              {t('admin:leads.recordCommunication')} {selectedLead?.firstName} {selectedLead?.lastName}
+              {selectedLead && `${selectedLead.firstName} ${selectedLead.lastName}`}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="type">{t('admin:leads.communicationType')}</Label>
-              <Select value={communicationData.type} onValueChange={(value) => setCommunicationData({...communicationData, type: value})}>
-                <SelectTrigger data-testid="select-communicationType">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="call">{t('admin:leads.communicationCall')}</SelectItem>
-                  <SelectItem value="email">{t('admin:leads.communicationEmail')}</SelectItem>
-                  <SelectItem value="sms">{t('admin:leads.communicationSMS')}</SelectItem>
-                  <SelectItem value="meeting">{t('admin:leads.communicationMeeting')}</SelectItem>
-                  <SelectItem value="note">{t('admin:leads.communicationNote')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="subject">{t('admin:leads.communicationSubject')}</Label>
-              <Input
-                id="subject"
-                value={communicationData.subject}
-                onChange={(e) => setCommunicationData({...communicationData, subject: e.target.value})}
-                placeholder={t('admin:leads.communicationSubject')}
-                data-testid="input-communicationSubject"
+          <Form {...communicationForm}>
+            <form onSubmit={communicationForm.handleSubmit(handleCreateCommunication)} className="space-y-4">
+              <FormField
+                control={communicationForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin:leads.communicationType')} *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-communicationType">
+                          <SelectValue placeholder={t('admin:leads.selectType')} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="call">{t('admin:leads.typeCall')}</SelectItem>
+                        <SelectItem value="email">{t('admin:leads.typeEmail')}</SelectItem>
+                        <SelectItem value="sms">{t('admin:leads.typeSMS')}</SelectItem>
+                        <SelectItem value="meeting">{t('admin:leads.typeMeeting')}</SelectItem>
+                        <SelectItem value="note">{t('admin:leads.typeNote')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-
-            <div>
-              <Label htmlFor="content">{t('admin:leads.communicationContent')}</Label>
-              <Textarea
-                id="content"
-                value={communicationData.content}
-                onChange={(e) => setCommunicationData({...communicationData, content: e.target.value})}
-                placeholder={t('admin:leads.communicationContent')}
-                rows={4}
-                data-testid="textarea-communicationContent"
+              
+              <FormField
+                control={communicationForm.control}
+                name="subject"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin:leads.subject')}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder={t('admin:leads.subjectPlaceholder')}
+                        data-testid="input-communicationSubject"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
+              
+              <FormField
+                control={communicationForm.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin:leads.content')} *</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={t('admin:leads.contentPlaceholder')}
+                        rows={4}
+                        data-testid="textarea-communicationContent"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={communicationForm.control}
+                name="scheduledFor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('admin:leads.scheduledFor')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="datetime-local"
+                        data-testid="input-scheduledFor"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCommunicationForm(false)} data-testid="button-cancelCommunication">
+            <Button variant="outline" onClick={() => setShowCommunicationForm(false)}>
               {t('admin:leads.cancel')}
             </Button>
             <Button 
-              onClick={() => {
-                if (selectedLead) {
-                  createCommunicationMutation.mutate({
-                    leadId: selectedLead.id,
-                    communication: communicationData
-                  });
-                }
-              }}
+              onClick={communicationForm.handleSubmit(handleCreateCommunication)}
               disabled={createCommunicationMutation.isPending}
-              data-testid="button-recordCommunication"
             >
               {createCommunicationMutation.isPending ? t('admin:leads.recording') : t('admin:leads.recordCommunication')}
             </Button>
