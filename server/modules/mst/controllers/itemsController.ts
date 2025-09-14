@@ -91,7 +91,7 @@ export class MstItemsController {
   /**
    * Get item by skill and stage
    */
-  getItem(skill: Skill, stage: Stage, cefr?: CEFRLevel): Item | null {
+  getItem(skill: Skill, stage: Stage, cefr?: CEFRLevel, excludedSuffixes?: Set<string>): Item | null {
     const items = this.itemBank.get(skill) || [];
     
     // Filter by stage and optionally by CEFR level
@@ -101,10 +101,27 @@ export class MstItemsController {
       filteredItems = filteredItems.filter(item => item.cefr === cefr);
     }
     
+    // Filter out items with excluded suffixes (for preventing duplicate content)
+    if (excludedSuffixes && excludedSuffixes.size > 0) {
+      filteredItems = filteredItems.filter(item => {
+        const suffix = item.id.split('-').pop();
+        return !excludedSuffixes.has(suffix || '');
+      });
+    }
+    
     if (filteredItems.length === 0) {
-      console.warn(`⚠️ No items found for ${skill} ${stage} ${cefr || ''}`);
-      // Return any item from the skill as fallback
-      return items[0] || null;
+      console.warn(`⚠️ No items found for ${skill} ${stage} ${cefr || ''} after filtering`);
+      // If no items after filtering, try without suffix filter as fallback
+      if (excludedSuffixes && excludedSuffixes.size > 0) {
+        filteredItems = items.filter(item => item.stage === stage);
+        if (cefr) {
+          filteredItems = filteredItems.filter(item => item.cefr === cefr);
+        }
+      }
+      if (filteredItems.length === 0) {
+        // Return any item from the skill as fallback
+        return items[0] || null;
+      }
     }
     
     // Return random item from filtered set

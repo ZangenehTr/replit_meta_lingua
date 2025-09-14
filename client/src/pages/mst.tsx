@@ -132,6 +132,9 @@ export default function MSTPage() {
   // ARCHITECT FIX B: Submission watchdog for 21-second backend latency
   const [isProcessingSubmission, setIsProcessingSubmission] = useState(false);
   const [submissionStartTime, setSubmissionStartTime] = useState<number>(0);
+  
+  // Track speaking question number (Q1=1, Q2=2)
+  const [speakingQuestionIndex, setSpeakingQuestionIndex] = useState(0);
 
   // Start MST session
   const startSessionMutation = useMutation({
@@ -264,13 +267,12 @@ export default function MSTPage() {
           } else {
             console.log('⚠️ Writing already completed, skipping duplicate advancement');
           }
-        } else if (currentStage === 'core') {
-          // FIXED: Removed A1 auto-skip logic to ensure all learners can attempt both questions
-          // Normal routing logic for all levels
+        } else if (currentItem.skill === 'speaking' && speakingQuestionIndex === 1) {
+          // Speaking Q1 -> Q2 transition
           const nextStage: MSTStage = data.route === 'up' ? 'upper' 
             : data.route === 'stay' ? 'upper' 
             : 'lower';
-          console.log(`📊 STAGE TRANSITION: ${currentItem.skill} ${currentStage} → ${nextStage} (route: ${data.route})`);
+          console.log(`📊 SPEAKING Q1→Q2 TRANSITION: ${currentItem.skill} ${currentItem.stage} → ${nextStage} (route: ${data.route}, Q${speakingQuestionIndex}→Q2)`);
           
           // CRITICAL: For speaking skill, ensure we reset speaking state before transitioning
           if (currentItem.skill === 'speaking') {
@@ -286,6 +288,8 @@ export default function MSTPage() {
             setNarrationPlayButton(false);
             setIsRecording(false);
             setIsAutoAdvancing(false);
+            // Increment speaking question index for Q2
+            setSpeakingQuestionIndex(2);
             // ARCHITECT FIX C: Clear processed items map to allow Q2 setup
             setProcessedSpeakingItems(new Map());
             // ARCHITECT FIX: Clear interval refs for Q1→Q2 transition
@@ -305,6 +309,14 @@ export default function MSTPage() {
           
           setCurrentStage(nextStage);
           fetchNextItemWithStage(nextStage);
+        } else if (currentStage === 'core' && currentItem.skill !== 'speaking') {
+          // Non-speaking skills: proceed with normal two-stage flow
+          const nextStage: MSTStage = data.route === 'up' ? 'upper' 
+            : data.route === 'stay' ? 'upper' 
+            : 'lower';
+          console.log(`📊 STAGE TRANSITION: ${currentItem.skill} ${currentStage} → ${nextStage} (route: ${data.route})`);
+          setCurrentStage(nextStage);
+          fetchNextItemWithStage(nextStage);
         } else {
           // For all other skills and speaking Q2, complete the skill
           console.log(`📊 SKILL COMPLETION: ${currentItem.skill} completed after stage ${currentStage}`);
@@ -314,6 +326,7 @@ export default function MSTPage() {
             setSpeakingPhase('narration');
             setRecordingBlob(null);
             setProcessedSpeakingItems(new Map());
+            setSpeakingQuestionIndex(0); // Reset for next test
             // ARCHITECT FIX: Clear interval refs for skill completion
             if (prepIntervalRef.current) {
               clearInterval(prepIntervalRef.current);
@@ -615,6 +628,11 @@ export default function MSTPage() {
     } else if (currentItem.skill === 'speaking') {
       console.log('🎙️ Setting up speaking item - resetting state and starting narration phase');
       
+      // Set speaking question index if not already set
+      if (speakingQuestionIndex === 0) {
+        setSpeakingQuestionIndex(1); // Start with Q1
+      }
+      
       // FIX: Reset speaking state per item with proper formatting
       setSpeakingPhase('narration');
       setPrepTimer(PREP_SEC);
@@ -730,7 +748,7 @@ export default function MSTPage() {
     submitResponseMutation.mutate({
       sessionId: currentSession.sessionId,
       skill: currentItem.skill,
-      stage: currentStage,
+      stage: currentItem.stage, // Use exact stage from item
       itemId: currentItem.id,
       responseData: currentResponse || 'Time expired',
       audioBlob: recordingBlob,
@@ -793,7 +811,7 @@ export default function MSTPage() {
     submitResponseMutation.mutate({
       sessionId: currentSession.sessionId,
       skill: currentItem.skill,
-      stage: currentStage,
+      stage: currentItem.stage, // Use exact stage from item
       itemId: currentItem.id,
       audioBlob: audioBlob,
       timeSpentMs
@@ -1175,7 +1193,7 @@ export default function MSTPage() {
     submitResponseMutation.mutate({
       sessionId: currentSession.sessionId,
       skill: currentItem.skill,
-      stage: currentStage,
+      stage: currentItem.stage, // Use exact stage from item
       itemId: currentItem.id,
       responseData: currentResponse,
       audioBlob: recordingBlob,

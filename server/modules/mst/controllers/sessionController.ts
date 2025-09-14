@@ -12,6 +12,7 @@ export class MstSessionController {
   private timers: Map<string, SessionTimer> = new Map();
   private skillResults: Map<string, SkillResult[]> = new Map();
   private sessionItems: Map<string, Map<string, any>> = new Map(); // sessionId -> itemKey -> item
+  private usedItemIds: Map<string, Set<string>> = new Map(); // sessionId -> Set of used item IDs
 
   /**
    * Start a new MST session
@@ -40,6 +41,7 @@ export class MstSessionController {
     this.timers.set(sessionId, createSessionTimer());
     this.skillResults.set(sessionId, []);
     this.sessionItems.set(sessionId, new Map());
+    this.usedItemIds.set(sessionId, new Set());
     
     return {
       sessionId,
@@ -225,9 +227,14 @@ export class MstSessionController {
    */
   setSessionItem(sessionId: string, skill: string, stage: string, item: any): void {
     const sessionItems = this.sessionItems.get(sessionId);
-    if (sessionItems) {
+    const usedIds = this.usedItemIds.get(sessionId);
+    if (sessionItems && usedIds) {
       const itemKey = `${skill}_${stage}`;
       sessionItems.set(itemKey, item);
+      // Track used item ID to prevent duplicates
+      if (item?.id) {
+        usedIds.add(item.id);
+      }
     }
   }
 
@@ -242,6 +249,29 @@ export class MstSessionController {
     }
     return null;
   }
+  
+  /**
+   * Get used item IDs for session
+   */
+  getUsedItemIds(sessionId: string): Set<string> {
+    return this.usedItemIds.get(sessionId) || new Set();
+  }
+  
+  /**
+   * Check if an item suffix has been used
+   */
+  hasUsedItemSuffix(sessionId: string, itemId: string): boolean {
+    const usedIds = this.getUsedItemIds(sessionId);
+    const suffix = itemId.split('-').pop(); // Get the suffix (e.g., '002' from 'S-B1-002')
+    
+    // Check if any used item has the same suffix
+    for (const usedId of usedIds) {
+      if (usedId.split('-').pop() === suffix) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   /**
    * Clean up old sessions (call periodically)
@@ -255,6 +285,7 @@ export class MstSessionController {
         this.timers.delete(sessionId);
         this.skillResults.delete(sessionId);
         this.sessionItems.delete(sessionId);
+        this.usedItemIds.delete(sessionId);
       }
     }
   }

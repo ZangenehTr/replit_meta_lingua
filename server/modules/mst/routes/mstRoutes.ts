@@ -113,8 +113,29 @@ router.get('/item', authenticateToken, async (req, res) => {
       });
     }
 
-    // Get item
-    const item = itemsController.getItem(skill, stage);
+    // Get used item suffixes for speaking skill to prevent duplicates
+    let excludedSuffixes: Set<string> | undefined;
+    if (skill === 'speaking') {
+      const usedIds = sessionController.getUsedItemIds(sessionId);
+      excludedSuffixes = new Set<string>();
+      
+      // Extract suffixes from used items (e.g., '002' from 'S-B1-002')
+      for (const usedId of usedIds) {
+        if (usedId.startsWith('S-')) { // Only check speaking items
+          const suffix = usedId.split('-').pop();
+          if (suffix) {
+            excludedSuffixes.add(suffix);
+          }
+        }
+      }
+      
+      if (excludedSuffixes.size > 0) {
+        console.log(`🔍 Speaking item selection: excluding suffixes ${Array.from(excludedSuffixes).join(', ')}`);
+      }
+    }
+
+    // Get item with exclusions for speaking
+    const item = itemsController.getItem(skill, stage, undefined, excludedSuffixes);
     
     if (!item) {
       return res.status(404).json({
@@ -122,6 +143,8 @@ router.get('/item', authenticateToken, async (req, res) => {
         error: 'No items available for this skill and stage'
       });
     }
+    
+    console.log(`📝 Selected item: ${item.id} for ${skill}/${stage}`);
 
     // Update session with current skill/stage
     sessionController.updateSession(sessionId, {
