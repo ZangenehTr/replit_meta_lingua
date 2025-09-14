@@ -543,54 +543,58 @@ router.post('/generate-roadmap', authenticateToken, async (req, res) => {
       });
     }
 
-    // Create simplified roadmap structure (mock for now - can be enhanced with AI later)
-    const mockRoadmap = {
+    // Create personalized roadmap structure based on actual MST results
+    const skillResults = session.skillResults || [];
+    const weakestSkill = getWeakestSkillFromResults(skillResults);
+    const totalWeeks = Math.max(8, Math.min(24, timeAvailability <= 5 ? 20 : (timeAvailability <= 10 ? 16 : 12)));
+    
+    const personalizedRoadmap = {
       id: Date.now(),
       title: `Personalized English Learning Path`,
-      description: `Based on your MST assessment results (${placementResults?.overallBand || 'B1'} level), this roadmap will help you achieve your learning goals.`,
-      estimatedWeeks: timeAvailability <= 5 ? 16 : (timeAvailability <= 10 ? 12 : 8),
+      description: `Based on your MST assessment results (${placementResults?.overallBand || 'B1'} level), this roadmap targets your specific weaknesses and goals.`,
+      estimatedWeeks: totalWeeks,
       weeklyHours: timeAvailability,
       milestones: [
         {
           id: 1,
-          title: 'Foundation Building',
-          description: 'Strengthen core language skills based on your assessment',
-          weekNumber: 2,
-          primarySkill: getWeakestSkill(placementResults)
+          title: 'Strengthen Your Foundation',
+          description: `Focus on ${weakestSkill} skills - your assessment shows this needs the most improvement`,
+          weekNumber: Math.ceil(totalWeeks * 0.15),
+          primarySkill: weakestSkill
         },
         {
           id: 2,
-          title: 'Intermediate Development',
-          description: 'Build fluency and confidence in all skills',
-          weekNumber: 6,
-          primarySkill: 'speaking'
+          title: 'Build All-Round Fluency',
+          description: `Develop balanced proficiency across listening, reading, speaking, and writing`,
+          weekNumber: Math.ceil(totalWeeks * 0.4),
+          primarySkill: getSecondWeakestSkill(skillResults)
         },
         {
           id: 3,
-          title: 'Advanced Practice',
-          description: 'Master complex language structures and expressions',
-          weekNumber: 10,
-          primarySkill: 'writing'
+          title: 'Advanced Application',
+          description: `Apply your skills in real-world contexts and complex scenarios`,
+          weekNumber: Math.ceil(totalWeeks * 0.7),
+          primarySkill: 'speaking'
         },
         {
           id: 4,
-          title: 'Goal Achievement',
-          description: `Focus on your specific goals: ${learningGoals.join(', ')}`,
-          weekNumber: 14,
-          primarySkill: 'speaking'
+          title: 'Goal Mastery',
+          description: `Achieve your specific learning objectives: ${learningGoals?.join(', ') || 'general fluency'}`,
+          weekNumber: Math.ceil(totalWeeks * 0.9),
+          primarySkill: getMostRelevantSkillForGoals(learningGoals)
         }
       ],
-      personalizedRecommendations: generateRecommendations(placementResults, learningGoals)
+      personalizedRecommendations: generatePersonalizedRecommendations(skillResults, placementResults, learningGoals, focusAreas)
     };
 
     res.json({
       success: true,
-      roadmap: mockRoadmap,
-      milestones: mockRoadmap.milestones,
+      roadmap: personalizedRoadmap,
+      milestones: personalizedRoadmap.milestones,
       steps: [], // Can be populated later
-      estimatedCompletion: new Date(Date.now() + mockRoadmap.estimatedWeeks * 7 * 24 * 60 * 60 * 1000),
-      personalizedRecommendations: mockRoadmap.personalizedRecommendations,
-      message: 'Roadmap generated successfully from MST assessment results'
+      estimatedCompletion: new Date(Date.now() + personalizedRoadmap.estimatedWeeks * 7 * 24 * 60 * 60 * 1000),
+      personalizedRecommendations: personalizedRoadmap.personalizedRecommendations,
+      message: 'Personalized roadmap generated successfully from your MST assessment results'
     });
 
   } catch (error) {
@@ -603,6 +607,108 @@ router.post('/generate-roadmap', authenticateToken, async (req, res) => {
 });
 
 // Helper functions for roadmap generation
+function getWeakestSkillFromResults(skillResults: any[]): string {
+  if (!skillResults || skillResults.length === 0) return 'speaking';
+  
+  const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  let weakestSkill = 'speaking';
+  let lowestLevelIndex = 6; // Start with highest
+  
+  for (const result of skillResults) {
+    const levelIndex = levels.indexOf(result.band);
+    if (levelIndex !== -1 && levelIndex < lowestLevelIndex) {
+      lowestLevelIndex = levelIndex;
+      weakestSkill = result.skill;
+    }
+  }
+  
+  return weakestSkill;
+}
+
+function getSecondWeakestSkill(skillResults: any[]): string {
+  if (!skillResults || skillResults.length < 2) return 'reading';
+  
+  const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  const sortedResults = skillResults
+    .map(result => ({ skill: result.skill, levelIndex: levels.indexOf(result.band) }))
+    .filter(item => item.levelIndex !== -1)
+    .sort((a, b) => a.levelIndex - b.levelIndex);
+  
+  return sortedResults.length > 1 ? sortedResults[1].skill : 'reading';
+}
+
+function getMostRelevantSkillForGoals(learningGoals: string[]): string {
+  if (!learningGoals || learningGoals.length === 0) return 'speaking';
+  
+  for (const goal of learningGoals) {
+    const lowerGoal = goal.toLowerCase();
+    if (lowerGoal.includes('ielts') || lowerGoal.includes('toefl') || lowerGoal.includes('exam')) return 'writing';
+    if (lowerGoal.includes('business') || lowerGoal.includes('professional')) return 'speaking';
+    if (lowerGoal.includes('academic') || lowerGoal.includes('university')) return 'reading';
+    if (lowerGoal.includes('conversation') || lowerGoal.includes('speaking')) return 'speaking';
+  }
+  
+  return 'speaking'; // Default fallback
+}
+
+function generatePersonalizedRecommendations(skillResults: any[], placementResults: any, learningGoals: string[], focusAreas: string[]): string[] {
+  const recommendations = [];
+  
+  // Based on skill results analysis
+  const weakestSkill = getWeakestSkillFromResults(skillResults);
+  const overallLevel = placementResults?.overallBand || 'B1';
+  
+  // Personalized skill-specific recommendations
+  switch (weakestSkill) {
+    case 'speaking':
+      recommendations.push('Focus on daily conversation practice - your speaking needs the most improvement');
+      recommendations.push('Practice pronunciation and fluency exercises regularly');
+      break;
+    case 'writing':
+      recommendations.push('Develop your writing skills through structured essay practice');
+      recommendations.push('Focus on grammar accuracy and coherent paragraph organization');
+      break;
+    case 'reading':
+      recommendations.push('Expand reading comprehension with diverse text types');
+      recommendations.push('Practice skimming and scanning techniques for better efficiency');
+      break;
+    case 'listening':
+      recommendations.push('Improve listening skills with varied accents and speaking speeds');
+      recommendations.push('Practice note-taking while listening to longer passages');
+      break;
+  }
+  
+  // Level-appropriate recommendations
+  if (['A1', 'A2'].includes(overallLevel)) {
+    recommendations.push('Build fundamental vocabulary and basic grammar structures');
+    recommendations.push('Practice simple daily conversations and basic reading');
+  } else if (['B1', 'B2'].includes(overallLevel)) {
+    recommendations.push('Develop intermediate vocabulary and complex sentence structures');
+    recommendations.push('Practice expressing opinions and handling longer discussions');
+  } else {
+    recommendations.push('Refine advanced language nuances and cultural expressions');
+    recommendations.push('Focus on specialized vocabulary in your areas of interest');
+  }
+  
+  // Goal-specific recommendations
+  if (learningGoals) {
+    for (const goal of learningGoals) {
+      const lowerGoal = goal.toLowerCase();
+      if (lowerGoal.includes('ielts') || lowerGoal.includes('toefl')) {
+        recommendations.push('Practice exam-specific formats and time management strategies');
+      }
+      if (lowerGoal.includes('business') || lowerGoal.includes('professional')) {
+        recommendations.push('Focus on professional communication and presentation skills');
+      }
+      if (lowerGoal.includes('conversation')) {
+        recommendations.push('Engage in regular speaking practice with native speakers');
+      }
+    }
+  }
+  
+  return recommendations.slice(0, 6); // Limit to 6 recommendations
+}
+
 function getWeakestSkill(placementResults: any): string {
   if (!placementResults?.levels) return 'speaking';
   

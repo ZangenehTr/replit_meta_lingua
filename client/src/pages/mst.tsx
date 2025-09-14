@@ -274,13 +274,13 @@ export default function MSTPage() {
           await fetchNextItemWithStage(nextStage);
           return;
         } else {
-          // Q2 done - advance to next skill and disable microphone permanently
-          console.log(`🎙️ Q2 completed, advancing to next skill`);
+          // Q2 done - complete speaking skill and advance to next skill
+          console.log(`🎙️ Q2 completed, completing speaking skill`);
           resetSpeakingState();
           setSpeakingQuestionIndex(0);
           // Disable microphone for remainder of test since speaking is complete
           disableMicrophoneForTest();
-          await goToWritingOrNext();
+          await advanceToNextSkill();
           return;
         }
       }
