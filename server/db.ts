@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
+import * as roadmapSchema from "@shared/roadmap-schema";
 
 // Database configuration for self-hosting
 // Development: Uses Replit/Neon for temporary development
@@ -28,7 +29,7 @@ export const pool = new Pool({
   ssl: false, // Disable SSL for local self-hosted database
 });
 
-export const db = drizzle(pool, { schema });
+export const db = drizzle(pool, { schema: { ...schema, ...roadmapSchema } });
 
 // Add graceful shutdown handling
 process.on('SIGINT', async () => {

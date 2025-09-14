@@ -177,16 +177,7 @@ export function setupRoadmapRoutes(app: Express, authenticateToken: any, require
         return res.status(400).json({ message: "Already enrolled in this roadmap" });
       }
       
-      // Count total steps
-      const stepsCount = await db
-        .select({ count: sql<number>`COUNT(*)` })
-        .from(roadmapSteps)
-        .innerJoin(roadmapMilestones, eq(roadmapSteps.milestoneId, roadmapMilestones.id))
-        .where(eq(roadmapMilestones.roadmapId, roadmapId));
-      
-      const totalSteps = stepsCount[0]?.count || 0;
-      
-      // Get first milestone and step
+      // Get first milestone
       const [firstMilestone] = await db
         .select()
         .from(roadmapMilestones)
@@ -194,24 +185,13 @@ export function setupRoadmapRoutes(app: Express, authenticateToken: any, require
         .orderBy(roadmapMilestones.orderIndex)
         .limit(1);
       
-      let firstStepId = null;
-      if (firstMilestone) {
-        const [firstStep] = await db
-          .select()
-          .from(roadmapSteps)
-          .where(eq(roadmapSteps.milestoneId, firstMilestone.id))
-          .orderBy(roadmapSteps.orderIndex)
-          .limit(1);
-        firstStepId = firstStep?.id;
-      }
-      
-      // Create enrollment
+      // Create enrollment (only using columns that exist in database)
       const [enrollment] = await db.insert(userRoadmapEnrollments).values({
         userId,
         roadmapId,
-        totalSteps,
-        currentMilestoneId: firstMilestone?.id,
-        currentStepId: firstStepId,
+        status: 'active',
+        currentMilestoneId: firstMilestone?.id || null,
+        progressPercentage: 0,
         targetCompletionDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 days from now
       }).returning();
       
@@ -277,10 +257,8 @@ export function setupRoadmapRoutes(app: Express, authenticateToken: any, require
       res.json({
         enrollment,
         completedSteps: completedSteps.length,
-        totalSteps: enrollment.totalSteps,
         progressPercentage: enrollment.progressPercentage,
-        currentMilestoneId: enrollment.currentMilestoneId,
-        currentStepId: enrollment.currentStepId
+        currentMilestoneId: enrollment.currentMilestoneId
       });
     } catch (error) {
       console.error('Error fetching roadmap progress:', error);
@@ -340,7 +318,7 @@ export function setupRoadmapRoutes(app: Express, authenticateToken: any, require
           .set({
             status: 'completed',
             completedAt: new Date(),
-            score: score?.toString(),
+            assessmentScore: score || null,
             timeSpentMinutes,
             notes
           })
@@ -352,8 +330,8 @@ export function setupRoadmapRoutes(app: Express, authenticateToken: any, require
           status: 'completed',
           startedAt: new Date(),
           completedAt: new Date(),
-          score: score?.toString(),
-          timeSpentMinutes,
+          assessmentScore: score || null,
+          timeSpentMinutes: timeSpentMinutes || 0,
           notes
         });
       }
@@ -370,29 +348,21 @@ export function setupRoadmapRoutes(app: Express, authenticateToken: any, require
         );
       
       const completedSteps = completedCount[0]?.count || 0;
-      const progressPercentage = (completedSteps / enrollment.totalSteps) * 100;
       
-      // Find next step
-      const nextStep = await db
-        .select()
+      // Count total steps for this roadmap
+      const totalStepsCount = await db
+        .select({ count: sql<number>`COUNT(*)` })
         .from(roadmapSteps)
-        .where(
-          and(
-            eq(roadmapSteps.milestoneId, step.milestoneId),
-            sql`${roadmapSteps.orderIndex} > ${step.orderIndex}`
-          )
-        )
-        .orderBy(roadmapSteps.orderIndex)
-        .limit(1);
+        .innerJoin(roadmapMilestones, eq(roadmapSteps.milestoneId, roadmapMilestones.id))
+        .where(eq(roadmapMilestones.roadmapId, enrollment.roadmapId));
+      
+      const totalSteps = totalStepsCount[0]?.count || 1;
+      const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
       
       await db
         .update(userRoadmapEnrollments)
         .set({
-          completedSteps,
-          progressPercentage: progressPercentage.toString(),
-          currentStepId: nextStep[0]?.id || enrollment.currentStepId,
-          lastActivityAt: new Date(),
-          updatedAt: new Date()
+          progressPercentage: progressPercentage
         })
         .where(eq(userRoadmapEnrollments.id, enrollment.id));
       
@@ -416,7 +386,8 @@ export function setupRoadmapRoutes(app: Express, authenticateToken: any, require
   // Get recommended roadmaps for user
   app.get("/api/student/recommended-roadmaps", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {
-      const user = await import('./storage').then(s => s.default.getUserById(req.user.id));
+      const { storage } = await import('./storage');
+      const user = await storage.getUser(req.user.id);
       const userLevel = user?.level || 'A1';
       
       // Get roadmaps matching user level

@@ -155,9 +155,7 @@ const defaultQueryFn = async ({ queryKey }: { queryKey: QueryKey }) => {
         continue;
       }
 
-      if (isNetworkError) {
-        throw new Error(`Network connectivity issue: Unable to reach server after ${maxRetries + 1} attempts. Please check your internet connection and try refreshing the page.`);
-      }
+      // Network connectivity issues handled above in retry logic
 
       // Other errors, don't retry
       throw error;
@@ -201,9 +199,6 @@ export const queryClient = new QueryClient({
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
       staleTime: 30000, // 30 seconds
       gcTime: 1000 * 60 * 10, // 10 minutes
-      onError: (error) => {
-        console.error('Query error:', error);
-      },
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
     },
@@ -217,9 +212,6 @@ export const queryClient = new QueryClient({
           }
         }
         return failureCount < 1;
-      },
-      onError: (error) => {
-        console.error('Mutation error:', error);
       },
       throwOnError: false, // Also prevent mutation errors from causing runtime errors
     },
