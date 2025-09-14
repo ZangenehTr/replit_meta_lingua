@@ -471,18 +471,24 @@ export default function MSTPage() {
       setAudioElement(null);
     }
 
-    setIsSubmissionLocked(false);
-    setIsAutoAdvancing(false);
+    // Clear all timers FIRST to prevent any stale timer callbacks
     clearTimer(prepIntervalRef);
     clearTimer(recordIntervalRef);
     if (autoplayFallbackTimeoutRef.current) {
       clearTimeout(autoplayFallbackTimeoutRef.current);
       autoplayFallbackTimeoutRef.current = null;
     }
+    
+    // Reset all refs and phases
     phaseRef.current = "narration";
     hasRecordingStartedRef.current = false;
     hasStoppedRef.current = false;
     audioStartedRef.current = false;
+    
+    // THEN unlock submissions after all state is clean
+    console.log("🔄 Item changed - clearing state for", currentItem.skill, currentItem.id);
+    setIsSubmissionLocked(false);
+    setIsAutoAdvancing(false);
 
     if (currentItem.skill === "speaking") {
       if (speakingQuestionIndex === 0) setSpeakingQuestionIndex(1);
@@ -561,6 +567,9 @@ export default function MSTPage() {
     setRecordTimeDisplay(formatTime(RECORD_SEC));
     setIsRecording(false);
     setRecordingBlob(null);
+    // CRITICAL: Clear stale blob from previous question to prevent duplicate submissions
+    lastBlobRef.current = null;
+    console.log("🔄 Speaking state reset: cleared recording blob and lastBlobRef");
   };
 
   const autoPlayNarration = async (audioUrl: string) => {
@@ -762,19 +771,42 @@ export default function MSTPage() {
       mimeType?: string;
     },
   ) => {
+    console.log("🚀 submitSpeakingBlob called", {
+      blobSize: blob.size,
+      hasSnap: !!snap,
+      snapItemId: snap?.itemId,
+      currentItemId: currentItem?.id,
+      isSubmissionLocked,
+      speakingQuestionIndex,
+      currentStage
+    });
+    
     const sessionId = snap?.sessionId || currentSession?.sessionId;
     const skill = snap?.skill || currentItem?.skill;
     const stage = snap?.stage || currentItem?.stage;
     const itemId = snap?.itemId || currentItem?.id;
+    
     if (!sessionId || !skill || !stage || !itemId) {
-      console.error("Missing submission snapshot/state", {
+      console.error("❌ Missing submission snapshot/state", {
         snap,
         currentItem,
         currentSession,
       });
       return;
     }
-    if (isSubmissionLocked) return;
+    
+    if (isSubmissionLocked) {
+      console.log("🚫 Submission locked, skipping duplicate");
+      return;
+    }
+
+    console.log("📤 Proceeding with submission", {
+      sessionId: sessionId.substring(0, 10) + "...",
+      skill,
+      stage,
+      itemId,
+      blobSize: blob.size
+    });
 
     setIsSubmissionLocked(true);
     setIsAutoAdvancing(true);
@@ -795,15 +827,40 @@ export default function MSTPage() {
   };
 
   const finalizeRecordingAndSubmit = () => {
-    if (isSubmissionLocked || hasStoppedRef.current) return;
+    console.log("🎙️ finalizeRecordingAndSubmit called", {
+      isSubmissionLocked,
+      hasStoppedRef: hasStoppedRef.current,
+      mediaRecorderState: mediaRecorder?.state,
+      recordingBlob: !!recordingBlob,
+      lastBlobRef: !!lastBlobRef.current,
+      speakingPhase,
+      currentItemId: currentItem?.id
+    });
+    
+    if (isSubmissionLocked || hasStoppedRef.current) {
+      console.log("🚫 Submission blocked by guards");
+      return;
+    }
+    
     if (mediaRecorder && mediaRecorder.state === "recording") {
       hasStoppedRef.current = true;
+      console.log("🔴 Stopping active recording");
       try {
         mediaRecorder.requestData();
       } catch {}
       mediaRecorder.stop();
     } else {
-      const blob = recordingBlob || lastBlobRef.current || new Blob();
+      // CRITICAL: Only submit if we have a valid recording blob
+      const blob = recordingBlob || lastBlobRef.current;
+      if (!blob || blob.size === 0) {
+        console.log("🚫 No valid recording blob to submit, skipping");
+        return;
+      }
+      
+      console.log("📤 Submitting speaking blob", {
+        blobSize: blob.size,
+        source: recordingBlob ? "recordingBlob" : "lastBlobRef"
+      });
       submitSpeakingBlob(blob, undefined);
     }
   };
