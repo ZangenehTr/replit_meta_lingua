@@ -406,8 +406,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     'persian-llm:3b'
   ];
 
-  // Test route without authentication for AI management
-  app.post("/api/test/model-download", async (req: any, res) => {
+  // Production gate middleware for test endpoints
+  const productionGateMiddleware = (req: any, res: any, next: any) => {
+    if (process.env.NODE_ENV === 'production') {
+      // In production, require admin authentication for test endpoints
+      return authenticateToken(req, res, (err: any) => {
+        if (err) return;
+        return requireRole(['Admin'])(req, res, next);
+      });
+    }
+    // In development, allow without authentication
+    next();
+  };
+
+  // Test route with production gating for AI management
+  app.post("/api/test/model-download", productionGateMiddleware, async (req: any, res) => {
     try {
       const { modelName } = req.body;
       console.log(`Test download requested for model: ${modelName}`);
@@ -431,7 +444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Model uninstall endpoint
-  app.post("/api/test/model-uninstall", async (req: any, res) => {
+  app.post("/api/test/model-uninstall", productionGateMiddleware, async (req: any, res) => {
     try {
       const { modelName } = req.body;
       console.log(`Test uninstall requested for model: ${modelName}`);
@@ -453,7 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Ollama status endpoint  
-  app.get("/api/test/ollama-status", async (req: any, res) => {
+  app.get("/api/test/ollama-status", productionGateMiddleware, async (req: any, res) => {
     try {
       const isAvailable = await ollamaService.isServiceAvailable();
       if (isAvailable) {
@@ -491,152 +504,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   });
 
-  // Training data upload endpoint
-  app.post("/api/admin/ai/training/upload", async (req: any, res) => {
-    try {
-      const { modelName, fileName, content } = req.body;
-      
-      if (!modelName || !fileName || !content) {
-        return res.status(400).json({ 
-          success: false, 
-          error: "Model name, file name, and content are required" 
-        });
-      }
 
-      const userId = "33"; // Fixed user ID for testing
-      
-      // Initialize storage structure
-      if (!trainingData.has(modelName)) {
-        trainingData.set(modelName, new Map());
-      }
-      
-      const modelData = trainingData.get(modelName)!;
-      if (!modelData.has(userId)) {
-        modelData.set(userId, []);
-      }
-      
-      // Store the training content
-      modelData.get(userId)!.push(content);
 
-      console.log(`Training data uploaded: ${fileName} for model ${modelName} by user ${userId}`);
-
-      res.json({
-        success: true,
-        message: "Training data uploaded successfully",
-        data: {
-          modelName,
-          fileName,
-          contentLength: content.length,
-          timestamp: new Date().toISOString()
-        }
-      });
-    } catch (error) {
-      console.error("Training data upload error:", error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Failed to upload training data",
-        details: error.message 
-      });
-    }
-  });
-
-  // File upload endpoint for .docx and .pages files  
-  app.post("/api/admin/ai/training/upload-file", upload.single('file'), async (req: any, res) => {
-    try {
-      const file = req.file;
-      const { modelName, fileName } = req.body;
-      
-      if (!file || !modelName || !fileName) {
-        return res.status(400).json({ 
-          success: false, 
-          error: "File, model name, and file name are required" 
-        });
-      }
-
-      const userId = "33"; // Fixed user ID for testing
-      let content: string = '';
-
-      // Extract text content based on file type
-      if (fileName.toLowerCase().endsWith('.docx')) {
-        try {
-          const result = await mammoth.extractRawText({ buffer: file.buffer });
-          content = result.value;
-        } catch (error) {
-          return res.status(400).json({ 
-            success: false, 
-            error: "Failed to extract text from .docx file" 
-          });
-        }
-      } else if (fileName.toLowerCase().endsWith('.pages')) {
-        // .pages files are complex; for now, treat as text (this is a limitation)
-        try {
-          content = file.buffer.toString('utf-8');
-        } catch (error) {
-          return res.status(400).json({ 
-            success: false, 
-            error: "Failed to process .pages file. Please convert to .docx or .txt format." 
-          });
-        }
-      } else {
-        content = file.buffer.toString('utf-8');
-      }
-
-      // Store the training data
-      if (!trainingData.has(modelName)) {
-        trainingData.set(modelName, new Map());
-      }
-      
-      const modelData = trainingData.get(modelName)!;
-      if (!modelData.has(userId)) {
-        modelData.set(userId, []);
-      }
-      
-      const userTrainingContent = modelData.get(userId)!;
-      userTrainingContent.push(`File: ${fileName}\n\n${content}`);
-      
-      res.json({ 
-        success: true, 
-        message: `File ${fileName} uploaded and processed successfully`,
-        contentLength: content.length
-      });
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Failed to upload and process file" 
-      });
-    }
-  });
-
-  // Get training data for a model
-  app.get("/api/admin/ai/training/:modelName", async (req: any, res) => {
-    try {
-      const { modelName } = req.params;
-      const userId = "33"; // Fixed user ID for testing
-      
-      const modelData = trainingData.get(modelName);
-      const userTrainingData = modelData?.get(userId) || [];
-
-      res.json({
-        success: true,
-        data: userTrainingData.map((content, index) => ({
-          id: index,
-          content: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
-          fullContent: content,
-          uploadedAt: new Date().toISOString()
-        }))
-      });
-    } catch (error) {
-      console.error("Get training data error:", error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Failed to retrieve training data" 
-      });
-    }
-  });
 
   // Enhanced model testing endpoint with training data integration
-  app.post("/api/test/model", async (req: any, res) => {
+  app.post("/api/test/model", productionGateMiddleware, async (req: any, res) => {
     try {
       const { model, prompt, userId } = req.body;
       
@@ -743,8 +615,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Original status endpoint
-  app.get("/api/admin/ollama/status", async (req: any, res) => {
+  // Original status endpoint - now properly secured
+  app.get("/api/admin/ollama/status", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       res.json({
         status: "running",
@@ -1334,39 +1206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Debug endpoint to see all users
-  app.get("/api/debug/users", async (req: any, res) => {
-    try {
-      const users = await storage.getAllUsers();
-      res.json(users.map(u => ({
-        id: u.id,
-        email: u.email,
-        role: u.role,
-        firstName: u.firstName,
-        lastName: u.lastName
-      })));
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get users" });
-    }
-  });
 
-  // Quick admin promotion endpoint for development
-  app.post("/api/debug/promote-admin", async (req: any, res) => {
-    try {
-      const { email } = req.body;
-      const users = await storage.getAllUsers();
-      const user = users.find(u => u.email === email);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      const updatedUser = await storage.updateUser(user.id, { role: 'Admin' });
-      res.json({ message: "User promoted to admin", user: updatedUser });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to promote user" });
-    }
-  });
 
   // Admin user creation endpoint
   app.post("/api/admin/users", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
@@ -7418,83 +7258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin CRM endpoints
-  app.get("/api/admin/stats", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'Admin') {
-      return res.status(403).json({ message: "Access denied" });
-    }
 
-    try {
-      const users = await storage.getAllUsers();
-      const students = filterStudents(users);
-      const teachers = filterTeachers(users);
-      const activeStudents = filterActiveUsers(students);
-      
-      // Get real payment data for authentic revenue calculation
-      const payments = await storage.getPaymentHistory();
-      const totalRevenue = roundCurrency(payments.reduce((sum, p) => sum + safeNumber(p.amount), 0));
-      const currentMonth = new Date().getMonth();
-      const monthlyRevenue = roundCurrency(payments
-        .filter(p => new Date(p.createdAt).getMonth() === currentMonth)
-        .reduce((sum, p) => sum + safeNumber(p.amount), 0));
-
-      const stats = {
-        totalStudents: students.length,
-        activeStudents: activeStudents.length,
-        totalTeachers: teachers.length,
-        totalRevenue,
-        monthlyRevenue,
-        pendingLeads: 12, // Real lead count needed
-        todaysSessions: 8, // Real session count needed
-        overdueInvoices: 3 // Real invoice count needed
-      };
-
-      res.json(stats);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get admin stats" });
-    }
-  });
-
-  app.get("/api/admin/students", async (req: any, res) => {
-
-    try {
-      const users = await storage.getAllUsers();
-      const courses = await storage.getCourses();
-      
-      // Get all enrollments by checking user courses for each student
-      const students = [];
-      
-      for (const user of filterStudents(users)) {
-        const userCourses = await storage.getUserCourses(user.id);
-        const profile = await storage.getUserProfile(user.id);
-        
-        students.push({
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          phone: user.phoneNumber || '',
-          status: user.isActive ? 'active' : 'inactive',
-          level: profile?.currentLevel || profile?.proficiencyLevel || 'Beginner',
-          nationalId: user.nationalId || profile?.nationalId || '',
-          birthday: user.birthday ? new Date(user.birthday).toISOString() : (profile?.birthday ? (typeof profile.birthday === 'string' ? profile.birthday : new Date(profile.birthday).toISOString()) : null),
-          guardianName: user.guardianName || profile?.guardianName || '',
-          guardianPhone: user.guardianPhone || profile?.guardianPhone || '',
-          notes: user.notes || profile?.notes || '',
-          progress: userCourses.length > 0 ? Math.round(userCourses.reduce((sum, c) => sum + (c.progress || 0), 0) / userCourses.length) : 0,
-          attendance: userCourses.length > 0 ? await calculateStudentAttendance(user.id) : 0,
-          courses: userCourses.map(c => c.title),
-          enrollmentDate: user.createdAt,
-          lastActivity: await getLastActivityTime(user.id),
-          avatar: user.avatar || null, // Return null if no avatar, frontend will show initials
-        });
-      }
-
-      res.json(students);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get students" });
-    }
-  });
 
   // Export students as CSV - FIXED: Non-functional export button
   app.get("/api/admin/export/students", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
@@ -7628,433 +7392,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create new student
-  app.post("/api/admin/students", async (req: any, res) => {
-    try {
-      const { firstName, lastName, email, phone, nationalId, birthday, level, status, guardianName, guardianPhone, notes, selectedCourses, totalFee } = req.body;
-      
-      console.log('Creating student with data:', { firstName, lastName, email, phone, level, status, selectedCourses });
-      
-      // Validate required fields
-      if (!firstName || !lastName || !email) {
-        return res.status(400).json({ message: "First name, last name, and email are required." });
-      }
-      
-      // Check if email already exists
-      try {
-        const existingUser = await storage.getUserByEmail(email);
-        if (existingUser) {
-          return res.status(400).json({ message: "Email already exists. Please use a different email address." });
-        }
-      } catch (emailCheckError) {
-        console.error('Error checking existing email:', emailCheckError);
-        // Continue with creation if email check fails
-      }
-      
-      // Create user account for the student
-      // Use phone number as default password
-      if (!phone) {
-        return res.status(400).json({ message: "Phone number is required for student creation" });
-      }
-      
-      // Clean phone number (remove spaces, dashes, etc.) for password
-      const cleanedPhone = phone.replace(/\D/g, '');
-      const defaultPassword = cleanedPhone;
-      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-      
-      console.log(`Student password set to phone number: ${defaultPassword}`); // Log for admin reference
-      
-      const studentData = {
-        firstName,
-        lastName,
-        email,
-        phoneNumber: phone,
-        role: 'student' as const,
-        password: hashedPassword,
-        isActive: status === 'active',
-        credits: 0,
-        streakDays: 0,
-        preferences: {
-          language: 'en',
-          notifications: true,
-          theme: 'light'
-        }
-      };
 
-      const newStudent = await storage.createUser(studentData);
-      console.log('Student created successfully:', newStudent.id);
-      
-      // Create course enrollments if courses were selected
-      if (selectedCourses && selectedCourses.length > 0) {
-        try {
-          // Verify courses exist before enrolling
-          const availableCourses = await storage.getCourses();
-          const validCourseIds = availableCourses.map(c => c.id);
-          console.log('Available course IDs:', validCourseIds);
-          console.log('Selected course IDs:', selectedCourses);
-          
-          for (const courseId of selectedCourses) {
-            if (validCourseIds.includes(courseId)) {
-              try {
-                await storage.enrollInCourse({
-                  userId: newStudent.id,
-                  courseId: courseId,
-                  enrollmentDate: new Date(),
-                  status: 'active'
-                });
-                console.log(`Enrolled student ${newStudent.id} in course ${courseId}`);
-              } catch (enrollError) {
-                console.error(`Error enrolling in course ${courseId}:`, enrollError);
-                // Continue with other courses instead of failing completely
-              }
-            } else {
-              console.warn(`Course ID ${courseId} not found in available courses`);
-            }
-          }
-        } catch (coursesError) {
-          console.error('Error handling course enrollments:', coursesError);
-          // Continue without failing the student creation
-        }
-      }
-      
-      // Get course names for display
-      let courseNames = [];
-      if (selectedCourses && selectedCourses.length > 0) {
-        const courses = await storage.getCourses();
-        courseNames = courses
-          .filter(course => selectedCourses.includes(course.id))
-          .map(course => course.title);
-      }
-      
-      // Send SMS with login credentials
-      try {
-        // Get SMS template from admin settings or use default
-        const settings = await storage.getAdminSettings();
-        let smsTemplate = settings?.studentCreationSmsTemplate || 
-          `Welcome to Meta Lingua Academy!\n\n` +
-          `Your student account has been created.\n` +
-          `Login Information:\n` +
-          `Username: {email}\n` +
-          `Password: {password}\n` +
-          `Classes: {courses}\n\n` +
-          `Please login at: {loginUrl}`;
-        
-        // Replace placeholders in template
-        const coursesText = courseNames.length > 0 ? courseNames.join(', ') : 'No courses assigned yet';
-        const loginUrl = process.env.FRONTEND_URL || 'https://metalingua.com/login';
-        
-        const smsMessage = smsTemplate
-          .replace('{firstName}', firstName)
-          .replace('{lastName}', lastName)
-          .replace('{email}', email)
-          .replace('{password}', defaultPassword)
-          .replace('{courses}', coursesText)
-          .replace('{loginUrl}', loginUrl);
-        
-        // Send SMS if Kavenegar is configured
-        if (settings?.kavenegarEnabled && settings?.kavenegarApiKey) {
-          const { kavenegarService } = await import('./kavenegar-service');
-          const smsResult = await kavenegarService.sendSimpleSMS(phone, smsMessage);
-          console.log('Student creation SMS sent:', smsResult);
-        } else {
-          console.log('SMS not sent - Kavenegar not configured');
-          console.log('SMS would have been:', smsMessage);
-        }
-      } catch (smsError) {
-        console.error('Error sending student creation SMS:', smsError);
-        // Don't fail the entire creation if SMS fails
-      }
-      
-      res.status(201).json({
-        message: "Student created successfully",
-        student: {
-          id: newStudent.id,
-          firstName: newStudent.firstName,
-          lastName: newStudent.lastName,
-          email: newStudent.email,
-          phone: phone,
-          nationalId,
-          birthday,
-          level,
-          guardianName,
-          guardianPhone,
-          notes,
-          selectedCourses: courseNames,
-          totalFee
-        }
-      });
-    } catch (error) {
-      console.error("Error creating student:", error);
-      res.status(400).json({ message: "Failed to create student" });
-    }
-  });
 
-  // Update student
-  app.put("/api/admin/students/:id", async (req: any, res) => {
-    try {
-      const studentId = parseInt(req.params.id);
-      const { firstName, lastName, email, phone, nationalId, birthday, level, guardianName, guardianPhone, notes, selectedCourses, status } = req.body;
-      
-      console.log('Updating student with data:', { studentId, firstName, lastName, email, phone, birthday, level, status, selectedCourses });
-      
-      // Get the existing student
-      const existingStudent = await storage.getUser(studentId);
-      if (!existingStudent) {
-        return res.status(404).json({ message: "Student not found" });
-      }
-      
-      // Check if email is being changed and if it already exists
-      if (email !== existingStudent.email) {
-        const emailExists = await storage.getUserByEmail(email);
-        if (emailExists) {
-          return res.status(400).json({ message: "Email already exists. Please use a different email address." });
-        }
-      }
-      
-      // Update the user data
-      const updateData = {
-        firstName,
-        lastName,
-        email,
-        phoneNumber: phone,
-        isActive: status === 'active'
-      };
-
-      const updatedStudent = await storage.updateUser(studentId, updateData);
-      if (!updatedStudent) {
-        return res.status(404).json({ message: "Failed to update student" });
-      }
-
-      // Update student profile data if provided
-      if (nationalId !== undefined || birthday !== undefined || level !== undefined || 
-          guardianName !== undefined || guardianPhone !== undefined || notes !== undefined) {
-        
-        console.log('Backend received birthday value:', birthday, 'type:', typeof birthday);
-        console.log('Updating student profile with:', { nationalId, birthday, level, guardianName, guardianPhone, notes });
-        
-        try {
-          // Check if profile exists, create if it doesn't
-          let profile = await storage.getUserProfile(studentId);
-          
-          if (!profile) {
-            console.log('Creating new profile for student:', studentId);
-            profile = await storage.createUserProfile({
-              userId: studentId,
-              nativeLanguage: 'en',
-              targetLanguages: [],
-              proficiencyLevel: level || 'beginner'
-            });
-          }
-
-          const profileData: any = {};
-          if (nationalId !== undefined) profileData.nationalId = nationalId;
-          if (birthday !== undefined && birthday !== null && birthday !== '') {
-            // Handle birthday properly - convert to YYYY-MM-DD format for date field
-            const birthdayDate = new Date(birthday);
-            if (!isNaN(birthdayDate.getTime())) {
-              profileData.dateOfBirth = birthdayDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-              console.log('Setting dateOfBirth to:', profileData.dateOfBirth);
-            }
-          }
-          if (level !== undefined) profileData.currentLevel = level;
-          if (guardianName !== undefined) profileData.guardianName = guardianName;
-          if (guardianPhone !== undefined) profileData.guardianPhone = guardianPhone;
-          if (notes !== undefined) profileData.notes = notes;
-
-          await storage.updateUserProfile(studentId, profileData);
-          console.log('Student profile updated successfully');
-        } catch (profileError) {
-          console.error('Error updating student profile:', profileError);
-          // Don't fail the entire request if profile update fails
-        }
-      }
-
-      // Handle course enrollments if selectedCourses is provided
-      if (selectedCourses && Array.isArray(selectedCourses)) {
-        console.log('Processing course enrollments:', selectedCourses);
-        
-        // Get current enrollments
-        const currentEnrollments = await storage.getUserCourses(studentId);
-        const currentCourseIds = currentEnrollments.map(c => c.id);
-        
-        console.log('Current enrollments:', currentCourseIds);
-        
-        // Determine courses to add and remove
-        const coursesToAdd = selectedCourses.filter(courseId => !currentCourseIds.includes(courseId));
-        const coursesToRemove = currentCourseIds.filter(courseId => !selectedCourses.includes(courseId));
-        
-        console.log('Selected courses:', selectedCourses);
-        console.log('Current course IDs:', currentCourseIds);
-        console.log('Courses to add:', coursesToAdd);
-        console.log('Courses to remove:', coursesToRemove);
-        
-        console.log('Courses to add:', coursesToAdd);
-        console.log('Courses to remove:', coursesToRemove);
-        
-        // Get all available courses to validate course IDs
-        const allCourses = await storage.getCourses();
-        const validCourseIds = allCourses.map(c => c.id);
-        
-        // Filter out invalid course IDs
-        const validCoursesToAdd = coursesToAdd.filter(courseId => validCourseIds.includes(courseId));
-        const invalidCourseIds = coursesToAdd.filter(courseId => !validCourseIds.includes(courseId));
-        
-        if (invalidCourseIds.length > 0) {
-          console.log('Invalid course IDs detected:', invalidCourseIds);
-        }
-        
-        // Add new enrollments
-        for (const courseId of validCoursesToAdd) {
-          try {
-            await storage.enrollInCourse({
-              userId: studentId,
-              courseId
-            });
-            console.log(`Enrolled student ${studentId} in course ${courseId}`);
-          } catch (error) {
-            console.error(`Failed to enroll in course ${courseId}:`, error);
-          }
-        }
-        
-        // Remove old enrollments (we'll need to add this method to storage)
-        for (const courseId of coursesToRemove) {
-          try {
-            await storage.unenrollFromCourse(studentId, courseId);
-            console.log(`Unenrolled student ${studentId} from course ${courseId}`);
-          } catch (error) {
-            console.error(`Failed to unenroll from course ${courseId}:`, error);
-          }
-        }
-
-        // Wait briefly for database transactions to commit and verify the changes
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Verify enrollment changes are reflected
-        const updatedEnrollments = await storage.getUserCourses(studentId);
-        const updatedCourseIds = updatedEnrollments.map(c => c.id);
-        console.log('Final verified course enrollments after update:', updatedCourseIds);
-      }
-
-      // Get the updated profile to ensure we return the correct birthday value
-      let finalBirthday = birthday;
-      let finalNationalId = nationalId;
-      let finalLevel = level;
-      let finalGuardianName = guardianName;
-      let finalGuardianPhone = guardianPhone;
-      let finalNotes = notes;
-      
-      try {
-        const updatedProfile = await storage.getUserProfile(studentId);
-        if (updatedProfile) {
-          finalBirthday = updatedProfile.dateOfBirth ? (typeof updatedProfile.dateOfBirth === 'string' ? updatedProfile.dateOfBirth : new Date(updatedProfile.dateOfBirth).toISOString()) : null;
-          finalNationalId = updatedProfile.nationalId || nationalId;
-          finalLevel = updatedProfile.currentLevel || level;
-          finalGuardianName = updatedProfile.guardianName || guardianName;
-          finalGuardianPhone = updatedProfile.guardianPhone || guardianPhone;
-          finalNotes = updatedProfile.notes || notes;
-        }
-      } catch (profileError) {
-        console.error('Error fetching updated profile:', profileError);
-        // Use the original values if profile fetch fails
-      }
-
-      res.json({
-        message: "Student updated successfully",
-        student: {
-          id: updatedStudent.id,
-          firstName: updatedStudent.firstName,
-          lastName: updatedStudent.lastName,
-          email: updatedStudent.email,
-          phone: updatedStudent.phoneNumber,
-          nationalId: finalNationalId,
-          birthday: finalBirthday,
-          level: finalLevel,
-          guardianName: finalGuardianName,
-          guardianPhone: finalGuardianPhone,
-          notes: finalNotes
-        }
-      });
-    } catch (error) {
-      console.error("Error updating student:", error);
-      res.status(400).json({ message: "Failed to update student" });
-    }
-  });
-
-  // Delete student
-  app.delete("/api/admin/students/:id", async (req: any, res) => {
-    try {
-      const studentId = parseInt(req.params.id);
-      
-      // Get the existing student first
-      const existingStudent = await storage.getUser(studentId);
-      if (!existingStudent) {
-        return res.status(404).json({ message: "Student not found" });
-      }
-      
-      if (existingStudent.role !== 'student') {
-        return res.status(400).json({ message: "User is not a student" });
-      }
-      
-      // For safety, mark as inactive instead of actually deleting
-      const updatedStudent = await storage.updateUser(studentId, { isActive: false });
-      if (!updatedStudent) {
-        return res.status(500).json({ message: "Failed to delete student" });
-      }
-      
-      res.json({ 
-        message: "Student deleted successfully",
-        studentId: studentId
-      });
-    } catch (error) {
-      console.error("Error deleting student:", error);
-      res.status(500).json({ message: "Failed to delete student" });
-    }
-  });
 
   // Note: CRM Lead Management endpoints are implemented below in the enhanced section
   // with proper RBAC, validation, and Iranian business rules
 
-  app.get("/api/admin/invoices", authenticateToken, async (req: any, res) => {
-    if (req.user.role !== 'Admin') {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
-    try {
-      const invoices = [
-        {
-          id: 1,
-          invoiceNumber: "INV-2024-001",
-          studentName: "Ahmad Rezaei",
-          amount: 500,
-          status: "paid",
-          dueDate: "2024-01-20",
-          courseName: "Persian Grammar Fundamentals"
-        },
-        {
-          id: 2,
-          invoiceNumber: "INV-2024-002",
-          studentName: "Maryam Karimi",
-          amount: 750,
-          status: "pending",
-          dueDate: "2024-01-25",
-          courseName: "Business English"
-        },
-        {
-          id: 3,
-          invoiceNumber: "INV-2024-003",
-          studentName: "Hassan Mohammadi",
-          amount: 450,
-          status: "overdue",
-          dueDate: "2024-01-10",
-          courseName: "Advanced Persian Literature"
-        }
-      ];
-
-      res.json(invoices);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get invoices" });
-    }
-  });
 
   // Call Center Call Logs endpoint
   app.get("/api/callcenter/call-logs", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
@@ -10404,29 +9747,9 @@ Return JSON format:
     }
   });
 
-  // Ollama Management Routes
-  app.get("/api/admin/ollama/status", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
-    try {
-      const { ollamaService } = await import('./ollama-service');
-      const isAvailable = await ollamaService.isServiceAvailable();
-      const models = await ollamaService.listModels();
-      
-      res.json({
-        success: true,
-        status: isAvailable ? 'running' : 'offline',
-        models: models,
-        endpoint: 'http://localhost:11434'
-      });
-    } catch (error) {
-      res.status(500).json({ 
-        success: false,
-        message: "Failed to check Ollama status",
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
-    }
-  });
+  // Ollama Management Routes - duplicate removed (keeping main implementation at line 619)
 
-  app.post("/api/admin/ollama/pull-model", async (req: any, res) => {
+  app.post("/api/admin/ollama/pull-model", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
     try {
       const { modelName } = req.body;
       
@@ -18234,17 +17557,7 @@ Meta Lingua Academy`;
 
   // ==================== OLLAMA AI SERVICES CONFIGURATION ====================
   
-  // Ollama Setup and Management
-  app.get("/api/admin/ollama/status", authenticateToken, requireRole(['Admin']), async (req, res) => {
-    try {
-      const { ollamaSetup } = await import('./ollama-setup.js');
-      const status = await ollamaSetup.checkOllamaStatus();
-      res.json(status);
-    } catch (error) {
-      console.error('Error checking Ollama status:', error);
-      res.status(500).json({ message: 'Failed to check Ollama status' });
-    }
-  });
+  // Ollama Setup and Management - status endpoint removed (duplicate of line 619)
 
   app.post("/api/admin/ollama/install", authenticateToken, requireRole(['Admin']), async (req, res) => {
     try {
