@@ -1008,40 +1008,22 @@ export default function MSTPage() {
       return;
     }
     
-    // Lock submission
-    setIsSubmissionLocked(true);
-    hasStoppedRef.current = true;
-    
     // Stop recording if still active
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       console.log('⏹️ Stopping MediaRecorder for submission');
+      // Just stop the recorder - let the existing onstop handler do the submission
       mediaRecorder.stop();
-      
-      // Wait for the blob to be available (with timeout)
-      await new Promise<void>((resolve) => {
-        const timeout = setTimeout(() => resolve(), 1000); // 1 second timeout
-        const originalOnStop = mediaRecorder.onstop;
-        mediaRecorder.onstop = function(event) {
-          if (originalOnStop) originalOnStop.call(this, event);
-          clearTimeout(timeout);
-          resolve();
-        };
-      });
-    }
-    
-    // Submit the response with the blob
-    if (currentSession && currentItem) {
+      // The onstop handler in startRecording() will handle the submission via handleSpeakingAutoAdvance
+    } else {
+      console.log('⚠️ MediaRecorder not recording, checking for existing blob');
+      // If recording already stopped, submit with existing blob
       const blob = recordingBlob || lastBlobRef.current;
-      console.log('📤 Submitting speaking response with blob:', blob?.size, 'bytes');
-      
-      submitResponseMutation.mutate({
-        sessionId: currentSession.sessionId,
-        skill: currentItem.skill as MSTSkill,
-        stage: currentStage,
-        itemId: currentItem.id,
-        audioBlob: blob,
-        timeSpentMs: 60000 // Fixed 60 seconds for speaking recording
-      });
+      if (blob && blob.size > 0) {
+        console.log('📤 Submitting existing blob:', blob.size, 'bytes');
+        handleSpeakingAutoAdvance(blob);
+      } else {
+        console.log('❌ No recording blob available to submit');
+      }
     }
   };
 
