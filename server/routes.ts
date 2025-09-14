@@ -49,6 +49,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import { generatePayslipPDF, generateCertificatePDF } from "./utils/pdf-generator";
+import { validateIranianPhone, validateIranianEmail, validatePersianText } from "./utils/iranian-validation";
 import { z } from "zod";
 import { 
   insertUserSchema, 
@@ -61,6 +62,8 @@ import {
   insertMoodRecommendationSchema,
   insertLearningAdaptationSchema,
   insertRoomSchema,
+  insertLeadSchema,
+  insertCommunicationLogSchema,
   type InsertMoodEntry,
   type InsertMoodRecommendation,
   type InsertLearningAdaptation,
@@ -69,7 +72,11 @@ import {
   type UserProfile,
   type InsertUserProfile,
   type Room,
-  type InsertRoom
+  type InsertRoom,
+  type Lead,
+  type InsertLead,
+  type CommunicationLog,
+  type InsertCommunicationLog
 } from "@shared/schema";
 import mammoth from "mammoth";
 import { 
@@ -8004,42 +8011,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Leads Management API - accessible by admin and call center roles
-  app.get("/api/leads", authenticateToken, async (req: any, res) => {
-    const userRole = req.user.role.toLowerCase();
-    if (!['admin', 'callcenter', 'supervisor', 'call center agent'].includes(userRole)) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
-    try {
-      const leads = await storage.getLeads();
-      res.json(leads);
-    } catch (error) {
-      console.error("Failed to get leads:", error);
-      res.status(500).json({ message: "Failed to get leads" });
-    }
-  });
-
-  // Removed duplicate - using the enhanced lead endpoint below
-
-  app.put("/api/leads/:id", authenticateToken, async (req: any, res) => {
-    const userRole = req.user.role.toLowerCase();
-    if (!['admin', 'callcenter', 'supervisor', 'call center agent'].includes(userRole)) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-
-    try {
-      const id = parseInt(req.params.id);
-      const lead = await storage.updateLead(id, req.body);
-      if (!lead) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      res.json(lead);
-    } catch (error) {
-      console.error("Failed to update lead:", error);
-      res.status(500).json({ message: "Failed to update lead" });
-    }
-  });
+  // Note: CRM Lead Management endpoints are implemented below in the enhanced section
+  // with proper RBAC, validation, and Iranian business rules
 
   app.get("/api/admin/invoices", authenticateToken, async (req: any, res) => {
     if (req.user.role !== 'Admin') {
@@ -12105,43 +12078,86 @@ Return JSON format:
     try {
       // Handle name field conversion for database compatibility
       const { name, ...otherData } = req.body;
-      let firstName = '';
-      let lastName = '';
+      let requestData = { ...otherData };
       
-      if (name) {
+      if (name && !requestData.firstName && !requestData.lastName) {
         const nameParts = name.trim().split(' ');
-        firstName = nameParts[0] || '';
-        lastName = nameParts.slice(1).join(' ') || '';
-      } else if (req.body.firstName && req.body.lastName) {
-        firstName = req.body.firstName;
-        lastName = req.body.lastName;
+        requestData.firstName = nameParts[0] || '';
+        requestData.lastName = nameParts.slice(1).join(' ') || '';
       }
-      
-      if (!firstName) {
-        return res.status(400).json({ message: "First name is required" });
+
+      // Ensure required fields are present
+      if (!requestData.firstName || !requestData.phoneNumber) {
+        return res.status(400).json({ 
+          message: "Missing required fields", 
+          details: { 
+            firstName: !requestData.firstName ? "First name is required" : undefined,
+            phoneNumber: !requestData.phoneNumber ? "Phone number is required" : undefined
+          }
+        });
       }
+
+      // Validate Iranian phone number
+      const phoneValidation = validateIranianPhone(requestData.phone || requestData.phoneNumber);
+      if (!phoneValidation.isValid) {
+        return res.status(400).json({ 
+          message: "Invalid Iranian phone number format. Please use +98 format or local format (09xxxxxxxxx)" 
+        });
+      }
+
+      // Validate email if provided
+      if (requestData.email) {
+        const emailValidation = validateIranianEmail(requestData.email);
+        if (!emailValidation.isValid) {
+          return res.status(400).json({ message: "Invalid email format" });
+        }
+      }
+
+      // Validate and normalize Persian text fields
+      const firstNameValidation = validatePersianText(requestData.firstName);
+      const lastNameValidation = validatePersianText(requestData.lastName || '');
+      const notesValidation = requestData.notes ? validatePersianText(requestData.notes) : { normalized: requestData.notes };
       
-      const leadData = {
-        firstName,
-        lastName,
-        email: otherData.email,
-        phoneNumber: otherData.phone || otherData.phoneNumber,
-        source: otherData.source || 'website',
-        status: otherData.status || 'new',
-        priority: otherData.priority || 'medium',
-        interestedLanguage: otherData.interestedLanguage,
-        interestedLevel: otherData.interestedLevel,
-        preferredFormat: otherData.preferredFormat,
-        budget: otherData.budget,
-        notes: otherData.notes,
-        assignedAgentId: req.user.id,
-        nextFollowUpDate: otherData.nextFollowUpDate ? new Date(otherData.nextFollowUpDate) : null
+      // Prepare data for Zod validation
+      const leadDataForValidation = {
+        firstName: firstNameValidation.normalized || requestData.firstName,
+        lastName: lastNameValidation.normalized || requestData.lastName || '',
+        email: requestData.email || null,
+        phoneNumber: phoneValidation.normalized,
+        source: requestData.source || 'website',
+        status: requestData.status || 'new',
+        priority: requestData.priority || 'medium',
+        level: requestData.level || 'beginner',
+        interestedLanguage: requestData.interestedLanguage || null,
+        interestedLevel: requestData.interestedLevel || null,
+        preferredFormat: requestData.preferredFormat || null,
+        budget: requestData.budget ? parseInt(requestData.budget) : null,
+        notes: notesValidation.normalized || null,
+        assignedTo: req.user.id,
+        nextFollowUpDate: requestData.nextFollowUpDate ? new Date(requestData.nextFollowUpDate) : null,
+        lastContactDate: null,
+        conversionDate: null,
+        studentId: null
       };
+
+      // Validate with Zod schema
+      const validatedData = insertLeadSchema.parse(leadDataForValidation);
       
-      const lead = await storage.createLead(leadData);
+      const lead = await storage.createLead(validatedData);
       res.status(201).json(lead);
     } catch (error) {
       console.error('Error creating lead:', error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message
+          }))
+        });
+      }
+      
       res.status(400).json({ message: "Failed to create lead", error: error.message });
     }
   });
@@ -12149,30 +12165,141 @@ Return JSON format:
   app.put("/api/leads/:id", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
     try {
       const leadId = parseInt(req.params.id);
-      const lead = await storage.updateLead(leadId, req.body);
+      if (isNaN(leadId)) {
+        return res.status(400).json({ message: "Invalid lead ID" });
+      }
+
+      // Prepare update data for validation
+      const updateData = { ...req.body };
+      
+      // Validate Iranian phone number if provided
+      if (updateData.phoneNumber || updateData.phone) {
+        const phoneValidation = validateIranianPhone(updateData.phoneNumber || updateData.phone);
+        if (!phoneValidation.isValid) {
+          return res.status(400).json({ 
+            message: "Invalid Iranian phone number format. Please use +98 format or local format (09xxxxxxxxx)" 
+          });
+        }
+        updateData.phoneNumber = phoneValidation.normalized;
+        delete updateData.phone;
+      }
+
+      // Validate email if provided
+      if (updateData.email) {
+        const emailValidation = validateIranianEmail(updateData.email);
+        if (!emailValidation.isValid) {
+          return res.status(400).json({ message: "Invalid email format" });
+        }
+      }
+
+      // Validate and normalize Persian text fields if provided
+      if (updateData.firstName) {
+        const validation = validatePersianText(updateData.firstName);
+        updateData.firstName = validation.normalized || updateData.firstName;
+      }
+      if (updateData.lastName) {
+        const validation = validatePersianText(updateData.lastName);
+        updateData.lastName = validation.normalized || updateData.lastName;
+      }
+      if (updateData.notes) {
+        const validation = validatePersianText(updateData.notes);
+        updateData.notes = validation.normalized || updateData.notes;
+      }
+
+      // Convert date strings to Date objects if provided
+      if (updateData.nextFollowUpDate) {
+        updateData.nextFollowUpDate = new Date(updateData.nextFollowUpDate);
+      }
+      if (updateData.lastContactDate) {
+        updateData.lastContactDate = new Date(updateData.lastContactDate);
+      }
+      if (updateData.conversionDate) {
+        updateData.conversionDate = new Date(updateData.conversionDate);
+      }
+
+      // Convert budget to number if provided
+      if (updateData.budget && typeof updateData.budget === 'string') {
+        updateData.budget = parseInt(updateData.budget);
+      }
+
+      // Use partial validation for updates - only validate provided fields
+      const partialLeadSchema = insertLeadSchema.partial();
+      const validatedData = partialLeadSchema.parse(updateData);
+      
+      const lead = await storage.updateLead(leadId, validatedData);
       if (!lead) {
         return res.status(404).json({ message: "Lead not found" });
       }
       res.json(lead);
     } catch (error) {
       console.error('Error updating lead:', error);
-      res.status(400).json({ message: "Failed to update lead" });
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message
+          }))
+        });
+      }
+      
+      res.status(400).json({ message: "Failed to update lead", error: error.message });
     }
   });
 
   app.post("/api/leads/:id/communication", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
     try {
       const leadId = parseInt(req.params.id);
+      if (isNaN(leadId)) {
+        return res.status(400).json({ message: "Invalid lead ID" });
+      }
+
+      // Prepare communication data for validation
       const communicationData = {
-        leadId,
-        agentId: req.user.id,
-        ...req.body
+        fromUserId: req.user.id,
+        toUserId: null, // Will be set if communicating with existing user
+        toParentId: leadId, // Link to lead
+        type: req.body.type || 'note',
+        subject: req.body.subject || null,
+        content: req.body.content || '',
+        status: req.body.status || 'sent',
+        scheduledFor: req.body.scheduledFor ? new Date(req.body.scheduledFor) : null,
+        sentAt: req.body.type === 'note' ? new Date() : (req.body.sentAt ? new Date(req.body.sentAt) : null),
+        readAt: null,
+        metadata: req.body.metadata || null,
+        studentId: null // Will be set if lead is converted to student
       };
-      const communication = await storage.createCommunicationLog(communicationData);
+
+      // Validate Persian text content if provided
+      if (communicationData.content) {
+        const validation = validatePersianText(communicationData.content);
+        communicationData.content = validation.normalized || communicationData.content;
+      }
+      if (communicationData.subject) {
+        const validation = validatePersianText(communicationData.subject);
+        communicationData.subject = validation.normalized || communicationData.subject;
+      }
+
+      // Validate with Zod schema
+      const validatedData = insertCommunicationLogSchema.parse(communicationData);
+      
+      const communication = await storage.createCommunicationLog(validatedData);
       res.status(201).json(communication);
     } catch (error) {
       console.error('Error logging communication:', error);
-      res.status(400).json({ message: "Failed to log communication" });
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message
+          }))
+        });
+      }
+      
+      res.status(400).json({ message: "Failed to log communication", error: error.message });
     }
   });
 

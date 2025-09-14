@@ -1704,14 +1704,50 @@ export class MemStorage implements IStorage {
   }
 
   // CRM Lead Management
-  async getLeads(): Promise<(Lead & { assignedToName?: string })[]> {
-    const result = await this.db.select({
+  async getLeads(filters?: {
+    status?: string;
+    priority?: string;
+    assignedAgentId?: number;
+    dateFrom?: string;
+    dateTo?: string;
+    source?: string;
+  }): Promise<(Lead & { assignedToName?: string })[]> {
+    let query = this.db.select({
       ...leads,
       assignedToName: users.firstName,
       assignedToLastName: users.lastName
     })
     .from(leads)
     .leftJoin(users, eq(leads.assignedTo, users.id));
+    
+    // Apply filters
+    if (filters) {
+      const conditions = [];
+      if (filters.status) {
+        conditions.push(eq(leads.status, filters.status));
+      }
+      if (filters.priority) {
+        conditions.push(eq(leads.priority, filters.priority));
+      }
+      if (filters.assignedAgentId) {
+        conditions.push(eq(leads.assignedTo, filters.assignedAgentId));
+      }
+      if (filters.source) {
+        conditions.push(eq(leads.source, filters.source));
+      }
+      if (filters.dateFrom) {
+        conditions.push(gte(leads.createdAt, new Date(filters.dateFrom)));
+      }
+      if (filters.dateTo) {
+        conditions.push(lte(leads.createdAt, new Date(filters.dateTo)));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+    }
+    
+    const result = await query;
     
     return result.map(row => ({
       ...row,

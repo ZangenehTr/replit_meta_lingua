@@ -1453,7 +1453,7 @@ export const leads = pgTable("leads", {
   preferredFormat: text("preferred_format"), // group, individual, online, in_person
   budget: integer("budget"), // IRR amount
   notes: text("notes"),
-  assignedAgentId: integer("assigned_agent_id").references(() => users.id),
+  assignedTo: integer("assigned_to").references(() => users.id),
   lastContactDate: timestamp("last_contact_date"),
   nextFollowUpDate: timestamp("next_follow_up_date"),
   conversionDate: timestamp("conversion_date"),
