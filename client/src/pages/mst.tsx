@@ -1253,9 +1253,9 @@ export default function MSTPage() {
         stream.getTracks().forEach(track => track.stop());
         
         // Clear recording interval
-        if (recordInterval) {
-          clearInterval(recordInterval);
-          setRecordInterval(null);
+        if (recordIntervalRef.current) {
+          clearInterval(recordIntervalRef.current);
+          recordIntervalRef.current = null;
         }
         
         // CRITICAL FIX: Use ref and remove setTimeout dependency for reliable auto-advance
@@ -1273,8 +1273,9 @@ export default function MSTPage() {
       setIsRecording(true);
       
       // Clear any existing interval
-      if (recordInterval) {
-        clearInterval(recordInterval);
+      if (recordIntervalRef.current) {
+        clearInterval(recordIntervalRef.current);
+        recordIntervalRef.current = null;
       }
       
       // Start recording countdown timer
@@ -1291,7 +1292,7 @@ export default function MSTPage() {
               setIsRecording(false);
             }
             clearInterval(newRecordInterval);
-            setRecordInterval(null);
+            recordIntervalRef.current = null;
             return 0;
           }
           
@@ -1299,7 +1300,7 @@ export default function MSTPage() {
         });
       }, 1000);
       
-      setRecordInterval(newRecordInterval);
+      recordIntervalRef.current = newRecordInterval;
       
     } catch (error) {
       console.error('❌ Recording error:', error);
