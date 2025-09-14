@@ -189,16 +189,29 @@ router.post('/response', authenticateToken, upload.single('audio'), async (req, 
     let responseData: any;
     let timeSpentMs = parseInt(req.body.timeSpentMs) || 0;
 
-    if (parsedSkill === 'speaking' && req.file) {
-      // Process audio for speaking
-      const asrResult = await responsesController.processAudioResponse(req.file.buffer);
-      responseData = {
-        audioUrl: '',
-        asr: asrResult
-      };
+    if (parsedSkill === 'speaking') {
+      // Process audio for speaking (if file provided, otherwise empty response)
+      if (req.file) {
+        const asrResult = await responsesController.processAudioResponse(req.file.buffer);
+        responseData = {
+          audioUrl: '',
+          asr: asrResult
+        };
+      } else {
+        // No audio file provided for speaking (might be a test or error case)
+        responseData = {
+          audioUrl: '',
+          asr: { transcription: '', confidence: 0 }
+        };
+      }
     } else {
-      // Parse JSON response data
-      responseData = JSON.parse(req.body.responseData || '{}');
+      // Parse JSON response data for non-speaking skills
+      const rawData = req.body.responseData;
+      if (rawData && rawData !== 'undefined') {
+        responseData = JSON.parse(rawData);
+      } else {
+        responseData = {};
+      }
     }
 
     // Process response and get quickscore
