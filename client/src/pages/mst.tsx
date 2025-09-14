@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -80,6 +80,8 @@ export default function MSTPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  // CRITICAL FIX: Add ref to eliminate race condition in MediaRecorder blob handling
+  const lastBlobRef = useRef<Blob | null>(null);
   const [testPhase, setTestPhase] = useState<'intro' | 'testing' | 'completed'>('intro');
   const [currentSkillIndex, setCurrentSkillIndex] = useState(0);
   const [currentStage, setCurrentStage] = useState<MSTStage>('core');
@@ -692,23 +694,23 @@ export default function MSTPage() {
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           console.log('🎤 Recording blob ready, size:', event.data.size);
+          // CRITICAL FIX: Store in ref immediately to avoid race condition
+          lastBlobRef.current = event.data;
           setRecordingBlob(event.data);
         }
       };
       
       recorder.onstop = () => {
         console.log('🎤 Recording stopped, processing blob...');
-        // Give a brief moment for blob to be processed
-        setTimeout(() => {
-          setSpeakingPhase('completed');
-          // Check if we have a valid recording blob
-          if (recordingBlob) {
-            console.log('🎤 Auto-submitting recording after stop');
-            handleSpeakingAutoAdvance(recordingBlob);
-          } else {
-            console.warn('⚠️ Recording blob not available after stop');
-          }
-        }, 100);
+        setSpeakingPhase('completed');
+        
+        // CRITICAL FIX: Use ref instead of state to eliminate race condition
+        if (lastBlobRef.current) {
+          console.log('🎤 Auto-submitting recording after stop (using ref)');
+          handleSpeakingAutoAdvance(lastBlobRef.current);
+        } else {
+          console.warn('⚠️ Recording blob not available after stop');
+        }
       };
       
       recorder.start();
@@ -1113,6 +1115,8 @@ export default function MSTPage() {
       
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
+        // CRITICAL FIX: Store in ref immediately to avoid any potential race condition
+        lastBlobRef.current = blob;
         setRecordingBlob(blob);
         setSpeakingPhase('completed');
         
@@ -1125,13 +1129,11 @@ export default function MSTPage() {
           setRecordInterval(null);
         }
         
-        // CRITICAL FIX: Auto-advance speaking to next stage after recording completes
+        // CRITICAL FIX: Use ref and remove setTimeout dependency for reliable auto-advance
         console.log('🎙️ Speaking recording completed, auto-advancing to next stage...');
         // Prevent duplicate calls by checking if already auto-advancing
-        if (!isAutoAdvancing) {
-          setTimeout(() => {
-            handleSpeakingAutoAdvance(blob);
-          }, 1000); // Small delay to ensure UI updates
+        if (!isAutoAdvancing && lastBlobRef.current) {
+          handleSpeakingAutoAdvance(lastBlobRef.current);
         } else {
           console.log('⚠️ Auto-advance already in progress, skipping recording completion callback');
         }
