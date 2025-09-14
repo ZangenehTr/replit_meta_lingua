@@ -256,16 +256,27 @@ export default function MSTPage() {
           if (currentItem.skill === 'speaking') {
             console.log('🎙️ SPEAKING Q1→Q2 TRANSITION: Transitioning from Q1 to Q2, resetting speaking state');
             console.log(`🎙️ SPEAKING Q1→Q2: route=${data.route}, nextStage=${nextStage}`);
-            // Reset speaking-specific states for Q2
+            // FIX: Reset speaking-specific states for Q2 with proper formatting
             setRecordingBlob(null);
             setSpeakingPhase('narration');
             setPrepTimer(PREP_SEC);
             setRecordTimer(RECORD_SEC);
-            setPrepTimeDisplay('00:15');
-            setRecordTimeDisplay('01:00');
+            setPrepTimeDisplay(formatTime(PREP_SEC)); // FIX: Use formatTime
+            setRecordTimeDisplay(formatTime(RECORD_SEC)); // FIX: Use formatTime
             setNarrationPlayButton(false);
+            setIsRecording(false);
+            setIsAutoAdvancing(false);
             // Clear processed items to allow Q2 setup
             setProcessedSpeakingItems(new Set());
+            // Clear any intervals
+            if (prepInterval) {
+              clearInterval(prepInterval);
+              setPrepInterval(null);
+            }
+            if (recordInterval) {
+              clearInterval(recordInterval);
+              setRecordInterval(null);
+            }
           }
           
           setCurrentStage(nextStage);
@@ -540,12 +551,12 @@ export default function MSTPage() {
     } else if (currentItem.skill === 'speaking') {
       console.log('🎙️ Setting up speaking item - resetting state and starting narration phase');
       
-      // CRITICAL: Reset speaking state per item
+      // FIX: Reset speaking state per item with proper formatting
       setSpeakingPhase('narration');
       setPrepTimer(PREP_SEC);
       setRecordTimer(RECORD_SEC);
-      setPrepTimeDisplay('00:15');
-      setRecordTimeDisplay('01:00');
+      setPrepTimeDisplay(formatTime(PREP_SEC)); // FIX: Use formatTime
+      setRecordTimeDisplay(formatTime(RECORD_SEC)); // FIX: Use formatTime
       setIsRecording(false);
       setRecordingBlob(null);
       setNarrationPlayButton(false);
@@ -737,12 +748,12 @@ export default function MSTPage() {
     }
     
     setPrepTimer(PREP_SEC);
-    setPrepTimeDisplay('00:15');
+    setPrepTimeDisplay(formatTime(PREP_SEC)); // FIX: Use formatTime consistently
     
     const interval = setInterval(() => {
       setPrepTimer(prev => {
         const newTime = prev - 1;
-        setPrepTimeDisplay(`00:${newTime.toString().padStart(2, '0')}`);
+        setPrepTimeDisplay(formatTime(newTime)); // FIX: Use formatTime consistently
         
         if (newTime <= 0) {
           clearInterval(interval);
@@ -763,8 +774,9 @@ export default function MSTPage() {
     setSpeakingPhase('recording');
     
     // CRITICAL: Initialize recording timer display and state
-    setRecordTimer(currentItem?.timing?.recordSec || RECORD_SEC);
-    setRecordTimeDisplay('01:00');
+    const recordSec = currentItem?.timing?.recordSec || RECORD_SEC;
+    setRecordTimer(recordSec);
+    setRecordTimeDisplay(formatTime(recordSec)); // FIX: Use formatTime instead of hardcoded
     
     // Play beep sound
     try {
@@ -818,9 +830,7 @@ export default function MSTPage() {
     const interval = setInterval(() => {
       setRecordTimer(prev => {
         const newTime = prev - 1;
-        const minutes = Math.floor(newTime / 60);
-        const seconds = newTime % 60;
-        setRecordTimeDisplay(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        setRecordTimeDisplay(formatTime(Math.max(0, newTime))); // FIX: Use formatTime and prevent negatives
         
         if (newTime <= 0) {
           clearInterval(interval);
