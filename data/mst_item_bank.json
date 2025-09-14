@@ -253,7 +253,7 @@
             "passage": "Online shopping has become increasingly popular in recent years. Many people prefer the convenience of shopping from home rather than visiting physical stores. However, some customers still enjoy the experience of touching and trying products before purchasing them. Both shopping methods have their advantages and disadvantages."
           },
           "timing": {
-            "maxAnswerSec": 60
+            "maxAnswerSec": 300
           },
           "questions": [
             {
@@ -328,7 +328,7 @@
             "passage": "Learning a new language requires dedication and consistent practice. Many experts recommend studying for at least 30 minutes daily rather than longer sessions once or twice a week. Using various learning methods such as listening to music, watching movies, and speaking with native speakers can significantly improve your progress."
           },
           "timing": {
-            "maxAnswerSec": 60
+            "maxAnswerSec": 300
           },
           "questions": [
             {
@@ -600,7 +600,7 @@
             "taskType": "opinion"
           },
           "timing": {
-            "maxAnswerSec": 120
+            "maxAnswerSec": 300
           },
           "metadata": {
             "domain": "academic"
@@ -620,7 +620,7 @@
             "taskType": "argument"
           },
           "timing": {
-            "maxAnswerSec": 150
+            "maxAnswerSec": 300
           },
           "metadata": {
             "domain": "academic"
@@ -640,7 +640,7 @@
             "taskType": "comparison"
           },
           "timing": {
-            "maxAnswerSec": 120
+            "maxAnswerSec": 300
           },
           "metadata": {
             "domain": "social"
@@ -660,7 +660,7 @@
             "taskType": "description"
           },
           "timing": {
-            "maxAnswerSec": 90
+            "maxAnswerSec": 300
           },
           "metadata": {
             "domain": "social"
@@ -680,7 +680,7 @@
             "taskType": "description"
           },
           "timing": {
-            "maxAnswerSec": 60
+            "maxAnswerSec": 300
           },
           "metadata": {
             "domain": "social"
@@ -698,7 +698,7 @@
             "taskType": "description"
           },
           "timing": {
-            "maxAnswerSec": 50
+            "maxAnswerSec": 300
           },
           "metadata": {
             "domain": "social"

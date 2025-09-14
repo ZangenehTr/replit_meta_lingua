@@ -14,7 +14,7 @@ export const DEFAULT_TIMING: TimingConfig = {
   listeningAudioMaxSec: 40,
   readingPassageWords: { min: 80, max: 180 },
   speakingRecordSec: { min: 60, max: 60 },
-  writingComposeSec: { min: 180, max: 240 }, // Single question with 3-4 minutes
+  writingComposeSec: { min: 180, max: 300 }, // Single question with 3-5 minutes
 };
 
 /**
@@ -54,7 +54,7 @@ export function getSpeakingRecordTime(level: string): number {
  */
 export function getWritingCompositionTime(level: string): number {
   // Single comprehensive writing question with adequate time
-  return 240; // 4 minutes for all levels - single question approach
+  return 300; // 5 minutes for all levels - single question approach
 }
 
 /**
