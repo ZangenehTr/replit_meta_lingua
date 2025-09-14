@@ -358,10 +358,10 @@ router.post('/skill-complete', authenticateToken, async (req, res) => {
     
     const finalScore = stage2Score || stage1Score;
     
-    // Calculate band and confidence - finalScore is already normalized 0-100
-    const normalizedScore = finalScore / 100; // Convert to 0-1 range
+    // Calculate band and confidence - finalScore is from quickscore p (0-1 range)
+    const normalizedScore = finalScore; // Already in 0-1 range from quickscore
     const band = determineFinalBand(finalStage, normalizedScore, 'B1');
-    const confidence = Math.min(1.0, finalScore / 80); // Simple confidence calculation
+    const confidence = Math.min(1.0, finalScore / 0.8); // Simple confidence calculation
     
     console.log(`🎯 MST Final Band Calculation: stage=${finalStage}, score=${finalScore}, normalized=${normalizedScore}, band=${band}`);
 

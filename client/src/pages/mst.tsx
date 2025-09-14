@@ -253,12 +253,12 @@ export default function MSTPage() {
       // store p/route
       const key = currentItem.skill;
       const curr = skillScores[key] || {};
-      const pct = Math.round((data.p ?? 0) * 100);
+      const pValue = data.p ?? 0; // Keep as 0-1 range
       if (currentStage === "core") {
-        curr.stage1Score = pct;
+        curr.stage1Score = pValue;
         curr.route = data.route;
       } else {
-        curr.stage2Score = pct;
+        curr.stage2Score = pValue;
       }
       setSkillScores((prev) => ({ ...prev, [key]: curr }));
 
@@ -420,8 +420,8 @@ export default function MSTPage() {
         body: JSON.stringify({
           sessionId: currentSession.sessionId,
           skill: currentSkill,
-          stage1Score: scores.stage1Score ?? 50,
-          stage2Score: scores.stage2Score ?? scores.stage1Score ?? 50,
+          stage1Score: scores.stage1Score ?? 0.5,
+          stage2Score: scores.stage2Score ?? scores.stage1Score ?? 0.5,
           route: scores.route ?? "stay",
           timeSpentSec: 60,
         }),
