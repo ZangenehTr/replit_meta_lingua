@@ -112,6 +112,9 @@ export default function MSTPage() {
   
   // CRITICAL: Prevent duplicate auto-advance calls for speaking questions
   const [isAutoAdvancing, setIsAutoAdvancing] = useState(false);
+  
+  // CRITICAL: Submission lock to prevent any duplicate API calls
+  const [isSubmissionLocked, setIsSubmissionLocked] = useState(false);
 
   // Start MST session
   const startSessionMutation = useMutation({
@@ -209,6 +212,10 @@ export default function MSTPage() {
       return response.json();
     },
     onSuccess: (data) => {
+      // CRITICAL: Reset submission locks FIRST
+      setIsAutoAdvancing(false);
+      setIsSubmissionLocked(false);
+      
       // Handle routing decision and fetch next item
       if (data.success && currentItem) {
         // CRITICAL: Store score for this stage
@@ -245,11 +252,10 @@ export default function MSTPage() {
             : 'lower';
           console.log(`📊 STAGE TRANSITION: ${currentItem.skill} ${currentStage} → ${nextStage} (route: ${data.route})`);
           
-          // CRITICAL: For speaking skill, ensure we reset auto-advancing flag before transitioning
+          // CRITICAL: For speaking skill, ensure we reset speaking state before transitioning
           if (currentItem.skill === 'speaking') {
             console.log('🎙️ SPEAKING Q1→Q2 TRANSITION: Transitioning from Q1 to Q2, resetting speaking state');
             console.log(`🎙️ SPEAKING Q1→Q2: route=${data.route}, nextStage=${nextStage}`);
-            setIsAutoAdvancing(false);
             // Reset speaking-specific states for Q2
             setRecordingBlob(null);
             setSpeakingPhase('narration');
@@ -258,45 +264,33 @@ export default function MSTPage() {
             setPrepTimeDisplay('00:15');
             setRecordTimeDisplay('01:00');
             setNarrationPlayButton(false);
-            // Clear any processed speaking items to allow Q2 setup
-            setProcessedSpeakingItems(prev => {
-              const newSet = new Set(prev);
-              // Don't clear current item, but ensure Q2 can be processed
-              return newSet;
-            });
+            // Clear processed items to allow Q2 setup
+            setProcessedSpeakingItems(new Set());
           }
           
           setCurrentStage(nextStage);
           fetchNextItemWithStage(nextStage);
         } else {
-          // CRITICAL FIX: For speaking skill, ensure Q2 is actually completed by user before skill completion
-          if (currentItem.skill === 'speaking' && currentStage !== 'core') {
-            // Check if this is a REAL response submission (user completed Q2) or just a stage transition
-            const hasActualResponse = recordingBlob || currentResponse.trim().length > 0;
-            
-            if (hasActualResponse) {
-              // User actually completed Q2 - now we can complete the speaking skill
-              console.log('🎙️ SPEAKING SKILL COMPLETION: Q2 actually completed by user, marking speaking skill as finished');
-              console.log(`🎙️ SPEAKING COMPLETED STAGE: ${currentStage} (Q2 completed with actual response)`);
-              setIsAutoAdvancing(false);
-              // Clear speaking state since skill is complete
-              setSpeakingPhase('narration');
-              setRecordingBlob(null);
-              setProcessedSpeakingItems(new Set());
-              
-              // Complete skill, advance to next
-              console.log(`📊 SKILL COMPLETION: ${currentItem.skill} completed after actual Q2 response`);
-              advanceToNextSkill();
-            } else {
-              // This is just a stage transition, not a real completion - stay in speaking skill for Q2
-              console.log('🎙️ SPEAKING STAGE TRANSITION: Not completing skill yet, user needs to complete Q2');
-              console.log(`🎙️ SPEAKING Q2 LOADING: stage=${currentStage}, waiting for user response`);
+          // For all other skills and speaking Q2, complete the skill
+          console.log(`📊 SKILL COMPLETION: ${currentItem.skill} completed after stage ${currentStage}`);
+          
+          // CRITICAL: For speaking, clean up all speaking-specific state
+          if (currentItem.skill === 'speaking') {
+            setSpeakingPhase('narration');
+            setRecordingBlob(null);
+            setProcessedSpeakingItems(new Set());
+            // Clear any remaining intervals
+            if (prepInterval) {
+              clearInterval(prepInterval);
+              setPrepInterval(null);
             }
-          } else {
-            // For all other skills, complete normally
-            console.log(`📊 SKILL COMPLETION: ${currentItem.skill} completed after stage ${currentStage}`);
-            advanceToNextSkill();
+            if (recordInterval) {
+              clearInterval(recordInterval);
+              setRecordInterval(null);
+            }
           }
+          
+          advanceToNextSkill();
         }
       }
       
@@ -312,6 +306,10 @@ export default function MSTPage() {
       }
     },
     onError: (error) => {
+      // CRITICAL: Reset submission locks on error
+      setIsAutoAdvancing(false);
+      setIsSubmissionLocked(false);
+      
       toast({
         title: 'Error',
         description: 'Failed to submit response. Please try again.',
@@ -519,15 +517,21 @@ export default function MSTPage() {
       setAudioProgress(0);
     }
     
-    // Clear any existing intervals
+    // CRITICAL: Clear any existing intervals to prevent conflicts
     if (prepInterval) {
       clearInterval(prepInterval);
       setPrepInterval(null);
+      console.log('🧹 Cleared existing prep interval');
     }
     if (recordInterval) {
       clearInterval(recordInterval);
       setRecordInterval(null);
+      console.log('🧹 Cleared existing record interval');
     }
+    
+    // CRITICAL: Reset any submission locks when changing items
+    setIsSubmissionLocked(false);
+    setIsAutoAdvancing(false);
     
     // Handle skill-specific setup with proper state validation
     if (currentItem.skill === 'listening') {
@@ -563,12 +567,12 @@ export default function MSTPage() {
               console.warn('⚠️ State changed during TTS generation, aborting speaking setup');
             } else {
               console.warn('⚠️ TTS generation failed for speaking prompt');
-              setTimeout(() => startPreparationPhase(), 3000);
+              setTimeout(() => startPreparationTimer(), 3000);
             }
           });
         } else {
           console.warn('⚠️ No prompt found for speaking item or state inconsistency');
-          setTimeout(() => startPreparationPhase(), 2000);
+          setTimeout(() => startPreparationTimer(), 2000);
         }
       } else {
         console.log('🔄 Speaking item already processed, skipping TTS generation');
@@ -576,7 +580,7 @@ export default function MSTPage() {
         if (currentItem.content.assets?.audio) {
           autoPlayNarration(currentItem.content.assets.audio);
         } else {
-          setTimeout(() => startPreparationPhase(), 1000);
+          setTimeout(() => startPreparationTimer(), 1000);
         }
       }
     } else if (currentItem.skill === 'writing') {
@@ -601,7 +605,7 @@ export default function MSTPage() {
       return;
     }
     
-    if (testPhase === 'testing' && itemTimer > 0) {
+    if (testPhase === 'testing' && itemTimer > 0 && !isSubmissionLocked) {
       const timer = setInterval(() => {
         setItemTimer(prev => {
           if (prev <= 1) {
@@ -616,11 +620,14 @@ export default function MSTPage() {
       
       return () => clearInterval(timer);
     }
-  }, [testPhase, itemTimer, currentItem?.skill]);
+  }, [testPhase, itemTimer, currentItem?.skill, isSubmissionLocked]);
 
   // Auto-submit when time expires
   const handleAutoSubmit = () => {
-    if (!currentSession || !currentItem) return;
+    if (!currentSession || !currentItem || isSubmissionLocked) return;
+    
+    // CRITICAL: Lock submission to prevent duplicate calls
+    setIsSubmissionLocked(true);
     
     const timeSpentMs = (currentItem.timing.maxAnswerSec - itemTimer + 1) * 1000;
     
@@ -639,13 +646,14 @@ export default function MSTPage() {
   const handleSpeakingAutoAdvance = async (audioBlob: Blob) => {
     if (!currentSession || !currentItem) return;
     
-    // CRITICAL: Prevent duplicate auto-advance calls
-    if (isAutoAdvancing) {
-      console.log('⚠️ Auto-advance already in progress, skipping duplicate call');
+    // CRITICAL: Prevent duplicate auto-advance calls with stronger protection
+    if (isAutoAdvancing || isSubmissionLocked) {
+      console.log('⚠️ Auto-advance or submission already in progress, skipping duplicate call');
       return;
     }
     
     setIsAutoAdvancing(true);
+    setIsSubmissionLocked(true);
     console.log(`🎙️ SPEAKING AUTO-ADVANCE: Recording completed for ${currentItem.skill} stage: ${currentStage}`);
     console.log(`🎙️ SPEAKING STATE CHECK: skillIndex=${currentSkillIndex}, currentStage=${currentStage}, itemId=${currentItem.id}`);
     
@@ -662,11 +670,6 @@ export default function MSTPage() {
       audioBlob: audioBlob,
       timeSpentMs
     });
-    
-    // Reset auto-advancing flag after submission
-    setTimeout(() => {
-      setIsAutoAdvancing(false);
-    }, 1000);
   };
 
   // Audio recording functions
@@ -677,14 +680,32 @@ export default function MSTPage() {
       
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
+          console.log('🎤 Recording blob ready, size:', event.data.size);
           setRecordingBlob(event.data);
         }
+      };
+      
+      recorder.onstop = () => {
+        console.log('🎤 Recording stopped, processing blob...');
+        // Give a brief moment for blob to be processed
+        setTimeout(() => {
+          setSpeakingPhase('completed');
+          // Check if we have a valid recording blob
+          if (recordingBlob) {
+            console.log('🎤 Auto-submitting recording after stop');
+            handleSpeakingAutoAdvance(recordingBlob);
+          } else {
+            console.warn('⚠️ Recording blob not available after stop');
+          }
+        }, 100);
       };
       
       recorder.start();
       setMediaRecorder(recorder);
       setIsRecording(true);
+      console.log('🎤 Recording started');
     } catch (error) {
+      console.error('Microphone access failed:', error);
       toast({
         title: 'Error',
         description: 'Failed to access microphone',
@@ -698,12 +719,24 @@ export default function MSTPage() {
       mediaRecorder.stop();
       mediaRecorder.stream.getTracks().forEach(track => track.stop());
       setIsRecording(false);
+      
+      // CRITICAL: Clear recording timer when stopping manually
+      if (recordInterval) {
+        clearInterval(recordInterval);
+        setRecordInterval(null);
+      }
     }
   };
 
   // TOEFL Speaking Flow Functions
   const startPreparationTimer = () => {
-    setPrepTimer(15);
+    // CRITICAL: Clear any existing prep interval first
+    if (prepInterval) {
+      clearInterval(prepInterval);
+      setPrepInterval(null);
+    }
+    
+    setPrepTimer(PREP_SEC);
     setPrepTimeDisplay('00:15');
     
     const interval = setInterval(() => {
@@ -713,6 +746,7 @@ export default function MSTPage() {
         
         if (newTime <= 0) {
           clearInterval(interval);
+          setPrepInterval(null);
           // Play beep and start recording
           playBeepAndStartRecording();
           return 0;
@@ -720,10 +754,17 @@ export default function MSTPage() {
         return newTime;
       });
     }, 1000);
+    
+    // CRITICAL: Store interval reference for proper cleanup
+    setPrepInterval(interval);
   };
 
   const playBeepAndStartRecording = async () => {
     setSpeakingPhase('recording');
+    
+    // CRITICAL: Initialize recording timer display and state
+    setRecordTimer(currentItem?.timing?.recordSec || RECORD_SEC);
+    setRecordTimeDisplay('01:00');
     
     // Play beep sound
     try {
@@ -742,37 +783,64 @@ export default function MSTPage() {
       
       // Start recording after beep
       setTimeout(() => {
-        startRecording();
-        
-        // Auto-stop recording after proper time limit from item timing
-        const recordingTime = (currentItem?.timing?.recordSec || 60) * 1000;
-        console.log('🎙️ Recording for', currentItem?.timing?.recordSec || 60, 'seconds');
-        
-        setTimeout(() => {
-          if (isRecording) {
-            console.log('⏹️ Auto-stopping recording after time limit');
-            stopRecording();
-            setSpeakingPhase('completed');
-          }
-        }, recordingTime);
+        if (!isSubmissionLocked) { // Only start if not already submitting
+          startRecording();
+          
+          // CRITICAL: Start recording timer with proper interval management
+          startRecordingTimer();
+        }
       }, 300);
       
     } catch (error) {
       console.error('Beep sound failed:', error);
       // Start recording anyway with proper timing
-      startRecording();
-      
-      const recordingTime = (currentItem?.timing?.recordSec || 60) * 1000;
-      console.log('🎙️ Recording for', currentItem?.timing?.recordSec || 60, 'seconds (fallback)');
-      
       setTimeout(() => {
-        if (isRecording) {
-          console.log('⏹️ Auto-stopping recording after time limit (fallback)');
-          stopRecording();
-          setSpeakingPhase('completed');
+        if (!isSubmissionLocked) { // Only start if not already submitting
+          startRecording();
+          startRecordingTimer();
         }
-      }, recordingTime);
+      }, 300);
     }
+  };
+  
+  // CRITICAL: Separate recording timer function with proper interval management
+  const startRecordingTimer = () => {
+    // Clear any existing recording interval first
+    if (recordInterval) {
+      clearInterval(recordInterval);
+      setRecordInterval(null);
+    }
+    
+    const recordingTime = currentItem?.timing?.recordSec || RECORD_SEC;
+    setRecordTimer(recordingTime);
+    console.log('🎙️ Starting recording timer for', recordingTime, 'seconds');
+    
+    const interval = setInterval(() => {
+      setRecordTimer(prev => {
+        const newTime = prev - 1;
+        const minutes = Math.floor(newTime / 60);
+        const seconds = newTime % 60;
+        setRecordTimeDisplay(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+        
+        if (newTime <= 0) {
+          clearInterval(interval);
+          setRecordInterval(null);
+          
+          // CRITICAL: Auto-stop recording and submit
+          if (isRecording) {
+            console.log('⏹️ Auto-stopping recording after timer expiry');
+            stopRecording();
+            // NOTE: Recording submission is now handled in recorder.onstop event
+          }
+          
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+    
+    // Store interval reference for proper cleanup
+    setRecordInterval(interval);
   };
 
   // Audio playback for listening items and speaking narration
@@ -813,7 +881,7 @@ export default function MSTPage() {
             startItemTimer(currentItem.timing.maxAnswerSec);
           } else if (currentItem?.skill === 'speaking') {
             console.log('🎙️ Speaking narration ended - starting preparation phase');
-            startPreparationPhase();
+            startPreparationTimer();
           }
         });
         
@@ -855,7 +923,10 @@ export default function MSTPage() {
 
   // Handle submit
   const handleSubmit = () => {
-    if (!currentSession || !currentItem || guardTimer > 0) return;
+    if (!currentSession || !currentItem || guardTimer > 0 || isSubmissionLocked) return;
+    
+    // CRITICAL: Lock submission to prevent duplicates
+    setIsSubmissionLocked(true);
     
     // CRITICAL: Stop and cleanup audio if it's still playing
     if (audioElement && !audioElement.paused) {
@@ -968,7 +1039,7 @@ export default function MSTPage() {
         console.log('🎵 Narration ended - starting preparation phase');
         setIsAudioPlaying(false);
         setNarrationPlayButton(false); // Hide play button
-        startPreparationPhase();
+        startPreparationTimer();
       });
       
       audio.addEventListener('error', (e) => {
@@ -1002,51 +1073,10 @@ export default function MSTPage() {
     } catch (error) {
       console.error('❌ Manual play error:', error);
       // If manual play also fails, continue to preparation
-      startPreparationPhase();
+      startPreparationTimer();
     }
   };
 
-  // Start preparation phase with proper timing
-  const startPreparationPhase = () => {
-    if (!currentItem) return;
-    
-    // Guard against multiple calls - only start if not already in preparation or recording
-    if (speakingPhase === 'preparation' || speakingPhase === 'recording' || speakingPhase === 'completed') {
-      console.log('⚠️ Preparation phase already started or in progress, skipping duplicate call');
-      return;
-    }
-    
-    console.log('⏰ Starting preparation phase with 15-second countdown');
-    setSpeakingPhase('preparation');
-    
-    // Reset preparation timer to constants
-    setPrepTimer(PREP_SEC);
-    setPrepTimeDisplay(formatTime(PREP_SEC));
-    
-    // Clear any existing interval
-    if (prepInterval) {
-      clearInterval(prepInterval);
-    }
-    
-    // Start preparation countdown
-    const newPrepInterval = setInterval(() => {
-      setPrepTimer(prev => {
-        const newTime = prev - 1;
-        setPrepTimeDisplay(formatTime(newTime));
-        
-        if (newTime <= 0) {
-          clearInterval(newPrepInterval);
-          setPrepInterval(null);
-          startRecordingPhase();
-          return 0;
-        }
-        
-        return newTime;
-      });
-    }, 1000);
-    
-    setPrepInterval(newPrepInterval);
-  };
 
   // Start recording phase with proper timing
   const startRecordingPhase = async () => {
