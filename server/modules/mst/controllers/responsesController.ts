@@ -99,16 +99,21 @@ export class MstResponsesController {
     whisperService?: any
   ): Promise<{ text: string; confidence: number }> {
     try {
-      if (whisperService && whisperService.transcribe) {
-        // Use Whisper service if available
-        const result = await whisperService.transcribe(audioBuffer);
+      if (whisperService && whisperService.transcribeBuffer) {
+        console.log('🎤 Using Whisper service for audio transcription');
+        
+        // Use Whisper service with proper method name
+        const result = await whisperService.transcribeBuffer(audioBuffer, 'audio.webm');
+        
+        console.log(`✓ Transcription completed: "${result.text.slice(0, 50)}..." (confidence: ${result.confidence || 'N/A'})`);
+        
         return {
           text: result.text || '',
           confidence: result.confidence || 0.8
         };
       } else {
         // Fallback: return empty transcript
-        console.warn('⚠️ Whisper service not available, using fallback');
+        console.warn('⚠️ Whisper service not available or missing transcribeBuffer method, using fallback');
         return {
           text: '[Audio transcription not available]',
           confidence: 0.1

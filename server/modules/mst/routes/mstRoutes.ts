@@ -11,6 +11,7 @@ import { MstItemsController } from '../controllers/itemsController';
 import { MstResponsesController } from '../controllers/responsesController';
 import { determineFinalBand } from '../routing/router';
 import { SkillResult } from '../schemas/resultSchema';
+import { whisperService } from '../../../whisper-service';
 
 const router = express.Router();
 
@@ -215,7 +216,7 @@ router.post('/response', authenticateToken, upload.single('audio'), async (req, 
     if (parsedSkill === 'speaking') {
       // Process audio for speaking (if file provided, otherwise empty response)
       if (req.file) {
-        const asrResult = await responsesController.processAudioResponse(req.file.buffer);
+        const asrResult = await responsesController.processAudioResponse(req.file.buffer, whisperService);
         responseData = {
           audioUrl: '',
           asr: asrResult
