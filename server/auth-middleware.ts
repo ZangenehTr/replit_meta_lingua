@@ -62,3 +62,8 @@ export function optionalAuth(req: AuthRequest, res: Response, next: NextFunction
     next();
   });
 }
+
+// Centralized authentication requirement (alias for authenticateToken)
+export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+  return authenticateToken(req, res, next);
+}

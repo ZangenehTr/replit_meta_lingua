@@ -15,7 +15,7 @@ import {
   type ExamTypeValues,
   type CEFRLevelValues 
 } from '@shared/schema';
-import { AuthRequest } from '../auth-middleware';
+import { requireAuth, AuthRequest } from '../auth-middleware';
 
 const router = express.Router();
 
@@ -27,6 +27,32 @@ const ieltsTargetScore = z.number().min(1).max(9, 'IELTS target score must be be
 const toeflTargetScore = z.number().min(0).max(120, 'TOEFL iBT target score must be between 0 and 120');
 const pteTargetScore = z.number().min(10).max(90, 'PTE Academic target score must be between 10 and 90');
 
+// Extended focus areas that the frontend can send
+const focusAreasEnum = z.enum([
+  'reading', 'writing', 'listening', 'speaking', 
+  'academic_writing', 'grammar', 'vocabulary', 'pronunciation', 'exam_strategy'
+]);
+
+// Extended pace options with normalization
+const preferredPaceEnum = z.enum(['slow', 'normal', 'fast', 'regular']).transform((val) => {
+  // Normalize 'regular' to 'normal' for internal consistency
+  return val === 'regular' ? 'normal' : val;
+});
+
+// Helper function to normalize focus areas to core skills for internal logic
+const normalizeFocusAreas = (areas: string[]): string[] => {
+  return areas.map(area => {
+    switch(area) {
+      case 'academic_writing': return 'writing';
+      case 'grammar': return 'writing';
+      case 'vocabulary': return 'reading';
+      case 'pronunciation': return 'speaking';
+      case 'exam_strategy': return 'reading'; // Maps to general comprehension
+      default: return area; // reading, writing, listening, speaking stay as-is
+    }
+  });
+};
+
 // Discriminated union for exam-specific validation
 const calculatePlanSchema = z.discriminatedUnion('exam', [
   z.object({
@@ -35,8 +61,8 @@ const calculatePlanSchema = z.discriminatedUnion('exam', [
     sessionId: z.string().min(1, 'MST session ID is required'),
     examDate: z.string().optional(),
     weeklyHours: z.number().min(1).max(40, 'Weekly hours must be between 1 and 40'),
-    focusAreas: z.array(z.enum(['reading', 'writing', 'listening', 'speaking'])).optional().default([]),
-    preferredPace: z.enum(['slow', 'normal', 'fast']).default('normal')
+    focusAreas: z.array(focusAreasEnum).optional().default([]),
+    preferredPace: preferredPaceEnum.default('normal')
   }),
   z.object({
     exam: z.literal(ExamType.IELTS_GENERAL),
@@ -44,8 +70,8 @@ const calculatePlanSchema = z.discriminatedUnion('exam', [
     sessionId: z.string().min(1, 'MST session ID is required'),
     examDate: z.string().optional(),
     weeklyHours: z.number().min(1).max(40, 'Weekly hours must be between 1 and 40'),
-    focusAreas: z.array(z.enum(['reading', 'writing', 'listening', 'speaking'])).optional().default([]),
-    preferredPace: z.enum(['slow', 'normal', 'fast']).default('normal')
+    focusAreas: z.array(focusAreasEnum).optional().default([]),
+    preferredPace: preferredPaceEnum.default('normal')
   }),
   z.object({
     exam: z.literal(ExamType.TOEFL_IBT),
@@ -53,8 +79,8 @@ const calculatePlanSchema = z.discriminatedUnion('exam', [
     sessionId: z.string().min(1, 'MST session ID is required'),
     examDate: z.string().optional(),
     weeklyHours: z.number().min(1).max(40, 'Weekly hours must be between 1 and 40'),
-    focusAreas: z.array(z.enum(['reading', 'writing', 'listening', 'speaking'])).optional().default([]),
-    preferredPace: z.enum(['slow', 'normal', 'fast']).default('normal')
+    focusAreas: z.array(focusAreasEnum).optional().default([]),
+    preferredPace: preferredPaceEnum.default('normal')
   }),
   z.object({
     exam: z.literal(ExamType.PTE_ACADEMIC),
@@ -62,8 +88,8 @@ const calculatePlanSchema = z.discriminatedUnion('exam', [
     sessionId: z.string().min(1, 'MST session ID is required'),
     examDate: z.string().optional(),
     weeklyHours: z.number().min(1).max(40, 'Weekly hours must be between 1 and 40'),
-    focusAreas: z.array(z.enum(['reading', 'writing', 'listening', 'speaking'])).optional().default([]),
-    preferredPace: z.enum(['slow', 'normal', 'fast']).default('normal')
+    focusAreas: z.array(focusAreasEnum).optional().default([]),
+    preferredPace: preferredPaceEnum.default('normal')
   }),
   z.object({
     exam: z.literal(ExamType.PTE_CORE),
@@ -71,8 +97,8 @@ const calculatePlanSchema = z.discriminatedUnion('exam', [
     sessionId: z.string().min(1, 'MST session ID is required'),
     examDate: z.string().optional(),
     weeklyHours: z.number().min(1).max(40, 'Weekly hours must be between 1 and 40'),
-    focusAreas: z.array(z.enum(['reading', 'writing', 'listening', 'speaking'])).optional().default([]),
-    preferredPace: z.enum(['slow', 'normal', 'fast']).default('normal')
+    focusAreas: z.array(focusAreasEnum).optional().default([]),
+    preferredPace: preferredPaceEnum.default('normal')
   })
 ]);
 
@@ -80,7 +106,7 @@ const generateSessionsSchema = z.object({
   planId: z.number().int().positive('Plan ID must be a positive integer'),
   sessionId: z.string().min(1, 'MST session ID is required'),
   exam: z.nativeEnum(ExamType),
-  focusAreas: z.array(z.enum(['reading', 'writing', 'listening', 'speaking'])).optional().default([]),
+  focusAreas: z.array(focusAreasEnum).optional().default([]),
   totalSessions: z.number().int().min(1).max(200, 'Total sessions must be between 1 and 200')
 });
 
@@ -92,25 +118,12 @@ const updateProgressSchema = z.object({
   timeSpent: z.number().min(0).optional()
 });
 
-// Authentication middleware
-const authenticateUser = (req: AuthRequest, res: express.Response, next: express.NextFunction) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ success: false, error: 'Authorization token required' });
-  }
-
-  // For demo purposes - replace with proper JWT validation
-  req.user = { id: parseInt(token) || 1, role: 'Student' };
-  next();
-};
 
 /**
  * POST /api/roadmap/calculate-plan
  * Calculate comprehensive study plan based on MST results
  */
-router.post('/calculate-plan', authenticateUser, async (req: AuthRequest, res) => {
+router.post('/calculate-plan', requireAuth, async (req: AuthRequest, res) => {
   try {
     console.log('🎯 POST /api/roadmap/calculate-plan - Calculating study plan');
 
@@ -163,7 +176,7 @@ router.post('/calculate-plan', authenticateUser, async (req: AuthRequest, res) =
  * POST /api/roadmap/generate-sessions
  * Generate detailed AI-powered session plans
  */
-router.post('/generate-sessions', authenticateUser, async (req: AuthRequest, res) => {
+router.post('/generate-sessions', requireAuth, async (req: AuthRequest, res) => {
   try {
     console.log('🤖 POST /api/roadmap/generate-sessions - Generating AI-powered sessions');
 
@@ -284,10 +297,60 @@ router.post('/generate-sessions', authenticateUser, async (req: AuthRequest, res
 });
 
 /**
+ * GET /api/roadmap/plans
+ * Get user's roadmap plans
+ */
+router.get('/plans', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    console.log(`📚 GET /api/roadmap/plans - Retrieving plans for user ${req.user!.id}`);
+
+    const plans = await storage.getUserRoadmapPlans(req.user!.id);
+
+    // Enhance plans with progress and session counts
+    const enhancedPlans = await Promise.all(
+      plans.map(async (plan) => {
+        const sessions = await storage.getRoadmapSessions(plan.id);
+        const completedSessions = plan.completedSessions || 0;
+        const progressPercentage = sessions.length > 0 ? 
+          Math.round((completedSessions / sessions.length) * 100) : 0;
+
+        return {
+          ...plan,
+          currentLevel: typeof plan.currentLevel === 'string' ? 
+            JSON.parse(plan.currentLevel) : plan.currentLevel,
+          sessionCount: sessions.length,
+          progressPercentage,
+          status: progressPercentage === 100 ? 'completed' : 
+                   progressPercentage > 0 ? 'in_progress' : 'not_started'
+        };
+      })
+    );
+
+    console.log(`✅ Retrieved ${enhancedPlans.length} roadmap plans`);
+
+    res.json({
+      success: true,
+      data: {
+        plans: enhancedPlans,
+        total: enhancedPlans.length
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error in get plans:', error);
+
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve roadmap plans'
+    });
+  }
+});
+
+/**
  * GET /api/roadmap/:planId
  * Retrieve saved roadmap plan with sessions
  */
-router.get('/:planId', authenticateUser, async (req: AuthRequest, res) => {
+router.get('/:planId', requireAuth, async (req: AuthRequest, res) => {
   try {
     const planId = parseInt(req.params.planId);
     
@@ -362,7 +425,7 @@ router.get('/:planId', authenticateUser, async (req: AuthRequest, res) => {
  * PATCH /api/roadmap/:planId/progress
  * Update session completion status and plan progress
  */
-router.patch('/:planId/progress', authenticateUser, async (req: AuthRequest, res) => {
+router.patch('/:planId/progress', requireAuth, async (req: AuthRequest, res) => {
   try {
     const planId = parseInt(req.params.planId);
     
@@ -481,60 +544,10 @@ router.patch('/:planId/progress', authenticateUser, async (req: AuthRequest, res
 });
 
 /**
- * GET /api/roadmap/plans
- * Get user's roadmap plans
- */
-router.get('/plans', authenticateUser, async (req: AuthRequest, res) => {
-  try {
-    console.log(`📚 GET /api/roadmap/plans - Retrieving plans for user ${req.user!.id}`);
-
-    const plans = await storage.getUserRoadmapPlans(req.user!.id);
-
-    // Enhance plans with progress and session counts
-    const enhancedPlans = await Promise.all(
-      plans.map(async (plan) => {
-        const sessions = await storage.getRoadmapSessions(plan.id);
-        const completedSessions = plan.completedSessions || 0;
-        const progressPercentage = sessions.length > 0 ? 
-          Math.round((completedSessions / sessions.length) * 100) : 0;
-
-        return {
-          ...plan,
-          currentLevel: typeof plan.currentLevel === 'string' ? 
-            JSON.parse(plan.currentLevel) : plan.currentLevel,
-          sessionCount: sessions.length,
-          progressPercentage,
-          status: progressPercentage === 100 ? 'completed' : 
-                   progressPercentage > 0 ? 'in_progress' : 'not_started'
-        };
-      })
-    );
-
-    console.log(`✅ Retrieved ${enhancedPlans.length} roadmap plans`);
-
-    res.json({
-      success: true,
-      data: {
-        plans: enhancedPlans,
-        total: enhancedPlans.length
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Error in get plans:', error);
-
-    res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve roadmap plans'
-    });
-  }
-});
-
-/**
  * DELETE /api/roadmap/:planId
  * Delete a roadmap plan and all its sessions
  */
-router.delete('/:planId', authenticateUser, async (req: AuthRequest, res) => {
+router.delete('/:planId', requireAuth, async (req: AuthRequest, res) => {
   try {
     const planId = parseInt(req.params.planId);
     
