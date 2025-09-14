@@ -280,15 +280,33 @@ export default function MSTPage() {
           setSpeakingQuestionIndex(0);
           // Disable microphone for remainder of test since speaking is complete
           disableMicrophoneForTest();
-          await advanceToNextSkill();
+          
+          // Get current scores for speaking skill to pass directly
+          const existingScores = skillScores[key] || {};
+          const completeScores = {
+            stage1Score: existingScores.stage1Score ?? pValue,
+            stage2Score: pValue, // Current Q2 score
+            route: existingScores.route ?? data.route
+          };
+          
+          console.log("🎙️ Speaking complete - passing scores directly to advanceToNextSkill:", completeScores);
+          await advanceToNextSkill(completeScores);
           return;
         }
       }
 
       if (key === "writing") {
-        // Wait for state update before advancing to ensure score is stored
-        await new Promise(resolve => setTimeout(resolve, 100));
-        await advanceToNextSkill();
+        // Pass the actual computed scores directly instead of relying on React state
+        console.log("📝 Writing complete - passing scores directly to advanceToNextSkill:", {
+          pValue,
+          stage1Score: pValue,
+          route: data.route
+        });
+        await advanceToNextSkill({
+          stage1Score: pValue,
+          stage2Score: pValue, // Writing is single-stage, so stage2 = stage1
+          route: data.route
+        });
         return;
       }
 
@@ -297,7 +315,17 @@ export default function MSTPage() {
         setCurrentStage(nextStage);
         await fetchNextItemWithStage(nextStage);
       } else {
-        await advanceToNextSkill();
+        // This is the second stage completion for reading/listening skills
+        // Pass the current scores directly to prevent fallback to 0.5
+        const existingScores = skillScores[key] || {};
+        const completeScores = {
+          stage1Score: existingScores.stage1Score ?? 0.5,
+          stage2Score: pValue, // Current stage2 score
+          route: existingScores.route ?? data.route
+        };
+        
+        console.log("📚 Stage 2 complete for", key, "- passing scores directly to advanceToNextSkill:", completeScores);
+        await advanceToNextSkill(completeScores);
       }
 
       setCurrentResponse("");
@@ -408,25 +436,42 @@ export default function MSTPage() {
     }
   };
 
-  const advanceToNextSkill = async () => {
+  const advanceToNextSkill = async (providedScores?: {
+    stage1Score?: number;
+    stage2Score?: number;
+    route?: "up" | "down" | "stay";
+  }) => {
     if (!currentSession || !status) return;
     const currentSkill = status.session.skillOrder[currentSkillIndex];
+    
+    // Use provided scores if available, otherwise fall back to React state
+    const scores = providedScores || skillScores[currentSkill] || {};
+    
+    console.log("📊 advanceToNextSkill called for", currentSkill, {
+      providedScores,
+      reactStateScores: skillScores[currentSkill],
+      finalScores: scores
+    });
+    
     try {
-      const scores = skillScores[currentSkill] || {};
+      const payload = {
+        sessionId: currentSession.sessionId,
+        skill: currentSkill,
+        stage1Score: scores.stage1Score ?? 0.5,
+        stage2Score: scores.stage2Score ?? scores.stage1Score ?? 0.5,
+        route: scores.route ?? "stay",
+        timeSpentSec: 60,
+      };
+      
+      console.log("🚀 Sending skill-complete with payload:", payload);
+      
       await fetch("/api/mst/skill-complete", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
         },
-        body: JSON.stringify({
-          sessionId: currentSession.sessionId,
-          skill: currentSkill,
-          stage1Score: scores.stage1Score ?? 0.5,
-          stage2Score: scores.stage2Score ?? scores.stage1Score ?? 0.5,
-          route: scores.route ?? "stay",
-          timeSpentSec: 60,
-        }),
+        body: JSON.stringify(payload),
       });
     } catch {
       /* non-fatal */
@@ -452,6 +497,8 @@ export default function MSTPage() {
       setCurrentStage("core");
       await fetchNextItemWithSkillAndStage(i, "core");
     } else {
+      // This fallback uses React state since we don't have current response scores
+      console.log("⚠️ goToWritingOrNext fallback - using React state scores (not critical path)");
       await advanceToNextSkill();
     }
   };
