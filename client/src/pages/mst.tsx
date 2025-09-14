@@ -286,6 +286,8 @@ export default function MSTPage() {
       }
 
       if (key === "writing") {
+        // Wait for state update before advancing to ensure score is stored
+        await new Promise(resolve => setTimeout(resolve, 100));
         await advanceToNextSkill();
         return;
       }
