@@ -632,28 +632,40 @@ export default function MSTPage() {
         const prompt = currentItem.content.assets?.prompt;
         if (prompt && currentItem.skill === 'speaking') {
           console.log('🎵 Generating TTS for speaking prompt after state validation');
+          let audioPlayed = false; // Track if audio actually plays
+          
           generateSpeakingTTS(prompt).then(audioUrl => {
             // Triple-check state is still consistent before playing TTS
             if (audioUrl && currentItem?.skill === 'speaking') {
               // ARCHITECT FIX C: Store audio URL in map
               setProcessedSpeakingItems(prev => new Map(prev).set(itemKey, audioUrl));
-              autoPlayNarration(audioUrl);
+              audioPlayed = true; // Mark that audio will play
+              autoPlayNarration(audioUrl); // Audio onended will trigger prep timer
             } else if (currentItem?.skill !== 'speaking') {
               console.warn('⚠️ State changed during TTS generation, aborting speaking setup');
             } else {
               console.warn('⚠️ TTS generation failed for speaking prompt');
-              // ARCHITECT FIX D: Immediate fallback to preparation timer (2s max)
-              setTimeout(() => startPreparationTimer(), 1500);
+              // Only start prep timer if audio didn't play
+              if (!audioPlayed && phaseRef.current === 'narration') {
+                console.log('🔄 Starting preparation timer as fallback (TTS failed)');
+                startPreparationTimer();
+              }
             }
           }).catch(error => {
             console.error('❌ TTS generation error caught:', error);
-            // ARCHITECT FIX D: Immediate fallback on TTS failure
-            setTimeout(() => startPreparationTimer(), 1000);
+            // Only start prep timer if we're still in narration phase
+            if (phaseRef.current === 'narration') {
+              console.log('🔄 Starting preparation timer as fallback (TTS error)');
+              startPreparationTimer();
+            }
           });
         } else {
           console.warn('⚠️ No prompt found for speaking item or state inconsistency');
-          // ARCHITECT FIX D: Immediate fallback when no prompt
-          setTimeout(() => startPreparationTimer(), 1000);
+          // Start prep timer immediately when no prompt
+          if (phaseRef.current === 'narration') {
+            console.log('🔄 Starting preparation timer as fallback (no prompt)');
+            startPreparationTimer();
+          }
         }
       }
     } else if (currentItem.skill === 'writing') {
@@ -979,6 +991,53 @@ export default function MSTPage() {
     }
   };
   
+  // CRITICAL: Function to finalize recording and submit response
+  const finalizeRecordingAndSubmit = async () => {
+    console.log('🎯 Finalizing recording and submitting response');
+    
+    // Idempotency guard
+    if (isSubmissionLocked || hasStoppedRef.current) {
+      console.log('⚠️ Already submitting or stopped, ignoring duplicate call');
+      return;
+    }
+    
+    // Lock submission
+    setIsSubmissionLocked(true);
+    hasStoppedRef.current = true;
+    
+    // Stop recording if still active
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      console.log('⏹️ Stopping MediaRecorder for submission');
+      mediaRecorder.stop();
+      
+      // Wait for the blob to be available (with timeout)
+      await new Promise<void>((resolve) => {
+        const timeout = setTimeout(() => resolve(), 1000); // 1 second timeout
+        const originalOnStop = mediaRecorder.onstop;
+        mediaRecorder.onstop = function(event) {
+          if (originalOnStop) originalOnStop.call(this, event);
+          clearTimeout(timeout);
+          resolve();
+        };
+      });
+    }
+    
+    // Submit the response with the blob
+    if (currentSession && currentItem) {
+      const blob = recordingBlob || lastBlobRef.current;
+      console.log('📤 Submitting speaking response with blob:', blob?.size, 'bytes');
+      
+      submitResponseMutation.mutate({
+        sessionId: currentSession.sessionId,
+        skill: currentItem.skill as MSTSkill,
+        stage: currentStage,
+        itemId: currentItem.id,
+        audioBlob: blob,
+        timeSpentMs: 60000 // Fixed 60 seconds for speaking recording
+      });
+    }
+  };
+
   // CRITICAL: Separate recording timer function with proper interval management
   // ARCHITECT FIX: Deadline-based recording timer with guards
   const startRecordingTimer = () => {
@@ -1010,17 +1069,14 @@ export default function MSTPage() {
       setRecordTimeDisplay(formatTime(remaining));
       
       if (remaining <= 0) {
-        console.log('⏹️ Recording time expired - auto-stopping');
+        console.log('⏹️ Recording time expired - finalizing and submitting');
         if (recordIntervalRef.current) {
           clearInterval(recordIntervalRef.current);
           recordIntervalRef.current = null;
         }
         
-        // CRITICAL: Auto-stop recording and submit
-        if (isRecording && mediaRecorder) {
-          console.log('⏹️ Auto-stopping recording after timer expiry');
-          stopRecordingOnce(mediaRecorder);
-        }
+        // CRITICAL: Finalize recording and submit response
+        finalizeRecordingAndSubmit();
       }
     };
     
