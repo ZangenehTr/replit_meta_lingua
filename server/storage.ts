@@ -29,6 +29,8 @@ import {
   institutes, departments, studentGroups, studentGroupMembers, teacherAssignments,
   studentNotes, parentGuardians, studentReports, referralSettings, courseReferrals,
   referralCommissions, adminSettings, aiTrainingData, aiKnowledgeBase,
+  // MST tables
+  mstSessions, mstSkillStates, mstResponses,
 } from "@shared/schema";
 import { 
   // Types
@@ -87,7 +89,12 @@ import {
   type CallernScoringEvent, type InsertCallernScoringEvent,
   // Supervision observation types
   type SupervisionObservation, type InsertSupervisionObservation,
-  type TeacherObservationResponse, type InsertTeacherObservationResponse
+  type TeacherObservationResponse, type InsertTeacherObservationResponse,
+  // Exam roadmap types
+  type RoadmapPlan, type InsertRoadmapPlan, type RoadmapSession, type InsertRoadmapSession,
+  roadmapPlans, roadmapSessions,
+  // MST types
+  type MSTSession, type MSTSkillState, type MSTResponse
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte } from "drizzle-orm";
@@ -1014,6 +1021,24 @@ export interface IStorage {
 
   // Call Recording Methods
   createCallHistory(data: any): Promise<any>;
+
+  // Exam-focused Roadmap Methods
+  createRoadmapPlan(plan: InsertRoadmapPlan): Promise<RoadmapPlan>;
+  getRoadmapPlan(id: number): Promise<RoadmapPlan | undefined>;
+  updateRoadmapPlan(id: number, updates: Partial<RoadmapPlan>): Promise<RoadmapPlan | undefined>;
+  deleteRoadmapPlan(id: number): Promise<void>;
+  getUserRoadmapPlans(userId: number): Promise<RoadmapPlan[]>;
+
+  createRoadmapSession(session: InsertRoadmapSession): Promise<RoadmapSession>;
+  getRoadmapSession(id: number): Promise<RoadmapSession | undefined>;
+  updateRoadmapSession(id: number, updates: Partial<RoadmapSession>): Promise<RoadmapSession | undefined>;
+  deleteRoadmapSession(id: number): Promise<void>;
+  getRoadmapSessions(planId: number): Promise<RoadmapSession[]>;
+  getRoadmapSessionsWithProgress(planId: number, userId: number): Promise<(RoadmapSession & { completed: boolean; score?: number; notes?: string; timeSpent?: number })[]>;
+
+  // MST Integration Methods
+  getMSTSession(sessionId: string): Promise<any>;
+  getMSTResults(sessionId: string): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -5094,6 +5119,198 @@ export class MemStorage implements IStorage {
 
   async updateLearningAdaptation(id: number, updates: any): Promise<any> {
     return null;
+  }
+
+  // Exam-focused Roadmap Methods Implementation
+  async createRoadmapPlan(plan: InsertRoadmapPlan): Promise<RoadmapPlan> {
+    const result = await this.db.insert(roadmapPlans).values(plan).returning();
+    return result[0];
+  }
+
+  async getRoadmapPlan(id: number): Promise<RoadmapPlan | undefined> {
+    const result = await this.db.select().from(roadmapPlans).where(eq(roadmapPlans.id, id));
+    return result[0];
+  }
+
+  async updateRoadmapPlan(id: number, updates: Partial<RoadmapPlan>): Promise<RoadmapPlan | undefined> {
+    const result = await this.db.update(roadmapPlans)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(roadmapPlans.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteRoadmapPlan(id: number): Promise<void> {
+    await this.db.delete(roadmapPlans).where(eq(roadmapPlans.id, id));
+  }
+
+  async getUserRoadmapPlans(userId: number): Promise<RoadmapPlan[]> {
+    return await this.db.select().from(roadmapPlans).where(eq(roadmapPlans.userId, userId));
+  }
+
+  async createRoadmapSession(session: InsertRoadmapSession): Promise<RoadmapSession> {
+    const result = await this.db.insert(roadmapSessions).values(session).returning();
+    return result[0];
+  }
+
+  async getRoadmapSession(id: number): Promise<RoadmapSession | undefined> {
+    const result = await this.db.select().from(roadmapSessions).where(eq(roadmapSessions.id, id));
+    return result[0];
+  }
+
+  async updateRoadmapSession(id: number, updates: Partial<RoadmapSession>): Promise<RoadmapSession | undefined> {
+    const result = await this.db.update(roadmapSessions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(roadmapSessions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteRoadmapSession(id: number): Promise<void> {
+    await this.db.delete(roadmapSessions).where(eq(roadmapSessions.id, id));
+  }
+
+  async getRoadmapSessions(planId: number): Promise<RoadmapSession[]> {
+    return await this.db.select().from(roadmapSessions)
+      .where(eq(roadmapSessions.planId, planId))
+      .orderBy(roadmapSessions.sessionIndex);
+  }
+
+  async getRoadmapSessionsWithProgress(planId: number, userId: number): Promise<(RoadmapSession & { completed: boolean; score?: number; notes?: string; timeSpent?: number })[]> {
+    // Get all sessions for the plan
+    const sessions = await this.getRoadmapSessions(planId);
+    
+    // For each session, check if there's completion tracking
+    // Since we don't have a separate progress table yet, we'll use the session's own completion fields
+    // This should be enhanced with a proper user_roadmap_progress table in the future
+    return sessions.map(session => ({
+      ...session,
+      completed: (session as any).completed || false,
+      score: (session as any).score || undefined,
+      notes: (session as any).notes || undefined,
+      timeSpent: (session as any).timeSpent || undefined
+    }));
+  }
+
+  // MST Integration methods
+  async getMSTSession(sessionId: string): Promise<any> {
+    try {
+      const result = await this.db.select().from(mstSessions).where(eq(mstSessions.sessionId, sessionId));
+      return result[0];
+    } catch (error) {
+      console.error('❌ Error getting MST session:', error);
+      return undefined;
+    }
+  }
+
+  async getMSTResults(sessionId: string): Promise<any> {
+    try {
+      // Get MST session
+      const session = await this.getMSTSession(sessionId);
+      if (!session) {
+        return null;
+      }
+
+      // Get all responses for this session
+      const responses = await this.db
+        .select()
+        .from(mstResponses)
+        .where(eq(mstResponses.sessionId, session.id));
+
+      // Get skill states
+      const skillStates = await this.db
+        .select()
+        .from(mstSkillStates)
+        .where(eq(mstSkillStates.sessionId, session.id));
+
+      // Compute final results from responses and skill states
+      const skillResults = skillStates.map(skillState => {
+        const skillResponses = responses.filter(r => r.skill === skillState.skill);
+        
+        // Calculate scores from responses (simplified scoring logic)
+        const stage1Score = this.calculateStageScore(skillResponses.filter(r => r.stage === 'core'));
+        const stage2Score = this.calculateStageScore(skillResponses.filter(r => r.stage === 'upper' || r.stage === 'lower'));
+
+        // Determine final band based on scores and routing
+        const finalScore = stage2Score || stage1Score;
+        const band = this.scoreToBand(finalScore, skillState.skill);
+
+        return {
+          skill: skillState.skill,
+          band,
+          confidence: Math.min(1.0, finalScore / 80), // Simple confidence calculation
+          stage1Score,
+          stage2Score: stage2Score || undefined,
+          route: this.determineRoute(stage1Score, stage2Score),
+          timeSpentSec: skillState.timeSpentSec || 0
+        };
+      });
+
+      // Calculate overall results
+      const overallScore = skillResults.reduce((sum, skill) => sum + (skill.stage2Score || skill.stage1Score), 0) / skillResults.length;
+      const overallBand = this.scoreToBand(overallScore, 'overall');
+
+      return {
+        sessionId,
+        overallBand,
+        overallConfidence: Math.min(1.0, overallScore / 80),
+        skills: skillResults,
+        totalTimeMin: Math.round(skillStates.reduce((sum, state) => sum + (state.timeSpentSec || 0), 0) / 60),
+        completedAt: new Date(),
+        recommendations: this.generateRecommendations(skillResults)
+      };
+    } catch (error) {
+      console.error('❌ Error computing MST results:', error);
+      return null;
+    }
+  }
+
+  // Helper methods for MST results computation
+  private calculateStageScore(responses: any[]): number {
+    if (responses.length === 0) return 0;
+    
+    // Simple scoring logic - count correct answers
+    let correctCount = 0;
+    for (const response of responses) {
+      // This is a simplified scoring logic - in reality, this would be more sophisticated
+      if (response.quickscore && response.quickscore.p > 0.6) {
+        correctCount++;
+      }
+    }
+    
+    return Math.round((correctCount / responses.length) * 100);
+  }
+
+  private scoreToBand(score: number, skill: string): string {
+    // Convert numeric score to CEFR band
+    if (score >= 85) return 'C2';
+    if (score >= 75) return 'C1';
+    if (score >= 65) return 'B2';
+    if (score >= 55) return 'B1';
+    if (score >= 40) return 'A2';
+    return 'A1';
+  }
+
+  private determineRoute(stage1Score: number, stage2Score?: number): 'up' | 'down' | 'stay' {
+    if (stage1Score >= 70) return 'up';
+    if (stage1Score < 50) return 'down';
+    return 'stay';
+  }
+
+  private generateRecommendations(skillResults: any[]): string[] {
+    const recommendations: string[] = [];
+    
+    const weakSkills = skillResults.filter(skill => (skill.stage2Score || skill.stage1Score) < 60);
+    if (weakSkills.length > 0) {
+      recommendations.push(`Focus on improving ${weakSkills.map(s => s.skill).join(', ')} skills`);
+    }
+    
+    const strongSkills = skillResults.filter(skill => (skill.stage2Score || skill.stage1Score) >= 80);
+    if (strongSkills.length > 0) {
+      recommendations.push(`Excellent performance in ${strongSkills.map(s => s.skill).join(', ')}`);
+    }
+    
+    return recommendations;
   }
 
   // Enterprise Features - Database implementations

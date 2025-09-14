@@ -14,6 +14,7 @@ import { setupCallernRecordingRoutes } from "./callern-recording-routes";
 import { registerCallernTeacherRoutes } from "./callern-teacher-routes";
 import callernRoadmapRoutes from "./routes/callern-roadmap-routes";
 import courseRoadmapRoutes from "./routes/course-roadmap-routes";
+import examRoadmapRoutes from "./routes/exam-roadmap-routes";
 import tttRoutes from "./ttt-routes";
 import aiWebhookRoutes from "./ai-webhook-routes";
 import mstRoutes from "./modules/mst/routes/mstRoutes";
@@ -19895,7 +19896,11 @@ Meta Lingua Academy`;
   app.use('/api', roadmapInstanceRoutes);
   app.use('/api', callernFlowRoutes);
   
+  // Register exam-focused roadmap routes
+  app.use('/api/roadmap', examRoadmapRoutes);
+  
   console.log('✅ CallerN Roadmap Template & Flow routes registered successfully');
+  console.log('✅ Exam-focused roadmap routes registered successfully');
 
   // Import and register Sample Courses routes
   const { sampleCoursesRoutes } = await import('./routes/sample-courses-routes');
