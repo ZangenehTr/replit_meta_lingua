@@ -12,6 +12,7 @@ import { MstResponsesController } from '../controllers/responsesController';
 import { determineFinalBand } from '../routing/router';
 import { SkillResult } from '../schemas/resultSchema';
 import { whisperService } from '../../../whisper-service';
+import { AuthRequest } from '../../../auth-middleware';
 
 const router = express.Router();
 
@@ -26,18 +27,8 @@ const sessionController = new MstSessionController();
 const itemsController = new MstItemsController();
 const responsesController = new MstResponsesController();
 
-// Extend Express Request interface to include user
-declare module 'express' {
-  interface Request {
-    user?: {
-      id: number;
-      role: string;
-    };
-  }
-}
-
 // Simple auth middleware (replace with proper auth)
-const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const authenticateToken = (req: AuthRequest, res: express.Response, next: express.NextFunction) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   
@@ -61,9 +52,9 @@ itemsController.initialize().catch(console.error);
  * POST /mst/start
  * Start a new MST session
  */
-router.post('/start', authenticateToken, async (req, res) => {
+router.post('/start', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     
     const result = await sessionController.startSession(userId);
     
@@ -84,7 +75,7 @@ router.post('/start', authenticateToken, async (req, res) => {
  * GET /mst/item
  * Get item for specific skill and stage
  */
-router.get('/item', authenticateToken, async (req, res) => {
+router.get('/item', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const skill = skillSchema.parse(req.query.skill);
     const stage = stageSchema.parse(req.query.stage);
@@ -99,7 +90,7 @@ router.get('/item', authenticateToken, async (req, res) => {
 
     // Validate session exists
     const session = sessionController.getSession(sessionId);
-    if (!session || session.userId !== req.user.id) {
+    if (!session || session.userId !== req.user!.id) {
       return res.status(404).json({
         success: false,
         error: 'Session not found'
@@ -183,7 +174,7 @@ router.get('/item', authenticateToken, async (req, res) => {
  * POST /mst/response
  * Submit response for an item
  */
-router.post('/response', authenticateToken, upload.single('audio'), async (req, res) => {
+router.post('/response', authenticateToken, upload.single('audio'), async (req: AuthRequest, res) => {
   try {
     const { sessionId, skill, stage, itemId } = req.body;
     
@@ -193,7 +184,7 @@ router.post('/response', authenticateToken, upload.single('audio'), async (req, 
     
     // Validate session
     const session = sessionController.getSession(sessionId);
-    if (!session || session.userId !== req.user.id) {
+    if (!session || session.userId !== req.user!.id) {
       return res.status(404).json({
         success: false,
         error: 'Session not found'
@@ -241,7 +232,7 @@ router.post('/response', authenticateToken, upload.single('audio'), async (req, 
     // Process response and get quickscore
     const quickscoreResult = await responsesController.processResponse(
       sessionId,
-      req.user.id,
+      req.user!.id,
       parsedSkill,
       parsedStage,
       item,
@@ -270,7 +261,7 @@ router.post('/response', authenticateToken, upload.single('audio'), async (req, 
  * POST /mst/quickscore
  * Get quickscore for a response (separate endpoint)
  */
-router.post('/quickscore', authenticateToken, async (req, res) => {
+router.post('/quickscore', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { sessionId, skill, stage, itemId, responseData, timeSpentMs } = req.body;
     
@@ -279,7 +270,7 @@ router.post('/quickscore', authenticateToken, async (req, res) => {
     
     // Validate session
     const session = sessionController.getSession(sessionId);
-    if (!session || session.userId !== req.user.id) {
+    if (!session || session.userId !== req.user!.id) {
       return res.status(404).json({
         success: false,
         error: 'Session not found'
@@ -298,7 +289,7 @@ router.post('/quickscore', authenticateToken, async (req, res) => {
     // Process and get quickscore
     const result = await responsesController.processResponse(
       sessionId,
-      req.user.id,
+      req.user!.id,
       parsedSkill,
       parsedStage,
       item,
@@ -326,7 +317,7 @@ router.post('/quickscore', authenticateToken, async (req, res) => {
  * POST /mst/skill-complete
  * Mark a skill as complete and add result
  */
-router.post('/skill-complete', authenticateToken, async (req, res) => {
+router.post('/skill-complete', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { sessionId, skill, stage1Score, stage2Score, route, timeSpentSec } = req.body;
     
@@ -334,7 +325,7 @@ router.post('/skill-complete', authenticateToken, async (req, res) => {
     
     // Validate session
     const session = sessionController.getSession(sessionId);
-    if (!session || session.userId !== req.user.id) {
+    if (!session || session.userId !== req.user!.id) {
       return res.status(404).json({
         success: false,
         error: 'Session not found'
@@ -404,13 +395,13 @@ router.post('/skill-complete', authenticateToken, async (req, res) => {
  * POST /mst/finalize
  * Finalize MST session and get results
  */
-router.post('/finalize', authenticateToken, async (req, res) => {
+router.post('/finalize', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { sessionId } = req.body;
     
     // Validate session
     const session = sessionController.getSession(sessionId);
-    if (!session || session.userId !== req.user.id) {
+    if (!session || session.userId !== req.user!.id) {
       return res.status(404).json({
         success: false,
         error: 'Session not found'
@@ -447,13 +438,13 @@ router.post('/finalize', authenticateToken, async (req, res) => {
  * GET /mst/status
  * Get session status and timing info
  */
-router.get('/status', authenticateToken, async (req, res) => {
+router.get('/status', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { sessionId } = req.query;
     
     // Validate session
     const session = sessionController.getSession(sessionId as string);
-    if (!session || session.userId !== req.user.id) {
+    if (!session || session.userId !== req.user!.id) {
       return res.status(404).json({
         success: false,
         error: 'Session not found'
@@ -497,7 +488,7 @@ router.get('/status', authenticateToken, async (req, res) => {
  * GET /mst/telemetry
  * Get performance telemetry (admin endpoint)
  */
-router.get('/telemetry', authenticateToken, async (req, res) => {
+router.get('/telemetry', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const stats = responsesController.getPerformanceStats();
     const logs = responsesController.getTelemetryLogs();
@@ -521,7 +512,7 @@ router.get('/telemetry', authenticateToken, async (req, res) => {
  * POST /mst/generate-roadmap
  * Generate AI roadmap from MST results
  */
-router.post('/generate-roadmap', authenticateToken, async (req, res) => {
+router.post('/generate-roadmap', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { sessionId, learningGoals, timeAvailability, preferredPace, focusAreas, placementResults } = req.body;
     
@@ -529,7 +520,7 @@ router.post('/generate-roadmap', authenticateToken, async (req, res) => {
     
     // Validate MST session exists
     const session = sessionController.getSession(sessionId);
-    if (!session || session.userId !== req.user.id) {
+    if (!session || session.userId !== req.user!.id) {
       return res.status(404).json({
         success: false,
         error: 'MST session not found or access denied'
@@ -544,7 +535,7 @@ router.post('/generate-roadmap', authenticateToken, async (req, res) => {
     }
 
     // Create personalized roadmap structure based on actual MST results
-    const skillResults = session.skillResults || [];
+    const skillResults = sessionController.getSkillResults(sessionId);
     const weakestSkill = getWeakestSkillFromResults(skillResults);
     const totalWeeks = Math.max(8, Math.min(24, timeAvailability <= 5 ? 20 : (timeAvailability <= 10 ? 16 : 12)));
     
