@@ -133,6 +133,22 @@ export default function CallernSystem() {
   const [activeCallConfig, setActiveCallConfig] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'packages' | 'teachers' | 'history'>('teachers');
   const [waitingForTeacher, setWaitingForTeacher] = useState(false);
+  const [roadmapContext, setRoadmapContext] = useState<any>(null);
+
+  // Load roadmap context on mount
+  useEffect(() => {
+    const storedContext = localStorage.getItem('callernRoadmapContext');
+    if (storedContext) {
+      try {
+        const context = JSON.parse(storedContext);
+        setRoadmapContext(context);
+        // Clear the context after loading to prevent persistence across sessions
+        localStorage.removeItem('callernRoadmapContext');
+      } catch (error) {
+        console.error('Failed to parse roadmap context:', error);
+      }
+    }
+  }, []);
 
   // Fetch available Callern packages
   const { data: packages = [], isLoading: packagesLoading } = useQuery<CallernPackage[]>({
@@ -423,8 +439,8 @@ export default function CallernSystem() {
         role="student"
         teacherName={activeCallConfig.teacherName}
         studentName={`${user?.firstName} ${user?.lastName}`}
-        roadmapTitle="General Conversation"
-        sessionStep="Free Talk Session"
+        roadmapTitle={roadmapContext?.roadmapSession?.title || "General Conversation"}
+        sessionStep={roadmapContext?.roadmapSession?.description || "Free Talk Session"}
         packageMinutesRemaining={600}
         onCallEnd={handleEndCall}
       />
@@ -463,15 +479,86 @@ export default function CallernSystem() {
           </div>
         </div>
 
-        {/* Welcome Banner */}
+        {/* Exam-Focused Session Banner - When coming from roadmap */}
+        {roadmapContext?.roadmapSession && (
+          <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-xl p-6 text-white shadow-xl border-2 border-emerald-300">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <Target className="h-6 w-6" />
+                  <h2 className="text-xl font-bold">Exam-Focused Speaking Session</h2>
+                  <Badge variant="secondary" className="bg-white/20 text-white hover:bg-white/30">
+                    {roadmapContext.roadmapSession.exam?.toUpperCase().replace('_', ' ')}
+                  </Badge>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{roadmapContext.roadmapSession.title}</h3>
+                <p className="text-sm opacity-90 mb-3">{roadmapContext.roadmapSession.description}</p>
+                
+                {/* Session Details */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {roadmapContext.roadmapSession.targetScore && (
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <p className="text-xs opacity-75">Target Score</p>
+                      <p className="font-bold">{roadmapContext.roadmapSession.targetScore}</p>
+                    </div>
+                  )}
+                  {roadmapContext.roadmapSession.grammarFocus && (
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <p className="text-xs opacity-75">Grammar Focus</p>
+                      <p className="font-semibold text-sm">{roadmapContext.roadmapSession.grammarFocus}</p>
+                    </div>
+                  )}
+                  {roadmapContext.roadmapSession.vocabularyTheme && (
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <p className="text-xs opacity-75">Vocabulary Theme</p>
+                      <p className="font-semibold text-sm">{roadmapContext.roadmapSession.vocabularyTheme}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Learning Objectives */}
+                {roadmapContext.roadmapSession.objectives && roadmapContext.roadmapSession.objectives.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-semibold mb-2">Session Objectives:</p>
+                    <ul className="text-sm space-y-1">
+                      {roadmapContext.roadmapSession.objectives.slice(0, 3).map((objective: string, index: number) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-200" />
+                          {objective}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex flex-col items-end gap-2">
+                <Badge variant="secondary" className="bg-emerald-600 text-white">
+                  {roadmapContext.roadmapSession.sessionType?.replace('_', ' ')}
+                </Badge>
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
+                  <p className="text-xs opacity-90">Speaking Practice</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Welcome Banner - Regular or with context */}
         <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl p-6 md:p-8 text-white shadow-xl">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                {t('callern:welcomeTitle')}
+                {roadmapContext?.roadmapSession 
+                  ? "Ready for Exam-Focused Speaking Practice?"
+                  : t('callern:welcomeTitle')
+                }
               </h1>
               <p className="text-sm md:text-base opacity-90">
-                {t('callern:welcomeDescription')}
+                {roadmapContext?.roadmapSession 
+                  ? "Connect with a qualified teacher for targeted speaking practice based on your study plan."
+                  : t('callern:welcomeDescription')
+                }
               </p>
             </div>
             <div className="flex items-center gap-2">

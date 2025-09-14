@@ -957,7 +957,25 @@ export default function RoadmapPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => setLocation('/callern')}
+                              onClick={() => {
+                                // Store session context for CallerN
+                                const callernContext = {
+                                  roadmapSession: {
+                                    id: session.id,
+                                    title: session.title,
+                                    description: session.description,
+                                    exam: studyPlan?.exam,
+                                    targetScore: studyPlan?.targetScore,
+                                    objectives: session.objectives,
+                                    primarySkill: session.primarySkill,
+                                    sessionType: session.sessionType,
+                                    grammarFocus: session.grammarFocus,
+                                    vocabularyTheme: session.vocabularyTheme
+                                  }
+                                };
+                                localStorage.setItem('callernRoadmapContext', JSON.stringify(callernContext));
+                                setLocation('/callern');
+                              }}
                               data-testid={`button-callern-${session.id}`}
                             >
                               <Mic className="h-4 w-4 mr-1" />

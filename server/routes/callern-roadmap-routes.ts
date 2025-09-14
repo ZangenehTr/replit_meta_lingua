@@ -104,7 +104,7 @@ router.get('/callern/roadmaps/:id', requireAuth, async (req, res) => {
 router.post('/callern/roadmaps', requireAuth, isAdmin, async (req, res) => {
   try {
     const validatedData = roadmapSchema.parse(req.body);
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
@@ -264,7 +264,7 @@ router.get('/callern/packages', requireAuth, async (req, res) => {
 router.post('/callern/roadmaps/:id/duplicate', requireAuth, isAdmin, async (req, res) => {
   try {
     const roadmapId = parseInt(req.params.id);
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
     
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
