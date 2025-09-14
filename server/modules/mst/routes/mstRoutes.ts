@@ -376,6 +376,8 @@ router.post('/skill-complete', authenticateToken, async (req, res) => {
       timeSpentSec
     };
 
+    console.log(`✅ Created skill result for ${parsedSkill}:`, skillResult);
+
     // Add to session
     sessionController.addSkillResult(sessionId, skillResult);
 

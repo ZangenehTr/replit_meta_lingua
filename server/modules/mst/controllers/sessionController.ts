@@ -167,7 +167,10 @@ export class MstSessionController {
     
     // Calculate overall level
     const skillBands = skillResults.map(result => result.band);
+    console.log(`🔄 Finalizing session: skillResults count=${skillResults.length}`);
+    console.log(`📊 Individual skill bands:`, skillBands);
     const overallBand = calculateOverallLevel(skillBands);
+    console.log(`📈 Final overall band: ${overallBand}`);
     
     // Calculate overall confidence (average of skill confidences)
     const overallConfidence = skillResults.length > 0 

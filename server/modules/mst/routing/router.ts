@@ -30,6 +30,8 @@ export function determineFinalBand(
 ): string {
   const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
   
+  console.log(`🔍 determineFinalBand: stage=${stage}, p=${p} (${Math.round(p*100)}%)`);
+  
   // Map performance score to CEFR level based on scientific assessment
   // These thresholds reflect actual proficiency levels
   let baseIndex: number;
@@ -37,21 +39,27 @@ export function determineFinalBand(
   if (p >= 0.85) {
     // Excellent performance (85%+) - Advanced levels
     baseIndex = stage === 'upper' ? 5 : (stage === 'core' ? 4 : 3); // C2/C1/B2
+    console.log(`  Excellent performance (85%+): ${stage} -> index ${baseIndex} (${levels[baseIndex]})`);
   } else if (p >= 0.70) {
     // Good performance (70-84%) - Upper intermediate
     baseIndex = stage === 'upper' ? 4 : (stage === 'core' ? 3 : 2); // C1/B2/B1
+    console.log(`  Good performance (70-84%): ${stage} -> index ${baseIndex} (${levels[baseIndex]})`);
   } else if (p >= 0.55) {
     // Moderate performance (55-69%) - Intermediate
     baseIndex = stage === 'upper' ? 3 : (stage === 'core' ? 2 : 1); // B2/B1/A2
+    console.log(`  Moderate performance (55-69%): ${stage} -> index ${baseIndex} (${levels[baseIndex]})`);
   } else if (p >= 0.35) {
     // Poor performance (35-54%) - Elementary
     baseIndex = stage === 'upper' ? 2 : (stage === 'core' ? 1 : 0); // B1/A2/A1
+    console.log(`  Poor performance (35-54%): ${stage} -> index ${baseIndex} (${levels[baseIndex]})`);
   } else if (p >= 0.15) {
     // Very poor performance (15-34%) - Beginner
     baseIndex = stage === 'upper' ? 1 : 0; // A2/A1
+    console.log(`  Very poor performance (15-34%): ${stage} -> index ${baseIndex} (${levels[baseIndex]})`);
   } else {
     // Extremely poor performance (<15%) - Always A1
     baseIndex = 0; // A1
+    console.log(`  Extremely poor performance (<15%): -> index 0 (A1)`);
   }
   
   // Ensure index is within bounds
@@ -61,13 +69,18 @@ export function determineFinalBand(
   // Add fine-grained modifiers based on performance within level
   const withinLevelScore = p % 0.15; // Performance within the level bracket
   
+  let result: string;
   if (withinLevelScore >= 0.12) {
-    return `${baseLevel}+`;
+    result = `${baseLevel}+`;
   } else if (withinLevelScore <= 0.03) {
-    return `${baseLevel}-`;
+    result = `${baseLevel}-`;
   } else {
-    return baseLevel;
+    result = baseLevel;
   }
+  
+  console.log(`🎯 determineFinalBand result: ${result} (within-level score: ${withinLevelScore.toFixed(3)})`);
+  
+  return result;
 }
 
 /**
@@ -78,11 +91,17 @@ export function determineFinalBand(
 export function calculateOverallLevel(skillBands: string[]): string {
   const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
   
+  console.log(`🔍 calculateOverallLevel input: ${skillBands.join(', ')}`);
+  
   // Extract base levels (remove +/- modifiers)
   const baseLevels = skillBands.map(band => {
     const baseLevel = band.replace(/[+-]$/, '');
-    return levels.indexOf(baseLevel);
+    const index = levels.indexOf(baseLevel);
+    console.log(`  Band '${band}' -> Base '${baseLevel}' -> Index ${index}`);
+    return index;
   }).filter(index => index !== -1);
+  
+  console.log(`  Valid indices: [${baseLevels.join(', ')}]`);
   
   if (baseLevels.length === 0) {
     console.warn('⚠️ No valid skill results found for overall calculation, defaulting to A1');
@@ -96,7 +115,12 @@ export function calculateOverallLevel(skillBands: string[]): string {
     ? Math.floor((baseLevels[median - 1] + baseLevels[median]) / 2)
     : baseLevels[median];
     
-  return levels[Math.max(0, Math.min(overallIndex, levels.length - 1))];
+  console.log(`  Sorted indices: [${baseLevels.join(', ')}], median position: ${median}, overall index: ${overallIndex}`);
+  
+  const result = levels[Math.max(0, Math.min(overallIndex, levels.length - 1))];
+  console.log(`🎯 calculateOverallLevel result: ${result}`);
+  
+  return result;
 }
 
 /**

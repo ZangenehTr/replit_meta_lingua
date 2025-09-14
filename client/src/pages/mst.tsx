@@ -121,6 +121,10 @@ export default function MSTPage() {
   );
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const lastBlobRef = useRef<Blob | null>(null);
+  
+  // Microphone management
+  const currentStreamRef = useRef<MediaStream | null>(null);
+  const [isMicrophoneDisabled, setIsMicrophoneDisabled] = useState(false);
 
   // Refs (browser timer IDs are numbers)
   const prepIntervalRef = useRef<number | null>(null);
@@ -270,10 +274,12 @@ export default function MSTPage() {
           await fetchNextItemWithStage(nextStage);
           return;
         } else {
-          // Q2 done - advance to next skill
+          // Q2 done - advance to next skill and disable microphone permanently
           console.log(`🎙️ Q2 completed, advancing to next skill`);
           resetSpeakingState();
           setSpeakingQuestionIndex(0);
+          // Disable microphone for remainder of test since speaking is complete
+          disableMicrophoneForTest();
           await goToWritingOrNext();
           return;
         }
@@ -329,6 +335,14 @@ export default function MSTPage() {
       if (t) clearTimeout(t);
     };
   }, [submitResponseMutation.isPending, submissionStartTime]);
+
+  // Component unmount cleanup - ensure microphone is always released
+  useEffect(() => {
+    return () => {
+      console.log("🧹 MST component unmounting, cleaning up microphone");
+      cleanupMicrophone();
+    };
+  }, []);
 
   // ---------- API: items
   const fetchFirstItem = async (sessionId: string) => {
@@ -442,6 +456,11 @@ export default function MSTPage() {
 
   const finalizeTest = async () => {
     if (!currentSession) return;
+    
+    // Ensure microphone is cleaned up when test is finalized
+    console.log("🏁 Test finalizing, ensuring microphone cleanup");
+    cleanupMicrophone();
+    
     try {
       const r = await fetch("/api/mst/finalize", {
         method: "POST",
@@ -566,6 +585,42 @@ export default function MSTPage() {
       responseData: currentResponse || "Time expired",
       timeSpentMs,
     });
+  };
+
+  // ---------- Microphone management helpers
+  const cleanupMicrophone = () => {
+    console.log("🎤 Cleaning up microphone access");
+    
+    // Stop active recording if any
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      try {
+        mediaRecorder.requestData();
+        mediaRecorder.stop();
+      } catch (e) {
+        console.error("Error stopping MediaRecorder:", e);
+      }
+    }
+    
+    // Release current stream
+    if (currentStreamRef.current) {
+      currentStreamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log("🎤 Stopped microphone track:", track.kind);
+      });
+      currentStreamRef.current = null;
+    }
+    
+    // Clear MediaRecorder reference
+    setMediaRecorder(null);
+    setIsRecording(false);
+    
+    console.log("✅ Microphone cleanup complete");
+  };
+  
+  const disableMicrophoneForTest = () => {
+    console.log("🚫 Disabling microphone for remainder of test");
+    cleanupMicrophone();
+    setIsMicrophoneDisabled(true);
   };
 
   // ---------- Speaking flow helpers
@@ -709,6 +764,12 @@ export default function MSTPage() {
   };
 
   const startRecording = async () => {
+    // Prevent recording if microphone is disabled
+    if (isMicrophoneDisabled) {
+      console.log("🚫 Recording blocked - microphone disabled for test");
+      return;
+    }
+    
     if (hasRecordingStartedRef.current || isRecording) return;
 
     hasRecordingStartedRef.current = true;
@@ -717,6 +778,10 @@ export default function MSTPage() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Track the current stream for cleanup
+      currentStreamRef.current = stream;
+      console.log("🎤 New MediaStream created and tracked");
 
       const mimeType = pickAudioMime();
       const rec = mimeType
@@ -746,7 +811,12 @@ export default function MSTPage() {
         setSpeakingPhase("completed");
         setIsRecording(false);
 
+        // Stop all tracks from this recording session
         stream.getTracks().forEach((t) => t.stop());
+        // Clear the tracked stream reference
+        if (currentStreamRef.current === stream) {
+          currentStreamRef.current = null;
+        }
         clearTimer(recordIntervalRef);
 
         // Submit even if tiny blob; backend can validate
@@ -773,6 +843,8 @@ export default function MSTPage() {
       hasRecordingStartedRef.current = false;
       phaseRef.current = "narration";
       setIsRecording(false);
+      // Clear stream reference on error
+      currentStreamRef.current = null;
       toast({
         title: "Microphone Error",
         description: "Please allow microphone access and try again.",
@@ -1193,35 +1265,31 @@ export default function MSTPage() {
         overallBand: testResults.overallBand,
         overallCEFRLevel: testResults.overallBand,
         scores: {
-          overall: testResults.confidence ? Math.round(testResults.confidence * 100) : 75,
+          overall: testResults.overallConfidence ? Math.round(testResults.overallConfidence * 100) : 0,
           speaking: testResults.skills?.find(s => s.skill === 'speaking')?.confidence ? 
-                   Math.round(testResults.skills.find(s => s.skill === 'speaking').confidence * 100) : 
-                   testResults.speakingScore || 75,
+                   Math.round(testResults.skills.find(s => s.skill === 'speaking').confidence * 100) : 0,
           listening: testResults.skills?.find(s => s.skill === 'listening')?.confidence ? 
-                    Math.round(testResults.skills.find(s => s.skill === 'listening').confidence * 100) : 
-                    testResults.listeningScore || 75,
+                    Math.round(testResults.skills.find(s => s.skill === 'listening').confidence * 100) : 0,
           reading: testResults.skills?.find(s => s.skill === 'reading')?.confidence ? 
-                  Math.round(testResults.skills.find(s => s.skill === 'reading').confidence * 100) : 
-                  testResults.readingScore || 75,
+                  Math.round(testResults.skills.find(s => s.skill === 'reading').confidence * 100) : 0,
           writing: testResults.skills?.find(s => s.skill === 'writing')?.confidence ? 
-                  Math.round(testResults.skills.find(s => s.skill === 'writing').confidence * 100) : 
-                  testResults.writingScore || 75
+                  Math.round(testResults.skills.find(s => s.skill === 'writing').confidence * 100) : 0
         },
         levels: {
           speaking: testResults.skills?.find(s => s.skill === 'speaking')?.band || 
-                   testResults.speakingLevel || testResults.overallBand,
+                   testResults.overallBand,
           listening: testResults.skills?.find(s => s.skill === 'listening')?.band || 
-                    testResults.listeningLevel || testResults.overallBand,
+                    testResults.overallBand,
           reading: testResults.skills?.find(s => s.skill === 'reading')?.band || 
-                  testResults.readingLevel || testResults.overallBand,
+                  testResults.overallBand,
           writing: testResults.skills?.find(s => s.skill === 'writing')?.band || 
-                  testResults.writingLevel || testResults.overallBand
+                  testResults.overallBand
         },
         confidence: {
-          speaking: testResults.skills?.find(s => s.skill === 'speaking')?.confidence || 0.7,
-          listening: testResults.skills?.find(s => s.skill === 'listening')?.confidence || 0.7,
-          reading: testResults.skills?.find(s => s.skill === 'reading')?.confidence || 0.7,
-          writing: testResults.skills?.find(s => s.skill === 'writing')?.confidence || 0.7
+          speaking: testResults.skills?.find(s => s.skill === 'speaking')?.confidence || 0,
+          listening: testResults.skills?.find(s => s.skill === 'listening')?.confidence || 0,
+          reading: testResults.skills?.find(s => s.skill === 'reading')?.confidence || 0,
+          writing: testResults.skills?.find(s => s.skill === 'writing')?.confidence || 0
         },
         // Use MST session ID directly - roadmap will handle MST-specific logic
         sessionId: currentSession.sessionId,
@@ -1261,7 +1329,7 @@ export default function MSTPage() {
               </div>
               <div className="text-xl font-semibold">Overall CEFR Level</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Score: {testResults.scores?.overall || 75}/100
+                Confidence: {testResults.overallConfidence ? Math.round(testResults.overallConfidence * 100) : 'N/A'}%
               </div>
             </div>
 
@@ -1273,8 +1341,13 @@ export default function MSTPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {['speaking', 'listening', 'reading', 'writing'].map((skill) => {
-                  const level = testResults.levels?.[skill] || testResults[`${skill}Level`] || testResults.overallBand || 'A2';
-                  const score = testResults.scores?.[skill] || testResults[`${skill}Score`] || 50;
+                  // Find the actual skill result from the MST calculation
+                  const skillResult = testResults.skills?.find(s => s.skill === skill);
+                  
+                  // Use actual calculated band and confidence, with fallback to overall band only if skill not found
+                  const level = skillResult?.band || testResults.overallBand || 'A1';
+                  const confidence = skillResult?.confidence || 0;
+                  const confidencePercent = Math.round(confidence * 100);
                   
                   return (
                     <div key={skill} className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1283,7 +1356,7 @@ export default function MSTPage() {
                         <div>
                           <div className="font-medium capitalize" data-testid={`skill-name-${skill}`}>{skill}</div>
                           <div className="text-sm text-gray-600 dark:text-gray-400" data-testid={`skill-score-${skill}`}>
-                            Score: {score}/100
+                            {skillResult ? `Confidence: ${confidencePercent}%` : 'Not completed'}
                           </div>
                         </div>
                       </div>
