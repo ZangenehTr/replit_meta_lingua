@@ -53,7 +53,8 @@ import {
   SignalZero,
   LifeBuoy,
   TrendingUp,
-  MessageSquare
+  MessageSquare,
+  Target
 } from "lucide-react";
 import {
   Dialog,
