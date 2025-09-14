@@ -155,37 +155,17 @@ export const roadmapReviews = pgTable("roadmap_reviews", {
 });
 
 // Insert schemas
-export const insertLearningRoadmapSchema = createInsertSchema(learningRoadmaps).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertLearningRoadmapSchema = createInsertSchema(learningRoadmaps);
 
-export const insertRoadmapMilestoneSchema = createInsertSchema(roadmapMilestones).omit({
-  id: true,
-  createdAt: true
-});
+export const insertRoadmapMilestoneSchema = createInsertSchema(roadmapMilestones);
 
-export const insertRoadmapStepSchema = createInsertSchema(roadmapSteps).omit({
-  id: true,
-  createdAt: true
-});
+export const insertRoadmapStepSchema = createInsertSchema(roadmapSteps);
 
-export const insertUserRoadmapEnrollmentSchema = createInsertSchema(userRoadmapEnrollments).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const insertUserRoadmapEnrollmentSchema = createInsertSchema(userRoadmapEnrollments);
 
-export const insertUserRoadmapProgressSchema = createInsertSchema(userRoadmapProgress).omit({
-  id: true,
-  createdAt: true
-});
+export const insertUserRoadmapProgressSchema = createInsertSchema(userRoadmapProgress);
 
-export const insertRoadmapReviewSchema = createInsertSchema(roadmapReviews).omit({
-  id: true,
-  createdAt: true
-});
+export const insertRoadmapReviewSchema = createInsertSchema(roadmapReviews);
 
 // Type exports
 export type LearningRoadmap = typeof learningRoadmaps.$inferSelect;

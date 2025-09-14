@@ -127,23 +127,11 @@ export type MSTSkill = 'listening' | 'reading' | 'speaking' | 'writing';
 export type MSTStage = 'S1' | 'S2';
 export type MSTRoute = 'up' | 'down' | 'stay';
 
-export const mstSessionInsertSchema = createInsertSchema(mstSessions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  startedAt: true
-});
+export const mstSessionInsertSchema = createInsertSchema(mstSessions);
 
-export const mstSkillStateInsertSchema = createInsertSchema(mstSkillStates).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
+export const mstSkillStateInsertSchema = createInsertSchema(mstSkillStates);
 
-export const mstResponseInsertSchema = createInsertSchema(mstResponses).omit({
-  id: true,
-  submittedAt: true
-});
+export const mstResponseInsertSchema = createInsertSchema(mstResponses);
 
 export type MSTSessionInsert = z.infer<typeof mstSessionInsertSchema>;
 export type MSTSession = typeof mstSessions.$inferSelect;
@@ -1653,7 +1641,7 @@ export const games = pgTable("games", {
   gameMode: varchar("game_mode", { length: 50 }).notNull(), // single_player, multiplayer, competitive, collaborative
   duration: integer("duration"), // estimated minutes per session
   pointsPerCorrect: integer("points_per_correct").default(10),
-  bonusMultiplier: decimal("bonus_multiplier", { precision: 3, scale: 2 }).default(1.0),
+  bonusMultiplier: decimal("bonus_multiplier", { precision: 3, scale: 2 }).default("1.0"),
   livesSystem: boolean("lives_system").default(false),
   timerEnabled: boolean("timer_enabled").default(false),
   
@@ -1685,7 +1673,7 @@ export const gameLevels = pgTable("game_levels", {
   
   // Difficulty settings
   difficulty: varchar("difficulty", { length: 20 }).default("medium"),
-  speedMultiplier: decimal("speed_multiplier", { precision: 3, scale: 2 }).default(1.0),
+  speedMultiplier: decimal("speed_multiplier", { precision: 3, scale: 2 }).default("1.0"),
   itemCount: integer("item_count").default(10), // number of items in this level
   
   // Rewards
@@ -1926,7 +1914,7 @@ export const gameDailyChallenges = pgTable("game_daily_challenges", {
   
   // Featured content
   featuredQuestions: jsonb("featured_questions"), // Array of question IDs
-  bonusMultiplier: decimal("bonus_multiplier", { precision: 3, scale: 2 }).default(1.5),
+  bonusMultiplier: decimal("bonus_multiplier", { precision: 3, scale: 2 }).default("1.5"),
   
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull()
@@ -1950,7 +1938,7 @@ export const userDailyChallengeProgress = pgTable("user_daily_challenge_progress
   
   // Completion status
   isCompleted: boolean("is_completed").default(false),
-  completionPercentage: decimal("completion_percentage", { precision: 5, scale: 2 }).default(0),
+  completionPercentage: decimal("completion_percentage", { precision: 5, scale: 2 }).default("0"),
   
   // Rewards claimed
   xpClaimed: integer("xp_claimed").default(0),
@@ -2036,7 +2024,7 @@ export const videoLessons = pgTable("video_lessons", {
   
   // Analytics
   viewCount: integer("view_count").default(0),
-  completionRate: decimal("completion_rate", { precision: 5, scale: 2 }).default(0),
+  completionRate: decimal("completion_rate", { precision: 5, scale: 2 }).default("0"),
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
@@ -2057,7 +2045,7 @@ export const videoProgress = pgTable("video_progress", {
   totalWatchTime: integer("total_watch_time").default(0), // including replays
   pauseCount: integer("pause_count").default(0),
   rewindCount: integer("rewind_count").default(0),
-  playbackSpeed: decimal("playback_speed", { precision: 3, scale: 2 }).default(1.0),
+  playbackSpeed: decimal("playback_speed", { precision: 3, scale: 2 }).default("1.0"),
   
   // Learning tracking
   notesCount: integer("notes_count").default(0),
@@ -2274,7 +2262,7 @@ export const aiVocabularyTracking = pgTable("ai_vocabulary_tracking", {
   firstSeenAt: timestamp("first_seen_at").defaultNow().notNull(),
   lastSeenAt: timestamp("last_seen_at"),
   lastUsedAt: timestamp("last_used_at"),
-  masteryLevel: decimal("mastery_level", { precision: 3, scale: 2 }).default(0), // 0-1
+  masteryLevel: decimal("mastery_level", { precision: 3, scale: 2 }).default("0"), // 0-1
   
   // Context
   contexts: jsonb("contexts"), // array of usage contexts
@@ -2616,8 +2604,6 @@ export type ProgressSnapshot = typeof progressSnapshots.$inferSelect;
 export type InsertProgressSnapshot = z.infer<typeof insertProgressSnapshotSchema>;
 
 // Additional Real Data System Types
-export type CommunicationLog = typeof communicationLogs.$inferSelect;
-export type InsertCommunicationLog = z.infer<typeof insertCommunicationLogSchema>;
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
@@ -3394,9 +3380,7 @@ export const insertAICallInsightSchema = createInsertSchema(aiCallInsights).omit
 export type AICallInsight = typeof aiCallInsights.$inferSelect;
 export type InsertAICallInsight = z.infer<typeof insertAICallInsightSchema>;
 
-// Supervision observation types
-export type SupervisionObservation = typeof supervisionObservations.$inferSelect;
-export type InsertSupervisionObservation = z.infer<typeof insertSupervisionObservationSchema>;
+// Supervision observation types (continued)
 export type TeacherObservationResponse = typeof teacherObservationResponses.$inferSelect;
 export type InsertTeacherObservationResponse = z.infer<typeof insertTeacherObservationResponseSchema>;
 export type ScheduledObservation = typeof scheduledObservations.$inferSelect;
@@ -4016,6 +4000,358 @@ export type ClassGroupChat = typeof classGroupChats.$inferSelect;
 export type InsertClassGroupChat = z.infer<typeof insertClassGroupChatSchema>;
 export type SocializerSession = typeof socializerSessions.$inferSelect;
 export type InsertSocializerSession = z.infer<typeof insertSocializerSessionSchema>;
+
+// ============================================================================
+// EXAM-FOCUSED PERSONALIZED ROADMAP SYSTEM
+// ============================================================================
+
+// Exam Types and Enums
+export const ExamType = {
+  IELTS_ACADEMIC: 'ielts_academic',
+  IELTS_GENERAL: 'ielts_general', 
+  TOEFL_IBT: 'toefl_ibt',
+  PTE_ACADEMIC: 'pte_academic',
+  PTE_CORE: 'pte_core',
+  GRE_GENERAL: 'gre_general',
+  GMAT: 'gmat',
+  BUSINESS_CORRESPONDENCE: 'business_correspondence',
+  BUSINESS_CONVERSATION: 'business_conversation',
+  GENERAL_CONVERSATION: 'general_conversation'
+} as const;
+
+export type ExamTypeValues = typeof ExamType[keyof typeof ExamType];
+
+export const CEFRLevel = {
+  A1: 'A1',
+  A2: 'A2', 
+  B1: 'B1',
+  B2: 'B2',
+  C1: 'C1',
+  C2: 'C2'
+} as const;
+
+export type CEFRLevelValues = typeof CEFRLevel[keyof typeof CEFRLevel];
+
+export const PreferredPace = {
+  INTENSIVE: 'intensive',     // 15+ hours/week
+  REGULAR: 'regular',         // 8-15 hours/week
+  RELAXED: 'relaxed'         // 5-8 hours/week
+} as const;
+
+export type PreferredPaceValues = typeof PreferredPace[keyof typeof PreferredPace];
+
+export const SessionType = {
+  FOUNDATION: 'foundation',       // Grammar, vocabulary fundamentals
+  SKILL_BUILDING: 'skill_building', // Targeted skill practice
+  EXAM_STRATEGY: 'exam_strategy', // Test-taking techniques
+  MOCK_TEST: 'mock_test',        // Practice exams
+  REVIEW: 'review',             // Consolidation and review
+  SPEAKING_INTENSIVE: 'speaking_intensive', // Focused speaking practice
+  WRITING_INTENSIVE: 'writing_intensive'   // Focused writing practice
+} as const;
+
+export type SessionTypeValues = typeof SessionType[keyof typeof SessionType];
+
+// Roadmap Configurations - User exam goals and preferences
+export const roadmapConfigs = pgTable("roadmap_configs", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull(), // References MST session
+  userId: integer("user_id").references(() => users.id).notNull(),
+  
+  // Exam configuration
+  exam: text("exam").notNull(), // ExamType
+  targetScore: decimal("target_score", { precision: 4, scale: 1 }).notNull(), // e.g., 7.0 for IELTS
+  examDate: date("exam_date"), // Target exam date
+  
+  // Study preferences
+  weeklyHours: integer("weekly_hours").notNull().default(10), // Available hours per week
+  preferredPace: text("preferred_pace").notNull().default("regular"), // intensive, regular, relaxed
+  
+  // Focus areas (skills/components to emphasize)
+  focusAreas: text("focus_areas").array().default([]), // ['academic_writing', 'speaking_fluency', 'listening_comprehension']
+  
+  // Learning preferences
+  studyDays: text("study_days").array().default(['monday', 'wednesday', 'friday']), // Preferred study days
+  sessionDuration: integer("session_duration").default(90), // Minutes per session
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Roadmap Plans - Generated study plans based on user goals
+export const roadmapPlans = pgTable("roadmap_plans", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  configId: integer("config_id").references(() => roadmapConfigs.id).notNull(),
+  
+  // Plan details
+  exam: text("exam").notNull(), // ExamType
+  currentLevel: text("current_level").notNull(), // Current CEFR level from MST
+  targetScore: decimal("target_score", { precision: 4, scale: 1 }).notNull(),
+  cefrTarget: text("cefr_target").notNull(), // Target CEFR level
+  
+  // Time calculations
+  requiredHours: integer("required_hours").notNull(), // Total estimated study hours
+  weeksToExam: integer("weeks_to_exam"), // Weeks until exam date
+  sessionsPerWeek: integer("sessions_per_week").notNull(),
+  totalSessions: integer("total_sessions").notNull(),
+  
+  // Progress tracking
+  completedSessions: integer("completed_sessions").default(0),
+  currentWeek: integer("current_week").default(1),
+  
+  // Plan metadata
+  planStatus: text("plan_status").default("active"), // active, paused, completed, outdated
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  
+  // Generated plan data
+  weeklyBreakdown: jsonb("weekly_breakdown"), // Week-by-week plan structure
+  skillProgression: jsonb("skill_progression"), // How skills develop over time
+  milestones: jsonb("milestones"), // Key checkpoints and assessments
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Roadmap Sessions - Individual study sessions within the plan
+export const roadmapSessions = pgTable("roadmap_sessions", {
+  id: serial("id").primaryKey(),
+  planId: integer("plan_id").references(() => roadmapPlans.id).notNull(),
+  
+  // Session ordering and timing
+  sessionIndex: integer("session_index").notNull(), // 1, 2, 3... within the plan
+  weekNumber: integer("week_number").notNull(), // Which week this session belongs to
+  
+  // Session content
+  title: varchar("title", { length: 255 }).notNull(),
+  sessionType: text("session_type").notNull(), // SessionType enum
+  durationMinutes: integer("duration_minutes").default(90),
+  
+  // Learning objectives and content
+  learningGoals: text("learning_goals").array().default([]), // What students will achieve
+  grammarTopics: text("grammar_topics").array().default([]), // Grammar points to cover
+  vocabularyThemes: text("vocabulary_themes").array().default([]), // Vocabulary areas
+  keyPhrases: text("key_phrases").array().default([]), // Important phrases/expressions
+  
+  // Materials and resources
+  flashcardSets: text("flashcard_sets").array().default([]), // Vocabulary/phrase sets
+  homeworkTasks: text("homework_tasks").array().default([]), // Assignments
+  practiceExercises: text("practice_exercises").array().default([]), // In-session activities
+  
+  // Integration with existing system
+  callernLessonId: integer("callern_lesson_id"), // Link to Callern lesson if applicable
+  courseId: integer("course_id").references(() => courses.id), // Link to course if applicable
+  
+  // Session structure
+  warmUpActivities: text("warm_up_activities").array().default([]),
+  mainActivities: text("main_activities").array().default([]),
+  closingActivities: text("closing_activities").array().default([]),
+  
+  // Assessment and feedback
+  assessmentCriteria: text("assessment_criteria").array().default([]),
+  expectedOutcomes: text("expected_outcomes").array().default([]),
+  
+  // Completion tracking
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  studentNotes: text("student_notes"),
+  teacherFeedback: text("teacher_feedback"),
+  sessionRating: integer("session_rating"), // 1-5 student rating
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// ============================================================================
+// SCORE MAPPING AND CONVERSION DATA
+// ============================================================================
+
+// IELTS Score to CEFR Mapping (Academic & General)
+export const IELTS_TO_CEFR_MAPPING = {
+  1.0: 'A1', 1.5: 'A1', 2.0: 'A1', 2.5: 'A1',
+  3.0: 'A1', 3.5: 'A2', 4.0: 'A2', 4.5: 'B1',
+  5.0: 'B1', 5.5: 'B2', 6.0: 'B2', 6.5: 'C1',
+  7.0: 'C1', 7.5: 'C1', 8.0: 'C2', 8.5: 'C2', 9.0: 'C2'
+} as const;
+
+// TOEFL iBT Score to CEFR Mapping
+export const TOEFL_TO_CEFR_MAPPING = {
+  // A1 level (0-31)
+  0: 'A1', 10: 'A1', 20: 'A1', 31: 'A1',
+  // A2 level (32-41) 
+  32: 'A2', 41: 'A2',
+  // B1 level (42-71)
+  42: 'B1', 71: 'B1',
+  // B2 level (72-94)
+  72: 'B2', 94: 'B2', 
+  // C1 level (95-112)
+  95: 'C1', 112: 'C1',
+  // C2 level (113-120)
+  113: 'C2', 120: 'C2'
+} as const;
+
+// PTE Academic Score to CEFR Mapping
+export const PTE_TO_CEFR_MAPPING = {
+  // A1 level (10-29)
+  10: 'A1', 29: 'A1',
+  // A2 level (30-35)
+  30: 'A2', 35: 'A2',
+  // B1 level (36-49)
+  36: 'B1', 49: 'B1',
+  // B2 level (50-64) 
+  50: 'B2', 64: 'B2',
+  // C1 level (65-78)
+  65: 'C1', 78: 'C1',
+  // C2 level (79-90)
+  79: 'C2', 90: 'C2'
+} as const;
+
+// Study Hours Required for CEFR Level Progression
+export const CEFR_STUDY_HOURS = {
+  'A1_TO_A2': 80,  // Beginner to Elementary
+  'A2_TO_B1': 100, // Elementary to Intermediate 
+  'B1_TO_B2': 120, // Intermediate to Upper-Intermediate
+  'B2_TO_C1': 150, // Upper-Intermediate to Advanced
+  'C1_TO_C2': 200  // Advanced to Proficiency
+} as const;
+
+// Base study hours by current level (to reach next level)
+export const BASE_HOURS_BY_LEVEL = {
+  'A1': 80,  // A1 → A2
+  'A2': 100, // A2 → B1  
+  'B1': 120, // B1 → B2
+  'B2': 150, // B2 → C1
+  'C1': 200  // C1 → C2
+} as const;
+
+// ============================================================================
+// HELPER FUNCTIONS FOR SCORE CONVERSION
+// ============================================================================
+
+/**
+ * Convert exam score to CEFR level
+ */
+export function examScoreToCEFR(examType: ExamTypeValues, score: number): CEFRLevelValues {
+  switch (examType) {
+    case ExamType.IELTS_ACADEMIC:
+    case ExamType.IELTS_GENERAL:
+      // Find the closest IELTS score
+      const ieltsScore = Math.round(score * 2) / 2; // Round to nearest 0.5
+      return IELTS_TO_CEFR_MAPPING[ieltsScore] || 'B1';
+      
+    case ExamType.TOEFL_IBT:
+      // Find TOEFL range
+      if (score <= 31) return 'A1';
+      if (score <= 41) return 'A2'; 
+      if (score <= 71) return 'B1';
+      if (score <= 94) return 'B2';
+      if (score <= 112) return 'C1';
+      return 'C2';
+      
+    case ExamType.PTE_ACADEMIC:
+    case ExamType.PTE_CORE:
+      // Find PTE range
+      if (score <= 29) return 'A1';
+      if (score <= 35) return 'A2';
+      if (score <= 49) return 'B1';
+      if (score <= 64) return 'B2';
+      if (score <= 78) return 'C1';
+      return 'C2';
+      
+    default:
+      return 'B1'; // Default fallback
+  }
+}
+
+/**
+ * Calculate required study hours based on current and target CEFR levels
+ */
+export function calculateRequiredHours(currentLevel: CEFRLevelValues, targetLevel: CEFRLevelValues): number {
+  const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  const currentIndex = levels.indexOf(currentLevel);
+  const targetIndex = levels.indexOf(targetLevel);
+  
+  if (currentIndex >= targetIndex) {
+    return 0; // Already at or above target level
+  }
+  
+  let totalHours = 0;
+  for (let i = currentIndex; i < targetIndex; i++) {
+    const currentLevelKey = levels[i] as keyof typeof BASE_HOURS_BY_LEVEL;
+    totalHours += BASE_HOURS_BY_LEVEL[currentLevelKey] || 100;
+  }
+  
+  return totalHours;
+}
+
+/**
+ * Calculate sessions per week based on available hours and session duration
+ */
+export function calculateSessionsPerWeek(weeklyHours: number, sessionDurationMinutes: number): number {
+  const sessionHours = sessionDurationMinutes / 60;
+  return Math.floor(weeklyHours / sessionHours);
+}
+
+/**
+ * Get minimum recommended score for CEFR level by exam type
+ */
+export function getMinimumScoreForCEFR(examType: ExamTypeValues, cefrLevel: CEFRLevelValues): number {
+  switch (examType) {
+    case ExamType.IELTS_ACADEMIC:
+    case ExamType.IELTS_GENERAL:
+      const ieltsMapping = {
+        'A1': 1.0, 'A2': 3.5, 'B1': 4.5, 'B2': 5.5, 'C1': 6.5, 'C2': 8.0
+      };
+      return ieltsMapping[cefrLevel] || 4.5;
+      
+    case ExamType.TOEFL_IBT:
+      const toeflMapping = {
+        'A1': 0, 'A2': 32, 'B1': 42, 'B2': 72, 'C1': 95, 'C2': 113
+      };
+      return toeflMapping[cefrLevel] || 42;
+      
+    case ExamType.PTE_ACADEMIC:
+    case ExamType.PTE_CORE:
+      const pteMapping = {
+        'A1': 10, 'A2': 30, 'B1': 36, 'B2': 50, 'C1': 65, 'C2': 79
+      };
+      return pteMapping[cefrLevel] || 36;
+      
+    default:
+      return 0;
+  }
+}
+
+// ============================================================================
+// ZOD SCHEMAS FOR EXAM-FOCUSED ROADMAP TABLES
+// ============================================================================
+
+export const roadmapConfigInsertSchema = createInsertSchema(roadmapConfigs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const roadmapPlanInsertSchema = createInsertSchema(roadmapPlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastUpdated: true
+});
+
+export const roadmapSessionInsertSchema = createInsertSchema(roadmapSessions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Type exports for exam-focused roadmap system
+export type RoadmapConfig = typeof roadmapConfigs.$inferSelect;
+export type RoadmapConfigInsert = z.infer<typeof roadmapConfigInsertSchema>;
+export type RoadmapPlan = typeof roadmapPlans.$inferSelect;
+export type RoadmapPlanInsert = z.infer<typeof roadmapPlanInsertSchema>;
+export type RoadmapSession = typeof roadmapSessions.$inferSelect; 
+export type RoadmapSessionInsert = z.infer<typeof roadmapSessionInsertSchema>;
 
 // Export placement test schemas
 export * from './placement-test-schema';
