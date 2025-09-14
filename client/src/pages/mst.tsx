@@ -120,14 +120,18 @@ export default function MSTPage() {
   // Prevent duplicate skill completions
   const [completedSkills, setCompletedSkills] = useState<Set<string>>(new Set());
   
-  // Prevent duplicate TTS generation for speaking items
-  const [processedSpeakingItems, setProcessedSpeakingItems] = useState<Set<string>>(new Set());
+  // ARCHITECT FIX C: Replace Set with map to track audio URLs properly
+  const [processedSpeakingItems, setProcessedSpeakingItems] = useState<Map<string, string>>(new Map());
   
   // CRITICAL: Prevent duplicate auto-advance calls for speaking questions
   const [isAutoAdvancing, setIsAutoAdvancing] = useState(false);
   
   // CRITICAL: Submission lock to prevent any duplicate API calls
   const [isSubmissionLocked, setIsSubmissionLocked] = useState(false);
+  
+  // ARCHITECT FIX B: Submission watchdog for 21-second backend latency
+  const [isProcessingSubmission, setIsProcessingSubmission] = useState(false);
+  const [submissionStartTime, setSubmissionStartTime] = useState<number>(0);
 
   // Start MST session
   const startSessionMutation = useMutation({
@@ -182,7 +186,7 @@ export default function MSTPage() {
       const data = await response.json();
       return data.success ? data : null;
     },
-    enabled: !!currentSession?.sessionId && testPhase === 'testing',
+    enabled: !!currentSession?.sessionId && testPhase === 'testing' && !isSubmissionLocked,
     refetchInterval: 1000 // Update every second
   });
 
@@ -197,6 +201,9 @@ export default function MSTPage() {
       audioBlob?: Blob;
       timeSpentMs: number;
     }) => {
+      // ARCHITECT FIX B: Start watchdog timer
+      console.log('🐕 Starting submission watchdog timer');
+      setSubmissionStartTime(Date.now());
       const formData = new FormData();
       formData.append('sessionId', data.sessionId);
       formData.append('skill', data.skill);
@@ -279,8 +286,8 @@ export default function MSTPage() {
             setNarrationPlayButton(false);
             setIsRecording(false);
             setIsAutoAdvancing(false);
-            // Clear processed items to allow Q2 setup
-            setProcessedSpeakingItems(new Set());
+            // ARCHITECT FIX C: Clear processed items map to allow Q2 setup
+            setProcessedSpeakingItems(new Map());
             // ARCHITECT FIX: Clear interval refs for Q1→Q2 transition
             if (prepIntervalRef.current) {
               clearInterval(prepIntervalRef.current);
@@ -306,7 +313,7 @@ export default function MSTPage() {
           if (currentItem.skill === 'speaking') {
             setSpeakingPhase('narration');
             setRecordingBlob(null);
-            setProcessedSpeakingItems(new Set());
+            setProcessedSpeakingItems(new Map());
             // ARCHITECT FIX: Clear interval refs for skill completion
             if (prepIntervalRef.current) {
               clearInterval(prepIntervalRef.current);
@@ -349,6 +356,31 @@ export default function MSTPage() {
       });
     }
   });
+
+  // ARCHITECT FIX B: Submission watchdog effect for 8-second timeout
+  useEffect(() => {
+    let watchdogTimer: NodeJS.Timeout;
+    
+    if (submitResponseMutation.isPending && submissionStartTime > 0) {
+      watchdogTimer = setTimeout(() => {
+        if (submitResponseMutation.isPending) {
+          console.log('🐕 Submission watchdog triggered - showing processing overlay');
+          setIsProcessingSubmission(true);
+        }
+      }, 8000); // 8 second watchdog
+    }
+    
+    // Clear processing state when mutation completes
+    if (!submitResponseMutation.isPending && submissionStartTime > 0) {
+      console.log('🐕 Submission completed - clearing watchdog and overlay');
+      setIsProcessingSubmission(false);
+      setSubmissionStartTime(0);
+    }
+    
+    return () => {
+      if (watchdogTimer) clearTimeout(watchdogTimer);
+    };
+  }, [submitResponseMutation.isPending, submissionStartTime]);
 
   // Fetch first item for session
   const fetchFirstItem = async (sessionId: string) => {
@@ -586,36 +618,41 @@ export default function MSTPage() {
       setRecordingBlob(null);
       setNarrationPlayButton(false);
       
-      // CRITICAL: Check if we've already processed this speaking item
+      // ARCHITECT FIX C: Check if we have valid audio URL in processed map
       const itemKey = `${currentItem.id}-${currentStage}`;
-      if (!processedSpeakingItems.has(itemKey)) {
-        setProcessedSpeakingItems(prev => new Set(prev).add(itemKey));
+      const existingAudioUrl = processedSpeakingItems.get(itemKey);
+      
+      if (existingAudioUrl && currentItem.content.assets?.audio === existingAudioUrl) {
+        console.log('🔄 Speaking item already has valid audio, playing existing narration');
+        autoPlayNarration(existingAudioUrl);
+      } else {
+        console.log('🎵 Generating TTS for speaking prompt - no valid audio found');
         
         // Generate TTS for speaking prompt with validation
         const prompt = currentItem.content.assets?.prompt;
-        if (prompt && currentItem.skill === 'speaking') { // Double-check we're still in speaking
+        if (prompt && currentItem.skill === 'speaking') {
           console.log('🎵 Generating TTS for speaking prompt after state validation');
           generateSpeakingTTS(prompt).then(audioUrl => {
             // Triple-check state is still consistent before playing TTS
             if (audioUrl && currentItem?.skill === 'speaking') {
+              // ARCHITECT FIX C: Store audio URL in map
+              setProcessedSpeakingItems(prev => new Map(prev).set(itemKey, audioUrl));
               autoPlayNarration(audioUrl);
             } else if (currentItem?.skill !== 'speaking') {
               console.warn('⚠️ State changed during TTS generation, aborting speaking setup');
             } else {
               console.warn('⚠️ TTS generation failed for speaking prompt');
-              setTimeout(() => startPreparationTimer(), 3000);
+              // ARCHITECT FIX D: Immediate fallback to preparation timer (2s max)
+              setTimeout(() => startPreparationTimer(), 1500);
             }
+          }).catch(error => {
+            console.error('❌ TTS generation error caught:', error);
+            // ARCHITECT FIX D: Immediate fallback on TTS failure
+            setTimeout(() => startPreparationTimer(), 1000);
           });
         } else {
           console.warn('⚠️ No prompt found for speaking item or state inconsistency');
-          setTimeout(() => startPreparationTimer(), 2000);
-        }
-      } else {
-        console.log('🔄 Speaking item already processed, skipping TTS generation');
-        // If already processed, try to play existing audio or go to preparation
-        if (currentItem.content.assets?.audio) {
-          autoPlayNarration(currentItem.content.assets.audio);
-        } else {
+          // ARCHITECT FIX D: Immediate fallback when no prompt
           setTimeout(() => startPreparationTimer(), 1000);
         }
       }
@@ -664,6 +701,10 @@ export default function MSTPage() {
     
     // CRITICAL: Lock submission to prevent duplicate calls
     setIsSubmissionLocked(true);
+    
+    // ARCHITECT FIX B: Start submission watchdog for auto-submits
+    console.log('🐶 Starting submission watchdog for auto-submit');
+    setSubmissionStartTime(Date.now());
     
     const timeSpentMs = (currentItem.timing.maxAnswerSec - itemTimer + 1) * 1000;
     
@@ -723,6 +764,10 @@ export default function MSTPage() {
     
     // Calculate time spent (prep + recording time)
     const timeSpentMs = ((currentItem.timing.prepSec || PREP_SEC) + (currentItem.timing.recordSec || RECORD_SEC)) * 1000;
+    
+    // ARCHITECT FIX B: Start submission watchdog timer for speaking
+    console.log('🐶 Starting submission watchdog for speaking response');
+    setSubmissionStartTime(Date.now());
     
     // CRITICAL: Use normal flow for ALL speaking responses - let submitResponseMutation.onSuccess handle stage transitions
     console.log('🎙️ SPEAKING: Submitting response via normal mutation flow...');
@@ -1069,6 +1114,10 @@ export default function MSTPage() {
     // CRITICAL: Lock submission to prevent duplicates
     setIsSubmissionLocked(true);
     
+    // ARCHITECT FIX B: Start submission watchdog for manual submits
+    console.log('🐶 Starting submission watchdog for manual submit');
+    setSubmissionStartTime(Date.now());
+    
     // CRITICAL: Stop and cleanup audio if it's still playing
     if (audioElement && !audioElement.paused) {
       console.log('Stopping audio on submit');
@@ -1158,11 +1207,14 @@ export default function MSTPage() {
       }
     } catch (error) {
       console.error('❌ TTS generation error:', error);
-      toast({
-        title: 'Audio Generation Error',
-        description: 'Failed to generate speech. Continuing with visual prompt only.',
-        variant: 'destructive'
-      });
+      // ARCHITECT FIX D: Immediate fallback on error, no toast to avoid UI disruption
+      console.log('🔄 TTS failed, falling back to preparation timer immediately');
+      // Don't show toast during production crisis - let flow continue
+      setTimeout(() => {
+        if (currentItem?.skill === 'speaking') {
+          startPreparationTimer();
+        }
+      }, 500);
       return null;
     } finally {
       setIsGeneratingTTS(false);
@@ -1196,9 +1248,14 @@ export default function MSTPage() {
       
     } catch (error) {
       console.error('❌ Auto-play error:', error);
-      // Show manual play button when autoplay fails
-      setNarrationPlayButton(true);
+      // ARCHITECT FIX D: Immediate fallback when autoplay fails
+      console.log('🔄 Auto-play failed, proceeding to preparation timer');
       setIsAudioPlaying(false);
+      setTimeout(() => {
+        if (currentItem?.skill === 'speaking') {
+          startPreparationTimer();
+        }
+      }, 1000);
     }
   };
 
@@ -1512,6 +1569,25 @@ export default function MSTPage() {
       className="container mx-auto p-4 sm:p-6 max-w-4xl mst-container" 
       style={mstStyle}
     >
+      {/* ARCHITECT FIX B: Submission Processing Overlay */}
+      {isProcessingSubmission && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="text-center space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                🎙️ Processing Speaking Response...
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Our AI is analyzing your speech. This may take up to 30 seconds.
+              </p>
+              <div className="text-xs text-gray-500">
+                Please wait - your response is being processed
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
