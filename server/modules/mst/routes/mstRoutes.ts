@@ -514,4 +514,143 @@ router.get('/telemetry', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * POST /mst/generate-roadmap
+ * Generate AI roadmap from MST results
+ */
+router.post('/generate-roadmap', authenticateToken, async (req, res) => {
+  try {
+    const { sessionId, learningGoals, timeAvailability, preferredPace, focusAreas, placementResults } = req.body;
+    
+    console.log('🗺 MST Roadmap generation requested for session:', sessionId);
+    
+    // Validate MST session exists
+    const session = sessionController.getSession(sessionId);
+    if (!session || session.userId !== req.user.id) {
+      return res.status(404).json({
+        success: false,
+        error: 'MST session not found or access denied'
+      });
+    }
+
+    if (session.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        error: 'Complete MST assessment before generating roadmap'
+      });
+    }
+
+    // Create simplified roadmap structure (mock for now - can be enhanced with AI later)
+    const mockRoadmap = {
+      id: Date.now(),
+      title: `Personalized English Learning Path`,
+      description: `Based on your MST assessment results (${placementResults?.overallBand || 'B1'} level), this roadmap will help you achieve your learning goals.`,
+      estimatedWeeks: timeAvailability <= 5 ? 16 : (timeAvailability <= 10 ? 12 : 8),
+      weeklyHours: timeAvailability,
+      milestones: [
+        {
+          id: 1,
+          title: 'Foundation Building',
+          description: 'Strengthen core language skills based on your assessment',
+          weekNumber: 2,
+          primarySkill: getWeakestSkill(placementResults)
+        },
+        {
+          id: 2,
+          title: 'Intermediate Development',
+          description: 'Build fluency and confidence in all skills',
+          weekNumber: 6,
+          primarySkill: 'speaking'
+        },
+        {
+          id: 3,
+          title: 'Advanced Practice',
+          description: 'Master complex language structures and expressions',
+          weekNumber: 10,
+          primarySkill: 'writing'
+        },
+        {
+          id: 4,
+          title: 'Goal Achievement',
+          description: `Focus on your specific goals: ${learningGoals.join(', ')}`,
+          weekNumber: 14,
+          primarySkill: 'speaking'
+        }
+      ],
+      personalizedRecommendations: generateRecommendations(placementResults, learningGoals)
+    };
+
+    res.json({
+      success: true,
+      roadmap: mockRoadmap,
+      milestones: mockRoadmap.milestones,
+      steps: [], // Can be populated later
+      estimatedCompletion: new Date(Date.now() + mockRoadmap.estimatedWeeks * 7 * 24 * 60 * 60 * 1000),
+      personalizedRecommendations: mockRoadmap.personalizedRecommendations,
+      message: 'Roadmap generated successfully from MST assessment results'
+    });
+
+  } catch (error) {
+    console.error('❌ Error generating MST roadmap:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate roadmap from MST results'
+    });
+  }
+});
+
+// Helper functions for roadmap generation
+function getWeakestSkill(placementResults: any): string {
+  if (!placementResults?.levels) return 'speaking';
+  
+  const skills = ['speaking', 'listening', 'reading', 'writing'];
+  const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  
+  let weakestSkill = 'speaking';
+  let lowestLevel = 6; // Start with highest
+  
+  for (const skill of skills) {
+    const level = placementResults.levels[skill];
+    if (level) {
+      const levelIndex = levels.indexOf(level.replace(/[+-]/, ''));
+      if (levelIndex !== -1 && levelIndex < lowestLevel) {
+        lowestLevel = levelIndex;
+        weakestSkill = skill;
+      }
+    }
+  }
+  
+  return weakestSkill;
+}
+
+function generateRecommendations(placementResults: any, learningGoals: string[]): string[] {
+  const recommendations = [];
+  
+  // Based on overall level
+  const overallLevel = placementResults?.overallBand || 'B1';
+  if (['A1', 'A2'].includes(overallLevel)) {
+    recommendations.push('Focus on building vocabulary and basic grammar structures');
+    recommendations.push('Practice daily conversations to improve fluency');
+  } else if (['B1', 'B2'].includes(overallLevel)) {
+    recommendations.push('Expand vocabulary with academic and professional terms');
+    recommendations.push('Practice complex sentence structures and idioms');
+  } else {
+    recommendations.push('Refine nuanced language use and cultural expressions');
+    recommendations.push('Focus on specialized vocabulary for your field of interest');
+  }
+  
+  // Based on learning goals
+  if (learningGoals.includes('ielts') || learningGoals.includes('toefl')) {
+    recommendations.push('Practice test-specific formats and timing strategies');
+  }
+  if (learningGoals.includes('business')) {
+    recommendations.push('Focus on professional communication and presentation skills');
+  }
+  if (learningGoals.includes('conversation')) {
+    recommendations.push('Engage in regular speaking practice with native speakers');
+  }
+  
+  return recommendations;
+}
+
 export default router;

@@ -143,13 +143,33 @@ export default function RoadmapPage() {
       focusAreas?: string[];
     }) => {
       if (!placementResults?.sessionId) {
-        throw new Error('No placement test session found');
+        throw new Error('No assessment session found');
       }
 
-      return apiRequest(`/api/placement-test/sessions/${placementResults.sessionId}/generate-roadmap`, {
-        method: 'POST',
-        body: JSON.stringify(data)
-      });
+      // Check if this is MST session (from MST test) or placement test session
+      const isMSTSession = placementResults.sessionType === 'mst' || 
+                          (typeof placementResults.sessionId === 'string' && placementResults.sessionId.startsWith('mst_'));
+      
+      if (isMSTSession) {
+        // Use MST-specific roadmap generation
+        return apiRequest('/api/mst/generate-roadmap', {
+          method: 'POST',
+          body: JSON.stringify({
+            sessionId: placementResults.sessionId,
+            learningGoals: data.learningGoals,
+            timeAvailability: data.timeAvailability,
+            preferredPace: data.preferredPace,
+            focusAreas: data.focusAreas,
+            placementResults
+          })
+        });
+      } else {
+        // Use original placement test roadmap generation
+        return apiRequest(`/api/placement-test/sessions/${placementResults.sessionId}/generate-roadmap`, {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+      }
     },
     onSuccess: (roadmapData) => {
       toast({

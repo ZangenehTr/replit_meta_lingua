@@ -518,7 +518,7 @@ export default function MSTPage() {
         }
       }
     } else if (currentItem.skill === "writing") {
-      startItemTimer(300); // 5 minutes for writing
+      startItemTimer(currentItem.timing.maxAnswerSec); // Use item's actual timing
     } else if (currentItem.skill === "reading") {
       startItemTimer(currentItem.timing.maxAnswerSec);
     } else if (currentItem.skill === "listening") {
@@ -556,8 +556,8 @@ export default function MSTPage() {
     if (!currentSession || !currentItem || isSubmissionLocked) return;
     setIsSubmissionLocked(true);
     setSubmissionStartTime(Date.now());
-    // Use the actual timer value that was set, not the item timing
-    const timeSpentMs = (actualTimerSeconds - itemTimer + 1) * 1000;
+    // Use consistent time calculation based on actual elapsed time
+    const timeSpentMs = (actualTimerSeconds - itemTimer) * 1000;
     submitResponseMutation.mutate({
       sessionId: currentSession.sessionId,
       skill: currentItem.skill,
@@ -588,6 +588,12 @@ export default function MSTPage() {
   };
 
   const autoPlayNarration = async (audioUrl: string) => {
+    // Prevent audio during writing questions to avoid unwanted notifications
+    if (currentItem?.skill === "writing") {
+      console.log("🔇 Skipping audio for writing question");
+      return;
+    }
+    
     try {
       const audio = new Audio(audioUrl);
       audioStartedRef.current = false;
@@ -1049,7 +1055,25 @@ export default function MSTPage() {
   };
 
   const handleSubmit = () => {
-    if (!currentSession || !currentItem || guardTimer > 0 || isSubmissionLocked)
+    if (!currentSession || !currentItem || isSubmissionLocked)
+      return;
+    
+    // Allow early submission for writing but warn about word count
+    if (currentItem.skill === "writing" && guardTimer > 0) {
+      const currentText = currentResponse?.toString() || "";
+      const wordCount = currentText.trim().split(/\s+/).filter(word => word.length > 0).length;
+      
+      if (wordCount < 80) {
+        toast({
+          title: "Low Word Count Warning",
+          description: `You have ${wordCount} words. For better scoring, aim for at least 80 words.`,
+          variant: "default",
+        });
+      }
+    }
+    
+    // For non-writing skills, respect guard timer
+    if (currentItem.skill !== "writing" && guardTimer > 0)
       return;
     
     // Listening validation: show toast if audio hasn't been played
@@ -1067,7 +1091,7 @@ export default function MSTPage() {
       audioElement.pause();
       audioElement.currentTime = 0;
     }
-    const timeSpentMs = (currentItem.timing.maxAnswerSec - itemTimer) * 1000;
+    const timeSpentMs = (actualTimerSeconds - itemTimer) * 1000;
     submitResponseMutation.mutate({
       sessionId: currentSession.sessionId,
       skill: currentItem.skill,
@@ -1155,37 +1179,62 @@ export default function MSTPage() {
     };
 
     const handleCreateRoadmap = () => {
-      // Save results to localStorage for roadmap generation
+      if (!testResults || !currentSession) {
+        toast({
+          title: "Error",
+          description: "MST results not available. Please complete the test first.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create comprehensive placement results using actual MST data
       const placementResults = {
         overallBand: testResults.overallBand,
         overallCEFRLevel: testResults.overallBand,
         scores: {
-          overall: testResults.scores?.overall || 75,
-          speaking: testResults.scores?.speaking || testResults.speakingScore || 75,
-          listening: testResults.scores?.listening || testResults.listeningScore || 75,
-          reading: testResults.scores?.reading || testResults.readingScore || 75,
-          writing: testResults.scores?.writing || testResults.writingScore || 75
+          overall: testResults.confidence ? Math.round(testResults.confidence * 100) : 75,
+          speaking: testResults.skills?.find(s => s.skill === 'speaking')?.confidence ? 
+                   Math.round(testResults.skills.find(s => s.skill === 'speaking').confidence * 100) : 
+                   testResults.speakingScore || 75,
+          listening: testResults.skills?.find(s => s.skill === 'listening')?.confidence ? 
+                    Math.round(testResults.skills.find(s => s.skill === 'listening').confidence * 100) : 
+                    testResults.listeningScore || 75,
+          reading: testResults.skills?.find(s => s.skill === 'reading')?.confidence ? 
+                  Math.round(testResults.skills.find(s => s.skill === 'reading').confidence * 100) : 
+                  testResults.readingScore || 75,
+          writing: testResults.skills?.find(s => s.skill === 'writing')?.confidence ? 
+                  Math.round(testResults.skills.find(s => s.skill === 'writing').confidence * 100) : 
+                  testResults.writingScore || 75
         },
         levels: {
-          speaking: testResults.levels?.speaking || testResults.speakingLevel || 'B1',
-          listening: testResults.levels?.listening || testResults.listeningLevel || 'B1',
-          reading: testResults.levels?.reading || testResults.readingLevel || 'B1',
-          writing: testResults.levels?.writing || testResults.writingLevel || 'B1'
+          speaking: testResults.skills?.find(s => s.skill === 'speaking')?.band || 
+                   testResults.speakingLevel || testResults.overallBand,
+          listening: testResults.skills?.find(s => s.skill === 'listening')?.band || 
+                    testResults.listeningLevel || testResults.overallBand,
+          reading: testResults.skills?.find(s => s.skill === 'reading')?.band || 
+                  testResults.readingLevel || testResults.overallBand,
+          writing: testResults.skills?.find(s => s.skill === 'writing')?.band || 
+                  testResults.writingLevel || testResults.overallBand
         },
         confidence: {
-          speaking: 0.8,
-          listening: 0.8,
-          reading: 0.8,
-          writing: 0.8
+          speaking: testResults.skills?.find(s => s.skill === 'speaking')?.confidence || 0.7,
+          listening: testResults.skills?.find(s => s.skill === 'listening')?.confidence || 0.7,
+          reading: testResults.skills?.find(s => s.skill === 'reading')?.confidence || 0.7,
+          writing: testResults.skills?.find(s => s.skill === 'writing')?.confidence || 0.7
         },
-        sessionId: currentSession?.sessionId || Date.now(),
+        // Use MST session ID directly - roadmap will handle MST-specific logic
+        sessionId: currentSession.sessionId,
+        sessionType: 'mst', // Flag to indicate this is from MST, not placement test
         recommendations: testResults.recommendations || []
       };
       
+      console.log('💾 Saving MST results for roadmap:', placementResults);
       localStorage.setItem('placementResults', JSON.stringify(placementResults));
+      
       toast({
         title: "Results Saved",
-        description: "Your MST results have been saved. Creating your roadmap...",
+        description: "Your MST results have been saved. Creating your personalized roadmap...",
       });
       
       // Navigate to roadmap page
@@ -1224,8 +1273,8 @@ export default function MSTPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {['speaking', 'listening', 'reading', 'writing'].map((skill) => {
-                  const level = testResults.levels?.[skill] || testResults[`${skill}Level`] || testResults.overallBand || 'B1';
-                  const score = testResults.scores?.[skill] || testResults[`${skill}Score`] || 75;
+                  const level = testResults.levels?.[skill] || testResults[`${skill}Level`] || testResults.overallBand || 'A2';
+                  const score = testResults.scores?.[skill] || testResults[`${skill}Score`] || 50;
                   
                   return (
                     <div key={skill} className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -1707,16 +1756,21 @@ export default function MSTPage() {
               {currentItem.skill !== "speaking" && (
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                   <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
-                    {guardTimer > 0 && (
+                    {guardTimer > 0 && currentItem?.skill !== "writing" && (
                       <span>
                         Please wait {guardTimer} seconds before submitting
+                      </span>
+                    )}
+                    {currentItem?.skill === "writing" && (
+                      <span className="text-green-600">
+                        You may submit anytime. Minimum 80 words recommended for best scoring.
                       </span>
                     )}
                   </div>
                   <Button
                     onClick={handleSubmit}
                     disabled={
-                      guardTimer > 0 ||
+                      (currentItem?.skill !== "writing" && guardTimer > 0) ||
                       submitResponseMutation.isPending ||
                       !isValidResponse()
                     }
@@ -1726,7 +1780,7 @@ export default function MSTPage() {
                   >
                     {submitResponseMutation.isPending
                       ? "Submitting..."
-                      : "Submit Response"}
+                      : currentItem?.skill === "writing" ? "Submit Writing" : "Submit Response"}
                   </Button>
                 </div>
               )}
