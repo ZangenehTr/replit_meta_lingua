@@ -743,6 +743,9 @@ export default function MSTPage() {
 
   // TOEFL Speaking Flow Functions
   const startPreparationTimer = () => {
+    // CRITICAL: Set speaking phase to 'preparation' so UI renders
+    setSpeakingPhase('preparation');
+    
     // CRITICAL: Clear any existing prep interval first
     if (prepInterval) {
       clearInterval(prepInterval);
