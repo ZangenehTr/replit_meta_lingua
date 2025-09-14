@@ -100,8 +100,19 @@ export default function MSTPage() {
   const [recordTimeDisplay, setRecordTimeDisplay] = useState('01:00');
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   const [narrationPlayButton, setNarrationPlayButton] = useState(false);
-  const [prepInterval, setPrepInterval] = useState<NodeJS.Timeout | null>(null);
-  const [recordInterval, setRecordInterval] = useState<NodeJS.Timeout | null>(null);
+  
+  // ARCHITECT FIX 1: Replace interval state with refs for proper cleanup
+  const prepIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const recordIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // ARCHITECT FIX 2: Add idempotency guards to prevent duplicate starts
+  const phaseRef = useRef<string>('narration');
+  const hasRecordingStartedRef = useRef(false);
+  const hasStoppedRef = useRef(false);
+  
+  // ARCHITECT FIX 3: Deadline-based timing for accuracy
+  const prepDeadlineRef = useRef<number>(0);
+  const recordDeadlineRef = useRef<number>(0);
   
   // Score tracking for proper skill completion
   const [skillScores, setSkillScores] = useState<{[skill: string]: {stage1Score?: number, stage2Score?: number, route?: string}}>({});
@@ -270,15 +281,19 @@ export default function MSTPage() {
             setIsAutoAdvancing(false);
             // Clear processed items to allow Q2 setup
             setProcessedSpeakingItems(new Set());
-            // Clear any intervals
-            if (prepInterval) {
-              clearInterval(prepInterval);
-              setPrepInterval(null);
+            // ARCHITECT FIX: Clear interval refs for Q1→Q2 transition
+            if (prepIntervalRef.current) {
+              clearInterval(prepIntervalRef.current);
+              prepIntervalRef.current = null;
             }
-            if (recordInterval) {
-              clearInterval(recordInterval);
-              setRecordInterval(null);
+            if (recordIntervalRef.current) {
+              clearInterval(recordIntervalRef.current);
+              recordIntervalRef.current = null;
             }
+            // Reset speaking guards
+            phaseRef.current = 'narration';
+            hasRecordingStartedRef.current = false;
+            hasStoppedRef.current = false;
           }
           
           setCurrentStage(nextStage);
@@ -292,15 +307,19 @@ export default function MSTPage() {
             setSpeakingPhase('narration');
             setRecordingBlob(null);
             setProcessedSpeakingItems(new Set());
-            // Clear any remaining intervals
-            if (prepInterval) {
-              clearInterval(prepInterval);
-              setPrepInterval(null);
+            // ARCHITECT FIX: Clear interval refs for skill completion
+            if (prepIntervalRef.current) {
+              clearInterval(prepIntervalRef.current);
+              prepIntervalRef.current = null;
             }
-            if (recordInterval) {
-              clearInterval(recordInterval);
-              setRecordInterval(null);
+            if (recordIntervalRef.current) {
+              clearInterval(recordIntervalRef.current);
+              recordIntervalRef.current = null;
             }
+            // Reset speaking guards
+            phaseRef.current = 'narration';
+            hasRecordingStartedRef.current = false;
+            hasStoppedRef.current = false;
           }
           
           advanceToNextSkill();
@@ -530,17 +549,21 @@ export default function MSTPage() {
       setAudioProgress(0);
     }
     
-    // CRITICAL: Clear any existing intervals to prevent conflicts
-    if (prepInterval) {
-      clearInterval(prepInterval);
-      setPrepInterval(null);
+    // ARCHITECT FIX: Clear interval refs and reset guards
+    if (prepIntervalRef.current) {
+      clearInterval(prepIntervalRef.current);
+      prepIntervalRef.current = null;
       console.log('🧹 Cleared existing prep interval');
     }
-    if (recordInterval) {
-      clearInterval(recordInterval);
-      setRecordInterval(null);
+    if (recordIntervalRef.current) {
+      clearInterval(recordIntervalRef.current);
+      recordIntervalRef.current = null;
       console.log('🧹 Cleared existing record interval');
     }
+    // Reset speaking guards
+    phaseRef.current = 'narration';
+    hasRecordingStartedRef.current = false;
+    hasStoppedRef.current = false;
     
     // CRITICAL: Reset any submission locks when changing items
     setIsSubmissionLocked(false);
@@ -655,6 +678,34 @@ export default function MSTPage() {
     });
   };
 
+  // ARCHITECT FIX: Comprehensive cleanup function for speaking timers and state
+  const cleanupSpeakingState = () => {
+    console.log('🧹 cleanupSpeakingState: Cleaning up all speaking intervals and guards');
+    
+    // Clear all interval refs
+    if (prepIntervalRef.current) {
+      clearInterval(prepIntervalRef.current);
+      prepIntervalRef.current = null;
+      console.log('🧹 Cleared prep interval ref');
+    }
+    if (recordIntervalRef.current) {
+      clearInterval(recordIntervalRef.current);
+      recordIntervalRef.current = null;
+      console.log('🧹 Cleared record interval ref');
+    }
+    
+    // Reset all guard refs to clean state
+    phaseRef.current = 'narration';
+    hasRecordingStartedRef.current = false;
+    hasStoppedRef.current = false;
+    
+    // Reset deadline refs
+    prepDeadlineRef.current = 0;
+    recordDeadlineRef.current = 0;
+    
+    console.log('🧹 All speaking state cleaned up successfully');
+  };
+
   // SIMPLIFIED: Handle speaking response submission (same flow for Q1 and Q2)
   const handleSpeakingAutoAdvance = async (audioBlob: Blob) => {
     if (!currentSession || !currentItem) return;
@@ -686,39 +737,74 @@ export default function MSTPage() {
   };
 
   // Audio recording functions
+  // ARCHITECT FIX: MediaRecorder with chunks accumulation to eliminate race conditions
   const startRecording = async () => {
+    console.log('🎤 startRecording called, checking guards...');
+    
+    // ARCHITECT FIX: Idempotency guard to prevent duplicate recording starts
+    if (hasRecordingStartedRef.current || isRecording) {
+      console.log('⚠️ Recording already started, ignoring duplicate call');
+      return;
+    }
+    
+    hasRecordingStartedRef.current = true;
+    hasStoppedRef.current = false;
+    phaseRef.current = 'recording';
+    
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       
+      // ARCHITECT FIX: Accumulate chunks to eliminate race conditions
+      const chunks: BlobPart[] = [];
+      
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          console.log('🎤 Recording blob ready, size:', event.data.size);
-          // CRITICAL FIX: Store in ref immediately to avoid race condition
-          lastBlobRef.current = event.data;
-          setRecordingBlob(event.data);
+          chunks.push(event.data);
+          console.log('📦 Received audio chunk:', event.data.size, 'bytes, total chunks:', chunks.length);
         }
       };
       
       recorder.onstop = () => {
-        console.log('🎤 Recording stopped, processing blob...');
-        setSpeakingPhase('completed');
+        console.log('🎤 MediaRecorder stopped, processing', chunks.length, 'chunks');
         
-        // CRITICAL FIX: Use ref instead of state to eliminate race condition
-        if (lastBlobRef.current) {
-          console.log('🎤 Auto-submitting recording after stop (using ref)');
-          handleSpeakingAutoAdvance(lastBlobRef.current);
+        // ARCHITECT FIX: Create blob from accumulated chunks (no race condition)
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        console.log('📦 Created final blob:', blob.size, 'bytes');
+        
+        // Update state
+        setRecordingBlob(blob);
+        setSpeakingPhase('completed');
+        setIsRecording(false);
+        
+        // Stop the stream
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Clear recording interval ref
+        if (recordIntervalRef.current) {
+          clearInterval(recordIntervalRef.current);
+          recordIntervalRef.current = null;
+        }
+        
+        // ARCHITECT FIX: Direct submission with local blob (eliminates race condition)
+        console.log('🎤 Recording completed, auto-advancing with', blob.size, 'byte blob');
+        if (!isAutoAdvancing && blob.size > 0) {
+          handleSpeakingAutoAdvance(blob);
         } else {
-          console.warn('⚠️ Recording blob not available after stop');
+          console.log('⚠️ Auto-advance already in progress or empty blob, skipping');
         }
       };
       
-      recorder.start();
       setMediaRecorder(recorder);
+      recorder.start();
       setIsRecording(true);
-      console.log('🎤 Recording started');
+      console.log('🎤 Recording started with chunks accumulation');
+      
     } catch (error) {
-      console.error('Microphone access failed:', error);
+      console.error('❌ Microphone access failed:', error);
+      // Reset guards on error
+      hasRecordingStartedRef.current = false;
+      phaseRef.current = 'narration';
       toast({
         title: 'Error',
         description: 'Failed to access microphone',
@@ -727,52 +813,80 @@ export default function MSTPage() {
     }
   };
 
+  // ARCHITECT FIX: Ensure MediaRecorder.stop() is called exactly once
+  const stopRecordingOnce = (recorder: MediaRecorder) => {
+    if (hasStoppedRef.current) {
+      console.log('⚠️ Recording already stopped, ignoring duplicate stop call');
+      return;
+    }
+    
+    hasStoppedRef.current = true;
+    if (recorder && recorder.state === 'recording') {
+      console.log('⏹️ Stopping MediaRecorder');
+      recorder.stop();
+    }
+  };
+  
+  // ARCHITECT FIX: Manual stop recording with proper cleanup
   const stopRecording = () => {
     if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      mediaRecorder.stream.getTracks().forEach(track => track.stop());
-      setIsRecording(false);
+      console.log('🛑 Manual recording stop requested');
       
-      // CRITICAL: Clear recording timer when stopping manually
-      if (recordInterval) {
-        clearInterval(recordInterval);
-        setRecordInterval(null);
+      // Clear recording interval ref
+      if (recordIntervalRef.current) {
+        clearInterval(recordIntervalRef.current);
+        recordIntervalRef.current = null;
       }
+      
+      // Use the guarded stop function
+      stopRecordingOnce(mediaRecorder);
     }
   };
 
   // TOEFL Speaking Flow Functions
+  // ARCHITECT FIX: Deadline-based preparation timer with guards
   const startPreparationTimer = () => {
-    // CRITICAL: Set speaking phase to 'preparation' so UI renders
-    setSpeakingPhase('preparation');
+    console.log('⏱️ startPreparationTimer called, checking guards...');
     
-    // CRITICAL: Clear any existing prep interval first
-    if (prepInterval) {
-      clearInterval(prepInterval);
-      setPrepInterval(null);
+    // ARCHITECT FIX: Idempotency guard to prevent duplicate starts
+    if (phaseRef.current === 'preparation') {
+      console.log('⚠️ Preparation timer already running, ignoring duplicate call');
+      return;
     }
     
+    phaseRef.current = 'preparation';
+    setSpeakingPhase('preparation');
+    
+    // ARCHITECT FIX: Clear any existing prep interval ref first
+    if (prepIntervalRef.current) {
+      clearInterval(prepIntervalRef.current);
+      prepIntervalRef.current = null;
+      console.log('🧹 Cleared existing prep interval before starting new one');
+    }
+    
+    // ARCHITECT FIX: Deadline-based countdown for accuracy
+    prepDeadlineRef.current = Date.now() + (PREP_SEC * 1000);
     setPrepTimer(PREP_SEC);
-    setPrepTimeDisplay(formatTime(PREP_SEC)); // FIX: Use formatTime consistently
+    setPrepTimeDisplay(formatTime(PREP_SEC));
     
-    const interval = setInterval(() => {
-      setPrepTimer(prev => {
-        const newTime = prev - 1;
-        setPrepTimeDisplay(formatTime(newTime)); // FIX: Use formatTime consistently
-        
-        if (newTime <= 0) {
-          clearInterval(interval);
-          setPrepInterval(null);
-          // Play beep and start recording
-          playBeepAndStartRecording();
-          return 0;
+    const updatePrepTimer = () => {
+      const remaining = Math.max(0, Math.ceil((prepDeadlineRef.current - Date.now()) / 1000));
+      setPrepTimer(remaining);
+      setPrepTimeDisplay(formatTime(remaining));
+      
+      if (remaining <= 0) {
+        console.log('⏰ Preparation time ended - transitioning to recording phase');
+        if (prepIntervalRef.current) {
+          clearInterval(prepIntervalRef.current);
+          prepIntervalRef.current = null;
         }
-        return newTime;
-      });
-    }, 1000);
+        playBeepAndStartRecording();
+      }
+    };
     
-    // CRITICAL: Store interval reference for proper cleanup
-    setPrepInterval(interval);
+    // Start interval with ref and higher frequency for accuracy
+    prepIntervalRef.current = setInterval(updatePrepTimer, 100);
+    console.log('⏱️ Preparation timer started for 15 seconds with deadline-based countdown');
   };
 
   const playBeepAndStartRecording = async () => {
@@ -821,41 +935,53 @@ export default function MSTPage() {
   };
   
   // CRITICAL: Separate recording timer function with proper interval management
+  // ARCHITECT FIX: Deadline-based recording timer with guards
   const startRecordingTimer = () => {
-    // Clear any existing recording interval first
-    if (recordInterval) {
-      clearInterval(recordInterval);
-      setRecordInterval(null);
+    console.log('🎙️ startRecordingTimer called, checking guards...');
+    
+    // ARCHITECT FIX: Idempotency guard to prevent duplicate starts
+    if (recordIntervalRef.current) {
+      console.log('⚠️ Recording timer already running, ignoring duplicate call');
+      return;
+    }
+    
+    // ARCHITECT FIX: Clear any existing record interval ref first
+    if (recordIntervalRef.current) {
+      clearInterval(recordIntervalRef.current);
+      recordIntervalRef.current = null;
+      console.log('🧹 Cleared existing record interval before starting new one');
     }
     
     const recordingTime = currentItem?.timing?.recordSec || RECORD_SEC;
+    
+    // ARCHITECT FIX: Deadline-based countdown for accuracy
+    recordDeadlineRef.current = Date.now() + (recordingTime * 1000);
     setRecordTimer(recordingTime);
-    console.log('🎙️ Starting recording timer for', recordingTime, 'seconds');
+    setRecordTimeDisplay(formatTime(recordingTime));
     
-    const interval = setInterval(() => {
-      setRecordTimer(prev => {
-        const newTime = prev - 1;
-        setRecordTimeDisplay(formatTime(Math.max(0, newTime))); // FIX: Use formatTime and prevent negatives
-        
-        if (newTime <= 0) {
-          clearInterval(interval);
-          setRecordInterval(null);
-          
-          // CRITICAL: Auto-stop recording and submit
-          if (isRecording) {
-            console.log('⏹️ Auto-stopping recording after timer expiry');
-            stopRecording();
-            // NOTE: Recording submission is now handled in recorder.onstop event
-          }
-          
-          return 0;
+    const updateRecordTimer = () => {
+      const remaining = Math.max(0, Math.ceil((recordDeadlineRef.current - Date.now()) / 1000));
+      setRecordTimer(remaining);
+      setRecordTimeDisplay(formatTime(remaining));
+      
+      if (remaining <= 0) {
+        console.log('⏹️ Recording time expired - auto-stopping');
+        if (recordIntervalRef.current) {
+          clearInterval(recordIntervalRef.current);
+          recordIntervalRef.current = null;
         }
-        return newTime;
-      });
-    }, 1000);
+        
+        // CRITICAL: Auto-stop recording and submit
+        if (isRecording && mediaRecorder) {
+          console.log('⏹️ Auto-stopping recording after timer expiry');
+          stopRecordingOnce(mediaRecorder);
+        }
+      }
+    };
     
-    // Store interval reference for proper cleanup
-    setRecordInterval(interval);
+    // Start interval with ref and higher frequency for accuracy
+    recordIntervalRef.current = setInterval(updateRecordTimer, 100);
+    console.log('🎙️ Recording timer started for', recordingTime, 'seconds with deadline-based countdown');
   };
 
   // Audio playback for listening items and speaking narration
