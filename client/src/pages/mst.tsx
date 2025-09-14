@@ -592,10 +592,17 @@ export default function MSTPage() {
       recordIntervalRef.current = null;
       console.log('🧹 Cleared existing record interval');
     }
+    // Clear fallback timer
+    if (autoplayFallbackTimeoutRef.current) {
+      clearTimeout(autoplayFallbackTimeoutRef.current);
+      autoplayFallbackTimeoutRef.current = null;
+      console.log('🧹 Cleared autoplay fallback timer');
+    }
     // Reset speaking guards
     phaseRef.current = 'narration';
     hasRecordingStartedRef.current = false;
     hasStoppedRef.current = false;
+    audioStartedRef.current = false;
     
     // CRITICAL: Reset any submission locks when changing items
     setIsSubmissionLocked(false);
@@ -645,17 +652,17 @@ export default function MSTPage() {
               console.warn('⚠️ State changed during TTS generation, aborting speaking setup');
             } else {
               console.warn('⚠️ TTS generation failed for speaking prompt');
-              // Only start prep timer if audio didn't play
+              // Only start prep timer if no audio will play
               if (!audioPlayed && phaseRef.current === 'narration') {
-                console.log('🔄 Starting preparation timer as fallback (TTS failed)');
+                console.log('🔄 No audio available - starting preparation timer immediately');
                 startPreparationTimer();
               }
             }
           }).catch(error => {
             console.error('❌ TTS generation error caught:', error);
-            // Only start prep timer if we're still in narration phase
-            if (phaseRef.current === 'narration') {
-              console.log('🔄 Starting preparation timer as fallback (TTS error)');
+            // Only start prep timer if we're still in narration phase and no audio
+            if (phaseRef.current === 'narration' && !audioPlayed) {
+              console.log('🔄 TTS generation failed - starting preparation timer immediately');
               startPreparationTimer();
             }
           });
@@ -663,7 +670,7 @@ export default function MSTPage() {
           console.warn('⚠️ No prompt found for speaking item or state inconsistency');
           // Start prep timer immediately when no prompt
           if (phaseRef.current === 'narration') {
-            console.log('🔄 Starting preparation timer as fallback (no prompt)');
+            console.log('🔄 No prompt available - starting preparation timer immediately');
             startPreparationTimer();
           }
         }
@@ -1263,19 +1270,18 @@ export default function MSTPage() {
       }
     } catch (error) {
       console.error('❌ TTS generation error:', error);
-      // ARCHITECT FIX D: Immediate fallback on error, no toast to avoid UI disruption
-      console.log('🔄 TTS failed, falling back to preparation timer immediately');
+      // Don't automatically start prep timer here - let the calling code handle it
+      console.log('🔄 TTS failed, returning null');
       // Don't show toast during production crisis - let flow continue
-      setTimeout(() => {
-        if (currentItem?.skill === 'speaking') {
-          startPreparationTimer();
-        }
-      }, 500);
       return null;
     } finally {
       setIsGeneratingTTS(false);
     }
   };
+
+  // Track audio state and fallback timers
+  const audioStartedRef = useRef(false);
+  const autoplayFallbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Auto-play narration audio for speaking questions (with manual fallback)
   const autoPlayNarration = async (audioUrl: string) => {
@@ -1283,7 +1289,27 @@ export default function MSTPage() {
       console.log('🎧 Auto-playing narration audio:', audioUrl);
       const audio = new Audio(audioUrl);
       
+      // Reset audio state
+      audioStartedRef.current = false;
+      
+      // Clear any existing fallback timer
+      if (autoplayFallbackTimeoutRef.current) {
+        clearTimeout(autoplayFallbackTimeoutRef.current);
+        autoplayFallbackTimeoutRef.current = null;
+      }
+      
       // Handle audio events
+      audio.addEventListener('play', () => {
+        console.log('🎵 Narration started playing');
+        audioStartedRef.current = true;
+        // CRITICAL: Clear fallback timer when audio starts playing
+        if (autoplayFallbackTimeoutRef.current) {
+          clearTimeout(autoplayFallbackTimeoutRef.current);
+          autoplayFallbackTimeoutRef.current = null;
+          console.log('✅ Canceled fallback timer - audio is playing');
+        }
+      });
+      
       audio.addEventListener('ended', () => {
         console.log('🎵 Narration ended - starting preparation phase');
         setIsAudioPlaying(false);
@@ -1295,23 +1321,42 @@ export default function MSTPage() {
         console.error('❌ Audio playback error:', e);
         setIsAudioPlaying(false);
         setNarrationPlayButton(true); // Show manual play button
+        // Only start prep timer if audio never started
+        if (!audioStartedRef.current && phaseRef.current === 'narration') {
+          console.log('🔄 Audio failed without starting - falling back to preparation timer');
+          startPreparationTimer();
+        }
       });
       
       setAudioElement(audio);
+      
+      // Set up fallback timer BEFORE attempting to play
+      autoplayFallbackTimeoutRef.current = setTimeout(() => {
+        if (!audioStartedRef.current && phaseRef.current === 'narration') {
+          console.log('⏱️ Fallback timer fired - audio never started, proceeding to preparation');
+          startPreparationTimer();
+        }
+      }, 3000); // 3 second fallback if audio never starts
+      
       await audio.play();
       setIsAudioPlaying(true);
       setNarrationPlayButton(false); // Hide play button on successful autoplay
       
     } catch (error) {
       console.error('❌ Auto-play error:', error);
-      // ARCHITECT FIX D: Immediate fallback when autoplay fails
-      console.log('🔄 Auto-play failed, proceeding to preparation timer');
-      setIsAudioPlaying(false);
-      setTimeout(() => {
-        if (currentItem?.skill === 'speaking') {
-          startPreparationTimer();
+      // Only proceed to preparation if audio never started
+      if (!audioStartedRef.current && phaseRef.current === 'narration') {
+        console.log('🔄 Auto-play failed and audio never started, proceeding to preparation timer');
+        setIsAudioPlaying(false);
+        // Use existing fallback timer or create new one
+        if (!autoplayFallbackTimeoutRef.current) {
+          autoplayFallbackTimeoutRef.current = setTimeout(() => {
+            if (!audioStartedRef.current && phaseRef.current === 'narration') {
+              startPreparationTimer();
+            }
+          }, 1000);
         }
-      }, 1000);
+      }
     }
   };
 
