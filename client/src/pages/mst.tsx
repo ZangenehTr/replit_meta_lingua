@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Clock, MicOff, Play, Pause, Volume2 } from "lucide-react";
+import { Clock, MicOff, Play, Pause, Volume2, Map, Trophy, Target, BookOpen } from "lucide-react";
 
 const mstStyle = { direction: "ltr" as const, textAlign: "left" as const };
 
@@ -90,6 +90,11 @@ export default function MSTPage() {
   const [currentResponse, setCurrentResponse] = useState<any>("");
   const [itemTimer, setItemTimer] = useState(0);
   const [guardTimer, setGuardTimer] = useState(0);
+  const [actualTimerSeconds, setActualTimerSeconds] = useState(0); // Track actual timer value set
+
+  // Listening validation
+  const [hasPlayedListening, setHasPlayedListening] = useState(false);
+  const [audioHasEnded, setAudioHasEnded] = useState(false);
 
   // Audio (listening / narration)
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
@@ -458,6 +463,7 @@ export default function MSTPage() {
   const startItemTimer = (max: number) => {
     setItemTimer(max);
     setGuardTimer(Math.min(2, max));
+    setActualTimerSeconds(max); // Track the actual timer value for accurate calculations
   };
 
   useEffect(() => {
@@ -489,6 +495,10 @@ export default function MSTPage() {
     console.log("🔄 Item changed - clearing state for", currentItem.skill, currentItem.id);
     setIsSubmissionLocked(false);
     setIsAutoAdvancing(false);
+    
+    // Reset listening validation state
+    setHasPlayedListening(false);
+    setAudioHasEnded(false);
 
     if (currentItem.skill === "speaking") {
       if (speakingQuestionIndex === 0) setSpeakingQuestionIndex(1);
@@ -508,8 +518,13 @@ export default function MSTPage() {
         }
       }
     } else if (currentItem.skill === "writing") {
-      startItemTimer(300);
+      startItemTimer(300); // 5 minutes for writing
     } else if (currentItem.skill === "reading") {
+      startItemTimer(currentItem.timing.maxAnswerSec);
+    } else if (currentItem.skill === "listening") {
+      // For listening, reset validation state and start timer
+      setHasPlayedListening(false);
+      setAudioHasEnded(false);
       startItemTimer(currentItem.timing.maxAnswerSec);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -541,8 +556,8 @@ export default function MSTPage() {
     if (!currentSession || !currentItem || isSubmissionLocked) return;
     setIsSubmissionLocked(true);
     setSubmissionStartTime(Date.now());
-    const timeSpentMs =
-      (currentItem.timing.maxAnswerSec - itemTimer + 1) * 1000;
+    // Use the actual timer value that was set, not the item timing
+    const timeSpentMs = (actualTimerSeconds - itemTimer + 1) * 1000;
     submitResponseMutation.mutate({
       sessionId: currentSession.sessionId,
       skill: currentItem.skill,
@@ -955,9 +970,16 @@ export default function MSTPage() {
         audio.addEventListener("ended", () => {
           setIsAudioPlaying(false);
           setAudioProgress(0);
-          if (currentItem?.skill === "listening")
+          if (currentItem?.skill === "listening") {
+            setAudioHasEnded(true);
+            setHasPlayedListening(true);
             startItemTimer(currentItem.timing.maxAnswerSec);
-          else if (currentItem?.skill === "speaking") startPreparationTimer();
+          } else if (currentItem?.skill === "speaking") startPreparationTimer();
+        });
+        audio.addEventListener("play", () => {
+          if (currentItem?.skill === "listening") {
+            setHasPlayedListening(true);
+          }
         });
         audio.addEventListener("error", () =>
           toast({
@@ -970,6 +992,9 @@ export default function MSTPage() {
         setAudioElement(audio);
         await audio.play();
         setIsAudioPlaying(true);
+        if (currentItem?.skill === "listening") {
+          setHasPlayedListening(true);
+        }
       } else {
         if (isAudioPlaying) {
           audioElement.pause();
@@ -977,6 +1002,9 @@ export default function MSTPage() {
         } else {
           await audioElement.play();
           setIsAudioPlaying(true);
+          if (currentItem?.skill === "listening") {
+            setHasPlayedListening(true);
+          }
         }
       }
     } catch (e) {
@@ -992,6 +1020,12 @@ export default function MSTPage() {
   // ---------- Submit (non-speaking)
   const isValidResponse = () => {
     if (!currentItem) return false;
+    
+    // Listening validation: check if audio has been played
+    if (currentItem.skill === "listening" && !hasPlayedListening) {
+      return false;
+    }
+    
     if (currentItem.skill === "listening" || currentItem.skill === "reading") {
       if (!currentResponse) return false;
       if (Array.isArray(currentResponse)) {
@@ -1017,6 +1051,16 @@ export default function MSTPage() {
   const handleSubmit = () => {
     if (!currentSession || !currentItem || guardTimer > 0 || isSubmissionLocked)
       return;
+    
+    // Listening validation: show toast if audio hasn't been played
+    if (currentItem.skill === "listening" && !hasPlayedListening) {
+      toast({
+        title: "Audio Required",
+        description: "Please listen to the audio file before submitting your answer.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsSubmissionLocked(true);
     setSubmissionStartTime(Date.now());
     if (audioElement && !audioElement.paused) {
@@ -1087,20 +1131,161 @@ export default function MSTPage() {
         </div>
       );
     }
+
+    const getSkillIcon = (skill: string) => {
+      switch (skill) {
+        case 'speaking': return '🗣️';
+        case 'listening': return '👂';
+        case 'reading': return '📖';
+        case 'writing': return '✍️';
+        default: return '📚';
+      }
+    };
+
+    const getSkillColor = (level: string) => {
+      switch (level?.toUpperCase()) {
+        case 'A1': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        case 'A2': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+        case 'B1': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        case 'B2': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+        case 'C1': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+        case 'C2': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+      }
+    };
+
+    const handleCreateRoadmap = () => {
+      // Save results to localStorage for roadmap generation
+      const placementResults = {
+        overallBand: testResults.overallBand,
+        overallCEFRLevel: testResults.overallBand,
+        scores: {
+          overall: testResults.scores?.overall || 75,
+          speaking: testResults.scores?.speaking || testResults.speakingScore || 75,
+          listening: testResults.scores?.listening || testResults.listeningScore || 75,
+          reading: testResults.scores?.reading || testResults.readingScore || 75,
+          writing: testResults.scores?.writing || testResults.writingScore || 75
+        },
+        levels: {
+          speaking: testResults.levels?.speaking || testResults.speakingLevel || 'B1',
+          listening: testResults.levels?.listening || testResults.listeningLevel || 'B1',
+          reading: testResults.levels?.reading || testResults.readingLevel || 'B1',
+          writing: testResults.levels?.writing || testResults.writingLevel || 'B1'
+        },
+        confidence: {
+          speaking: 0.8,
+          listening: 0.8,
+          reading: 0.8,
+          writing: 0.8
+        },
+        sessionId: currentSession?.sessionId || Date.now(),
+        recommendations: testResults.recommendations || []
+      };
+      
+      localStorage.setItem('placementResults', JSON.stringify(placementResults));
+      toast({
+        title: "Results Saved",
+        description: "Your MST results have been saved. Creating your roadmap...",
+      });
+      
+      // Navigate to roadmap page
+      window.location.href = "/roadmap";
+    };
+
     return (
       <div className="container mx-auto p-4 sm:p-6 max-w-4xl" style={mstStyle}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">Your Results</CardTitle>
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="text-center pb-4">
+            <div className="flex justify-center mb-4">
+              <Trophy className="h-12 w-12 text-yellow-500" />
+            </div>
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              MST Test Complete!
+            </CardTitle>
+            <p className="text-gray-600 dark:text-gray-300">Your English proficiency assessment results</p>
           </CardHeader>
-          <CardContent className="space-y-6 text-center">
-            <div className="text-4xl font-bold">{testResults.overallBand}</div>
-            <Button
-              size="lg"
-              onClick={() => (window.location.href = "/dashboard")}
-            >
-              Return to Dashboard
-            </Button>
+          <CardContent className="space-y-6">
+            {/* Overall Score */}
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-3xl font-bold mb-4">
+                {testResults.overallBand}
+              </div>
+              <div className="text-xl font-semibold">Overall CEFR Level</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Score: {testResults.scores?.overall || 75}/100
+              </div>
+            </div>
+
+            {/* Individual Skills Breakdown */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-center flex items-center justify-center gap-2">
+                <Target className="h-5 w-5" />
+                Individual Skills Breakdown
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {['speaking', 'listening', 'reading', 'writing'].map((skill) => {
+                  const level = testResults.levels?.[skill] || testResults[`${skill}Level`] || testResults.overallBand || 'B1';
+                  const score = testResults.scores?.[skill] || testResults[`${skill}Score`] || 75;
+                  
+                  return (
+                    <div key={skill} className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl" data-testid={`icon-skill-${skill}`}>{getSkillIcon(skill)}</span>
+                        <div>
+                          <div className="font-medium capitalize" data-testid={`skill-name-${skill}`}>{skill}</div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400" data-testid={`skill-score-${skill}`}>
+                            Score: {score}/100
+                          </div>
+                        </div>
+                      </div>
+                      <Badge className={getSkillColor(level)} data-testid={`skill-level-${skill}`}>
+                        {level}
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Recommendations */}
+            {testResults.recommendations && testResults.recommendations.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  Recommendations
+                </h3>
+                <ul className="space-y-2">
+                  {testResults.recommendations.map((rec: string, index: number) => (
+                    <li key={index} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
+                      <span className="text-blue-500 mt-1">•</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+              <Button
+                size="lg"
+                onClick={handleCreateRoadmap}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                data-testid="button-create-roadmap"
+              >
+                <Map className="w-5 h-5 mr-2" />
+                Create Learning Roadmap
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => (window.location.href = "/dashboard")}
+                className="flex-1"
+                data-testid="button-return-dashboard"
+              >
+                Return to Dashboard
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
