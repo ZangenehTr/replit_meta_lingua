@@ -1,12 +1,22 @@
 import { Router, Request, Response, NextFunction } from 'express';
+
+interface AuthenticatedRequest extends Request {
+  user: {
+    id: number;
+    email: string;
+    role: string;
+    [key: string]: any;
+  };
+}
 import { z } from 'zod';
 import { storage } from '../storage';
+import { roadmapStorage } from '../services/roadmap-storage';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || "meta-lingua-secret-key";
 
 // Auth middleware
-const requireAuth = async (req: any, res: Response, next: NextFunction) => {
+const requireAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -46,7 +56,7 @@ const paceAdjustmentSchema = z.object({
 });
 
 // CREATE ROADMAP INSTANCE
-router.post('/roadmaps/instances', requireAuth, async (req, res) => {
+router.post('/roadmaps/instances', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const instanceData = createRoadmapInstanceSchema.parse(req.body);
     const userRole = req.user.role;
@@ -57,7 +67,7 @@ router.post('/roadmaps/instances', requireAuth, async (req, res) => {
     }
 
     // Verify template exists
-    const template = await storage.getRoadmapTemplate(instanceData.templateId);
+    const template = await roadmapStorage.getRoadmapTemplate(instanceData.templateId);
     if (!template) {
       return res.status(404).json({ message: 'Roadmap template not found' });
     }
@@ -77,9 +87,9 @@ router.post('/roadmaps/instances', requireAuth, async (req, res) => {
       }
     }
 
-    // Create instance and initialize activity instances
-    const instance = await storage.createRoadmapInstance(instanceData);
-    await storage.initializeActivityInstances(instance.id);
+    // Create instance first, then initialize activity instances
+    const instance = await roadmapStorage.createRoadmapInstance(instanceData);
+    await roadmapStorage.initializeActivityInstances(instance.id);
 
     res.status(201).json({
       message: 'Roadmap instance created successfully',
@@ -92,7 +102,7 @@ router.post('/roadmaps/instances', requireAuth, async (req, res) => {
 });
 
 // GET ROADMAP INSTANCE WITH FULL NESTING AND PROGRESS
-router.get('/roadmaps/instances/:id', requireAuth, async (req, res) => {
+router.get('/roadmaps/instances/:id', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const instanceId = parseInt(req.params.id);
     const userId = req.user.id;
@@ -122,7 +132,7 @@ router.get('/roadmaps/instances/:id', requireAuth, async (req, res) => {
 });
 
 // LIST ROADMAP INSTANCES
-router.get('/roadmaps/instances', requireAuth, async (req, res) => {
+router.get('/roadmaps/instances', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const { courseId, studentId, templateId, status } = req.query;
     const userRole = req.user.role;
@@ -152,7 +162,7 @@ router.get('/roadmaps/instances', requireAuth, async (req, res) => {
 });
 
 // ADJUST ROADMAP PACING (BULK SHIFT DATES)
-router.patch('/roadmaps/instances/:id/pace', requireAuth, async (req, res) => {
+router.patch('/roadmaps/instances/:id/pace', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const instanceId = parseInt(req.params.id);
     const { adjustmentDays, reason } = paceAdjustmentSchema.parse(req.body);
@@ -185,7 +195,7 @@ router.patch('/roadmaps/instances/:id/pace', requireAuth, async (req, res) => {
 });
 
 // UPDATE ROADMAP INSTANCE STATUS
-router.patch('/roadmaps/instances/:id/status', requireAuth, async (req, res) => {
+router.patch('/roadmaps/instances/:id/status', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const instanceId = parseInt(req.params.id);
     const { status } = z.object({ 
@@ -215,7 +225,7 @@ router.patch('/roadmaps/instances/:id/status', requireAuth, async (req, res) => 
 });
 
 // GET STUDENT'S CURRENT ROADMAP POSITION
-router.get('/roadmaps/instances/:id/position', requireAuth, async (req, res) => {
+router.get('/roadmaps/instances/:id/position', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const instanceId = parseInt(req.params.id);
     const userId = req.user.id;
@@ -241,7 +251,7 @@ router.get('/roadmaps/instances/:id/position', requireAuth, async (req, res) => 
 });
 
 // GET ROADMAP INSTANCE ANALYTICS
-router.get('/roadmaps/instances/:id/analytics', requireAuth, async (req, res) => {
+router.get('/roadmaps/instances/:id/analytics', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const instanceId = parseInt(req.params.id);
     const userRole = req.user.role;
@@ -261,7 +271,7 @@ router.get('/roadmaps/instances/:id/analytics', requireAuth, async (req, res) =>
 });
 
 // RESET ROADMAP INSTANCE PROGRESS
-router.post('/roadmaps/instances/:id/reset', requireAuth, async (req, res) => {
+router.post('/roadmaps/instances/:id/reset', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const instanceId = parseInt(req.params.id);
     const userRole = req.user.role;

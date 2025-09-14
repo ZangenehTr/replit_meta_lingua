@@ -162,9 +162,9 @@ export default function CallernRoadmapManager() {
   if (showEditor) {
     return (
       <AdvancedRoadmapEditor
-        roadmap={selectedRoadmap ? {
-          ...roadmapDetails,
-          steps: roadmapDetails?.steps || []
+        roadmap={selectedRoadmap && roadmapDetails ? {
+          ...(typeof roadmapDetails === 'object' ? roadmapDetails : {}),
+          steps: (roadmapDetails as any)?.steps || []
         } : undefined}
         packages={packages}
         onSave={handleSaveRoadmap}
@@ -434,7 +434,7 @@ export default function CallernRoadmapManager() {
         )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         .loading-spinner {
           width: 48px;
           height: 48px;

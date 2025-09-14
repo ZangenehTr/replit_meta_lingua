@@ -246,9 +246,9 @@ Generate a structured learning roadmap in JSON format:
 `;
 
     try {
-      const response = await this.ollamaService.generateResponse(prompt, {
+      const response = await this.ollamaService.generateCompletion(prompt, undefined, {
         temperature: 0.4,
-        max_tokens: 2000
+        maxTokens: 2000
       });
       
       return JSON.parse(response);
