@@ -413,7 +413,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
         const completion = await openai.chat.completions.create({
           model: "gpt-4o-mini",
           messages: [
-            { role: "system" as const, content: "You are a helpful AI study partner for language learning. Be encouraging and provide clear, helpful responses." },
+            { role: "system" as const, content: "You are Lexi, an enthusiastic AI language learning partner. Your motto is 'Turn minutes into progress.' Be encouraging, friendly, and use emojis naturally. Help users make the most of their study time with personalized guidance and engaging conversation." },
             { role: "user" as const, content: message }
           ],
           max_tokens: 500,
@@ -439,16 +439,16 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
         console.log("🎯 NEW NATURAL RESPONSES ACTIVE - Processing message:", message);
         if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
           const greetings = [
-            "Hey there! 😊 Good to see you! What's on your mind today - want to chat about something fun or work on specific English skills?",
-            "Hi! Great to meet you! I'm excited to help you with your English. What would you like to talk about?",
-            "Hello! 👋 Ready for some English practice? I'm here to chat about whatever interests you!"
+            "Hey there! 😊 I'm Lexi, your AI study partner! Ready to turn minutes into progress? What's on your mind today?",
+            "Hi! I'm Lexi 👋 Your friendly language learning companion. Let's make every minute count - what would you like to work on?",
+            "Hello! Lexi here! 🌟 Ready for some productive English practice? Let's turn your study time into real progress!"
           ];
           aiResponse = greetings[Math.floor(Math.random() * greetings.length)];
         } else if (lowerMessage.includes("help") && lowerMessage.includes("conversation")) {
           const conversationStarters = [
-            "Awesome! I love having conversations! How about we talk about something you're passionate about? What do you enjoy doing in your free time?",
-            "Perfect! Let's just chat naturally. Tell me, what's the most interesting thing that happened to you this week?",
-            "Great idea! Conversation is the best way to improve. What's your favorite topic to discuss - maybe something about your country or hobbies?"
+            "Perfect! I'm Lexi, and I love conversations! 💬 Let's turn this chat into real progress. What's something you're passionate about?",
+            "Great choice! I'm Lexi, your study partner. Natural conversation is the best way to improve! What interesting thing happened to you recently?",
+            "Awesome! Lexi here - ready to help you practice! 🎯 Let's chat about something fun. What topics do you enjoy discussing?"
           ];
           aiResponse = conversationStarters[Math.floor(Math.random() * conversationStarters.length)];
         } else if (lowerMessage.includes("grammar")) {
@@ -489,10 +489,10 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
         } else {
           // Dynamic, encouraging responses that build on what they said
           const naturalResponses = [
-            `Interesting! You said "${message}" - I can tell you're really thinking about this. Want to expand on that thought or try expressing it differently?`,
-            `I hear you saying "${message}" - that's great practice! How about we build on that idea? What do you think about...?`,
-            `Thanks for sharing "${message}" with me! Your English is coming along nicely. What would you like to talk about next?`,
-            `"${message}" - I like that! You're expressing yourself clearly. Want to dive deeper into this topic or try something new?`
+            `Hi! I'm Lexi 😊 You said "${message}" - I can tell you're really thinking! Let's turn this into learning progress. Want to expand on that?`,
+            `Great! Lexi here - "${message}" is excellent practice! 💪 How about we build on that idea and make more progress together?`,
+            `Thanks for sharing "${message}" with me! I'm Lexi, your study partner, and your English is improving! What should we explore next?`,
+            `"${message}" - I love it! I'm Lexi, and I can see you're expressing yourself clearly. Ready to turn this into more progress? 🚀`
           ];
           aiResponse = naturalResponses[Math.floor(Math.random() * naturalResponses.length)];
         }

@@ -334,7 +334,7 @@ export default function StudentAIStudyPartnerMobile() {
 
   return (
     <MobileLayout
-      title={t('student:aiStudyPartner')}
+      title="Lexi - Turn minutes into progress"
       showBack={false}
       gradient="primary"
       headerAction={
@@ -462,10 +462,10 @@ export default function StudentAIStudyPartnerMobile() {
           >
             <Sparkles className="w-16 h-16 text-purple-400 mx-auto mb-4" />
             <h3 className="text-white text-lg font-semibold mb-2">
-              {t('student:studyPartnerWelcome')}
+              Hi! I'm Lexi 👋
             </h3>
             <p className="text-white/70 text-sm mb-4">
-              {t('student:studyPartnerWelcomeDesc')}
+              Your AI language learning partner. Let's turn minutes into progress together!
             </p>
             
             {/* Quick Start Prompts */}
@@ -494,8 +494,8 @@ export default function StudentAIStudyPartnerMobile() {
               <div className={`max-w-[85%] ${message.role === 'user' ? 'items-end' : 'items-start'} flex gap-2`}>
                 {message.role === 'assistant' && (
                   <Avatar className="w-8 h-8 flex-shrink-0 mt-1">
-                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500">
-                      <Bot className="w-5 h-5 text-white" />
+                    <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 font-bold text-white">
+                      L
                     </AvatarFallback>
                   </Avatar>
                 )}
