@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { MobileLayout } from '@/components/mobile/MobileLayout';
@@ -67,10 +67,13 @@ export default function StudentAIStudyPartnerMobile() {
   type ConversationState = 'IDLE' | 'LISTENING' | 'THINKING' | 'SPEAKING' | 'COOLDOWN';
   const [conversationState, setConversationState] = useState<ConversationState>('IDLE');
   
+  // STT Session Controller - prevent concurrent sessions
+  const [sttSessionId, setSttSessionId] = useState<string | null>(null);
+  
   // Echo filter and deduplication
   const [lastAssistantText, setLastAssistantText] = useState('');
   const [recentMessages, setRecentMessages] = useState<Set<string>>(new Set());
-  const [cooldownTimeout, setCooldownTimeout] = useState<NodeJS.Timeout | null>(null);
+  const cooldownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [settings, setSettings] = useState<StudyPartnerSettings>({
     personality: 'encouraging',
     focusArea: 'general',
@@ -161,16 +164,20 @@ export default function StudentAIStudyPartnerMobile() {
       // Set last assistant text for echo filter (strip emojis)
       setLastAssistantText(data.response.replace(/[\u{1f300}-\u{1ffc0}]/gu, '').trim());
       
-      // Transition to SPEAKING state
-      setConversationState('SPEAKING');
-      
       // Auto-speak AI responses in focused/exam-prep mode
       if (settings.studyMode === 'focused' || settings.studyMode === 'exam-prep') {
         speakText(data.response);
+      } else {
+        // No TTS - return to IDLE or start listening in continuous mode
+        if (continuousMode) {
+          startCooldownToListening();
+        } else {
+          setConversationState('IDLE');
+        }
       }
       
       // Invalidate and refetch conversation history
-      queryClient.invalidateQueries({ queryKey: ['/api/ai-study-partner/messages'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/ai-study-partner/messages'] })
     },
     onError: () => {
       // Reset state on error
@@ -275,6 +282,10 @@ export default function StudentAIStudyPartnerMobile() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    
+    // CRITICAL FIX: Set THINKING state before mutate
+    setConversationState('THINKING');
+    
     sendMessage.mutate(inputText);
     setInputText('');
   };
@@ -284,15 +295,60 @@ export default function StudentAIStudyPartnerMobile() {
     setTimeout(() => handleSend(), 100);
   };
 
+  // Clear cooldown timeout helper
+  const clearCooldownTimeout = useCallback(() => {
+    if (cooldownTimeoutRef.current) {
+      clearTimeout(cooldownTimeoutRef.current);
+      cooldownTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Start cooldown to LISTENING transition
+  const startCooldownToListening = useCallback(async () => {
+    clearCooldownTimeout();
+    
+    cooldownTimeoutRef.current = setTimeout(async () => {
+      try {
+        // Generate new session ID to prevent conflicts
+        const newSessionId = `continuous-session-${Date.now()}`;
+        setSttSessionId(newSessionId);
+        
+        // FSM: Transition to LISTENING state before starting STT
+        setConversationState('LISTENING');
+        setIsRecording(true);
+        
+        await speechRecognitionService.startListening(
+          newSessionId,
+          'en-US',
+          handleSpeechResult,
+          (analysis) => console.log('Speech analysis:', analysis)
+        );
+        console.log('FSM: COOLDOWN → LISTENING. Ready for your response!');
+      } catch (error) {
+        console.error('Failed to restart continuous mode:', error);
+        setIsRecording(false);
+        setConversationState('IDLE');
+        setSttSessionId(null);
+      }
+    }, 500); // Brief cooldown period
+  }, [clearCooldownTimeout]);
+
   // Text-to-Speech for AI responses
   const speakText = async (text: string, language: string = 'en') => {
     try {
       setIsSpeaking(true);
       
+      // CRITICAL FIX: Set COOLDOWN at TTS start (align with architect's design)
+      setConversationState('COOLDOWN');
+      
+      // Clear any pending cooldown transitions
+      clearCooldownTimeout();
+      
       // CRITICAL: Pause speech recognition to prevent feedback loop!
       if (isRecording) {
         speechRecognitionService.pauseForTTS();
         setIsRecording(false);
+        setSttSessionId(null); // Clear session ID
       }
       
       // Stop any current audio
@@ -316,43 +372,54 @@ export default function StudentAIStudyPartnerMobile() {
         audio.onended = () => {
           setIsSpeaking(false);
           currentAudio.current = null;
-          // CONTINUOUS MODE: Auto-restart speech recognition after Lexi finishes
+          
           speechRecognitionService.resumeAfterTTS();
           if (continuousMode) {
-            setTimeout(async () => {
-              try {
-                setIsRecording(true);
-                await speechRecognitionService.startListening(
-                  `continuous-session-${Date.now()}`,
-                  'en-US',
-                  handleSpeechResult,
-                  (analysis) => console.log('Speech analysis:', analysis)
-                );
-                console.log('Continuous conversation mode: Ready for your response!');
-              } catch (error) {
-                console.error('Failed to restart continuous mode:', error);
-                setIsRecording(false);
-              }
-            }, 500); // Brief delay after TTS ends
+            // COOLDOWN→LISTENING transition after TTS ends + cooldown
+            startCooldownToListening();
+          } else {
+            // Return to IDLE if not in continuous mode
+            setConversationState('IDLE');
           }
         };
         
         audio.onerror = () => {
           setIsSpeaking(false);
           currentAudio.current = null;
-          // Enable recognition to resume even on TTS error
           speechRecognitionService.resumeAfterTTS();
+          
+          // CRITICAL FIX: On TTS error in continuous mode, run same COOLDOWN→LISTENING restart path
+          if (continuousMode) {
+            startCooldownToListening();
+          } else {
+            setConversationState('IDLE');
+          }
         };
 
         await audio.play();
       } else {
         setIsSpeaking(false);
-        // Enable recognition to resume if TTS failed
         speechRecognitionService.resumeAfterTTS();
+        
+        // Handle TTS failure - same restart logic
+        if (continuousMode) {
+          startCooldownToListening();
+        } else {
+          setConversationState('IDLE');
+        }
       }
     } catch (error) {
       console.error('TTS error:', error);
       setIsSpeaking(false);
+      speechRecognitionService.resumeAfterTTS();
+      
+      // Handle TTS exception - same restart logic
+      if (continuousMode) {
+        startCooldownToListening();
+      } else {
+        setConversationState('IDLE');
+      }
+      
       toast({
         title: t('common:error'),
         description: t('student:ttsError'),
@@ -384,19 +451,11 @@ export default function StudentAIStudyPartnerMobile() {
         description: result.text,
       });
       
-      // Auto-send in continuous mode for seamless conversation
+      // Auto-send in continuous mode - use handleAutoSend for proper FSM flow
       if (continuousMode && result.text.trim()) {
         setTimeout(() => {
-          const userMessage = {
-            id: Date.now().toString(),
-            role: 'user' as const,
-            content: result.text,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, userMessage]);
-          sendMessage.mutate(result.text);
-          setInputText('');
-        }, 500);
+          handleAutoSend(result.text.trim());
+        }, 100);
       }
     } else {
       // Only show interim results if we're still actively recording
@@ -407,20 +466,39 @@ export default function StudentAIStudyPartnerMobile() {
   };
 
   const startRecording = async () => {
+    // CRITICAL FIX: Block startRecording unless state is IDLE/COOLDOWN and !isRecording
+    if (isRecording || (conversationState !== 'IDLE' && conversationState !== 'COOLDOWN')) {
+      console.log('STT blocked - invalid state:', { isRecording, conversationState });
+      return;
+    }
+    
+    // Clear any pending cooldown transitions to prevent conflicts
+    clearCooldownTimeout();
+    
     setIsRecording(true);
     setInputText('');
     
+    // Generate new session ID
+    const newSessionId = `study-session-${Date.now()}`;
+    setSttSessionId(newSessionId);
+    
+    // FSM: Transition to LISTENING state when STT starts
+    setConversationState('LISTENING');
+    
     try {
       await speechRecognitionService.startListening(
-        `study-session-${Date.now()}`,
+        newSessionId,
         'en-US',
         handleSpeechResult,
         (analysis) => {
           console.log('Speech analysis:', analysis);
         }
       );
+      console.log('FSM: IDLE/COOLDOWN → LISTENING. Speech recognition started.');
     } catch (error) {
       setIsRecording(false);
+      setConversationState('IDLE'); // Reset to IDLE on error
+      setSttSessionId(null);
       toast({
         title: t('common:error'),
         description: t('student:speechRecognitionError'),
@@ -437,6 +515,8 @@ export default function StudentAIStudyPartnerMobile() {
   const stopRecording = () => {
     setIsRecording(false);
     speechRecognitionService.stopListening();
+    setSttSessionId(null); // Clear session ID
+    clearCooldownTimeout(); // Clear any pending transitions
     
     toast({
       title: t('student:processingAudio'),
@@ -447,6 +527,16 @@ export default function StudentAIStudyPartnerMobile() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Cleanup on unmount - prevent memory leaks
+  useEffect(() => {
+    return () => {
+      clearCooldownTimeout();
+      if (isRecording) {
+        speechRecognitionService.stopListening();
+      }
+    };
+  }, [clearCooldownTimeout, isRecording]);
 
   const quickStartPrompts = [
     "Help me prepare for my next IELTS speaking session",
@@ -467,7 +557,10 @@ export default function StudentAIStudyPartnerMobile() {
       title="Lexi - Turn minutes into progress"
       showBack={false}
       gradient="primary"
-      headerAction={
+      showSettings={false}
+    >
+      {/* Settings Button */}
+      <div className="flex justify-end mb-4">
         <button 
           className="p-2 rounded-full glass-button"
           onClick={() => setShowSettings(!showSettings)}
@@ -475,8 +568,8 @@ export default function StudentAIStudyPartnerMobile() {
         >
           <Settings className="w-5 h-5 text-white" />
         </button>
-      }
-    >
+      </div>
+
       {/* Settings Panel */}
       <AnimatePresence>
         {showSettings && (

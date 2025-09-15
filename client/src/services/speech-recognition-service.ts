@@ -49,7 +49,7 @@ interface SpeechRecognitionAlternative {
 
 // Ollama service will be called via API endpoints to server
 
-export interface SpeechRecognitionResult {
+export interface RecognitionResult {
   text: string;
   confidence: number;
   language: string;
@@ -90,7 +90,8 @@ export class SpeechRecognitionService {
   private recognition: SpeechRecognition | null = null;
   private isListening = false;
   private sessionId: string | null = null;
-  private onResult: ((result: SpeechRecognitionResult) => void) | null = null;
+  private currentSessionId: string | null = null; // Track current active session
+  private onResult: ((result: RecognitionResult) => void) | null = null;
   private onSpeechAnalysis: ((analysis: SpeechAnalysis) => void) | null = null;
   private targetLanguage = 'en-US';
   private buffer: string[] = [];
@@ -98,6 +99,7 @@ export class SpeechRecognitionService {
   private lastRestartTime = 0;
   private restartThrottle = 2000; // Minimum 2 seconds between restarts
   private pausedForTTS = false; // Flag to pause during TTS playback
+  private initializationInProgress = false; // Prevent double-initialization
 
   constructor() {
     this.initializeSpeechRecognition();
@@ -131,50 +133,76 @@ export class SpeechRecognitionService {
   }
 
   /**
-   * Start real speech recognition
+   * Start real speech recognition with double-initialization prevention
    */
   async startListening(
     sessionId: string, 
     language: string = 'en-US',
-    onResult?: (result: SpeechRecognitionResult) => void,
+    onResult?: (result: RecognitionResult) => void,
     onAnalysis?: (analysis: SpeechAnalysis) => void
   ): Promise<void> {
     if (!this.recognition) {
       throw new Error('Speech recognition not supported');
     }
 
-    if (this.isListening) {
-      this.stopListening();
+    // CRITICAL FIX: Prevent concurrent STT sessions
+    if (this.initializationInProgress) {
+      console.log('STT initialization already in progress - blocking concurrent call');
+      return;
     }
 
-    this.sessionId = sessionId;
-    this.targetLanguage = language;
-    this.onResult = onResult || null;
-    this.onSpeechAnalysis = onAnalysis || null;
-    this.recognition.lang = language;
+    // CRITICAL FIX: Block if same session is already active
+    if (this.currentSessionId === sessionId && this.isListening) {
+      console.log(`STT session ${sessionId} already active - blocking duplicate`);
+      return;
+    }
+
+    this.initializationInProgress = true;
 
     try {
+      if (this.isListening) {
+        this.stopListening();
+        // Wait briefly for cleanup
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      this.sessionId = sessionId;
+      this.currentSessionId = sessionId; // Track current active session
+      this.targetLanguage = language;
+      this.onResult = onResult || null;
+      this.onSpeechAnalysis = onAnalysis || null;
+      this.recognition.lang = language;
+      this.manualStop = false; // Reset manual stop flag
+
       this.recognition.start();
       console.log(`Real speech recognition started for session ${sessionId} in ${language}`);
     } catch (error) {
       console.error('Error starting speech recognition:', error);
+      this.currentSessionId = null;
       throw error;
+    } finally {
+      this.initializationInProgress = false;
     }
   }
 
   /**
-   * Stop speech recognition
+   * Stop speech recognition with proper cleanup
    */
   stopListening(): void {
     this.manualStop = true; // Set flag to prevent auto-restart
     this.pausedForTTS = false; // Reset TTS pause flag
+    this.initializationInProgress = false; // Reset initialization flag
+    
     if (this.recognition && this.isListening) {
       this.recognition.stop();
       this.isListening = false;
       console.log('Speech recognition stopped manually');
     }
-    // Clear session immediately to prevent any auto-restart
+    
+    // Clear session IDs immediately to prevent any auto-restart
     this.sessionId = null;
+    this.currentSessionId = null;
+    
     // Reset manual stop flag after longer delay to ensure clean state
     setTimeout(() => {
       this.manualStop = false; // Reset for next session
@@ -191,14 +219,19 @@ export class SpeechRecognitionService {
       this.isListening = false;
       console.log('Speech recognition paused for TTS');
     }
+    // Don't clear currentSessionId - we want to resume the same session
   }
 
   /**
    * Resume speech recognition (after TTS ends) - controlled by UI
+   * CRITICAL FIX: Prevent double-initialization by ensuring only this OR startListening executes
    */
   resumeAfterTTS(): void {
     this.pausedForTTS = false;
     console.log('Speech recognition ready to resume after TTS');
+    
+    // CRITICAL: Do NOT auto-restart here - let UI control all restarts
+    // This prevents double-initialization issues where both resumeAfterTTS and startListening execute
   }
 
   /**
@@ -217,7 +250,7 @@ export class SpeechRecognitionService {
     const confidence = latest[0].confidence || 0;
     const isFinal = latest.isFinal;
 
-    const result: SpeechRecognitionResult = {
+    const result: RecognitionResult = {
       text: transcript,
       confidence,
       language: this.targetLanguage,
@@ -571,6 +604,11 @@ export class SpeechRecognitionService {
     this.isListening = false;
     console.log('Speech recognition ended - NO AUTO-RESTART (UI controls restarts)');
     
+    // Clear current session ID when recognition ends
+    if (!this.pausedForTTS) {
+      this.currentSessionId = null;
+    }
+    
     // NO AUTO-RESTART - UI will control all restarts through finite state machine
     // This prevents feedback loops and duplicate responses
   }
@@ -598,8 +636,23 @@ export class SpeechRecognitionService {
   destroy(): void {
     this.stopListening();
     this.sessionId = null;
+    this.currentSessionId = null;
     this.onResult = null;
     this.onSpeechAnalysis = null;
+    this.initializationInProgress = false;
+  }
+
+  /**
+   * Get current session information for debugging
+   */
+  getCurrentSessionInfo(): { sessionId: string | null; currentSessionId: string | null; isListening: boolean; pausedForTTS: boolean; initInProgress: boolean } {
+    return {
+      sessionId: this.sessionId,
+      currentSessionId: this.currentSessionId,
+      isListening: this.isListening,
+      pausedForTTS: this.pausedForTTS,
+      initInProgress: this.initializationInProgress
+    };
   }
 }
 
