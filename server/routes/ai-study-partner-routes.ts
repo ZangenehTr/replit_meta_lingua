@@ -430,7 +430,31 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
 
       } catch (openaiError) {
         console.error("OpenAI API error:", openaiError);
-        res.status(500).json({ error: "AI service temporarily unavailable" });
+        
+        // Fallback: Simple pattern-based AI responses when OpenAI fails
+        let aiResponse = "";
+        const lowerMessage = message.toLowerCase();
+        
+        if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
+          aiResponse = "Hello! I'm your AI study partner. I'm here to help you practice English conversation, improve your vocabulary, and work on grammar. What would you like to focus on today?";
+        } else if (lowerMessage.includes("help") && lowerMessage.includes("conversation")) {
+          aiResponse = "I'd be happy to help you practice conversation! Let's start with a topic you're interested in. We could discuss travel, work, hobbies, or daily activities. What sounds interesting to you?";
+        } else if (lowerMessage.includes("grammar")) {
+          aiResponse = "Great! Grammar practice is very important. I can help you with verb tenses, sentence structure, and common grammar mistakes. Do you have a specific grammar topic you'd like to work on?";
+        } else if (lowerMessage.includes("vocabulary")) {
+          aiResponse = "Excellent choice! Building vocabulary is key to improving your English. I can suggest new words, help with synonyms, or practice using words in context. What type of vocabulary interests you most?";
+        } else if (lowerMessage.includes("pronunciation")) {
+          aiResponse = "Pronunciation practice is very valuable! While I can't hear you directly right now, I can give you tips on difficult sounds, word stress, and intonation patterns. Which sounds do you find most challenging?";
+        } else {
+          // Generic encouraging response
+          aiResponse = `I understand you're saying: "${message}". That's great practice! I'm here to help you improve your English. Feel free to ask me about grammar, vocabulary, conversation topics, or any other language learning questions you have.`;
+        }
+        
+        res.json({
+          response: aiResponse,
+          context: "Study partner - basic mode (OpenAI unavailable)",
+          messageId: Date.now()
+        });
       }
 
     } catch (error) {

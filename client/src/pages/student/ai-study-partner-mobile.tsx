@@ -262,34 +262,40 @@ export default function StudentAIStudyPartnerMobile() {
     }
   };
 
-  const startRecording = () => {
+  const startRecording = async () => {
     setIsRecording(true);
     setInputText('');
     
-    speechRecognition.current.startListening('en-US');
-    
-    speechRecognition.current.onResult = (result) => {
-      if (result.isFinal) {
-        setInputText(result.text);
-        setIsRecording(false);
-        toast({
-          title: t('student:speechCaptured'),
-          description: result.text,
-        });
-      } else {
-        // Show interim results
-        setInputText(result.text);
-      }
-    };
-    
-    speechRecognition.current.onError = (error) => {
+    try {
+      await speechRecognition.current.startListening(
+        `study-session-${Date.now()}`,
+        'en-US',
+        (result) => {
+          if (result.isFinal) {
+            setInputText(result.text);
+            setIsRecording(false);
+            toast({
+              title: t('student:speechCaptured'),
+              description: result.text,
+            });
+          } else {
+            // Show interim results
+            setInputText(result.text);
+          }
+        },
+        (analysis) => {
+          // Handle speech analysis if needed
+          console.log('Speech analysis:', analysis);
+        }
+      );
+    } catch (error) {
       setIsRecording(false);
       toast({
         title: t('common:error'),
         description: t('student:speechRecognitionError'),
         variant: 'destructive'
       });
-    };
+    }
 
     toast({
       title: t('student:recording'),
