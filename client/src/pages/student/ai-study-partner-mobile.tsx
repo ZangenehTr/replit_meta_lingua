@@ -4,6 +4,7 @@ import { queryClient, apiRequest } from '@/lib/queryClient';
 import { MobileLayout } from '@/components/mobile/MobileLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { SpeechRecognitionService } from '@/services/speech-recognition-service';
 import { 
   Bot,
   Send,
@@ -68,6 +69,8 @@ export default function StudentAIStudyPartnerMobile() {
     studyMode: 'focused'
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const speechRecognition = useRef<SpeechRecognitionService>(new SpeechRecognitionService());
+  const currentAudio = useRef<HTMLAudioElement | null>(null);
 
   // Fetch current roadmap progress for context
   const { data: roadmapProgress } = useQuery<RoadmapProgress>({
@@ -144,6 +147,11 @@ export default function StudentAIStudyPartnerMobile() {
       };
       setMessages(prev => [...prev, aiMessage]);
       
+      // Auto-speak AI responses in focused/exam-prep mode
+      if (settings.studyMode === 'focused' || settings.studyMode === 'exam-prep') {
+        speakText(data.response);
+      }
+      
       // Invalidate and refetch conversation history
       queryClient.invalidateQueries({ queryKey: ['/api/ai-study-partner/messages'] });
     },
@@ -200,19 +208,103 @@ export default function StudentAIStudyPartnerMobile() {
     setTimeout(() => handleSend(), 100);
   };
 
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    if (!isRecording) {
-      toast({
-        title: t('student:recording'),
-        description: t('student:speakNow'),
+  // Text-to-Speech for AI responses
+  const speakText = async (text: string, language: string = 'en') => {
+    try {
+      setIsSpeaking(true);
+      
+      // Stop any current audio
+      if (currentAudio.current) {
+        currentAudio.current.pause();
+        currentAudio.current = null;
+      }
+
+      const response = await apiRequest('/api/ai-study-partner/tts', {
+        method: 'POST',
+        body: JSON.stringify({ text, language })
       });
-    } else {
+
+      if (response.success && response.audioUrl) {
+        const audio = new Audio(response.audioUrl);
+        currentAudio.current = audio;
+        
+        audio.onended = () => {
+          setIsSpeaking(false);
+          currentAudio.current = null;
+        };
+        
+        audio.onerror = () => {
+          setIsSpeaking(false);
+          currentAudio.current = null;
+        };
+
+        await audio.play();
+      } else {
+        setIsSpeaking(false);
+      }
+    } catch (error) {
+      console.error('TTS error:', error);
+      setIsSpeaking(false);
       toast({
-        title: t('student:processingAudio'),
-        description: t('student:pleaseWait'),
+        title: t('common:error'),
+        description: t('student:ttsError'),
+        variant: 'destructive'
       });
     }
+  };
+
+  // Voice Recognition
+  const toggleRecording = () => {
+    if (!isRecording) {
+      startRecording();
+    } else {
+      stopRecording();
+    }
+  };
+
+  const startRecording = () => {
+    setIsRecording(true);
+    setInputText('');
+    
+    speechRecognition.current.startListening({
+      targetLanguage: 'en-US',
+      onResult: (result) => {
+        if (result.isFinal) {
+          setInputText(result.text);
+          setIsRecording(false);
+          toast({
+            title: t('student:speechCaptured'),
+            description: result.text,
+          });
+        } else {
+          // Show interim results
+          setInputText(result.text);
+        }
+      },
+      onError: (error) => {
+        setIsRecording(false);
+        toast({
+          title: t('common:error'),
+          description: t('student:speechRecognitionError'),
+          variant: 'destructive'
+        });
+      }
+    });
+
+    toast({
+      title: t('student:recording'),
+      description: t('student:speakNow'),
+    });
+  };
+
+  const stopRecording = () => {
+    setIsRecording(false);
+    speechRecognition.current.stopListening();
+    
+    toast({
+      title: t('student:processingAudio'),
+      description: t('student:pleaseWait'),
+    });
   };
 
   useEffect(() => {
@@ -411,13 +503,31 @@ export default function StudentAIStudyPartnerMobile() {
                     <p className="text-sm leading-relaxed">{message.content}</p>
                   </div>
                   
+                  {/* Voice controls for AI messages */}
+                  {message.role === 'assistant' && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        onClick={() => speakText(message.content)}
+                        disabled={isSpeaking}
+                        className="p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-50"
+                        data-testid={`button-speak-${message.id}`}
+                      >
+                        {isSpeaking ? (
+                          <VolumeX className="w-4 h-4 text-white/70" />
+                        ) : (
+                          <Volume2 className="w-4 h-4 text-white/70" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+                  
                   {message.context && (
-                    <p className="text-white/40 text-xs px-2">
+                    <p className="text-white/40 text-xs px-2 mt-1">
                       {message.context}
                     </p>
                   )}
                   
-                  <p className="text-white/30 text-xs px-2">
+                  <p className="text-white/30 text-xs px-2 mt-1">
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>

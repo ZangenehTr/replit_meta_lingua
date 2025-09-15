@@ -6,10 +6,13 @@ import { IStorage } from "../storage";
 import { insertChatConversationSchema, insertChatMessageSchema, insertAiStudyPartnerSchema } from "@shared/schema";
 // Initialize OpenAI client directly
 import OpenAI from 'openai';
+import { WhisperService } from "../whisper-service";
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 
 });
+
+const whisperService = new WhisperService();
 
 export function createAiStudyPartnerRoutes(storage: IStorage) {
   const router = express.Router();
@@ -120,6 +123,66 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
     } catch (error) {
       console.error("Error fetching conversation messages:", error);
       res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  // Convert AI response to speech
+  router.post("/api/ai-study-partner/tts", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { text, language = 'en' } = z.object({ text: z.string(), language: z.string().optional() }).parse(req.body);
+      
+      // Use existing TTS service endpoint format
+      const ttsResponse = await fetch(`${process.env.BASE_URL || 'http://localhost:5000'}/api/tts/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text, 
+          language, 
+          speed: 1.0,
+          voice: language === 'en' ? 'en-US-AriaNeural' : 'auto' 
+        })
+      });
+
+      const result = await ttsResponse.json();
+      
+      if (result.success) {
+        res.json({ 
+          success: true, 
+          audioUrl: result.audioUrl || result.audioFile,
+          duration: result.duration 
+        });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("TTS generation error:", error);
+      res.status(500).json({ success: false, error: "Failed to generate speech" });
+    }
+  });
+
+  // Process voice input (speech-to-text)
+  router.post("/api/ai-study-partner/stt", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const audioFile = req.file || req.body.audioFile;
+      
+      if (!audioFile) {
+        return res.status(400).json({ error: "Audio file required" });
+      }
+
+      // Use existing Whisper service
+      const transcription = await whisperService.transcribe(audioFile.buffer || audioFile, {
+        language: 'en'
+      });
+      
+      res.json({
+        success: true,
+        text: transcription.text,
+        language: transcription.language,
+        confidence: transcription.confidence
+      });
+    } catch (error) {
+      console.error("Speech-to-text error:", error);
+      res.status(500).json({ success: false, error: "Failed to process audio" });
     }
   });
 
