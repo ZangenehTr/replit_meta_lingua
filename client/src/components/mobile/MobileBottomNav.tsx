@@ -9,7 +9,8 @@ import {
   BookOpen, 
   MessageSquare, 
   Video,
-  User
+  User,
+  Bot
 } from 'lucide-react';
 
 interface NavItem {
@@ -45,9 +46,9 @@ export function MobileBottomNav() {
       label: t('student.navigation.callern')
     },
     {
-      path: '/student/messages',
-      icon: <MessageSquare className="h-5 w-5" />,
-      label: t('student.navigation.messages')
+      path: '/student/ai-study-partner',
+      icon: <Bot className="h-5 w-5" />,
+      label: t('student.navigation.aiPartner')
     },
     {
       path: '/student/profile',

@@ -4,7 +4,12 @@ import type { Request, Response } from "express";
 import { requireAuth } from "../auth-middleware";
 import { IStorage } from "../storage";
 import { insertChatConversationSchema, insertChatMessageSchema, insertAiStudyPartnerSchema } from "@shared/schema";
-import { openai } from "../openai-service";
+// Initialize OpenAI client directly
+import OpenAI from 'openai';
+
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY 
+});
 
 export function createAiStudyPartnerRoutes(storage: IStorage) {
   const router = express.Router();

@@ -71,6 +71,7 @@ import TutorsPage from "@/pages/student/tutors";
 import SessionsPage from "@/pages/student/sessions";
 import HomeworkPage from "@/pages/student/homework";
 import StudentAIConversation from "@/pages/student/AIConversation";
+import StudentAIStudyPartnerMobile from "@/pages/student/ai-study-partner-mobile";
 import MessagesPage from "@/pages/student/messages";
 import PaymentPage from "@/pages/student/payment";
 import PronunciationPracticePage from "@/pages/pronunciation-practice";
@@ -480,6 +481,11 @@ function Router() {
       <Route path="/student/AIConversation">
         <ProtectedRoute>
           <StudentAIConversation />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/student/ai-study-partner">
+        <ProtectedRoute>
+          <StudentAIStudyPartnerMobile />
         </ProtectedRoute>
       </Route>
       <Route path="/assignments">
