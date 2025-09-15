@@ -214,6 +214,12 @@ export default function StudentAIStudyPartnerMobile() {
     try {
       setIsSpeaking(true);
       
+      // CRITICAL: Pause speech recognition to prevent feedback loop!
+      if (isRecording) {
+        speechRecognitionService.pauseForTTS();
+        setIsRecording(false);
+      }
+      
       // Stop any current audio
       if (currentAudio.current) {
         currentAudio.current.pause();
@@ -232,16 +238,22 @@ export default function StudentAIStudyPartnerMobile() {
         audio.onended = () => {
           setIsSpeaking(false);
           currentAudio.current = null;
+          // Enable recognition to resume (but don't auto-start)
+          speechRecognitionService.resumeAfterTTS();
         };
         
         audio.onerror = () => {
           setIsSpeaking(false);
           currentAudio.current = null;
+          // Enable recognition to resume even on TTS error
+          speechRecognitionService.resumeAfterTTS();
         };
 
         await audio.play();
       } else {
         setIsSpeaking(false);
+        // Enable recognition to resume if TTS failed
+        speechRecognitionService.resumeAfterTTS();
       }
     } catch (error) {
       console.error('TTS error:', error);
@@ -275,13 +287,18 @@ export default function StudentAIStudyPartnerMobile() {
           if (result.isFinal) {
             setInputText(result.text);
             setIsRecording(false);
+            // CRITICAL: Stop the service to prevent auto-restart after final result
+            speechRecognitionService.stopListening();
             toast({
               title: t('student:speechCaptured'),
               description: result.text,
             });
           } else {
-            // Show interim results
-            setInputText(result.text);
+            // Only show interim results if we're still actively recording
+            // Don't overwrite final results with interim ones
+            if (isRecording) {
+              setInputText(result.text);
+            }
           }
         },
         (analysis) => {

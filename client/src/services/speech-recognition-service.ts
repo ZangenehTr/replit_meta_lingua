@@ -97,6 +97,7 @@ export class SpeechRecognitionService {
   private manualStop = false;
   private lastRestartTime = 0;
   private restartThrottle = 2000; // Minimum 2 seconds between restarts
+  private pausedForTTS = false; // Flag to pause during TTS playback
 
   constructor() {
     this.initializeSpeechRecognition();
@@ -166,16 +167,39 @@ export class SpeechRecognitionService {
    */
   stopListening(): void {
     this.manualStop = true; // Set flag to prevent auto-restart
+    this.pausedForTTS = false; // Reset TTS pause flag
     if (this.recognition && this.isListening) {
       this.recognition.stop();
       this.isListening = false;
       console.log('Speech recognition stopped manually');
     }
-    // Clear session after a brief delay to allow for final processing
+    // Clear session immediately to prevent any auto-restart
+    this.sessionId = null;
+    // Reset manual stop flag after longer delay to ensure clean state
     setTimeout(() => {
-      this.sessionId = null;
       this.manualStop = false; // Reset for next session
-    }, 1000);
+    }, 2000);
+  }
+
+  /**
+   * Pause speech recognition (for TTS playback)
+   */
+  pauseForTTS(): void {
+    this.pausedForTTS = true;
+    if (this.recognition && this.isListening) {
+      this.recognition.stop();
+      this.isListening = false;
+      console.log('Speech recognition paused for TTS');
+    }
+  }
+
+  /**
+   * Resume speech recognition (after TTS ends)
+   */
+  resumeAfterTTS(): void {
+    this.pausedForTTS = false;
+    // Don't auto-resume - let user manually start recording again
+    console.log('Speech recognition ready to resume after TTS');
   }
 
   /**
@@ -541,25 +565,37 @@ export class SpeechRecognitionService {
     this.isListening = false;
     console.log('Speech recognition ended');
     
+    // VERY restrictive auto-restart logic - prevent most auto-restarts:
     // Only auto-restart if:
     // 1. Session is still active
     // 2. Stop was not manual
-    // 3. Enough time has passed since last restart (throttling)
-    if (this.sessionId && !this.manualStop) {
+    // 3. Not paused for TTS
+    // 4. Enough time has passed since last restart (throttling)
+    // 5. Recognition is still supposed to be continuous
+    // 6. Not experiencing repeated failures
+    if (this.sessionId && !this.manualStop && !this.pausedForTTS && this.recognition && this.recognition.continuous) {
       const now = Date.now();
       if (now - this.lastRestartTime > this.restartThrottle) {
         this.lastRestartTime = now;
         setTimeout(() => {
-          if (this.sessionId && !this.manualStop && this.recognition) {
+          // Triple-check all conditions before restarting
+          if (this.sessionId && !this.manualStop && !this.pausedForTTS && this.recognition && this.isListening === false) {
             try {
               this.recognition.start();
               console.log('Speech recognition auto-restarted');
             } catch (error) {
               console.log('Failed to auto-restart speech recognition:', error);
+              // If restart fails, stop trying and require manual restart
+              this.manualStop = true;
+              this.sessionId = null;
             }
           }
-        }, 500); // Brief delay before restart
+        }, 1500); // Even longer delay before restart
+      } else {
+        console.log('Speech recognition restart throttled');
       }
+    } else {
+      console.log('Speech recognition end - not auto-restarting (conditions not met)');
     }
   }
 
