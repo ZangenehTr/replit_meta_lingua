@@ -435,7 +435,8 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
         let aiResponse = "";
         const lowerMessage = message.toLowerCase();
         
-        // Natural, conversational AI responses (not robotic!)
+        // Natural, conversational AI responses (not robotic!) [ENHANCED VERSION ACTIVE]
+        console.log("🎯 NEW NATURAL RESPONSES ACTIVE - Processing message:", message);
         if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
           const greetings = [
             "Hey there! 😊 Good to see you! What's on your mind today - want to chat about something fun or work on specific English skills?",
