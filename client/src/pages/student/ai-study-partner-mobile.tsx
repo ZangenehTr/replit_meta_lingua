@@ -901,28 +901,61 @@ export default function StudentAIStudyPartnerMobile() {
               </motion.button>
             ) : (
               <button
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
-                onClick={() => setMessages([])}
-                data-testid="button-audio-viz"
+                className={`w-10 h-10 rounded-full transition-all flex items-center justify-center ${
+                  continuousMode 
+                    ? 'bg-green-500/20 border border-green-400 hover:bg-green-500/30' 
+                    : 'bg-white/10 hover:bg-white/20'
+                }`}
+                onClick={() => {
+                  setContinuousMode(!continuousMode);
+                  toast({
+                    title: continuousMode ? 'Manual Mode' : 'Continuous Mode',
+                    description: continuousMode 
+                      ? 'Click microphone to record' 
+                      : 'Automatic conversation enabled',
+                  });
+                }}
+                data-testid="button-continuous-toggle"
+                title={continuousMode ? 'Switch to Manual Mode' : 'Switch to Continuous Mode'}
               >
-                {/* Audio visualization bars */}
-                <div className="flex items-center gap-0.5">
-                  <div className={`w-0.5 h-2 bg-white/60 rounded-full ${
-                    isSpeaking ? 'animate-pulse' : ''
-                  }`} style={{ animationDelay: '0ms' }} />
-                  <div className={`w-0.5 h-3 bg-white/60 rounded-full ${
-                    isSpeaking ? 'animate-pulse' : ''
-                  }`} style={{ animationDelay: '100ms' }} />
-                  <div className={`w-0.5 h-4 bg-white/60 rounded-full ${
-                    isSpeaking ? 'animate-pulse' : ''
-                  }`} style={{ animationDelay: '200ms' }} />
-                  <div className={`w-0.5 h-3 bg-white/60 rounded-full ${
-                    isSpeaking ? 'animate-pulse' : ''
-                  }`} style={{ animationDelay: '300ms' }} />
-                  <div className={`w-0.5 h-2 bg-white/60 rounded-full ${
-                    isSpeaking ? 'animate-pulse' : ''
-                  }`} style={{ animationDelay: '400ms' }} />
-                </div>
+                {/* Show continuous mode indicator or audio visualization */}
+                {continuousMode ? (
+                  <div className="flex items-center gap-0.5">
+                    <div className={`w-0.5 h-2 bg-green-400 rounded-full ${
+                      isSpeaking ? 'animate-pulse' : ''
+                    }`} style={{ animationDelay: '0ms' }} />
+                    <div className={`w-0.5 h-3 bg-green-400 rounded-full ${
+                      isSpeaking ? 'animate-pulse' : ''
+                    }`} style={{ animationDelay: '100ms' }} />
+                    <div className={`w-0.5 h-4 bg-green-400 rounded-full ${
+                      isSpeaking ? 'animate-pulse' : ''
+                    }`} style={{ animationDelay: '200ms' }} />
+                    <div className={`w-0.5 h-3 bg-green-400 rounded-full ${
+                      isSpeaking ? 'animate-pulse' : ''
+                    }`} style={{ animationDelay: '300ms' }} />
+                    <div className={`w-0.5 h-2 bg-green-400 rounded-full ${
+                      isSpeaking ? 'animate-pulse' : ''
+                    }`} style={{ animationDelay: '400ms' }} />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-0.5">
+                    <div className={`w-0.5 h-2 bg-white/60 rounded-full ${
+                      isSpeaking ? 'animate-pulse' : ''
+                    }`} style={{ animationDelay: '0ms' }} />
+                    <div className={`w-0.5 h-3 bg-white/60 rounded-full ${
+                      isSpeaking ? 'animate-pulse' : ''
+                    }`} style={{ animationDelay: '100ms' }} />
+                    <div className={`w-0.5 h-4 bg-white/60 rounded-full ${
+                      isSpeaking ? 'animate-pulse' : ''
+                    }`} style={{ animationDelay: '200ms' }} />
+                    <div className={`w-0.5 h-3 bg-white/60 rounded-full ${
+                      isSpeaking ? 'animate-pulse' : ''
+                    }`} style={{ animationDelay: '300ms' }} />
+                    <div className={`w-0.5 h-2 bg-white/60 rounded-full ${
+                      isSpeaking ? 'animate-pulse' : ''
+                    }`} style={{ animationDelay: '400ms' }} />
+                  </div>
+                )}
               </button>
             )}
           </div>
