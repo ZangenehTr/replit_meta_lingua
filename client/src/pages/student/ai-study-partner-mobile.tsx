@@ -469,8 +469,8 @@ export default function StudentAIStudyPartnerMobile() {
       if (continuousMode && result.text.trim()) {
         // Immediately process - no timeout needed since we're already in LISTENING
         handleAutoSend(result.text.trim());
-        // Clear input after processing
-        setTimeout(() => setInputText(''), 50);
+        // Don't clear input immediately - let user see what they said!
+        // Input will be cleared when the next speech starts or manually cleared
       }
     } else {
       // Show interim results during recording
