@@ -7,12 +7,20 @@ import { insertChatConversationSchema, insertChatMessageSchema, insertAiStudyPar
 // Initialize OpenAI client directly
 import OpenAI from 'openai';
 import { WhisperService } from "../whisper-service";
+import { ttsService } from "../tts-service";
+import multer from "multer";
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 
 });
 
 const whisperService = new WhisperService();
+
+// Multer for handling audio file uploads
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 export function createAiStudyPartnerRoutes(storage: IStorage) {
   const router = express.Router();
@@ -126,24 +134,28 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
     }
   });
 
-  // Convert AI response to speech
+  // Convert AI response to speech using direct TTS service
   router.post("/api/ai-study-partner/tts", requireAuth, async (req: Request, res: Response) => {
     try {
       const { text, language = 'en' } = z.object({ text: z.string(), language: z.string().optional() }).parse(req.body);
       
-      // Use existing TTS service endpoint format
-      const ttsResponse = await fetch(`${process.env.BASE_URL || 'http://localhost:5000'}/api/tts/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          text, 
-          language, 
-          speed: 1.0,
-          voice: language === 'en' ? 'en-US-AriaNeural' : 'auto' 
-        })
+      // Use direct TTS service call instead of external fetch
+      let result = await ttsService.generateSpeechWithEdgeTTS({
+        text,
+        language,
+        speed: 1.0,
+        voice: language === 'en' ? 'en-US-AriaNeural' : 'auto'
       });
 
-      const result = await ttsResponse.json();
+      // Fallback to Google TTS if Edge TTS fails
+      if (!result.success) {
+        console.log('🔄 Edge TTS failed, falling back to Google TTS');
+        result = await ttsService.generateSpeech({
+          text,
+          language,
+          speed: 1.0
+        });
+      }
       
       if (result.success) {
         res.json({ 
@@ -160,25 +172,46 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
     }
   });
 
-  // Process voice input (speech-to-text)
-  router.post("/api/ai-study-partner/stt", requireAuth, async (req: Request, res: Response) => {
+  // Process voice input (speech-to-text) with file upload support
+  router.post("/api/ai-study-partner/stt", requireAuth, upload.single('audio'), async (req: Request, res: Response) => {
     try {
-      const audioFile = req.file || req.body.audioFile;
+      const audioFile = req.file;
       
       if (!audioFile) {
-        return res.status(400).json({ error: "Audio file required" });
+        return res.status(400).json({ success: false, error: "Audio file required" });
       }
 
-      // Use existing Whisper service
-      const transcription = await whisperService.transcribe(audioFile.buffer || audioFile, {
-        language: 'en'
-      });
+      // Use Whisper service with proper method call
+      let transcription;
+      try {
+        transcription = await whisperService.transcribeBuffer(audioFile.buffer, audioFile.originalname, {
+          language: 'en'
+        });
+      } catch (whisperError) {
+        console.log('🔄 Local Whisper failed, using OpenAI fallback');
+        // Fallback to OpenAI if local Whisper fails
+        if (whisperService.openai) {
+          const transcriptionResult = await whisperService.openai.audio.transcriptions.create({
+            file: new File([audioFile.buffer], audioFile.originalname),
+            model: 'whisper-1',
+            language: 'en'
+          });
+          transcription = {
+            text: transcriptionResult.text,
+            language: 'en',
+            duration: 0,
+            confidence: 1.0
+          };
+        } else {
+          throw whisperError;
+        }
+      }
       
       res.json({
         success: true,
         text: transcription.text,
         language: transcription.language,
-        confidence: transcription.confidence
+        confidence: transcription.confidence || 1.0
       });
     } catch (error) {
       console.error("Speech-to-text error:", error);
@@ -262,6 +295,155 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
     } catch (error) {
       console.error("Error processing AI conversation:", error);
       res.status(500).json({ error: "Failed to process message" });
+    }
+  });
+
+  // ==== FRONTEND-EXPECTED API ROUTES ====
+  // These routes provide the API interface that the frontend expects
+
+  // Get AI study partner profile (frontend expects this exact route)
+  router.get("/api/ai-study-partner/profile", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+
+      let studyPartner = await storage.getAiStudyPartnerByUserId(userId);
+      
+      if (!studyPartner) {
+        // Create default AI study partner
+        studyPartner = await storage.createAiStudyPartner({
+          userId,
+          learningStyle: "balanced",
+          preferredLanguage: "en",
+          difficultyLevel: "intermediate",
+          studyGoals: ["conversation"],
+          personalityType: "supportive",
+          responseLength: "medium",
+          includeGrammarTips: true,
+          includeVocabulary: true,
+          includePronunciation: false
+        });
+      }
+
+      res.json(studyPartner);
+    } catch (error) {
+      console.error("Error fetching AI study partner profile:", error);
+      res.status(500).json({ error: "Failed to fetch AI study partner profile" });
+    }
+  });
+
+  // Get AI study partner messages (frontend expects this exact route)
+  router.get("/api/ai-study-partner/messages", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { limit = 50, offset = 0 } = req.query;
+
+      // Get user's AI conversation
+      const conversation = await storage.getAiConversationByUserId(userId);
+      if (!conversation) {
+        return res.json([]);
+      }
+
+      const messages = await storage.getChatMessages(conversation.id, {
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string)
+      });
+
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching AI study partner messages:", error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  // Send message to AI study partner (frontend expects this exact route)
+  router.post("/api/ai-study-partner/chat", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { message } = z.object({ message: z.string() }).parse(req.body);
+
+      // Get or create conversation
+      let conversation = await storage.getAiConversationByUserId(userId);
+      if (!conversation) {
+        conversation = await storage.createChatConversation({
+          title: "AI Study Partner",
+          type: "ai_study_partner",
+          participants: [userId.toString()],
+          isActive: true
+        });
+      }
+
+      // Store user message
+      const userMessage = await storage.createChatMessage({
+        conversationId: conversation.id,
+        userId: userId,
+        content: message,
+        messageType: "text",
+        isRead: true
+      });
+
+      // Get AI study partner settings and roadmap progress for context
+      const [studyPartner, roadmapProgress] = await Promise.all([
+        storage.getAiStudyPartnerByUserId(userId),
+        storage.getRoadmapProgressByUserId(userId).catch(() => null)
+      ]);
+
+      // Build personalized system prompt
+      const systemPrompt = buildPersonalizedSystemPrompt(studyPartner, roadmapProgress);
+
+      // Get recent conversation context
+      const recentMessages = await storage.getChatMessages(conversation.id, {
+        limit: 10,
+        offset: 0
+      });
+
+      const conversationContext = recentMessages
+        .slice(-9)
+        .map(msg => `${msg.userId === userId ? 'Student' : 'AI'}: ${msg.content}`)
+        .join('\n');
+
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "system", content: `Recent conversation:\n${conversationContext}` },
+            { role: "user", content: message }
+          ],
+          max_tokens: 500,
+          temperature: 0.7
+        });
+
+        const aiResponse = completion.choices[0].message.content || "I apologize, but I'm having trouble responding right now. Please try again.";
+
+        // Store AI response
+        const aiMessage = await storage.createChatMessage({
+          conversationId: conversation.id,
+          userId: 0, // AI user ID
+          content: aiResponse,
+          messageType: "text",
+          isRead: false
+        });
+
+        // Prepare context information
+        let context = "";
+        if (roadmapProgress) {
+          context = `Current focus: ${roadmapProgress.currentStage || 'General English'}`;
+        }
+
+        res.json({
+          response: aiResponse,
+          context: context,
+          messageId: aiMessage.id
+        });
+
+      } catch (openaiError) {
+        console.error("OpenAI API error:", openaiError);
+        res.status(500).json({ error: "AI service temporarily unavailable" });
+      }
+
+    } catch (error) {
+      console.error("Error in AI study partner chat:", error);
+      res.status(500).json({ error: "Failed to process chat message" });
     }
   });
 

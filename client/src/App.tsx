@@ -488,6 +488,11 @@ function Router() {
           <StudentAIStudyPartnerMobile />
         </ProtectedRoute>
       </Route>
+      <Route path="/ai-study-partner">
+        <ProtectedRoute>
+          <StudentAIStudyPartnerMobile />
+        </ProtectedRoute>
+      </Route>
       <Route path="/assignments">
         <ProtectedRoute>
           <HomeworkPage />
