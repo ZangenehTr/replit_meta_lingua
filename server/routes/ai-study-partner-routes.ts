@@ -28,7 +28,7 @@ const authenticateToken = async (req: any, res: any, next: any) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'meta-lingua-secret-key') as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret') as any;
     
     // Use token data directly to match main routes behavior
     req.user = {
