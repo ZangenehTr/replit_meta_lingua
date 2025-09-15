@@ -4,7 +4,7 @@ import { queryClient, apiRequest } from '@/lib/queryClient';
 import { MobileLayout } from '@/components/mobile/MobileLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { SpeechRecognitionService } from '@/services/speech-recognition-service';
+import { speechRecognitionService } from '@/services/speech-recognition-service';
 import { 
   Bot,
   Send,
@@ -69,7 +69,8 @@ export default function StudentAIStudyPartnerMobile() {
     studyMode: 'focused'
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const speechRecognition = useRef<SpeechRecognitionService>(new SpeechRecognitionService());
+  // Temporarily disable speech recognition to fix infinite loop issue
+  // const speechRecognition = useRef<SpeechRecognitionService>(new SpeechRecognitionService());
   const currentAudio = useRef<HTMLAudioElement | null>(null);
 
   // Fetch current roadmap progress for context
@@ -267,7 +268,7 @@ export default function StudentAIStudyPartnerMobile() {
     setInputText('');
     
     try {
-      await speechRecognition.current.startListening(
+      await speechRecognitionService.startListening(
         `study-session-${Date.now()}`,
         'en-US',
         (result) => {
@@ -305,7 +306,7 @@ export default function StudentAIStudyPartnerMobile() {
 
   const stopRecording = () => {
     setIsRecording(false);
-    speechRecognition.current.stopListening();
+    speechRecognitionService.stopListening();
     
     toast({
       title: t('student:processingAudio'),

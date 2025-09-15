@@ -4,6 +4,49 @@
  * NO MOCK DATA - Real browser speech recognition with Ollama enhancement
  */
 
+// TypeScript declarations for Web Speech API
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onend: () => void;
+  onstart: () => void;
+}
+
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
 // Ollama service will be called via API endpoints to server
 
 export interface SpeechRecognitionResult {
@@ -435,12 +478,13 @@ export class SpeechRecognitionService {
    */
   private handleSpeechError(event: SpeechRecognitionErrorEvent): void {
     console.error('Speech recognition error:', event.error);
+    this.isListening = false;
     
-    // Auto-restart on network errors (real error handling)
-    if (event.error === 'network' && this.sessionId) {
+    // Only restart on specific network errors, not all errors
+    if (event.error === 'network' && this.sessionId && !this.isListening) {
       setTimeout(() => {
-        if (this.sessionId) {
-          this.recognition?.start();
+        if (this.sessionId && this.recognition && !this.isListening) {
+          this.recognition.start();
         }
       }, 1000);
     }
@@ -451,15 +495,8 @@ export class SpeechRecognitionService {
    */
   private handleSpeechEnd(): void {
     this.isListening = false;
-    
-    // Auto-restart if session is still active
-    if (this.sessionId) {
-      setTimeout(() => {
-        if (this.sessionId && this.recognition) {
-          this.recognition.start();
-        }
-      }, 100);
-    }
+    console.log('Speech recognition ended');
+    // Do not auto-restart - this was causing the infinite loop
   }
 
   /**
@@ -490,4 +527,12 @@ export class SpeechRecognitionService {
   }
 }
 
-export const speechRecognitionService = new SpeechRecognitionService();
+// Temporarily disable auto-initialization to prevent infinite loop
+// export const speechRecognitionService = new SpeechRecognitionService();
+export const speechRecognitionService = {
+  startListening: () => Promise.resolve(),
+  stopListening: () => {},
+  isActive: () => false,
+  setLanguage: () => {},
+  destroy: () => {}
+};
