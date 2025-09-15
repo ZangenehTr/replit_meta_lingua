@@ -254,9 +254,9 @@ export default function StudentAIStudyPartnerMobile() {
   };
 
   // Voice Recognition
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (!isRecording) {
-      startRecording();
+      await startRecording();
     } else {
       stopRecording();
     }
