@@ -266,30 +266,30 @@ export default function StudentAIStudyPartnerMobile() {
     setIsRecording(true);
     setInputText('');
     
-    speechRecognition.current.startListening({
-      targetLanguage: 'en-US',
-      onResult: (result) => {
-        if (result.isFinal) {
-          setInputText(result.text);
-          setIsRecording(false);
-          toast({
-            title: t('student:speechCaptured'),
-            description: result.text,
-          });
-        } else {
-          // Show interim results
-          setInputText(result.text);
-        }
-      },
-      onError: (error) => {
+    speechRecognition.current.startListening('en-US');
+    
+    speechRecognition.current.onResult = (result) => {
+      if (result.isFinal) {
+        setInputText(result.text);
         setIsRecording(false);
         toast({
-          title: t('common:error'),
-          description: t('student:speechRecognitionError'),
-          variant: 'destructive'
+          title: t('student:speechCaptured'),
+          description: result.text,
         });
+      } else {
+        // Show interim results
+        setInputText(result.text);
       }
-    });
+    };
+    
+    speechRecognition.current.onError = (error) => {
+      setIsRecording(false);
+      toast({
+        title: t('common:error'),
+        description: t('student:speechRecognitionError'),
+        variant: 'destructive'
+      });
+    };
 
     toast({
       title: t('student:recording'),
@@ -329,7 +329,7 @@ export default function StudentAIStudyPartnerMobile() {
     <MobileLayout
       title={t('student:aiStudyPartner')}
       showBack={false}
-      gradient="ai"
+      gradient="primary"
       headerAction={
         <button 
           className="p-2 rounded-full glass-button"
