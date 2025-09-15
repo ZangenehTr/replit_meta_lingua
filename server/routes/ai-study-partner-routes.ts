@@ -435,19 +435,65 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
         let aiResponse = "";
         const lowerMessage = message.toLowerCase();
         
+        // Natural, conversational AI responses (not robotic!)
         if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
-          aiResponse = "Hello! I'm your AI study partner. I'm here to help you practice English conversation, improve your vocabulary, and work on grammar. What would you like to focus on today?";
+          const greetings = [
+            "Hey there! 😊 Good to see you! What's on your mind today - want to chat about something fun or work on specific English skills?",
+            "Hi! Great to meet you! I'm excited to help you with your English. What would you like to talk about?",
+            "Hello! 👋 Ready for some English practice? I'm here to chat about whatever interests you!"
+          ];
+          aiResponse = greetings[Math.floor(Math.random() * greetings.length)];
         } else if (lowerMessage.includes("help") && lowerMessage.includes("conversation")) {
-          aiResponse = "I'd be happy to help you practice conversation! Let's start with a topic you're interested in. We could discuss travel, work, hobbies, or daily activities. What sounds interesting to you?";
+          const conversationStarters = [
+            "Awesome! I love having conversations! How about we talk about something you're passionate about? What do you enjoy doing in your free time?",
+            "Perfect! Let's just chat naturally. Tell me, what's the most interesting thing that happened to you this week?",
+            "Great idea! Conversation is the best way to improve. What's your favorite topic to discuss - maybe something about your country or hobbies?"
+          ];
+          aiResponse = conversationStarters[Math.floor(Math.random() * conversationStarters.length)];
         } else if (lowerMessage.includes("grammar")) {
-          aiResponse = "Great! Grammar practice is very important. I can help you with verb tenses, sentence structure, and common grammar mistakes. Do you have a specific grammar topic you'd like to work on?";
+          const grammarResponses = [
+            "Oh, grammar! Don't worry, we'll make it fun and easy. What specific grammar thing has been bugging you lately?",
+            "Grammar can be tricky, but you're doing great by asking! What part of English grammar feels most confusing right now?",
+            "Nice! Grammar is like the skeleton of language - once you get it, everything becomes clearer. What would you like to work on?"
+          ];
+          aiResponse = grammarResponses[Math.floor(Math.random() * grammarResponses.length)];
         } else if (lowerMessage.includes("vocabulary")) {
-          aiResponse = "Excellent choice! Building vocabulary is key to improving your English. I can suggest new words, help with synonyms, or practice using words in context. What type of vocabulary interests you most?";
+          const vocabResponses = [
+            "Vocabulary building is so satisfying! It's like collecting tools for expression. What kind of words do you want to learn - everyday words, business terms, or something else?",
+            "Love it! New words are like new colors for painting your thoughts. What topics interest you most? I can suggest words related to your interests!",
+            "Great choice! The more words you know, the more precisely you can express yourself. What situations do you want to improve your vocabulary for?"
+          ];
+          aiResponse = vocabResponses[Math.floor(Math.random() * vocabResponses.length)];
         } else if (lowerMessage.includes("pronunciation")) {
-          aiResponse = "Pronunciation practice is very valuable! While I can't hear you directly right now, I can give you tips on difficult sounds, word stress, and intonation patterns. Which sounds do you find most challenging?";
+          const pronunciationResponses = [
+            "Pronunciation is super important for being understood! What sounds give you the most trouble? The 'th' sound? 'R' vs 'L'? Let's tackle it!",
+            "Good thinking! Clear pronunciation makes such a difference. Are there specific words or sounds that feel difficult when you speak?",
+            "Pronunciation practice is key! Which part feels challenging - individual sounds, word stress, or maybe sentence rhythm?"
+          ];
+          aiResponse = pronunciationResponses[Math.floor(Math.random() * pronunciationResponses.length)];
+        } else if (lowerMessage.includes("tired") || lowerMessage.includes("difficult") || lowerMessage.includes("hard")) {
+          const encouragementResponses = [
+            "Hey, learning a language is tough work! You're doing amazing just by practicing. Want to try something easier and more fun for a bit?",
+            "I get it - English can be exhausting sometimes! How about we switch to something lighter? Maybe just casual chat?",
+            "Language learning has its ups and downs, and that's totally normal! You're making progress even when it doesn't feel like it. What would make this more enjoyable right now?"
+          ];
+          aiResponse = encouragementResponses[Math.floor(Math.random() * encouragementResponses.length)];
+        } else if (lowerMessage.includes("good") || lowerMessage.includes("great") || lowerMessage.includes("thanks")) {
+          const positiveResponses = [
+            "That's wonderful! Your positive attitude makes learning so much more effective. What would you like to explore next?",
+            "I'm so glad you're feeling good about it! That confidence will really help you improve. What should we work on now?",
+            "Awesome! When you feel good about learning, your brain absorbs everything better. Ready for the next challenge?"
+          ];
+          aiResponse = positiveResponses[Math.floor(Math.random() * positiveResponses.length)];
         } else {
-          // Generic encouraging response
-          aiResponse = `I understand you're saying: "${message}". That's great practice! I'm here to help you improve your English. Feel free to ask me about grammar, vocabulary, conversation topics, or any other language learning questions you have.`;
+          // Dynamic, encouraging responses that build on what they said
+          const naturalResponses = [
+            `Interesting! You said "${message}" - I can tell you're really thinking about this. Want to expand on that thought or try expressing it differently?`,
+            `I hear you saying "${message}" - that's great practice! How about we build on that idea? What do you think about...?`,
+            `Thanks for sharing "${message}" with me! Your English is coming along nicely. What would you like to talk about next?`,
+            `"${message}" - I like that! You're expressing yourself clearly. Want to dive deeper into this topic or try something new?`
+          ];
+          aiResponse = naturalResponses[Math.floor(Math.random() * naturalResponses.length)];
         }
         
         res.json({
