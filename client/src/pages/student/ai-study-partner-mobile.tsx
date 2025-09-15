@@ -309,21 +309,24 @@ export default function StudentAIStudyPartnerMobile() {
     
     cooldownTimeoutRef.current = setTimeout(async () => {
       try {
-        // Generate new session ID to prevent conflicts
-        const newSessionId = `continuous-session-${Date.now()}`;
-        setSttSessionId(newSessionId);
+        // CRITICAL FIX: Reuse existing session ID in continuous mode for seamless restart
+        let sessionId = sttSessionId;
+        if (!sessionId) {
+          sessionId = `continuous-session-${Date.now()}`;
+          setSttSessionId(sessionId);
+        }
         
         // FSM: Transition to LISTENING state before starting STT
         setConversationState('LISTENING');
         setIsRecording(true);
         
         await speechRecognitionService.startListening(
-          newSessionId,
+          sessionId,
           'en-US',
           handleSpeechResult,
           (analysis) => console.log('Speech analysis:', analysis)
         );
-        console.log('FSM: COOLDOWN → LISTENING. Ready for your response!');
+        console.log('FSM: COOLDOWN → LISTENING. Continuous mode restarted with session:', sessionId);
       } catch (error) {
         console.error('Failed to restart continuous mode:', error);
         setIsRecording(false);
@@ -331,7 +334,7 @@ export default function StudentAIStudyPartnerMobile() {
         setSttSessionId(null);
       }
     }, 500); // Brief cooldown period
-  }, [clearCooldownTimeout]);
+  }, [clearCooldownTimeout, sttSessionId]);
 
   // Text-to-Speech for AI responses
   const speakText = async (text: string, language: string = 'en') => {
@@ -348,7 +351,10 @@ export default function StudentAIStudyPartnerMobile() {
       if (isRecording) {
         speechRecognitionService.pauseForTTS();
         setIsRecording(false);
-        setSttSessionId(null); // Clear session ID
+        // CRITICAL FIX: In continuous mode, preserve session ID for seamless restart
+        if (!continuousMode) {
+          setSttSessionId(null); // Only clear session ID in manual mode
+        }
       }
       
       // Stop any current audio
