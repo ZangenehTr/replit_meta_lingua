@@ -94,6 +94,9 @@ export class SpeechRecognitionService {
   private onSpeechAnalysis: ((analysis: SpeechAnalysis) => void) | null = null;
   private targetLanguage = 'en-US';
   private buffer: string[] = [];
+  private manualStop = false;
+  private lastRestartTime = 0;
+  private restartThrottle = 2000; // Minimum 2 seconds between restarts
 
   constructor() {
     this.initializeSpeechRecognition();
@@ -162,11 +165,17 @@ export class SpeechRecognitionService {
    * Stop speech recognition
    */
   stopListening(): void {
+    this.manualStop = true; // Set flag to prevent auto-restart
     if (this.recognition && this.isListening) {
       this.recognition.stop();
       this.isListening = false;
-      console.log('Speech recognition stopped');
+      console.log('Speech recognition stopped manually');
     }
+    // Clear session after a brief delay to allow for final processing
+    setTimeout(() => {
+      this.sessionId = null;
+      this.manualStop = false; // Reset for next session
+    }, 1000);
   }
 
   /**
@@ -480,13 +489,48 @@ export class SpeechRecognitionService {
     console.error('Speech recognition error:', event.error);
     this.isListening = false;
     
-    // Only restart on specific network errors, not all errors
-    if (event.error === 'network' && this.sessionId && !this.isListening) {
-      setTimeout(() => {
-        if (this.sessionId && this.recognition && !this.isListening) {
-          this.recognition.start();
+    // Handle different error types appropriately
+    switch (event.error) {
+      case 'network':
+        // Retry on network errors with throttling
+        if (this.sessionId && !this.manualStop) {
+          const now = Date.now();
+          if (now - this.lastRestartTime > this.restartThrottle) {
+            this.lastRestartTime = now;
+            setTimeout(() => {
+              if (this.sessionId && !this.manualStop && this.recognition) {
+                try {
+                  this.recognition.start();
+                  console.log('Speech recognition restarted after network error');
+                } catch (retryError) {
+                  console.log('Failed to restart after network error:', retryError);
+                }
+              }
+            }, 2000);
+          }
         }
-      }, 1000);
+        break;
+      case 'aborted':
+        // Don't restart on aborted - this is usually intentional
+        console.log('Speech recognition aborted - not restarting');
+        break;
+      case 'no-speech':
+        // Auto-restart on no speech detected
+        if (this.sessionId && !this.manualStop) {
+          setTimeout(() => {
+            if (this.sessionId && !this.manualStop && this.recognition) {
+              try {
+                this.recognition.start();
+                console.log('Speech recognition restarted after no-speech');
+              } catch (retryError) {
+                console.log('Failed to restart after no-speech:', retryError);
+              }
+            }
+          }, 1000);
+        }
+        break;
+      default:
+        console.log(`Speech recognition error '${event.error}' - not restarting`);
     }
   }
 
@@ -496,7 +540,27 @@ export class SpeechRecognitionService {
   private handleSpeechEnd(): void {
     this.isListening = false;
     console.log('Speech recognition ended');
-    // Do not auto-restart - this was causing the infinite loop
+    
+    // Only auto-restart if:
+    // 1. Session is still active
+    // 2. Stop was not manual
+    // 3. Enough time has passed since last restart (throttling)
+    if (this.sessionId && !this.manualStop) {
+      const now = Date.now();
+      if (now - this.lastRestartTime > this.restartThrottle) {
+        this.lastRestartTime = now;
+        setTimeout(() => {
+          if (this.sessionId && !this.manualStop && this.recognition) {
+            try {
+              this.recognition.start();
+              console.log('Speech recognition auto-restarted');
+            } catch (error) {
+              console.log('Failed to auto-restart speech recognition:', error);
+            }
+          }
+        }, 500); // Brief delay before restart
+      }
+    }
   }
 
   /**
@@ -527,12 +591,5 @@ export class SpeechRecognitionService {
   }
 }
 
-// Temporarily disable auto-initialization to prevent infinite loop
-// export const speechRecognitionService = new SpeechRecognitionService();
-export const speechRecognitionService = {
-  startListening: () => Promise.resolve(),
-  stopListening: () => {},
-  isActive: () => false,
-  setLanguage: () => {},
-  destroy: () => {}
-};
+// Create properly working speech recognition service
+export const speechRecognitionService = new SpeechRecognitionService();
