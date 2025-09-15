@@ -29,6 +29,8 @@ import {
   institutes, departments, studentGroups, studentGroupMembers, teacherAssignments,
   studentNotes, parentGuardians, studentReports, referralSettings, courseReferrals,
   referralCommissions, adminSettings, aiTrainingData, aiKnowledgeBase,
+  // Chat and AI study partner tables
+  chatConversations, chatMessages, aiStudyPartners,
   // MST tables
   mstSessions, mstSkillStates, mstResponses,
 } from "@shared/schema";
@@ -93,6 +95,9 @@ import {
   // Exam roadmap types
   type RoadmapPlan, type InsertRoadmapPlan, type RoadmapSession, type InsertRoadmapSession,
   roadmapPlans, roadmapSessions,
+  // Chat and AI study partner types
+  type ChatConversation, type InsertChatConversation, type ChatMessage, type InsertChatMessage,
+  type AiStudyPartner, type InsertAiStudyPartner,
   // MST types
   type MSTSession, type MSTSkillState, type MSTResponse
 } from "@shared/schema";
@@ -1039,6 +1044,21 @@ export interface IStorage {
   // MST Integration Methods
   getMSTSession(sessionId: string): Promise<any>;
   getMSTResults(sessionId: string): Promise<any>;
+
+  // AI Study Partner management
+  getAiStudyPartnerByUserId(userId: number): Promise<AiStudyPartner | undefined>;
+  createAiStudyPartner(data: InsertAiStudyPartner): Promise<AiStudyPartner>;
+  updateAiStudyPartner(userId: number, data: Partial<AiStudyPartner>): Promise<AiStudyPartner | undefined>;
+
+  // Chat conversation management
+  getChatConversationById(id: number): Promise<ChatConversation | undefined>;
+  getAiConversationByUserId(userId: number): Promise<ChatConversation | undefined>;
+  createChatConversation(data: InsertChatConversation): Promise<ChatConversation>;
+  updateChatConversation(id: number, data: Partial<ChatConversation>): Promise<ChatConversation | undefined>;
+
+  // Chat message management
+  getChatMessages(conversationId: number, options?: { limit?: number; offset?: number }): Promise<ChatMessage[]>;
+  createChatMessage(data: InsertChatMessage): Promise<ChatMessage>;
 }
 
 export class MemStorage implements IStorage {
@@ -6855,6 +6875,52 @@ export class MemStorage implements IStorage {
     
     this.userRoadmapEnrollments.set(enrollmentData.id, enrollmentData);
     return enrollmentData;
+  }
+
+  // AI Study Partner methods (placeholder - should use database)
+  async getAiStudyPartnerByUserId(userId: number): Promise<AiStudyPartner | undefined> {
+    // For MemStorage, this is a placeholder
+    return undefined;
+  }
+
+  async createAiStudyPartner(data: InsertAiStudyPartner): Promise<AiStudyPartner> {
+    // For MemStorage, this is a placeholder
+    throw new Error("AI Study Partner requires database storage");
+  }
+
+  async updateAiStudyPartner(userId: number, data: Partial<AiStudyPartner>): Promise<AiStudyPartner | undefined> {
+    // For MemStorage, this is a placeholder
+    return undefined;
+  }
+
+  async getChatConversationById(id: number): Promise<ChatConversation | undefined> {
+    // For MemStorage, this is a placeholder
+    return undefined;
+  }
+
+  async getAiConversationByUserId(userId: number): Promise<ChatConversation | undefined> {
+    // For MemStorage, this is a placeholder
+    return undefined;
+  }
+
+  async createChatConversation(data: InsertChatConversation): Promise<ChatConversation> {
+    // For MemStorage, this is a placeholder
+    throw new Error("Chat conversations require database storage");
+  }
+
+  async updateChatConversation(id: number, data: Partial<ChatConversation>): Promise<ChatConversation | undefined> {
+    // For MemStorage, this is a placeholder
+    return undefined;
+  }
+
+  async getChatMessages(conversationId: number, options?: { limit?: number; offset?: number }): Promise<ChatMessage[]> {
+    // For MemStorage, this is a placeholder
+    return [];
+  }
+
+  async createChatMessage(data: InsertChatMessage): Promise<ChatMessage> {
+    // For MemStorage, this is a placeholder
+    throw new Error("Chat messages require database storage");
   }
 }
 

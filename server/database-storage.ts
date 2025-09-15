@@ -73,12 +73,15 @@ import {
   // Quality Assurance types
   liveClassSessions, teacherRetentionData, studentQuestionnaires, questionnaireResponses, supervisionObservations, scheduledObservations,
   type LiveClassSession, type InsertLiveClassSession, type TeacherRetentionData, type InsertTeacherRetentionData,
+  // Chat and AI study partner types  
+  chatConversations, chatMessages, aiStudyPartners,
+  type ChatConversation, type InsertChatConversation, type ChatMessage, type InsertChatMessage,
+  type AiStudyPartner, type InsertAiStudyPartner,
   type StudentQuestionnaire, type InsertStudentQuestionnaire, type QuestionnaireResponse, type InsertQuestionnaireResponse,
   type SupervisionObservation, type InsertSupervisionObservation, type ScheduledObservation, type InsertScheduledObservation,
   // Communication system types
-  supportTickets, supportTicketMessages, chatConversations, chatMessages, pushNotifications, notificationDeliveryLogs,
+  supportTickets, supportTicketMessages, pushNotifications, notificationDeliveryLogs,
   type SupportTicket, type InsertSupportTicket, type SupportTicketMessage, type InsertSupportTicketMessage,
-  type ChatConversation, type InsertChatConversation, type ChatMessage, type InsertChatMessage,
   type PushNotification, type InsertPushNotification, type NotificationDeliveryLog, type InsertNotificationDeliveryLog,
   // Teacher availability
   teacherAvailability, teacherAvailabilityPeriods,
@@ -13290,6 +13293,142 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('❌ Error getting MST results:', error);
       return undefined;
+    }
+  }
+
+  // AI Study Partner management
+  async getAiStudyPartnerByUserId(userId: number): Promise<AiStudyPartner | undefined> {
+    try {
+      console.log('🤖 Getting AI study partner for user:', userId);
+      const [studyPartner] = await this.db.select().from(aiStudyPartners)
+        .where(eq(aiStudyPartners.userId, userId))
+        .limit(1);
+      
+      return studyPartner;
+    } catch (error) {
+      console.error('❌ Error getting AI study partner:', error);
+      return undefined;
+    }
+  }
+
+  async createAiStudyPartner(data: InsertAiStudyPartner): Promise<AiStudyPartner> {
+    try {
+      console.log('🚀 Creating AI study partner for user:', data.userId);
+      const [studyPartner] = await this.db.insert(aiStudyPartners)
+        .values(data)
+        .returning();
+      
+      console.log('✅ Created AI study partner:', studyPartner.id);
+      return studyPartner;
+    } catch (error) {
+      console.error('❌ Error creating AI study partner:', error);
+      throw error;
+    }
+  }
+
+  async updateAiStudyPartner(userId: number, data: Partial<AiStudyPartner>): Promise<AiStudyPartner | undefined> {
+    try {
+      console.log('🔄 Updating AI study partner for user:', userId);
+      const [studyPartner] = await this.db.update(aiStudyPartners)
+        .set(data)
+        .where(eq(aiStudyPartners.userId, userId))
+        .returning();
+      
+      return studyPartner;
+    } catch (error) {
+      console.error('❌ Error updating AI study partner:', error);
+      return undefined;
+    }
+  }
+
+  // Chat conversation management
+  async getChatConversationById(id: number): Promise<ChatConversation | undefined> {
+    try {
+      const [conversation] = await this.db.select().from(chatConversations)
+        .where(eq(chatConversations.id, id))
+        .limit(1);
+      
+      return conversation;
+    } catch (error) {
+      console.error('❌ Error getting chat conversation:', error);
+      return undefined;
+    }
+  }
+
+  async getAiConversationByUserId(userId: number): Promise<ChatConversation | undefined> {
+    try {
+      const [conversation] = await this.db.select().from(chatConversations)
+        .where(and(
+          eq(chatConversations.type, "ai_study_partner"),
+          sql`${userId}::text = ANY(${chatConversations.participants})`
+        ))
+        .limit(1);
+      
+      return conversation;
+    } catch (error) {
+      console.error('❌ Error getting AI conversation:', error);
+      return undefined;
+    }
+  }
+
+  async createChatConversation(data: InsertChatConversation): Promise<ChatConversation> {
+    try {
+      console.log('💬 Creating chat conversation:', data.type);
+      const [conversation] = await this.db.insert(chatConversations)
+        .values(data)
+        .returning();
+      
+      console.log('✅ Created chat conversation:', conversation.id);
+      return conversation;
+    } catch (error) {
+      console.error('❌ Error creating chat conversation:', error);
+      throw error;
+    }
+  }
+
+  async updateChatConversation(id: number, data: Partial<ChatConversation>): Promise<ChatConversation | undefined> {
+    try {
+      const [conversation] = await this.db.update(chatConversations)
+        .set(data)
+        .where(eq(chatConversations.id, id))
+        .returning();
+      
+      return conversation;
+    } catch (error) {
+      console.error('❌ Error updating chat conversation:', error);
+      return undefined;
+    }
+  }
+
+  // Chat message management
+  async getChatMessages(conversationId: number, options?: { limit?: number; offset?: number }): Promise<ChatMessage[]> {
+    try {
+      const limit = options?.limit || 50;
+      const offset = options?.offset || 0;
+      
+      const messages = await this.db.select().from(chatMessages)
+        .where(eq(chatMessages.conversationId, conversationId))
+        .orderBy(desc(chatMessages.sentAt))
+        .limit(limit)
+        .offset(offset);
+      
+      return messages.reverse(); // Return in chronological order
+    } catch (error) {
+      console.error('❌ Error getting chat messages:', error);
+      return [];
+    }
+  }
+
+  async createChatMessage(data: InsertChatMessage): Promise<ChatMessage> {
+    try {
+      const [message] = await this.db.insert(chatMessages)
+        .values(data)
+        .returning();
+      
+      return message;
+    } catch (error) {
+      console.error('❌ Error creating chat message:', error);
+      throw error;
     }
   }
 }
