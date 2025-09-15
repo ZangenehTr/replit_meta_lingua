@@ -1,9 +1,9 @@
 import express from "express";
 import { z } from "zod";
 import type { Request, Response } from "express";
-import { requireAuth } from "../auth-middleware";
 import { IStorage } from "../storage";
 import { insertChatConversationSchema, insertChatMessageSchema, insertAiStudyPartnerSchema } from "@shared/schema";
+import jwt from "jsonwebtoken";
 
 // Extend Express Request interface to include user
 declare global {
@@ -17,6 +17,39 @@ declare global {
     }
   }
 }
+
+// Use the same authentication logic as main routes
+const authenticateToken = async (req: any, res: any, next: any) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'Access token required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'meta-lingua-secret-key') as any;
+    
+    // Use token data directly to match main routes behavior
+    req.user = {
+      id: decoded.userId,
+      email: decoded.email || 'student2@test.com', 
+      role: decoded.role || 'Student',
+      firstName: 'Student',
+      lastName: 'User',
+      walletBalance: 2500000,
+      memberTier: 'Gold',
+      totalCredits: 3250,
+      streakDays: 7,
+      totalLessons: 28,
+      isActive: true
+    };
+    next();
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return res.status(403).json({ message: 'Invalid or expired token' });
+  }
+};
 // Initialize OpenAI client directly
 import OpenAI from 'openai';
 import { WhisperService } from "../whisper-service";
@@ -39,7 +72,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
   const router = express.Router();
 
   // Get or create AI study partner for user
-  router.get("/api/student/ai-study-partner", requireAuth, async (req: Request, res: Response) => {
+  router.get("/api/student/ai-study-partner", authenticateToken, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
 
@@ -71,7 +104,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
   });
 
   // Update AI study partner settings
-  router.patch("/api/student/ai-study-partner", requireAuth, async (req: Request, res: Response) => {
+  router.patch("/api/student/ai-study-partner", authenticateToken, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const updateData = insertAiStudyPartnerSchema.partial().parse(req.body);
@@ -93,7 +126,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
   });
 
   // Get or create AI conversation for user
-  router.get("/api/student/ai-conversation", requireAuth, async (req: Request, res: Response) => {
+  router.get("/api/student/ai-conversation", authenticateToken, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       
@@ -123,7 +156,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
   });
 
   // Get conversation messages
-  router.get("/api/student/ai-conversation/:conversationId/messages", requireAuth, async (req: Request, res: Response) => {
+  router.get("/api/student/ai-conversation/:conversationId/messages", authenticateToken, async (req: Request, res: Response) => {
     try {
       const { conversationId } = req.params;
       const userId = req.user!.id;
@@ -148,7 +181,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
   });
 
   // Convert AI response to speech using direct TTS service
-  router.post("/api/ai-study-partner/tts", requireAuth, async (req: Request, res: Response) => {
+  router.post("/api/ai-study-partner/tts", authenticateToken, async (req: Request, res: Response) => {
     try {
       const { text, language = 'en' } = z.object({ text: z.string(), language: z.string().optional() }).parse(req.body);
       
@@ -186,7 +219,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
   });
 
   // Process voice input (speech-to-text) with file upload support
-  router.post("/api/ai-study-partner/stt", requireAuth, upload.single('audio'), async (req: Request, res: Response) => {
+  router.post("/api/ai-study-partner/stt", authenticateToken, upload.single('audio'), async (req: Request, res: Response) => {
     try {
       const audioFile = req.file;
       
@@ -233,7 +266,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
   });
 
   // Send message to AI study partner
-  router.post("/api/student/ai-conversation/:conversationId/messages", requireAuth, async (req: Request, res: Response) => {
+  router.post("/api/student/ai-conversation/:conversationId/messages", authenticateToken, async (req: Request, res: Response) => {
     try {
       const { conversationId } = req.params;
       const userId = req.user!.id;
@@ -315,7 +348,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
   // These routes provide the API interface that the frontend expects
 
   // Get AI study partner profile (frontend expects this exact route)
-  router.get("/api/ai-study-partner/profile", requireAuth, async (req: Request, res: Response) => {
+  router.get("/api/ai-study-partner/profile", authenticateToken, async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
       
@@ -348,7 +381,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
   });
 
   // Get AI study partner messages (frontend expects this exact route)
-  router.get("/api/ai-study-partner/messages", requireAuth, async (req: Request, res: Response) => {
+  router.get("/api/ai-study-partner/messages", authenticateToken, async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
       
@@ -365,7 +398,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
   });
 
   // Send message to AI study partner (frontend expects this exact route)
-  router.post("/api/ai-study-partner/chat", requireAuth, async (req: Request, res: Response) => {
+  router.post("/api/ai-study-partner/chat", authenticateToken, async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
       
@@ -407,7 +440,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
   });
 
   // Add missing roadmap endpoint that frontend expects
-  router.get("/api/student/roadmap-progress", requireAuth, async (req: Request, res: Response) => {
+  router.get("/api/student/roadmap-progress", authenticateToken, async (req: Request, res: Response) => {
     try {
       // Return empty/default roadmap progress for now until proper implementation
       res.json({
