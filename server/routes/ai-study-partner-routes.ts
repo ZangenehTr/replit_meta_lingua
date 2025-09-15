@@ -280,14 +280,14 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
 
       // Get user's study partner settings and context
       const studyPartner = await storage.getAiStudyPartnerByUserId(userId);
-      const userProfile = await storage.getUserById(userId);
-      const userRoadmaps = await storage.getRoadmapInstancesByUser(userId);
+      const userProfile = await storage.getUser(userId);
+      const userRoadmaps = await storage.getRoadmapInstances({ userId });
 
       // Save user message
       const userMessage = await storage.createChatMessage({
         conversationId: parseInt(conversationId),
         senderId: userId,
-        senderName: `${userProfile?.firstName} ${userProfile?.lastName}`,
+        senderName: `${userProfile?.firstName} ${userProfile?.lastName}` || "User",
         message,
         messageType: "text",
         isRead: true
@@ -549,7 +549,7 @@ async function generateAiStudyPartnerResponse(
       .slice(-5) // Last 5 messages for context
       .reverse()
       .map(msg => ({
-        role: msg.isAiGenerated ? "assistant" : "user",
+        role: (msg.isAiGenerated ? "assistant" : "user") as "assistant" | "user",
         content: msg.message
       }));
 
@@ -655,18 +655,26 @@ function buildPersonalizedSystemPrompt(studyPartner: any, userProfile: any, user
     }
   }
 
-  // General guidelines
+  // Enhanced natural response guidelines
   prompt += `
-    
-Key Guidelines:
-1. Keep responses helpful and educational
-2. Correct errors gently and explain why
-3. Ask follow-up questions to encourage conversation
-4. Provide practical examples and exercises
-5. Celebrate progress and achievements
-6. Stay focused on English learning objectives
 
-Remember: You're a study partner, not just an information provider. Engage actively in the learning process!`;
+🎯 NATURAL CONVERSATION STYLE:
+- Use emojis naturally throughout responses (😊, 💪, 🎉, 📚, etc.)
+- Vary your greetings: "Hey there! 😊", "Hi! Great to see you! 👋", "Hello! Ready to learn? 🚀"
+- Be conversational, not robotic - avoid templates like "I understand you're saying..."
+- Mix formal learning with casual encouragement
+- Show genuine enthusiasm for their progress
+- Use varied sentence structures and lengths
+
+Key Guidelines:
+1. Keep responses helpful, natural, and educational 📚
+2. Correct errors gently with encouraging language ✨
+3. Ask engaging follow-up questions 💭
+4. Provide practical examples with real-world context 🌍
+5. Celebrate every win, big or small! 🎉
+6. Stay focused on English learning but keep it fun 😄
+
+Remember: You're their friendly study buddy, not a formal teacher! Be warm, supportive, and genuinely excited about their learning journey! 🌟`;
 
   return prompt;
 }
