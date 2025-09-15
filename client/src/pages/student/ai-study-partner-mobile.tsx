@@ -441,27 +441,34 @@ export default function StudentAIStudyPartnerMobile() {
   const handleSpeechResult = (result: any) => {
     if (result.isFinal) {
       setInputText(result.text);
-      setIsRecording(false);
-      // In continuous mode, don't stop - let it continue listening
-      if (!continuousMode) {
+      
+      // CRITICAL FIX: In continuous mode, ensure we're in LISTENING state for auto-send
+      if (continuousMode) {
+        // Keep conversation state as LISTENING for continuous flow
+        setConversationState('LISTENING');
+        // Don't set isRecording to false yet - keep listening
+        console.log('Continuous mode: Speech captured, staying in LISTENING state');
+      } else {
+        // Manual mode - stop recording and listening
+        setIsRecording(false);
         speechRecognitionService.stopListening();
       }
+      
       toast({
         title: t('student:speechCaptured'),
         description: result.text,
       });
       
-      // Auto-send in continuous mode - use handleAutoSend for proper FSM flow
+      // Auto-send in continuous mode - IMMEDIATE for ChatGPT-like flow
       if (continuousMode && result.text.trim()) {
-        setTimeout(() => {
-          handleAutoSend(result.text.trim());
-        }, 100);
+        // Immediately process - no timeout needed since we're already in LISTENING
+        handleAutoSend(result.text.trim());
+        // Clear input after processing
+        setTimeout(() => setInputText(''), 50);
       }
     } else {
-      // Only show interim results if we're still actively recording
-      if (isRecording) {
-        setInputText(result.text);
-      }
+      // Show interim results during recording
+      setInputText(result.text);
     }
   };
 
@@ -637,7 +644,7 @@ export default function StudentAIStudyPartnerMobile() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white/70 text-sm mb-1">Continuous Conversation</p>
-                  <p className="text-white/50 text-xs">Auto-listen after Lexi responds (ChatGPT-style)</p>
+                  <p className="text-white/50 text-xs">Auto-conversation like ChatGPT (no clicking send)</p>
                 </div>
                 <button
                   onClick={() => setContinuousMode(!continuousMode)}
@@ -821,68 +828,105 @@ export default function StudentAIStudyPartnerMobile() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="glass-card p-3 flex items-center gap-3">
-        {/* Continuous mode status */}
+      {/* ChatGPT-Style Input Area */}
+      <div className="relative">
+        {/* Continuous mode status indicator */}
         {continuousMode && (
-          <div className="text-xs text-green-300 flex items-center gap-1">
+          <div className="absolute -top-8 left-0 text-xs text-green-300 flex items-center gap-1">
             <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-            Auto-listen
+            Auto-conversation mode
           </div>
         )}
         
-        <div className="relative">
-          <button
-            className={`p-2 rounded-full transition-all ${
-              isRecording 
-                ? 'bg-red-500 animate-pulse' 
-                : 'bg-white/10 hover:bg-white/20'
-            }`}
-            onClick={toggleRecording}
-            data-testid="button-voice-input"
-          >
-            <Mic className="w-5 h-5 text-white" />
-          </button>
+        <div className="relative bg-white/10 backdrop-blur-md rounded-full border border-white/20 p-3 flex items-center gap-3">
+          {/* Plus icon */}
+          <div className="flex-shrink-0">
+            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+              <span className="text-white/80 text-lg font-light">+</span>
+            </div>
+          </div>
           
-          {/* Continuous mode indicator on mic */}
-          {continuousMode && (
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border border-white" />
-          )}
+          {/* Input field */}
+          <input
+            type="text"
+            placeholder="Ask anything"
+            className="flex-1 bg-transparent text-white placeholder-white/60 outline-none text-base"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && inputText.trim()) {
+                handleSend();
+              }
+            }}
+            data-testid="input-message"
+          />
+          
+          {/* Right side buttons */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Microphone button */}
+            <button
+              className={`relative w-10 h-10 rounded-full transition-all flex items-center justify-center ${
+                isRecording 
+                  ? 'bg-red-500/20 border border-red-400' 
+                  : 'bg-white/10 hover:bg-white/20'
+              }`}
+              onClick={toggleRecording}
+              data-testid="button-voice-input"
+            >
+              <Mic className={`w-5 h-5 ${
+                isRecording ? 'text-red-400' : 'text-white/80'
+              }`} />
+              
+              {/* Recording indicator */}
+              {isRecording && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse" />
+              )}
+              
+              {/* Continuous mode indicator */}
+              {continuousMode && !isRecording && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full" />
+              )}
+            </button>
+            
+            {/* Audio visualization / Send button */}
+            {inputText.trim() ? (
+              <motion.button
+                className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 disabled:opacity-50 flex items-center justify-center"
+                whileTap={{ scale: 0.9 }}
+                onClick={handleSend}
+                disabled={sendMessage.isPending}
+                data-testid="button-send"
+              >
+                <Send className="w-5 h-5 text-white" />
+              </motion.button>
+            ) : (
+              <button
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                onClick={() => setMessages([])}
+                data-testid="button-audio-viz"
+              >
+                {/* Audio visualization bars */}
+                <div className="flex items-center gap-0.5">
+                  <div className={`w-0.5 h-2 bg-white/60 rounded-full ${
+                    isSpeaking ? 'animate-pulse' : ''
+                  }`} style={{ animationDelay: '0ms' }} />
+                  <div className={`w-0.5 h-3 bg-white/60 rounded-full ${
+                    isSpeaking ? 'animate-pulse' : ''
+                  }`} style={{ animationDelay: '100ms' }} />
+                  <div className={`w-0.5 h-4 bg-white/60 rounded-full ${
+                    isSpeaking ? 'animate-pulse' : ''
+                  }`} style={{ animationDelay: '200ms' }} />
+                  <div className={`w-0.5 h-3 bg-white/60 rounded-full ${
+                    isSpeaking ? 'animate-pulse' : ''
+                  }`} style={{ animationDelay: '300ms' }} />
+                  <div className={`w-0.5 h-2 bg-white/60 rounded-full ${
+                    isSpeaking ? 'animate-pulse' : ''
+                  }`} style={{ animationDelay: '400ms' }} />
+                </div>
+              </button>
+            )}
+          </div>
         </div>
-        
-        <input
-          type="text"
-          placeholder={t('student:askStudyPartner')}
-          className="flex-1 bg-transparent text-white placeholder-white/50 outline-none"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter' && inputText.trim()) {
-              handleSend();
-            }
-          }}
-          data-testid="input-message"
-        />
-        
-        {inputText.trim() ? (
-          <motion.button
-            className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 disabled:opacity-50"
-            whileTap={{ scale: 0.9 }}
-            onClick={handleSend}
-            disabled={sendMessage.isPending}
-            data-testid="button-send"
-          >
-            <Send className="w-5 h-5 text-white" />
-          </motion.button>
-        ) : (
-          <button
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20"
-            onClick={() => setMessages([])}
-            data-testid="button-clear-chat"
-          >
-            <RefreshCw className="w-5 h-5 text-white/70" />
-          </button>
-        )}
       </div>
     </MobileLayout>
   );
