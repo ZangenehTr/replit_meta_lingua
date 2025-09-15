@@ -59,6 +59,7 @@ export default function StudentAIStudyPartnerMobile() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [continuousMode, setContinuousMode] = useState(true); // Enable continuous conversation by default
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<StudyPartnerSettings>({
@@ -226,9 +227,12 @@ export default function StudentAIStudyPartnerMobile() {
         currentAudio.current = null;
       }
 
+      // Strip emojis from TTS to prevent feedback loop
+      const cleanText = text.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim();
+      
       const response = await apiRequest('/api/ai-study-partner/tts', {
         method: 'POST',
-        body: JSON.stringify({ text, language })
+        body: JSON.stringify({ text: cleanText, language })
       });
 
       if (response.success && response.audioUrl) {
@@ -238,8 +242,25 @@ export default function StudentAIStudyPartnerMobile() {
         audio.onended = () => {
           setIsSpeaking(false);
           currentAudio.current = null;
-          // Enable recognition to resume (but don't auto-start)
+          // CONTINUOUS MODE: Auto-restart speech recognition after Lexi finishes
           speechRecognitionService.resumeAfterTTS();
+          if (continuousMode) {
+            setTimeout(async () => {
+              try {
+                setIsRecording(true);
+                await speechRecognitionService.startListening(
+                  `continuous-session-${Date.now()}`,
+                  'en-US',
+                  handleSpeechResult,
+                  (analysis) => console.log('Speech analysis:', analysis)
+                );
+                console.log('Continuous conversation mode: Ready for your response!');
+              } catch (error) {
+                console.error('Failed to restart continuous mode:', error);
+                setIsRecording(false);
+              }
+            }, 500); // Brief delay after TTS ends
+          }
         };
         
         audio.onerror = () => {
@@ -275,6 +296,42 @@ export default function StudentAIStudyPartnerMobile() {
     }
   };
 
+  // Shared speech result handler for both manual and continuous modes
+  const handleSpeechResult = (result: any) => {
+    if (result.isFinal) {
+      setInputText(result.text);
+      setIsRecording(false);
+      // In continuous mode, don't stop - let it continue listening
+      if (!continuousMode) {
+        speechRecognitionService.stopListening();
+      }
+      toast({
+        title: t('student:speechCaptured'),
+        description: result.text,
+      });
+      
+      // Auto-send in continuous mode for seamless conversation
+      if (continuousMode && result.text.trim()) {
+        setTimeout(() => {
+          const userMessage = {
+            id: Date.now().toString(),
+            role: 'user' as const,
+            content: result.text,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, userMessage]);
+          sendMessage.mutate(result.text);
+          setInputText('');
+        }, 500);
+      }
+    } else {
+      // Only show interim results if we're still actively recording
+      if (isRecording) {
+        setInputText(result.text);
+      }
+    }
+  };
+
   const startRecording = async () => {
     setIsRecording(true);
     setInputText('');
@@ -283,26 +340,8 @@ export default function StudentAIStudyPartnerMobile() {
       await speechRecognitionService.startListening(
         `study-session-${Date.now()}`,
         'en-US',
-        (result) => {
-          if (result.isFinal) {
-            setInputText(result.text);
-            setIsRecording(false);
-            // CRITICAL: Stop the service to prevent auto-restart after final result
-            speechRecognitionService.stopListening();
-            toast({
-              title: t('student:speechCaptured'),
-              description: result.text,
-            });
-          } else {
-            // Only show interim results if we're still actively recording
-            // Don't overwrite final results with interim ones
-            if (isRecording) {
-              setInputText(result.text);
-            }
-          }
-        },
+        handleSpeechResult,
         (analysis) => {
-          // Handle speech analysis if needed
           console.log('Speech analysis:', analysis);
         }
       );
@@ -423,6 +462,29 @@ export default function StudentAIStudyPartnerMobile() {
                     {t(`student:personality.${personality}`)}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Continuous Conversation Mode Toggle */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/70 text-sm mb-1">Continuous Conversation</p>
+                  <p className="text-white/50 text-xs">Auto-listen after Lexi responds (ChatGPT-style)</p>
+                </div>
+                <button
+                  onClick={() => setContinuousMode(!continuousMode)}
+                  className={`
+                    relative w-12 h-6 rounded-full transition-colors
+                    ${continuousMode ? 'bg-purple-500' : 'bg-white/20'}
+                  `}
+                  data-testid="toggle-continuous-mode"
+                >
+                  <div className={`
+                    absolute w-5 h-5 bg-white rounded-full transition-transform top-0.5
+                    ${continuousMode ? 'translate-x-6' : 'translate-x-0.5'}
+                  `} />
+                </button>
               </div>
             </div>
 
@@ -594,17 +656,32 @@ export default function StudentAIStudyPartnerMobile() {
 
       {/* Input Area */}
       <div className="glass-card p-3 flex items-center gap-3">
-        <button
-          className={`p-2 rounded-full transition-all ${
-            isRecording 
-              ? 'bg-red-500 animate-pulse' 
-              : 'bg-white/10 hover:bg-white/20'
-          }`}
-          onClick={toggleRecording}
-          data-testid="button-voice-input"
-        >
-          <Mic className="w-5 h-5 text-white" />
-        </button>
+        {/* Continuous mode status */}
+        {continuousMode && (
+          <div className="text-xs text-green-300 flex items-center gap-1">
+            <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+            Auto-listen
+          </div>
+        )}
+        
+        <div className="relative">
+          <button
+            className={`p-2 rounded-full transition-all ${
+              isRecording 
+                ? 'bg-red-500 animate-pulse' 
+                : 'bg-white/10 hover:bg-white/20'
+            }`}
+            onClick={toggleRecording}
+            data-testid="button-voice-input"
+          >
+            <Mic className="w-5 h-5 text-white" />
+          </button>
+          
+          {/* Continuous mode indicator on mic */}
+          {continuousMode && (
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border border-white" />
+          )}
+        </div>
         
         <input
           type="text"
