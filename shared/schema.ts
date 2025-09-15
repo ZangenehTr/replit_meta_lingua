@@ -3182,7 +3182,7 @@ export const supportTicketMessages = pgTable("support_ticket_messages", {
 export const chatConversations = pgTable("chat_conversations", {
   id: serial("id").primaryKey(),
   title: text("title"),
-  type: text("type").notNull().default("direct"), // direct, group
+  type: text("type").notNull().default("direct"), // direct, group, ai_study_partner
   participants: text("participants").array().notNull(), // user IDs
   lastMessage: text("last_message"),
   lastMessageAt: timestamp("last_message_at"),
@@ -3196,10 +3196,10 @@ export const chatConversations = pgTable("chat_conversations", {
 export const chatMessages = pgTable("chat_messages", {
   id: serial("id").primaryKey(),
   conversationId: integer("conversation_id").references(() => chatConversations.id).notNull(),
-  senderId: integer("sender_id").references(() => users.id).notNull(),
+  senderId: integer("sender_id"), // Can be null for AI messages
   senderName: text("sender_name"), // Sender's full name for display
   message: text("message").notNull(),
-  messageType: varchar("message_type", { length: 20 }).default("text"), // text, image, file, system
+  messageType: varchar("message_type", { length: 20 }).default("text"), // text, image, file, system, ai_response
   attachments: text("attachments").array().default([]),
   isRead: boolean("is_read").default(false), // Add missing is_read field
   isEdited: boolean("is_edited").default(false),
@@ -3207,7 +3207,53 @@ export const chatMessages = pgTable("chat_messages", {
   replyTo: integer("reply_to").references(() => chatMessages.id),
   reactions: jsonb("reactions"), // {emoji: [userIds]}
   sentAt: timestamp("sent_at").defaultNow().notNull(),
-  readBy: jsonb("read_by") // {userId: timestamp}
+  readBy: jsonb("read_by"), // {userId: timestamp}
+  // AI-specific fields
+  isAiGenerated: boolean("is_ai_generated").default(false),
+  aiContext: jsonb("ai_context"), // Study context, roadmap progress, etc.
+  aiPromptTokens: integer("ai_prompt_tokens"),
+  aiResponseTokens: integer("ai_response_tokens")
+});
+
+// AI Study Partner Configuration
+export const aiStudyPartners = pgTable("ai_study_partners", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  conversationId: integer("conversation_id").references(() => chatConversations.id),
+  
+  // Personalization settings
+  learningStyle: varchar("learning_style", { length: 50 }).default("balanced"), // visual, auditory, kinesthetic, balanced
+  preferredLanguage: varchar("preferred_language", { length: 10 }).default("en"),
+  difficultyLevel: varchar("difficulty_level", { length: 20 }).default("intermediate"), // beginner, intermediate, advanced
+  studyGoals: text("study_goals").array().default([]), // exam_prep, conversation, business, academic
+  
+  // Current roadmap context
+  activeRoadmapId: integer("active_roadmap_id"),
+  currentExam: varchar("current_exam", { length: 20 }), // ielts_academic, toefl_ibt, pte_academic, etc.
+  targetScore: text("target_score"),
+  studyDeadline: timestamp("study_deadline"),
+  
+  // AI behavior preferences
+  personalityType: varchar("personality_type", { length: 30 }).default("supportive"), // supportive, challenging, casual, formal
+  responseLength: varchar("response_length", { length: 20 }).default("medium"), // short, medium, detailed
+  includePronunciation: boolean("include_pronunciation").default(false),
+  includeGrammarTips: boolean("include_grammar_tips").default(true),
+  includeVocabulary: boolean("include_vocabulary").default(true),
+  
+  // Learning progress tracking
+  totalConversations: integer("total_conversations").default(0),
+  totalMessagesExchanged: integer("total_messages_exchanged").default(0),
+  currentStreak: integer("current_streak").default(0), // days of consecutive use
+  longestStreak: integer("longest_streak").default(0),
+  lastInteractionAt: timestamp("last_interaction_at"),
+  
+  // AI usage statistics
+  totalTokensUsed: integer("total_tokens_used").default(0),
+  averageResponseTime: integer("average_response_time"), // in milliseconds
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Push Notifications
@@ -3279,6 +3325,12 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
   sentAt: true
 });
 
+export const insertAiStudyPartnerSchema = createInsertSchema(aiStudyPartners).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 export const insertPushNotificationSchema = createInsertSchema(pushNotifications).omit({
   id: true,
   createdAt: true,
@@ -3299,6 +3351,8 @@ export type ChatConversation = typeof chatConversations.$inferSelect;
 export type InsertChatConversation = z.infer<typeof insertChatConversationSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type AiStudyPartner = typeof aiStudyPartners.$inferSelect;
+export type InsertAiStudyPartner = z.infer<typeof insertAiStudyPartnerSchema>;
 export type PushNotification = typeof pushNotifications.$inferSelect;
 export type InsertPushNotification = z.infer<typeof insertPushNotificationSchema>;
 export type NotificationDeliveryLog = typeof notificationDeliveryLogs.$inferSelect;
