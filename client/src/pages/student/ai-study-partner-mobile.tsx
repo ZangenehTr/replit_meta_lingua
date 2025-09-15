@@ -62,6 +62,15 @@ export default function StudentAIStudyPartnerMobile() {
   const [continuousMode, setContinuousMode] = useState(true); // Enable continuous conversation by default
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  
+  // Finite State Machine for conversation control
+  type ConversationState = 'IDLE' | 'LISTENING' | 'THINKING' | 'SPEAKING' | 'COOLDOWN';
+  const [conversationState, setConversationState] = useState<ConversationState>('IDLE');
+  
+  // Echo filter and deduplication
+  const [lastAssistantText, setLastAssistantText] = useState('');
+  const [recentMessages, setRecentMessages] = useState<Set<string>>(new Set());
+  const [cooldownTimeout, setCooldownTimeout] = useState<NodeJS.Timeout | null>(null);
   const [settings, setSettings] = useState<StudyPartnerSettings>({
     personality: 'encouraging',
     focusArea: 'general',
@@ -149,6 +158,12 @@ export default function StudentAIStudyPartnerMobile() {
       };
       setMessages(prev => [...prev, aiMessage]);
       
+      // Set last assistant text for echo filter (strip emojis)
+      setLastAssistantText(data.response.replace(/[\u{1f300}-\u{1ffc0}]/gu, '').trim());
+      
+      // Transition to SPEAKING state
+      setConversationState('SPEAKING');
+      
       // Auto-speak AI responses in focused/exam-prep mode
       if (settings.studyMode === 'focused' || settings.studyMode === 'exam-prep') {
         speakText(data.response);
@@ -158,6 +173,9 @@ export default function StudentAIStudyPartnerMobile() {
       queryClient.invalidateQueries({ queryKey: ['/api/ai-study-partner/messages'] });
     },
     onError: () => {
+      // Reset state on error
+      setConversationState('IDLE');
+      
       toast({
         title: t('common:error'),
         description: t('student:aiStudyPartnerError'),
@@ -182,6 +200,62 @@ export default function StudentAIStudyPartnerMobile() {
       });
     }
   });
+
+  // Auto-send when speech is detected - with finite state machine control
+  const handleAutoSend = useCallback((text: string) => {
+    if (!text.trim() || !continuousMode) return;
+    
+    // State machine guard - only send if we're LISTENING
+    if (conversationState !== 'LISTENING') {
+      console.log('Auto-send blocked - not in LISTENING state:', conversationState);
+      return;
+    }
+    
+    // Echo filter - don't respond to our own TTS
+    const normalizedText = text.trim().toLowerCase();
+    const normalizedLastAssistant = lastAssistantText.toLowerCase();
+    
+    // Check for similarity to last assistant message
+    if (normalizedLastAssistant && normalizedText.includes(normalizedLastAssistant.substring(0, 20))) {
+      console.log('Echo filter: Blocking similar text to last assistant message');
+      return;
+    }
+    
+    // Deduplication filter
+    if (recentMessages.has(normalizedText)) {
+      console.log('Deduplication filter: Blocking duplicate message');
+      return;
+    }
+    
+    // Add to recent messages with TTL
+    const newRecentMessages = new Set(recentMessages);
+    newRecentMessages.add(normalizedText);
+    setRecentMessages(newRecentMessages);
+    
+    // Clear from recent messages after 10 seconds
+    setTimeout(() => {
+      setRecentMessages(prev => {
+        const updated = new Set(prev);
+        updated.delete(normalizedText);
+        return updated;
+      });
+    }, 10000);
+    
+    // Add user message immediately
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: text.trim(),
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMessage]);
+    
+    // Transition to THINKING state
+    setConversationState('THINKING');
+    
+    // Send message
+    sendMessage.mutate(text.trim());
+  }, [continuousMode, sendMessage, conversationState, lastAssistantText, recentMessages]);
 
   // Load conversation history on mount
   useEffect(() => {

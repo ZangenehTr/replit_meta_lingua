@@ -117,7 +117,7 @@ export class SpeechRecognitionService {
 
     this.recognition = new SpeechRecognition();
     this.recognition.continuous = true;
-    this.recognition.interimResults = true;
+    this.recognition.interimResults = false; // Only final results to prevent duplicates
     this.recognition.lang = this.targetLanguage;
     
     // Set up event handlers
@@ -194,12 +194,18 @@ export class SpeechRecognitionService {
   }
 
   /**
-   * Resume speech recognition (after TTS ends)
+   * Resume speech recognition (after TTS ends) - controlled by UI
    */
   resumeAfterTTS(): void {
     this.pausedForTTS = false;
-    // Don't auto-resume - let user manually start recording again
     console.log('Speech recognition ready to resume after TTS');
+  }
+
+  /**
+   * Check if paused for TTS
+   */
+  isPausedForTTS(): boolean {
+    return this.pausedForTTS;
   }
 
   /**
@@ -563,40 +569,10 @@ export class SpeechRecognitionService {
    */
   private handleSpeechEnd(): void {
     this.isListening = false;
-    console.log('Speech recognition ended');
+    console.log('Speech recognition ended - NO AUTO-RESTART (UI controls restarts)');
     
-    // VERY restrictive auto-restart logic - prevent most auto-restarts:
-    // Only auto-restart if:
-    // 1. Session is still active
-    // 2. Stop was not manual
-    // 3. Not paused for TTS
-    // 4. Enough time has passed since last restart (throttling)
-    // 5. Recognition is still supposed to be continuous
-    // 6. Not experiencing repeated failures
-    if (this.sessionId && !this.manualStop && !this.pausedForTTS && this.recognition && this.recognition.continuous) {
-      const now = Date.now();
-      if (now - this.lastRestartTime > this.restartThrottle) {
-        this.lastRestartTime = now;
-        setTimeout(() => {
-          // Triple-check all conditions before restarting
-          if (this.sessionId && !this.manualStop && !this.pausedForTTS && this.recognition && this.isListening === false) {
-            try {
-              this.recognition.start();
-              console.log('Speech recognition auto-restarted');
-            } catch (error) {
-              console.log('Failed to auto-restart speech recognition:', error);
-              // If restart fails, stop trying and require manual restart
-              this.manualStop = true;
-              this.sessionId = null;
-            }
-          }
-        }, 1500); // Even longer delay before restart
-      } else {
-        console.log('Speech recognition restart throttled');
-      }
-    } else {
-      console.log('Speech recognition end - not auto-restarting (conditions not met)');
-    }
+    // NO AUTO-RESTART - UI will control all restarts through finite state machine
+    // This prevents feedback loops and duplicate responses
   }
 
   /**
