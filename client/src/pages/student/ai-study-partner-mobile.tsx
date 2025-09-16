@@ -541,6 +541,24 @@ export default function StudentAIStudyPartnerMobile() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Automatic greeting on first entry - level-appropriate
+  useEffect(() => {
+    const shouldShowGreeting = conversationHistory && 
+                              conversationHistory.length === 0 && 
+                              messages.length === 0 && 
+                              !sendMessage.isPending;
+    
+    if (shouldShowGreeting) {
+      // Delay greeting slightly to ensure component is fully loaded
+      const timer = setTimeout(() => {
+        console.log('🎯 FIRST ENTRY - Sending automatic level-appropriate greeting');
+        sendMessage.mutate('__first_entry__');
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [conversationHistory, messages.length, sendMessage]);
+
   // Cleanup on unmount - prevent memory leaks
   useEffect(() => {
     return () => {
