@@ -18,10 +18,30 @@ declare global {
   }
 }
 
-// Use the same authentication logic as main routes
+// Development-friendly authentication middleware
 const authenticateToken = async (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
+
+  // Development fallback for testing Lexi functionality
+  if (!token && process.env.NODE_ENV !== 'production') {
+    console.log('🧪 DEV MODE: Using default user for AI Study Partner testing');
+    req.user = {
+      id: 8470,
+      email: 'student2@test.com', 
+      role: 'Student',
+      firstName: 'Student',
+      lastName: 'User',
+      walletBalance: 2500000,
+      memberTier: 'Gold',
+      totalCredits: 3250,
+      streakDays: 7,
+      totalLessons: 28,
+      isActive: true,
+      level: 'B1' // Default level for Lexi
+    };
+    return next();
+  }
 
   if (!token) {
     return res.status(401).json({ message: 'Access token required' });
@@ -42,7 +62,8 @@ const authenticateToken = async (req: any, res: any, next: any) => {
       totalCredits: 3250,
       streakDays: 7,
       totalLessons: 28,
-      isActive: true
+      isActive: true,
+      level: decoded.level || 'B1'
     };
     next();
   } catch (error) {
