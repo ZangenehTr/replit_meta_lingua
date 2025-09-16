@@ -159,6 +159,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <AppLayout>{children}</AppLayout>;
 }
 
+// Index redirect component for root route
+function IndexRedirect() {
+  console.log('🔍 IndexRedirect component mounted!');
+  const { user, isLoading } = useAuth();
+  console.log('🔍 useAuth result:', { user, isLoading });
+  if (isLoading) return <div>Loading...</div>;
+  return user ? <Redirect to="/dashboard" /> : <Redirect to="/auth" />;
+}
+
 // Profile redirect component based on user role
 function ProfileRedirect() {
   const { user } = useAuth();
@@ -179,7 +188,9 @@ function ProfileRedirect() {
 function Router() {
   return (
     <Switch>
-      <Route path="/auth" component={Auth} />
+      {/* Root route - redirect to auth if not authenticated, dashboard if authenticated */}
+      <Route path="/"><IndexRedirect /></Route>
+      <Route path="/auth"><Auth /></Route>
       <Route path="/simple-auth" component={SimpleAuth} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
@@ -780,29 +791,6 @@ function Router() {
         <ProtectedRoute>
           <UnifiedDashboard />
         </ProtectedRoute>
-      </Route>
-      <Route path="/">
-        {(() => {
-          const { user, isLoading } = useAuth();
-          
-          if (isLoading) {
-            return (
-              <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p>Loading...</p>
-                </div>
-              </div>
-            );
-          }
-          
-          if (!user) {
-            return <Redirect to="/auth" />;
-          }
-          
-          // All authenticated users redirect to unified dashboard
-          return <Redirect to="/dashboard" />;
-        })()}
       </Route>
       <Route component={NotFound} />
     </Switch>
