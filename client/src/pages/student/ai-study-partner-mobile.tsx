@@ -885,20 +885,21 @@ export default function StudentAIStudyPartnerMobile() {
             data-testid="input-message"
           />
           
-          {/* Right side buttons */}
+          {/* Right side buttons - ChatGPT style */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Microphone button */}
+            {/* Voice chat button - always continuous mode */}
             <button
               className={`relative w-10 h-10 rounded-full transition-all flex items-center justify-center ${
                 isRecording 
                   ? 'bg-red-500/20 border border-red-400' 
-                  : 'bg-white/10 hover:bg-white/20'
+                  : 'bg-green-500/20 border border-green-400 hover:bg-green-500/30'
               }`}
               onClick={toggleRecording}
-              data-testid="button-voice-input"
+              data-testid="button-voice-chat"
+              title="Voice Chat (Continuous Conversation)"
             >
               <Mic className={`w-5 h-5 ${
-                isRecording ? 'text-red-400' : 'text-white/80'
+                isRecording ? 'text-red-400' : 'text-green-400'
               }`} />
               
               {/* Recording indicator */}
@@ -906,82 +907,29 @@ export default function StudentAIStudyPartnerMobile() {
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse" />
               )}
               
-              {/* Continuous mode indicator */}
-              {continuousMode && !isRecording && (
+              {/* Continuous mode always active indicator */}
+              {!isRecording && (
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full" />
               )}
             </button>
             
-            {/* Audio visualization / Send button */}
-            {inputText.trim() ? (
-              <motion.button
-                className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 disabled:opacity-50 flex items-center justify-center"
-                whileTap={{ scale: 0.9 }}
-                onClick={handleSend}
-                disabled={sendMessage.isPending}
-                data-testid="button-send"
-              >
-                <Send className="w-5 h-5 text-white" />
-              </motion.button>
-            ) : (
-              <button
-                className={`w-10 h-10 rounded-full transition-all flex items-center justify-center ${
-                  continuousMode 
-                    ? 'bg-green-500/20 border border-green-400 hover:bg-green-500/30' 
-                    : 'bg-white/10 hover:bg-white/20'
-                }`}
-                onClick={() => {
-                  setContinuousMode(!continuousMode);
-                  toast({
-                    title: continuousMode ? 'Manual Mode' : 'Continuous Mode',
-                    description: continuousMode 
-                      ? 'Click microphone to record' 
-                      : 'Automatic conversation enabled',
-                  });
-                }}
-                data-testid="button-continuous-toggle"
-                title={continuousMode ? 'Switch to Manual Mode' : 'Switch to Continuous Mode'}
-              >
-                {/* Show continuous mode indicator or audio visualization */}
-                {continuousMode ? (
-                  <div className="flex items-center gap-0.5">
-                    <div className={`w-0.5 h-2 bg-green-400 rounded-full ${
-                      isSpeaking ? 'animate-pulse' : ''
-                    }`} style={{ animationDelay: '0ms' }} />
-                    <div className={`w-0.5 h-3 bg-green-400 rounded-full ${
-                      isSpeaking ? 'animate-pulse' : ''
-                    }`} style={{ animationDelay: '100ms' }} />
-                    <div className={`w-0.5 h-4 bg-green-400 rounded-full ${
-                      isSpeaking ? 'animate-pulse' : ''
-                    }`} style={{ animationDelay: '200ms' }} />
-                    <div className={`w-0.5 h-3 bg-green-400 rounded-full ${
-                      isSpeaking ? 'animate-pulse' : ''
-                    }`} style={{ animationDelay: '300ms' }} />
-                    <div className={`w-0.5 h-2 bg-green-400 rounded-full ${
-                      isSpeaking ? 'animate-pulse' : ''
-                    }`} style={{ animationDelay: '400ms' }} />
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-0.5">
-                    <div className={`w-0.5 h-2 bg-white/60 rounded-full ${
-                      isSpeaking ? 'animate-pulse' : ''
-                    }`} style={{ animationDelay: '0ms' }} />
-                    <div className={`w-0.5 h-3 bg-white/60 rounded-full ${
-                      isSpeaking ? 'animate-pulse' : ''
-                    }`} style={{ animationDelay: '100ms' }} />
-                    <div className={`w-0.5 h-4 bg-white/60 rounded-full ${
-                      isSpeaking ? 'animate-pulse' : ''
-                    }`} style={{ animationDelay: '200ms' }} />
-                    <div className={`w-0.5 h-3 bg-white/60 rounded-full ${
-                      isSpeaking ? 'animate-pulse' : ''
-                    }`} style={{ animationDelay: '300ms' }} />
-                    <div className={`w-0.5 h-2 bg-white/60 rounded-full ${
-                      isSpeaking ? 'animate-pulse' : ''
-                    }`} style={{ animationDelay: '400ms' }} />
-                  </div>
-                )}
-              </button>
-            )}
+            {/* Text chat button - Send button for text */}
+            <motion.button
+              className={`w-10 h-10 rounded-full transition-all flex items-center justify-center ${
+                inputText.trim() 
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' 
+                  : 'bg-white/10 hover:bg-white/20'
+              }`}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleSend}
+              disabled={sendMessage.isPending || !inputText.trim()}
+              data-testid="button-text-chat"
+              title="Send Text Message"
+            >
+              <Send className={`w-5 h-5 ${
+                inputText.trim() ? 'text-white' : 'text-white/60'
+              }`} />
+            </motion.button>
           </div>
         </div>
       </div>
