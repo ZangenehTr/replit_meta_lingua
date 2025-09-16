@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import OpenAI from 'openai';
-import { whisperHesitationDetector, WhisperHesitationDetector } from './whisper-hesitation-detector';
+import { whisperHesitationDetector } from './whisper-hesitation-detector';
 import { TranscriptionResult } from './whisper-service';
 
 interface ConversationMetrics {
@@ -52,12 +52,25 @@ export class CallernAIMonitor {
   private conversationTranscripts: Map<string, string[]> = new Map();
   private studentProfiles: Map<number, any> = new Map();
   private courseRoadmaps: Map<number, any> = new Map();
+  
+  // Intervention cooldown tracking
+  private lastStudentIntervention: Map<string, number> = new Map();
+  private lastTeacherAlert: Map<string, number> = new Map();
+  private lastQuizSuggestion: Map<string, number> = new Map();
+  
   private warningThresholds = {
     tttBalance: { min: 0.3, max: 0.7 }, // 30-70% teacher talk time
     silenceDuration: 5000, // 5 seconds
     attentionLow: 0.4,
     taskTimeNormal: 120000, // 2 minutes per task
     idlenessThreshold: 10000, // 10 seconds
+  };
+  
+  // Intervention cooldowns (in milliseconds)
+  private readonly INTERVENTION_COOLDOWNS = {
+    studentHint: 15000, // 15 seconds between student hints
+    teacherAlert: 30000, // 30 seconds between teacher alerts
+    quizSuggestion: 60000, // 60 seconds between quiz suggestions
   };
 
   constructor(io: Server) {
@@ -268,12 +281,15 @@ export class CallernAIMonitor {
     languageCode: string = 'en'
   ): Promise<void> {
     try {
+      // Use transcriptionResult.language as source of truth, fallback to languageCode
+      const detectedLanguage = transcription.language || languageCode;
+      
       // Analyze hesitation with Whisper data
       const hesitationScore = await whisperHesitationDetector.analyzeTranscription(
         roomId,
         transcription,
         speaker,
-        languageCode
+        detectedLanguage
       );
 
       // Update metrics with hesitation data
@@ -301,6 +317,14 @@ export class CallernAIMonitor {
    * Trigger student interventions based on hesitation patterns
    */
   private triggerStudentInterventions(roomId: string, metrics: ConversationMetrics): void {
+    const now = Date.now();
+    const lastIntervention = this.lastStudentIntervention.get(roomId) || 0;
+    
+    // Check cooldown
+    if (now - lastIntervention < this.INTERVENTION_COOLDOWNS.studentHint) {
+      return; // Still in cooldown
+    }
+    
     const studentScore = whisperHesitationDetector.getHesitationScore(roomId, 'student');
     if (!studentScore) return;
 
@@ -312,8 +336,11 @@ export class CallernAIMonitor {
         hints: interventions.studentHints,
         type: 'hesitation-support',
         priority: metrics.studentHesitationScore < 0.3 ? 'high' : 'medium',
-        timestamp: Date.now()
+        timestamp: now
       });
+      
+      // Update last intervention time
+      this.lastStudentIntervention.set(roomId, now);
     }
   }
 
@@ -321,6 +348,14 @@ export class CallernAIMonitor {
    * Trigger teacher alerts about student hesitation
    */
   private triggerTeacherAlerts(roomId: string, metrics: ConversationMetrics): void {
+    const now = Date.now();
+    const lastAlert = this.lastTeacherAlert.get(roomId) || 0;
+    
+    // Check cooldown
+    if (now - lastAlert < this.INTERVENTION_COOLDOWNS.teacherAlert) {
+      return; // Still in cooldown
+    }
+    
     const studentScore = whisperHesitationDetector.getHesitationScore(roomId, 'student');
     if (!studentScore) return;
 
@@ -338,8 +373,11 @@ export class CallernAIMonitor {
           silenceLength: Math.round(metrics.averageSilenceLength * 10) / 10,
           fillerWords: metrics.fillerWordCount
         },
-        timestamp: Date.now()
+        timestamp: now
       });
+      
+      // Update last alert time
+      this.lastTeacherAlert.set(roomId, now);
     }
   }
 
@@ -347,6 +385,14 @@ export class CallernAIMonitor {
    * Trigger quiz suggestions for low engagement
    */
   private triggerQuizSuggestions(roomId: string, metrics: ConversationMetrics): void {
+    const now = Date.now();
+    const lastSuggestion = this.lastQuizSuggestion.get(roomId) || 0;
+    
+    // Check cooldown
+    if (now - lastSuggestion < this.INTERVENTION_COOLDOWNS.quizSuggestion) {
+      return; // Still in cooldown
+    }
+    
     const studentScore = whisperHesitationDetector.getHesitationScore(roomId, 'student');
     if (!studentScore) return;
 
@@ -359,8 +405,11 @@ export class CallernAIMonitor {
         reason: 'low-engagement-hesitation',
         engagementLevel: Math.round(metrics.engagementLevel * 100),
         fluencyLevel: Math.round(metrics.studentHesitationScore * 100),
-        timestamp: Date.now()
+        timestamp: now
       });
+      
+      // Update last suggestion time
+      this.lastQuizSuggestion.set(roomId, now);
     }
   }
 

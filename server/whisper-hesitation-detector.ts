@@ -61,28 +61,28 @@ export class WhisperHesitationDetector extends EventEmitter {
       // Persian/Farsi filler words  
       {
         type: 'filler_word',
-        pattern: /\b(اَم|اُه|یعنی|خب|راستش|ببین|چیزی|اون|این|یه جورایی)\b/g,
+        pattern: /\b(اَم|اُه|یعنی|خب|راستش|ببین|چیزی|اون|این|یه جورایی)\b/gu,
         severity: 0.3,
         languages: ['fa']
       },
       // Arabic filler words
       {
         type: 'filler_word', 
-        pattern: /\b(اممم|اه|يعني|طيب|بصراحة|شوف|حاجة|اللي|ده|كده)\b/g,
+        pattern: /\b(اممم|اه|يعني|طيب|بصراحة|شوف|حاجة|اللي|ده|كده)\b/gu,
         severity: 0.3,
         languages: ['ar']
       },
       // Repetition patterns (multi-language)
       {
         type: 'repetition',
-        pattern: /\b(\w+)\s+\1\b/g,
+        pattern: /\b(\p{L}+)\s+\1\b/gu,
         severity: 0.4,
         languages: ['en', 'fa', 'ar']
       },
       // False starts (incomplete words/sentences)
       {
         type: 'false_start',
-        pattern: /\b\w{1,2}\s+\w+/g,
+        pattern: /\b\p{L}{1,2}\s+\p{L}+/gu,
         severity: 0.5,
         languages: ['en', 'fa', 'ar']
       }
