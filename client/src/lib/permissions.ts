@@ -75,13 +75,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
     // Supervisor-specific powers
     qualityAssurance: true,
     teacherEvaluation: true,
-    complianceMonitoring: true,
-    teacherManagement: true,
-    courseManagement: true,
-    studentManagement: true,
-    paymentApproval: true,
-    leadManagement: true,
-    callernManagement: true
+    complianceMonitoring: true
   },
   teacher: {
     canView: ['own_students', 'own_courses', 'own_sessions', 'class_analytics', 'student_progress'],
@@ -94,8 +88,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
     studentCommunication: true
   },
   mentor: {
-    canView: ['assigned_students', 'learning_progress', 'goal_tracking', 'mentorship_analytics'],
-    canEdit: ['student_goals', 'progress_notes', 'recommendations', 'mentorship_plans'],
+    canView: ['assigned_students', 'learning_progress', 'goal_tracking', 'mentorship_analytics', 'leads', 'follow_up_leads'],
+    canEdit: ['student_goals', 'progress_notes', 'recommendations', 'mentorship_plans', 'lead_follow_up'],
     canDelete: [],
     canCreate: ['goal_plans', 'progress_updates', 'motivation_content', 'achievement_rewards'],
     // Mentor-specific powers
@@ -149,9 +143,9 @@ export const DASHBOARD_ROUTES: Record<UserRole, string> = {
 export function hasPermission(userRole: UserRole, action: 'view' | 'edit' | 'delete' | 'create', resource: string): boolean {
   const permissions = ROLE_PERMISSIONS[userRole];
   const actionKey = `can${action.charAt(0).toUpperCase() + action.slice(1)}` as keyof Permission;
-  const allowedResources = permissions[actionKey];
+  const allowedResources = permissions[actionKey] as string[];
   
-  return allowedResources.includes('*') || allowedResources.includes(resource);
+  return Array.isArray(allowedResources) && (allowedResources.includes('*') || allowedResources.includes(resource));
 }
 
 export function canAccessRoute(userRole: UserRole, route: string): boolean {
@@ -161,12 +155,12 @@ export function canAccessRoute(userRole: UserRole, route: string): boolean {
   
   // Role-specific route access
   const allowedRoutes = {
-    admin: ['/admin', '/dashboard', '/manager', '/supervisor', '/teacher', '/mentor', '/call-center', '/accounting'],
+    admin: ['/admin', '/dashboard', '/manager', '/supervisor', '/teacher', '/mentor', '/call-center', '/callcenter', '/accounting'],
     manager: ['/manager', '/dashboard', '/supervisor', '/teacher'],
-    supervisor: ['/supervisor', '/dashboard', '/teacher'],
+    supervisor: ['/supervisor', '/dashboard', '/teacher', '/callcenter'],
     teacher: ['/teacher', '/dashboard'],
-    mentor: ['/mentor', '/dashboard'],
-    call_center: ['/call-center', '/dashboard'],
+    mentor: ['/mentor', '/dashboard', '/callcenter'],
+    call_center: ['/call-center', '/callcenter', '/dashboard'],
     accountant: ['/accounting', '/dashboard'],
     student: ['/dashboard']
   };

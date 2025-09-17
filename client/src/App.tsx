@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import "./i18n"; // Initialize i18n
 import { AppLayout } from "@/components/layout/app-layout";
 import { RTLLayout } from "@/components/rtl-layout";
+import { RoleProtectedRoute } from "@/components/RoleProtectedRoute";
 
 import NotFound from "@/pages/not-found";
 import Auth from "@/pages/auth";
@@ -353,19 +354,19 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/callcenter">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor']}>
           <UnifiedCallCenterWorkflow />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/callcenter/unified-workflow">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center', 'mentor']}>
           <UnifiedCallCenterWorkflow />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/callcenter/dashboard">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center']}>
           <CallCenterDashboard />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/lead-management">
         <ProtectedRoute>
@@ -378,9 +379,9 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/callcenter/voip">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center']}>
           <VoIPCenter />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/teacher-new">
         <ProtectedRoute>
@@ -703,19 +704,19 @@ function Router() {
 
       {/* Call Center Routes */}
       <Route path="/callcenter/calls">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center']}>
           <CallLogsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/callcenter/prospects">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center']}>
           <ProspectsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
       <Route path="/callcenter/campaigns">
-        <ProtectedRoute>
+        <RoleProtectedRoute allowedRoles={['admin', 'supervisor', 'call_center']}>
           <CampaignsPage />
-        </ProtectedRoute>
+        </RoleProtectedRoute>
       </Route>
 
       {/* Admin Routes */}
