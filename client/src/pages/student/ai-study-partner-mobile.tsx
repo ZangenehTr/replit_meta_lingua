@@ -414,12 +414,16 @@ export default function StudentAIStudyPartnerMobile() {
       gradient="primary"
       showSettings={false}
     >
-      {/* Floating Settings Button */}
+      {/* Floating Settings Button - positioned to avoid browser UI */}
       <motion.button
-        className="fixed top-4 right-4 z-30 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 hover:bg-white transition-all"
+        className="fixed top-20 right-4 z-[9999] p-3 bg-white/95 backdrop-blur-sm rounded-full shadow-xl border border-gray-200 hover:bg-white transition-all"
         onClick={() => setShowSettings(!showSettings)}
         data-testid="lexi-settings-button"
         whileTap={{ scale: 0.95 }}
+        style={{ 
+          marginTop: 'env(safe-area-inset-top, 0px)',
+          zIndex: 9999 
+        }}
       >
         <Settings className="w-5 h-5 text-gray-700" />
       </motion.button>
