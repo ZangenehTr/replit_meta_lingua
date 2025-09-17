@@ -357,6 +357,11 @@ function Router() {
           <UnifiedCallCenterWorkflow />
         </ProtectedRoute>
       </Route>
+      <Route path="/callcenter/unified-workflow">
+        <ProtectedRoute>
+          <UnifiedCallCenterWorkflow />
+        </ProtectedRoute>
+      </Route>
       <Route path="/callcenter/dashboard">
         <ProtectedRoute>
           <CallCenterDashboard />
