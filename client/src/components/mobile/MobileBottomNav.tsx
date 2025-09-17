@@ -58,7 +58,7 @@ export function MobileBottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 bottom-safe-area z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 bottom-safe-area" style={{ zIndex: 50 }}>
       <nav className="flex justify-around items-center py-2">
         {navItems.map((item) => {
           const isActive = location === item.path || 

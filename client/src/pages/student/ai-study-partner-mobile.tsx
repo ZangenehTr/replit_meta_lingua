@@ -454,13 +454,19 @@ export default function StudentAIStudyPartnerMobile() {
     >
       {/* Floating Settings Button - positioned to avoid browser UI */}
       <motion.button
-        className="fixed top-20 right-4 z-[9999] p-3 bg-white/95 backdrop-blur-sm rounded-full shadow-xl border border-gray-200 hover:bg-white transition-all"
-        onClick={() => setShowSettings(!showSettings)}
+        className="fixed top-16 right-4 p-3 bg-white/95 backdrop-blur-sm rounded-full shadow-xl border border-gray-200 hover:bg-white transition-all touch-none"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setShowSettings(prev => !prev);
+        }}
         data-testid="lexi-settings-button"
         whileTap={{ scale: 0.95 }}
         style={{ 
-          marginTop: 'env(safe-area-inset-top, 0px)',
-          zIndex: 9999 
+          zIndex: 99999,
+          position: 'fixed',
+          top: '4rem',
+          right: '1rem'
         }}
       >
         <Settings className="w-5 h-5 text-gray-700" />
@@ -470,18 +476,26 @@ export default function StudentAIStudyPartnerMobile() {
       <AnimatePresence>
         {showSettings && (
           <motion.div 
-            className="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowSettings(false)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowSettings(false);
+            }}
+            style={{ zIndex: 99998 }}
           >
             <motion.div 
               className="bg-white rounded-2xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
             >
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Lexi Settings</h3>
               
@@ -622,7 +636,7 @@ export default function StudentAIStudyPartnerMobile() {
             </motion.div>
             
             {/* Bottom Controls */}
-            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-6 pb-8 mb-safe-area-inset-bottom" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 0px))' }}>
+            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-6" style={{ paddingBottom: 'max(7rem, env(safe-area-inset-bottom, 6rem))' }}>
               {/* Mic Button */}
               <motion.button
                 className={`
