@@ -98,6 +98,7 @@ export class SpeechRecognitionService {
   private lastRestartTime = 0;
   private restartThrottle = 2000; // Minimum 2 seconds between restarts
   private pausedForTTS = false; // Flag to pause during TTS playback
+  private lastTTSClean: string | null = null; // Clean TTS text to prevent echo
 
   constructor() {
     this.initializeSpeechRecognition();
@@ -182,7 +183,28 @@ export class SpeechRecognitionService {
   }
 
   /**
-   * Pause speech recognition (for TTS playback)
+   * Begin TTS Guard - Stop listening and prepare for TTS playback
+   */
+  beginTTSGuard(ttsText: string): void {
+    this.pausedForTTS = true;
+    this.lastTTSClean = this.cleanText(ttsText);
+    if (this.recognition && this.isListening) {
+      this.recognition.stop();
+      console.log('STT paused for TTS guard:', ttsText.substring(0, 30) + '...');
+    }
+  }
+
+  /**
+   * End TTS Guard - Clear echo detection and allow speech recognition restart
+   */
+  endTTSGuard(): void {
+    this.pausedForTTS = false;
+    this.lastTTSClean = null;
+    console.log('TTS guard ended - ready for speech input');
+  }
+
+  /**
+   * Legacy methods for backward compatibility
    */
   pauseForTTS(): void {
     this.pausedForTTS = true;
@@ -193,12 +215,8 @@ export class SpeechRecognitionService {
     }
   }
 
-  /**
-   * Resume speech recognition (after TTS ends)
-   */
   resumeAfterTTS(): void {
     this.pausedForTTS = false;
-    // Don't auto-resume - let user manually start recording again
     console.log('Speech recognition ready to resume after TTS');
   }
 
@@ -206,10 +224,22 @@ export class SpeechRecognitionService {
    * Handle real speech recognition results
    */
   private handleSpeechResult(event: SpeechRecognitionEvent): void {
+    // CRITICAL: Block all results if TTS is playing
+    if (this.pausedForTTS) {
+      console.log('Speech result blocked - TTS playing');
+      return;
+    }
+
     const latest = event.results[event.results.length - 1];
     const transcript = latest[0].transcript;
     const confidence = latest[0].confidence || 0;
     const isFinal = latest.isFinal;
+
+    // CRITICAL: Check for TTS echo/feedback
+    if (this.lastTTSClean && this.isEcho(transcript, this.lastTTSClean)) {
+      console.log('Dropped TTS echo:', transcript.substring(0, 50) + '...');
+      return;
+    }
 
     const result: SpeechRecognitionResult = {
       text: transcript,
@@ -617,6 +647,39 @@ export class SpeechRecognitionService {
   }
 
   /**
+   * Clean text for echo detection
+   */
+  private cleanText(text: string): string {
+    return text.toLowerCase()
+      .replace(/[^\w\s]/g, '') // Remove punctuation
+      .replace(/\s+/g, ' ')   // Normalize spaces
+      .trim();
+  }
+
+  /**
+   * Detect if transcript is an echo of the last TTS
+   */
+  private isEcho(transcript: string, lastTTSClean: string): boolean {
+    const cleanTranscript = this.cleanText(transcript);
+    
+    // Direct substring match
+    if (cleanTranscript.includes(lastTTSClean) || lastTTSClean.includes(cleanTranscript)) {
+      return true;
+    }
+    
+    // Token overlap check for partial matches
+    const transcriptTokens = cleanTranscript.split(' ').filter(t => t.length > 2);
+    const ttsTokens = lastTTSClean.split(' ').filter(t => t.length > 2);
+    
+    if (transcriptTokens.length === 0 || ttsTokens.length === 0) return false;
+    
+    const commonTokens = transcriptTokens.filter(token => ttsTokens.includes(token));
+    const overlapRatio = commonTokens.length / Math.max(transcriptTokens.length, ttsTokens.length);
+    
+    return overlapRatio > 0.6; // 60% token overlap threshold
+  }
+
+  /**
    * Cleanup resources
    */
   destroy(): void {
@@ -624,6 +687,7 @@ export class SpeechRecognitionService {
     this.sessionId = null;
     this.onResult = null;
     this.onSpeechAnalysis = null;
+    this.lastTTSClean = null;
   }
 }
 
