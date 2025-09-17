@@ -34,9 +34,6 @@ export function useAuth() {
   const { data: user, isLoading, error } = useQuery<User | null>({
     queryKey: ["/api/users/me"],
     queryFn: async () => {
-      const token = localStorage.getItem("auth_token");
-      if (!token) return null;
-
       try {
         const response = await apiClient.get("/users/me");
         return response.data;
@@ -49,6 +46,7 @@ export function useAuth() {
         return null;
       }
     },
+    enabled: !!localStorage.getItem("auth_token"), // Only run query if token exists
     retry: (failureCount, error: any) => {
       // Don't retry auth errors, but retry network errors up to 3 times
       if (error?.response?.status === 401 || error?.response?.status === 403) {
