@@ -92,10 +92,10 @@ export default function CoursePlayer({ courseId, lessonId }: CoursePlayerProps) 
     queryKey: ['/api/courses', courseId, 'player'],
   });
 
-  // Get current lesson
-  const currentLesson = course?.lessons.find(lesson => 
+  // Get current lesson (only after course is loaded)
+  const currentLesson = course?.lessons?.find(lesson => 
     currentLessonId ? lesson.id === currentLessonId : lesson.order === 1
-  ) || course?.lessons[0];
+  ) || course?.lessons?.[0];
 
   // Update progress mutation
   const updateProgress = useMutation({
