@@ -412,104 +412,43 @@ export default function StudentAIStudyPartnerMobile() {
       <AnimatePresence>
         {dynamicMode && (
           <motion.div 
-            className="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center"
+            className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Dynamic Circle - Changes size when AI speaks */}
+            {/* Clean ChatGPT-style Circle */}
             <div className="relative flex items-center justify-center">
               <motion.div
-                className={`
-                  rounded-full bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600 
-                  ${isSpeaking ? 'shadow-2xl shadow-purple-500/50' : 'shadow-lg shadow-blue-500/30'}
-                `}
+                className="rounded-full bg-gradient-to-br from-blue-300 via-blue-500 to-white"
                 animate={{
-                  scale: isSpeaking ? [1, 1.3, 1.1, 1.4, 1.2] : [1, 1.05, 1],
-                  rotate: isSpeaking ? [0, 5, -5, 10, -10, 0] : [0, 2, -2, 0],
+                  scale: isSpeaking ? [1, 1.05, 1] : [1, 1.02, 1],
                 }}
                 transition={{
                   scale: {
-                    duration: isSpeaking ? 2 : 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  },
-                  rotate: {
-                    duration: isSpeaking ? 1.5 : 4,
+                    duration: isSpeaking ? 1.5 : 2.5,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }
                 }}
                 style={{
-                  width: isSpeaking ? '200px' : '150px',
-                  height: isSpeaking ? '200px' : '150px',
+                  width: isSpeaking ? '180px' : '160px',
+                  height: isSpeaking ? '180px' : '160px',
+                  filter: 'blur(0.5px)',
                 }}
-              >
-                {/* Inner pulsing circle */}
-                <motion.div
-                  className="absolute inset-2 rounded-full bg-white/20 backdrop-blur-sm"
-                  animate={{
-                    opacity: isSpeaking ? [0.2, 0.8, 0.2] : [0.1, 0.3, 0.1],
-                    scale: isSpeaking ? [0.8, 1.1, 0.8] : [0.9, 1, 0.9],
-                  }}
-                  transition={{
-                    duration: isSpeaking ? 1 : 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-                
-                {/* Center logo/icon */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div
-                    animate={{ scale: isSpeaking ? [1, 0.9, 1] : 1 }}
-                    transition={{ duration: 0.5, repeat: Infinity }}
-                  >
-                    <Bot className="w-12 h-12 text-white" />
-                  </motion.div>
-                </div>
-              </motion.div>
-              
-              {/* Sound waves animation when speaking */}
-              {isSpeaking && (
-                <>
-                  {[...Array(3)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="absolute rounded-full border-2 border-white/30"
-                      initial={{ scale: 1, opacity: 0.7 }}
-                      animate={{ 
-                        scale: [1, 2, 3], 
-                        opacity: [0.7, 0.3, 0] 
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        delay: i * 0.4,
-                        ease: "easeOut"
-                      }}
-                      style={{
-                        width: '150px',
-                        height: '150px',
-                        left: '25px',
-                        top: '25px'
-                      }}
-                    />
-                  ))}
-                </>
-              )}
+              />
             </div>
             
             {/* Status Text */}
             <motion.div 
-              className="mt-8 text-center"
-              animate={{ opacity: [0.7, 1, 0.7] }}
+              className="mt-12 text-center"
+              animate={{ opacity: [0.8, 1, 0.8] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <h2 className="text-white text-xl font-medium mb-2">
+              <h2 className="text-gray-800 text-lg font-medium mb-2">
                 {isSpeaking ? 'Lexi is speaking...' : isRecording ? 'Listening...' : 'Tap to speak'}
               </h2>
-              <p className="text-white/60 text-sm">
+              <p className="text-gray-500 text-sm">
                 Turn minutes into progress
               </p>
             </motion.div>
@@ -519,24 +458,24 @@ export default function StudentAIStudyPartnerMobile() {
               {/* Mic Button */}
               <motion.button
                 className={`
-                  p-4 rounded-full transition-all shadow-lg
+                  p-4 rounded-full transition-all shadow-sm border
                   ${
                     isRecording 
-                      ? 'bg-red-500 animate-pulse' 
-                      : 'bg-white/20 backdrop-blur-sm hover:bg-white/30'
+                      ? 'bg-red-500 border-red-600 text-white animate-pulse' 
+                      : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-700'
                   }
                 `}
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={toggleRecording}
                 data-testid="dynamic-mic-button"
               >
-                <Mic className="w-6 h-6 text-white" />
+                <Mic className="w-5 h-5" />
               </motion.button>
               
               {/* Close Button */}
               <motion.button
-                className="p-4 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all shadow-lg"
-                whileTap={{ scale: 0.9 }}
+                className="p-4 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition-all shadow-sm text-gray-700"
+                whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   setDynamicMode(false);
                   speechRecognitionService.stopListening();
@@ -544,7 +483,7 @@ export default function StudentAIStudyPartnerMobile() {
                 }}
                 data-testid="dynamic-close-button"
               >
-                <X className="w-6 h-6 text-white" />
+                <X className="w-5 h-5" />
               </motion.button>
             </div>
           </motion.div>
