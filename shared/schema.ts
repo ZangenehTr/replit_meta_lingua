@@ -1446,6 +1446,34 @@ export const leads = pgTable("leads", {
   nextFollowUpDate: timestamp("next_follow_up_date"),
   conversionDate: timestamp("conversion_date"),
   studentId: integer("student_id").references(() => users.id), // If converted
+  
+  // NEW FIELDS FOR UNIFIED CALL CENTER WORKFLOW
+  age: integer("age"), // Required age field
+  gender: text("gender"), // male, female - required field
+  nationalId: text("national_id"), // Iranian national ID
+  nationalIdImage: text("national_id_image"), // National ID card image URL
+  avatar: text("avatar"), // Applicant photo URL
+  
+  // Course-specific fields
+  courseTarget: text("course_target"), // IELTS, TOEFL, PTE, GRE, GE (General English)
+  courseModule: text("course_module"), // Academic, General (for IELTS), Core (for PTE)
+  goal: text("goal"), // Based on goal mapping table
+  deliveryType: text("delivery_type"), // حضوری, آنلاین, برون‌سازمانی
+  classType: text("class_type"), // خصوصی, گروهی
+  referralSource: text("referral_source"), // Detailed referral information
+  timeLimit: integer("time_limit"), // Time constraint in months
+  branch: text("branch"), // Preferred branch location
+  
+  // Workflow timeline fields
+  levelAssessmentStart: timestamp("level_assessment_start"),
+  levelAssessmentEnd: timestamp("level_assessment_end"),
+  followUpStart: timestamp("follow_up_start"),
+  followUpEnd: timestamp("follow_up_end"),
+  callCount: integer("call_count").default(0), // Number of attempts made
+  
+  // Workflow status tracking
+  workflowStatus: text("workflow_status").default("دفتر_تلفن"), // دفتر_تلفن, ورودی_جدید, پاسخ_نداده, پیگیری, تعیین_سطح, انصراف
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
