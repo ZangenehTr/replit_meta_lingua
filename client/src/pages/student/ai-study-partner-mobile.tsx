@@ -64,6 +64,7 @@ export default function StudentAIStudyPartnerMobile() {
   const [dynamicMode, setDynamicMode] = useState(false); // ChatGPT-style dynamic interface
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [systemPrompt, setSystemPrompt] = useState('');
   const [settings, setSettings] = useState<StudyPartnerSettings>({
     personality: 'encouraging',
     focusArea: 'general',
@@ -103,6 +104,43 @@ export default function StudentAIStudyPartnerMobile() {
       return response.json();
     }
   });
+
+  // Update system prompt when study partner data loads
+  useEffect(() => {
+    if (studyPartner?.systemPrompt) {
+      setSystemPrompt(studyPartner.systemPrompt);
+    }
+  }, [studyPartner]);
+
+  // Save system prompt function
+  const saveSystemPrompt = async () => {
+    try {
+      const response = await fetch('/api/student/ai-study-partner', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ systemPrompt: systemPrompt.trim() })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save system prompt');
+      }
+
+      toast({
+        title: "System Prompt Saved",
+        description: "Your custom system prompt has been saved and will work across all AI providers.",
+      });
+    } catch (error) {
+      console.error('Error saving system prompt:', error);
+      toast({
+        title: "Save Failed",
+        description: "Failed to save system prompt. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Fetch conversation history
   const { data: conversationHistory } = useQuery<ChatMessage[]>({
@@ -489,6 +527,29 @@ export default function StudentAIStudyPartnerMobile() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* System Prompt Configuration */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Custom System Prompt</label>
+                <div className="text-xs text-gray-500 mb-2">
+                  Customize how Lexi behaves (works across all AI providers)
+                </div>
+                <textarea
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none text-sm"
+                  rows={4}
+                  placeholder="You are Lexi, a helpful AI language learning partner..."
+                  value={systemPrompt}
+                  onChange={(e) => setSystemPrompt(e.target.value)}
+                  data-testid="system-prompt-input"
+                />
+                <button
+                  className="w-full px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                  onClick={saveSystemPrompt}
+                  data-testid="save-system-prompt"
+                >
+                  Save System Prompt
+                </button>
               </div>
 
               {/* Continuous Conversation Toggle */}

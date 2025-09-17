@@ -359,6 +359,7 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
         studyGoals: ["conversation"],
         personalityType: "supportive",
         responseLength: "medium",
+        systemPrompt: "", // Custom system prompt field
         includeGrammarTips: true,
         includeVocabulary: true,
         includePronunciation: false,
@@ -401,16 +402,26 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
       
       const { message } = z.object({ message: z.string() }).parse(req.body);
 
+      // Get user's study partner profile for system prompt
+      const studyPartner = await storage.getAiStudyPartnerByUserId(userId) || { systemPrompt: "" };
+      
+      // Use custom system prompt if available, otherwise use default
+      const defaultSystemPrompt = "You are Lexi, an enthusiastic AI language learning partner. Your motto is 'Turn minutes into progress.' Be encouraging, friendly, and use emojis naturally. Help users make the most of their study time with personalized guidance and engaging conversation.";
+      const systemPrompt = studyPartner.systemPrompt && studyPartner.systemPrompt.trim() 
+        ? studyPartner.systemPrompt 
+        : defaultSystemPrompt;
+      
       // Use AI Provider Manager (Ollama primary, OpenAI fallback)
       try {
         const completion = await aiProvider.createChatCompletion({
           messages: [
-            { role: "system", content: "You are Lexi, an enthusiastic AI language learning partner. Your motto is 'Turn minutes into progress.' Be encouraging, friendly, and use emojis naturally. Help users make the most of their study time with personalized guidance and engaging conversation." },
+            { role: "system", content: systemPrompt },
             { role: "user", content: message }
           ],
           maxTokens: 500,
           temperature: 0.7,
-          model: "qwen2.5:7b" // Preferred Ollama model
+          model: "qwen2.5:7b", // Preferred Ollama model
+          systemPrompt: systemPrompt // Pass system prompt to provider for consistency
         });
 
         res.json({
