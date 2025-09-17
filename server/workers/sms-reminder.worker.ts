@@ -71,6 +71,22 @@ export class SMSReminderWorker {
       const now = new Date();
       const reminderWindowStart = new Date(now.getTime() - this.config.reminderWindowMs);
       
+      // Process lead follow-up reminders
+      await this.processLeadReminders(reminderWindowStart, now);
+      
+      // Process placement test reminders
+      await this.processPlacementTestReminders();
+      
+    } catch (error) {
+      console.error('Error processing SMS reminders:', error);
+    }
+  }
+
+  /**
+   * Process lead follow-up reminders (existing functionality)
+   */
+  private async processLeadReminders(reminderWindowStart: Date, now: Date): Promise<void> {
+    try {
       // Get leads that need SMS reminders
       const pendingLeads = await this.getPendingSMSReminders(reminderWindowStart, now);
       
@@ -78,7 +94,7 @@ export class SMSReminderWorker {
         return; // No reminders to send
       }
 
-      console.log(`Processing ${pendingLeads.length} SMS reminders...`);
+      console.log(`Processing ${pendingLeads.length} lead SMS reminders...`);
 
       for (const lead of pendingLeads) {
         try {
@@ -90,9 +106,41 @@ export class SMSReminderWorker {
         }
       }
 
-      console.log(`Completed processing SMS reminders`);
+      console.log(`Completed processing lead SMS reminders`);
     } catch (error) {
-      console.error('Error processing SMS reminders:', error);
+      console.error('Error processing lead reminders:', error);
+    }
+  }
+
+  /**
+   * Process placement test reminders for unpaid students
+   */
+  private async processPlacementTestReminders(): Promise<void> {
+    try {
+      // Get students who completed placement test but haven't enrolled (last 7 days)
+      const unpaidStudents = await storage.getUnpaidStudentsAfterPlacementTest(7);
+      
+      if (unpaidStudents.length === 0) {
+        return; // No placement test reminders to send
+      }
+
+      console.log(`Processing placement test reminders for ${unpaidStudents.length} students...`);
+
+      for (const student of unpaidStudents) {
+        try {
+          // Check if SMS reminder was already sent
+          if (await this.shouldSendPlacementTestReminder(student)) {
+            await this.sendPlacementTestReminder(student);
+            await this.markPlacementTestReminderSent(student.userId, student.placementSessionId);
+          }
+        } catch (error) {
+          console.error(`Failed to send placement test reminder for student ${student.userId}:`, error);
+        }
+      }
+
+      console.log(`Completed processing placement test reminders`);
+    } catch (error) {
+      console.error('Error processing placement test reminders:', error);
     }
   }
 
@@ -237,6 +285,147 @@ export class SMSReminderWorker {
       });
     } catch (logError) {
       console.error(`Failed to log SMS error for lead ${leadId}:`, logError);
+    }
+  }
+
+  /**
+   * Check if placement test reminder should be sent to student
+   */
+  private async shouldSendPlacementTestReminder(student: any): Promise<boolean> {
+    try {
+      // Check if phone number exists
+      if (!student.phone || student.phone.length < 10) {
+        return false;
+      }
+
+      // Check if reminder was already sent (24-hour cooldown)
+      const reminderCooldownMs = 24 * 60 * 60 * 1000; // 24 hours
+      const lastReminderSent = await this.getLastPlacementTestReminderSent(student.userId, student.placementSessionId);
+      
+      if (lastReminderSent) {
+        const timeSinceLastReminder = new Date().getTime() - new Date(lastReminderSent).getTime();
+        if (timeSinceLastReminder < reminderCooldownMs) {
+          console.log(`Skipping placement test reminder for user ${student.userId} - sent ${Math.round(timeSinceLastReminder / (60 * 1000))} minutes ago`);
+          return false;
+        }
+      }
+
+      // Check if student hasn't been reminded too many times (max 3 reminders)
+      const reminderCount = await this.getPlacementTestReminderCount(student.userId, student.placementSessionId);
+      if (reminderCount >= 3) {
+        console.log(`Skipping placement test reminder for user ${student.userId} - already sent ${reminderCount} reminders`);
+        return false;
+      }
+
+      // Only send reminders for students who completed test 1+ days ago (avoid immediate spam)
+      const daysSinceTest = student.daysSinceTest || 0;
+      if (daysSinceTest < 1) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error checking if placement test reminder should be sent:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Send placement test enrollment reminder SMS
+   */
+  private async sendPlacementTestReminder(student: any): Promise<void> {
+    try {
+      const studentName = student.firstName || 'دانش‌آموز';
+      const level = student.placementLevel || 'B1';
+      const daysAgo = student.daysSinceTest || 1;
+      
+      // Create Persian SMS message
+      const message = `سلام ${studentName} عزیز! 
+${daysAgo} روز پیش تست تعیین سطح خود را در سطح ${level} تکمیل کردید. 
+برای شروع دوره‌های آموزشی و استفاده از امکانات ویژه، در دوره‌ها ثبت‌نام کنید.
+🎯 Meta Lingua - مسیر موفقیت شما`;
+
+      const result = await this.kavenegarService.sendSimpleSMS(
+        student.phone,
+        message,
+        '10008663' // Default Kavenegar sender number
+      );
+
+      if (result.success) {
+        console.log(`✅ Placement test reminder sent to ${student.phone} (User: ${student.userId})`);
+      } else {
+        console.error(`❌ Failed to send placement test reminder to ${student.phone}:`, result.error);
+        throw new Error(result.error || 'SMS sending failed');
+      }
+    } catch (error) {
+      console.error('Error sending placement test reminder:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark placement test reminder as sent
+   */
+  private async markPlacementTestReminderSent(userId: number, placementSessionId: number): Promise<void> {
+    try {
+      // Log the reminder in communication logs for tracking
+      await storage.createCommunicationLog({
+        userId,
+        type: 'sms_placement_reminder',
+        content: 'Placement test enrollment reminder SMS sent',
+        metadata: {
+          placementSessionId,
+          sentAt: new Date().toISOString(),
+          reminderType: 'placement_test_enrollment'
+        },
+        sentAt: new Date()
+      });
+      
+      console.log(`📝 Marked placement test reminder as sent for user ${userId}, session ${placementSessionId}`);
+    } catch (error) {
+      console.error('Error marking placement test reminder as sent:', error);
+    }
+  }
+
+  /**
+   * Get last placement test reminder sent time
+   */
+  private async getLastPlacementTestReminderSent(userId: number, placementSessionId: number): Promise<Date | null> {
+    try {
+      // Query communication logs for the most recent placement test reminder
+      const logs = await storage.getCommunicationLogs(userId, 'sms_placement_reminder');
+      const placementReminders = logs.filter(log => 
+        log.metadata?.placementSessionId === placementSessionId
+      );
+      
+      if (placementReminders.length === 0) {
+        return null;
+      }
+      
+      // Return the most recent reminder time
+      const mostRecent = placementReminders.sort((a, b) => 
+        new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
+      )[0];
+      
+      return new Date(mostRecent.sentAt);
+    } catch (error) {
+      console.error('Error getting last placement test reminder sent time:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get count of placement test reminders sent
+   */
+  private async getPlacementTestReminderCount(userId: number, placementSessionId: number): Promise<number> {
+    try {
+      const logs = await storage.getCommunicationLogs(userId, 'sms_placement_reminder');
+      return logs.filter(log => 
+        log.metadata?.placementSessionId === placementSessionId
+      ).length;
+    } catch (error) {
+      console.error('Error getting placement test reminder count:', error);
+      return 0;
     }
   }
 

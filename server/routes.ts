@@ -20859,6 +20859,28 @@ Meta Lingua Academy`;
   // MISSING STUDENT API ENDPOINTS - FIXED VERSIONS
   // ========================
   
+  // Admin: Get unpaid students after placement test - for SMS automation
+  app.get("/api/admin/unpaid-students-after-placement", authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: any, res) => {
+    try {
+      const daysSinceTest = parseInt(req.query.days as string) || 7;
+      const unpaidStudents = await storage.getUnpaidStudentsAfterPlacementTest(daysSinceTest);
+      
+      res.json({
+        success: true,
+        unpaidStudents,
+        total: unpaidStudents.length,
+        daysSinceTest,
+        message: `Found ${unpaidStudents.length} students who completed placement test ${daysSinceTest} days ago but haven't enrolled`
+      });
+    } catch (error) {
+      console.error('Error getting unpaid students after placement test:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get unpaid students after placement test'
+      });
+    }
+  });
+
   // Student placement test status - FIXED VERSION
   app.get("/api/student/placement-status", authenticateToken, requireRole(['Student']), async (req: any, res) => {
     try {

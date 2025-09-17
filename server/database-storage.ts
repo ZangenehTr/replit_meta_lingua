@@ -5223,6 +5223,167 @@ export class DatabaseStorage implements IStorage {
       .where(eq(enrollments.userId, userId));
   }
 
+  // Check if student has any paid enrollments after placement test
+  async hasActiveEnrollmentAfterPlacementTest(userId: number, placementTestCompletedAt: Date): Promise<boolean> {
+    try {
+      // Check class enrollments with paid status
+      const paidClassEnrollments = await db.select()
+        .from(classEnrollments)
+        .where(
+          and(
+            eq(classEnrollments.userId, userId),
+            eq(classEnrollments.paymentStatus, 'paid'),
+            gte(classEnrollments.enrollmentDate, placementTestCompletedAt)
+          )
+        );
+
+      if (paidClassEnrollments.length > 0) {
+        return true;
+      }
+
+      // Check course payments after placement test
+      const coursePaymentsAfterTest = await db.select()
+        .from(coursePayments)
+        .where(
+          and(
+            eq(coursePayments.userId, userId),
+            eq(coursePayments.status, 'completed'),
+            gte(coursePayments.createdAt, placementTestCompletedAt)
+          )
+        );
+
+      if (coursePaymentsAfterTest.length > 0) {
+        return true;
+      }
+
+      // Check general enrollments after placement test
+      const enrollmentsAfterTest = await db.select()
+        .from(enrollments)
+        .where(
+          and(
+            eq(enrollments.userId, userId),
+            gte(enrollments.enrolledAt, placementTestCompletedAt)
+          )
+        );
+
+      return enrollmentsAfterTest.length > 0;
+    } catch (error) {
+      console.error('Error checking active enrollment after placement test:', error);
+      return false;
+    }
+  }
+
+  // Get students who completed placement test but haven't enrolled/paid
+  async getUnpaidStudentsAfterPlacementTest(daysSinceTest: number = 7): Promise<any[]> {
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysSinceTest);
+
+      // Get completed placement test sessions from the specified time period
+      const completedSessions = await db.select({
+        userId: placementTestSessions.userId,
+        sessionId: placementTestSessions.id,
+        completedAt: placementTestSessions.completedAt,
+        overallLevel: placementTestSessions.overallCEFRLevel,
+        userEmail: users.email,
+        userFirstName: users.firstName,
+        userLastName: users.lastName,
+        userPhone: users.phone
+      })
+        .from(placementTestSessions)
+        .leftJoin(users, eq(placementTestSessions.userId, users.id))
+        .where(
+          and(
+            eq(placementTestSessions.status, 'completed'),
+            gte(placementTestSessions.completedAt, cutoffDate),
+            isNotNull(placementTestSessions.completedAt)
+          )
+        );
+
+      // Filter students who haven't enrolled/paid after placement test
+      const unpaidStudents = [];
+      
+      for (const session of completedSessions) {
+        if (session.completedAt) {
+          const hasActivePaidEnrollment = await this.hasActiveEnrollmentAfterPlacementTest(
+            session.userId,
+            session.completedAt
+          );
+
+          if (!hasActivePaidEnrollment) {
+            unpaidStudents.push({
+              userId: session.userId,
+              email: session.userEmail,
+              firstName: session.userFirstName,
+              lastName: session.userLastName,
+              phone: session.userPhone,
+              placementSessionId: session.sessionId,
+              placementCompletedAt: session.completedAt,
+              placementLevel: session.overallLevel,
+              daysSinceTest: Math.floor(
+                (new Date().getTime() - new Date(session.completedAt).getTime()) / (1000 * 60 * 60 * 24)
+              )
+            });
+          }
+        }
+      }
+
+      return unpaidStudents;
+    } catch (error) {
+      console.error('Error getting unpaid students after placement test:', error);
+      return [];
+    }
+  }
+
+  // Get student enrollment and payment summary
+  async getStudentEnrollmentSummary(userId: number): Promise<any> {
+    try {
+      // Get all enrollments
+      const courseEnrollments = await this.getUserEnrollments(userId);
+      
+      // Get class enrollments with payment status
+      const classEnrollments = await db.select()
+        .from(classEnrollments)
+        .where(eq(classEnrollments.userId, userId));
+
+      // Get course payments
+      const coursePayments = await db.select()
+        .from(coursePayments)
+        .where(eq(coursePayments.userId, userId));
+
+      // Get general payments
+      const payments = await db.select()
+        .from(payments)
+        .where(eq(payments.userId, userId));
+
+      const summary = {
+        hasAnyEnrollment: courseEnrollments.length > 0 || classEnrollments.length > 0,
+        hasPaidEnrollment: classEnrollments.some(e => e.paymentStatus === 'paid') || 
+                          coursePayments.some(p => p.status === 'completed'),
+        totalCourseEnrollments: courseEnrollments.length,
+        totalClassEnrollments: classEnrollments.length,
+        totalCoursePayments: coursePayments.length,
+        totalPayments: payments.length,
+        paidClassEnrollments: classEnrollments.filter(e => e.paymentStatus === 'paid').length,
+        completedCoursePayments: coursePayments.filter(p => p.status === 'completed').length
+      };
+
+      return summary;
+    } catch (error) {
+      console.error('Error getting student enrollment summary:', error);
+      return {
+        hasAnyEnrollment: false,
+        hasPaidEnrollment: false,
+        totalCourseEnrollments: 0,
+        totalClassEnrollments: 0,
+        totalCoursePayments: 0,
+        totalPayments: 0,
+        paidClassEnrollments: 0,
+        completedCoursePayments: 0
+      };
+    }
+  }
+
   // ===== TESTING SUBSYSTEM =====
   // Test management
   async createTest(test: InsertTest): Promise<Test> {

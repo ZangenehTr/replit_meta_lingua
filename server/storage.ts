@@ -131,6 +131,12 @@ export interface IStorage {
   getPlacementTestResponses(sessionId: number): Promise<any[]>;
   createUserRoadmapEnrollment(data: any): Promise<any>;
 
+  // Enrollment and payment checking methods
+  getUserEnrollments(userId: number): Promise<Enrollment[]>;
+  hasActiveEnrollmentAfterPlacementTest(userId: number, placementTestCompletedAt: Date): Promise<boolean>;
+  getUnpaidStudentsAfterPlacementTest(daysSinceTest?: number): Promise<any[]>;
+  getStudentEnrollmentSummary(userId: number): Promise<any>;
+
   // User profiles
   getUserProfile(userId: number): Promise<UserProfile | undefined>;
   createUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
