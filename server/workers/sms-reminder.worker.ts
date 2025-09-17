@@ -192,8 +192,9 @@ export class SMSReminderWorker {
     }
 
     const message = this.generateReminderMessage(lead);
+    const maskedPhone = this.maskPhoneNumber(lead.phoneNumber);
     
-    console.log(`Sending SMS reminder to ${lead.firstName} ${lead.lastName} (${lead.phoneNumber})`);
+    console.log(`Sending SMS reminder to ${lead.firstName} ${lead.lastName} (${maskedPhone})`);
     
     const result = await this.kavenegarService.sendSimpleSMS(
       lead.phoneNumber,
@@ -204,7 +205,7 @@ export class SMSReminderWorker {
       throw new Error(`SMS sending failed: ${result.error}`);
     }
 
-    console.log(`SMS reminder sent successfully to ${lead.phoneNumber} (Message ID: ${result.messageId})`);
+    console.log(`SMS reminder sent successfully to ${maskedPhone} (Message ID: ${result.messageId})`);
 
     // Log the communication
     await this.logCommunication(lead, message, result);
@@ -338,12 +339,10 @@ export class SMSReminderWorker {
       const studentName = student.firstName || 'دانش‌آموز';
       const level = student.placementLevel || 'B1';
       const daysAgo = student.daysSinceTest || 1;
+      const maskedPhone = this.maskPhoneNumber(student.phone);
       
-      // Create Persian SMS message
-      const message = `سلام ${studentName} عزیز! 
-${daysAgo} روز پیش تست تعیین سطح خود را در سطح ${level} تکمیل کردید. 
-برای شروع دوره‌های آموزشی و استفاده از امکانات ویژه، در دوره‌ها ثبت‌نام کنید.
-🎯 Meta Lingua - مسیر موفقیت شما`;
+      // Create culturally appropriate Persian SMS message
+      const message = this.generatePlacementTestReminderMessage(studentName, level, daysAgo);
 
       const result = await this.kavenegarService.sendSimpleSMS(
         student.phone,
@@ -352,9 +351,15 @@ ${daysAgo} روز پیش تست تعیین سطح خود را در سطح ${leve
       );
 
       if (result.success) {
-        console.log(`✅ Placement test reminder sent to ${student.phone} (User: ${student.userId})`);
+        console.log(`✅ Placement test reminder sent to ${maskedPhone} (User: ${student.userId})`);
+        
+        // Log successful communication
+        await this.logPlacementTestCommunication(student, message, result, 'sent');
       } else {
-        console.error(`❌ Failed to send placement test reminder to ${student.phone}:`, result.error);
+        console.error(`❌ Failed to send placement test reminder to ${maskedPhone}:`, result.error);
+        
+        // Log failed communication
+        await this.logPlacementTestCommunication(student, message, result, 'failed');
         throw new Error(result.error || 'SMS sending failed');
       }
     } catch (error) {
@@ -368,17 +373,20 @@ ${daysAgo} روز پیش تست تعیین سطح خود را در سطح ${leve
    */
   private async markPlacementTestReminderSent(userId: number, placementSessionId: number): Promise<void> {
     try {
-      // Log the reminder in communication logs for tracking
+      // FIXED: Use correct storage interface for communication logs
       await storage.createCommunicationLog({
-        userId,
+        fromUserId: 1, // System user
+        toUserId: userId,
         type: 'sms_placement_reminder',
+        subject: 'Placement Test Enrollment Reminder',
         content: 'Placement test enrollment reminder SMS sent',
+        status: 'sent',
+        sentAt: new Date(),
         metadata: {
           placementSessionId,
-          sentAt: new Date().toISOString(),
+          automated: true,
           reminderType: 'placement_test_enrollment'
-        },
-        sentAt: new Date()
+        }
       });
       
       console.log(`📝 Marked placement test reminder as sent for user ${userId}, session ${placementSessionId}`);
@@ -392,9 +400,11 @@ ${daysAgo} روز پیش تست تعیین سطح خود را در سطح ${leve
    */
   private async getLastPlacementTestReminderSent(userId: number, placementSessionId: number): Promise<Date | null> {
     try {
-      // Query communication logs for the most recent placement test reminder
-      const logs = await storage.getCommunicationLogs(userId, 'sms_placement_reminder');
-      const placementReminders = logs.filter(log => 
+      // FIXED: Get all communication logs and filter in memory
+      const allLogs = await storage.getCommunicationLogs();
+      const placementReminders = allLogs.filter(log => 
+        log.userId === userId &&
+        log.type === 'sms_placement_reminder' &&
         log.metadata?.placementSessionId === placementSessionId
       );
       
@@ -404,10 +414,10 @@ ${daysAgo} روز پیش تست تعیین سطح خود را در سطح ${leve
       
       // Return the most recent reminder time
       const mostRecent = placementReminders.sort((a, b) => 
-        new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
+        new Date(b.sentAt || b.createdAt).getTime() - new Date(a.sentAt || a.createdAt).getTime()
       )[0];
       
-      return new Date(mostRecent.sentAt);
+      return new Date(mostRecent.sentAt || mostRecent.createdAt);
     } catch (error) {
       console.error('Error getting last placement test reminder sent time:', error);
       return null;
@@ -419,13 +429,79 @@ ${daysAgo} روز پیش تست تعیین سطح خود را در سطح ${leve
    */
   private async getPlacementTestReminderCount(userId: number, placementSessionId: number): Promise<number> {
     try {
-      const logs = await storage.getCommunicationLogs(userId, 'sms_placement_reminder');
-      return logs.filter(log => 
+      // FIXED: Get all communication logs and filter in memory
+      const allLogs = await storage.getCommunicationLogs();
+      return allLogs.filter(log => 
+        log.userId === userId &&
+        log.type === 'sms_placement_reminder' &&
         log.metadata?.placementSessionId === placementSessionId
       ).length;
     } catch (error) {
       console.error('Error getting placement test reminder count:', error);
       return 0;
+    }
+  }
+
+  /**
+   * Mask phone number for security in logs
+   */
+  private maskPhoneNumber(phone: string): string {
+    if (!phone || phone.length < 4) {
+      return '***';
+    }
+    // Show first 2 and last 2 digits, mask the middle
+    const start = phone.slice(0, 2);
+    const end = phone.slice(-2);
+    const middle = '*'.repeat(Math.max(phone.length - 4, 3));
+    return `${start}${middle}${end}`;
+  }
+
+  /**
+   * Generate culturally appropriate Persian placement test reminder message
+   */
+  private generatePlacementTestReminderMessage(studentName: string, level: string, daysAgo: number): string {
+    const timePhrase = daysAgo === 1 ? 'دیروز' : `${daysAgo} روز پیش`;
+    
+    return `سلام ${studentName} عزیز!
+
+${timePhrase} تست تعیین سطح خود را در سطح ${level} با موفقیت تکمیل کردید. 🎉
+
+برای شروع مسیر یادگیری و بهره‌مندی از کلاس‌های تخصصی، زمان ثبت‌نام در دوره‌های آموزشی فرا رسیده است.
+
+📞 جهت مشاوره و ثبت‌نام: 021-1234
+🌐 Meta Lingua - همراه شما در مسیر یادگیری`;
+  }
+
+  /**
+   * Log placement test SMS communication (success or failure)
+   */
+  private async logPlacementTestCommunication(
+    student: any,
+    message: string,
+    smsResult: any,
+    status: 'sent' | 'failed'
+  ): Promise<void> {
+    try {
+      await storage.createCommunicationLog({
+        fromUserId: 1, // System user
+        toUserId: student.userId,
+        type: 'sms_placement_reminder',
+        subject: 'Placement Test Enrollment Reminder',
+        content: message,
+        status: status,
+        sentAt: new Date(),
+        metadata: {
+          placementSessionId: student.placementSessionId,
+          placementLevel: student.placementLevel,
+          daysSinceTest: student.daysSinceTest,
+          messageId: smsResult?.messageId,
+          cost: smsResult?.cost,
+          automated: true,
+          error: status === 'failed' ? smsResult?.error : undefined
+        }
+      });
+    } catch (error) {
+      console.error(`Failed to log placement test communication for user ${student.userId}:`, error);
     }
   }
 
