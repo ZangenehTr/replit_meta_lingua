@@ -478,11 +478,11 @@ export default function StudentAIStudyPartnerMobile() {
                     <button
                       key={mode.id}
                       className={`p-3 rounded-lg text-center transition-all ${
-                        studyMode === mode.id
+                        settings.studyMode === mode.id
                           ? mode.color + ' text-white shadow-lg'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
-                      onClick={() => setStudyMode(mode.id as any)}
+                      onClick={() => setSettings({...settings, studyMode: mode.id as any})}
                     >
                       <mode.icon className="w-4 h-4 mx-auto mb-1" />
                       <div className="text-xs font-medium">{mode.label}</div>
