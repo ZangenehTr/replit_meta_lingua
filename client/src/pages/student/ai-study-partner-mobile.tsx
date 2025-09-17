@@ -622,7 +622,7 @@ export default function StudentAIStudyPartnerMobile() {
             </motion.div>
             
             {/* Bottom Controls */}
-            <div className="absolute bottom-8 flex items-center justify-center gap-6">
+            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-6 pb-8 mb-safe-area-inset-bottom" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 0px))' }}>
               {/* Mic Button */}
               <motion.button
                 className={`
