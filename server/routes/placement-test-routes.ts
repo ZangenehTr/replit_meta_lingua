@@ -9,6 +9,8 @@ import { DatabaseStorage } from '../database-storage';
 import { AdaptivePlacementService } from '../services/adaptive-placement-service';
 import { AIRoadmapGenerator } from '../services/ai-roadmap-generator';
 import { OllamaService } from '../ollama-service';
+import { authenticateToken, requireRole } from '../auth-middleware';
+import type { AuthRequest } from '../auth-middleware';
 
 // Configure multer for audio uploads (store in memory)
 const upload = multer({ 
@@ -22,28 +24,7 @@ const upload = multer({
     }
   }
 });
-// Simple authentication middleware for placement tests
-const authenticateToken = (req: any, res: any, next: any) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) {
-    return res.status(401).json({ success: false, error: 'Access token required' });
-  }
-  
-  // For demo purposes, assume a valid user
-  req.user = { id: 1, role: 'Student' };
-  next();
-};
-
-const requireRole = (roles: string[]) => {
-  return (req: any, res: any, next: any) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ success: false, error: 'Insufficient permissions' });
-    }
-    next();
-  };
-};
+// Using real authentication middleware from auth-middleware.ts
 import { z } from 'zod';
 
 const router = express.Router();
@@ -68,6 +49,15 @@ const generateRoadmapSchema = z.object({
   focusAreas: z.array(z.string()).optional()
 });
 
+// Helper function to get next week start date
+function getNextWeekStartDate(): string {
+  const now = new Date();
+  const nextWeek = new Date(now);
+  nextWeek.setDate(now.getDate() + (7 - now.getDay())); // Next Sunday
+  nextWeek.setHours(0, 0, 0, 0);
+  return nextWeek.toISOString();
+}
+
 export function createPlacementTestRoutes(
   storage: DatabaseStorage,
   ollamaService: OllamaService
@@ -76,10 +66,23 @@ export function createPlacementTestRoutes(
   const roadmapGenerator = new AIRoadmapGenerator(ollamaService, storage);
 
   // Start new placement test
-  router.post('/start', authenticateToken, async (req, res) => {
+  router.post('/start', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const data = startTestSchema.parse(req.body);
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
+
+      // Check weekly limits (max 3 attempts per week)
+      const sessionsThisWeek = await storage.getUserPlacementTestSessionsThisWeek(userId);
+      if (sessionsThisWeek.length >= 3) {
+        return res.status(429).json({
+          success: false,
+          error: 'Weekly placement test limit exceeded',
+          message: 'You can only take 3 placement tests per week. Please try again next week.',
+          attemptsUsed: sessionsThisWeek.length,
+          maxAttempts: 3,
+          nextAvailableDate: getNextWeekStartDate()
+        });
+      }
 
       const session = await placementService.startPlacementTest(
         userId,
@@ -95,6 +98,11 @@ export function createPlacementTestRoutes(
           currentSkill: session.currentSkill,
           startedAt: session.startedAt,
           maxDurationMinutes: 10
+        },
+        weeklyLimits: {
+          attemptsUsed: sessionsThisWeek.length + 1,
+          maxAttempts: 3,
+          remainingAttempts: 2 - sessionsThisWeek.length
         }
       });
     } catch (error) {
@@ -107,10 +115,10 @@ export function createPlacementTestRoutes(
   });
 
   // Get next question
-  router.get('/sessions/:sessionId/next-question', authenticateToken, async (req, res) => {
+  router.get('/sessions/:sessionId/next-question', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
 
       // Verify session belongs to user
       const session = await storage.getPlacementTestSession(sessionId);
@@ -176,10 +184,10 @@ export function createPlacementTestRoutes(
   });
 
   // Submit response to question
-  router.post('/sessions/:sessionId/responses', authenticateToken, upload.single('audio'), async (req, res) => {
+  router.post('/sessions/:sessionId/responses', authenticateToken, upload.single('audio'), async (req: AuthRequest, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
       
       let data;
       
@@ -243,10 +251,10 @@ export function createPlacementTestRoutes(
   });
 
   // Get placement test results
-  router.get('/sessions/:sessionId/results', authenticateToken, async (req, res) => {
+  router.get('/sessions/:sessionId/results', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
 
       const session = await storage.getPlacementTestSession(sessionId);
       if (!session || session.userId !== userId) {
@@ -302,11 +310,11 @@ export function createPlacementTestRoutes(
   });
 
   // Generate instant AI roadmap from placement results
-  router.post('/sessions/:sessionId/generate-roadmap', authenticateToken, async (req, res) => {
+  router.post('/sessions/:sessionId/generate-roadmap', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const data = generateRoadmapSchema.parse(req.body);
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
 
       const session = await storage.getPlacementTestSession(sessionId);
       if (!session || session.userId !== userId) {
@@ -379,9 +387,9 @@ export function createPlacementTestRoutes(
   });
 
   // Get user's placement test history
-  router.get('/history', authenticateToken, async (req, res) => {
+  router.get('/history', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user!.id;
       const sessions = await storage.getUserPlacementTestSessions(userId);
 
       res.json({
@@ -408,7 +416,7 @@ export function createPlacementTestRoutes(
   });
 
   // Admin: Get all placement test sessions (for analytics)
-  router.get('/admin/sessions', authenticateToken, requireRole(['Admin', 'Supervisor']), async (req, res) => {
+  router.get('/admin/sessions', authenticateToken, requireRole(['Admin', 'Supervisor']), async (req: AuthRequest, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;

@@ -13021,6 +13021,35 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getUserPlacementTestSessionsThisWeek(userId: number): Promise<any[]> {
+    try {
+      // Get start of current week (Sunday)
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      // Get end of current week (Saturday)
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+
+      return await db.select()
+        .from(placementTestSessions)
+        .where(
+          and(
+            eq(placementTestSessions.userId, userId),
+            gte(placementTestSessions.startedAt, startOfWeek),
+            lte(placementTestSessions.startedAt, endOfWeek)
+          )
+        )
+        .orderBy(desc(placementTestSessions.startedAt));
+    } catch (error) {
+      console.error('Error getting user placement test sessions this week:', error);
+      return [];
+    }
+  }
+
   async createPlacementTestQuestion(data: any): Promise<any> {
     try {
       const [question] = await db.insert(placementTestQuestions).values({

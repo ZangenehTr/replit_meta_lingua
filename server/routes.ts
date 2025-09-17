@@ -2754,34 +2754,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user?.id;
       
-      // For now, return mock data since placement test schema has import issues
-      // TODO: Fix placement test schema import later
-      const hasCompletedPlacementTest = false; // Reset to allow retaking test
+      // Get user's placement test sessions to find the latest completed one
+      const placementSessions = await storage.getUserPlacementTestSessions(userId);
+      const completedSessions = placementSessions.filter((session: any) => session.status === 'completed');
+      
+      // Get this week's sessions for weekly limit display
+      const sessionsThisWeek = await storage.getUserPlacementTestSessionsThisWeek(userId);
+      
+      let hasCompletedPlacementTest = completedSessions.length > 0;
       let placementResults = null;
+      let latestSession = null;
       
       if (hasCompletedPlacementTest) {
+        // Get the most recent completed session
+        latestSession = completedSessions.sort((a: any, b: any) => 
+          new Date(b.completedAt || b.startedAt).getTime() - new Date(a.completedAt || a.startedAt).getTime()
+        )[0];
+        
         placementResults = {
-          overallLevel: 'B2',
-          speakingLevel: 'B2',
-          listeningLevel: 'B1',
-          readingLevel: 'B2',
-          writingLevel: 'B1',
-          completedAt: '2024-01-20T10:00:00Z'
+          sessionId: latestSession.id,
+          overallLevel: latestSession.overallCEFRLevel || 'B1',
+          speakingLevel: latestSession.speakingLevel || 'B1',
+          listeningLevel: latestSession.listeningLevel || 'B1',
+          readingLevel: latestSession.readingLevel || 'B1',
+          writingLevel: latestSession.writingLevel || 'B1',
+          overallScore: latestSession.overallScore || 0,
+          speakingScore: latestSession.speakingScore || 0,
+          listeningScore: latestSession.listeningScore || 0,
+          readingScore: latestSession.readingScore || 0,
+          writingScore: latestSession.writingScore || 0,
+          strengths: latestSession.strengths || [],
+          recommendations: latestSession.recommendations || [],
+          confidenceScore: latestSession.confidenceScore || 0,
+          completedAt: latestSession.completedAt || latestSession.startedAt
         };
       }
       
       res.json({
         hasCompletedPlacementTest,
         placementResults,
+        weeklyLimits: {
+          attemptsUsed: sessionsThisWeek.length,
+          maxAttempts: 3,
+          remainingAttempts: Math.max(0, 3 - sessionsThisWeek.length),
+          canTakeTest: sessionsThisWeek.length < 3
+        },
         message: hasCompletedPlacementTest 
-          ? 'Placement test completed' 
-          : 'Placement test required for optimal learning path'
+          ? 'Placement test completed - see your results below' 
+          : 'Take your placement test to discover your English level and get personalized learning recommendations'
       });
     } catch (error) {
       console.error('Error checking placement test status:', error);
       res.status(500).json({ 
         error: 'Failed to check placement test status',
-        hasCompletedPlacementTest: false 
+        hasCompletedPlacementTest: false,
+        weeklyLimits: {
+          attemptsUsed: 0,
+          maxAttempts: 3,
+          remainingAttempts: 3,
+          canTakeTest: true
+        }
       });
     }
   });

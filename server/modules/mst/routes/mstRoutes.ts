@@ -12,7 +12,9 @@ import { MstResponsesController } from '../controllers/responsesController';
 import { determineFinalBand } from '../routing/router';
 import { SkillResult } from '../schemas/resultSchema';
 import { whisperService } from '../../../whisper-service';
+import { authenticateToken, requireRole } from '../../../auth-middleware';
 import { AuthRequest } from '../../../auth-middleware';
+import { storage } from '../../storage';
 
 const router = express.Router();
 
@@ -27,19 +29,7 @@ const sessionController = new MstSessionController();
 const itemsController = new MstItemsController();
 const responsesController = new MstResponsesController();
 
-// Simple auth middleware (replace with proper auth)
-const authenticateToken = (req: AuthRequest, res: express.Response, next: express.NextFunction) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) {
-    return res.status(401).json({ success: false, error: 'Access token required' });
-  }
-  
-  // For demo purposes - replace with proper JWT validation
-  req.user = { id: parseInt(token) || 1, role: 'Student' };
-  next();
-};
+// Using real authentication middleware from auth-middleware.ts
 
 // Request schemas
 const skillSchema = z.enum(['listening', 'reading', 'speaking', 'writing']);
@@ -47,6 +37,15 @@ const stageSchema = z.enum(['core', 'upper', 'lower']);
 
 // Initialize item bank
 itemsController.initialize().catch(console.error);
+
+// Helper function to get next week start date
+function getNextWeekStartDate(): string {
+  const now = new Date();
+  const nextWeek = new Date(now);
+  nextWeek.setDate(now.getDate() + (7 - now.getDay())); // Next Sunday
+  nextWeek.setHours(0, 0, 0, 0);
+  return nextWeek.toISOString();
+}
 
 /**
  * POST /mst/start
@@ -56,11 +55,29 @@ router.post('/start', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.user!.id;
     
+    // Check weekly limits (max 3 attempts per week) - consistent with placement tests
+    const sessionsThisWeek = await storage.getUserPlacementTestSessionsThisWeek(userId);
+    if (sessionsThisWeek.length >= 3) {
+      return res.status(429).json({
+        success: false,
+        error: 'Weekly placement test limit exceeded',
+        message: 'You can only take 3 placement tests per week. Please try again next week.',
+        attemptsUsed: sessionsThisWeek.length,
+        maxAttempts: 3,
+        nextAvailableDate: getNextWeekStartDate()
+      });
+    }
+    
     const result = await sessionController.startSession(userId);
     
     res.json({
       success: true,
-      ...result
+      ...result,
+      weeklyLimits: {
+        attemptsUsed: sessionsThisWeek.length + 1,
+        maxAttempts: 3,
+        remainingAttempts: 2 - sessionsThisWeek.length
+      }
     });
   } catch (error) {
     console.error('❌ Error starting MST session:', error);

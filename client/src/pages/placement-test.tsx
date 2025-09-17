@@ -99,7 +99,7 @@ export default function PlacementTestPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
         body: JSON.stringify(data)
       });
@@ -147,7 +147,7 @@ export default function PlacementTestPage() {
         response = await fetch(`/api/placement-test/sessions/${data.sessionId}/responses`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
           },
           body: formData
         });
@@ -157,7 +157,7 @@ export default function PlacementTestPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
           },
           body: JSON.stringify({
             questionId: data.questionId,
@@ -217,7 +217,7 @@ export default function PlacementTestPage() {
       console.log('[DEBUG] Fetching next question for session:', sessionId);
       const response = await fetch(`/api/placement-test/sessions/${sessionId}/next-question`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
       
@@ -279,7 +279,7 @@ export default function PlacementTestPage() {
     try {
       const response = await fetch(`/api/placement-test/sessions/${currentSession.id}/results`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
       });
       

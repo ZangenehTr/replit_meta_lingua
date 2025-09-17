@@ -71,12 +71,27 @@ interface StudentStats {
 interface PlacementTestStatus {
   hasCompletedPlacementTest: boolean;
   placementResults?: {
+    sessionId: number;
     overallLevel: string;
     speakingLevel: string;
     listeningLevel: string;
     readingLevel: string;
     writingLevel: string;
+    overallScore: number;
+    speakingScore: number;
+    listeningScore: number;
+    readingScore: number;
+    writingScore: number;
+    strengths: string[];
+    recommendations: string[];
+    confidenceScore: number;
     completedAt: string;
+  };
+  weeklyLimits: {
+    attemptsUsed: number;
+    maxAttempts: number;
+    remainingAttempts: number;
+    canTakeTest: boolean;
   };
   message: string;
 }
@@ -280,15 +295,46 @@ export default function StudentDashboard() {
                 <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto">
                   {t('student:placementTestDescription', 'Take our 6-minute placement test to create your personalized learning path and find your perfect starting level.')}
                 </p>
-                <Button 
-                  className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold px-6 py-3"
-                  asChild
-                >
-                  <Link href="/mst" className="flex items-center gap-2">
-                    <Zap className="w-5 h-5" />
-                    {t('student:startPlacementTest', 'Start Placement Test (6 min)')}
-                  </Link>
-                </Button>
+                
+                {/* Weekly Limits Display */}
+                {placementStatus.weeklyLimits && (
+                  <div className="mb-4 p-3 bg-white/50 rounded-lg">
+                    <div className="text-xs text-gray-600 mb-1">Weekly Attempts</div>
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="text-sm font-medium">
+                        {placementStatus.weeklyLimits.attemptsUsed} / {placementStatus.weeklyLimits.maxAttempts}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        ({placementStatus.weeklyLimits.remainingAttempts} remaining)
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {placementStatus.weeklyLimits?.canTakeTest ? (
+                  <Button 
+                    className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold px-6 py-3"
+                    asChild
+                  >
+                    <Link href="/mst" className="flex items-center gap-2">
+                      <Zap className="w-5 h-5" />
+                      {t('student:startPlacementTest', 'Start Placement Test (6 min)')}
+                    </Link>
+                  </Button>
+                ) : (
+                  <div className="text-center">
+                    <Button 
+                      className="bg-gray-400 text-white font-bold px-6 py-3"
+                      disabled
+                    >
+                      <Timer className="w-5 h-5 mr-2" />
+                      Weekly Limit Reached
+                    </Button>
+                    <p className="text-xs text-gray-500 mt-2">
+                      You can take 3 placement tests per week. Try again next week.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -302,34 +348,127 @@ export default function StudentDashboard() {
             transition={{ delay: 0.1 }}
           >
             <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 shadow-xl">
-              <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-white" />
+              <CardContent className="p-6">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                    <CheckCircle2 className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="font-bold text-xl text-gray-900 mb-2">
+                    {t('student:placementCompleted', 'Latest Placement Test Results')}
+                  </h4>
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <span className="text-2xl font-bold text-green-700">{placementStatus.placementResults.overallLevel}</span>
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      Overall Level
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Completed: {new Date(placementStatus.placementResults.completedAt).toLocaleDateString()}
+                  </p>
                 </div>
-                <h4 className="font-bold text-lg text-gray-900 mb-2">
-                  {t('student:placementCompleted', 'Placement Test Complete')}
-                </h4>
-                <p className="text-gray-600 text-sm mb-3">
-                  {t('student:yourLevel', 'Your Level')}: <span className="font-bold text-green-700">{placementStatus.placementResults.overallLevel}</span>
-                </p>
-                <div className="grid grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <div className="text-gray-500 text-xs">Speaking</div>
-                    <div className="font-bold text-green-700">{placementStatus.placementResults.speakingLevel}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500 text-xs">Listening</div>
-                    <div className="font-bold text-green-700">{placementStatus.placementResults.listeningLevel}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500 text-xs">Reading</div>
-                    <div className="font-bold text-green-700">{placementStatus.placementResults.readingLevel}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500 text-xs">Writing</div>
-                    <div className="font-bold text-green-700">{placementStatus.placementResults.writingLevel}</div>
+
+                {/* Skills Breakdown */}
+                <div className="space-y-4 mb-6">
+                  <h5 className="font-semibold text-gray-900 text-center">Skills Breakdown</h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Mic className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm font-medium">Speaking</span>
+                      </div>
+                      <Badge variant="outline" className="font-bold">
+                        {placementStatus.placementResults.speakingLevel}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Headphones className="w-4 h-4 text-green-500" />
+                        <span className="text-sm font-medium">Listening</span>
+                      </div>
+                      <Badge variant="outline" className="font-bold">
+                        {placementStatus.placementResults.listeningLevel}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-purple-500" />
+                        <span className="text-sm font-medium">Reading</span>
+                      </div>
+                      <Badge variant="outline" className="font-bold">
+                        {placementStatus.placementResults.readingLevel}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <PenTool className="w-4 h-4 text-orange-500" />
+                        <span className="text-sm font-medium">Writing</span>
+                      </div>
+                      <Badge variant="outline" className="font-bold">
+                        {placementStatus.placementResults.writingLevel}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
+
+                {/* Strengths and Recommendations */}
+                {(placementStatus.placementResults.strengths?.length > 0 || placementStatus.placementResults.recommendations?.length > 0) && (
+                  <div className="space-y-4">
+                    {placementStatus.placementResults.strengths?.length > 0 && (
+                      <div>
+                        <h6 className="font-semibold text-sm text-green-700 mb-2 flex items-center gap-1">
+                          <Star className="w-4 h-4" />
+                          Your Strengths
+                        </h6>
+                        <div className="flex flex-wrap gap-1">
+                          {placementStatus.placementResults.strengths.slice(0, 3).map((strength, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs bg-green-100 text-green-800">
+                              {strength}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {placementStatus.placementResults.recommendations?.length > 0 && (
+                      <div>
+                        <h6 className="font-semibold text-sm text-blue-700 mb-2 flex items-center gap-1">
+                          <TrendingUp className="w-4 h-4" />
+                          Recommendations
+                        </h6>
+                        <div className="flex flex-wrap gap-1">
+                          {placementStatus.placementResults.recommendations.slice(0, 2).map((rec, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {rec}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Weekly Limits for Completed Users */}
+                {placementStatus.weeklyLimits && (
+                  <div className="mt-6 pt-4 border-t border-green-200">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Weekly Tests</span>
+                      <span className="font-medium">
+                        {placementStatus.weeklyLimits.attemptsUsed}/{placementStatus.weeklyLimits.maxAttempts} used
+                      </span>
+                    </div>
+                    {placementStatus.weeklyLimits.canTakeTest && (
+                      <Button 
+                        className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white"
+                        size="sm"
+                        asChild
+                      >
+                        <Link href="/mst" className="flex items-center justify-center gap-2">
+                          <Brain className="w-4 h-4" />
+                          Retake Placement Test
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>

@@ -120,6 +120,7 @@ export interface IStorage {
   getPlacementTestSession(id: number): Promise<any | undefined>;
   updatePlacementTestSession(id: number, updates: any): Promise<any | undefined>;
   getUserPlacementTestSessions(userId: number): Promise<any[]>;
+  getUserPlacementTestSessionsThisWeek(userId: number): Promise<any[]>;
   getPlacementTestSessionsPaginated(page: number, limit: number): Promise<{ sessions: any[], total: number }>;
   getPlacementTestSessionsCount(): Promise<number>;
   createPlacementTestQuestion(data: any): Promise<any>;
@@ -1209,6 +1210,27 @@ export class MemStorage implements IStorage {
 
   async getUserPlacementTestSessions(userId: number): Promise<any[]> {
     return await this.db.select().from(mstSessions).where(eq(mstSessions.userId, userId));
+  }
+
+  async getUserPlacementTestSessionsThisWeek(userId: number): Promise<any[]> {
+    // Get start of current week (Sunday)
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    // Get end of current week (Saturday)
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    return await this.db.select().from(mstSessions).where(
+      and(
+        eq(mstSessions.userId, userId),
+        gte(mstSessions.startedAt, startOfWeek),
+        lte(mstSessions.startedAt, endOfWeek)
+      )
+    );
   }
 
   async getPlacementTestSessionsPaginated(page: number, limit: number): Promise<{ sessions: any[], total: number }> {
