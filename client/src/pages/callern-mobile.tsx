@@ -315,50 +315,66 @@ export default function CallernMobilePage() {
                   <p className="text-white/60">{t('callern:loadingTeachers')}</p>
                 </div>
               ) : availableTeachers.filter((t: AvailableTeacher) => 
-                t.languages.includes(selectedLanguage)
+                t.languages.includes(selectedLanguage) && t.isOnline
               ).length === 0 ? (
                 <MobileCard className="p-8 text-center">
                   <WifiOff className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600 dark:text-gray-400">
-                    {t('callern:noTeachersAvailable', { language: selectedLanguage })}
+                    {t('callern:noTeachersOnline', { language: selectedLanguage })}
                   </p>
                 </MobileCard>
               ) : (
                 availableTeachers
                   .filter((teacher: AvailableTeacher) => 
-                    teacher.languages.includes(selectedLanguage)
+                    teacher.languages.includes(selectedLanguage) && teacher.isOnline
                   )
                   .map((teacher: AvailableTeacher) => (
-                    <MobileCard key={teacher.id} className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
-                            {teacher.firstName[0]}{teacher.lastName[0]}
+                    <MobileCard key={teacher.id} className="p-6 bg-gradient-to-br from-white via-gray-50 to-blue-50 border-2 border-gray-100 hover:border-blue-200 transition-all duration-300 shadow-lg hover:shadow-xl">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            {teacher.profileImageUrl ? (
+                              <img 
+                                src={teacher.profileImageUrl} 
+                                alt={`${teacher.firstName} ${teacher.lastName}`}
+                                className="w-18 h-18 rounded-full object-cover border-4 border-white shadow-xl"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`w-18 h-18 rounded-full bg-gradient-to-br from-purple-500 via-blue-500 to-pink-500 flex items-center justify-center text-white font-bold text-xl shadow-xl border-4 border-white ${teacher.profileImageUrl ? 'hidden' : ''}`}>
+                              {teacher.firstName[0]}{teacher.lastName[0]}
+                            </div>
+                            {/* Online status indicator */}
+                            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1.5 border-3 border-white animate-pulse shadow-lg">
+                              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-800 dark:text-white">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-1">
                               {teacher.firstName} {teacher.lastName}
                             </h3>
-                            <div className="flex items-center gap-1 mt-1">
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                              <span className="text-sm text-gray-600 dark:text-gray-300">
-                                {teacher.rating}
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="flex items-center gap-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    className={`h-4 w-4 ${i < Math.floor(teacher.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                                {teacher.rating} (5.0)
                               </span>
                             </div>
                           </div>
                         </div>
                         <Badge 
-                          className={`${
-                            teacher.isOnline 
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' 
-                              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                          }`}
+                          className="bg-gradient-to-r from-green-500 to-emerald-500 text-white animate-pulse px-3 py-1.5 shadow-lg"
                         >
-                          {teacher.isOnline ? (
-                            <><Wifi className="h-3 w-3 mr-1" /> {t('callern:online')}</>
-                          ) : (
-                            <><WifiOff className="h-3 w-3 mr-1" /> {t('callern:offline')}</>
-                          )}
+                          <Wifi className="h-4 w-4 mr-1" /> {t('callern:online')}
                         </Badge>
                       </div>
 

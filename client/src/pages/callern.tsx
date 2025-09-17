@@ -706,22 +706,37 @@ export default function CallernSystem() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                 <p>{t('callern:loadingTeachers')}</p>
               </div>
-            ) : availableTeachers.length === 0 ? (
+            ) : onlineTeachers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                {t('callern:noTeachersAvailable', { language: selectedLanguage })}
+                {t('callern:noTeachersOnline', { language: selectedLanguage })}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {availableTeachers.map((teacher: AvailableTeacher) => (
-                  <div key={teacher.id} className="border rounded-lg p-4 space-y-3 hover:shadow-lg transition-shadow bg-gradient-to-br from-white to-gray-50">
+                {onlineTeachers.map((teacher: AvailableTeacher) => (
+                  <div key={teacher.id} className="border rounded-xl p-6 space-y-4 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white via-gray-50 to-blue-50 hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 border-gray-200 hover:border-blue-300">
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <div className="relative">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                          {teacher.profileImageUrl ? (
+                            <img 
+                              src={teacher.profileImageUrl} 
+                              alt={`${teacher.firstName} ${teacher.lastName}`}
+                              className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white ${teacher.profileImageUrl ? 'hidden' : ''}`}>
                             {teacher.firstName[0]}{teacher.lastName[0]}
                           </div>
+                          {/* Online status indicator */}
+                          <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 border-3 border-white animate-pulse">
+                            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                          </div>
                           {teacher.connectionQuality && (
-                            <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
+                            <div className="absolute -top-1 -left-1 bg-white rounded-full p-1 shadow-sm">
                               {teacher.connectionQuality === 'excellent' && <SignalHigh className="h-3 w-3 text-green-500" />}
                               {teacher.connectionQuality === 'good' && <Signal className="h-3 w-3 text-green-500" />}
                               {teacher.connectionQuality === 'fair' && <SignalLow className="h-3 w-3 text-yellow-500" />}
@@ -729,46 +744,36 @@ export default function CallernSystem() {
                             </div>
                           )}
                         </div>
-                        <div>
-                          <h4 className="font-semibold flex items-center gap-2">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-lg text-gray-900 flex items-center gap-2 mb-1">
                             {teacher.firstName} {teacher.lastName}
-                            {teacher.rating >= 4.5 && <Award className="h-4 w-4 text-yellow-500" />}
+                            {teacher.rating >= 4.5 && <Award className="h-5 w-5 text-yellow-500" />}
                           </h4>
-                          <div className="flex items-center gap-2 text-sm">
-                            <div className="flex items-center gap-0.5">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="flex items-center gap-1">
                               {[...Array(5)].map((_, i) => (
                                 <Star 
                                   key={i} 
-                                  className={`h-3 w-3 ${i < Math.floor(teacher.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                                  className={`h-4 w-4 ${i < Math.floor(teacher.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
                                 />
                               ))}
                             </div>
-                            <span className="font-semibold">{teacher.rating.toFixed(1)}</span>
-                            <span className="text-gray-500">({teacher.totalRatings || 0})</span>
+                            <span className="font-bold text-gray-800">{teacher.rating.toFixed(1)}</span>
+                            <span className="text-gray-500 text-sm">({teacher.totalRatings || 0} reviews)</span>
                           </div>
                           {teacher.totalCalls && (
-                            <div className="flex items-center gap-1 text-xs text-gray-600">
-                              <Phone className="h-3 w-3" />
-                              <span>{teacher.totalCalls} {t('callern:calls')}</span>
+                            <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 rounded-full px-3 py-1 w-fit">
+                              <Phone className="h-4 w-4" />
+                              <span className="font-medium">{teacher.totalCalls} {t('callern:calls')} completed</span>
                             </div>
                           )}
                         </div>
                       </div>
                       <Badge 
-                        variant={teacher.isOnline ? "default" : "secondary"}
-                        className={teacher.isOnline ? "animate-pulse" : ""}
+                        className="bg-gradient-to-r from-green-500 to-emerald-500 text-white animate-pulse px-3 py-1"
                       >
-                        {teacher.isOnline ? (
-                          <>
-                            <Wifi className="mr-1 h-3 w-3" />
-                            {t('callern:online')}
-                          </>
-                        ) : (
-                          <>
-                            <WifiOff className="mr-1 h-3 w-3" />
-                            {t('callern:offline')}
-                          </>
-                        )}
+                        <Wifi className="mr-1 h-4 w-4" />
+                        {t('callern:online')}
                       </Badge>
                     </div>
 
