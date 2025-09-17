@@ -9,6 +9,7 @@ export interface ChatCompletionRequest {
   maxTokens?: number;
   temperature?: number;
   model?: string;
+  systemPrompt?: string; // Custom system prompt that overrides default behavior
 }
 
 export interface ChatCompletionResponse {

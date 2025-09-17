@@ -3236,6 +3236,7 @@ export const aiStudyPartners = pgTable("ai_study_partners", {
   // AI behavior preferences
   personalityType: varchar("personality_type", { length: 30 }).default("supportive"), // supportive, challenging, casual, formal
   responseLength: varchar("response_length", { length: 20 }).default("medium"), // short, medium, detailed
+  systemPrompt: text("system_prompt"), // Custom system prompt that works across all AI providers
   includePronunciation: boolean("include_pronunciation").default(false),
   includeGrammarTips: boolean("include_grammar_tips").default(true),
   includeVocabulary: boolean("include_vocabulary").default(true),

@@ -63,9 +63,23 @@ export class OpenAIProvider extends BaseAIProvider {
     }
 
     try {
+      // Prepare messages with system prompt if provided
+      let messages = [...request.messages];
+      
+      // If a custom system prompt is provided, prepend it or replace existing system message
+      if (request.systemPrompt) {
+        // Remove any existing system messages
+        messages = messages.filter(msg => msg.role !== 'system');
+        // Add the custom system prompt at the beginning
+        messages.unshift({
+          role: 'system',
+          content: request.systemPrompt
+        });
+      }
+
       const completion = await this.client.chat.completions.create({
         model: request.model || 'gpt-4o-mini',
-        messages: request.messages,
+        messages,
         max_tokens: request.maxTokens || 500,
         temperature: request.temperature || 0.7,
       });
