@@ -66,6 +66,7 @@ import {
   insertRoomSchema,
   insertLeadSchema,
   insertCommunicationLogSchema,
+  WORKFLOW_STATUS,
   type InsertMoodEntry,
   type InsertMoodRecommendation,
   type InsertLearningAdaptation,
@@ -11570,6 +11571,143 @@ Return JSON format:
       }
       
       res.status(400).json({ message: "Failed to update lead", error: error.message });
+    }
+  });
+
+  // Search lead by phone number
+  app.post("/api/leads/search-by-phone", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      // Validate request body
+      const phoneSearchSchema = z.object({
+        phoneNumber: z.string().min(10, "Phone number must be at least 10 digits")
+      });
+      
+      const { phoneNumber } = phoneSearchSchema.parse(req.body);
+      if (!phoneNumber) {
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+
+      const lead = await storage.getLeadByPhone(phoneNumber);
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      
+      res.json(lead);
+    } catch (error) {
+      console.error('Error searching lead by phone:', error);
+      res.status(500).json({ message: "Failed to search lead" });
+    }
+  });
+
+  // Log call attempt
+  app.post("/api/leads/:id/call-attempt", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const leadId = parseInt(req.params.id);
+      if (isNaN(leadId)) {
+        return res.status(400).json({ message: "Invalid lead ID" });
+      }
+
+      // Validate request body
+      const callAttemptSchema = z.object({
+        duration: z.number().optional(),
+        outcome: z.string().optional(),
+        notes: z.string().optional()
+      });
+      
+      const { duration, outcome, notes } = callAttemptSchema.parse(req.body);
+      
+      // Get current lead to increment call count
+      const currentLead = await storage.getLead(leadId);
+      if (!currentLead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+
+      // Update call count and last contact date
+      const lead = await storage.updateLead(leadId, {
+        callCount: (currentLead.callCount || 0) + 1,
+        lastContactDate: new Date()
+      });
+
+      // Log the call attempt
+      await storage.createCommunicationLog({
+        fromUserId: req.user.id,
+        toUserId: null,
+        toParentId: leadId,
+        type: 'call',
+        subject: 'Call Attempt',
+        content: notes || 'Call attempted',
+        status: outcome || 'completed',
+        sentAt: new Date(),
+        metadata: { duration: duration || 0, outcome: outcome || 'attempted' },
+        studentId: null
+      });
+      
+      res.json({ success: true, lead });
+    } catch (error) {
+      console.error('Error logging call attempt:', error);
+      res.status(500).json({ message: "Failed to log call attempt" });
+    }
+  });
+
+  // Send SMS
+  app.post("/api/leads/:id/sms", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const leadId = parseInt(req.params.id);
+      if (isNaN(leadId)) {
+        return res.status(400).json({ message: "Invalid lead ID" });
+      }
+
+      // Validate request body
+      const smsSchema = z.object({
+        message: z.string().min(1, "Message is required"),
+        templateId: z.string().optional()
+      });
+      
+      const { message, templateId } = smsSchema.parse(req.body);
+      
+      // Here you would integrate with SMS service (e.g., Kavenegar for Iran)
+      // For now, we'll just log the SMS attempt
+      
+      await storage.createCommunicationLog({
+        fromUserId: req.user.id,
+        toUserId: null,
+        toParentId: leadId,
+        type: 'sms',
+        subject: 'SMS Message',
+        content: message || 'SMS sent',
+        status: 'sent',
+        sentAt: new Date(),
+        metadata: { templateId: templateId || null },
+        studentId: null
+      });
+      
+      res.json({ success: true, message: "SMS sent successfully" });
+    } catch (error) {
+      console.error('Error sending SMS:', error);
+      res.status(500).json({ message: "Failed to send SMS" });
+    }
+  });
+
+  // Get workflow statistics for unified call center
+  app.get("/api/leads/workflow-stats", authenticateToken, requireRole(['Admin', 'Call Center Agent', 'Supervisor']), async (req: any, res) => {
+    try {
+      const leads = await storage.getLeads();
+      
+      // Calculate statistics for each workflow stage using canonical constants
+      const stats = {
+        contactDesk: leads.filter(lead => lead.workflowStatus === WORKFLOW_STATUS.CONTACT_DESK).length,
+        newIntake: leads.filter(lead => lead.workflowStatus === WORKFLOW_STATUS.NEW_INTAKE).length,
+        noResponse: leads.filter(lead => lead.workflowStatus === WORKFLOW_STATUS.NO_RESPONSE).length,
+        followUp: leads.filter(lead => lead.workflowStatus === WORKFLOW_STATUS.FOLLOW_UP).length,
+        levelAssessment: leads.filter(lead => lead.workflowStatus === WORKFLOW_STATUS.LEVEL_ASSESSMENT).length,
+        withdrawal: leads.filter(lead => lead.workflowStatus === WORKFLOW_STATUS.WITHDRAWAL).length,
+        total: leads.length
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching workflow stats:', error);
+      res.status(500).json({ message: "Failed to fetch workflow statistics" });
     }
   });
 

@@ -373,6 +373,7 @@ export interface IStorage {
   // CRM - Lead Management
   getLeads(): Promise<(Lead & { assignedToName?: string })[]>;
   getLead(id: number): Promise<Lead | undefined>;
+  getLeadByPhone(phoneNumber: string): Promise<Lead | undefined>;
   createLead(lead: InsertLead): Promise<Lead>;
   updateLead(id: number, updates: Partial<Lead>): Promise<Lead | undefined>;
 
@@ -1931,6 +1932,11 @@ export class MemStorage implements IStorage {
     return result[0];
   }
 
+  async getLeadByPhone(phoneNumber: string): Promise<Lead | undefined> {
+    const result = await this.db.select().from(leads).where(eq(leads.phoneNumber, phoneNumber));
+    return result[0];
+  }
+
   async createLead(lead: InsertLead): Promise<Lead> {
     const result = await this.db.insert(leads).values(lead).returning();
     return result[0];
@@ -2912,6 +2918,17 @@ export class MemStorage implements IStorage {
       return result[0];
     } catch (error) {
       console.error('Error getting lead:', error);
+      return undefined;
+    }
+  }
+
+  async getLeadByPhone(phoneNumber: string): Promise<Lead | undefined> {
+    try {
+      const result = await this.db.select().from(leads)
+        .where(eq(leads.phoneNumber, phoneNumber));
+      return result[0];
+    } catch (error) {
+      console.error('Error getting lead by phone:', error);
       return undefined;
     }
   }

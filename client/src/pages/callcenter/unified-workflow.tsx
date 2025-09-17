@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,15 +54,20 @@ export default function UnifiedCallCenterWorkflow() {
   const { isRTL } = useLanguage();
   const [activeStage, setActiveStage] = useState<WorkflowStage>("contact_desk");
 
-  // Mock stats - will be replaced with real API calls
+  // Get real workflow statistics from API
+  const { data: workflowStatsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/leads/workflow-stats'],
+    enabled: true
+  });
+
   const workflowStats: WorkflowStats = {
-    contactDesk: 156,
-    newIntake: 23,
-    noResponse: 45,
-    followUp: 78,
-    levelAssessment: 34,
-    withdrawal: 12,
-    totalActive: 348
+    contactDesk: workflowStatsData?.contactDesk || 0,
+    newIntake: workflowStatsData?.newIntake || 0,
+    noResponse: workflowStatsData?.noResponse || 0,
+    followUp: workflowStatsData?.followUp || 0,
+    levelAssessment: workflowStatsData?.levelAssessment || 0,
+    withdrawal: workflowStatsData?.withdrawal || 0,
+    totalActive: workflowStatsData?.total || 0
   };
 
   const workflowStages = [
