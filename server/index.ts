@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http"; 
-// Dynamic import of Vite after disabling Cartographer plugin
-// import { setupVite, serveStatic, log } from "./vite";
+import jwt from "jsonwebtoken";
+import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -24,9 +24,6 @@ if (fs.existsSync(envPath)) {
   });
   console.log('Environment variables loaded from .env file');
   
-  // CRITICAL: Disable Cartographer plugin to prevent WebSocket HMR issues
-  delete process.env.REPL_ID;
-  
   // Verify critical variables in production
   if (process.env.NODE_ENV === 'production') {
     if (!process.env.JWT_SECRET) {
@@ -38,38 +35,8 @@ if (fs.existsSync(envPath)) {
 }
 
 const app = express();
-app.set('trust proxy', true);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// DEVELOPMENT ONLY: Request logger to debug routing issues
-app.use((req, res, next) => {
-  console.log(`📥 REQUEST: ${req.method} ${req.path} from ${req.headers['user-agent']?.substring(0, 50)}`);
-  next();
-});
-
-// DEVELOPMENT ONLY: Global auth header injection for all API routes
-app.use((req, res, next) => {
-  if ((process.env.NODE_ENV !== 'production') || process.env.AUTH_DEV_BYPASS === 'true') {
-    if (req.path.startsWith('/api') && !req.headers.authorization) {
-      const jwt = require('jsonwebtoken');
-      const token = jwt.sign(
-        { userId: 1, email: 'ahmad.rezaei@example.com', role: 'Student' },
-        process.env.JWT_SECRET || 'default-secret',
-        { expiresIn: '7d' }
-      );
-      req.headers.authorization = `Bearer ${token}`;
-      req.user = { userId: 1, email: 'ahmad.rezaei@example.com', role: 'Student' };
-      console.log(`🔓 Dev auth header injected -> ${req.method} ${req.path}`);
-    }
-  }
-  next();
-});
-
-// Public health endpoint for testing connectivity
-app.get('/api/ping', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is reachable', timestamp: new Date().toISOString() });
-});
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -209,7 +176,7 @@ app.use((req, res, next) => {
         logLine = logLine.slice(0, 79) + "…";
       }
 
-      console.log(logLine);
+      log(logLine);
     }
   });
 
@@ -217,11 +184,38 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Import and setup authentication first, before any route usage
-  console.log('Loading auth module...');
-  const { setupAuth, authenticateToken, requireRole } = await import('./auth-fix');
-  console.log('Auth module loaded successfully');
-  setupAuth(app);
+  // INLINE SECURITY FIXES - Fix critical authentication vulnerabilities
+  
+  // Authentication middleware
+  const authenticateToken = (req: any, res: any, next: any) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ message: 'Access token required' });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET || 'default-secret', (err: any, user: any) => {
+      if (err) {
+        return res.status(403).json({ message: 'Invalid or expired token' });
+      }
+      req.user = user;
+      next();
+    });
+  };
+
+  // Role requirement middleware  
+  const requireRole = (roles: string[]) => {
+    return (req: any, res: any, next: any) => {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      if (!roles.includes(req.user.role)) {
+        return res.status(403).json({ message: 'Insufficient permissions' });
+      }
+      next();
+    };
+  };
 
   // SECURITY FIX: Protected student endpoints
   app.get("/api/student/placement-test-status", authenticateToken, requireRole(['Student']), async (req: any, res) => {
@@ -500,8 +494,6 @@ app.use((req, res, next) => {
     }
   });
 
-  // Authentication already set up at the beginning of this function
-
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);
@@ -523,10 +515,8 @@ app.use((req, res, next) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
-    const { setupVite } = await import("./vite.js");
     await setupVite(app, server);
   } else {
-    const { serveStatic } = await import("./vite.js");
     serveStatic(app);
   }
 
@@ -539,6 +529,6 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    console.log(`9:41:51 AM [express] serving on port ${port}`);
+    log(`serving on port ${port}`);
   });
 })();

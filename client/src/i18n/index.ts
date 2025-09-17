@@ -78,10 +78,6 @@ i18n
     returnEmptyString: false,
     load: 'languageOnly',
     
-    react: {
-      useSuspense: false, // Disable Suspense to allow immediate rendering
-    },
-    
     interpolation: {
       escapeValue: false, // React already escapes values
     },

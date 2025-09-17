@@ -35,7 +35,7 @@ class SocketManager {
 
     // Create new socket
     console.log('Creating new socket connection for user:', userId);
-    this.socket = io(window.location.origin, {
+    this.socket = io({
       path: '/socket.io/',
       transports: ['websocket', 'polling'],
       reconnection: true,

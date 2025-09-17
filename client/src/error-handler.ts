@@ -6,14 +6,12 @@ export class ErrorHandler {
     window.addEventListener('unhandledrejection', (event) => {
       console.error('Unhandled promise rejection:', event.reason);
       
-      // Only prevent default for network errors, let others surface
-      if (event.reason?.message?.includes('Failed to fetch')) {
-        event.preventDefault();
-        
-        // Log to console for debugging
-        if (event.reason?.message) {
-          console.error('Error message:', event.reason.message);
-        }
+      // Prevent default browser behavior
+      event.preventDefault();
+      
+      // Log to console for debugging
+      if (event.reason?.message) {
+        console.error('Error message:', event.reason.message);
       }
       
       // Optionally show user-friendly error
