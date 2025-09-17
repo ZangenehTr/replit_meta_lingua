@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -89,6 +89,13 @@ function NewIntake() {
 
   const courseTarget = form.watch("courseTarget");
 
+  // Reset courseModule when courseTarget changes (Data Integrity Fix)
+  useEffect(() => {
+    if (courseTarget) {
+      form.setValue("courseModule", "");
+    }
+  }, [courseTarget, form]);
+
   // Get available modules based on course target
   const getAvailableModules = (target: string) => {
     switch (target) {
@@ -125,18 +132,18 @@ function NewIntake() {
   // Create lead mutation
   const createLeadMutation = useMutation({
     mutationFn: async (data: NewIntakeForm) => {
-      // Automatically detect current operator (from auth context)
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      
+      // Server will automatically set assignedTo from authenticated session (Security Fix)
+      // Data Semantics Fix: All courses are English language with different exam types
       const leadData = {
         ...data,
-        assignedTo: currentUser.id,
+        // Security Fix: Remove assignedTo - server derives from req.user.id
         source: "call_center",
         status: LEAD_STATUS.NEW, 
         priority: "medium",
         level: "pending_assessment",
         workflowStatus: WORKFLOW_STATUS.NEW_INTAKE,
-        interestedLanguage: data.courseTarget.toLowerCase(),
+        interestedLanguage: "english", // Data Semantics Fix: All courses are English
+        examType: data.courseTarget, // Store actual exam type (IELTS, TOEFL, etc.)
         interestedLevel: "beginner", // Default until assessment
         createdAt: new Date().toISOString()
       };
