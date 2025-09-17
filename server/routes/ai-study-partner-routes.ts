@@ -415,13 +415,12 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
       try {
         const completion = await aiProvider.createChatCompletion({
           messages: [
-            { role: "system", content: systemPrompt },
             { role: "user", content: message }
           ],
           maxTokens: 500,
           temperature: 0.7,
           model: "qwen2.5:7b", // Preferred Ollama model
-          systemPrompt: systemPrompt // Pass system prompt to provider for consistency
+          systemPrompt: systemPrompt // This is the critical part - pass to provider for consistency across all AI backends
         });
 
         res.json({
@@ -434,19 +433,29 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
       } catch (aiProviderError) {
         console.error("AI Provider error:", aiProviderError);
         
-        // Fallback: Simple pattern-based AI responses when OpenAI fails
+        // Fallback: Simple pattern-based AI responses when AI providers fail
+        // Use custom system prompt to influence fallback behavior
         let aiResponse = "";
         const lowerMessage = message.toLowerCase();
         
-        // Natural, conversational AI responses (not robotic!) [ENHANCED VERSION ACTIVE]
-        console.log("🎯 NEW NATURAL RESPONSES ACTIVE - Processing message:", message);
+        // Check if custom system prompt changes the personality
+        const isCustomPrompt = studyPartner.systemPrompt && studyPartner.systemPrompt.trim();
+        const promptStyle = isCustomPrompt ? 'custom' : 'default';
+        
+        console.log(`🎯 BASIC MODE ACTIVE (${promptStyle} prompt) - Processing message:`, message);
         if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
-          const greetings = [
-            "Hey there! 😊 I'm Lexi, your AI study partner! Ready to turn minutes into progress? What's on your mind today?",
-            "Hi! I'm Lexi 👋 Your friendly language learning companion. Let's make every minute count - what would you like to work on?",
-            "Hello! Lexi here! 🌟 Ready for some productive English practice? Let's turn your study time into real progress!"
-          ];
-          aiResponse = greetings[Math.floor(Math.random() * greetings.length)];
+          if (isCustomPrompt) {
+            // For custom prompts, use a more neutral response that can be adapted
+            aiResponse = "Hello! I'm here to help you with your language learning. How can I assist you today?";
+          } else {
+            // Default Lexi personality
+            const greetings = [
+              "Hey there! 😊 I'm Lexi, your AI study partner! Ready to turn minutes into progress? What's on your mind today?",
+              "Hi! I'm Lexi 👋 Your friendly language learning companion. Let's make every minute count - what would you like to work on?",
+              "Hello! Lexi here! 🌟 Ready for some productive English practice? Let's turn your study time into real progress!"
+            ];
+            aiResponse = greetings[Math.floor(Math.random() * greetings.length)];
+          }
         } else if (lowerMessage.includes("help") && lowerMessage.includes("conversation")) {
           const conversationStarters = [
             "Perfect! I'm Lexi, and I love conversations! 💬 Let's turn this chat into real progress. What's something you're passionate about?",
