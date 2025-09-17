@@ -28,7 +28,11 @@ const authenticateToken = async (req: any, res: any, next: any) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret') as any;
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET not configured');
+    }
+    const decoded = jwt.verify(token, jwtSecret) as any;
     
     // Use token data directly to match main routes behavior
     req.user = {
@@ -50,17 +54,19 @@ const authenticateToken = async (req: any, res: any, next: any) => {
     return res.status(403).json({ message: 'Invalid or expired token' });
   }
 };
-// Initialize OpenAI client directly
-import OpenAI from 'openai';
+// AI Provider Management
+import { AIProviderManager } from "../ai-providers/ai-provider-manager";
 import { WhisperService } from "../whisper-service";
 import { ttsService } from "../tts-service";
 import multer from "multer";
 
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
-});
-
+const aiProvider = new AIProviderManager();
 const whisperService = new WhisperService();
+
+// Initialize AI provider on module load
+aiProvider.initialize().catch(error => {
+  console.error('Failed to initialize AI provider:', error);
+});
 
 // Multer for handling audio file uploads
 const upload = multer({ 
@@ -235,22 +241,9 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
         });
       } catch (whisperError) {
         console.log('🔄 Local Whisper failed, using OpenAI fallback');
-        // Fallback to OpenAI if local Whisper fails
-        if (openai) {
-          const transcriptionResult = await openai.audio.transcriptions.create({
-            file: new File([audioFile.buffer], audioFile.originalname),
-            model: 'whisper-1',
-            language: 'en'
-          });
-          transcription = {
-            text: transcriptionResult.text,
-            language: 'en',
-            duration: 0,
-            confidence: 1.0
-          };
-        } else {
-          throw whisperError;
-        }
+        // For STT, we'll use the existing OpenAI integration until we add Whisper to AI provider
+        // This is a specialized use case for audio transcription, not general chat
+        throw whisperError; // For now, fail cleanly without OpenAI fallback for STT
       }
       
       res.json({
@@ -408,28 +401,27 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
       
       const { message } = z.object({ message: z.string() }).parse(req.body);
 
-      // Simple OpenAI chat without complex database operations for testing
+      // Use AI Provider Manager (Ollama primary, OpenAI fallback)
       try {
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
+        const completion = await aiProvider.createChatCompletion({
           messages: [
-            { role: "system" as const, content: "You are Lexi, an enthusiastic AI language learning partner. Your motto is 'Turn minutes into progress.' Be encouraging, friendly, and use emojis naturally. Help users make the most of their study time with personalized guidance and engaging conversation." },
-            { role: "user" as const, content: message }
+            { role: "system", content: "You are Lexi, an enthusiastic AI language learning partner. Your motto is 'Turn minutes into progress.' Be encouraging, friendly, and use emojis naturally. Help users make the most of their study time with personalized guidance and engaging conversation." },
+            { role: "user", content: message }
           ],
-          max_tokens: 500,
-          temperature: 0.7
+          maxTokens: 500,
+          temperature: 0.7,
+          model: "qwen2.5:7b" // Preferred Ollama model
         });
-
-        const aiResponse = completion.choices[0].message.content || "I apologize, but I'm having trouble responding right now. Please try again.";
 
         res.json({
-          response: aiResponse,
-          context: "General English practice session",
-          messageId: Date.now()
+          response: completion.content,
+          context: `Study session via ${completion.model}`,
+          messageId: Date.now(),
+          tokensUsed: completion.tokensUsed.total
         });
 
-      } catch (openaiError) {
-        console.error("OpenAI API error:", openaiError);
+      } catch (aiProviderError) {
+        console.error("AI Provider error:", aiProviderError);
         
         // Fallback: Simple pattern-based AI responses when OpenAI fails
         let aiResponse = "";
@@ -556,31 +548,33 @@ async function generateAiStudyPartnerResponse(
     // Build personalized system prompt based on study partner settings
     const systemPrompt = buildPersonalizedSystemPrompt(studyPartner, userProfile, userRoadmaps);
 
-    // Create OpenAI completion
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    // Create AI completion using provider manager
+    const completion = await aiProvider.createChatCompletion({
       messages: [
         { role: "system", content: systemPrompt },
         ...conversationHistory,
         { role: "user", content: userMessage }
       ],
-      max_tokens: studyPartner?.responseLength === "detailed" ? 800 : 
+      maxTokens: studyPartner?.responseLength === "detailed" ? 800 : 
                  studyPartner?.responseLength === "short" ? 200 : 400,
-      temperature: 0.7
+      temperature: 0.7,
+      model: "qwen2.5:7b"
     });
 
-    const response = completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response right now.";
+    const aiResponse = completion.content || "I'm sorry, I couldn't generate a response right now.";
     
+    const aiContext = {
+      userMessage,
+      studyPartnerSettings: studyPartner,
+      conversationLength: recentMessages.length,
+      activeRoadmaps: userRoadmaps?.length || 0
+    };
+
     return {
-      content: response,
-      context: {
-        userMessage,
-        studyPartnerSettings: studyPartner,
-        conversationLength: recentMessages.length,
-        activeRoadmaps: userRoadmaps?.length || 0
-      },
-      promptTokens: completion.usage?.prompt_tokens || 0,
-      responseTokens: completion.usage?.completion_tokens || 0
+      content: aiResponse,
+      context: aiContext,
+      promptTokens: completion.tokensUsed.prompt,
+      responseTokens: completion.tokensUsed.completion
     };
 
   } catch (error) {
