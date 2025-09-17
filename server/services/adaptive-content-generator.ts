@@ -1,4 +1,4 @@
-import { OllamaService } from '../ollama-service.js';
+import { OllamaService } from './ollama.js';
 
 interface StudentProfile {
   id: number;

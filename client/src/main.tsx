@@ -35,8 +35,8 @@ window.addEventListener('unhandledrejection', (event) => {
     console.warn('Network error handled gracefully');
   }
 
-  // Only prevent default for WebRTC errors, let others surface
-  // event.preventDefault(); // Removed to allow error visibility
+  // Prevent default handling that might crash the app
+  event.preventDefault();
 }, true); // Use capture phase
 
 window.addEventListener('error', (event) => {
@@ -59,8 +59,8 @@ window.addEventListener('error', (event) => {
     console.warn('Benign error handled gracefully');
   }
 
-  // Only prevent default for WebRTC errors, let others surface
-  // event.preventDefault(); // Removed to allow error visibility
+  // Prevent default handling that might crash the app
+  event.preventDefault();
 }, true); // Use capture phase
 
 // React error boundary fallback

@@ -2,8 +2,6 @@ import { EventEmitter } from 'events';
 import { Server } from 'socket.io';
 import { OllamaService } from './ollama-service';
 import { AudioProcessor } from './audio-processor';
-import { whisperHesitationDetector } from './whisper-hesitation-detector';
-import { CallernAIMonitor } from './callern-ai-monitor';
 
 interface Event {
   timestamp: string;
@@ -44,7 +42,6 @@ export class SupervisorEngine extends EventEmitter {
   private io: Server;
   private ollama: OllamaService;
   private audioProcessor: AudioProcessor;
-  private aiMonitor: CallernAIMonitor;
   
   // Rate limiting
   private readonly TIP_COOLDOWN_MS = 20000; // 20 seconds between tips per role
@@ -63,7 +60,6 @@ export class SupervisorEngine extends EventEmitter {
     this.io = io;
     this.ollama = new OllamaService();
     this.audioProcessor = audioProcessor;
-    this.aiMonitor = new CallernAIMonitor(io);
     
     // Listen to transcripts from audio processor
     this.audioProcessor.on('transcript-ready', this.handleTranscript.bind(this));
@@ -77,10 +73,6 @@ export class SupervisorEngine extends EventEmitter {
     lessonTitle: string;
     objectives: string[];
     studentLevel: string;
-    studentId?: number;
-    teacherId?: number;
-    courseId?: number;
-    languageCode?: string;
   }): void {
     this.sessions.set(data.sessionId, {
       sessionId: data.sessionId,
@@ -101,53 +93,27 @@ export class SupervisorEngine extends EventEmitter {
       studentLevel: data.studentLevel || 'B1'
     });
     
-    // Start AI monitoring if we have the required data
-    if (data.studentId && data.teacherId) {
-      this.aiMonitor.startMonitoring({
-        roomId: data.sessionId,
-        studentId: data.studentId,
-        teacherId: data.teacherId,
-        courseId: data.courseId,
-        languageCode: data.languageCode || 'en'
-      });
-    }
-    
     // Start periodic analysis
     this.startAnalysisLoop(data.sessionId);
   }
 
   /**
-   * Handle new transcript segment with Whisper-based hesitation detection
+   * Handle new transcript segment
    */
   private async handleTranscript(data: {
     sessionId: string;
     segment: any;
     context: string;
-    transcriptionResult?: any; // Whisper transcription with segments
-    languageCode?: string;
   }): Promise<void> {
     const session = this.sessions.get(data.sessionId);
     if (!session) return;
     
-    // Process Whisper transcription for hesitation analysis if available
-    if (data.transcriptionResult && this.aiMonitor) {
-      // Use transcriptionResult.language as source of truth, fallback to languageCode
-      const detectedLanguage = data.transcriptionResult.language || data.languageCode || 'en';
-      await this.aiMonitor.processWhisperTranscription(
-        data.sessionId,
-        data.transcriptionResult,
-        data.segment.speaker,
-        detectedLanguage
-      );
-    }
-    
-    // Extract events from transcript (now uses Whisper-enhanced detection)
+    // Extract events from transcript
     const events = await this.extractEvents(
       data.segment,
       data.context,
       session.lessonTitle,
-      session.objectives,
-      data.transcriptionResult
+      session.objectives
     );
     
     // Add events to session
@@ -161,14 +127,13 @@ export class SupervisorEngine extends EventEmitter {
   }
 
   /**
-   * Extract pedagogical events from transcript using LLM with Whisper-enhanced detection
+   * Extract pedagogical events from transcript using LLM
    */
   private async extractEvents(
     segment: any,
     context: string,
     lessonTitle: string,
-    objectives: string[],
-    transcriptionResult?: any
+    objectives: string[]
   ): Promise<Event[]> {
     try {
       const systemPrompt = `You are an ELT classroom event tagger. Output STRICT JSON array of events.

@@ -1,7 +1,5 @@
 import { Server, Socket } from 'socket.io';
 import OpenAI from 'openai';
-import { whisperHesitationDetector } from './whisper-hesitation-detector';
-import { TranscriptionResult } from './whisper-service';
 
 interface ConversationMetrics {
   studentTalkTime: number;
@@ -16,12 +14,6 @@ interface ConversationMetrics {
   vocabularyUsed: Set<string>;
   grammarErrors: string[];
   pronunciationIssues: string[];
-  // Whisper-based hesitation metrics
-  studentHesitationScore: number;
-  teacherHesitationScore: number;
-  hesitationRate: number;
-  averageSilenceLength: number;
-  fillerWordCount: number;
 }
 
 interface AIMonitorConfig {
@@ -52,25 +44,12 @@ export class CallernAIMonitor {
   private conversationTranscripts: Map<string, string[]> = new Map();
   private studentProfiles: Map<number, any> = new Map();
   private courseRoadmaps: Map<number, any> = new Map();
-  
-  // Intervention cooldown tracking
-  private lastStudentIntervention: Map<string, number> = new Map();
-  private lastTeacherAlert: Map<string, number> = new Map();
-  private lastQuizSuggestion: Map<string, number> = new Map();
-  
   private warningThresholds = {
     tttBalance: { min: 0.3, max: 0.7 }, // 30-70% teacher talk time
     silenceDuration: 5000, // 5 seconds
     attentionLow: 0.4,
     taskTimeNormal: 120000, // 2 minutes per task
     idlenessThreshold: 10000, // 10 seconds
-  };
-  
-  // Intervention cooldowns (in milliseconds)
-  private readonly INTERVENTION_COOLDOWNS = {
-    studentHint: 15000, // 15 seconds between student hints
-    teacherAlert: 30000, // 30 seconds between teacher alerts
-    quizSuggestion: 60000, // 60 seconds between quiz suggestions
   };
 
   constructor(io: Server) {
@@ -93,13 +72,7 @@ export class CallernAIMonitor {
       topicsDiscussed: [],
       vocabularyUsed: new Set(),
       grammarErrors: [],
-      pronunciationIssues: [],
-      // Initialize hesitation metrics
-      studentHesitationScore: 1.0,
-      teacherHesitationScore: 1.0,
-      hesitationRate: 0,
-      averageSilenceLength: 0,
-      fillerWordCount: 0
+      pronunciationIssues: []
     };
 
     this.activeMonitors.set(config.roomId, metrics);
@@ -180,26 +153,20 @@ export class CallernAIMonitor {
   }
 
   private updateEngagementScore(roomId: string, metrics: ConversationMetrics): void {
-    // Calculate engagement based on multiple factors including hesitation
+    // Calculate engagement based on multiple factors
     const factors = {
       tttBalance: this.calculateTTTScore(metrics),
       conversationFlow: metrics.conversationFlowScore,
       attention: metrics.attentionScore,
-      participation: this.calculateParticipationScore(metrics),
-      // NEW: Add hesitation-based fluency factor
-      fluency: this.calculateFluencyScore(metrics)
+      participation: this.calculateParticipationScore(metrics)
     };
     
     metrics.engagementLevel = (
-      factors.tttBalance * 0.2 +
-      factors.conversationFlow * 0.2 +
-      factors.attention * 0.25 +
-      factors.participation * 0.15 +
-      factors.fluency * 0.2  // Hesitation-based fluency now part of engagement
+      factors.tttBalance * 0.25 +
+      factors.conversationFlow * 0.25 +
+      factors.attention * 0.3 +
+      factors.participation * 0.2
     );
-
-    // Trigger interventions based on engagement threshold
-    this.checkForInterventions(roomId, metrics);
   }
 
   private calculateTTTScore(metrics: ConversationMetrics): number {
@@ -212,205 +179,6 @@ export class CallernAIMonitor {
   private calculateParticipationScore(metrics: ConversationMetrics): number {
     const silenceRatio = metrics.silencePeriods.length / (metrics.totalDuration / 10000 || 1);
     return Math.max(0, 1 - silenceRatio * 0.1);
-  }
-
-  /**
-   * Calculate fluency score based on Whisper hesitation analysis
-   */
-  private calculateFluencyScore(metrics: ConversationMetrics): number {
-    // Weight student hesitation more heavily since they're learning
-    const studentWeight = 0.7;
-    const teacherWeight = 0.3;
-    
-    const combinedScore = (
-      metrics.studentHesitationScore * studentWeight +
-      metrics.teacherHesitationScore * teacherWeight
-    );
-
-    // Apply penalties for specific hesitation patterns
-    let fluencyScore = combinedScore;
-    
-    // Penalty for high hesitation rate (more than 5 per minute)
-    if (metrics.hesitationRate > 5) {
-      fluencyScore *= Math.max(0.5, 1 - (metrics.hesitationRate - 5) / 10);
-    }
-    
-    // Penalty for long silences (more than 2 seconds average)
-    if (metrics.averageSilenceLength > 2) {
-      fluencyScore *= Math.max(0.6, 1 - (metrics.averageSilenceLength - 2) / 5);
-    }
-    
-    // Penalty for excessive filler words (more than 10)
-    if (metrics.fillerWordCount > 10) {
-      fluencyScore *= Math.max(0.7, 1 - (metrics.fillerWordCount - 10) / 20);
-    }
-
-    return Math.max(0, Math.min(1, fluencyScore));
-  }
-
-  /**
-   * Check for interventions based on engagement thresholds
-   */
-  private checkForInterventions(roomId: string, metrics: ConversationMetrics): void {
-    const engagementThreshold = 0.5;
-    const fluencyThreshold = 0.4;
-    
-    // Check if student needs help due to low engagement/fluency
-    if (metrics.engagementLevel < engagementThreshold || metrics.studentHesitationScore < fluencyThreshold) {
-      this.triggerStudentInterventions(roomId, metrics);
-    }
-    
-    // Check if teacher needs alerts about student struggling
-    if (metrics.studentHesitationScore < 0.3) {
-      this.triggerTeacherAlerts(roomId, metrics);
-    }
-    
-    // Suggest quiz if engagement is very low
-    if (metrics.engagementLevel < 0.3) {
-      this.triggerQuizSuggestions(roomId, metrics);
-    }
-  }
-
-  /**
-   * Process Whisper transcription and update hesitation metrics
-   */
-  async processWhisperTranscription(
-    roomId: string,
-    transcription: TranscriptionResult,
-    speaker: 'student' | 'teacher',
-    languageCode: string = 'en'
-  ): Promise<void> {
-    try {
-      // Use transcriptionResult.language as source of truth, fallback to languageCode
-      const detectedLanguage = transcription.language || languageCode;
-      
-      // Analyze hesitation with Whisper data
-      const hesitationScore = await whisperHesitationDetector.analyzeTranscription(
-        roomId,
-        transcription,
-        speaker,
-        detectedLanguage
-      );
-
-      // Update metrics with hesitation data
-      const metrics = this.activeMonitors.get(roomId);
-      if (metrics) {
-        if (speaker === 'student') {
-          metrics.studentHesitationScore = hesitationScore.overallScore;
-        } else {
-          metrics.teacherHesitationScore = hesitationScore.overallScore;
-        }
-        
-        metrics.hesitationRate = hesitationScore.hesitationRate;
-        metrics.averageSilenceLength = hesitationScore.averageSilenceLength;
-        metrics.fillerWordCount = hesitationScore.fillerWordCount;
-        
-        // Update engagement score with new hesitation data
-        this.updateEngagementScore(roomId, metrics);
-      }
-    } catch (error) {
-      console.error('Error processing Whisper transcription for hesitation:', error);
-    }
-  }
-
-  /**
-   * Trigger student interventions based on hesitation patterns
-   */
-  private triggerStudentInterventions(roomId: string, metrics: ConversationMetrics): void {
-    const now = Date.now();
-    const lastIntervention = this.lastStudentIntervention.get(roomId) || 0;
-    
-    // Check cooldown
-    if (now - lastIntervention < this.INTERVENTION_COOLDOWNS.studentHint) {
-      return; // Still in cooldown
-    }
-    
-    const studentScore = whisperHesitationDetector.getHesitationScore(roomId, 'student');
-    if (!studentScore) return;
-
-    const interventions = whisperHesitationDetector.generateInterventions(studentScore);
-    
-    // Send student hints via Socket.io
-    if (interventions.studentHints.length > 0) {
-      this.io.to(roomId).emit('student-hint', {
-        hints: interventions.studentHints,
-        type: 'hesitation-support',
-        priority: metrics.studentHesitationScore < 0.3 ? 'high' : 'medium',
-        timestamp: now
-      });
-      
-      // Update last intervention time
-      this.lastStudentIntervention.set(roomId, now);
-    }
-  }
-
-  /**
-   * Trigger teacher alerts about student hesitation
-   */
-  private triggerTeacherAlerts(roomId: string, metrics: ConversationMetrics): void {
-    const now = Date.now();
-    const lastAlert = this.lastTeacherAlert.get(roomId) || 0;
-    
-    // Check cooldown
-    if (now - lastAlert < this.INTERVENTION_COOLDOWNS.teacherAlert) {
-      return; // Still in cooldown
-    }
-    
-    const studentScore = whisperHesitationDetector.getHesitationScore(roomId, 'student');
-    if (!studentScore) return;
-
-    const interventions = whisperHesitationDetector.generateInterventions(studentScore);
-    
-    // Send teacher alerts via Socket.io
-    if (interventions.teacherAlerts.length > 0) {
-      this.io.to(roomId).emit('teacher-alert', {
-        alerts: interventions.teacherAlerts,
-        type: 'student-hesitation',
-        severity: metrics.studentHesitationScore < 0.2 ? 'high' : 'medium',
-        hesitationData: {
-          fluencyScore: Math.round(metrics.studentHesitationScore * 100),
-          hesitationRate: Math.round(metrics.hesitationRate),
-          silenceLength: Math.round(metrics.averageSilenceLength * 10) / 10,
-          fillerWords: metrics.fillerWordCount
-        },
-        timestamp: now
-      });
-      
-      // Update last alert time
-      this.lastTeacherAlert.set(roomId, now);
-    }
-  }
-
-  /**
-   * Trigger quiz suggestions for low engagement
-   */
-  private triggerQuizSuggestions(roomId: string, metrics: ConversationMetrics): void {
-    const now = Date.now();
-    const lastSuggestion = this.lastQuizSuggestion.get(roomId) || 0;
-    
-    // Check cooldown
-    if (now - lastSuggestion < this.INTERVENTION_COOLDOWNS.quizSuggestion) {
-      return; // Still in cooldown
-    }
-    
-    const studentScore = whisperHesitationDetector.getHesitationScore(roomId, 'student');
-    if (!studentScore) return;
-
-    const interventions = whisperHesitationDetector.generateInterventions(studentScore);
-    
-    // Send quiz suggestions via Socket.io
-    if (interventions.quizSuggestions.length > 0) {
-      this.io.to(roomId).emit('quiz-suggestion', {
-        quizTypes: interventions.quizSuggestions,
-        reason: 'low-engagement-hesitation',
-        engagementLevel: Math.round(metrics.engagementLevel * 100),
-        fluencyLevel: Math.round(metrics.studentHesitationScore * 100),
-        timestamp: now
-      });
-      
-      // Update last suggestion time
-      this.lastQuizSuggestion.set(roomId, now);
-    }
   }
 
   async generateWordSuggestions(

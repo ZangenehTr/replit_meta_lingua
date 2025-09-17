@@ -20,13 +20,7 @@ export interface BrandingSettings {
 export function useBranding() {
   const { data: branding, isLoading, error } = useQuery<BrandingSettings>({
     queryKey: ["/api/branding"],
-    // Only fetch branding if user has token or if it's a public endpoint
-    enabled: true, // Branding should be public - will be loaded regardless of auth status
     retry: (failureCount, error: any) => {
-      // Don't retry auth errors since branding should be public
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
-        return false;
-      }
       // Don't retry if it's a server error, but retry network errors
       if (error?.response?.status >= 500) {
         return false;

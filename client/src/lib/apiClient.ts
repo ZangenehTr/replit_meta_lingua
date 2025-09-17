@@ -24,12 +24,7 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Check if this is a public endpoint that shouldn't trigger auth redirects
-    const isPublicEndpoint = originalRequest.url?.includes('/auth/') || 
-                            originalRequest.url?.includes('/branding') ||
-                            originalRequest.url?.includes('/public/');
-    
-    if ((error.response?.status === 403 || error.response?.status === 401) && !originalRequest._retry && !isPublicEndpoint) {
+    if ((error.response?.status === 403 || error.response?.status === 401) && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
@@ -50,14 +45,13 @@ apiClient.interceptors.response.use(
         
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, clear tokens and redirect (only for protected endpoints)
+        // Refresh failed, clear tokens and redirect
         localStorage.removeItem('auth_token');
         localStorage.removeItem('refresh_token');
         
-        // Only redirect if user is not already on auth page
-        if (!window.location.pathname.includes('/auth')) {
-          window.location.href = '/auth';
-        }
+        // Clear any cached data would be handled by redirect
+        
+        window.location.href = '/auth';
         return Promise.reject(refreshError);
       }
     }

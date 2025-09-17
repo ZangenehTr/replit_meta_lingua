@@ -49,7 +49,7 @@ interface SpeechRecognitionAlternative {
 
 // Ollama service will be called via API endpoints to server
 
-export interface RecognitionResult {
+export interface SpeechRecognitionResult {
   text: string;
   confidence: number;
   language: string;
@@ -90,8 +90,7 @@ export class SpeechRecognitionService {
   private recognition: SpeechRecognition | null = null;
   private isListening = false;
   private sessionId: string | null = null;
-  private currentSessionId: string | null = null; // Track current active session
-  private onResult: ((result: RecognitionResult) => void) | null = null;
+  private onResult: ((result: SpeechRecognitionResult) => void) | null = null;
   private onSpeechAnalysis: ((analysis: SpeechAnalysis) => void) | null = null;
   private targetLanguage = 'en-US';
   private buffer: string[] = [];
@@ -99,7 +98,6 @@ export class SpeechRecognitionService {
   private lastRestartTime = 0;
   private restartThrottle = 2000; // Minimum 2 seconds between restarts
   private pausedForTTS = false; // Flag to pause during TTS playback
-  private initializationInProgress = false; // Prevent double-initialization
 
   constructor() {
     this.initializeSpeechRecognition();
@@ -119,7 +117,7 @@ export class SpeechRecognitionService {
 
     this.recognition = new SpeechRecognition();
     this.recognition.continuous = true;
-    this.recognition.interimResults = false; // Only final results to prevent duplicates
+    this.recognition.interimResults = true;
     this.recognition.lang = this.targetLanguage;
     
     // Set up event handlers
@@ -133,76 +131,50 @@ export class SpeechRecognitionService {
   }
 
   /**
-   * Start real speech recognition with double-initialization prevention
+   * Start real speech recognition
    */
   async startListening(
     sessionId: string, 
     language: string = 'en-US',
-    onResult?: (result: RecognitionResult) => void,
+    onResult?: (result: SpeechRecognitionResult) => void,
     onAnalysis?: (analysis: SpeechAnalysis) => void
   ): Promise<void> {
     if (!this.recognition) {
       throw new Error('Speech recognition not supported');
     }
 
-    // CRITICAL FIX: Prevent concurrent STT sessions
-    if (this.initializationInProgress) {
-      console.log('STT initialization already in progress - blocking concurrent call');
-      return;
+    if (this.isListening) {
+      this.stopListening();
     }
 
-    // CRITICAL FIX: Block if same session is already active
-    if (this.currentSessionId === sessionId && this.isListening) {
-      console.log(`STT session ${sessionId} already active - blocking duplicate`);
-      return;
-    }
-
-    this.initializationInProgress = true;
+    this.sessionId = sessionId;
+    this.targetLanguage = language;
+    this.onResult = onResult || null;
+    this.onSpeechAnalysis = onAnalysis || null;
+    this.recognition.lang = language;
 
     try {
-      if (this.isListening) {
-        this.stopListening();
-        // Wait briefly for cleanup
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-
-      this.sessionId = sessionId;
-      this.currentSessionId = sessionId; // Track current active session
-      this.targetLanguage = language;
-      this.onResult = onResult || null;
-      this.onSpeechAnalysis = onAnalysis || null;
-      this.recognition.lang = language;
-      this.manualStop = false; // Reset manual stop flag
-
       this.recognition.start();
       console.log(`Real speech recognition started for session ${sessionId} in ${language}`);
     } catch (error) {
       console.error('Error starting speech recognition:', error);
-      this.currentSessionId = null;
       throw error;
-    } finally {
-      this.initializationInProgress = false;
     }
   }
 
   /**
-   * Stop speech recognition with proper cleanup
+   * Stop speech recognition
    */
   stopListening(): void {
     this.manualStop = true; // Set flag to prevent auto-restart
     this.pausedForTTS = false; // Reset TTS pause flag
-    this.initializationInProgress = false; // Reset initialization flag
-    
     if (this.recognition && this.isListening) {
       this.recognition.stop();
       this.isListening = false;
       console.log('Speech recognition stopped manually');
     }
-    
-    // Clear session IDs immediately to prevent any auto-restart
+    // Clear session immediately to prevent any auto-restart
     this.sessionId = null;
-    this.currentSessionId = null;
-    
     // Reset manual stop flag after longer delay to ensure clean state
     setTimeout(() => {
       this.manualStop = false; // Reset for next session
@@ -219,26 +191,15 @@ export class SpeechRecognitionService {
       this.isListening = false;
       console.log('Speech recognition paused for TTS');
     }
-    // Don't clear currentSessionId - we want to resume the same session
   }
 
   /**
-   * Resume speech recognition (after TTS ends) - controlled by UI
-   * CRITICAL FIX: Prevent double-initialization by ensuring only this OR startListening executes
+   * Resume speech recognition (after TTS ends)
    */
   resumeAfterTTS(): void {
     this.pausedForTTS = false;
+    // Don't auto-resume - let user manually start recording again
     console.log('Speech recognition ready to resume after TTS');
-    
-    // CRITICAL: Do NOT auto-restart here - let UI control all restarts
-    // This prevents double-initialization issues where both resumeAfterTTS and startListening execute
-  }
-
-  /**
-   * Check if paused for TTS
-   */
-  isPausedForTTS(): boolean {
-    return this.pausedForTTS;
   }
 
   /**
@@ -250,7 +211,7 @@ export class SpeechRecognitionService {
     const confidence = latest[0].confidence || 0;
     const isFinal = latest.isFinal;
 
-    const result: RecognitionResult = {
+    const result: SpeechRecognitionResult = {
       text: transcript,
       confidence,
       language: this.targetLanguage,
@@ -602,15 +563,40 @@ export class SpeechRecognitionService {
    */
   private handleSpeechEnd(): void {
     this.isListening = false;
-    console.log('Speech recognition ended - NO AUTO-RESTART (UI controls restarts)');
+    console.log('Speech recognition ended');
     
-    // Clear current session ID when recognition ends
-    if (!this.pausedForTTS) {
-      this.currentSessionId = null;
+    // VERY restrictive auto-restart logic - prevent most auto-restarts:
+    // Only auto-restart if:
+    // 1. Session is still active
+    // 2. Stop was not manual
+    // 3. Not paused for TTS
+    // 4. Enough time has passed since last restart (throttling)
+    // 5. Recognition is still supposed to be continuous
+    // 6. Not experiencing repeated failures
+    if (this.sessionId && !this.manualStop && !this.pausedForTTS && this.recognition && this.recognition.continuous) {
+      const now = Date.now();
+      if (now - this.lastRestartTime > this.restartThrottle) {
+        this.lastRestartTime = now;
+        setTimeout(() => {
+          // Triple-check all conditions before restarting
+          if (this.sessionId && !this.manualStop && !this.pausedForTTS && this.recognition && this.isListening === false) {
+            try {
+              this.recognition.start();
+              console.log('Speech recognition auto-restarted');
+            } catch (error) {
+              console.log('Failed to auto-restart speech recognition:', error);
+              // If restart fails, stop trying and require manual restart
+              this.manualStop = true;
+              this.sessionId = null;
+            }
+          }
+        }, 1500); // Even longer delay before restart
+      } else {
+        console.log('Speech recognition restart throttled');
+      }
+    } else {
+      console.log('Speech recognition end - not auto-restarting (conditions not met)');
     }
-    
-    // NO AUTO-RESTART - UI will control all restarts through finite state machine
-    // This prevents feedback loops and duplicate responses
   }
 
   /**
@@ -636,23 +622,8 @@ export class SpeechRecognitionService {
   destroy(): void {
     this.stopListening();
     this.sessionId = null;
-    this.currentSessionId = null;
     this.onResult = null;
     this.onSpeechAnalysis = null;
-    this.initializationInProgress = false;
-  }
-
-  /**
-   * Get current session information for debugging
-   */
-  getCurrentSessionInfo(): { sessionId: string | null; currentSessionId: string | null; isListening: boolean; pausedForTTS: boolean; initInProgress: boolean } {
-    return {
-      sessionId: this.sessionId,
-      currentSessionId: this.currentSessionId,
-      isListening: this.isListening,
-      pausedForTTS: this.pausedForTTS,
-      initInProgress: this.initializationInProgress
-    };
   }
 }
 

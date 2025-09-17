@@ -11,7 +11,6 @@ import { useTranslation } from "react-i18next";
 import "./i18n"; // Initialize i18n
 import { AppLayout } from "@/components/layout/app-layout";
 import { RTLLayout } from "@/components/rtl-layout";
-import { Suspense } from "react";
 
 import NotFound from "@/pages/not-found";
 import Auth from "@/pages/auth";
@@ -783,7 +782,27 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/">
-        <Redirect to="/auth" />
+        {(() => {
+          const { user, isLoading } = useAuth();
+          
+          if (isLoading) {
+            return (
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p>Loading...</p>
+                </div>
+              </div>
+            );
+          }
+          
+          if (!user) {
+            return <Redirect to="/auth" />;
+          }
+          
+          // All authenticated users redirect to unified dashboard
+          return <Redirect to="/dashboard" />;
+        })()}
       </Route>
       <Route component={NotFound} />
     </Switch>
@@ -793,23 +812,11 @@ function Router() {
 function AppWithBranding() {
   const { branding, isLoading } = useBranding();
 
-  // Loading fallback for i18n and other suspense operations
-  const LoadingFallback = () => (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p>Loading...</p>
-      </div>
-    </div>
-  );
-
   // Always render the app - don't block on branding
   return (
     <TooltipProvider>
       <Toaster />
-      <Suspense fallback={<LoadingFallback />}>
-        <Router />
-      </Suspense>
+      <Router />
     </TooltipProvider>
   );
 }

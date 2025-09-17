@@ -14,20 +14,6 @@ export interface AuthRequest extends Request {
 
 // Verify JWT token
 export function authenticateToken(req: AuthRequest, res: Response, next: NextFunction) {
-  // Public paths that don't require authentication
-  const PUBLIC_PATHS = [
-    /^\/api\/auth\/(login|register|refresh|request-otp|verify-otp)$/,
-    /^\/api\/branding$/,
-    /^\/api\/public\//,
-    /^\/assets\//,
-    /^\/uploads\//
-  ];
-
-  // Check if this is a public path
-  if (PUBLIC_PATHS.some((regex) => regex.test(req.path))) {
-    return next();
-  }
-
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 

@@ -20796,19 +20796,6 @@ Meta Lingua Academy`;
   });
 
   // ========================
-  // AI STUDY PARTNER ROUTES - Register before 404 catch-all
-  // ========================
-  
-  // Register AI Study Partner routes
-  app.use(createAiStudyPartnerRoutes(storage));
-  console.log('✅ AI Study Partner routes registered successfully');
-
-  // Register roadmap routes
-  app.use(courseRoadmapRoutes);
-  app.use(callernRoadmapRoutes);
-  app.use(examRoadmapRoutes);
-
-  // ========================
   // ERROR HANDLING - 404 for non-existent endpoints
   // ========================
   

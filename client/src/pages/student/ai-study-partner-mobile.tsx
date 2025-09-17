@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { MobileLayout } from '@/components/mobile/MobileLayout';
@@ -62,18 +62,6 @@ export default function StudentAIStudyPartnerMobile() {
   const [continuousMode, setContinuousMode] = useState(true); // Enable continuous conversation by default
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  
-  // Finite State Machine for conversation control
-  type ConversationState = 'IDLE' | 'LISTENING' | 'THINKING' | 'SPEAKING' | 'COOLDOWN';
-  const [conversationState, setConversationState] = useState<ConversationState>('IDLE');
-  
-  // STT Session Controller - prevent concurrent sessions
-  const [sttSessionId, setSttSessionId] = useState<string | null>(null);
-  
-  // Echo filter and deduplication
-  const [lastAssistantText, setLastAssistantText] = useState('');
-  const [recentMessages, setRecentMessages] = useState<Set<string>>(new Set());
-  const cooldownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [settings, setSettings] = useState<StudyPartnerSettings>({
     personality: 'encouraging',
     focusArea: 'general',
@@ -161,28 +149,15 @@ export default function StudentAIStudyPartnerMobile() {
       };
       setMessages(prev => [...prev, aiMessage]);
       
-      // Set last assistant text for echo filter (strip emojis)
-      setLastAssistantText(data.response.replace(/[\u{1f300}-\u{1ffc0}]/gu, '').trim());
-      
       // Auto-speak AI responses in focused/exam-prep mode
       if (settings.studyMode === 'focused' || settings.studyMode === 'exam-prep') {
         speakText(data.response);
-      } else {
-        // No TTS - return to IDLE or start listening in continuous mode
-        if (continuousMode) {
-          startCooldownToListening();
-        } else {
-          setConversationState('IDLE');
-        }
       }
       
       // Invalidate and refetch conversation history
-      queryClient.invalidateQueries({ queryKey: ['/api/ai-study-partner/messages'] })
+      queryClient.invalidateQueries({ queryKey: ['/api/ai-study-partner/messages'] });
     },
     onError: () => {
-      // Reset state on error
-      setConversationState('IDLE');
-      
       toast({
         title: t('common:error'),
         description: t('student:aiStudyPartnerError'),
@@ -208,62 +183,6 @@ export default function StudentAIStudyPartnerMobile() {
     }
   });
 
-  // Auto-send when speech is detected - with finite state machine control
-  const handleAutoSend = useCallback((text: string) => {
-    if (!text.trim() || !continuousMode) return;
-    
-    // State machine guard - only send if we're LISTENING
-    if (conversationState !== 'LISTENING') {
-      console.log('Auto-send blocked - not in LISTENING state:', conversationState);
-      return;
-    }
-    
-    // Echo filter - don't respond to our own TTS
-    const normalizedText = text.trim().toLowerCase();
-    const normalizedLastAssistant = lastAssistantText.toLowerCase();
-    
-    // Check for similarity to last assistant message
-    if (normalizedLastAssistant && normalizedText.includes(normalizedLastAssistant.substring(0, 20))) {
-      console.log('Echo filter: Blocking similar text to last assistant message');
-      return;
-    }
-    
-    // Deduplication filter
-    if (recentMessages.has(normalizedText)) {
-      console.log('Deduplication filter: Blocking duplicate message');
-      return;
-    }
-    
-    // Add to recent messages with TTL
-    const newRecentMessages = new Set(recentMessages);
-    newRecentMessages.add(normalizedText);
-    setRecentMessages(newRecentMessages);
-    
-    // Clear from recent messages after 10 seconds
-    setTimeout(() => {
-      setRecentMessages(prev => {
-        const updated = new Set(prev);
-        updated.delete(normalizedText);
-        return updated;
-      });
-    }, 10000);
-    
-    // Add user message immediately
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: text.trim(),
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, userMessage]);
-    
-    // Transition to THINKING state
-    setConversationState('THINKING');
-    
-    // Send message
-    sendMessage.mutate(text.trim());
-  }, [continuousMode, sendMessage, conversationState, lastAssistantText, recentMessages]);
-
   // Load conversation history on mount
   useEffect(() => {
     if (conversationHistory) {
@@ -282,10 +201,6 @@ export default function StudentAIStudyPartnerMobile() {
     };
 
     setMessages(prev => [...prev, userMessage]);
-    
-    // CRITICAL FIX: Set THINKING state before mutate
-    setConversationState('THINKING');
-    
     sendMessage.mutate(inputText);
     setInputText('');
   };
@@ -295,66 +210,15 @@ export default function StudentAIStudyPartnerMobile() {
     setTimeout(() => handleSend(), 100);
   };
 
-  // Clear cooldown timeout helper
-  const clearCooldownTimeout = useCallback(() => {
-    if (cooldownTimeoutRef.current) {
-      clearTimeout(cooldownTimeoutRef.current);
-      cooldownTimeoutRef.current = null;
-    }
-  }, []);
-
-  // Start cooldown to LISTENING transition
-  const startCooldownToListening = useCallback(async () => {
-    clearCooldownTimeout();
-    
-    cooldownTimeoutRef.current = setTimeout(async () => {
-      try {
-        // CRITICAL FIX: Reuse existing session ID in continuous mode for seamless restart
-        let sessionId = sttSessionId;
-        if (!sessionId) {
-          sessionId = `continuous-session-${Date.now()}`;
-          setSttSessionId(sessionId);
-        }
-        
-        // FSM: Transition to LISTENING state before starting STT
-        setConversationState('LISTENING');
-        setIsRecording(true);
-        
-        await speechRecognitionService.startListening(
-          sessionId,
-          'en-US',
-          handleSpeechResult,
-          (analysis) => console.log('Speech analysis:', analysis)
-        );
-        console.log('FSM: COOLDOWN → LISTENING. Continuous mode restarted with session:', sessionId);
-      } catch (error) {
-        console.error('Failed to restart continuous mode:', error);
-        setIsRecording(false);
-        setConversationState('IDLE');
-        setSttSessionId(null);
-      }
-    }, 500); // Brief cooldown period
-  }, [clearCooldownTimeout, sttSessionId]);
-
   // Text-to-Speech for AI responses
   const speakText = async (text: string, language: string = 'en') => {
     try {
       setIsSpeaking(true);
       
-      // CRITICAL FIX: Set COOLDOWN at TTS start (align with architect's design)
-      setConversationState('COOLDOWN');
-      
-      // Clear any pending cooldown transitions
-      clearCooldownTimeout();
-      
       // CRITICAL: Pause speech recognition to prevent feedback loop!
       if (isRecording) {
         speechRecognitionService.pauseForTTS();
         setIsRecording(false);
-        // CRITICAL FIX: In continuous mode, preserve session ID for seamless restart
-        if (!continuousMode) {
-          setSttSessionId(null); // Only clear session ID in manual mode
-        }
       }
       
       // Stop any current audio
@@ -378,54 +242,43 @@ export default function StudentAIStudyPartnerMobile() {
         audio.onended = () => {
           setIsSpeaking(false);
           currentAudio.current = null;
-          
+          // CONTINUOUS MODE: Auto-restart speech recognition after Lexi finishes
           speechRecognitionService.resumeAfterTTS();
           if (continuousMode) {
-            // COOLDOWN→LISTENING transition after TTS ends + cooldown
-            startCooldownToListening();
-          } else {
-            // Return to IDLE if not in continuous mode
-            setConversationState('IDLE');
+            setTimeout(async () => {
+              try {
+                setIsRecording(true);
+                await speechRecognitionService.startListening(
+                  `continuous-session-${Date.now()}`,
+                  'en-US',
+                  handleSpeechResult,
+                  (analysis) => console.log('Speech analysis:', analysis)
+                );
+                console.log('Continuous conversation mode: Ready for your response!');
+              } catch (error) {
+                console.error('Failed to restart continuous mode:', error);
+                setIsRecording(false);
+              }
+            }, 500); // Brief delay after TTS ends
           }
         };
         
         audio.onerror = () => {
           setIsSpeaking(false);
           currentAudio.current = null;
+          // Enable recognition to resume even on TTS error
           speechRecognitionService.resumeAfterTTS();
-          
-          // CRITICAL FIX: On TTS error in continuous mode, run same COOLDOWN→LISTENING restart path
-          if (continuousMode) {
-            startCooldownToListening();
-          } else {
-            setConversationState('IDLE');
-          }
         };
 
         await audio.play();
       } else {
         setIsSpeaking(false);
+        // Enable recognition to resume if TTS failed
         speechRecognitionService.resumeAfterTTS();
-        
-        // Handle TTS failure - same restart logic
-        if (continuousMode) {
-          startCooldownToListening();
-        } else {
-          setConversationState('IDLE');
-        }
       }
     } catch (error) {
       console.error('TTS error:', error);
       setIsSpeaking(false);
-      speechRecognitionService.resumeAfterTTS();
-      
-      // Handle TTS exception - same restart logic
-      if (continuousMode) {
-        startCooldownToListening();
-      } else {
-        setConversationState('IDLE');
-      }
-      
       toast({
         title: t('common:error'),
         description: t('student:ttsError'),
@@ -447,71 +300,53 @@ export default function StudentAIStudyPartnerMobile() {
   const handleSpeechResult = (result: any) => {
     if (result.isFinal) {
       setInputText(result.text);
-      
-      // CRITICAL FIX: In continuous mode, ensure we're in LISTENING state for auto-send
-      if (continuousMode) {
-        // Keep conversation state as LISTENING for continuous flow
-        setConversationState('LISTENING');
-        // Don't set isRecording to false yet - keep listening
-        console.log('Continuous mode: Speech captured, staying in LISTENING state');
-      } else {
-        // Manual mode - stop recording and listening
-        setIsRecording(false);
+      setIsRecording(false);
+      // In continuous mode, don't stop - let it continue listening
+      if (!continuousMode) {
         speechRecognitionService.stopListening();
       }
-      
       toast({
         title: t('student:speechCaptured'),
         description: result.text,
       });
       
-      // Auto-send in continuous mode - IMMEDIATE for ChatGPT-like flow
+      // Auto-send in continuous mode for seamless conversation
       if (continuousMode && result.text.trim()) {
-        // Immediately process - no timeout needed since we're already in LISTENING
-        handleAutoSend(result.text.trim());
-        // Don't clear input immediately - let user see what they said!
-        // Input will be cleared when the next speech starts or manually cleared
+        setTimeout(() => {
+          const userMessage = {
+            id: Date.now().toString(),
+            role: 'user' as const,
+            content: result.text,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, userMessage]);
+          sendMessage.mutate(result.text);
+          setInputText('');
+        }, 500);
       }
     } else {
-      // Show interim results during recording
-      setInputText(result.text);
+      // Only show interim results if we're still actively recording
+      if (isRecording) {
+        setInputText(result.text);
+      }
     }
   };
 
   const startRecording = async () => {
-    // CRITICAL FIX: Block startRecording unless state is IDLE/COOLDOWN and !isRecording
-    if (isRecording || (conversationState !== 'IDLE' && conversationState !== 'COOLDOWN')) {
-      console.log('STT blocked - invalid state:', { isRecording, conversationState });
-      return;
-    }
-    
-    // Clear any pending cooldown transitions to prevent conflicts
-    clearCooldownTimeout();
-    
     setIsRecording(true);
     setInputText('');
     
-    // Generate new session ID
-    const newSessionId = `study-session-${Date.now()}`;
-    setSttSessionId(newSessionId);
-    
-    // FSM: Transition to LISTENING state when STT starts
-    setConversationState('LISTENING');
-    
     try {
       await speechRecognitionService.startListening(
-        newSessionId,
+        `study-session-${Date.now()}`,
         'en-US',
         handleSpeechResult,
         (analysis) => {
           console.log('Speech analysis:', analysis);
         }
       );
-      console.log('FSM: IDLE/COOLDOWN → LISTENING. Speech recognition started.');
     } catch (error) {
       setIsRecording(false);
-      setConversationState('IDLE'); // Reset to IDLE on error
-      setSttSessionId(null);
       toast({
         title: t('common:error'),
         description: t('student:speechRecognitionError'),
@@ -528,8 +363,6 @@ export default function StudentAIStudyPartnerMobile() {
   const stopRecording = () => {
     setIsRecording(false);
     speechRecognitionService.stopListening();
-    setSttSessionId(null); // Clear session ID
-    clearCooldownTimeout(); // Clear any pending transitions
     
     toast({
       title: t('student:processingAudio'),
@@ -540,34 +373,6 @@ export default function StudentAIStudyPartnerMobile() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  // Automatic greeting on first entry - level-appropriate
-  useEffect(() => {
-    const shouldShowGreeting = conversationHistory && 
-                              conversationHistory.length === 0 && 
-                              messages.length === 0 && 
-                              !sendMessage.isPending;
-    
-    if (shouldShowGreeting) {
-      // Delay greeting slightly to ensure component is fully loaded
-      const timer = setTimeout(() => {
-        console.log('🎯 FIRST ENTRY - Sending automatic level-appropriate greeting');
-        sendMessage.mutate('__first_entry__');
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [conversationHistory, messages.length, sendMessage]);
-
-  // Cleanup on unmount - prevent memory leaks
-  useEffect(() => {
-    return () => {
-      clearCooldownTimeout();
-      if (isRecording) {
-        speechRecognitionService.stopListening();
-      }
-    };
-  }, [clearCooldownTimeout, isRecording]);
 
   const quickStartPrompts = [
     "Help me prepare for my next IELTS speaking session",
@@ -588,10 +393,7 @@ export default function StudentAIStudyPartnerMobile() {
       title="Lexi - Turn minutes into progress"
       showBack={false}
       gradient="primary"
-      showSettings={false}
-    >
-      {/* Settings Button */}
-      <div className="flex justify-end mb-4">
+      headerAction={
         <button 
           className="p-2 rounded-full glass-button"
           onClick={() => setShowSettings(!showSettings)}
@@ -599,8 +401,8 @@ export default function StudentAIStudyPartnerMobile() {
         >
           <Settings className="w-5 h-5 text-white" />
         </button>
-      </div>
-
+      }
+    >
       {/* Settings Panel */}
       <AnimatePresence>
         {showSettings && (
@@ -668,7 +470,7 @@ export default function StudentAIStudyPartnerMobile() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white/70 text-sm mb-1">Continuous Conversation</p>
-                  <p className="text-white/50 text-xs">Auto-conversation like ChatGPT (no clicking send)</p>
+                  <p className="text-white/50 text-xs">Auto-listen after Lexi responds (ChatGPT-style)</p>
                 </div>
                 <button
                   onClick={() => setContinuousMode(!continuousMode)}
@@ -852,86 +654,68 @@ export default function StudentAIStudyPartnerMobile() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ChatGPT-Style Input Area */}
-      <div className="relative">
-        {/* Continuous mode status indicator */}
+      {/* Input Area */}
+      <div className="glass-card p-3 flex items-center gap-3">
+        {/* Continuous mode status */}
         {continuousMode && (
-          <div className="absolute -top-8 left-0 text-xs text-green-300 flex items-center gap-1">
+          <div className="text-xs text-green-300 flex items-center gap-1">
             <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-            Auto-conversation mode
+            Auto-listen
           </div>
         )}
         
-        <div className="relative bg-white/10 backdrop-blur-md rounded-full border border-white/20 p-3 flex items-center gap-3">
-          {/* Plus icon */}
-          <div className="flex-shrink-0">
-            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-              <span className="text-white/80 text-lg font-light">+</span>
-            </div>
-          </div>
+        <div className="relative">
+          <button
+            className={`p-2 rounded-full transition-all ${
+              isRecording 
+                ? 'bg-red-500 animate-pulse' 
+                : 'bg-white/10 hover:bg-white/20'
+            }`}
+            onClick={toggleRecording}
+            data-testid="button-voice-input"
+          >
+            <Mic className="w-5 h-5 text-white" />
+          </button>
           
-          {/* Input field */}
-          <input
-            type="text"
-            placeholder="Ask anything"
-            className="flex-1 bg-transparent text-white placeholder-white/60 outline-none text-base"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && inputText.trim()) {
-                handleSend();
-              }
-            }}
-            data-testid="input-message"
-          />
-          
-          {/* Right side buttons - ChatGPT style */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Voice chat button - always continuous mode */}
-            <button
-              className={`relative w-10 h-10 rounded-full transition-all flex items-center justify-center ${
-                isRecording 
-                  ? 'bg-red-500/20 border border-red-400' 
-                  : 'bg-green-500/20 border border-green-400 hover:bg-green-500/30'
-              }`}
-              onClick={toggleRecording}
-              data-testid="button-voice-chat"
-              title="Voice Chat (Continuous Conversation)"
-            >
-              <Mic className={`w-5 h-5 ${
-                isRecording ? 'text-red-400' : 'text-green-400'
-              }`} />
-              
-              {/* Recording indicator */}
-              {isRecording && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-pulse" />
-              )}
-              
-              {/* Continuous mode always active indicator */}
-              {!isRecording && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full" />
-              )}
-            </button>
-            
-            {/* Text chat button - Send button for text */}
-            <motion.button
-              className={`w-10 h-10 rounded-full transition-all flex items-center justify-center ${
-                inputText.trim() 
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' 
-                  : 'bg-white/10 hover:bg-white/20'
-              }`}
-              whileTap={{ scale: 0.9 }}
-              onClick={handleSend}
-              disabled={sendMessage.isPending || !inputText.trim()}
-              data-testid="button-text-chat"
-              title="Send Text Message"
-            >
-              <Send className={`w-5 h-5 ${
-                inputText.trim() ? 'text-white' : 'text-white/60'
-              }`} />
-            </motion.button>
-          </div>
+          {/* Continuous mode indicator on mic */}
+          {continuousMode && (
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border border-white" />
+          )}
         </div>
+        
+        <input
+          type="text"
+          placeholder={t('student:askStudyPartner')}
+          className="flex-1 bg-transparent text-white placeholder-white/50 outline-none"
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' && inputText.trim()) {
+              handleSend();
+            }
+          }}
+          data-testid="input-message"
+        />
+        
+        {inputText.trim() ? (
+          <motion.button
+            className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 disabled:opacity-50"
+            whileTap={{ scale: 0.9 }}
+            onClick={handleSend}
+            disabled={sendMessage.isPending}
+            data-testid="button-send"
+          >
+            <Send className="w-5 h-5 text-white" />
+          </motion.button>
+        ) : (
+          <button
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20"
+            onClick={() => setMessages([])}
+            data-testid="button-clear-chat"
+          >
+            <RefreshCw className="w-5 h-5 text-white/70" />
+          </button>
+        )}
       </div>
     </MobileLayout>
   );
