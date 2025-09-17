@@ -275,5 +275,18 @@
     "fillingSectionsHelp": "Filling out the following sections will help the AI:",
     "completeProfileNow": "Complete Profile Now",
     "skipForNow": "Skip for now"
-  }
+  },
+  "studyMode": {
+    "title": "Study Mode",
+    "casual": "Casual",
+    "focused": "Focused",
+    "examPrep": "Exam Prep"
+  },
+  "personality": {
+    "encouraging": "Encouraging",
+    "professional": "Professional", 
+    "friendly": "Friendly",
+    "challenging": "Challenging"
+  },
+  "aiPersonality": "AI Personality"
 }

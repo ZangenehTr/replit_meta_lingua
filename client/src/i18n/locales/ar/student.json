@@ -151,5 +151,18 @@
   "groupCreated": "تم إنشاء المجموعة",
   "inviteClassmates": "ادع زملاءك في الصف",
   "supportContacted": "تم الاتصال بالدعم",
-  "supportWillRespond": "سيرد الدعم قريبًا"
+  "supportWillRespond": "سيرد الدعم قريبًا",
+  "studyMode": {
+    "title": "نمط الدراسة",
+    "casual": "عادي",
+    "focused": "مركز",
+    "examPrep": "إعداد الامتحان"
+  },
+  "personality": {
+    "encouraging": "مشجع",
+    "professional": "مهني",
+    "friendly": "ودود",
+    "challenging": "تحدي"
+  },
+  "aiPersonality": "شخصية الذكاء الاصطناعي"
 }

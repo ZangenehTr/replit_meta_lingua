@@ -284,5 +284,18 @@
     "fillingSectionsHelp": "تکمیل بخش‌های زیر به هوش مصنوعی کمک خواهد کرد:",
     "completeProfileNow": "تکمیل پروفایل",
     "skipForNow": "فعلاً رد کن"
-  }
+  },
+  "studyMode": {
+    "title": "حالت مطالعه",
+    "casual": "عادی",
+    "focused": "متمرکز",
+    "examPrep": "آماده‌سازی امتحان"
+  },
+  "personality": {
+    "encouraging": "تشویق‌کننده",
+    "professional": "حرفه‌ای",
+    "friendly": "دوستانه",
+    "challenging": "چالش‌برانگیز"
+  },
+  "aiPersonality": "شخصیت هوش مصنوعی"
 }
