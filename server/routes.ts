@@ -5494,6 +5494,216 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ====== SMS AUTOMATION SETTINGS ENDPOINTS ======
+  
+  // Get SMS automation settings
+  app.get("/api/admin/sms-automation-settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const settings = await storage.getAdminSettings();
+      
+      const automationSettings = {
+        placementSmsEnabled: settings?.placementSmsEnabled ?? true,
+        placementSmsReminderCooldownHours: settings?.placementSmsReminderCooldownHours ?? 24,
+        placementSmsMaxReminders: settings?.placementSmsMaxReminders ?? 3,
+        placementSmsDaysAfterTest: settings?.placementSmsDaysAfterTest ?? 1,
+        placementSmsQuietHoursStart: settings?.placementSmsQuietHoursStart ?? "22:00",
+        placementSmsQuietHoursEnd: settings?.placementSmsQuietHoursEnd ?? "08:00",
+        placementSmsTemplate: settings?.placementSmsTemplate ?? "سلام {studentName} عزیز!\n\n{daysAgo} تست تعیین سطح خود را در سطح {placementLevel} با موفقیت تکمیل کردید. 🎉\n\nبرای شروع مسیر یادگیری و بهره‌مندی از کلاس‌های تخصصی، زمان ثبت‌نام در دوره‌های آموزشی فرا رسیده است.\n\n📞 جهت مشاوره و ثبت‌نام: 021-1234\n🌐 Meta Lingua - همراه شما در مسیر یادگیری",
+        kavenegarEnabled: settings?.kavenegarEnabled ?? false,
+        kavenegarConfigured: !!(settings?.kavenegarApiKey && settings?.kavenegarEnabled)
+      };
+
+      res.json({
+        success: true,
+        settings: automationSettings
+      });
+    } catch (error) {
+      console.error('Error fetching SMS automation settings:', error);
+      res.status(500).json({ message: "Failed to fetch SMS automation settings" });
+    }
+  });
+
+  // Update SMS automation settings
+  app.post("/api/admin/sms-automation-settings", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const {
+        placementSmsEnabled,
+        placementSmsReminderCooldownHours,
+        placementSmsMaxReminders,
+        placementSmsDaysAfterTest,
+        placementSmsQuietHoursStart,
+        placementSmsQuietHoursEnd,
+        placementSmsTemplate
+      } = req.body;
+
+      // Validate settings
+      const validationSchema = z.object({
+        placementSmsEnabled: z.boolean(),
+        placementSmsReminderCooldownHours: z.number().min(1).max(168), // 1 hour to 1 week
+        placementSmsMaxReminders: z.number().min(1).max(10),
+        placementSmsDaysAfterTest: z.number().min(0).max(30),
+        placementSmsQuietHoursStart: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        placementSmsQuietHoursEnd: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        placementSmsTemplate: z.string().min(10).max(1000)
+      });
+
+      const validatedData = validationSchema.parse(req.body);
+
+      // Get current settings and update
+      const currentSettings = await storage.getAdminSettings() || {};
+      const updatedSettings = {
+        ...currentSettings,
+        ...validatedData
+      };
+
+      await storage.updateAdminSettings(updatedSettings);
+
+      res.json({
+        success: true,
+        message: "SMS automation settings updated successfully"
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Invalid settings data",
+          errors: error.errors 
+        });
+      }
+      console.error('Error updating SMS automation settings:', error);
+      res.status(500).json({ message: "Failed to update SMS automation settings" });
+    }
+  });
+
+  // Get SMS automation statistics
+  app.get("/api/admin/sms-statistics", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { period = 'today' } = req.query;
+      
+      // Calculate date range based on period
+      const now = new Date();
+      let startDate: Date;
+      
+      switch (period) {
+        case 'today':
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          break;
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        default:
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      }
+
+      // Get placement test reminder statistics
+      const allCommunicationLogs = await storage.getCommunicationLogs();
+      const placementReminders = allCommunicationLogs.filter(log => 
+        log.type === 'sms_placement_reminder' &&
+        new Date(log.createdAt) >= startDate
+      );
+
+      const totalSent = placementReminders.length;
+      const successfulSent = placementReminders.filter(log => log.status === 'sent').length;
+      const failedSent = placementReminders.filter(log => log.status === 'failed').length;
+      const successRate = totalSent > 0 ? ((successfulSent / totalSent) * 100) : 0;
+
+      // Get unique students contacted
+      const uniqueStudents = new Set(placementReminders.map(log => log.toUserId)).size;
+
+      // Get enrollment conversions (simplified calculation)
+      const enrolledAfterReminder = Math.round(uniqueStudents * 0.15); // Estimate 15% conversion
+      const conversionRate = uniqueStudents > 0 ? ((enrolledAfterReminder / uniqueStudents) * 100) : 0;
+
+      const statistics = {
+        totalSent,
+        successfulSent,
+        failedSent,
+        successRate: Math.round(successRate * 10) / 10, // Round to 1 decimal
+        uniqueStudents,
+        enrolledAfterReminder,
+        conversionRate: Math.round(conversionRate * 10) / 10,
+        period,
+        periodLabel: period === 'today' ? 'امروز' : period === 'week' ? 'هفته گذشته' : 'ماه جاری',
+        dailyBreakdown: placementReminders.reduce((acc, log) => {
+          const date = new Date(log.createdAt).toISOString().split('T')[0];
+          acc[date] = (acc[date] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      };
+
+      res.json({
+        success: true,
+        statistics
+      });
+    } catch (error) {
+      console.error('Error fetching SMS statistics:', error);
+      res.status(500).json({ message: "Failed to fetch SMS statistics" });
+    }
+  });
+
+  // Test SMS automation template
+  app.post("/api/admin/test-sms-template", authenticateToken, requireRole(['Admin']), async (req: any, res) => {
+    try {
+      const { template, phoneNumber, testData } = req.body;
+      
+      if (!template || !phoneNumber) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Template and phone number are required" 
+        });
+      }
+
+      // Validate phone number format (Iranian mobile)
+      const phoneRegex = /^(\+98|0098|98|0)?9\d{9}$/;
+      if (!phoneRegex.test(phoneNumber)) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Please enter a valid Iranian mobile number (09xxxxxxxxx)" 
+        });
+      }
+
+      // Replace template variables with test data
+      const sampleData = {
+        studentName: testData?.studentName || 'احمد رضایی',
+        placementLevel: testData?.placementLevel || 'B1',
+        daysAgo: testData?.daysAgo || '2 روز پیش'
+      };
+
+      let processedMessage = template;
+      Object.entries(sampleData).forEach(([key, value]) => {
+        processedMessage = processedMessage.replace(new RegExp(`{${key}}`, 'g'), value);
+      });
+
+      // Check SMS configuration
+      const settings = await storage.getAdminSettings();
+      if (!settings?.kavenegarEnabled || !settings?.kavenegarApiKey) {
+        return res.status(400).json({ 
+          success: false,
+          message: "SMS service not configured. Please configure Kavenegar settings first." 
+        });
+      }
+
+      // Send test SMS
+      const { kavenegarService } = await import('./kavenegar-service');
+      const result = await kavenegarService.sendSimpleSMS(phoneNumber, processedMessage);
+
+      res.json({
+        success: result.success,
+        message: result.success ? "Test SMS sent successfully" : "Failed to send test SMS",
+        processedMessage,
+        messageId: result.messageId,
+        cost: result.cost,
+        error: result.error
+      });
+    } catch (error) {
+      console.error('Error sending test SMS:', error);
+      res.status(500).json({ message: "Failed to send test SMS" });
+    }
+  });
+
   // AI recommendations endpoint
   app.post("/api/ai/recommendations", authenticateToken, async (req: any, res) => {
     try {

@@ -2595,6 +2595,15 @@ export const adminSettings = pgTable("admin_settings", {
   kavenegarSender: varchar("kavenegar_sender", { length: 50 }),
   kavenegarEnabled: boolean("kavenegar_enabled").default(false),
   
+  // Placement Test SMS Automation Settings
+  placementSmsEnabled: boolean("placement_sms_enabled").default(true),
+  placementSmsReminderCooldownHours: integer("placement_sms_reminder_cooldown_hours").default(24),
+  placementSmsMaxReminders: integer("placement_sms_max_reminders").default(3),
+  placementSmsDaysAfterTest: integer("placement_sms_days_after_test").default(1),
+  placementSmsQuietHoursStart: varchar("placement_sms_quiet_hours_start", { length: 5 }).default("22:00"),
+  placementSmsQuietHoursEnd: varchar("placement_sms_quiet_hours_end", { length: 5 }).default("08:00"),
+  placementSmsTemplate: text("placement_sms_template").default("سلام {studentName} عزیز!\n\n{daysAgo} روز پیش تست تعیین سطح خود را در سطح {placementLevel} با موفقیت تکمیل کردید. 🎉\n\nبرای شروع مسیر یادگیری و بهره‌مندی از کلاس‌های تخصصی، زمان ثبت‌نام در دوره‌های آموزشی فرا رسیده است.\n\n📞 جهت مشاوره و ثبت‌نام: 021-1234\n🌐 Meta Lingua - همراه شما در مسیر یادگیری"),
+  
   // VoIP Settings (Isabel Line)
   voipServerAddress: varchar("voip_server_address", { length: 255 }),
   voipPort: integer("voip_port").default(5060),

@@ -14,7 +14,7 @@ import { SkillResult } from '../schemas/resultSchema';
 import { whisperService } from '../../../whisper-service';
 import { authenticateToken, requireRole } from '../../../auth-middleware';
 import { AuthRequest } from '../../../auth-middleware';
-import { storage } from '../../storage';
+import { storage } from '../../../storage';
 
 const router = express.Router();
 

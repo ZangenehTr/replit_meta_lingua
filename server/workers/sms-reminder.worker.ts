@@ -117,8 +117,17 @@ export class SMSReminderWorker {
    */
   private async processPlacementTestReminders(): Promise<void> {
     try {
-      // Get students who completed placement test but haven't enrolled (last 7 days)
-      const unpaidStudents = await storage.getUnpaidStudentsAfterPlacementTest(7);
+      // Get admin SMS automation settings
+      const adminSettings = await storage.getAdminSettings();
+      
+      // Check if SMS automation is enabled
+      if (!adminSettings?.placementSmsEnabled) {
+        return; // SMS automation disabled
+      }
+      
+      // Use configured days after test or default to 7
+      const lookbackDays = adminSettings?.placementSmsDaysAfterTest || 7;
+      const unpaidStudents = await storage.getUnpaidStudentsAfterPlacementTest(lookbackDays);
       
       if (unpaidStudents.length === 0) {
         return; // No placement test reminders to send
@@ -128,9 +137,9 @@ export class SMSReminderWorker {
 
       for (const student of unpaidStudents) {
         try {
-          // Check if SMS reminder was already sent
-          if (await this.shouldSendPlacementTestReminder(student)) {
-            await this.sendPlacementTestReminder(student);
+          // Check if SMS reminder should be sent using admin settings
+          if (await this.shouldSendPlacementTestReminder(student, adminSettings)) {
+            await this.sendPlacementTestReminder(student, adminSettings);
             await this.markPlacementTestReminderSent(student.userId, student.placementSessionId);
           }
         } catch (error) {
@@ -153,7 +162,10 @@ export class SMSReminderWorker {
       const allLeads = await storage.getFollowUpReminderCandidates(WORKFLOW_STATUS.FOLLOW_UP);
       
       const now = new Date();
-      const reminderCooldownMs = 24 * 60 * 60 * 1000; // 24 hours cooldown between reminders
+      // Get admin SMS automation settings for cooldown
+      const adminSettings = await storage.getAdminSettings();
+      const cooldownHours = adminSettings?.placementSmsReminderCooldownHours || 24;
+      const reminderCooldownMs = cooldownHours * 60 * 60 * 1000;
       
       return allLeads.filter(lead => {
         // Must have SMS reminders enabled
@@ -292,15 +304,16 @@ export class SMSReminderWorker {
   /**
    * Check if placement test reminder should be sent to student
    */
-  private async shouldSendPlacementTestReminder(student: any): Promise<boolean> {
+  private async shouldSendPlacementTestReminder(student: any, adminSettings?: any): Promise<boolean> {
     try {
       // Check if phone number exists
       if (!student.phone || student.phone.length < 10) {
         return false;
       }
 
-      // Check if reminder was already sent (24-hour cooldown)
-      const reminderCooldownMs = 24 * 60 * 60 * 1000; // 24 hours
+      // Use configured cooldown period or default to 24 hours
+      const cooldownHours = adminSettings?.placementSmsReminderCooldownHours || 24;
+      const reminderCooldownMs = cooldownHours * 60 * 60 * 1000;
       const lastReminderSent = await this.getLastPlacementTestReminderSent(student.userId, student.placementSessionId);
       
       if (lastReminderSent) {
@@ -311,17 +324,41 @@ export class SMSReminderWorker {
         }
       }
 
-      // Check if student hasn't been reminded too many times (max 3 reminders)
+      // Use configured max reminders or default to 3
+      const maxReminders = adminSettings?.placementSmsMaxReminders || 3;
       const reminderCount = await this.getPlacementTestReminderCount(student.userId, student.placementSessionId);
-      if (reminderCount >= 3) {
-        console.log(`Skipping placement test reminder for user ${student.userId} - already sent ${reminderCount} reminders`);
+      if (reminderCount >= maxReminders) {
+        console.log(`Skipping placement test reminder for user ${student.userId} - already sent ${reminderCount}/${maxReminders} reminders`);
         return false;
       }
 
-      // Only send reminders for students who completed test 1+ days ago (avoid immediate spam)
+      // Use configured days after test or default to 1
+      const minDaysAfterTest = adminSettings?.placementSmsDaysAfterTest || 1;
       const daysSinceTest = student.daysSinceTest || 0;
-      if (daysSinceTest < 1) {
+      if (daysSinceTest < minDaysAfterTest) {
+        console.log(`Skipping placement test reminder for user ${student.userId} - only ${daysSinceTest} days since test (minimum: ${minDaysAfterTest})`);
         return false;
+      }
+      
+      // Check quiet hours if configured
+      if (adminSettings?.placementSmsQuietHoursStart && adminSettings?.placementSmsQuietHoursEnd) {
+        const now = new Date();
+        const currentTime = now.getHours() * 100 + now.getMinutes(); // Convert to HHMM format
+        const quietStart = parseInt(adminSettings.placementSmsQuietHoursStart.replace(':', ''));
+        const quietEnd = parseInt(adminSettings.placementSmsQuietHoursEnd.replace(':', ''));
+        
+        // Handle quiet hours that cross midnight
+        if (quietStart > quietEnd) {
+          if (currentTime >= quietStart || currentTime <= quietEnd) {
+            console.log(`Skipping placement test reminder for user ${student.userId} - currently in quiet hours (${adminSettings.placementSmsQuietHoursStart}-${adminSettings.placementSmsQuietHoursEnd})`);
+            return false;
+          }
+        } else {
+          if (currentTime >= quietStart && currentTime <= quietEnd) {
+            console.log(`Skipping placement test reminder for user ${student.userId} - currently in quiet hours (${adminSettings.placementSmsQuietHoursStart}-${adminSettings.placementSmsQuietHoursEnd})`);
+            return false;
+          }
+        }
       }
 
       return true;
@@ -334,15 +371,15 @@ export class SMSReminderWorker {
   /**
    * Send placement test enrollment reminder SMS
    */
-  private async sendPlacementTestReminder(student: any): Promise<void> {
+  private async sendPlacementTestReminder(student: any, adminSettings?: any): Promise<void> {
     try {
       const studentName = student.firstName || 'دانش‌آموز';
       const level = student.placementLevel || 'B1';
       const daysAgo = student.daysSinceTest || 1;
       const maskedPhone = this.maskPhoneNumber(student.phone);
       
-      // Create culturally appropriate Persian SMS message
-      const message = this.generatePlacementTestReminderMessage(studentName, level, daysAgo);
+      // Use admin-configured message template or default message
+      const message = this.generatePlacementTestReminderMessage(studentName, level, daysAgo, adminSettings);
 
       const result = await this.kavenegarService.sendSimpleSMS(
         student.phone,
@@ -457,19 +494,29 @@ export class SMSReminderWorker {
   }
 
   /**
-   * Generate culturally appropriate Persian placement test reminder message
+   * Generate placement test reminder message using admin template or default
    */
-  private generatePlacementTestReminderMessage(studentName: string, level: string, daysAgo: number): string {
-    const timePhrase = daysAgo === 1 ? 'دیروز' : `${daysAgo} روز پیش`;
-    
-    return `سلام ${studentName} عزیز!
+  private generatePlacementTestReminderMessage(studentName: string, level: string, daysAgo: number, adminSettings?: any): string {
+    // Use admin template if available, otherwise use default
+    const template = adminSettings?.placementSmsTemplate || 
+      `سلام {studentName} عزیز!
 
-${timePhrase} تست تعیین سطح خود را در سطح ${level} با موفقیت تکمیل کردید. 🎉
+{daysAgo} تست تعیین سطح خود را در سطح {placementLevel} با موفقیت تکمیل کردید. 🎉
 
 برای شروع مسیر یادگیری و بهره‌مندی از کلاس‌های تخصصی، زمان ثبت‌نام در دوره‌های آموزشی فرا رسیده است.
 
 📞 جهت مشاوره و ثبت‌نام: 021-1234
 🌐 Meta Lingua - همراه شما در مسیر یادگیری`;
+    
+    const timePhrase = daysAgo === 1 ? 'دیروز' : `${daysAgo} روز پیش`;
+    
+    // Replace template variables
+    let message = template;
+    message = message.replace(/{studentName}/g, studentName);
+    message = message.replace(/{placementLevel}/g, level);
+    message = message.replace(/{daysAgo}/g, timePhrase);
+    
+    return message;
   }
 
   /**

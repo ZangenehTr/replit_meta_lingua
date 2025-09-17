@@ -45,6 +45,31 @@ interface KavenegarSettings {
   isEnabled: boolean;
 }
 
+interface SMSAutomationSettings {
+  placementSmsEnabled: boolean;
+  placementSmsReminderCooldownHours: number;
+  placementSmsMaxReminders: number;
+  placementSmsDaysAfterTest: number;
+  placementSmsQuietHoursStart: string;
+  placementSmsQuietHoursEnd: string;
+  placementSmsTemplate: string;
+  kavenegarEnabled: boolean;
+  kavenegarConfigured: boolean;
+}
+
+interface SMSStatistics {
+  totalSent: number;
+  successfulSent: number;
+  failedSent: number;
+  successRate: number;
+  uniqueStudents: number;
+  enrolledAfterReminder: number;
+  conversionRate: number;
+  period: string;
+  periodLabel: string;
+  dailyBreakdown: Record<string, number>;
+}
+
 export default function SMSSettingsPage() {
   const { t } = useTranslation(['admin', 'common']);
   const { language, isRTL, direction } = useLanguage();
@@ -57,6 +82,8 @@ export default function SMSSettingsPage() {
     dailyLimit: 1000,
     isEnabled: false
   });
+  const [testPhoneNumber, setTestPhoneNumber] = useState("");
+  const [statisticsPeriod, setStatisticsPeriod] = useState<"today" | "week" | "month">("today");
 
   // Fetch SMS templates
   const { data: smsTemplates = [], isLoading: templatesLoading } = useQuery({
@@ -66,6 +93,17 @@ export default function SMSSettingsPage() {
   // Fetch Kavenegar settings
   const { data: kavenegarSettings, isLoading: settingsLoading } = useQuery({
     queryKey: ['/api/admin/kavenegar-settings'],
+  });
+
+  // Fetch SMS automation settings
+  const { data: smsAutomationSettings, isLoading: automationLoading } = useQuery<SMSAutomationSettings>({
+    queryKey: ['/api/admin/sms-automation-settings'],
+  });
+
+  // Fetch SMS statistics
+  const { data: smsStatistics, isLoading: statisticsLoading } = useQuery<SMSStatistics>({
+    queryKey: ['/api/admin/sms-statistics', statisticsPeriod],
+    queryFn: () => apiRequest(`/api/admin/sms-statistics?period=${statisticsPeriod}`)
   });
 
   // Update form data when settings are loaded
@@ -101,6 +139,61 @@ export default function SMSSettingsPage() {
         variant: "destructive",
       });
     },
+  });
+
+  // Update SMS automation settings mutation
+  const updateAutomationSettings = useMutation({
+    mutationFn: async (updates: Partial<SMSAutomationSettings>) => {
+      return await apiRequest('/api/admin/sms-automation-settings', {
+        method: 'POST',
+        body: JSON.stringify(updates)
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/sms-automation-settings'] });
+      toast({
+        title: "تنظیمات ذخیره شد",
+        description: "تنظیمات SMS خودکار با موفقیت به‌روزرسانی شد"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در ذخیره تنظیمات",
+        description: error.message || "خطایی رخ داده است",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Test SMS template mutation
+  const testSMSTemplate = useMutation({
+    mutationFn: async (data: { template: string; phoneNumber: string; testData?: any }) => {
+      return await apiRequest('/api/admin/test-sms-template', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+    },
+    onSuccess: (data: any) => {
+      if (data.success) {
+        toast({
+          title: "پیامک آزمایشی ارسال شد",
+          description: "پیامک با موفقیت ارسال شد"
+        });
+      } else {
+        toast({
+          title: "ارسال پیامک ناموفق",
+          description: data.message || "خطایی رخ داده است",
+          variant: "destructive"
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در ارسال پیامک آزمایشی",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const eventTypes = [
@@ -287,6 +380,12 @@ export default function SMSSettingsPage() {
         <TabsList>
           <TabsTrigger value="sms-templates">{t('admin:smsSettings.smsTemplatesTab')}</TabsTrigger>
           <TabsTrigger value="automation">{t('admin:smsSettings.automationTab')}</TabsTrigger>
+          <TabsTrigger value="placement-automation" data-testid="tab-placement-automation">
+            یادآوری تست تعیین سطح
+          </TabsTrigger>
+          <TabsTrigger value="statistics" data-testid="tab-statistics">
+            آمار و گزارش
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="sms-templates">
@@ -469,6 +568,407 @@ export default function SMSSettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Placement Test SMS Automation Tab */}
+        <TabsContent value="placement-automation">
+          <div className="space-y-6">
+            {!smsAutomationSettings?.kavenegarConfigured && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  <span className="text-yellow-800 dark:text-yellow-200">
+                    سرویس Kavenegar هنوز پیکربندی نشده است. لطفاً ابتدا تنظیمات اصلی SMS را پیکربندی کنید.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  تنظیمات پیامک خودکار تست تعیین سطح
+                </CardTitle>
+                <CardDescription>
+                  پیکربندی سیستم یادآوری خودکار برای دانش‌آموزانی که تست تعیین سطح را گذرانده‌اند
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target as HTMLFormElement);
+                    const settings = {
+                      placementSmsEnabled: formData.get("placementSmsEnabled") === "on",
+                      placementSmsReminderCooldownHours: parseInt(formData.get("placementSmsReminderCooldownHours") as string) || 24,
+                      placementSmsMaxReminders: parseInt(formData.get("placementSmsMaxReminders") as string) || 3,
+                      placementSmsDaysAfterTest: parseInt(formData.get("placementSmsDaysAfterTest") as string) || 1,
+                      placementSmsQuietHoursStart: formData.get("placementSmsQuietHoursStart") as string || "22:00",
+                      placementSmsQuietHoursEnd: formData.get("placementSmsQuietHoursEnd") as string || "08:00",
+                      placementSmsTemplate: formData.get("placementSmsTemplate") as string || ""
+                    };
+                    updateAutomationSettings.mutate(settings);
+                  }}
+                  className="space-y-6"
+                >
+                  {/* Enable/Disable Toggle */}
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Switch 
+                      id="placementSmsEnabled"
+                      name="placementSmsEnabled"
+                      defaultChecked={smsAutomationSettings?.placementSmsEnabled}
+                      disabled={!smsAutomationSettings?.kavenegarConfigured}
+                      data-testid="switch-placement-sms-enabled"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="placementSmsEnabled" className="text-base font-medium">
+                        فعال‌سازی پیامک خودکار یادآوری
+                      </Label>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        ارسال خودکار پیامک یادآوری به دانش‌آموزان برای ثبت‌نام در دوره‌ها
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Timing Settings */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="placementSmsReminderCooldownHours">
+                        فاصله زمانی بین پیامک‌ها (ساعت)
+                      </Label>
+                      <Input
+                        id="placementSmsReminderCooldownHours"
+                        name="placementSmsReminderCooldownHours"
+                        type="number"
+                        min="1"
+                        max="168"
+                        defaultValue={smsAutomationSettings?.placementSmsReminderCooldownHours || 24}
+                        disabled={!smsAutomationSettings?.kavenegarConfigured}
+                        data-testid="input-cooldown-hours"
+                      />
+                      <p className="text-xs text-gray-500">حداقل 1 ساعت، حداکثر 168 ساعت (1 هفته)</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="placementSmsMaxReminders">
+                        حداکثر تعداد پیامک برای هر دانش‌آموز
+                      </Label>
+                      <Input
+                        id="placementSmsMaxReminders"
+                        name="placementSmsMaxReminders"
+                        type="number"
+                        min="1"
+                        max="10"
+                        defaultValue={smsAutomationSettings?.placementSmsMaxReminders || 3}
+                        disabled={!smsAutomationSettings?.kavenegarConfigured}
+                        data-testid="input-max-reminders"
+                      />
+                      <p className="text-xs text-gray-500">حداقل 1، حداکثر 10 پیامک</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="placementSmsDaysAfterTest">
+                        تعداد روز پس از تست برای شروع پیامک
+                      </Label>
+                      <Input
+                        id="placementSmsDaysAfterTest"
+                        name="placementSmsDaysAfterTest"
+                        type="number"
+                        min="0"
+                        max="30"
+                        defaultValue={smsAutomationSettings?.placementSmsDaysAfterTest || 1}
+                        disabled={!smsAutomationSettings?.kavenegarConfigured}
+                        data-testid="input-days-after-test"
+                      />
+                      <p className="text-xs text-gray-500">0 تا 30 روز</p>
+                    </div>
+                  </div>
+
+                  {/* Quiet Hours */}
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-medium mb-2">ساعات سکوت</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        در این بازه زمانی پیامک ارسال نخواهد شد
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="placementSmsQuietHoursStart">شروع ساعات سکوت</Label>
+                        <Input
+                          id="placementSmsQuietHoursStart"
+                          name="placementSmsQuietHoursStart"
+                          type="time"
+                          defaultValue={smsAutomationSettings?.placementSmsQuietHoursStart || "22:00"}
+                          disabled={!smsAutomationSettings?.kavenegarConfigured}
+                          data-testid="input-quiet-hours-start"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="placementSmsQuietHoursEnd">پایان ساعات سکوت</Label>
+                        <Input
+                          id="placementSmsQuietHoursEnd"
+                          name="placementSmsQuietHoursEnd"
+                          type="time"
+                          defaultValue={smsAutomationSettings?.placementSmsQuietHoursEnd || "08:00"}
+                          disabled={!smsAutomationSettings?.kavenegarConfigured}
+                          data-testid="input-quiet-hours-end"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Template Editor */}
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-medium mb-2">ویرایش قالب پیامک</h3>
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-4">
+                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                          <strong>فیلدهای قابل استفاده:</strong> {`{studentName}`}, {`{placementLevel}`}, {`{daysAgo}`}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <Textarea
+                      id="placementSmsTemplate"
+                      name="placementSmsTemplate"
+                      rows={6}
+                      defaultValue={smsAutomationSettings?.placementSmsTemplate}
+                      placeholder="متن پیامک خود را اینجا بنویسید..."
+                      className="font-mono text-sm"
+                      disabled={!smsAutomationSettings?.kavenegarConfigured}
+                      data-testid="textarea-sms-template"
+                    />
+                    <p className="text-xs text-gray-500">
+                      حداکثر 1000 کاراکتر (توصیه: حداکثر 160 کاراکتر برای 1 پیامک)
+                    </p>
+
+                    {/* Template Preview */}
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border">
+                      <h4 className="font-medium mb-2">پیش‌نمای پیامک:</h4>
+                      <div className="text-sm bg-white dark:bg-gray-900 p-3 rounded border border-dashed">
+                        {smsAutomationSettings?.placementSmsTemplate
+                          ?.replace(/{studentName}/g, "احمد رضایی")
+                          ?.replace(/{placementLevel}/g, "B1")
+                          ?.replace(/{daysAgo}/g, "2 روز پیش") || "قالب پیامک را وارد کنید..."}
+                      </div>
+                    </div>
+
+                    {/* Test SMS */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="testPhoneNumber">شماره تلفن آزمایشی</Label>
+                        <Input
+                          id="testPhoneNumber"
+                          type="tel"
+                          placeholder="09123456789"
+                          value={testPhoneNumber}
+                          onChange={(e) => setTestPhoneNumber(e.target.value)}
+                          disabled={!smsAutomationSettings?.kavenegarConfigured}
+                          data-testid="input-test-phone"
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <Button 
+                          type="button"
+                          onClick={() => {
+                            if (!testPhoneNumber || !smsAutomationSettings?.placementSmsTemplate) {
+                              toast({
+                                title: "اطلاعات ناقص",
+                                description: "شماره تلفن و قالب پیام الزامی است",
+                                variant: "destructive"
+                              });
+                              return;
+                            }
+                            testSMSTemplate.mutate({
+                              template: smsAutomationSettings.placementSmsTemplate,
+                              phoneNumber: testPhoneNumber,
+                              testData: {
+                                studentName: "احمد رضایی",
+                                placementLevel: "B1",
+                                daysAgo: "2 روز پیش"
+                              }
+                            });
+                          }}
+                          disabled={testSMSTemplate.isPending || !smsAutomationSettings?.kavenegarConfigured}
+                          data-testid="button-test-template"
+                        >
+                          <TestTube className="h-4 w-4 ml-2" />
+                          {testSMSTemplate.isPending ? "در حال ارسال..." : "ارسال آزمایشی"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button 
+                      type="submit" 
+                      disabled={updateAutomationSettings.isPending || !smsAutomationSettings?.kavenegarConfigured}
+                      data-testid="button-save-settings"
+                    >
+                      <Save className="h-4 w-4 ml-2" />
+                      {updateAutomationSettings.isPending ? "در حال ذخیره..." : "ذخیره تنظیمات"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Statistics Tab */}
+        <TabsContent value="statistics">
+          <div className="space-y-6">
+            {/* Statistics Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h2 className="text-2xl font-bold">آمار پیامک‌های یادآوری</h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  عملکرد سیستم پیامک خودکار در دوره {smsStatistics?.periodLabel}
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <select 
+                  value={statisticsPeriod} 
+                  onChange={(e) => setStatisticsPeriod(e.target.value as any)}
+                  className="px-3 py-2 border rounded-md text-sm"
+                  data-testid="select-stats-period"
+                >
+                  <option value="today">امروز</option>
+                  <option value="week">هفته گذشته</option>
+                  <option value="month">ماه جاری</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">کل پیامک‌های ارسالی</p>
+                      <p className="text-2xl font-bold" data-testid="stat-total-sent">
+                        {statisticsLoading ? "..." : smsStatistics?.totalSent || 0}
+                      </p>
+                    </div>
+                    <Send className="h-8 w-8 text-blue-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">نرخ موفقیت</p>
+                      <p className="text-2xl font-bold text-green-600" data-testid="stat-success-rate">
+                        {statisticsLoading ? "..." : `${smsStatistics?.successRate || 0}%`}
+                      </p>
+                    </div>
+                    <CheckCircle className="h-8 w-8 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">دانش‌آموزان تماس‌گرفته</p>
+                      <p className="text-2xl font-bold" data-testid="stat-unique-students">
+                        {statisticsLoading ? "..." : smsStatistics?.uniqueStudents || 0}
+                      </p>
+                    </div>
+                    <Users className="h-8 w-8 text-orange-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">نرخ تبدیل به ثبت‌نام</p>
+                      <p className="text-2xl font-bold text-purple-600" data-testid="stat-conversion-rate">
+                        {statisticsLoading ? "..." : `${smsStatistics?.conversionRate || 0}%`}
+                      </p>
+                    </div>
+                    <Clock className="h-8 w-8 text-purple-500" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Detailed Statistics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>جزئیات ارسال</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded">
+                      <span>پیامک‌های موفق</span>
+                      <span className="font-bold text-green-600" data-testid="detail-successful">
+                        {smsStatistics?.successfulSent || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded">
+                      <span>پیامک‌های ناموفق</span>
+                      <span className="font-bold text-red-600" data-testid="detail-failed">
+                        {smsStatistics?.failedSent || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
+                      <span>ثبت‌نام پس از یادآوری</span>
+                      <span className="font-bold text-blue-600" data-testid="detail-enrolled">
+                        {smsStatistics?.enrolledAfterReminder || 0}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>وضعیت سیستم</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span>سرویس پیامک</span>
+                      <Badge variant={smsAutomationSettings?.kavenegarConfigured ? "default" : "secondary"}>
+                        {smsAutomationSettings?.kavenegarConfigured ? "فعال" : "غیرفعال"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>پیامک خودکار</span>
+                      <Badge variant={smsAutomationSettings?.placementSmsEnabled ? "default" : "secondary"}>
+                        {smsAutomationSettings?.placementSmsEnabled ? "فعال" : "غیرفعال"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>فاصله پیامک‌ها</span>
+                      <span className="text-sm font-medium">
+                        {smsAutomationSettings?.placementSmsReminderCooldownHours || 24} ساعت
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>حداکثر تعداد پیامک</span>
+                      <span className="text-sm font-medium">
+                        {smsAutomationSettings?.placementSmsMaxReminders || 3}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
