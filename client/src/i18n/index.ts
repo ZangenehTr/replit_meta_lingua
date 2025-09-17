@@ -134,7 +134,7 @@ i18n
     },
     
     defaultNS: 'common',
-    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'auth', 'callern', 'coursePlayer'],
+    ns: ['common', 'errors', 'validation', 'admin', 'teacher', 'student', 'mentor', 'supervisor', 'callcenter', 'accountant', 'auth', 'callern', 'coursePlayer', 'courses'],
   });
 
 export default i18n;
