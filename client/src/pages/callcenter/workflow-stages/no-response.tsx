@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Clock, 
   Phone, 
@@ -21,14 +22,17 @@ import {
   Calendar,
   User,
   CheckCircle,
-  XCircle
+  XCircle,
+  Timer,
+  AlertTriangle,
+  Hourglass
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Lead } from "@shared/schema";
 import { WORKFLOW_STATUS, LEAD_STATUS } from "@shared/schema";
 import { motion } from "framer-motion";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format, isAfter, isBefore } from "date-fns";
 import { faIR } from "date-fns/locale";
 
 function NoResponse() {
@@ -39,6 +43,8 @@ function NoResponse() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [callNotes, setCallNotes] = useState("");
+  const [retryFilter, setRetryFilter] = useState<string>("all"); // all, due, overdue, waiting
+  const [forceCallOverride, setForceCallOverride] = useState(false);
 
   // Fetch leads with no response (status could be 'contacted' with no recent response)
   const { data: noResponseLeads = [], isLoading } = useQuery<Lead[]>({
@@ -119,11 +125,61 @@ function NoResponse() {
     }
   });
 
-  const filteredLeads = noResponseLeads.filter(lead =>
-    lead.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.phoneNumber.includes(searchTerm)
-  );
+  // Helper functions for retry logic
+  const getRetryStatus = (lead: Lead) => {
+    if (!lead.nextRetryAt) return 'due'; // If no retry time set, assume due
+    
+    const now = new Date();
+    const nextRetry = new Date(lead.nextRetryAt);
+    
+    if (isBefore(nextRetry, now)) {
+      return 'due'; // Past due time, can call
+    } else {
+      return 'waiting'; // Still waiting for retry time
+    }
+  };
+  
+  const getRetryStatusColor = (status: string) => {
+    switch (status) {
+      case 'due': return 'bg-green-100 text-green-800';
+      case 'waiting': return 'bg-blue-100 text-blue-800';
+      case 'overdue': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+  
+  const canMakeCall = (lead: Lead) => {
+    const status = getRetryStatus(lead);
+    return status === 'due' || forceCallOverride;
+  };
+  
+  const getTimeUntilRetry = (lead: Lead) => {
+    if (!lead.nextRetryAt) return null;
+    const nextRetry = new Date(lead.nextRetryAt);
+    return formatDistanceToNow(nextRetry, { addSuffix: true, locale: faIR });
+  };
+
+  const filteredLeads = noResponseLeads.filter(lead => {
+    // Text search filter
+    const matchesSearch = lead.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.phoneNumber.includes(searchTerm);
+    
+    if (!matchesSearch) return false;
+    
+    // Retry status filter
+    if (retryFilter === 'all') return true;
+    
+    const retryStatus = getRetryStatus(lead);
+    if (retryFilter === 'due') return retryStatus === 'due';
+    if (retryFilter === 'waiting') return retryStatus === 'waiting';
+    if (retryFilter === 'overdue') {
+      // Check if lead has excessive call attempts (5+) without success
+      return (lead.callCount || 0) >= 5 && retryStatus === 'due';
+    }
+    
+    return true;
+  });
 
   const getCallCountColor = (count: number) => {
     if (count <= 2) return "bg-yellow-100 text-yellow-800";
@@ -149,9 +205,26 @@ function NoResponse() {
         </div>
         
         <div className="flex gap-2">
+          <Select value={retryFilter} onValueChange={setRetryFilter}>
+            <SelectTrigger className="w-48" data-testid="select-retry-filter">
+              <SelectValue placeholder="فیلتر وضعیت تماس" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">همه موارد</SelectItem>
+              <SelectItem value="due">آماده تماس</SelectItem>
+              <SelectItem value="waiting">در انتظار</SelectItem>
+              <SelectItem value="overdue">نیاز به اقدام فوری</SelectItem>
+            </SelectContent>
+          </Select>
+          
           <Badge variant="outline" className="px-3 py-1">
             <Clock className="h-4 w-4 mr-2" />
             {filteredLeads.length} مورد
+          </Badge>
+          
+          <Badge variant="outline" className="px-3 py-1">
+            <CheckCircle className="h-4 w-4 mr-2" />
+            {filteredLeads.filter(lead => getRetryStatus(lead) === 'due').length} آماده تماس
           </Badge>
         </div>
       </div>
@@ -196,9 +269,24 @@ function NoResponse() {
                         <Badge className={getCallCountColor(lead.callCount || 0)}>
                           {lead.callCount || 0} تماس
                         </Badge>
+                        
+                        <Badge className={getRetryStatusColor(getRetryStatus(lead))}>
+                          {getRetryStatus(lead) === 'due' && (
+                            <>
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              آماده تماس
+                            </>
+                          )}
+                          {getRetryStatus(lead) === 'waiting' && (
+                            <>
+                              <Timer className="h-3 w-3 mr-1" />
+                              در انتظار
+                            </>
+                          )}
+                        </Badge>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4" />
                           <span dir="ltr">{lead.phoneNumber}</span>
@@ -211,14 +299,32 @@ function NoResponse() {
                           </div>
                         )}
                         
-                        {lead.lastContactDate && (
+                        {lead.lastAttemptAt && (
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4" />
                             <span>
-                              آخرین تماس: {formatDistanceToNow(new Date(lead.lastContactDate), { 
+                              آخرین تلاش: {formatDistanceToNow(new Date(lead.lastAttemptAt), { 
                                 addSuffix: true, 
                                 locale: faIR 
                               })}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {lead.nextRetryAt && getRetryStatus(lead) === 'waiting' && (
+                          <div className="flex items-center gap-2">
+                            <Hourglass className="h-4 w-4" />
+                            <span>
+                              تماس بعدی: {getTimeUntilRetry(lead)}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {(lead.callCount || 0) >= 5 && (
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-orange-500" />
+                            <span className="text-orange-600 font-medium">
+                              نیاز به بررسی مجدد
                             </span>
                           </div>
                         )}
@@ -235,13 +341,27 @@ function NoResponse() {
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button 
-                            variant="outline" 
+                            variant={canMakeCall(lead) ? "outline" : "secondary"}
                             size="sm"
-                            onClick={() => setSelectedLead(lead)}
+                            disabled={!canMakeCall(lead) && !forceCallOverride}
+                            onClick={() => {
+                              setSelectedLead(lead);
+                              setForceCallOverride(false); // Reset override when opening dialog
+                            }}
                             data-testid={`button-call-${lead.id}`}
+                            className={!canMakeCall(lead) ? "opacity-60" : ""}
                           >
-                            <PhoneCall className="h-4 w-4 mr-2" />
-                            تماس
+                            {!canMakeCall(lead) ? (
+                              <>
+                                <Timer className="h-4 w-4 mr-2" />
+                                منتظر تماس
+                              </>
+                            ) : (
+                              <>
+                                <PhoneCall className="h-4 w-4 mr-2" />
+                                تماس
+                              </>
+                            )}
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-md" dir={isRTL ? "rtl" : "ltr"}>
@@ -253,6 +373,31 @@ function NoResponse() {
                           </DialogHeader>
                           
                           <div className="space-y-4">
+                            {selectedLead && (selectedLead.callCount || 0) >= 5 && (
+                              <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded text-orange-800 dark:text-orange-200 text-sm">
+                                <AlertTriangle className="h-4 w-4 inline mr-1" />
+                                هشدار: این متقاضی {selectedLead.callCount} بار تماس گرفته است. آیا باید به بخش انصراف منتقل شود؟
+                              </div>
+                            )}
+                            
+                            {selectedLead && !canMakeCall(selectedLead) && !forceCallOverride && (
+                              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded text-blue-800 dark:text-blue-200 text-sm">
+                                <Timer className="h-4 w-4 inline mr-1" />
+                                زمان تماس بعدی: {selectedLead.nextRetryAt ? getTimeUntilRetry(selectedLead) : "نامشخص"}
+                                <br />
+                                <label className="flex items-center gap-2 mt-2">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={forceCallOverride}
+                                    onChange={(e) => setForceCallOverride(e.target.checked)}
+                                    className="rounded"
+                                    data-testid="checkbox-force-override"
+                                  />
+                                  تماس اضطراری (عدم رعایت زمان)
+                                </label>
+                              </div>
+                            )}
+                            
                             <div>
                               <Label htmlFor="call-notes">یادداشت تماس</Label>
                               <Textarea
@@ -265,6 +410,47 @@ function NoResponse() {
                               />
                             </div>
                             
+                            {selectedLead && (selectedLead.callCount || 0) >= 5 && (
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (selectedLead) {
+                                      markAsLostMutation.mutate(selectedLead.id);
+                                      setSelectedLead(null);
+                                      setCallNotes("");
+                                      setForceCallOverride(false);
+                                    }
+                                  }}
+                                  disabled={markAsLostMutation.isPending}
+                                  className="flex-1"
+                                  data-testid="button-mark-lost"
+                                >
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  عدم پاسخگویی
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (selectedLead) {
+                                      markResponsiveMutation.mutate(selectedLead.id);
+                                      setSelectedLead(null);
+                                      setCallNotes("");
+                                      setForceCallOverride(false);
+                                    }
+                                  }}
+                                  disabled={markResponsiveMutation.isPending}
+                                  className="flex-1"
+                                  data-testid="button-mark-responsive"
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  پاسخگو شد
+                                </Button>
+                              </div>
+                            )}
+                            
                             <div className="flex justify-end gap-2">
                               <Button
                                 variant="outline"
@@ -272,6 +458,7 @@ function NoResponse() {
                                 onClick={() => {
                                   setSelectedLead(null);
                                   setCallNotes("");
+                                  setForceCallOverride(false);
                                 }}
                               >
                                 انصراف
@@ -282,7 +469,7 @@ function NoResponse() {
                                   leadId: selectedLead.id,
                                   notes: callNotes
                                 })}
-                                disabled={makeCallMutation.isPending}
+                                disabled={makeCallMutation.isPending || (selectedLead && !canMakeCall(selectedLead) && !forceCallOverride)}
                                 data-testid="button-submit-call"
                               >
                                 {makeCallMutation.isPending ? "در حال ثبت..." : "ثبت تماس"}

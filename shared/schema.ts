@@ -1503,6 +1503,8 @@ export const leads = pgTable("leads", {
   followUpStart: timestamp("follow_up_start"),
   followUpEnd: timestamp("follow_up_end"),
   callCount: integer("call_count").default(0), // Number of attempts made
+  lastAttemptAt: timestamp("last_attempt_at"), // When last call attempt was made
+  nextRetryAt: timestamp("next_retry_at"), // When next retry is due based on progressive backoff
   
   // Workflow status tracking
   workflowStatus: text("workflow_status").default(WORKFLOW_STATUS.CONTACT_DESK), // Uses canonical workflow status constants

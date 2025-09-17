@@ -11622,10 +11622,31 @@ Return JSON format:
         return res.status(404).json({ message: "Lead not found" });
       }
 
-      // Update call count and last contact date
+      // Calculate progressive backoff for next retry
+      const newCallCount = (currentLead.callCount || 0) + 1;
+      const now = new Date();
+      
+      // Progressive backoff schedule: 0h, 2h, 24h, 3d, 7d
+      const backoffSchedule = [
+        0,           // 1st attempt: immediate (0 hours)
+        2 * 60 * 60, // 2nd attempt: 2 hours in seconds  
+        24 * 60 * 60, // 3rd attempt: 24 hours in seconds
+        3 * 24 * 60 * 60, // 4th attempt: 3 days in seconds
+        7 * 24 * 60 * 60, // 5th attempt: 7 days in seconds
+        14 * 24 * 60 * 60 // 6th+ attempts: 14 days in seconds
+      ];
+      
+      // Calculate next retry time based on call count
+      const backoffIndex = Math.min(newCallCount, backoffSchedule.length - 1);
+      const backoffSeconds = backoffSchedule[backoffIndex];
+      const nextRetryAt = new Date(now.getTime() + (backoffSeconds * 1000));
+
+      // Update call count, last contact date, and retry scheduling
       const lead = await storage.updateLead(leadId, {
-        callCount: (currentLead.callCount || 0) + 1,
-        lastContactDate: new Date()
+        callCount: newCallCount,
+        lastContactDate: now,
+        lastAttemptAt: now,
+        nextRetryAt: nextRetryAt
       });
 
       // Log the call attempt
