@@ -478,15 +478,29 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
             "Awesome! When you feel good about learning, your brain absorbs everything better. Ready for the next challenge?"
           ];
           aiResponse = positiveResponses[Math.floor(Math.random() * positiveResponses.length)];
-        } else {
-          // Simple, natural responses without echoing user input
-          const naturalResponses = [
-            `Hi! I'm Lexi 😊 I'm your friendly AI study partner, and I love helping with English! What would you like to practice today?`,
-            `Great question! I'm Lexi, your language learning companion 💪 I'm here to help you turn every minute into real progress. What interests you?`,
-            `Hello! Lexi here - I'm an AI designed to make English practice fun and effective! 🚀 What should we work on together?`,
-            `Nice to meet you! I'm Lexi, and I'm excited to help you improve your English! What would you like to learn about?`
+        } else if (lowerMessage.includes("slow") || lowerMessage.includes("fast") || lowerMessage.includes("understand")) {
+          const speedResponses = [
+            "Oh sorry! I'll speak much more slowly for you. Take your time - there's no rush! 🐢 What would you like to talk about?",
+            "You're absolutely right - let me slow down! I get excited about helping with English. What can I explain more clearly?",
+            "My bad! I'll speak slower and clearer. Learning should be comfortable, not stressful. What would you like to practice step by step?"
           ];
-          aiResponse = naturalResponses[Math.floor(Math.random() * naturalResponses.length)];
+          aiResponse = speedResponses[Math.floor(Math.random() * speedResponses.length)];
+        } else if (lowerMessage.includes("don't know") || lowerMessage.includes("not sure") || lowerMessage.includes("dunno")) {
+          const uncertaintyResponses = [
+            "That's totally okay! Not knowing is the first step to learning. 😊 How about we start with something simple - tell me about your day?",
+            "No worries at all! Sometimes the best conversations happen when we just start talking. What's one thing you enjoyed today?",
+            "Perfect! When you're not sure, that means we can explore together. Let's start easy - what's your favorite hobby or interest?"
+          ];
+          aiResponse = uncertaintyResponses[Math.floor(Math.random() * uncertaintyResponses.length)];
+        } else {
+          // Better fallback responses that acknowledge user engagement
+          const helpfulFallbacks = [
+            `That's interesting! I'm Lexi, and I love helping with English conversation. Let's explore that topic more - what would you like to discuss about it?`,
+            `I hear you! I'm Lexi, your study partner. Every conversation is practice! Tell me more about what's on your mind.`,
+            `Good point! I'm Lexi, and I'm here to help you practice English naturally. What aspect of this would you like to work on together?`,
+            `Thanks for sharing! I'm Lexi, and I believe the best learning happens through real conversation. What questions do you have?`
+          ];
+          aiResponse = helpfulFallbacks[Math.floor(Math.random() * helpfulFallbacks.length)];
         }
         
         res.json({
