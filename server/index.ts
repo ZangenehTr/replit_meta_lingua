@@ -497,6 +497,11 @@ app.use((req, res, next) => {
   // Import and register routes from routes.ts
   const { registerRoutes } = await import('./routes.js');
   const server = await registerRoutes(app);
+  
+  // Initialize SMS reminder worker
+  const { smsReminderWorker } = await import('./workers/sms-reminder.worker.js');
+  smsReminderWorker.start();
+  console.log('✅ SMS Reminder Worker initialized');
 
   // 404 handler for API endpoints (moved after route registration)
   app.use('/api/*', (req, res) => {

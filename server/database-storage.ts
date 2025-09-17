@@ -2069,6 +2069,35 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(leads).where(eq(leads.status, status)).orderBy(desc(leads.createdAt));
   }
 
+  async getLeadsByWorkflowStatus(workflowStatus: string): Promise<Lead[]> {
+    return await db.select().from(leads).where(eq(leads.workflowStatus, workflowStatus)).orderBy(desc(leads.createdAt));
+  }
+
+  // Focused query for SMS reminders - selects only required fields to avoid missing column errors
+  async getFollowUpReminderCandidates(workflowStatus: string): Promise<{
+    id: number;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    workflowStatus: string | null;
+    nextFollowUpDate: Date | null;
+    smsReminderEnabled: boolean | null;
+    smsReminderSentAt: Date | null;
+    studentId: number | null;
+  }[]> {
+    return await db.select({
+      id: leads.id,
+      firstName: leads.firstName,
+      lastName: leads.lastName,
+      phoneNumber: leads.phoneNumber,
+      workflowStatus: leads.workflowStatus,
+      nextFollowUpDate: leads.nextFollowUpDate,
+      smsReminderEnabled: leads.smsReminderEnabled,
+      smsReminderSentAt: leads.smsReminderSentAt,
+      studentId: leads.studentId,
+    }).from(leads).where(eq(leads.workflowStatus, workflowStatus)).orderBy(desc(leads.createdAt));
+  }
+
   async getLeadsByAssignee(assignee: string): Promise<Lead[]> {
     return await db.select().from(leads).where(eq(leads.assignedTo, assignee)).orderBy(desc(leads.createdAt));
   }

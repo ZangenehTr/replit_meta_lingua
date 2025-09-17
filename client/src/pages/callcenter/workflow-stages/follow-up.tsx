@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { TimePicker } from "@/components/ui/time-picker";
+import { Switch } from "@/components/ui/switch";
 import { 
   Calendar as CalendarIcon,
   Clock, 
@@ -28,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Lead } from "@shared/schema";
 import { WORKFLOW_STATUS, LEAD_STATUS } from "@shared/schema";
 import { motion } from "framer-motion";
-import { format, addDays, isAfter, isBefore, startOfDay } from "date-fns";
+import { format, addDays, isAfter, isBefore, startOfDay, isValid } from "date-fns";
 import { faIR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +42,9 @@ function FollowUp() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [followUpDate, setFollowUpDate] = useState<Date | undefined>(undefined);
+  const [followUpTime, setFollowUpTime] = useState<{ hours: number; minutes: number } | null>({ hours: 10, minutes: 0 });
   const [followUpNotes, setFollowUpNotes] = useState("");
+  const [enableSMSReminder, setEnableSMSReminder] = useState(true);
 
   // Fetch leads in follow-up stage
   const { data: followUpLeads = [], isLoading } = useQuery<Lead[]>({
@@ -52,26 +56,70 @@ function FollowUp() {
 
   // Schedule follow-up mutation
   const scheduleFollowUpMutation = useMutation({
-    mutationFn: async ({ leadId, date, notes }: { leadId: number; date: Date; notes: string }) => {
+    mutationFn: async ({ leadId, date, time, notes, smsReminder }: { 
+      leadId: number; 
+      date: Date; 
+      time: { hours: number; minutes: number }; 
+      notes: string;
+      smsReminder: boolean;
+    }) => {
+      // Validation
+      if (!isValid(date)) {
+        throw new Error('تاریخ انتخاب شده نامعتبر است');
+      }
+      
+      if (!time || time.hours < 0 || time.hours > 23 || time.minutes < 0 || time.minutes > 59) {
+        throw new Error('زمان انتخاب شده نامعتبر است');
+      }
+      
+      // Combine date and time into proper DateTime
+      const followUpDateTime = new Date(date);
+      followUpDateTime.setHours(time.hours, time.minutes, 0, 0);
+      
+      // Validate the combined DateTime is not in the past
+      const now = new Date();
+      if (followUpDateTime <= now) {
+        throw new Error('زمان پیگیری نمی‌تواند در گذشته باشد');
+      }
+      
+      // Create end date (7 days later at the same time)
+      const followUpEndDateTime = new Date(followUpDateTime);
+      followUpEndDateTime.setDate(followUpEndDateTime.getDate() + 7);
+      
       return await apiRequest(`/api/leads/${leadId}`, {
         method: "PUT",
         body: JSON.stringify({
-          nextFollowUpDate: date.toISOString(),
-          followUpStart: date.toISOString(),
-          followUpEnd: addDays(date, 7).toISOString(),
-          notes: notes
+          nextFollowUpDate: followUpDateTime.toISOString(),
+          followUpStart: followUpDateTime.toISOString(),
+          followUpEnd: followUpEndDateTime.toISOString(),
+          notes: notes,
+          smsReminderEnabled: smsReminder
         })
       });
     },
     onSuccess: () => {
+      const scheduledTime = followUpDate && followUpTime ? 
+        `${format(followUpDate, 'yyyy/MM/dd', { locale: faIR })} ${followUpTime.hours.toString().padStart(2, '0')}:${followUpTime.minutes.toString().padStart(2, '0')}` 
+        : '';
+      
       toast({
         title: "پیگیری برنامه‌ریزی شد",
-        description: "زمان پیگیری با موفقیت تنظیم شد",
+        description: `زمان پیگیری برای ${scheduledTime} تنظیم شد` + (enableSMSReminder ? ' (همراه با پیامک یادآوری)' : ''),
+        variant: "default"
       });
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
       setSelectedLead(null);
       setFollowUpDate(undefined);
+      setFollowUpTime({ hours: 10, minutes: 0 });
       setFollowUpNotes("");
+      setEnableSMSReminder(true);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطا در برنامه‌ریزی",
+        description: error.message || "عملیات با شکست مواجه شد",
+        variant: "destructive"
+      });
     }
   });
 
@@ -198,7 +246,7 @@ function FollowUp() {
                         <div className="flex items-center gap-2">
                           <CalendarIcon className="h-3 w-3" />
                           <span>
-                            {format(new Date(lead.nextFollowUpDate), 'yyyy/MM/dd', { locale: faIR })}
+                            {format(new Date(lead.nextFollowUpDate), 'yyyy/MM/dd HH:mm', { locale: faIR })}
                           </span>
                         </div>
                       )}
@@ -227,37 +275,61 @@ function FollowUp() {
                         </DialogHeader>
                         
                         <div className="space-y-4">
-                          <div>
-                            <Label>تاریخ پیگیری</Label>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "w-full justify-start text-left font-normal",
-                                    !followUpDate && "text-muted-foreground"
-                                  )}
-                                >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {followUpDate ? (
-                                    format(followUpDate, "PPP", { locale: faIR })
-                                  ) : (
-                                    "انتخاب تاریخ"
-                                  )}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                  mode="single"
-                                  selected={followUpDate}
-                                  onSelect={setFollowUpDate}
-                                  disabled={(date) =>
-                                    isBefore(date, startOfDay(new Date()))
-                                  }
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label>تاریخ پیگیری</Label>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full justify-start text-left font-normal",
+                                      !followUpDate && "text-muted-foreground"
+                                    )}
+                                  >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {followUpDate ? (
+                                      format(followUpDate, "PPP", { locale: faIR })
+                                    ) : (
+                                      "انتخاب تاریخ"
+                                    )}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <Calendar
+                                    mode="single"
+                                    selected={followUpDate}
+                                    onSelect={setFollowUpDate}
+                                    disabled={(date) =>
+                                      isBefore(date, startOfDay(new Date()))
+                                    }
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                            
+                            <div>
+                              <Label>زمان پیگیری</Label>
+                              <TimePicker
+                                value={followUpTime}
+                                onChange={setFollowUpTime}
+                                placeholder="انتخاب زمان"
+                                data-testid="time-picker-follow-up"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="sms-reminder"
+                              checked={enableSMSReminder}
+                              onCheckedChange={setEnableSMSReminder}
+                              data-testid="switch-sms-reminder"
+                            />
+                            <Label htmlFor="sms-reminder" className="text-sm font-medium">
+                              ارسال پیامک یادآوری در زمان مقرر
+                            </Label>
                           </div>
                           
                           <div>
@@ -279,19 +351,23 @@ function FollowUp() {
                               onClick={() => {
                                 setSelectedLead(null);
                                 setFollowUpDate(undefined);
+                                setFollowUpTime({ hours: 10, minutes: 0 });
                                 setFollowUpNotes("");
+                                setEnableSMSReminder(true);
                               }}
                             >
                               انصراف
                             </Button>
                             <Button
                               size="sm"
-                              onClick={() => selectedLead && followUpDate && scheduleFollowUpMutation.mutate({
+                              onClick={() => selectedLead && followUpDate && followUpTime && scheduleFollowUpMutation.mutate({
                                 leadId: selectedLead.id,
                                 date: followUpDate,
-                                notes: followUpNotes
+                                time: followUpTime,
+                                notes: followUpNotes,
+                                smsReminder: enableSMSReminder
                               })}
-                              disabled={!followUpDate || scheduleFollowUpMutation.isPending}
+                              disabled={!followUpDate || !followUpTime || scheduleFollowUpMutation.isPending}
                               data-testid="button-submit-follow-up"
                             >
                               {scheduleFollowUpMutation.isPending ? "در حال ثبت..." : "تایید"}

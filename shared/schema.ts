@@ -1513,6 +1513,10 @@ export const leads = pgTable("leads", {
   withdrawalReason: text("withdrawal_reason"), // Reason for withdrawal
   withdrawalDate: timestamp("withdrawal_date"), // When withdrawal occurred
   
+  // SMS reminder settings
+  smsReminderEnabled: boolean("sms_reminder_enabled").default(false), // Whether to send SMS reminders
+  smsReminderSentAt: timestamp("sms_reminder_sent_at"), // When last SMS reminder was sent (for idempotency)
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });

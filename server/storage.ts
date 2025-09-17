@@ -429,7 +429,20 @@ export interface IStorage {
   updateLead(id: number, updates: Partial<Lead>): Promise<Lead | undefined>;
   deleteLead(id: number): Promise<boolean>;
   getLeadsByStatus(status: string): Promise<Lead[]>;
+  getLeadsByWorkflowStatus(workflowStatus: string): Promise<Lead[]>;
   getLeadsByAssignee(assignee: string): Promise<Lead[]>;
+  // Focused query for SMS reminders with only required fields
+  getFollowUpReminderCandidates(workflowStatus: string): Promise<{
+    id: number;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    workflowStatus: string | null;
+    nextFollowUpDate: Date | null;
+    smsReminderEnabled: boolean | null;
+    smsReminderSentAt: Date | null;
+    studentId: number | null;
+  }[]>;
   
   // Dashboard Stats
   getAdminDashboardStats(): Promise<any>;
@@ -1956,6 +1969,10 @@ export class MemStorage implements IStorage {
 
   async getLeadsByStatus(status: string): Promise<Lead[]> {
     return await this.db.select().from(leads).where(eq(leads.status, status));
+  }
+
+  async getLeadsByWorkflowStatus(workflowStatus: string): Promise<Lead[]> {
+    return await this.db.select().from(leads).where(eq(leads.workflowStatus, workflowStatus));
   }
 
   async getLeadsByAssignee(assignedTo: number): Promise<Lead[]> {
@@ -4865,6 +4882,25 @@ export class MemStorage implements IStorage {
   }
 
   async getLeadsByStatus(status: string): Promise<Lead[]> {
+    return [];
+  }
+
+  async getLeadsByWorkflowStatus(workflowStatus: string): Promise<Lead[]> {
+    return [];
+  }
+
+  // Focused query for SMS reminders with only required fields
+  async getFollowUpReminderCandidates(workflowStatus: string): Promise<{
+    id: number;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    workflowStatus: string | null;
+    nextFollowUpDate: Date | null;
+    smsReminderEnabled: boolean | null;
+    smsReminderSentAt: Date | null;
+    studentId: number | null;
+  }[]> {
     return [];
   }
 
