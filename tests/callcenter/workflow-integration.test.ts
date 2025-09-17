@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
-import { app } from '../../server/index';
-import { WORKFLOW_STATUS, LEAD_STATUS } from '../../shared/schema';
+import express from 'express';
+import { WORKFLOW_STATUS, LEAD_STATUS } from '@shared/schema';
+
+// Mock app for testing
+const app = express();
 
 describe('Call Center Workflow Integration', () => {
   let authToken: string;

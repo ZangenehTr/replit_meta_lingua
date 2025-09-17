@@ -4,44 +4,22 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../client/src/i18n';
 
-// Import workflow components
-import ContactDesk from '../../client/src/pages/callcenter/workflow-stages/contact-desk';
-import NewIntake from '../../client/src/pages/callcenter/workflow-stages/new-intake';
-import NoResponse from '../../client/src/pages/callcenter/workflow-stages/no-response';
-import FollowUp from '../../client/src/pages/callcenter/workflow-stages/follow-up';
-import LevelAssessment from '../../client/src/pages/callcenter/workflow-stages/level-assessment';
-import Withdrawal from '../../client/src/pages/callcenter/workflow-stages/withdrawal';
+// Import workflow components using aliases
+import ContactDesk from '@/pages/callcenter/workflow-stages/contact-desk';
+import NewIntake from '@/pages/callcenter/workflow-stages/new-intake';
+import NoResponse from '@/pages/callcenter/workflow-stages/no-response';
+import FollowUp from '@/pages/callcenter/workflow-stages/follow-up';
+import LevelAssessment from '@/pages/callcenter/workflow-stages/level-assessment';
+import Withdrawal from '@/pages/callcenter/workflow-stages/withdrawal';
 
 // Mock API client
-vi.mock('../../client/src/lib/queryClient', () => ({
+vi.mock('@/lib/queryClient', () => ({
   apiRequest: vi.fn(),
   queryClient: new QueryClient({
     defaultOptions: {
       queries: { retry: false },
       mutations: { retry: false }
     }
-  })
-}));
-
-// Mock authentication
-vi.mock('../../client/src/hooks/use-auth', () => ({
-  useAuth: () => ({
-    user: { id: 1, role: 'Admin', firstName: 'Test', lastName: 'Admin' }
-  })
-}));
-
-// Mock toast
-vi.mock('../../client/src/hooks/use-toast', () => ({
-  useToast: () => ({
-    toast: vi.fn()
-  })
-}));
-
-// Mock language hook
-vi.mock('../../client/src/hooks/useLanguage', () => ({
-  useLanguage: () => ({
-    isRTL: true,
-    language: 'fa'
   })
 }));
 
@@ -76,7 +54,7 @@ describe('Workflow Stage Components', () => {
     });
 
     it('should search by phone number on form submit', async () => {
-      const { apiRequest } = await import('../../client/src/lib/queryClient');
+      const { apiRequest } = await import('@/lib/queryClient');
       (apiRequest as any).mockResolvedValueOnce({ id: 1, firstName: 'احمد', phoneNumber: '09123456789' });
 
       renderWithProviders(<ContactDesk />);

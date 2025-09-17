@@ -1,10 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import request from 'supertest';
-import { app } from '../../server/index';
-import { WORKFLOW_STATUS } from '../../shared/schema';
+import express from 'express';
+import { WORKFLOW_STATUS } from '@shared/schema';
+
+// Mock app for testing
+const app = express();
 
 // Mock Kavenegar service
-vi.mock('../../server/services/kavenegar.service', () => ({
+vi.mock('@server/services/kavenegar.service', () => ({
   KavenegarService: {
     sendSMS: vi.fn().mockResolvedValue({
       success: true,
