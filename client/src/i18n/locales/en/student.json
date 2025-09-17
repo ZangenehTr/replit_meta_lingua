@@ -288,5 +288,8 @@
     "friendly": "Friendly",
     "challenging": "Challenging"
   },
-  "aiPersonality": "AI Personality"
+  "aiPersonality": "AI Personality",
+  "navigation": {
+    "aiPartner": "AI Partner"
+  }
 }

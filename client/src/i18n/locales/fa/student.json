@@ -297,5 +297,8 @@
     "friendly": "دوستانه",
     "challenging": "چالش‌برانگیز"
   },
-  "aiPersonality": "شخصیت هوش مصنوعی"
+  "aiPersonality": "شخصیت هوش مصنوعی",
+  "navigation": {
+    "aiPartner": "مربی هوشمند"
+  }
 }

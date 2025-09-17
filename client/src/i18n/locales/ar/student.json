@@ -164,5 +164,8 @@
     "friendly": "ودود",
     "challenging": "تحدي"
   },
-  "aiPersonality": "شخصية الذكاء الاصطناعي"
+  "aiPersonality": "شخصية الذكاء الاصطناعي",
+  "navigation": {
+    "aiPartner": "الشريك الذكي"
+  }
 }
