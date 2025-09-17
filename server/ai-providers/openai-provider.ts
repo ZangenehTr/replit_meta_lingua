@@ -9,8 +9,8 @@ export class OpenAIProvider extends BaseAIProvider {
 
   constructor() {
     super();
-    // DISABLED BY DEFAULT for Iranian self-hosting requirements
-    this.isEnabled = process.env.ENABLE_OPENAI_FALLBACK === 'true';
+    // TEMPORARILY ENABLED for development until Ollama is set up
+    this.isEnabled = process.env.OPENAI_API_KEY ? true : false;
     
     if (this.isEnabled && process.env.OPENAI_API_KEY) {
       this.client = new OpenAI({

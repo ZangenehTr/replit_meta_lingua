@@ -479,12 +479,12 @@ export function createAiStudyPartnerRoutes(storage: IStorage) {
           ];
           aiResponse = positiveResponses[Math.floor(Math.random() * positiveResponses.length)];
         } else {
-          // Dynamic, encouraging responses that build on what they said
+          // Simple, natural responses without echoing user input
           const naturalResponses = [
-            `Hi! I'm Lexi 😊 You said "${message}" - I can tell you're really thinking! Let's turn this into learning progress. Want to expand on that?`,
-            `Great! Lexi here - "${message}" is excellent practice! 💪 How about we build on that idea and make more progress together?`,
-            `Thanks for sharing "${message}" with me! I'm Lexi, your study partner, and your English is improving! What should we explore next?`,
-            `"${message}" - I love it! I'm Lexi, and I can see you're expressing yourself clearly. Ready to turn this into more progress? 🚀`
+            `Hi! I'm Lexi 😊 I'm your friendly AI study partner, and I love helping with English! What would you like to practice today?`,
+            `Great question! I'm Lexi, your language learning companion 💪 I'm here to help you turn every minute into real progress. What interests you?`,
+            `Hello! Lexi here - I'm an AI designed to make English practice fun and effective! 🚀 What should we work on together?`,
+            `Nice to meet you! I'm Lexi, and I'm excited to help you improve your English! What would you like to learn about?`
           ];
           aiResponse = naturalResponses[Math.floor(Math.random() * naturalResponses.length)];
         }
