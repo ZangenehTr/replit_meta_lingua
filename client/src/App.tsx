@@ -57,6 +57,7 @@ import ReferralsPage from "@/pages/referrals";
 import Courses from "@/pages/courses";
 import LeadManagement from "@/pages/lead-management";
 import CallCenterDashboard from "@/pages/callcenter/dashboard";
+import UnifiedCallCenterWorkflow from "@/pages/callcenter/unified-workflow";
 import VoIPCenter from "@/pages/callcenter/voip-center";
 import TeacherDashboardNew from "@/pages/teacher/dashboard";
 import AccountantDashboard from "@/pages/accountant/dashboard";
@@ -352,6 +353,11 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/callcenter">
+        <ProtectedRoute>
+          <UnifiedCallCenterWorkflow />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/callcenter/dashboard">
         <ProtectedRoute>
           <CallCenterDashboard />
         </ProtectedRoute>

@@ -2,6 +2,39 @@ import { pgTable, text, serial, integer, boolean, timestamp, decimal, jsonb, var
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// ============================================================================
+// WORKFLOW STATUS CONSTANTS
+// ============================================================================
+
+// Canonical workflow status values for call center workflow
+export const WORKFLOW_STATUS = {
+  CONTACT_DESK: "دفتر_تلفن",
+  NEW_INTAKE: "ورودی_جدید", 
+  NO_RESPONSE: "پاسخ_نداده",
+  FOLLOW_UP: "پیگیری",
+  LEVEL_ASSESSMENT: "تعیین_سطح",
+  LEVEL_ASSESSMENT_COMPLETE: "تعیین_سطح_کامل",
+  WITHDRAWAL: "انصراف"
+} as const;
+
+// Type for workflow status
+export type WorkflowStatus = typeof WORKFLOW_STATUS[keyof typeof WORKFLOW_STATUS];
+
+// Lead status constants  
+export const LEAD_STATUS = {
+  NEW: "new",
+  CONTACTED: "contacted", 
+  INTERESTED: "interested",
+  QUALIFIED: "qualified",
+  CONVERTED: "converted",
+  LOST: "lost",
+  ASSESSMENT_SCHEDULED: "assessment_scheduled",
+  NO_RESPONSE: "no_response"
+} as const;
+
+// Type for lead status
+export type LeadStatus = typeof LEAD_STATUS[keyof typeof LEAD_STATUS];
+
 // Users table with roles and authentication
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -1472,7 +1505,11 @@ export const leads = pgTable("leads", {
   callCount: integer("call_count").default(0), // Number of attempts made
   
   // Workflow status tracking
-  workflowStatus: text("workflow_status").default("دفتر_تلفن"), // دفتر_تلفن, ورودی_جدید, پاسخ_نداده, پیگیری, تعیین_سطح, انصراف
+  workflowStatus: text("workflow_status").default(WORKFLOW_STATUS.CONTACT_DESK), // Uses canonical workflow status constants
+  
+  // Withdrawal tracking fields
+  withdrawalReason: text("withdrawal_reason"), // Reason for withdrawal
+  withdrawalDate: timestamp("withdrawal_date"), // When withdrawal occurred
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
