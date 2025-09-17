@@ -166,6 +166,13 @@
   },
   "aiPersonality": "شخصية الذكاء الاصطناعي",
   "navigation": {
-    "aiPartner": "الشريك الذكي"
-  }
+    "home": "الرئيسية",
+    "courses": "الدورات",
+    "callern": "كالرن",
+    "aiPartner": "الشريك الذكي",
+    "profile": "الملف الشخصي"
+  },
+  "saveSettings": "حفظ الإعدادات",
+  "learningProgress": "تقدم التعلم",
+  "studyPartnerSettings": "إعدادات شريك الدراسة"
 }
