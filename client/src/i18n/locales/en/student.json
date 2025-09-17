@@ -290,10 +290,6 @@
   },
   "aiPersonality": "AI Personality",
   "navigation": {
-    "home": "Home",
-    "courses": "Courses", 
-    "callern": "Callern",
-    "aiPartner": "AI Partner",
-    "profile": "Profile"
+    "aiPartner": "AI Partner"
   }
 }

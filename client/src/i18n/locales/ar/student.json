@@ -166,10 +166,6 @@
   },
   "aiPersonality": "شخصية الذكاء الاصطناعي",
   "navigation": {
-    "home": "الرئيسية",
-    "courses": "الدورات",
-    "callern": "كالرن", 
-    "aiPartner": "الشريك الذكي",
-    "profile": "الملف الشخصي"
+    "aiPartner": "الشريك الذكي"
   }
 }

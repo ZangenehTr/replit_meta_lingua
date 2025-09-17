@@ -299,10 +299,6 @@
   },
   "aiPersonality": "شخصیت هوش مصنوعی",
   "navigation": {
-    "home": "خانه",
-    "courses": "دوره‌ها",
-    "callern": "کالرن",
-    "aiPartner": "مربی هوشمند",
-    "profile": "پروفایل"
+    "aiPartner": "مربی هوشمند"
   }
 }

@@ -477,7 +477,7 @@ export default function StudentAIStudyPartnerMobile() {
             onClick={() => setShowSettings(false)}
           >
             <motion.div 
-              className="bg-white rounded-t-2xl w-full max-w-lg p-6 space-y-4 max-h-[85vh] overflow-y-auto"
+              className="bg-white rounded-t-2xl w-full max-w-lg p-6 space-y-4"
               initial={{ y: 400 }}
               animate={{ y: 0 }}
               exit={{ y: 400 }}
