@@ -393,21 +393,124 @@ export default function StudentAIStudyPartnerMobile() {
     { id: 'exam-prep', label: t('student:studyMode.examPrep'), icon: GraduationCap, color: 'bg-red-500' }
   ];
 
+  // Listen for URL hash to open settings (from MobileLayout settings button)
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#settings') {
+        setShowSettings(true);
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+    
+    handleHashChange(); // Check on mount
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   return (
     <MobileLayout
-      title="Lexi - Turn minutes into progress"
+      title="Lexi - Turn minutes into progress"  
       showBack={false}
       gradient="primary"
-      headerAction={
-        <button 
-          className="p-2 rounded-full glass-button"
-          onClick={() => setShowSettings(!showSettings)}
-          data-testid="button-settings"
-        >
-          <Settings className="w-5 h-5 text-white" />
-        </button>
-      }
+      showSettings={false}
     >
+      {/* Floating Settings Button */}
+      <motion.button
+        className="fixed top-4 right-4 z-30 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 hover:bg-white transition-all"
+        onClick={() => setShowSettings(!showSettings)}
+        data-testid="lexi-settings-button"
+        whileTap={{ scale: 0.95 }}
+      >
+        <Settings className="w-5 h-5 text-gray-700" />
+      </motion.button>
+
+      {/* Settings Panel */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div 
+            className="fixed inset-0 z-40 bg-black/50 flex items-end justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowSettings(false)}
+          >
+            <motion.div 
+              className="bg-white rounded-t-2xl w-full max-w-lg p-6 space-y-4"
+              initial={{ y: 400 }}
+              animate={{ y: 0 }}
+              exit={{ y: 400 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Lexi Settings</h3>
+              
+              {/* Practice Mode Button */}
+              <button
+                className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg"
+                onClick={() => {
+                  setDynamicMode(true);
+                  setShowSettings(false);
+                }}
+                data-testid="start-practice-mode"
+              >
+                <div className="flex items-center gap-3">
+                  <Mic className="w-6 h-6" />
+                  <div className="text-left">
+                    <div className="font-semibold">Start Voice Conversation</div>
+                    <div className="text-sm opacity-90">ChatGPT-style continuous conversation</div>
+                  </div>
+                </div>
+                <motion.div whileTap={{ scale: 0.9 }}>
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                    <Mic className="w-4 h-4" />
+                  </div>
+                </motion.div>
+              </button>
+
+              {/* Study Mode Settings */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Study Mode</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {studyModes.map((mode) => (
+                    <button
+                      key={mode.id}
+                      className={`p-3 rounded-lg text-center transition-all ${
+                        studyMode === mode.id
+                          ? mode.color + ' text-white shadow-lg'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      onClick={() => setStudyMode(mode.id as any)}
+                    >
+                      <mode.icon className="w-4 h-4 mx-auto mb-1" />
+                      <div className="text-xs font-medium">{mode.label}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Continuous Conversation Toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-gray-900">Continuous Conversation</div>
+                  <div className="text-sm text-gray-500">Auto-listen after responses</div>
+                </div>
+                <button
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    continuousMode ? 'bg-blue-500' : 'bg-gray-300'
+                  }`}
+                  onClick={() => setContinuousMode(!continuousMode)}
+                >
+                  <div
+                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      continuousMode ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ChatGPT-Style Dynamic Voice Interface */}
       <AnimatePresence>
         {dynamicMode && (
