@@ -21,7 +21,7 @@ interface NavItem {
 
 export function MobileBottomNav() {
   const [location, navigate] = useLocation();
-  const { t } = useTranslation();
+  const { t } = useTranslation('student');
   const { user } = useAuth();
 
   // Only show mobile navigation for students
@@ -33,27 +33,27 @@ export function MobileBottomNav() {
     {
       path: '/dashboard',
       icon: <Home className="h-5 w-5" />,
-      label: t('student.navigation.home')
+      label: t('navigation.home')
     },
     {
       path: '/student/courses',
       icon: <BookOpen className="h-5 w-5" />,
-      label: t('student.navigation.courses')
+      label: t('navigation.courses')
     },
     {
       path: '/callern',
       icon: <Video className="h-5 w-5" />,
-      label: t('student.navigation.callern')
+      label: t('navigation.callern')
     },
     {
       path: '/student/ai-study-partner',
       icon: <Bot className="h-5 w-5" />,
-      label: t('student.navigation.aiPartner')
+      label: t('navigation.aiPartner')
     },
     {
       path: '/student/profile',
       icon: <User className="h-5 w-5" />,
-      label: t('student.navigation.profile')
+      label: t('navigation.profile')
     }
   ];
 

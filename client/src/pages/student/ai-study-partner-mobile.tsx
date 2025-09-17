@@ -470,17 +470,17 @@ export default function StudentAIStudyPartnerMobile() {
       <AnimatePresence>
         {showSettings && (
           <motion.div 
-            className="fixed inset-0 z-40 bg-black/50 flex items-end justify-center"
+            className="fixed inset-0 z-40 bg-black/50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowSettings(false)}
           >
             <motion.div 
-              className="bg-white rounded-t-2xl w-full max-w-lg p-6 space-y-4 max-h-[85vh] overflow-y-auto"
-              initial={{ y: 400 }}
-              animate={{ y: 0 }}
-              exit={{ y: 400 }}
+              className="bg-white rounded-2xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Lexi Settings</h3>
