@@ -1481,6 +1481,10 @@ export const leads = pgTable("leads", {
 // Insert schema for leads
 export const insertLeadSchema = createInsertSchema(leads);
 
+// Lead types
+export type Lead = typeof leads.$inferSelect;
+export type InsertLead = z.infer<typeof insertLeadSchema>;
+
 // COMMUNICATION LOGS (Call Center)
 export const communicationLogs = pgTable("communication_logs", {
   id: serial("id").primaryKey(),
