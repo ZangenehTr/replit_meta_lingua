@@ -4955,11 +4955,12 @@ export class DatabaseStorage implements IStorage {
       id: callernCallHistory.id,
       teacherId: callernCallHistory.teacherId,
       teacherName: sql`${users.firstName} || ' ' || ${users.lastName}`,
-      startTime: callernCallHistory.startTime,
-      endTime: callernCallHistory.endTime,
-      durationMinutes: callernCallHistory.durationMinutes,
+      startedAt: callernCallHistory.startTime,
+      endedAt: callernCallHistory.endTime,
+      duration: callernCallHistory.durationMinutes,
+      callType: sql<string>`'video_call'`,
       status: callernCallHistory.status,
-      notes: callernCallHistory.notes
+      recordingUrl: callernCallHistory.recordingUrl
     })
     .from(callernCallHistory)
     .leftJoin(users, eq(callernCallHistory.teacherId, users.id))
