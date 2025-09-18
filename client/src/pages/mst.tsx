@@ -178,6 +178,11 @@ export default function MSTPage() {
   // Client-side scoring state
   const [clientScoring, setClientScoring] = useState(true); // Enable client-side scoring
   const [scoringPerformance, setScoringPerformance] = useState<{computeTimeMs: number, serverLoadReduction: number} | null>(null);
+  const [loadReductionStats, setLoadReductionStats] = useState<{totalResponses: number, clientScored: number, serverLoadReduced: number}>({
+    totalResponses: 0,
+    clientScored: 0,
+    serverLoadReduced: 0
+  });
 
   // ---------- CLIENT-SIDE SCORING UTILITIES ----------
   
@@ -409,6 +414,34 @@ export default function MSTPage() {
       setIsProcessingSubmission(false);
       setSubmissionStartTime(0);
       if (!data?.success || !currentItem) return;
+
+      // Track load reduction performance for speaking/writing only
+      const skill = currentItem.skill;
+      if (skill === 'speaking' || skill === 'writing') {
+        setLoadReductionStats(prev => {
+          const newStats = {
+            totalResponses: prev.totalResponses + 1,
+            clientScored: prev.clientScored + (data.clientScored ? 1 : 0),
+            serverLoadReduced: 0
+          };
+          
+          // Calculate server load reduction percentage
+          if (newStats.totalResponses > 0) {
+            newStats.serverLoadReduced = Math.round((newStats.clientScored / newStats.totalResponses) * 100);
+          }
+          
+          console.log(`📊 Load Reduction Stats (${skill}):`, newStats);
+          return newStats;
+        });
+        
+        // Update performance metrics if client scored
+        if (data.clientScored && data.computeTimeMs !== undefined) {
+          setScoringPerformance({
+            computeTimeMs: data.computeTimeMs,
+            serverLoadReduction: Math.round((loadReductionStats.clientScored + 1) / (loadReductionStats.totalResponses + 1) * 100)
+          });
+        }
+      }
 
       // store p/route
       const key = currentItem.skill;
