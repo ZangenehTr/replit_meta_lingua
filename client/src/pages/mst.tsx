@@ -11,6 +11,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Clock, MicOff, Play, Pause, Volume2, Map, Trophy, Target, BookOpen } from "lucide-react";
+import { 
+  scoreSpeaking, 
+  scoreWriting, 
+  validateSpeakingResponse, 
+  validateWritingResponse,
+  performanceTracker,
+  type QuickscoreResult,
+  type SpeakingItem,
+  type WritingItem,
+  type SpeakingResponse,
+  type WritingResponse
+} from "@/lib/scoring";
 
 const mstStyle = { direction: "ltr" as const, textAlign: "left" as const };
 
@@ -163,6 +175,98 @@ export default function MSTPage() {
   // Final results
   const [testResults, setTestResults] = useState<any>(null);
 
+  // Client-side scoring state
+  const [clientScoring, setClientScoring] = useState(true); // Enable client-side scoring
+  const [scoringPerformance, setScoringPerformance] = useState<{computeTimeMs: number, serverLoadReduction: number} | null>(null);
+
+  // ---------- CLIENT-SIDE SCORING UTILITIES ----------
+  
+  /**
+   * Perform client-side scoring for speaking and writing items
+   * Returns null for reading/listening (server-side only)
+   */
+  const performClientSideScoring = (item: MSTItem, response: any): QuickscoreResult | null => {
+    if (!clientScoring) return null;
+    
+    try {
+      if (item.skill === 'speaking') {
+        // Convert item to SpeakingItem format
+        const speakingItem: SpeakingItem = {
+          id: item.id,
+          skill: 'speaking',
+          stage: item.stage,
+          cefr: item.cefr as any,
+          assets: {
+            prompt: item.content?.prompt || '',
+            keywords: item.content?.keywords,
+            structure: item.content?.structure,
+          },
+          timing: {
+            prepSec: item.timing.prepSec || PREP_SEC,
+            recordSec: item.timing.recordSec || RECORD_SEC,
+            maxAnswerSec: item.timing.maxAnswerSec,
+          },
+        };
+        
+        // Convert response to SpeakingResponse format
+        const speakingResponse: SpeakingResponse = {
+          audioUrl: response.audioUrl,
+          audioBuffer: response.audioBlob,
+          asr: response.transcript ? {
+            text: response.transcript,
+            confidence: response.asrConfidence || 0.8,
+          } : undefined,
+        };
+        
+        if (!validateSpeakingResponse(speakingItem, speakingResponse)) {
+          console.warn('Invalid speaking response for client-side scoring');
+          return null;
+        }
+        
+        const result = scoreSpeaking(speakingItem, speakingResponse);
+        performanceTracker.recordScore('speaking', result.computeTimeMs || 0);
+        console.log('🎤 Client-side speaking score:', result);
+        return result;
+        
+      } else if (item.skill === 'writing') {
+        // Convert item to WritingItem format
+        const writingItem: WritingItem = {
+          id: item.id,
+          skill: 'writing',
+          stage: item.stage,
+          cefr: item.cefr as any,
+          assets: {
+            prompt: item.content?.prompt || '',
+            minWords: item.content?.minWords || 50,
+            maxWords: item.content?.maxWords || 250,
+            taskType: item.content?.taskType || 'opinion',
+          },
+        };
+        
+        // Handle both string and object response formats
+        const writingResponse: WritingResponse | string = typeof response === 'string' 
+          ? response 
+          : response?.text || response || '';
+        
+        if (!validateWritingResponse(writingItem, writingResponse)) {
+          console.warn('Invalid writing response for client-side scoring');
+          return null;
+        }
+        
+        const result = scoreWriting(writingItem, writingResponse);
+        performanceTracker.recordScore('writing', result.computeTimeMs || 0);
+        console.log('📝 Client-side writing score:', result);
+        return result;
+      }
+      
+      // Reading and listening still use server-side scoring
+      return null;
+    } catch (error) {
+      console.error('Client-side scoring error:', error);
+      return null;
+    }
+  };
+
   // ---------- API: start/status/submit/finalize
   const startSessionMutation = useMutation({
     mutationFn: async () => {
@@ -224,15 +328,55 @@ export default function MSTPage() {
       timeSpentMs: number;
     }) => {
       setSubmissionStartTime(Date.now());
+      
+      // Try client-side scoring first for speaking and writing
+      let clientScore: QuickscoreResult | null = null;
+      
+      if (currentItem && (p.skill === 'speaking' || p.skill === 'writing')) {
+        const response = p.skill === 'speaking' 
+          ? { audioBlob: p.audioBlob, transcript: p.responseData?.transcript, asrConfidence: p.responseData?.asrConfidence }
+          : p.responseData;
+          
+        clientScore = performClientSideScoring(currentItem, response);
+        
+        if (clientScore) {
+          console.log(`⚡ Client-side ${p.skill} scoring completed in ${clientScore.computeTimeMs}ms:`, {
+            score: clientScore.p,
+            route: clientScore.route,
+            features: clientScore.features
+          });
+          
+          // Update performance tracking
+          const stats = performanceTracker.getStats();
+          setScoringPerformance({
+            computeTimeMs: clientScore.computeTimeMs || 0,
+            serverLoadReduction: stats.estimatedServerLoadReduction
+          });
+        }
+      }
+      
       const form = new FormData();
       form.append("sessionId", p.sessionId);
       form.append("skill", p.skill);
       form.append("stage", p.stage);
       form.append("itemId", p.itemId);
       form.append("timeSpentMs", String(p.timeSpentMs));
+      
+      // Include client-side score for server validation
+      if (clientScore) {
+        form.append("clientScore", JSON.stringify({
+          p: clientScore.p,
+          route: clientScore.route,
+          features: clientScore.features,
+          computeTimeMs: clientScore.computeTimeMs,
+          version: "1.0" // Version for future compatibility
+        }));
+      }
+      
       if (p.audioBlob)
         form.append("audio", p.audioBlob, "recording"); // accept any mime
       else form.append("responseData", JSON.stringify(p.responseData ?? null));
+      
       const r = await fetch("/api/mst/response", {
         method: "POST",
         headers: {
@@ -241,7 +385,23 @@ export default function MSTPage() {
         body: form,
       });
       if (!r.ok) throw new Error("submit failed");
-      return r.json();
+      
+      const serverResponse = await r.json();
+      
+      // Use client score if available and valid, otherwise use server score
+      if (clientScore && clientScore.p !== undefined) {
+        console.log(`🎯 Using client-side score: ${clientScore.p} (route: ${clientScore.route})`);
+        return {
+          ...serverResponse,
+          p: clientScore.p,
+          route: clientScore.route,
+          clientScored: true,
+          serverValidated: true
+        };
+      }
+      
+      console.log(`🌐 Using server-side score: ${serverResponse.p} (route: ${serverResponse.route})`);
+      return { ...serverResponse, clientScored: false };
     },
     onSuccess: async (data) => {
       setIsAutoAdvancing(false);
