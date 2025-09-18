@@ -505,6 +505,13 @@ export default function MSTPage() {
       }
 
       if (key === "writing") {
+        // Prevent multiple submissions for writing
+        if (isSubmissionLocked) {
+          console.log("🔒 Writing submission blocked - already processing");
+          return;
+        }
+        setIsSubmissionLocked(true);
+        
         // Pass the actual computed scores directly instead of relying on React state
         console.log("📝 Writing complete - passing scores directly to advanceToNextSkill:", {
           pValue,
@@ -2220,6 +2227,7 @@ export default function MSTPage() {
                     disabled={
                       (currentItem?.skill !== "writing" && guardTimer > 0) ||
                       submitResponseMutation.isPending ||
+                      isSubmissionLocked ||
                       !isValidResponse()
                     }
                     size="lg"
