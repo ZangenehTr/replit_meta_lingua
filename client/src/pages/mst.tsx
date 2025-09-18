@@ -265,9 +265,17 @@ export default function MSTPage() {
       // SPEAKING flow: Q1 -> Q2 (stage-based), Q2 -> next skill (prefer writing)
       if (key === "speaking") {
         if (currentStage === "core") {
-          // Q1 done - proceed to Q2
-          const nextStage: MSTStage = data.route === "down" ? "lower" : "upper";
-          console.log(`🎙️ Q1 completed, advancing to Q2 with stage: ${nextStage}`);
+          // Q1 done - proceed to Q2 based on route decision
+          let nextStage: MSTStage;
+          if (data.route === "down") {
+            nextStage = "lower";
+          } else if (data.route === "up") {
+            nextStage = "upper";
+          } else {
+            // route === "stay" - stay at core level
+            nextStage = "core";
+          }
+          console.log(`🎙️ Q1 completed (route=${data.route}), advancing to Q2 with stage: ${nextStage}`);
           resetSpeakingState();
           setSpeakingQuestionIndex(2);
           setCurrentStage(nextStage);
