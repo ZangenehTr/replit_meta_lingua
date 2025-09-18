@@ -262,9 +262,9 @@ export default function MSTPage() {
       }
       setSkillScores((prev) => ({ ...prev, [key]: curr }));
 
-      // SPEAKING flow: Q1 -> Q2 (stage-based), Q2 -> next skill (prefer writing)
+      // SPEAKING flow: Q1 -> Q2 (question-based), Q2 -> next skill (prefer writing)
       if (key === "speaking") {
-        if (currentStage === "core") {
+        if (speakingQuestionIndex === 1) {
           // Q1 done - proceed to Q2 based on route decision
           let nextStage: MSTStage;
           if (data.route === "down") {
