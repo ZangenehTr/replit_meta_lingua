@@ -489,7 +489,7 @@ export default function StudentDashboard() {
                   </div>
                   <div>
                     <h3 className="font-bold text-lg text-gray-900">
-                      {t('student:socializer', 'همکلاسی‌سازی')}
+                      {t('student:socializer', 'معاشرت اجتماعی')}
                     </h3>
                     <p className="text-gray-600 text-sm">
                       {t('student:socializerDesc', 'آماده پیوستن به جلسات دیگران')}
@@ -818,7 +818,7 @@ export default function StudentDashboard() {
                     whileTap={{ scale: 0.95 }}
                   >
                     <Video className="h-6 w-6 text-blue-500 mb-1" />
-                    <span className="text-xs text-gray-600 text-center">{t('student:callern', 'کالرن')}</span>
+                    <span className="text-xs text-gray-600 text-center">{t('student:sessionsTitle', 'جلسات')}</span>
                   </motion.div>
                 </Link>
                 

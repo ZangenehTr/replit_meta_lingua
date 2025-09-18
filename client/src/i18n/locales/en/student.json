@@ -301,5 +301,11 @@
   "studyPartnerSettings": "Study Partner Settings",
   "placementTestRequired": "Complete Your Placement Test",
   "placementTestDescription": "Take our 10-minute placement test to create your personalized learning path and find your perfect starting level",
-  "startPlacementTest": "Start Placement Test (10 min)"
+  "startPlacementTest": "Start Placement Test (10 min)",
+  "socializer": "Social Learning",
+  "socializerDesc": "Ready to join others' sessions",
+  "aiMatching": "🤖 Smart Matching",
+  "toggleAvailability": "Toggle Availability",
+  "socializerNote": "When active, teachers may invite you to sessions when needed",
+  "sessionsTitle": "My Sessions"
 }
