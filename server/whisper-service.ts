@@ -267,27 +267,19 @@ export class WhisperService extends EventEmitter {
   private generateFallbackTranscription(filePath?: string): TranscriptionResult {
     console.log('Using fallback transcription (Whisper service unavailable)');
     
-    // Production fallback for demonstration
-    const fallbackTexts = [
-      'سلام، من می‌خواهم در مورد دوره‌های زبان انگلیسی اطلاعات بگیرم.',
-      'آیا کلاس‌های آنلاین دارید؟ قیمت دوره‌ها چقدر است؟',
-      'من علاقه‌مند به یادگیری زبان فارسی هستم. چه پیشنهادی دارید؟',
-      'Hello, I would like to inquire about your Persian language courses.',
-      'What are the available schedules for online classes?'
-    ];
-    
-    const randomText = fallbackTexts[Math.floor(Math.random() * fallbackTexts.length)];
+    // For MST English tests, return a neutral English fallback indicating service error
+    const fallbackText = "[Transcription service temporarily unavailable - audio was recorded but could not be processed]";
     
     return {
-      text: randomText,
-      language: 'fa',
+      text: fallbackText,
+      language: 'en',
       duration: 30,
       segments: [{
         start: 0,
         end: 30,
-        text: randomText
+        text: fallbackText
       }],
-      confidence: 0.5
+      confidence: 0.1 // Very low confidence to indicate this is not real transcription
     };
   }
 
