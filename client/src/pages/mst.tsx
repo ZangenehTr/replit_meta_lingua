@@ -369,7 +369,7 @@ export default function MSTPage() {
           route: clientScore.route,
           features: clientScore.features,
           computeTimeMs: clientScore.computeTimeMs,
-          version: "1.0" // Version for future compatibility
+          version: "1.0" // Must match server CLIENT_SCORING_VERSION
         }));
       }
       

@@ -35,6 +35,39 @@ const responsesController = new MstResponsesController();
 const skillSchema = z.enum(['listening', 'reading', 'speaking', 'writing']);
 const stageSchema = z.enum(['core', 'upper', 'lower']);
 
+// Client score validation schema
+const CLIENT_SCORING_VERSION = "1.0";
+const CLIENT_SCORE_TOLERANCE = 0.1; // Tight tolerance to prevent manipulation
+const VALIDATION_SAMPLE_RATE = 0.15; // Validate 15% of client scores
+
+const clientScoreSchema = z.object({
+  p: z.number().min(0).max(1),
+  route: z.enum(['up', 'down', 'stay']), // Will be ignored - computed server-side
+  features: z.record(z.unknown()).optional(),
+  computeTimeMs: z.number().min(0).optional(),
+  version: z.string()
+}).optional();
+
+// Helper function to derive route from score and session context
+function deriveRouteFromScore(p: number, skill: string, stage: string): 'up' | 'down' | 'stay' {
+  // Core stage routing thresholds
+  if (stage === 'core') {
+    if (p >= 0.65) return 'up';
+    if (p <= 0.35) return 'down';
+    return 'stay';
+  }
+  // For upper/lower stages, use different thresholds
+  if (stage === 'upper') {
+    if (p >= 0.7) return 'stay';
+    return 'down';
+  }
+  if (stage === 'lower') {
+    if (p <= 0.3) return 'stay';
+    return 'up';
+  }
+  return 'stay';
+}
+
 // Initialize item bank
 itemsController.initialize().catch(console.error);
 
@@ -246,16 +279,119 @@ router.post('/response', authenticateToken, upload.single('audio'), async (req: 
       }
     }
 
-    // Process response and get quickscore
-    const quickscoreResult = await responsesController.processResponse(
-      sessionId,
-      req.user!.id,
-      parsedSkill,
-      parsedStage,
-      item,
-      responseData,
-      timeSpentMs
-    );
+    // Check for client-side score validation
+    let clientScore = null;
+    let useClientScore = false;
+    let shouldValidateServerSide = false;
+    
+    if (req.body.clientScore) {
+      try {
+        const parsedClientScore = JSON.parse(req.body.clientScore);
+        clientScore = clientScoreSchema.parse(parsedClientScore);
+        
+        // Version validation - reject mismatched versions
+        if (clientScore.version !== CLIENT_SCORING_VERSION) {
+          console.warn(`⚠️ Client score version mismatch: expected ${CLIENT_SCORING_VERSION}, got ${clientScore.version}`);
+          throw new Error('Version mismatch');
+        }
+        
+        // Only accept client scores for speaking or writing
+        if (parsedSkill === 'speaking' || parsedSkill === 'writing') {
+          console.log(`🔍 Client-side ${parsedSkill} score received: p=${clientScore.p.toFixed(3)}, v=${clientScore.version}`);
+          useClientScore = true;
+          
+          // Determine if we need server validation (sampling + boundary cases)
+          const isRandomSample = Math.random() < VALIDATION_SAMPLE_RATE;
+          const isBoundaryCase = Math.abs(clientScore.p - 0.5) < 0.05 || 
+                                 Math.abs(clientScore.p - 0.35) < 0.05 || 
+                                 Math.abs(clientScore.p - 0.65) < 0.05;
+          shouldValidateServerSide = isRandomSample || isBoundaryCase;
+          
+          if (shouldValidateServerSide) {
+            console.log(`🔬 Server validation triggered: ${isRandomSample ? 'random sample' : 'boundary case'}`);
+          }
+        } else {
+          console.warn(`⚠️ Client score ignored for ${parsedSkill} - not supported`);
+        }
+      } catch (error) {
+        console.warn('⚠️ Invalid client score, falling back to server scoring:', error);
+      }
+    }
+
+    // Process response with true load reduction
+    let quickscoreResult;
+    
+    if (useClientScore && clientScore && !shouldValidateServerSide) {
+      // FAST PATH: Use client score without server validation
+      console.log(`⚡ Fast path: Using client-side ${parsedSkill} score (p=${clientScore.p.toFixed(3)})`);
+      
+      // Derive route server-side from client score (never trust client route)
+      const serverRoute = deriveRouteFromScore(clientScore.p, parsedSkill, parsedStage);
+      
+      quickscoreResult = {
+        p: clientScore.p,
+        route: serverRoute,
+        features: clientScore.features || {},
+        computeTimeMs: clientScore.computeTimeMs || 0,
+        clientScored: true,
+        serverValidated: false,
+        loadReduced: true
+      };
+    } else if (useClientScore && clientScore && shouldValidateServerSide) {
+      // VALIDATION PATH: Compare client score with server score
+      console.log(`🔬 Validation path: Comparing client vs server ${parsedSkill} score`);
+      
+      const serverQuickscoreResult = await responsesController.processResponse(
+        sessionId,
+        req.user!.id,
+        parsedSkill,
+        parsedStage,
+        item,
+        responseData,
+        timeSpentMs
+      );
+      
+      const scoreDifference = Math.abs(clientScore.p - serverQuickscoreResult.p);
+      const serverRoute = deriveRouteFromScore(clientScore.p, parsedSkill, parsedStage);
+      
+      if (scoreDifference <= CLIENT_SCORE_TOLERANCE) {
+        console.log(`✅ Client score validated (diff: ${scoreDifference.toFixed(3)}) - using client score with server route`);
+        quickscoreResult = {
+          ...serverQuickscoreResult,
+          p: clientScore.p,
+          route: serverRoute, // Always use server-derived route
+          features: clientScore.features || serverQuickscoreResult.features,
+          computeTimeMs: clientScore.computeTimeMs || 0,
+          clientScored: true,
+          serverValidated: true,
+          scoreDifference,
+          validationPassed: true
+        };
+      } else {
+        console.warn(`⚠️ Client score validation failed (diff: ${scoreDifference.toFixed(3)}) - using server score`);
+        quickscoreResult = {
+          ...serverQuickscoreResult,
+          clientScored: false,
+          serverValidated: true,
+          scoreDifference,
+          validationPassed: false
+        };
+      }
+    } else {
+      // STANDARD PATH: Server-side scoring for reading/listening or when no client score
+      console.log(`🌐 Standard path: Server-side ${parsedSkill} scoring`);
+      quickscoreResult = await responsesController.processResponse(
+        sessionId,
+        req.user!.id,
+        parsedSkill,
+        parsedStage,
+        item,
+        responseData,
+        timeSpentMs
+      );
+      quickscoreResult.clientScored = false;
+      quickscoreResult.loadReduced = false;
+    }
 
     res.json({
       success: true,
@@ -263,6 +399,9 @@ router.post('/response', authenticateToken, upload.single('audio'), async (req: 
       p: quickscoreResult.p,
       features: quickscoreResult.features,
       computeTimeMs: quickscoreResult.computeTimeMs,
+      clientScored: quickscoreResult.clientScored || false,
+      serverValidated: quickscoreResult.serverValidated || false,
+      scoreDifference: quickscoreResult.scoreDifference,
       quickscore: quickscoreResult
     });
   } catch (error) {
