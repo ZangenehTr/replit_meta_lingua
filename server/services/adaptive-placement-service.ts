@@ -385,41 +385,42 @@ export class AdaptivePlacementService {
     let shouldContinue = true;
     let reasoning = '';
 
-    // Sophisticated level adjustment logic
-    if (metrics.averageScore >= 85 && metrics.confidence >= 0.7) {
-      // Strong performance - move up
+    // Sophisticated level adjustment logic - aligned with CEFR scoring thresholds
+    if (metrics.averageScore >= 90) {
+      // Excellent performance - move up
       nextLevel = CEFRLevels[Math.min(currentIndex + 1, CEFRLevels.length - 1)];
-      reasoning = `Strong performance (avg: ${metrics.averageScore.toFixed(1)}) - moving to ${nextLevel}`;
-    } else if (metrics.averageScore >= 75 && metrics.levelStability >= 0.7) {
-      // Stable good performance - stay at level but check if we can stop
+      reasoning = `Excellent performance (avg: ${metrics.averageScore.toFixed(1)}) - moving to ${nextLevel}`;
+    } else if (metrics.averageScore >= 80) {
+      // Strong performance - stay at level but may complete
       nextLevel = skillState.currentLevel;
       if (skillState.questionsAsked >= this.defaultConfig.minQuestionsPerSkill && metrics.confidence >= 0.8) {
         shouldContinue = false;
-        reasoning = `Stable performance at ${nextLevel} level - assessment complete`;
+        reasoning = `Strong performance at ${nextLevel} level - assessment complete`;
       } else {
-        reasoning = `Stable performance at ${nextLevel} - confirming level`;
+        reasoning = `Strong performance at ${nextLevel} - confirming level`;
       }
-    } else if (metrics.averageScore >= 55) {
-      // Moderate performance - stay at current level to confirm
+    } else if (metrics.averageScore >= 70) {
+      // Good performance - stay at current level
       nextLevel = skillState.currentLevel;
-      reasoning = `Moderate performance (avg: ${metrics.averageScore.toFixed(1)}) - staying at ${nextLevel} to confirm level`;
-    } else if (metrics.averageScore < 45 && currentIndex > 0) {
-      // Poor performance - move down (lowered threshold from 60 to 45)
+      reasoning = `Good performance (avg: ${metrics.averageScore.toFixed(1)}) - staying at ${nextLevel} to confirm level`;
+    } else if (metrics.averageScore >= 60) {
+      // Adequate performance but may need lower level - move down one level
       nextLevel = CEFRLevels[Math.max(currentIndex - 1, 0)];
-      reasoning = `Performance below threshold (avg: ${metrics.averageScore.toFixed(1)}) - adjusting to ${nextLevel}`;
-    } else if (metrics.averageScore < 35 && skillState.questionsAsked >= 2) {
-      // Very poor performance - might stop early
-      if (currentIndex === 0) {
-        shouldContinue = false;
-        reasoning = `Very low performance at A1 level - placement at ${skillState.currentLevel}`;
-      } else {
-        nextLevel = CEFRLevels[Math.max(currentIndex - 1, 0)];
-        reasoning = `Very poor performance - significant level adjustment to ${nextLevel}`;
-      }
+      reasoning = `Adequate performance (avg: ${metrics.averageScore.toFixed(1)}) - adjusting to ${nextLevel}`;
+    } else if (metrics.averageScore >= 45) {
+      // Below target performance - move down one level
+      nextLevel = CEFRLevels[Math.max(currentIndex - 1, 0)];
+      reasoning = `Below target performance (avg: ${metrics.averageScore.toFixed(1)}) - adjusting to ${nextLevel}`;
     } else {
-      // Default case - continue at current level
-      nextLevel = skillState.currentLevel;
-      reasoning = `Standard assessment progression at ${nextLevel}`;
+      // Poor performance - move down significantly (2 levels if possible)
+      const newIndex = Math.max(currentIndex - 2, 0);
+      nextLevel = CEFRLevels[newIndex];
+      if (newIndex === 0 && skillState.questionsAsked >= 2) {
+        shouldContinue = false;
+        reasoning = `Very poor performance at A1 level - placement at ${skillState.currentLevel}`;
+      } else {
+        reasoning = `Poor performance (avg: ${metrics.averageScore.toFixed(1)}) - significant adjustment to ${nextLevel}`;
+      }
     }
 
     // Stopping criteria
