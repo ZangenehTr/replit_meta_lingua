@@ -1601,32 +1601,62 @@ export default function MSTPage() {
       const recommendations: string[] = [];
       const skills = testResults.skills || [];
       
-      // Find weak skills (A1, A2)
-      const weakSkills = skills.filter((s: any) => 
-        s.band?.startsWith('A1') || s.band?.startsWith('A2')
-      );
-      
-      // Find strong skills (B2+)  
-      const strongSkills = skills.filter((s: any) => 
-        s.band?.startsWith('B2') || s.band?.startsWith('C1') || s.band?.startsWith('C2')
-      );
-      
-      if (weakSkills.length > 0) {
-        const weakSkillNames = weakSkills.map((s: any) => t(`mst.${s.skill}`)).join(' و ');
-        recommendations.push(`روی بهبود مهارت‌های ${weakSkillNames} تمرکز کنید`);
+      // Analyze each skill individually with specific recommendations
+      skills.forEach((skill: any) => {
+        const band = skill.band || '';
+        const confidence = Math.round((skill.confidence || 0) * 100);
         
-        if (weakSkills.some((s: any) => s.skill === 'listening')) {
-          recommendations.push(t("mst.focusOnListening"));
-        }
-        if (weakSkills.some((s: any) => s.skill === 'speaking')) {
-          recommendations.push(t("mst.focusOnSpeaking"));
+        if (skill.skill === 'listening') {
+          if (band.startsWith('A1') || band.startsWith('A2')) {
+            recommendations.push(`📻 شنیداری (${band}): روزانه ۱۵ دقیقه پادکست مبتدی انگلیسی گوش دهید، از فیلم‌های انگلیسی با زیرنویس فارسی استفاده کنید`);
+            recommendations.push(`🎵 آهنگ‌های ساده انگلیسی بشنوید و سعی کنید کلمات را تشخیص دهید`);
+          } else if (band.startsWith('B1')) {
+            recommendations.push(`📺 شنیداری (${band}): سریال‌های انگلیسی با زیرنویس انگلیسی ببینید، روزانه ۳۰ دقیقه اخبار BBC Learning English گوش دهید`);
+          }
         }
         
-        recommendations.push(t("mst.considerFundamentalCourses"));
-      } else if (strongSkills.length >= 3) {
-        recommendations.push(t("mst.excellentResults"));
-      } else {
-        recommendations.push("برای تقویت مهارت‌های زبانی خود به تمرین مداوم ادامه دهید");
+        if (skill.skill === 'speaking') {
+          if (band.startsWith('A1') || band.startsWith('A2')) {
+            recommendations.push(`🗣️ گفتاری (${band}): روزانه ۱۰ دقیقه با خودتان انگلیسی صحبت کنید، صدای خود را ضبط کنید و گوش دهید`);
+            recommendations.push(`📱 از اپلیکیشن Speechify یا Google Translate برای تمرین تلفظ استفاده کنید`);
+            recommendations.push(`👥 در گروه‌های مکالمه آنلاین شرکت کنید (مثل HelloTalk، Tandem)`);
+          } else if (band.startsWith('B1')) {
+            recommendations.push(`🎯 گفتاری (${band}): ۲۰ دقیقه روزانه درباره موضوعات مختلف صحبت کنید، ویدیوهای کوتاه خودتان بسازید`);
+          }
+        }
+        
+        if (skill.skill === 'reading') {
+          if (band.startsWith('A1') || band.startsWith('A2')) {
+            recommendations.push(`📖 خواندن (${band}): کتاب‌های داستان ساده برای کودکان بخوانید، روزانه ۱۰ صفحه از graded readers`);
+            recommendations.push(`📰 اخبار ساده از News in Levels (سطح ۱-۲) مطالعه کنید`);
+          } else if (band.startsWith('C')) {
+            recommendations.push(`📚 خواندن (${band}): مجلات تخصصی، کتاب‌های غیرداستانی و مقالات علمی بخوانید`);
+          }
+        }
+        
+        if (skill.skill === 'writing') {
+          if (band.startsWith('A1') || band.startsWith('A2')) {
+            recommendations.push(`✍️ نوشتن (${band}): روزانه ۱ پاراگراف درباره روزتان بنویسید، از Grammarly برای بررسی استفاده کنید`);
+            recommendations.push(`📝 ایمیل‌های ساده و پیام‌های کوتاه انگلیسی بنویسید`);
+          } else if (band.startsWith('C')) {
+            recommendations.push(`🔍 نوشتن (${band}): مقالات نقدی، گزارش‌های تحلیلی و متون پیچیده بنویسید`);
+          }
+        }
+      });
+      
+      // Add general recommendations based on overall performance
+      const averageLevel = testResults.overallBand;
+      if (averageLevel.startsWith('A')) {
+        recommendations.push(`🎯 برنامه مطالعه: هفته‌ای ۳ ساعت کلاس آنلاین، ۲ ساعت تمرین شخصی`);
+        recommendations.push(`📅 هدف کوتاه‌مدت: ظرف ۳ ماه به سطح A2 برسید`);
+      } else if (averageLevel.startsWith('B')) {
+        recommendations.push(`🎯 برنامه مطالعه: هفته‌ای ۴ ساعت مطالعه منظم، ۱ ساعت مکالمه با native speaker`);
+        recommendations.push(`🏆 آماده شدن برای آزمون‌های IELTS یا TOEFL را در نظر بگیرید`);
+      }
+      
+      // Add specific technical recommendations
+      if (testResults.overallConfidence && testResults.overallConfidence < 0.7) {
+        recommendations.push(`⚠️ توجه: اطمینان نتایج پایین است (${Math.round(testResults.overallConfidence * 100)}%) - بهتر است آزمون را مجدداً انجام دهید`);
       }
       
       return recommendations;
