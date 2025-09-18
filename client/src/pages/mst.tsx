@@ -192,12 +192,6 @@ export default function MSTPage() {
     serverLoadReduced: 0
   });
 
-  // Goal selection and personalization state
-  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
-  const [timeAvailability, setTimeAvailability] = useState<number>(5);
-  const [preferredPace, setPreferredPace] = useState<'slow' | 'normal' | 'fast'>('normal');
-  const [learningStyle, setLearningStyle] = useState<string>('interactive');
-
   // ---------- CLIENT-SIDE SCORING UTILITIES ----------
   
   /**
