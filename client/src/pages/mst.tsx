@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Clock, MicOff, Play, Pause, Volume2, Map, Trophy, Target, BookOpen } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { Clock, MicOff, Play, Pause, Volume2, Map, Trophy, Target, BookOpen, CheckCircle, Users, Calendar, Zap, Brain } from "lucide-react";
 import { 
   scoreSpeaking, 
   scoreWriting, 
@@ -92,7 +93,7 @@ export default function MSTPage() {
   const { t } = useTranslation();
 
   // Session / flow
-  const [testPhase, setTestPhase] = useState<"intro" | "testing" | "completed">(
+  const [testPhase, setTestPhase] = useState<"intro" | "testing" | "completed" | "goalSelection" | "generating" | "personalized">(
     "intro",
   );
   const [currentSession, setCurrentSession] = useState<MSTSession | null>(null);
@@ -176,6 +177,11 @@ export default function MSTPage() {
 
   // Final results
   const [testResults, setTestResults] = useState<any>(null);
+  const [personalizedRecommendations, setPersonalizedRecommendations] = useState<any>(null);
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [timeAvailability, setTimeAvailability] = useState<number>(5);
+  const [preferredPace, setPreferredPace] = useState<'slow' | 'normal' | 'fast'>('normal');
+  const [learningStyle, setLearningStyle] = useState<string>('interactive');
 
   // Client-side scoring state
   const [clientScoring, setClientScoring] = useState(true); // Enable client-side scoring
@@ -185,6 +191,12 @@ export default function MSTPage() {
     clientScored: 0,
     serverLoadReduced: 0
   });
+
+  // Goal selection and personalization state
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [timeAvailability, setTimeAvailability] = useState<number>(5);
+  const [preferredPace, setPreferredPace] = useState<'slow' | 'normal' | 'fast'>('normal');
+  const [learningStyle, setLearningStyle] = useState<string>('interactive');
 
   // ---------- CLIENT-SIDE SCORING UTILITIES ----------
   
@@ -734,7 +746,10 @@ export default function MSTPage() {
       });
       if (!r.ok) throw new Error("finalize failed");
       const data = await r.json();
-      if (data.success) setTestResults(data.result);
+      if (data.success) {
+        setTestResults(data.result);
+        setTestPhase("goalSelection"); // Go to goal selection instead of showing results directly
+      }
     } catch (e) {
       console.error(e);
     }
