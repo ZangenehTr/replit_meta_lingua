@@ -8148,6 +8148,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all student sessions (with optional filtering)
+  app.get("/api/student/sessions", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
+    try {
+      // Mock sessions data for now - will be replaced with real database calls
+      const sessions = [
+        {
+          id: 1,
+          title: "Business English Conversation",
+          courseName: "Business English A2", 
+          tutorFirstName: "Sarah",
+          tutorLastName: "Johnson",
+          sessionDate: "2025-09-20",
+          startTime: "14:00",
+          endTime: "15:00", 
+          duration: 60,
+          type: "group",
+          status: "upcoming",
+          canJoin: false,
+          language: "English",
+          level: "A2"
+        },
+        {
+          id: 2,
+          title: "IELTS Speaking Practice",
+          courseName: "IELTS Preparation",
+          tutorFirstName: "Michael", 
+          tutorLastName: "Brown",
+          sessionDate: "2025-09-22",
+          startTime: "10:00",
+          endTime: "11:00",
+          duration: 60,
+          type: "individual", 
+          status: "upcoming",
+          canJoin: false,
+          language: "English",
+          level: "B2"
+        }
+      ];
+      res.json(sessions);
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+      res.status(500).json({ message: "Failed to get sessions" });
+    }
+  });
+
   // Get upcoming sessions
   app.get("/api/student/sessions/upcoming", authenticateToken, requireRole(['Student', 'Admin']), async (req: any, res) => {
     try {
