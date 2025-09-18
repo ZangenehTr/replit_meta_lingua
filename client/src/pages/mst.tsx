@@ -319,7 +319,17 @@ export default function MSTPage() {
       }
 
       if (currentStage === "core") {
-        const nextStage: MSTStage = data.route === "down" ? "lower" : "upper";
+        // Q1 done for reading/listening - proceed to Q2 based on route decision
+        let nextStage: MSTStage;
+        if (data.route === "down") {
+          nextStage = "lower";
+        } else if (data.route === "up") {
+          nextStage = "upper";
+        } else {
+          // route === "stay" - stay at core level
+          nextStage = "core";
+        }
+        console.log(`📚 Q1 completed for ${key} (route=${data.route}), advancing to Q2 with stage: ${nextStage}`);
         setCurrentStage(nextStage);
         await fetchNextItemWithStage(nextStage);
       } else {
