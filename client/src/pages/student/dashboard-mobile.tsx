@@ -213,10 +213,10 @@ export default function StudentDashboardMobile() {
                     <Target className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-white font-bold text-lg mb-2">
-                    {t('student:placementTestRequired', 'Complete Your Placement Test')}
+                    {t('student:placementTestRequired')}
                   </h3>
                   <p className="text-white/80 text-sm mb-4">
-                    {t('student:placementTestDescription', 'Take our 6-minute placement test to create your personalized learning path and find your perfect starting level.')}
+                    {t('student:placementTestDescription')}
                   </p>
                   <GlossyButton 
                     variant="warning" 
@@ -225,7 +225,7 @@ export default function StudentDashboardMobile() {
                   >
                     <Link href="/mst" className="flex items-center justify-center gap-2 w-full">
                       <Zap className="w-5 h-5" />
-                      {t('student:startPlacementTest', 'Start Placement Test (6 min)')}
+                      {t('student:startPlacementTest')}
                     </Link>
                   </GlossyButton>
                 </div>

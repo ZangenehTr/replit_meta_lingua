@@ -290,10 +290,10 @@ export default function StudentDashboard() {
                   <Target className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-bold text-xl text-gray-900 mb-2">
-                  {t('student:placementTestRequired', 'Complete Your Placement Test')}
+                  {t('student:placementTestRequired')}
                 </h3>
                 <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto">
-                  {t('student:placementTestDescription', 'Take our 6-minute placement test to create your personalized learning path and find your perfect starting level.')}
+                  {t('student:placementTestDescription')}
                 </p>
                 
                 {/* Weekly Limits Display */}
@@ -318,7 +318,7 @@ export default function StudentDashboard() {
                   >
                     <Link href="/mst" className="flex items-center gap-2">
                       <Zap className="w-5 h-5" />
-                      {t('student:startPlacementTest', 'Start Placement Test (6 min)')}
+                      {t('student:startPlacementTest')}
                     </Link>
                   </Button>
                 ) : (

@@ -298,5 +298,8 @@
   },
   "saveSettings": "Save Settings",
   "learningProgress": "Learning Progress",
-  "studyPartnerSettings": "Study Partner Settings"
+  "studyPartnerSettings": "Study Partner Settings",
+  "placementTestRequired": "Complete Your Placement Test",
+  "placementTestDescription": "Take our 10-minute placement test to create your personalized learning path and find your perfect starting level",
+  "startPlacementTest": "Start Placement Test (10 min)"
 }
