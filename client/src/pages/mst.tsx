@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Clock, MicOff, Play, Pause, Volume2, Map, Trophy, Target, BookOpen } from "lucide-react";
 import { 
   scoreSpeaking, 
@@ -88,6 +89,7 @@ function pickAudioMime(): string | undefined {
 
 export default function MSTPage() {
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // Session / flow
   const [testPhase, setTestPhase] = useState<"intro" | "testing" | "completed">(
@@ -1569,6 +1571,67 @@ export default function MSTPage() {
       window.location.href = "/roadmap";
     };
 
+    const handleRetakeTest = () => {
+      // Reset all state and restart the test
+      setTestPhase("intro");
+      setCurrentSession(null);
+      setCurrentItem(null);
+      setCurrentSkillIndex(0);
+      setCurrentStage("core");
+      setTestResults(null);
+      setCurrentResponse("");
+      setItemTimer(0);
+      setGuardTimer(0);
+      setHasPlayedListening(false);
+      setAudioHasEnded(false);
+      setSpeakingPhase("narration");
+      setIsRecording(false);
+      setRecordedBlob(null);
+      setSkillScores({});
+      setLoadReductionStats({ totalResponses: 0, clientScored: 0, serverLoadReduced: 0 });
+      setScoringPerformance({ computeTimeMs: 0, serverLoadReduction: 0 });
+      
+      toast({
+        title: t("mst.retakeTest"),
+        description: t("mst.retakeTestDesc"),
+      });
+    };
+
+    const generateFarsiRecommendations = (testResults: any): string[] => {
+      const recommendations: string[] = [];
+      const skills = testResults.skills || [];
+      
+      // Find weak skills (A1, A2)
+      const weakSkills = skills.filter((s: any) => 
+        s.band?.startsWith('A1') || s.band?.startsWith('A2')
+      );
+      
+      // Find strong skills (B2+)  
+      const strongSkills = skills.filter((s: any) => 
+        s.band?.startsWith('B2') || s.band?.startsWith('C1') || s.band?.startsWith('C2')
+      );
+      
+      if (weakSkills.length > 0) {
+        const weakSkillNames = weakSkills.map((s: any) => t(`mst.${s.skill}`)).join(' و ');
+        recommendations.push(`روی بهبود مهارت‌های ${weakSkillNames} تمرکز کنید`);
+        
+        if (weakSkills.some((s: any) => s.skill === 'listening')) {
+          recommendations.push(t("mst.focusOnListening"));
+        }
+        if (weakSkills.some((s: any) => s.skill === 'speaking')) {
+          recommendations.push(t("mst.focusOnSpeaking"));
+        }
+        
+        recommendations.push(t("mst.considerFundamentalCourses"));
+      } else if (strongSkills.length >= 3) {
+        recommendations.push(t("mst.excellentResults"));
+      } else {
+        recommendations.push("برای تقویت مهارت‌های زبانی خود به تمرین مداوم ادامه دهید");
+      }
+      
+      return recommendations;
+    };
+
     return (
       <div className="container mx-auto p-4 sm:p-6 max-w-4xl" style={mstStyle}>
         <Card className="border-0 shadow-lg">
@@ -1587,9 +1650,9 @@ export default function MSTPage() {
               <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-3xl font-bold mb-4">
                 {testResults.overallBand}
               </div>
-              <div className="text-xl font-semibold">Overall CEFR Level</div>
+              <div className="text-xl font-semibold">{t("mst.overallCEFRLevel")}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Confidence: {testResults.overallConfidence ? Math.round(testResults.overallConfidence * 100) : 'N/A'}%
+                {t("mst.confidence")}: {testResults.overallConfidence ? Math.round(testResults.overallConfidence * 100) : 'N/A'}%
               </div>
             </div>
 
@@ -1597,7 +1660,7 @@ export default function MSTPage() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-center flex items-center justify-center gap-2">
                 <Target className="h-5 w-5" />
-                Individual Skills Breakdown
+                {t("mst.individualSkillsBreakdown")}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {['speaking', 'listening', 'reading', 'writing'].map((skill) => {
@@ -1614,9 +1677,9 @@ export default function MSTPage() {
                       <div className="flex items-center gap-3">
                         <span className="text-2xl" data-testid={`icon-skill-${skill}`}>{getSkillIcon(skill)}</span>
                         <div>
-                          <div className="font-medium capitalize" data-testid={`skill-name-${skill}`}>{skill}</div>
+                          <div className="font-medium" data-testid={`skill-name-${skill}`}>{t(`mst.${skill}`)}</div>
                           <div className="text-sm text-gray-600 dark:text-gray-400" data-testid={`skill-score-${skill}`}>
-                            {skillResult ? `Confidence: ${confidencePercent}%` : 'Not completed'}
+                            {skillResult ? `${t('mst.confidence')}: ${confidencePercent}%` : 'Not completed'}
                           </div>
                         </div>
                       </div>
@@ -1630,22 +1693,25 @@ export default function MSTPage() {
             </div>
 
             {/* Recommendations */}
-            {testResults.recommendations && testResults.recommendations.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  Recommendations
-                </h3>
-                <ul className="space-y-2">
-                  {testResults.recommendations.map((rec: string, index: number) => (
-                    <li key={index} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
-                      <span className="text-blue-500 mt-1">•</span>
-                      <span>{rec}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {(() => {
+              const farsiRecommendations = generateFarsiRecommendations(testResults);
+              return farsiRecommendations.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    {t("mst.recommendations")}
+                  </h3>
+                  <ul className="space-y-2">
+                    {farsiRecommendations.map((rec: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
+                        <span className="text-blue-500 mt-1">•</span>
+                        <span>{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-6">
@@ -1656,7 +1722,17 @@ export default function MSTPage() {
                 data-testid="button-create-roadmap"
               >
                 <Map className="w-5 h-5 mr-2" />
-                Create Learning Roadmap
+                {t("mst.createLearningRoadmap")}
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleRetakeTest}
+                className="flex-1 text-blue-600 border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                data-testid="button-retake-test"
+              >
+                <Trophy className="w-5 h-5 mr-2" />
+                {t("mst.retakeTest")}
               </Button>
               <Button
                 variant="outline"
@@ -1665,7 +1741,7 @@ export default function MSTPage() {
                 className="flex-1"
                 data-testid="button-return-dashboard"
               >
-                Return to Dashboard
+                {t("mst.returnToDashboard")}
               </Button>
             </div>
           </CardContent>

@@ -307,5 +307,24 @@
   },
   "saveSettings": "ذخیره تنظیمات",
   "learningProgress": "پیشرفت یادگیری",
-  "studyPartnerSettings": "تنظیمات همراه مطالعه"
+  "studyPartnerSettings": "تنظیمات همراه مطالعه",
+  "mst": {
+    "title": "آزمون تعیین سطح چندمرحله‌ای",
+    "overallCEFRLevel": "سطح کلی CEFR",
+    "confidence": "اطمینان",
+    "individualSkillsBreakdown": "تحلیل مهارت‌های جداگانه",
+    "listening": "شنیداری",
+    "speaking": "گفتاری", 
+    "reading": "خواندن",
+    "writing": "نوشتن",
+    "recommendations": "پیشنهادات",
+    "focusOnListening": "روی بهبود مهارت‌های شنیداری تمرکز کنید",
+    "focusOnSpeaking": "روی بهبود مهارت‌های گفتاری تمرکز کنید",
+    "considerFundamentalCourses": "شروع با دوره‌های پایه‌ای زبان را در نظر بگیرید",
+    "excellentResults": "نتایج عالی! برای چالش بیشتر دوره‌های پیشرفته را امتحان کنید",
+    "returnToDashboard": "بازگشت به داشبورد",
+    "createLearningRoadmap": "ایجاد نقشه راه یادگیری",
+    "retakeTest": "تکرار آزمون",
+    "retakeTestDesc": "می‌توانید آزمون را مجدداً برای بهبود نتایج خود انجام دهید"
+  }
 }
