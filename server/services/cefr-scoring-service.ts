@@ -66,7 +66,7 @@ export class CEFRScoringService {
   /**
    * Initialize CEFR descriptors from the official assessment grid
    */
-  private async initializeCEFRDescriptors() {
+  private initializeCEFRDescriptors() {
     const descriptors: Partial<CEFRDescriptor>[] = [
       // Speaking - Spoken Production
       {
@@ -187,18 +187,96 @@ export class CEFRScoringService {
    * Evaluate speaking assessment using CEFR criteria
    */
   async evaluateSpeaking(data: SpeakingAssessmentData, targetLevel: CEFRLevel): Promise<CEFREvaluationResult> {
-    // Use fallback evaluation to avoid memory issues
-    console.log(`Using fallback evaluation for speaking assessment - level: ${targetLevel}`);
-    return this.getFallbackEvaluation(targetLevel, 'speaking');
+    // Analyze transcript quality and fluency
+    const transcript = data.transcript || '';
+    const wordCount = transcript.split(/\s+/).filter(word => word.length > 0).length;
+    const duration = data.duration || 1;
+    const wordsPerMinute = Math.round((wordCount / duration) * 60);
+    
+    // Performance-based scoring
+    let performanceScore = this.calculateSpeakingPerformanceScore(transcript, wordCount, wordsPerMinute, targetLevel);
+    
+    // CEFR level determination based on actual performance
+    const { level, confidence } = this.determineLevelFromPerformance(performanceScore, targetLevel, 'speaking');
+    
+    const metCriteria: string[] = [];
+    const unmetCriteria: string[] = [];
+    const recommendations: string[] = [];
+    
+    if (performanceScore >= 85) {
+      metCriteria.push(`Excellent ${targetLevel} speaking proficiency demonstrated`);
+      metCriteria.push('Strong vocabulary and fluency');
+      recommendations.push('Continue with advanced speaking activities');
+    } else if (performanceScore >= 70) {
+      metCriteria.push(`Good ${targetLevel} speaking ability`);
+      recommendations.push('Practice complex sentence structures');
+    } else if (performanceScore >= 55) {
+      metCriteria.push('Basic speaking ability demonstrated');
+      unmetCriteria.push(`Some ${targetLevel} level criteria not fully met`);
+      recommendations.push('Focus on vocabulary expansion and fluency');
+    } else {
+      unmetCriteria.push(`Below ${targetLevel} speaking proficiency`);
+      recommendations.push('Practice basic pronunciation and simple sentences');
+    }
+    
+    const detailedFeedback = this.generateSpeakingFeedback(performanceScore, wordCount, wordsPerMinute, level);
+    
+    return {
+      level,
+      score: performanceScore,
+      confidence,
+      metCriteria,
+      unmetCriteria,
+      detailedFeedback,
+      recommendations
+    };
   }
 
   /**
    * Evaluate writing assessment using CEFR criteria
    */
   async evaluateWriting(data: WritingAssessmentData, targetLevel: CEFRLevel): Promise<CEFREvaluationResult> {
-    // Use fallback evaluation to avoid memory issues
-    console.log(`Using fallback evaluation for writing assessment - level: ${targetLevel}`);
-    return this.getFallbackEvaluation(targetLevel, 'writing');
+    const text = data.text || '';
+    const wordCount = data.wordCount || text.split(/\s+/).filter(word => word.length > 0).length;
+    const timeSpent = data.timeSpent || 1;
+    
+    // Performance-based scoring for writing
+    let performanceScore = this.calculateWritingPerformanceScore(text, wordCount, timeSpent, targetLevel);
+    
+    // CEFR level determination based on actual performance
+    const { level, confidence } = this.determineLevelFromPerformance(performanceScore, targetLevel, 'writing');
+    
+    const metCriteria: string[] = [];
+    const unmetCriteria: string[] = [];
+    const recommendations: string[] = [];
+    
+    if (performanceScore >= 85) {
+      metCriteria.push(`Excellent ${targetLevel} writing proficiency demonstrated`);
+      metCriteria.push('Strong coherence and vocabulary');
+      recommendations.push('Continue with advanced writing tasks');
+    } else if (performanceScore >= 70) {
+      metCriteria.push(`Good ${targetLevel} writing ability`);
+      recommendations.push('Practice complex sentence structures and transitions');
+    } else if (performanceScore >= 55) {
+      metCriteria.push('Basic writing ability demonstrated');
+      unmetCriteria.push(`Some ${targetLevel} level criteria not fully met`);
+      recommendations.push('Focus on paragraph structure and vocabulary');
+    } else {
+      unmetCriteria.push(`Below ${targetLevel} writing proficiency`);
+      recommendations.push('Practice basic sentence formation and grammar');
+    }
+    
+    const detailedFeedback = this.generateWritingFeedback(performanceScore, wordCount, timeSpent, level, text);
+    
+    return {
+      level,
+      score: performanceScore,
+      confidence,
+      metCriteria,
+      unmetCriteria,
+      detailedFeedback,
+      recommendations
+    };
   }
 
   /**
@@ -281,6 +359,293 @@ export class CEFRScoringService {
     };
   }
 
+  /**
+   * Calculate speaking performance score based on transcript analysis
+   */
+  private calculateSpeakingPerformanceScore(transcript: string, wordCount: number, wordsPerMinute: number, targetLevel: CEFRLevel): number {
+    let score = 0;
+    
+    // Word count scoring (30% of total)
+    const expectedWordCounts = {
+      'A1': { min: 20, optimal: 40 },
+      'A2': { min: 40, optimal: 80 },
+      'B1': { min: 80, optimal: 120 },
+      'B2': { min: 120, optimal: 180 },
+      'C1': { min: 180, optimal: 250 },
+      'C2': { min: 250, optimal: 350 }
+    };
+    
+    const expected = expectedWordCounts[targetLevel];
+    if (wordCount >= expected.optimal) {
+      score += 30;
+    } else if (wordCount >= expected.min) {
+      score += 20 + (10 * (wordCount - expected.min) / (expected.optimal - expected.min));
+    } else {
+      score += Math.max(5, 20 * (wordCount / expected.min));
+    }
+    
+    // Fluency scoring based on words per minute (25% of total)
+    const expectedWPM = {
+      'A1': { min: 60, optimal: 100 },
+      'A2': { min: 80, optimal: 120 },
+      'B1': { min: 100, optimal: 140 },
+      'B2': { min: 120, optimal: 160 },
+      'C1': { min: 140, optimal: 180 },
+      'C2': { min: 160, optimal: 200 }
+    };
+    
+    const expectedFluency = expectedWPM[targetLevel];
+    if (wordsPerMinute >= expectedFluency.optimal) {
+      score += 25;
+    } else if (wordsPerMinute >= expectedFluency.min) {
+      score += 15 + (10 * (wordsPerMinute - expectedFluency.min) / (expectedFluency.optimal - expectedFluency.min));
+    } else {
+      score += Math.max(5, 15 * (wordsPerMinute / expectedFluency.min));
+    }
+    
+    // Complexity and vocabulary scoring (45% of total)
+    score += this.analyzeLanguageComplexity(transcript, targetLevel) * 0.45;
+    
+    return Math.min(100, Math.max(0, Math.round(score)));
+  }
+  
+  /**
+   * Calculate writing performance score based on text analysis
+   */
+  private calculateWritingPerformanceScore(text: string, wordCount: number, timeSpent: number, targetLevel: CEFRLevel): number {
+    let score = 0;
+    
+    // Length and completeness scoring (25% of total)
+    const expectedWordCounts = {
+      'A1': { min: 30, optimal: 60 },
+      'A2': { min: 60, optimal: 100 },
+      'B1': { min: 100, optimal: 150 },
+      'B2': { min: 150, optimal: 250 },
+      'C1': { min: 200, optimal: 300 },
+      'C2': { min: 250, optimal: 400 }
+    };
+    
+    const expected = expectedWordCounts[targetLevel];
+    if (wordCount >= expected.optimal) {
+      score += 25;
+    } else if (wordCount >= expected.min) {
+      score += 15 + (10 * (wordCount - expected.min) / (expected.optimal - expected.min));
+    } else {
+      score += Math.max(5, 15 * (wordCount / expected.min));
+    }
+    
+    // Structure and organization (30% of total)
+    score += this.analyzeWritingStructure(text, targetLevel) * 0.30;
+    
+    // Language complexity and accuracy (45% of total)
+    score += this.analyzeLanguageComplexity(text, targetLevel) * 0.45;
+    
+    return Math.min(100, Math.max(0, Math.round(score)));
+  }
+  
+  /**
+   * Analyze language complexity for speaking or writing
+   */
+  private analyzeLanguageComplexity(text: string, targetLevel: CEFRLevel): number {
+    if (!text || text.trim().length === 0) return 10;
+    
+    let complexityScore = 0;
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const words = text.split(/\s+/).filter(w => w.length > 0);
+    
+    // Sentence length analysis
+    const avgSentenceLength = words.length / Math.max(sentences.length, 1);
+    const expectedSentenceLengths = {
+      'A1': { min: 4, optimal: 7 },
+      'A2': { min: 6, optimal: 10 },
+      'B1': { min: 8, optimal: 12 },
+      'B2': { min: 10, optimal: 15 },
+      'C1': { min: 12, optimal: 18 },
+      'C2': { min: 15, optimal: 22 }
+    };
+    
+    const expectedLength = expectedSentenceLengths[targetLevel];
+    if (avgSentenceLength >= expectedLength.optimal) {
+      complexityScore += 30;
+    } else if (avgSentenceLength >= expectedLength.min) {
+      complexityScore += 20 + (10 * (avgSentenceLength - expectedLength.min) / (expectedLength.optimal - expectedLength.min));
+    } else {
+      complexityScore += Math.max(5, 20 * (avgSentenceLength / expectedLength.min));
+    }
+    
+    // Vocabulary sophistication
+    const longWords = words.filter(w => w.length > 6).length;
+    const vocabularyRatio = longWords / Math.max(words.length, 1);
+    
+    const expectedVocabRatios = {
+      'A1': 0.1, 'A2': 0.15, 'B1': 0.2, 'B2': 0.25, 'C1': 0.3, 'C2': 0.35
+    };
+    
+    if (vocabularyRatio >= expectedVocabRatios[targetLevel]) {
+      complexityScore += 25;
+    } else {
+      complexityScore += Math.max(5, 25 * (vocabularyRatio / expectedVocabRatios[targetLevel]));
+    }
+    
+    // Grammar complexity indicators
+    const conjunctions = (text.match(/\b(and|but|or|so|because|although|however|therefore|moreover|furthermore)\b/gi) || []).length;
+    const conjunctionRatio = conjunctions / Math.max(sentences.length, 1);
+    
+    if (conjunctionRatio >= 0.3) {
+      complexityScore += 20;
+    } else {
+      complexityScore += Math.max(5, 20 * (conjunctionRatio / 0.3));
+    }
+    
+    // Variety of sentence structures
+    const questionMarks = (text.match(/\?/g) || []).length;
+    const exclamations = (text.match(/!/g) || []).length;
+    const varietyScore = Math.min(25, (questionMarks + exclamations) * 5 + sentences.length * 2);
+    complexityScore += varietyScore;
+    
+    return Math.min(100, Math.max(0, complexityScore));
+  }
+  
+  /**
+   * Analyze writing structure and organization
+   */
+  private analyzeWritingStructure(text: string, targetLevel: CEFRLevel): number {
+    if (!text || text.trim().length === 0) return 10;
+    
+    let structureScore = 0;
+    const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    
+    // Paragraph organization
+    if (paragraphs.length >= 2) {
+      structureScore += 30;
+    } else if (paragraphs.length === 1 && sentences.length >= 3) {
+      structureScore += 20;
+    } else {
+      structureScore += 10;
+    }
+    
+    // Coherence indicators
+    const transitions = (text.match(/\b(first|second|third|finally|however|moreover|furthermore|in addition|on the other hand|in conclusion)\b/gi) || []).length;
+    structureScore += Math.min(40, transitions * 10);
+    
+    // Introduction and conclusion patterns
+    const hasIntro = /\b(I think|In my opinion|This essay|This text)\b/i.test(text.substring(0, 100));
+    const hasConclusion = /\b(In conclusion|To sum up|Finally|Overall)\b/i.test(text.substring(text.length - 100));
+    
+    if (hasIntro && hasConclusion) {
+      structureScore += 30;
+    } else if (hasIntro || hasConclusion) {
+      structureScore += 20;
+    } else {
+      structureScore += 10;
+    }
+    
+    return Math.min(100, Math.max(0, structureScore));
+  }
+  
+  /**
+   * Determine CEFR level from performance score
+   */
+  private determineLevelFromPerformance(score: number, targetLevel: CEFRLevel, skill: Skill): { level: CEFRLevel, confidence: number } {
+    const targetIndex = CEFRLevels.indexOf(targetLevel);
+    let levelIndex = targetIndex;
+    let confidence = 0.8;
+    
+    // Performance-based level adjustment
+    if (score >= 90) {
+      // Excellent performance - may be ready for higher level
+      levelIndex = Math.min(CEFRLevels.length - 1, targetIndex + 1);
+      confidence = 0.95;
+    } else if (score >= 80) {
+      // Strong performance at target level
+      levelIndex = targetIndex;
+      confidence = 0.9;
+    } else if (score >= 70) {
+      // Good performance at target level
+      levelIndex = targetIndex;
+      confidence = 0.8;
+    } else if (score >= 60) {
+      // Adequate performance but may need lower level
+      levelIndex = Math.max(0, targetIndex - 1);
+      confidence = 0.7;
+    } else if (score >= 45) {
+      // Below target level performance
+      levelIndex = Math.max(0, targetIndex - 1);
+      confidence = 0.6;
+    } else {
+      // Poor performance - significantly lower level
+      levelIndex = Math.max(0, targetIndex - 2);
+      confidence = 0.5;
+    }
+    
+    return {
+      level: CEFRLevels[levelIndex],
+      confidence
+    };
+  }
+  
+  /**
+   * Generate detailed feedback for speaking assessment
+   */
+  private generateSpeakingFeedback(score: number, wordCount: number, wordsPerMinute: number, level: CEFRLevel): string {
+    let feedback = `Speaking assessment completed with a score of ${score}/100. `;
+    
+    if (score >= 85) {
+      feedback += `Excellent ${level} level speaking demonstrated. `;
+    } else if (score >= 70) {
+      feedback += `Good ${level} level speaking ability shown. `;
+    } else if (score >= 55) {
+      feedback += `Basic speaking skills demonstrated with room for improvement. `;
+    } else {
+      feedback += `Speaking skills need significant development. `;
+    }
+    
+    feedback += `You spoke ${wordCount} words at approximately ${wordsPerMinute} words per minute. `;
+    
+    if (wordsPerMinute < 80) {
+      feedback += `Focus on improving fluency and speaking pace. `;
+    } else if (wordsPerMinute > 180) {
+      feedback += `Good fluency demonstrated. Consider focusing on clarity and pronunciation. `;
+    } else {
+      feedback += `Good speaking pace maintained. `;
+    }
+    
+    return feedback;
+  }
+  
+  /**
+   * Generate detailed feedback for writing assessment
+   */
+  private generateWritingFeedback(score: number, wordCount: number, timeSpent: number, level: CEFRLevel, text: string): string {
+    let feedback = `Writing assessment completed with a score of ${score}/100. `;
+    
+    if (score >= 85) {
+      feedback += `Excellent ${level} level writing demonstrated. `;
+    } else if (score >= 70) {
+      feedback += `Good ${level} level writing ability shown. `;
+    } else if (score >= 55) {
+      feedback += `Basic writing skills demonstrated with room for improvement. `;
+    } else {
+      feedback += `Writing skills need significant development. `;
+    }
+    
+    feedback += `Your response contained ${wordCount} words. `;
+    
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+    const avgSentenceLength = wordCount / Math.max(sentences, 1);
+    
+    if (avgSentenceLength < 6) {
+      feedback += `Consider using more complex sentence structures. `;
+    } else if (avgSentenceLength > 20) {
+      feedback += `Good use of complex sentences. Focus on clarity and coherence. `;
+    } else {
+      feedback += `Good sentence variety demonstrated. `;
+    }
+    
+    return feedback;
+  }
+  
   /**
    * Get fallback evaluation when AI fails
    */

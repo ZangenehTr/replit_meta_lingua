@@ -148,21 +148,16 @@ export class AdaptivePlacementService {
   ): Promise<{
     evaluation: CEFREvaluationResult;
   }> {
-    console.log(`[DEBUG] Submitting response for session ${sessionId}, question ${questionId}`);
     
     const session = await this.storage.getPlacementTestSession(sessionId);
     const question = await this.storage.getPlacementTestQuestion(questionId);
     
-    console.log(`[DEBUG] Session found: ${!!session}`);
-    console.log(`[DEBUG] Question found: ${!!question}`);
     
     if (!session) {
-      console.log(`[DEBUG] Session ${sessionId} not found in storage`);
       throw new Error('Session not found');
     }
     
     if (!question) {
-      console.log(`[DEBUG] Question ${questionId} not found in storage`);
       throw new Error('Question not found');
     }
 
@@ -486,13 +481,16 @@ export class AdaptivePlacementService {
         break;
         
       case 'writing':
-        // Writing typically lags behind speaking
+        // Writing assessment should be based on actual performance, not assumptions
+        // Start at appropriate level based on speaking performance with minimal bias
         if (speakingMetrics.averageScore >= 85 && speakingMetrics.confidence >= 0.8) {
-          adjustment = -1; // One level down even for strong speakers
+          adjustment = 0; // Same level for strong speakers - let actual performance determine level
         } else if (speakingMetrics.averageScore >= 70) {
-          adjustment = -1; // One level down for good speakers
+          adjustment = 0; // Same level for good speakers
+        } else if (speakingMetrics.averageScore >= 60) {
+          adjustment = -1; // One level down for moderate speakers
         } else {
-          adjustment = -2; // Two levels down for weaker speakers
+          adjustment = -1; // One level down for weaker speakers only
         }
         break;
         
@@ -510,7 +508,6 @@ export class AdaptivePlacementService {
     // Calculate final level with bounds checking
     const finalIndex = Math.max(0, Math.min(CEFRLevels.length - 1, speakingIndex + adjustment));
     
-    console.log(`[ADAPTIVE] Starting ${skill} at ${CEFRLevels[finalIndex]} based on speaking ${speakingLevel} (score: ${speakingMetrics.averageScore.toFixed(1)}, confidence: ${speakingMetrics.confidence.toFixed(2)}, adjustment: ${adjustment})`);
     
     return CEFRLevels[finalIndex];
   }
@@ -560,11 +557,12 @@ export class AdaptivePlacementService {
       return this.generateListeningQuestionContent(level);
     }
     
-    // Fallback
+    // Fallback - ensure skill is treated as string
+    const skillName = String(skill);
     return {
-      type: `${skill}_assessment`,
-      title: `${skill.charAt(0).toUpperCase() + skill.slice(1)} Assessment - ${level} Level`,
-      prompt: `Please complete this ${skill} task at ${level} level.`,
+      type: `${skillName}_assessment`,
+      title: `${skillName.charAt(0).toUpperCase() + skillName.slice(1)} Assessment - ${level} Level`,
+      prompt: `Please complete this ${skillName} task at ${level} level.`,
       content: {},
       expectedDurationSeconds: 120
     };
@@ -815,7 +813,7 @@ export class AdaptivePlacementService {
       expectedDurationSeconds: questionContent.expectedDurationSeconds,
       scoringCriteria: { level, skill },
       maxScore: 100,
-      difficultyWeight: 0.5,
+      difficultyWeight: '0.50',
       prerequisiteSkills: [],
       tags: [skill, level],
       estimatedCompletionMinutes: Math.ceil(questionContent.expectedDurationSeconds / 60),
@@ -851,16 +849,20 @@ export class AdaptivePlacementService {
         }, level);
         
       case 'reading':
+        // Type guard for reading content
+        const readingContent = question.content as { passage?: string } || {};
         return await this.cefrScoring.evaluateReading({
           answers: userResponse.answers || {},
-          passage: question.content.passage || '',
+          passage: readingContent.passage || '',
           timeSpent: userResponse.timeSpent || 0
         }, level);
         
       case 'listening':
+        // Type guard for listening content
+        const listeningContent = question.content as { audioUrl?: string } || {};
         return await this.cefrScoring.evaluateListening({
           answers: userResponse.answers || {},
-          audioUrl: question.content.audioUrl || '',
+          audioUrl: listeningContent.audioUrl || '',
           timeSpent: userResponse.timeSpent || 0
         }, level);
         
@@ -870,7 +872,7 @@ export class AdaptivePlacementService {
   }
 
   /**
-   * Evaluate skill from all responses
+   * Evaluate skill from all responses using actual performance data
    */
   private async evaluateSkillFromResponses(skill: Skill, responses: PlacementTestResponse[]): Promise<CEFREvaluationResult> {
     if (responses.length === 0) {
@@ -885,26 +887,101 @@ export class AdaptivePlacementService {
       };
     }
 
-    // Average scores and determine final level
-    const avgScore = responses.reduce((sum, r) => sum + (r.aiScore || 60), 0) / responses.length;
     
-    // Determine level based on average score
-    let level: CEFRLevel;
-    if (avgScore >= 90) level = 'C2';
-    else if (avgScore >= 80) level = 'C1';
-    else if (avgScore >= 70) level = 'B2';
-    else if (avgScore >= 60) level = 'B1';
-    else if (avgScore >= 40) level = 'A2';
-    else level = 'A1';
+    // Calculate performance metrics from all responses
+    const scores = responses.map(r => {
+      const score = r.aiScore;
+      return typeof score === 'string' ? parseFloat(score) : (score || 60);
+    });
+    
+    const avgScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    
+    // Calculate performance consistency
+    const variance = scores.reduce((sum, score) => sum + Math.pow(score - avgScore, 2), 0) / scores.length;
+    const consistency = Math.max(0, 1 - (variance / 1000)); // Normalize to 0-1
+    
+    // Get the levels tested during the assessment
+    const levelsAttempted = await Promise.all(
+      responses.map(async r => {
+        const question = await this.storage.getPlacementTestQuestion(r.questionId);
+        return question ? question.cefrLevel as CEFRLevel : 'B1';
+      })
+    );
+    
+    // Find the highest level where performance was strong
+    let determinedLevel: CEFRLevel = 'A1';
+    let confidence = 0.5;
+    
+    // Group responses by level tested
+    const performanceByLevel = new Map<CEFRLevel, number[]>();
+    for (let i = 0; i < responses.length; i++) {
+      const level = levelsAttempted[i];
+      if (!performanceByLevel.has(level)) {
+        performanceByLevel.set(level, []);
+      }
+      performanceByLevel.get(level)!.push(scores[i]);
+    }
+    
+    // Determine level based on actual performance at each CEFR level
+    const levelIndices = CEFRLevels.map(level => CEFRLevels.indexOf(level));
+    let highestValidLevel = 0; // A1 index
+    
+    for (const [level, levelScores] of performanceByLevel) {
+      const levelIndex = CEFRLevels.indexOf(level);
+      const levelAvg = levelScores.reduce((sum, score) => sum + score, 0) / levelScores.length;
+      
+      
+      // Strong performance threshold for confirming a level
+      if (levelAvg >= 75 && levelScores.length >= 1) {
+        highestValidLevel = Math.max(highestValidLevel, levelIndex);
+        confidence = Math.max(confidence, 0.8);
+      } else if (levelAvg >= 65 && levelScores.length >= 2) {
+        // Good performance with multiple responses
+        highestValidLevel = Math.max(highestValidLevel, levelIndex);
+        confidence = Math.max(confidence, 0.7);
+      } else if (levelAvg >= 55) {
+        // Moderate performance - can confirm this level with lower confidence
+        highestValidLevel = Math.max(highestValidLevel, levelIndex);
+        confidence = Math.max(confidence, 0.6);
+      }
+    }
+    
+    determinedLevel = CEFRLevels[highestValidLevel];
+    
+    
+    // Generate appropriate feedback
+    const metCriteria: string[] = [];
+    const unmetCriteria: string[] = [];
+    const recommendations: string[] = [];
+    
+    if (confidence >= 0.8) {
+      metCriteria.push(`Strong ${determinedLevel} level ${skill} performance demonstrated`);
+      if (highestValidLevel < CEFRLevels.length - 1) {
+        recommendations.push(`Ready to practice ${CEFRLevels[highestValidLevel + 1]} level ${skill} activities`);
+      }
+    } else if (confidence >= 0.6) {
+      metCriteria.push(`${determinedLevel} level ${skill} ability shown`);
+      recommendations.push(`Continue practicing ${determinedLevel} level activities to build confidence`);
+    } else {
+      metCriteria.push(`Basic ${skill} ability observed`);
+      unmetCriteria.push(`Inconsistent performance at ${determinedLevel} level`);
+      recommendations.push(`Focus on foundational ${skill} skills`);
+      recommendations.push(`Practice regularly to improve consistency`);
+    }
+    
+    const detailedFeedback = `${skill.charAt(0).toUpperCase() + skill.slice(1)} assessment completed with ${responses.length} responses. ` +
+                           `Average performance: ${avgScore.toFixed(1)}/100. ` +
+                           `Performance consistency: ${(consistency * 100).toFixed(1)}%. ` +
+                           `Determined ${skill} level: ${determinedLevel}.`;
 
     return {
-      level,
+      level: determinedLevel,
       score: avgScore,
-      confidence: responses.length >= 2 ? 0.8 : 0.6,
-      metCriteria: [`Demonstrates ${level} level ${skill} ability`],
-      unmetCriteria: [],
-      detailedFeedback: `${skill} assessment shows ${level} proficiency with average score of ${avgScore.toFixed(1)}%`,
-      recommendations: [`Continue developing ${skill} skills at ${level} level`]
+      confidence,
+      metCriteria,
+      unmetCriteria,
+      detailedFeedback,
+      recommendations
     };
   }
 
