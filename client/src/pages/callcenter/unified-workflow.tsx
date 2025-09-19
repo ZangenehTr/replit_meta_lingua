@@ -201,7 +201,7 @@ export default function UnifiedCallCenterWorkflow() {
   };
 
   return (
-      <div className="space-y-6 admin-ltr">
+      <div className="space-y-6 w-full admin-ltr">
         {/* Header with Overall Stats */}
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
