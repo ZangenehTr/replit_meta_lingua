@@ -204,9 +204,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           dir="ltr"
         >
           <div className="min-h-full">
-            {/* Universal Container System */}
-            <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-              {children}
+            {/* Optimized Container System - Better space utilization */}
+            <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+              <div className="mx-auto max-w-[95%] 2xl:max-w-[90%]">
+                {children}
+              </div>
             </div>
           </div>
         </main>
