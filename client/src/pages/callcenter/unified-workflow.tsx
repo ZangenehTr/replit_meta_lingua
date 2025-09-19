@@ -60,23 +60,21 @@ export default function UnifiedCallCenterWorkflow() {
 
   // Check user permissions based on role
   const hasStageAccess = (stage: WorkflowStage): boolean => {
-    if (!user || !(user as any)?.role) return false;
-    
-    const userRole = (user as any).role;
+    if (!user) return false;
     
     switch (stage) {
       case "contact_desk":
         return true; // All call center roles can access contact desk
       case "new_intake":
-        return userRole === 'Admin' || userRole === 'Supervisor';
+        return user.role === 'Admin' || user.role === 'Supervisor';
       case "no_response":
-        return userRole === 'Admin' || userRole === 'Supervisor';
+        return user.role === 'Admin' || user.role === 'Supervisor';
       case "follow_up":
-        return userRole === 'Admin' || userRole === 'Supervisor' || userRole === 'Call Center Agent';
+        return user.role === 'Admin' || user.role === 'Supervisor' || user.role === 'Call Center Agent';
       case "level_assessment":
-        return userRole === 'Admin' || userRole === 'Supervisor' || userRole === 'Mentor';
+        return user.role === 'Admin' || user.role === 'Supervisor' || user.role === 'Mentor';
       case "withdrawal":
-        return userRole === 'Admin' || userRole === 'Supervisor';
+        return user.role === 'Admin' || user.role === 'Supervisor';
       default:
         return false;
     }
@@ -203,7 +201,7 @@ export default function UnifiedCallCenterWorkflow() {
   };
 
   return (
-      <div className="space-y-6 w-full admin-ltr admin-content-container">
+      <div className="space-y-6 w-full admin-ltr">
         {/* Header with Overall Stats */}
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
