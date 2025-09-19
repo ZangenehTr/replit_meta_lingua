@@ -212,9 +212,9 @@ export default function UnifiedCallCenterWorkflow() {
   };
 
   return (
-      <div className="space-y-6 w-full admin-ltr px-4 sm:px-6 md:ml-8 md:pl-8">
-        {/* Header with Overall Stats */}
-        <div className="flex flex-col gap-4">
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 admin-ltr">
+        {/* Header */}
+        <div className="mb-6">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -239,10 +239,68 @@ export default function UnifiedCallCenterWorkflow() {
               </Card>
             </div>
           </div>
+        </div>
           
-          {/* Quick Stats Overview */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {workflowStages.map((stage) => {
+        {/* Two-column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-[340px,1fr] gap-6">
+          {/* Left Column: Stage Navigation (Desktop) */}
+          <div className="hidden lg:block">
+            <Card className="sticky top-24 max-h-[calc(100vh-128px)] overflow-y-auto">
+              <CardHeader>
+                <CardTitle className="text-lg">مراحل کاری</CardTitle>
+                <CardDescription>انتخاب مرحله برای مشاهده جزئیات</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {availableStages.map((stage) => {
+                  const IconComponent = stage.icon;
+                  return (
+                    <motion.div
+                      key={stage.key}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Card 
+                        className={`cursor-pointer transition-all duration-200 ${
+                          activeStage === stage.key 
+                            ? "ring-2 ring-blue-500 shadow-lg" 
+                            : "hover:shadow-md"
+                        }`}
+                        onClick={() => setActiveStage(stage.key)}
+                        data-testid={stage.testId}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${stage.color} bg-opacity-10`}>
+                              <IconComponent className={`h-5 w-5 ${stage.color.replace('bg-', 'text-')}`} />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {stage.title}
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {stage.description}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                {stage.count}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Right Column: Main Content */}
+          <div className="space-y-6">
+            {/* Mobile Quick Stats Grid */}
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 lg:hidden">
+            {availableStages.map((stage) => {
               const IconComponent = stage.icon;
               return (
                 <motion.div
@@ -283,48 +341,49 @@ export default function UnifiedCallCenterWorkflow() {
                 </motion.div>
               );
             })}
-          </div>
-        </div>
+            </div>
 
-        {/* Main Workflow Content */}
-        <div className="min-h-[600px]">
-          <Card>
-            <CardHeader className="border-b">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {(() => {
-                    const currentStage = workflowStages.find(s => s.key === activeStage);
-                    const IconComponent = currentStage?.icon || Phone;
-                    return (
-                      <>
-                        <div className={`p-2 rounded-lg ${currentStage?.color || 'bg-blue-500'} bg-opacity-10`}>
-                          <IconComponent className={`h-6 w-6 ${(currentStage?.color || 'bg-blue-500').replace('bg-', 'text-')}`} />
-                        </div>
-                        <div>
-                          <CardTitle className="text-xl">
-                            {currentStage?.title || "دفتر تلفن"}
-                          </CardTitle>
-                          <CardDescription>
-                            {currentStage?.description || "مدیریت تماس‌ها"}
-                          </CardDescription>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
+            {/* Main Workflow Content */}
+            <div className="min-h-[600px]">
+              <Card>
+                <CardHeader className="border-b">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {(() => {
+                        const currentStage = availableStages.find(s => s.key === activeStage);
+                        const IconComponent = currentStage?.icon || Phone;
+                        return (
+                          <>
+                            <div className={`p-2 rounded-lg ${currentStage?.color || 'bg-blue-500'} bg-opacity-10`}>
+                              <IconComponent className={`h-6 w-6 ${(currentStage?.color || 'bg-blue-500').replace('bg-', 'text-')}`} />
+                            </div>
+                            <div>
+                              <CardTitle className="text-xl">
+                                {currentStage?.title || "دفتر تلفن"}
+                              </CardTitle>
+                              <CardDescription>
+                                {currentStage?.description || "مدیریت تماس‌ها"}
+                              </CardDescription>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                    
+                    <Badge variant="outline" className="text-sm">
+                      {availableStages.find(s => s.key === activeStage)?.count || 0} مورد
+                    </Badge>
+                  </div>
+                </CardHeader>
                 
-                <Badge variant="outline" className="text-sm">
-                  {workflowStages.find(s => s.key === activeStage)?.count || 0} مورد
-                </Badge>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="p-0">
-              <div className="min-h-[500px]">
-                {renderStageContent()}
-              </div>
-            </CardContent>
-          </Card>
+                <CardContent className="p-0">
+                  <div className="min-h-[500px]">
+                    {renderStageContent()}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     );

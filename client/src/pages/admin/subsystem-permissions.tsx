@@ -215,42 +215,47 @@ export default function SubsystemPermissions() {
   }
 
   return (
-      <div className="space-y-6 w-full admin-ltr px-4 sm:px-6 md:ml-8 md:pl-8">
+      <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 admin-ltr">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div className="text-left">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {t('admin:subsystemPermissions.title', 'Subsystem Permissions')}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {t('admin:subsystemPermissions.description', 'Define role-based access to all platform subsystems and features')}
-            </p>
-          </div>
-          
-          <div className="flex gap-2 sm:flex-shrink-0">
-            <Button 
-              variant="outline" 
-              onClick={() => resetDefaultsMutation.mutate()}
-              disabled={resetDefaultsMutation.isPending}
-              data-testid="button-reset-defaults"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              {t('admin:subsystemPermissions.resetDefaults', 'Reset to Defaults')}
-            </Button>
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div className="text-left">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                {t('admin:subsystemPermissions.title', 'Subsystem Permissions')}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                {t('admin:subsystemPermissions.description', 'Define role-based access to all platform subsystems and features')}
+              </p>
+            </div>
             
-            <Button 
-              onClick={() => savePermissionsMutation.mutate(rolePermissions)}
-              disabled={savePermissionsMutation.isPending}
-              data-testid="button-save-permissions"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {t('admin:subsystemPermissions.savePermissions', 'Save Permissions')}
-            </Button>
+            <div className="flex gap-2 sm:flex-shrink-0">
+              <Button 
+                variant="outline" 
+                onClick={() => resetDefaultsMutation.mutate()}
+                disabled={resetDefaultsMutation.isPending}
+                data-testid="button-reset-defaults"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                {t('admin:subsystemPermissions.resetDefaults', 'Reset to Defaults')}
+              </Button>
+              
+              <Button 
+                onClick={() => savePermissionsMutation.mutate(rolePermissions)}
+                disabled={savePermissionsMutation.isPending}
+                data-testid="button-save-permissions"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {t('admin:subsystemPermissions.savePermissions', 'Save Permissions')}
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Role Selection Tabs */}
-        <Card>
+        {/* Two-column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-[360px,1fr] gap-6">
+          {/* Left Column: Role Selection and Stats */}
+          <div className="space-y-4">
+            <Card className="sticky top-24 max-h-[calc(100vh-128px)] overflow-y-auto">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
@@ -310,29 +315,33 @@ export default function SubsystemPermissions() {
             </Tabs>
           </CardContent>
         </Card>
+          </div>
 
-        {/* Subsystem Tree */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              {t('admin:subsystemPermissions.subsystemAccess', 'Subsystem Access Configuration')}
-            </CardTitle>
-            <CardDescription>
-              {t('admin:subsystemPermissions.subsystemDescription', 'Check the boxes to grant access to specific subsystems for the selected role')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[600px] w-full">
-              <div className="space-y-2" data-testid="subsystem-tree">
-                {renderSubsystemTree(SUBSYSTEM_TREE)}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+          {/* Right Column: Subsystem Tree */}
+          <div className="space-y-4">
+            <Card className="h-[calc(100vh-220px)]">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5" />
+                  {t('admin:subsystemPermissions.subsystemAccess', 'Subsystem Access Configuration')}
+                </CardTitle>
+                <CardDescription>
+                  {t('admin:subsystemPermissions.subsystemDescription', 'Check the boxes to grant access to specific subsystems for the selected role')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[calc(100vh-320px)] w-full">
+                  <div className="space-y-2" data-testid="subsystem-tree">
+                    {renderSubsystemTree(SUBSYSTEM_TREE)}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-2">
+        <div className="mt-6 flex justify-end gap-2">
           <Button 
             variant="outline" 
             onClick={() => setRolePermissions(DEFAULT_ROLE_PERMISSIONS)}
