@@ -55,19 +55,19 @@ export default function UnifiedCallCenterWorkflow() {
   const [activeStage, setActiveStage] = useState<WorkflowStage>("contact_desk");
 
   // Get real workflow statistics from API
-  const { data: workflowStatsData, isLoading: statsLoading } = useQuery({
+  const { data: workflowStatsData, isLoading: statsLoading } = useQuery<WorkflowStats>({
     queryKey: ['/api/leads/workflow-stats'],
     enabled: true
   });
 
   const workflowStats: WorkflowStats = {
-    contactDesk: workflowStatsData?.contactDesk || 0,
-    newIntake: workflowStatsData?.newIntake || 0,
-    noResponse: workflowStatsData?.noResponse || 0,
-    followUp: workflowStatsData?.followUp || 0,
-    levelAssessment: workflowStatsData?.levelAssessment || 0,
-    withdrawal: workflowStatsData?.withdrawal || 0,
-    totalActive: workflowStatsData?.total || 0
+    contactDesk: (workflowStatsData as any)?.contactDesk || 0,
+    newIntake: (workflowStatsData as any)?.newIntake || 0,
+    noResponse: (workflowStatsData as any)?.noResponse || 0,
+    followUp: (workflowStatsData as any)?.followUp || 0,
+    levelAssessment: (workflowStatsData as any)?.levelAssessment || 0,
+    withdrawal: (workflowStatsData as any)?.withdrawal || 0,
+    totalActive: (workflowStatsData as any)?.total || 0
   };
 
   const workflowStages = [
