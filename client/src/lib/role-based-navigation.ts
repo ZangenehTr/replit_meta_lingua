@@ -125,6 +125,7 @@ export const getCallCenterNavigation = (t: any, userRole?: string): NavigationIt
   const basePath = isAdmin ? '/admin' : '/callcenter';
   
   return [
+    { path: "/callcenter/unified-workflow", icon: "Workflow", label: t('common:navigation.unifiedWorkflow') || 'Unified Workflow', roles: ["Call Center Agent", "Admin", "Supervisor", "Mentor"] },
     { path: `${basePath}/leads`, icon: "UserPlus", label: t('common:navigation.leadManagement'), roles: ["Call Center Agent", "Admin", "Supervisor"] },
     { path: `${basePath}/calls`, icon: "Phone", label: t('common:navigation.callLogs'), roles: ["Call Center Agent", "Admin"] },
     { path: `${basePath}/prospects`, icon: "Target", label: t('common:navigation.prospects'), roles: ["Call Center Agent", "Admin"] },
