@@ -421,7 +421,7 @@ export default function UserManagement() {
                         <div className="flex items-center gap-3 rtl:flex-row-reverse">
                           <Avatar>
                             <AvatarFallback>
-                              {user.firstName[0]}{user.lastName[0]}
+                              {user.firstName?.[0] || 'U'}{user.lastName?.[0] || ''}
                             </AvatarFallback>
                           </Avatar>
                           <div>

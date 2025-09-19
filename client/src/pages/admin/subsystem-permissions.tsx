@@ -22,11 +22,11 @@ import {
 import * as Icons from "lucide-react";
 import { Save, RefreshCw, Settings, Shield, Users, Building2 } from "lucide-react";
 
-// Available roles
+// Available roles - must match database role values
 const AVAILABLE_ROLES = [
   { key: "Admin", name: "مدیر", nameEn: "Administrator", color: "bg-red-500" },
   { key: "Supervisor", name: "سرپرست", nameEn: "Supervisor", color: "bg-orange-500" },  
-  { key: "Teacher", name: "معلم", nameEn: "Teacher/Tutor", color: "bg-blue-500" },
+  { key: "Teacher/Tutor", name: "معلم", nameEn: "Teacher/Tutor", color: "bg-blue-500" },
   { key: "Call Center Agent", name: "پشتیبان", nameEn: "Call Center Agent", color: "bg-green-500" },
   { key: "Mentor", name: "منتور", nameEn: "Mentor", color: "bg-purple-500" },
   { key: "Student", name: "دانش‌آموز", nameEn: "Student", color: "bg-indigo-500" },
@@ -216,35 +216,49 @@ export default function SubsystemPermissions() {
     <AppLayout>
       <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {t('admin:subsystemPermissions.title', 'Subsystem Permissions')}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {t('admin:subsystemPermissions.description', 'Define role-based access to all platform subsystems and features')}
-            </p>
-          </div>
-          
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => resetDefaultsMutation.mutate()}
-              disabled={resetDefaultsMutation.isPending}
-              data-testid="button-reset-defaults"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              {t('admin:subsystemPermissions.resetDefaults', 'Reset to Defaults')}
-            </Button>
+        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-xl p-8 text-white shadow-lg">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">
+                {t('admin:subsystemPermissions.title', 'Subsystem Permissions')}
+              </h1>
+              <p className="text-blue-100 text-lg max-w-2xl">
+                {t('admin:subsystemPermissions.description', 'Define role-based access to all platform subsystems and features')}
+              </p>
+              <div className="mt-4 flex items-center gap-4 text-blue-100">
+                <span className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  {AVAILABLE_ROLES.length} Roles
+                </span>
+                <span className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5" />
+                  {getAllSubsystemIds().length} Subsystems
+                </span>
+              </div>
+            </div>
             
-            <Button 
-              onClick={() => savePermissionsMutation.mutate(rolePermissions)}
-              disabled={savePermissionsMutation.isPending}
-              data-testid="button-save-permissions"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {t('admin:subsystemPermissions.savePermissions', 'Save Permissions')}
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                variant="secondary" 
+                onClick={() => resetDefaultsMutation.mutate()}
+                disabled={resetDefaultsMutation.isPending}
+                data-testid="button-reset-defaults"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                {t('admin:subsystemPermissions.resetDefaults', 'Reset to Defaults')}
+              </Button>
+              
+              <Button 
+                onClick={() => savePermissionsMutation.mutate(rolePermissions)}
+                disabled={savePermissionsMutation.isPending}
+                data-testid="button-save-permissions"
+                className="bg-white text-blue-600 hover:bg-blue-50 font-semibold"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {t('admin:subsystemPermissions.savePermissions', 'Save Permissions')}
+              </Button>
+            </div>
           </div>
         </div>
 
