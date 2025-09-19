@@ -21,7 +21,7 @@ import { LanguageSelector } from "@/components/language-selector";
 import MobileBottomNav from "./mobile-bottom-nav";
 import AICompanion from "@/components/ai-companion";
 import { useState } from "react";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage } from "@/hooks/use-language";
 import { useTranslation } from 'react-i18next';
 
 interface AppLayoutProps {
