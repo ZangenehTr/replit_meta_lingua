@@ -98,6 +98,20 @@ body.rtl p, body.rtl div, body.rtl span {
   text-align: left !important;
 }
 
+/* Admin content positioning fix - reduce excessive left margin */
+.admin-content-container {
+  margin-left: 0 !important;
+  padding-left: 1rem !important;
+  max-width: none !important;
+}
+
+@media (min-width: 768px) {
+  .admin-content-container {
+    margin-left: -2rem !important;
+    padding-left: 2rem !important;
+  }
+}
+
 .mst-container .flex {
   flex-direction: row !important;
 }
