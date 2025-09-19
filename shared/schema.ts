@@ -68,6 +68,25 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Call Center Permissions - controls access to workflow stages and features
+export const callCenterPermissions = pgTable("call_center_permissions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  canAccessContactDesk: boolean("can_access_contact_desk").default(true),
+  canAccessNewIntake: boolean("can_access_new_intake").default(false),
+  canAccessNoResponse: boolean("can_access_no_response").default(false),
+  canAccessFollowUp: boolean("can_access_follow_up").default(false),
+  canAccessLevelAssessment: boolean("can_access_level_assessment").default(false),
+  canAccessWithdrawal: boolean("can_access_withdrawal").default(false),
+  canManageLeads: boolean("can_manage_leads").default(false),
+  canMakeCalls: boolean("can_make_calls").default(false),
+  canViewReports: boolean("can_view_reports").default(false),
+  canManageCampaigns: boolean("can_manage_campaigns").default(false),
+  accessLevel: text("access_level").default("read"), // read, write, admin
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // User Profiles with Cultural Background and Learning Preferences
 export const userProfiles = pgTable("user_profiles", {
   id: serial("id").primaryKey(),
@@ -1108,6 +1127,7 @@ export const insertUserSchema = createInsertSchema(users);
 export const insertUserProfileSchema = createInsertSchema(userProfiles);
 export const insertRolePermissionSchema = createInsertSchema(rolePermissions);
 export const insertUserSessionSchema = createInsertSchema(userSessions);
+export const insertCallCenterPermissionsSchema = createInsertSchema(callCenterPermissions);
 // Holidays table for managing institute holidays (used for class end date calculation)
 export const holidays = pgTable("holidays", {
   id: serial("id").primaryKey(),
@@ -2549,8 +2569,6 @@ export type LevelAssessmentQuestion = typeof levelAssessmentQuestions.$inferSele
 export type InsertLevelAssessmentQuestion = z.infer<typeof insertLevelAssessmentQuestionSchema>;
 export type LevelAssessmentResult = typeof levelAssessmentResults.$inferSelect;
 export type InsertLevelAssessmentResult = z.infer<typeof insertLevelAssessmentResultSchema>;
-export type Lead = typeof leads.$inferSelect;
-export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type SystemConfig = typeof systemConfig.$inferSelect;
 export type InsertSystemConfig = z.infer<typeof insertSystemConfigSchema>;
 export type CustomRole = typeof customRoles.$inferSelect;

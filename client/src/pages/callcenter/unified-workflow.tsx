@@ -54,6 +54,33 @@ export default function UnifiedCallCenterWorkflow() {
   const { isRTL } = useLanguage();
   const [activeStage, setActiveStage] = useState<WorkflowStage>("contact_desk");
 
+  // Get current user information  
+  const { data: user } = useQuery({
+    queryKey: ['/api/users/me']
+  });
+
+  // Check user permissions based on role
+  const hasStageAccess = (stage: WorkflowStage): boolean => {
+    if (!user) return false;
+    
+    switch (stage) {
+      case "contact_desk":
+        return true; // All call center roles can access contact desk
+      case "new_intake":
+        return user.role === 'Admin' || user.role === 'Supervisor';
+      case "no_response":
+        return user.role === 'Admin' || user.role === 'Supervisor';
+      case "follow_up":
+        return user.role === 'Admin' || user.role === 'Supervisor' || user.role === 'Call Center Agent';
+      case "level_assessment":
+        return user.role === 'Admin' || user.role === 'Supervisor' || user.role === 'Mentor';
+      case "withdrawal":
+        return user.role === 'Admin' || user.role === 'Supervisor';
+      default:
+        return false;
+    }
+  };
+
   // Get real workflow statistics from API
   const { data: workflowStatsData, isLoading: statsLoading } = useQuery<WorkflowStats>({
     queryKey: ['/api/leads/workflow-stats'],
@@ -133,7 +160,29 @@ export default function UnifiedCallCenterWorkflow() {
     }
   ];
 
+  // Filter stages based on user permissions
+  const availableStages = workflowStages.filter(stage => hasStageAccess(stage.key));
+
+  // If current active stage is not accessible, switch to first available
+  if (!hasStageAccess(activeStage) && availableStages.length > 0) {
+    setActiveStage(availableStages[0].key);
+  }
+
   const renderStageContent = () => {
+    // Guard content rendering - only show if user has access
+    if (!hasStageAccess(activeStage)) {
+      return (
+        <div className="flex flex-col items-center justify-center p-8 text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            {t('callcenter:accessDenied', 'Access Denied')}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t('callcenter:noPermissionStage', 'You don\'t have permission to access this workflow stage.')}
+          </p>
+        </div>
+      );
+    }
     switch (activeStage) {
       case "contact_desk":
         return <ContactDesk />;
