@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useQuery } from "@tanstack/react-query";
-import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -202,8 +201,7 @@ export default function UnifiedCallCenterWorkflow() {
   };
 
   return (
-    <AppLayout>
-      <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
+      <div className="space-y-6 admin-ltr">
         {/* Header with Overall Stats */}
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
@@ -318,6 +316,5 @@ export default function UnifiedCallCenterWorkflow() {
           </Card>
         </div>
       </div>
-    </AppLayout>
-  );
+    );
 }
