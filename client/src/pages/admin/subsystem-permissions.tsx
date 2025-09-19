@@ -49,7 +49,7 @@ export default function SubsystemPermissions() {
   // Update local state when data changes
   React.useEffect(() => {
     if (backendPermissions && typeof backendPermissions === 'object') {
-      setRolePermissions(backendPermissions);
+      setRolePermissions(backendPermissions as RolePermissions);
     }
   }, [backendPermissions]);
 
