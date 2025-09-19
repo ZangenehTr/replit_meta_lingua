@@ -98,18 +98,26 @@ body.rtl p, body.rtl div, body.rtl span {
   text-align: left !important;
 }
 
-/* Admin content positioning fix - reduce excessive left margin */
+/* Admin content positioning fix - reduce excessive left margin and padding */
 .admin-content-container {
-  margin-left: 0 !important;
+  margin-left: -2rem !important;
+  margin-right: 0 !important;
   padding-left: 1rem !important;
+  padding-right: 1rem !important;
   max-width: none !important;
 }
 
 @media (min-width: 768px) {
   .admin-content-container {
-    margin-left: -2rem !important;
+    margin-left: -4rem !important;
     padding-left: 2rem !important;
   }
+}
+
+/* Force immediate application for admin pages */
+.admin-ltr.admin-content-container {
+  margin-left: -3rem !important;
+  padding-left: 1.5rem !important;
 }
 
 .mst-container .flex {

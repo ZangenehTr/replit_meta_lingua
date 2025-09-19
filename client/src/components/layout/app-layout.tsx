@@ -203,7 +203,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           }`}
           dir="ltr"
         >
-          <div className="min-h-full p-4 sm:p-6 lg:p-8">
+          <div className="min-h-full p-2 sm:p-4 lg:p-6">
             {children}
           </div>
         </main>
